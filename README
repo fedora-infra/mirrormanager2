@@ -1,1 +1,9 @@
-This file left intentionally blank for repo creation
+This is the top level of the Fedora Mirror Management system.
+
+Directories include:
+
+mirrors/  - the TurboGears web site and database schema
+
+
+Other directories, such as mirror client-side tools, will be added
+here.
