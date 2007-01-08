@@ -58,19 +58,36 @@ class HostIPBlocks(SQLObject):
 class Arch(SQLObject):
     name = StringCol(alternateID=True)
 
+class Category(SQLObject):
+    # e.g. core, extras, updates, updates-testing, test, ...
+    name = StringCol(alternateID=True)
+    # with $VERSION and $ARCH for later substitution
+    path = StringCol()
+    canonicalhost = StringCol()
+    sourcepkgpath = StringCol()
+    sourceisopath = StringCol(default=None)
+    contents = MultipleJoin('Content')
+
+class Product(SQLObject):
+    name = StringCol(alternateID=True)
+    versions = MultipleJoin('ProductVersion')
+
+class ProductVersion(SQLObject):
+    name = StringCol()
+    product = ForeignKey('Product')
+    isTest = BoolCol(default=False)
+
 
 class Content(SQLObject):
     # e.g. fedora-core-6-i386
     name = StringCol(alternateID=True)
-    # e.g. core, extras, updates, updates-testing, test, ...
-    category = StringCol()
+    category = ForeignKey('Category')
     # 5, 6, development
-    version = StringCol()
+    version = ForeignKey('ProductVersion')
     # default subdir starting below /
     # e.g. 'pub/fedora/core/6/$ARCH/'
     path = StringCol()
-    canonical = StringCol()
-    arch      = ForeignKey('Arch')
+    arch = ForeignKey('Arch')
     # these are paths below $ARCH/
     # e.g. iso/, os/, debuginfo/
     # of course Extras doesn't have these ;-(

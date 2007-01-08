@@ -2,6 +2,25 @@ from mirrors.model import *
 import socket
 import re
 
+
+def make_content(ver, category, arch):
+    reponame = '%s-%s-%s-%s' % (ver.product.name, category.name, ver.name, arch.name)
+    path = re.sub('\$VERSION', ver.name, category.path)
+    path = re.sub('\$ARCH', arch.name, path)
+    sourcepkgpath = re.sub('\$VERSION', ver.name, category.sourcepkgpath)
+    if category.sourceisopath is not None:
+        sourceisopath = re.sub('\$VERSION', ver.name, category.sourceisopath)
+    print "Content(name=%s)" % (reponame)
+    if arch.name == 'source':
+        Content(name=reponame, version=ver, arch=arch,
+                category=category,
+                path=sourcepkgpath)
+    else:
+        Content(name=reponame, version=ver, arch=arch,
+                category=category,
+                path=path)
+
+
 #check if a configuration already exists. Create one if it doesn't
 if not Arch.select().count():
     print "Creating Arches"
@@ -10,6 +29,8 @@ if not Arch.select().count():
     Arch(name='x86_64')
     Arch(name='ppc')
 
+
+redhat = None
 
 if not Site.select().count() and not Host.select().count():
     print "Creating Sites and Hosts"
@@ -32,37 +53,77 @@ if not SiteAdmin.select().count():
     SiteAdmin(username='mdomsch', site=dell)
     SiteAdmin(username='hpa', site=korg)
 
-if not Content.select().count():
-    for category in [ 'core', 'extras', 'updates', 'updates-testing']:
-        for arch in Arch.select():
-            for ver in [ '5', '6', 'development' ]:
-                reponame = 'fedora-%s-%s-%s' % (category, ver, arch.name)
-                if category in [ 'core', 'extras' ]:
-                    path = 'pub/fedora/linux/%s/%s/%s'  % (category, ver, arch.name)
-                elif category is 'updates':
-                    if arch.name is 'source':
-                        path = 'pub/fedora/linux/core/updates/%s/SRPMS'  % (ver)
-                    else:
-                        path = 'pub/fedora/linux/core/updates/%s/%s'  % (ver, arch.name)
-                elif category is 'updates-testing':
-                    if arch.name is 'source':
-                        path = 'pub/fedora/linux/core/updates/testing/%s/SRPMS'  % (ver)
-                    else:
-                        path = 'pub/fedora/linux/core/updates/testing/%s/%s'  % (ver, arch.name)
-                            
-                content = Content(name=reponame, version=ver, arch=arch,
-                                  category=category,
-                                  path=path,
-                                  canonical='http://download.fedora.redhat.com/%s' % (path),
-                                  )
-    # make a test example
-    for arch in Arch.select():
-        path='/pub/fedora/linux/core/test/6.90/%s/' % (arch.name)
-        Content(name='fedora-test-6.90-%s' % (arch.name),
-                version='6.90', arch = arch, path = path, category='test',
-                canonical='http://download.fedora.redhat.com/%s' % (path))
-                    
+# create our default products
+rhel = Product(name='rhel')
+fedora = Product(name='fedora')
 
+
+# create our default Categories
+core = Category(name='core', path='pub/fedora/linux/core/$VERSION/$ARCH/',
+                canonicalhost='http://download.fedora.redhat.com',
+                sourcepkgpath='pub/fedora/linux/core/$VERSION/source/SRPMS/',
+                sourceisopath='pub/fedora/linux/core/$VERSION/source/iso/')
+
+updates = Category(name='updates',
+                   path='pub/fedora/linux/core/updates/$VERSION/$ARCH/',
+                   canonicalhost='http://download.fedora.redhat.com',
+                   sourcepkgpath='pub/fedora/linux/core/updates/$VERSION/SRPMS/')
+
+updates_testing = Category(name='updates-testing',
+                           path='pub/fedora/linux/core/updates/testing/$VERSION/$ARCH/',
+                           canonicalhost='http://download.fedora.redhat.com',
+                           sourcepkgpath='pub/fedora/linux/core/updates/testing/$VERSION/SRPMS/')
+extras = Category(name='extras',
+                  path='pub/fedora/linux/extras/$VERSION/$ARCH/',
+                  canonicalhost='http://download.fedora.redhat.com',
+                  sourcepkgpath='pub/fedora/linux/extras/$VERSION/SRPMS/')
+test = Category(name='test',
+                path='pub/fedora/linux/core/test/$VERSION/$ARCH/',
+                canonicalhost='http://download.fedora.redhat.com',
+                sourcepkgpath='pub/fedora/linux/core/test/$VERSION/source/SRPMS/',
+                sourceisopath='pub/fedora/linux/core/test/$VERSION/source/iso/')
+epel = Category(name='epel',
+                path='pub/epel/$VERSION/$ARCH',
+                canonicalhost='http://download.fedora.redhat.com',
+                sourcepkgpath='pub/epel/$VERSION/SRPMS/')
+                
+
+# create our default versions
+versions = []
+for ver in range(1,7):
+    versions.append(str(ver))
+versions.append('development')
+for ver in versions:
+    ProductVersion(name=ver, product=fedora)
+ProductVersion(name='6.90', product=fedora, isTest=True)
+
+for ver in ['4', '5']:
+    ProductVersion(name=ver, product=rhel)
+
+
+
+if not Content.select().count():
+    # do Fedora major versions
+    for ver in ProductVersion.select():
+        if ver.product.name != 'fedora' or ver.isTest:
+            continue
+        for arch in Arch.select():
+            for category in Category.select():
+                if category.name not in [ 'epel', 'test' ]:
+                    make_content(ver, category, arch)
+                    
+    # do Fedora test
+    for ver in ProductVersion.select():
+        if ver.product.name == 'fedora' and ver.isTest:
+            for arch in Arch.select():
+                make_content(ver, test, arch)
+
+    # do RHEL EPEL
+    for ver in ProductVersion.select():
+        if ver.product.name == 'rhel':
+            for arch in Arch.select():
+                for category in Category.select(Category.q.name=='epel'):
+                    make_content(ver, category, arch)
 
 # These are all fedora-core-6 mirrors, but they may not carry all arches or content.
 # That's ok, we'll figure out what they've got.
@@ -128,8 +189,6 @@ initial_mirror_list = [
 'http://ftp-stud.fht-esslingen.de/pub/fedora/linux/core/6/$ARCH/os/',
 ]
 
-redhat = Site.select(Site.q.name=='Red Hat')[0]
-
 for m in initial_mirror_list:
     s = m.split('/')
     name = s[2]
@@ -148,19 +207,16 @@ for m in initial_mirror_list:
     host = Host(site=site, name=name, pull_from=redhat)
     path = '/'.join(path)
 
-    for content in Content.select(AND(Content.q.category=='core',
-                                      OR(Content.q.version=='5',
-                                         Content.q.version=='6'))):
-        print 'Creating Mirror(host=%s, content=%s)\n' % (host.name, content.name)
+    for content in Content.select():
+        if content.category.name != 'core':
+            continue
+        print 'Mirror(host=%s, content=%s)' % (host.name, content.name)
         mirror = Mirror(host=host, content=content)
 
-        ver = '/%s/' % (content.version)
+        ver = '/%s/' % (content.version.name)
         verpath = re.sub('/6/', ver, path)
 
-        if content.arch.name == 'source':
-            archpath = re.sub('\$ARCH/os/', 'source/SRPMS/', verpath)
-        else:
-            archpath = re.sub('\$ARCH', content.arch.name, verpath)
+        archpath = re.sub('\$ARCH', content.arch.name, verpath)
         urlpath = '%s//%s/%s' % (s[0], name, archpath)
-        print 'MirrorURL(path=%s)\n' % (urlpath)
+        print 'MirrorURL(path=%s)' % (urlpath)
         MirrorURL(mirror=mirror, path=urlpath)
