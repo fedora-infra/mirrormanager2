@@ -37,6 +37,35 @@ class Host(SQLObject):
     mirrors = MultipleJoin('Mirror')
     private_rsyncs = MultipleJoin('HostPrivateRsync')
     ip_blocks = MultipleJoin('HostIPBlocks')
+    hostListing = SingleJoin('HostListing')
+    
+# the listings are kept in the file system
+class HostListing(SqlObject):
+    host = SingleJoin('Host')
+    timestamp = DateTimeCol(default=DateTimeCol.now)
+
+    def listingFilename(self):
+        return 'listings/host-%s.jpg' % self.host.id
+
+    def _get_listing(self):
+        if not os.path.exists(self.listingFilename()):
+            return None
+        f = open(self.listingFilename())
+        v = f.read()
+        f.close()
+        return v
+
+    def _set_listing(self, value):
+        # assume we get a string for the listing
+        f = open(self.listingFilename(), 'w')
+        f.write(value)
+        f.close()
+
+    def _del_listing(self, value):
+        # I usually wouldn't include a method like this, but for
+        # instructional purposes...
+        os.unlink(self.listingFilename())
+
 
 # for other mirrors to pull from in tiering
 class HostPrivateRsync(SQLObject):
@@ -97,6 +126,11 @@ class Content(SQLObject):
     debuginfo = StringCol(default='debug/')
     repoview  = StringCol(default=None)
     mirrors = MultipleJoin('Mirror')
+
+# FIXME - with the listings being available
+# Mirror must change to be a mirror of a directory
+# rather than named content.  We can handle named content -> dir
+# in another table methinks.
 
 # one per Host per Content
 # fortunately these will be created/modified
