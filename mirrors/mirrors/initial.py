@@ -165,8 +165,8 @@ def make_mirrors_subdirs(host, path, directory):
 
 def make_mirrors():
     for host in Host.select():
-        for cu in host.categoryURLs:
-            directory    = Directory.get(cu.category.directory.id)
+        for category in host.categories:
+            directory    = Directory.get(category.directory.id)
             # fixme find path below cu.path that matches directory
             path = '%s/%s' % (cu.url, 'something')
             MirrorDirectory(directory=directory, url=cu, path=path)

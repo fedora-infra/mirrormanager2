@@ -39,7 +39,7 @@ class Host(SQLObject):
     private_rsyncs = MultipleJoin('HostPrivateRsync')
     ip_blocks = MultipleJoin('HostIPBlocks')
     hostFile = MultipleJoin('HostFile')
-    categoryURLs = MultipleJoin('HostCategoryURL')
+    categories = MultipleJoin('HostCategory')
     
 # the listings are kept in the file system
 class HostFile(SQLObject):
