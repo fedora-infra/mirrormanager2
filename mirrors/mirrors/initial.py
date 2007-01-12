@@ -2,23 +2,192 @@ from mirrors.model import *
 import socket
 import re
 
+redhat = None
+core = None
+fedora = None
+rhel = None
 
-def make_content(ver, category, arch):
-    reponame = '%s-%s-%s-%s' % (ver.product.name, category.name, ver.name, arch.name)
-    path = re.sub('\$VERSION', ver.name, category.path)
-    path = re.sub('\$ARCH', arch.name, path)
-    sourcepkgpath = re.sub('\$VERSION', ver.name, category.sourcepkgpath)
-    if category.sourceisopath is not None:
-        sourceisopath = re.sub('\$VERSION', ver.name, category.sourceisopath)
-    print "Content(name=%s)" % (reponame)
-    if arch.name == 'source':
-        Content(name=reponame, version=ver, arch=arch,
-                category=category,
-                path=sourcepkgpath)
-    else:
-        Content(name=reponame, version=ver, arch=arch,
-                category=category,
-                path=path)
+
+def make_directories():
+    testfiles = {'core':'../fedora-test-data/fedora-linux-core-dirsonly.txt', 'extras': '../fedora-test-data/fedora-linux-extras-dirsonly.txt'}
+    for category, file in testfiles.iteritems():
+        f = open(file, 'r')
+        try:
+            for line in f:
+                line = line.strip()
+                if re.compile('^\.$').match(line):
+                    name = 'pub/fedora/linux/%s' % (category)
+                    Directory(name=name)
+                else:
+                    name = 'pub/fedora/linux/%s/%s' % (category, line)
+                    parent = None
+                    index = name.rfind('/')
+                    if index > 0:
+                        parentname = name[:index]
+                        parent = Directory.select(Directory.q.name==parentname)
+                        if parent.count():
+                            parent = parent[0]
+
+                        child = Directory(name=name)
+                        DirectoryTree(parent=parent, child=child)
+                    
+        finally:
+            f.close()
+
+def trim_os_from_dirname(dirname):
+    # trim the /os off the name
+    index = dirname.rfind('/os')
+    if index > 0:
+        dirname = dirname[:index]
+    return dirname
+
+def rename_SRPMS_source(l):
+    rc = []
+    for i in l:
+        if i == 'source':
+            pass
+        elif i == 'SRPMS':
+            rc.append('source')
+        else:
+            rc.append(i)
+    return rc
+
+def guess_ver_arch_from_path(category, path):
+    arch = None
+    for a in Arch.select():
+        if path.find(a.name) != -1:
+            arch = a
+    if path.find('SRPMS') != -1:
+        arch = Arch.select(Arch.q.name=='source')
+
+    ver = None
+    for v in Version.select(Version.q.productID==category.product.id):
+        s = '/%s' % (v.name)
+        if path.find(s) != -1:
+            ver = v
+
+    return (ver, arch)
+
+        
+
+
+# lines look like
+# -rw-r--r--         951 2007/01/10 14:17:39 updates/testing/6/SRPMS/repodata/repomd.xml
+def make_repositories():
+    testfiles = {'core':'../fedora-test-data/fedora-linux-core.txt', 'extras': '../fedora-test-data/fedora-linux-extras.txt'}
+    for category, file in testfiles.iteritems():
+        f = open(file, 'r')
+        try:
+            for line in f:
+                line = line.strip()
+                index = line.find('/repodata/repomd.xml')
+                if index > 0:
+                    path = line.split()[4]
+                    index = path.find('/repodata/repomd.xml')
+                    path = path[:index]
+                    cat = Category.select(Category.q.name==category)[0]
+                    (ver, arch) = guess_ver_arch_from_path(cat, path)
+                    path = trim_os_from_dirname(path)
+                    dirname = 'pub/fedora/linux/%s/%s'  % (category, path)
+                    name=path.split('/')
+                    name = rename_SRPMS_source(name)
+                    name='-'.join(name)
+                    name='%s-%s-%s' % (cat.product.name, category, name)
+                    dirs = Directory.select(Directory.q.name==dirname)
+                    dir = None
+                    if dirs.count() > 0:
+                        dir = dirs[0]
+                    Repository(name=name, category=cat, version=ver, arch=arch, directory=dir)
+
+        finally:
+            f.close()
+        
+
+
+def make_sites():
+    testfiles = {'core':'../fedora-test-data/mirror-hosts-core.txt', 'extras': '../fedora-test-data/mirror-hosts-extras.txt'}
+    for category, file in testfiles.iteritems():
+        # These are all fedora-core-6 mirrors, but they may not carry all arches or content.
+        # That's ok, we'll figure out what they've got.
+        # Turns out these all also carry fc5 too.
+        f = open(file, 'r')
+        try:
+            for line in f:
+                line = line.strip()
+                s = line.split('/')
+                index = line.find('://')
+                protocol = line[:(index+3)]
+                name = s[2]
+                path = s[3:]
+                    
+                if Site.select(Site.q.name==name).count() == 0:
+                    site = Site(name=name)
+                else:
+                    site = Site.select(Site.q.name==name)[0]
+
+                ip = socket.gethostbyname(name)
+                if ip is not None:
+                    SiteIP(site=site, address=ip)
+
+                host = Host(site=site, name=name, pull_from=redhat)
+                path = '/'.join(path)
+                index = path.find('/6/$ARCH')
+                path = path[:index]
+                url = '%s%s%s' % (protocol, name, path)
+                hc = HostCategory(host=host, category=Category.select(Category.q.name==category)[0])
+                HostCategoryURL(hostcategory=hc, protocol=protocol, path=path)
+
+        finally:
+            f.close()
+
+def mirrordir_to_url(mirrorDirectory):
+    url = mirrorDirectory.url
+    hostcategory = url.hostcategory
+    category = hostcategory.category
+    cdir = category.directory
+    # fixme not sure what I should be doing here...
+    # this sucks
+    
+    
+    
+    
+    
+
+                
+# fixme!!
+def make_mirrors_subdirs(host, path, directory):
+    """Recursively walk the directory tree from this point down
+    adding new Mirrors"""
+    for s in DirectoryTree.select(DirectoryTree.q.parent==directory):
+       # Mirror(host=cu.host, path='something', directory=s.child)
+        pass
+
+
+def make_mirrors():
+    for host in Host.select():
+        for cu in host.categoryURLs:
+            directory    = Directory.get(cu.category.directory.id)
+            # fixme find path below cu.path that matches directory
+            path = '%s/%s' % (cu.url, 'something')
+            MirrorDirectory(directory=directory, url=cu, path=path)
+#            make_mirrors_subdirs(cu.host, cu.path, directory)
+                
+
+
+
+def make_versions():
+    # create our default versions
+    versions = []
+    for ver in range(1,7):
+        versions.append(str(ver))
+    versions.append('development')
+    for ver in versions:
+        Version(name=ver, product=fedora)
+    Version(name='6.90', product=fedora, isTest=True)
+
+    for ver in ['4', '5']:
+        Version(name=ver, product=rhel)
+
 
 
 #check if a configuration already exists. Create one if it doesn't
@@ -29,8 +198,6 @@ if not Arch.select().count():
     Arch(name='x86_64')
     Arch(name='ppc')
 
-
-redhat = None
 
 if not Site.select().count() and not Host.select().count():
     print "Creating Sites and Hosts"
@@ -58,165 +225,36 @@ rhel = Product(name='rhel')
 fedora = Product(name='fedora')
 
 
-# create our default Categories
-core = Category(name='core', path='pub/fedora/linux/core/$VERSION/$ARCH/',
-                canonicalhost='http://download.fedora.redhat.com',
-                sourcepkgpath='pub/fedora/linux/core/$VERSION/source/SRPMS/',
-                sourceisopath='pub/fedora/linux/core/$VERSION/source/iso/')
+if not Version.select().count():
+    make_versions()
 
-updates = Category(name='updates',
-                   path='pub/fedora/linux/core/updates/$VERSION/$ARCH/',
-                   canonicalhost='http://download.fedora.redhat.com',
-                   sourcepkgpath='pub/fedora/linux/core/updates/$VERSION/SRPMS/')
+if not Directory.select().count():
+    make_directories()
 
-updates_testing = Category(name='updates-testing',
-                           path='pub/fedora/linux/core/updates/testing/$VERSION/$ARCH/',
-                           canonicalhost='http://download.fedora.redhat.com',
-                           sourcepkgpath='pub/fedora/linux/core/updates/testing/$VERSION/SRPMS/')
+# create our default Repositories
+core = Category(name='core',
+                product = fedora,
+                directory = Directory.select(Directory.q.name=='pub/fedora/linux/core')[0])
+
 extras = Category(name='extras',
-                  path='pub/fedora/linux/extras/$VERSION/$ARCH/',
-                  canonicalhost='http://download.fedora.redhat.com',
-                  sourcepkgpath='pub/fedora/linux/extras/$VERSION/SRPMS/')
-test = Category(name='test',
-                path='pub/fedora/linux/core/test/$VERSION/$ARCH/',
-                canonicalhost='http://download.fedora.redhat.com',
-                sourcepkgpath='pub/fedora/linux/core/test/$VERSION/source/SRPMS/',
-                sourceisopath='pub/fedora/linux/core/test/$VERSION/source/iso/')
-epel = Category(name='epel',
-                path='pub/epel/$VERSION/$ARCH',
-                canonicalhost='http://download.fedora.redhat.com',
-                sourcepkgpath='pub/epel/$VERSION/SRPMS/')
+                  product = fedora,
+                  directory = Directory.select(Directory.q.name=='pub/fedora/linux/extras')[0])
+
+
+# release = Category(name='release',
+#                    product = fedora,
+#                    directory = Directory.select(Directory.q.name=='pub/fedora/linux/release')[0])
+
+# epel = Category(name='epel',
+#                 product = rhel,
+#                 directory = Directory.select(Directory.q.name=='pub/epel/')[0])
+
                 
 
-# create our default versions
-versions = []
-for ver in range(1,7):
-    versions.append(str(ver))
-versions.append('development')
-for ver in versions:
-    ProductVersion(name=ver, product=fedora)
-ProductVersion(name='6.90', product=fedora, isTest=True)
-
-for ver in ['4', '5']:
-    ProductVersion(name=ver, product=rhel)
 
 
+if not Repository.select().count():
+    make_repositories()
 
-if not Content.select().count():
-    # do Fedora major versions
-    for ver in ProductVersion.select():
-        if ver.product.name != 'fedora' or ver.isTest:
-            continue
-        for arch in Arch.select():
-            for category in Category.select():
-                if category.name not in [ 'epel', 'test' ]:
-                    make_content(ver, category, arch)
-                    
-    # do Fedora test
-    for ver in ProductVersion.select():
-        if ver.product.name == 'fedora' and ver.isTest:
-            for arch in Arch.select():
-                make_content(ver, test, arch)
-
-    # do RHEL EPEL
-    for ver in ProductVersion.select():
-        if ver.product.name == 'rhel':
-            for arch in Arch.select():
-                for category in Category.select(Category.q.name=='epel'):
-                    make_content(ver, category, arch)
-
-# These are all fedora-core-6 mirrors, but they may not carry all arches or content.
-# That's ok, we'll figure out what they've got.
-# Turns out these all also carry fc5 too.
-initial_mirror_list = [
-'http://redhat.download.fedoraproject.org/pub/fedora/linux/core/6/$ARCH/os/',
-'http://ftp.fi.muni.cz/pub/linux/fedora-core/6/$ARCH/os/',
-'ftp://ftp.tu-chemnitz.de/pub/linux/fedora-core/6/$ARCH/os/',
-'ftp://ftp.wsisiz.edu.pl/pub/linux/fedora/linux/core/6/$ARCH/os/',
-'http://ftp.ale.org/mirrors/fedora/linux/core/6/$ARCH/os/',
-'http://ftp.uninett.no/pub/linux/Fedora/core/6/$ARCH/os/',
-'http://ftp.tu-chemnitz.de/pub/linux/fedora-core/6/$ARCH/os/',
-'http://sunsite.informatik.rwth-aachen.de/ftp/pub/linux/fedora-core/6/$ARCH/os/',
-'ftp://ftp.tecnoera.com/pub/fedora/linux/core/6/$ARCH/os/',
-'ftp://redhat.taygeta.com/pub/RedHat/fedora/core/6/$ARCH/os/',
-'http://fr2.rpmfind.net/linux/fedora/core/6/$ARCH/os/',
-'http://ftp.riken.jp/Linux/fedora/core/6/$ARCH/os/',
-'http://zeniv.linux.org.uk/pub/distributions/fedora/linux/core/6/$ARCH/os/',
-'http://zeniiia.linux.org.uk/pub/distributions/fedora/linux/core/6/$ARCH/os/',
-'ftp://ftp.wicks.co.nz/pub/linux/dist/fedora/6/$ARCH/os/',
-'ftp://ftp.rhd.ru/pub/fedora/linux/core/6/$ARCH/os/',
-'http://ftp.rhd.ru/pub/fedora/linux/core/6/$ARCH/os/',
-'ftp://ftp.ipex.cz/pub/linux/fedora/core/6/$ARCH/os/',
-'http://fedora.cat.pdx.edu/linux/core/6/$ARCH/os/',
-'ftp://falkor.skane.se/pub/mirrors/fedora/core/6/$ARCH/os/',
-'ftp://ftp.cica.es/fedora/linux/core/6/$ARCH/os/',
-'ftp://ftp.free.fr/mirrors/fedora.redhat.com/fedora/linux/core/6/$ARCH/os/',
-'http://ftp.ussg.iu.edu/linux/fedora/linux/core/6/$ARCH/os/',
-'http://ftp.surfnet.nl/ftp/pub/os/Linux/distr/fedora/6/$ARCH/os/',
-'http://ftp.nluug.nl/ftp/pub/os/Linux/distr/fedora/6/$ARCH/os/',
-'ftp://ftp.net.usf.edu/pub/fedora/linux/core/6/$ARCH/os/',
-'http://www.muug.mb.ca/pub/fedora/linux/core/6/$ARCH/os/',
-'http://mirror.eas.muohio.edu/fedora/linux/core/6/$ARCH/os/',
-'http://sunsite.mff.cuni.cz/pub/fedora/6/$ARCH/os/',
-'http://mirror.linux.duke.edu/pub/fedora/linux/core/6/$ARCH/os/',
-'http://distro.ibiblio.org/pub/linux/distributions/fedora/linux/core/6/$ARCH/os/',
-'http://mirror.hiwaay.net/redhat/fedora/linux/core/6/$ARCH/os/',
-'ftp://mirrors.hpcf.upr.edu/pub/Mirrors/redhat/download.fedora.redhat.com/6/$ARCH/os/',
-'http://redhat.secsup.org/fedora/core/6/$ARCH/os/',
-'ftp://ftp.dc.aleron.net/pub/linux/fedora/linux/core/6/$ARCH/os/',
-'ftp://mirror.newnanutilities.org/pub/fedora/linux/core/6/$ARCH/os/',
-'ftp://ftp.software.umn.edu/pub/linux/fedora/core/6/$ARCH/os/',
-'http://www.gtlib.gatech.edu/pub/fedora.redhat/linux/core/6/$ARCH/os/',
-'ftp://fedora.mirrors.tds.net/pub/fedora-core/6/$ARCH/os/',
-'http://fedora.cs.wisc.edu/pub/mirrors/linux/download.fedora.redhat.com/pub/fedora/linux/core/6/$ARCH/os/',
-'http://ftp.ndlug.nd.edu/pub/fedora/linux/core/6/$ARCH/os/',
-'http://fedora.server4you.net/fedora/core/6/$ARCH/os/',
-'ftp://mirrors.ptd.net/fedora/core/6/$ARCH/os/',
-'ftp://fedora.bu.edu/fedora/core/6/$ARCH/os/',
-'http://mirror.pacific.net.au/linux/fedora/linux/core/6/$ARCH/os/',
-'http://ftp.dulug.duke.edu/pub/fedora/linux/core/6/$ARCH/os/',
-'http://mirrors.kernel.org/fedora/core/6/$ARCH/os/',
-'http://ftp1.skynet.cz/pub/linux/fedora/6/$ARCH/os/',
-'http://ftp.iij.ad.jp/pub/linux/fedora/core/6/$ARCH/os/',
-'ftp://mirror.switch.ch/mirror/fedora/linux/core/6/$ARCH/os/',
-'http://mirror.switch.ch/ftp/mirror/fedora/linux/core/6/$ARCH/os/',
-'http://srl.cs.jhu.edu/YUM/fedora/core/6/$ARCH/os/',
-'http://ftp.gui.uva.es/sites/fedora.redhat.com/core/6/$ARCH/os/',
-'ftp://alviss.et.tudelft.nl/pub/fedora/core/6/$ARCH/os/',
-'http://mirror.aarnet.edu.au/pub/fedora/linux/core/6/$ARCH/os/',
-'ftp://ftp.funet.fi/pub/mirrors/ftp.redhat.com/pub/fedora/linux/core/6/$ARCH/os/',
-'ftp://thales.memphis.edu/fedora/linux/core/6/$ARCH/os/',
-'http://ftp-stud.fht-esslingen.de/pub/fedora/linux/core/6/$ARCH/os/',
-]
-
-for m in initial_mirror_list:
-    s = m.split('/')
-    name = s[2]
-    path = s[3:]
-
-    if Site.select(Site.q.name==name).count() == 0:
-        site = Site(name=name)
-    else:
-        sites = Site.select(Site.q.name==name)
-        site = sites[0]
-
-    ip = socket.gethostbyname(name)
-    if ip is not None:
-        SiteIP(site=site, address=ip)
-
-    host = Host(site=site, name=name, pull_from=redhat)
-    path = '/'.join(path)
-
-    for content in Content.select():
-        if content.category.name != 'core':
-            continue
-        print 'Mirror(host=%s, content=%s)' % (host.name, content.name)
-        mirror = Mirror(host=host, content=content)
-
-        ver = '/%s/' % (content.version.name)
-        verpath = re.sub('/6/', ver, path)
-
-        archpath = re.sub('\$ARCH', content.arch.name, verpath)
-        urlpath = '%s//%s/%s' % (s[0], name, archpath)
-        print 'MirrorURL(path=%s)' % (urlpath)
-        MirrorURL(mirror=mirror, path=urlpath)
+make_sites()
+#make_mirrors()

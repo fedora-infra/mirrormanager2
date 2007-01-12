@@ -11,6 +11,7 @@ from mirrors.identity_models import *
 class Site(SQLObject):
     name = StringCol(alternateID=True)
     robot_email = StringCol(default=None)
+    upload_password = StringCol(default=None)
     admin_active = BoolCol(default=False)
     user_active = BoolCol(default=True)
     private = BoolCol(default=False)
@@ -34,18 +35,20 @@ class Host(SQLObject):
     country = StringCol(default=None)
     internet2 = BoolCol(default=False)
     pull_from = ForeignKey('Site')
-    mirrors = MultipleJoin('Mirror')
+    mirrors = MultipleJoin('MirrorDirectory')
     private_rsyncs = MultipleJoin('HostPrivateRsync')
     ip_blocks = MultipleJoin('HostIPBlocks')
-    hostListing = SingleJoin('HostListing')
+    hostFile = MultipleJoin('HostFile')
+    categoryURLs = MultipleJoin('HostCategoryURL')
     
 # the listings are kept in the file system
-class HostListing(SqlObject):
-    host = SingleJoin('Host')
+class HostFile(SQLObject):
+    host = ForeignKey('Host')
+    type = StringCol()
     timestamp = DateTimeCol(default=DateTimeCol.now)
 
     def listingFilename(self):
-        return 'listings/host-%s.jpg' % self.host.id
+        return 'hostfiles/host-%s-%s.jpg' % (self.host.id, self.type) # fixme, only one file of each type??
 
     def _get_listing(self):
         if not os.path.exists(self.listingFilename()):
@@ -87,69 +90,85 @@ class HostIPBlocks(SQLObject):
 class Arch(SQLObject):
     name = StringCol(alternateID=True)
 
-class Category(SQLObject):
-    # e.g. core, extras, updates, updates-testing, test, ...
-    name = StringCol(alternateID=True)
-    # with $VERSION and $ARCH for later substitution
-    path = StringCol()
-    canonicalhost = StringCol()
-    sourcepkgpath = StringCol()
-    sourceisopath = StringCol(default=None)
-    contents = MultipleJoin('Content')
-
+# e.g. 'fedora' and 'rhel'
 class Product(SQLObject):
     name = StringCol(alternateID=True)
-    versions = MultipleJoin('ProductVersion')
+    versions = MultipleJoin('Version')
+    categories = MultipleJoin('Category')
 
-class ProductVersion(SQLObject):
+class Version(SQLObject):
     name = StringCol()
     product = ForeignKey('Product')
     isTest = BoolCol(default=False)
 
 
-class Content(SQLObject):
-    # e.g. fedora-core-6-i386
+# Directories are all from the perspective of the
+# master download server.
+class DirectoryTree(SQLObject):
+    parent = ForeignKey('Directory')
+    child  = ForeignKey('Directory')
+
+class Directory(SQLObject):
+    # Full path
+    # e.g. pub/fedora/linux/core/6/i386/os
+    # e.g. pub/fedora/linux/extras
+    # e.g. pub/epel
+    # e.g. pub/fedora/linux/release
+    name = StringCol(alternateID=True)
+    repository = MultipleJoin('Repository')
+    mirrors = MultipleJoin('MirrorDirectory')
+    category = MultipleJoin('Category')
+
+
+class Category(SQLObject):
+    # Top-level mirroring
+    # e.g. core, extras, release, epel
+    name = StringCol(alternateID=True)
+    product = ForeignKey('Product')
+    canonicalhost = StringCol(default='http://download.fedora.redhat.com')
+    directory = ForeignKey('Directory')
+
+
+
+class Repository(SQLObject):
     name = StringCol(alternateID=True)
     category = ForeignKey('Category')
-    # 5, 6, development
-    version = ForeignKey('ProductVersion')
-    # default subdir starting below /
-    # e.g. 'pub/fedora/core/6/$ARCH/'
-    path = StringCol()
+    version = ForeignKey('Version')
     arch = ForeignKey('Arch')
-    # these are paths below $ARCH/
-    # e.g. iso/, os/, debuginfo/
-    # of course Extras doesn't have these ;-(
-    isos  = StringCol(default=None)
-    binarypackages  = StringCol(default=None)
-    repodata  = StringCol(default=None)
-    debuginfo = StringCol(default='debug/')
-    repoview  = StringCol(default=None)
-    mirrors = MultipleJoin('Mirror')
+    directory = ForeignKey('Directory')
 
-# FIXME - with the listings being available
-# Mirror must change to be a mirror of a directory
-# rather than named content.  We can handle named content -> dir
-# in another table methinks.
 
-# one per Host per Content
-# fortunately these will be created/modified
-# by a crawler program rather than manually
-class Mirror(SQLObject):
-    host = ForeignKey('Host')
-    content  = ForeignKey('Content')
-    urls = MultipleJoin('MirrorURL')
-    # sync status
-    dvd_isos_synced    = BoolCol(default=False)
-    cd_isos_synced     = BoolCol(default=False)
-    binarypackages_synced  = BoolCol(default=False)
-    debuginfo_synced = BoolCol(default=False)
-    repoview_synced  = BoolCol(default=False)
+class HostCategory(SQLObject):
+    host     = ForeignKey('Host')
+    category = ForeignKey('Category')
+    hcURLs   = MultipleJoin('HostCategoryURL')
+    
 
 # One per protocol/path one can get at this same data
-# checking one MirrorURL is the same as checking them all
-class MirrorURL(SQLObject):
-    mirror = ForeignKey('Mirror')
+# checking one HostCategoryURL is the same as checking them all
+class HostCategoryURL(SQLObject):
+    hostcategory = ForeignKey('HostCategory')
+    protocol = StringCol(default='http://')
     # The equivalent of the dir structure on the masters
-    # e.g. http://mirrors.kernel.org/fedora/core/6/i386/os/
-    path      = StringCol(default=None)
+    # e.g. 'core' -> 'pub/fedora/linux/core'
+    path = StringCol()
+    # using protocol + host.name + path, we get a
+    # full URL to same, e.g. 'http://download.fedoraproject.org/pub/fedora/linux/core'
+    def _get_url(self):
+        return '%s%s/%s' % (self.protocol, self.host.name, self.path)
+
+
+
+# one per Host per Directory
+# fortunately these will be created/modified
+# by a crawler program rather than manually
+class MirrorDirectory(SQLObject):
+    directory = ForeignKey('Directory')
+    host = ForeignKey('Host')
+    url = ForeignKey('HostCategoryURL')
+    # this is the path below url.path
+    path = StringCol()
+    # sync status
+    synced = BoolCol(default=False)
+    lastChecked = DateTimeCol(default=DateTimeCol.now)
+
