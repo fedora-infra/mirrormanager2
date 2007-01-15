@@ -7,6 +7,7 @@ import bz2
 import re
 import ConfigParser
 import pprint
+import time
 
 class HostConfig(object):
     """Holder for config info from the configuration file"""
@@ -36,11 +37,28 @@ def gen_dirtree(path):
     dirtree = []
     for dirpath, dirnames, filenames in os.walk(path):
         result = {'dirpath': dirpath}
-        statfiles = {}
+
+        # trim filenames list
+        date_file_list = []
+        count=0
         for name in filenames:
             f = os.path.join(dirpath, name)
             s = os.stat(f)
-            statfiles[name] = s.st_size
+            lastmod_date = time.localtime(s.st_mtime)
+            date_file_tuple = (lastmod_date, f, s.st_size)
+            date_file_list.append(date_file_tuple)
+            if name.endswith('.rpm') or name.endswith('.html'):
+                count=count+1
+            # we only want to remember the most recent 10 if they're
+            # directories full of .rpm or .html (repoview) files
+        if count > 10:
+            date_file_list.sort()
+            date_file_list.reverse()
+            date_file_list = date_file_list[:10]
+            
+        statfiles = {}
+        for mtime, name, size in date_file_list:
+            statfiles[name] = size
 
         result['files'] = statfiles
         dirtree.append(result)
@@ -60,6 +78,12 @@ def check_required_options(conf, section, required_options):
             raise MissingOption()
     return True
 
+def parse_value(value):
+    """Split multi-line values into a list"""
+    if value.find('\n') > -1:
+        return value.split()
+    return value
+
 def parse_section(conf, section, item, required_options, optional_options):
     if conf.has_option(section, 'enabled'):
         if conf.get(section, 'enabled') != '1':
@@ -68,10 +92,10 @@ def parse_section(conf, section, item, required_options, optional_options):
         return False
     item.config[section.lower()] = {}
     for o in required_options:
-        item.config[section.lower()][o] = conf.get(section, o)
+        item.config[section.lower()][o] = parse_value(conf.get(section, o))
     for o in optional_options:
         if conf.has_option(section, o):
-            item.config[section.lower()][o] = conf.get(section, o)
+            item.config[section.lower()][o] = parse_value(conf.get(section, o))
     return True
 
 def parse_global(conf, section, item):
@@ -105,17 +129,13 @@ def config(cfg, item):
     conf.read(cfg)
 
     try:
-        if conf.has_section('global'):
-            if not parse_global(conf, 'global', item):
-                return False
-
-        if conf.has_section('site'):
-            if not parse_site(conf, 'site', item):
+        for section, parsefunc in [ ('global', parse_global), ('site', parse_site), ('host', parse_host) ]:
+            if conf.has_section(section):
+                if not parsefunc(conf, section, item):
                     return False
-
-        if conf.has_section('host'):
-            if not parse_host(conf, 'host', item):
-                return False
+            else:
+                errorprint('Invalid configuration - missing section [%s]' % (section))
+                sys.exit(1)
 
         for section in conf.sections():
             if section in [ 'global', 'site', 'host']:
