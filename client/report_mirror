@@ -5,9 +5,135 @@ from os.path import join
 import pickle
 import bz2
 import re
+import ConfigParser
+import pprint
+
+class HostConfig(object):
+    """Holder for config info from the configuration file"""
+    def __init__(self):
+        self.config = { 'version' : 0,
+                        'global': {},
+                        'site': {},
+                        'host': {},
+                        }
+
+
+def gen_dirtree(path):
+    # structure here is:
+    # dirtree is a list
+    # [
+    #   { 'dirpath' : dirpath,
+    #     'files'   : {
+    #                   filename1 : size1,
+    #                   filename2 : size2,
+    #                   ...
+    #                 }
+    #   }
+    #   ...
+    # ]
+    # 
+
+    dirtree = []
+    for dirpath, dirnames, filenames in os.walk(path):
+        result = {'dirpath': dirpath}
+        statfiles = {}
+        for name in filenames:
+            f = os.path.join(dirpath, name)
+            s = os.stat(f)
+            statfiles[name] = s.st_size
+
+        result['files'] = statfiles
+        dirtree.append(result)
+
+    return dirtree
+
+def errorprint(error):
+    print >> sys.stderr, error
+
+class MissingOption(Exception):
+    pass
+
+def check_required_options(conf, section, required_options):
+    for o in required_options:
+        if not conf.has_option(section, o):
+            errorprint('missing required option %s in config [%s]' % (o, section))
+            raise MissingOption()
+    return True
+
+def parse_section(conf, section, item, required_options, optional_options):
+    if conf.has_option(section, 'enabled'):
+        if conf.get(section, 'enabled') != '1':
+            return False
+    if not check_required_options(conf, section, required_options):
+        return False
+    item.config[section.lower()] = {}
+    for o in required_options:
+        item.config[section.lower()][o] = conf.get(section, o)
+    for o in optional_options:
+        if conf.has_option(section, o):
+            item.config[section.lower()][o] = conf.get(section, o)
+    return True
+
+def parse_global(conf, section, item):
+    required_options = [ 'enabled', 'server' ]
+    if not parse_section(conf, section, item, required_options, []):
+        return False
+    return True
+
+def parse_site(conf, section, item):
+    required_options = [ 'name', 'password' ]
+    optional_options = [ 'organization', 'orgurl', 'private' ]
+    return parse_section(conf, section, item, required_options, optional_options)
+
+def parse_host(conf, section, item):
+    required_options = [ 'name' ]
+    optional_options = [ 'country', 'countries_allowed', 'netblocks', 'private' ]
+    return parse_section(conf, section, item, required_options, optional_options)
+
+def parse_category(conf, section, item):
+    required_options = [ 'enabled', 'path', 'urls' ]
+    optional_options = [ 'upstream' ]
+    if not parse_section(conf, section, item, required_options, optional_options):
+        return False
+
+    dirtree = gen_dirtree(conf.get(section, 'path'))
+    #item.config[section]['dirtree'] = dirtree
+
+def config(cfg, item):
+    broken = False
+    conf = ConfigParser.ConfigParser()
+    conf.read(cfg)
+
+    try:
+        if conf.has_section('global'):
+            if not parse_global(conf, 'global', item):
+                return False
+
+        if conf.has_section('site'):
+            if not parse_site(conf, 'site', item):
+                    return False
+
+        if conf.has_section('host'):
+            if not parse_host(conf, 'host', item):
+                return False
+
+        for section in conf.sections():
+            if section in [ 'global', 'site', 'host']:
+                continue
+            else:
+                parse_category(conf, section, item)
+
+    except MissingOption:
+        errorprint('Invalid configuration - Exiting')
+        sys.exit(1)
+
+    return True
 
 def usage():
-    print "No output file or directories specified"
+    print 'Usage: report_mirror [options]'
+    print '  options:'
+    print '  -o outputfile'
+    print '  -c configfile'
     sys.exit(1)
 
 def print_iso_sizes(dirtree):
@@ -20,52 +146,36 @@ def print_iso_sizes(dirtree):
 
 
 
-from optparse import OptionParser
-parser = OptionParser(usage= sys.argv[0] + " [options] dir1 [dir2] ...")
-parser.add_option("-o", "--output",
-                  dest="output",
-                  default=None,
-                  help="Output filename (required)")
 
-(options, args) = parser.parse_args()
-if len(args) < 1:
-    usage()
-if options.output is None:
-    usage()
-
-# structure here is:
-# dirtree is a list
-# [
-#   { 'dirpath' : dirpath,
-#     'files'   : {
-#                   filename1 : size1,
-#                   filename2 : size2,
-#                   ...
-#                 }
-#   }
-#   ...
-# ]
-# 
-
-dirtree = []
-
-for a in args:
-    for dirpath, dirnames, filenames in os.walk(a):
-        result = {'dirpath': dirpath}
-
-        statfiles = {}
-        for name in filenames:
-            f = os.path.join(dirpath, name)
-            s = os.stat(f)
-            statfiles[name] = s.st_size
-
-        result['files'] = statfiles
-        dirtree.append(result)
-        #print '%s size=%s time=%s' % (f, s.st_size, s.st_ctime)
+def main():
+    from optparse import OptionParser
+    parser = OptionParser(usage= sys.argv[0] + " [options] dir1 [dir2] ...")
+    parser.add_option("-o", "--output",
+                      dest="output",
+                      default=None,
+                      help="Output filename (required)")
+    parser.add_option("-c", "--config",
+                      dest="config",
+                      default='/etc/report_mirror.conf',
+                      help='Configuration filename (required)')
 
 
-print_iso_sizes(dirtree)
-pbz = bz2.compress(pickle.dumps(dirtree, -1))
-outfile = open(options.output, 'wb')
-outfile.write(pbz)
-outfile.close()
+    (options, args) = parser.parse_args()
+    if options.output is None:
+        usage()
+
+    item = HostConfig()
+    if not config(options.config, item):
+        sys.exit(1)
+        
+    pbz = bz2.compress(pickle.dumps(item.config, -1))
+    if options.output is not None:
+        outfile = open(options.output, 'wb')
+        outfile.write(pbz)
+        outfile.close()
+
+    
+
+
+if __name__ == '__main__':
+    main()
