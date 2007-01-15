@@ -97,7 +97,7 @@ def parse_category(conf, section, item):
         return False
 
     dirtree = gen_dirtree(conf.get(section, 'path'))
-    #item.config[section]['dirtree'] = dirtree
+    item.config[section]['dirtree'] = dirtree
 
 def config(cfg, item):
     broken = False
@@ -158,6 +158,11 @@ def main():
                       dest="config",
                       default='/etc/report_mirror.conf',
                       help='Configuration filename (required)')
+    parser.add_option("-d", "--debug",
+                      action="store_true",
+                      dest="debug",
+                      default=False,
+                      help='Enable debugging output')
 
 
     (options, args) = parser.parse_args()
@@ -167,6 +172,10 @@ def main():
     item = HostConfig()
     if not config(options.config, item):
         sys.exit(1)
+
+    if options.debug:
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(item.config)
         
     pbz = bz2.compress(pickle.dumps(item.config, -1))
     if options.output is not None:
