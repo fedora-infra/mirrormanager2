@@ -3,49 +3,77 @@
     py:extends="'master.kid'">
 <head>
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
-<title>Welcome to Fedora Mirrors</title>
+<title>Welcome to Fedora Mirror Manager</title>
 </head>
 <body>
-<div id="main_content">
-  <div id="getting_started">
-    <ul id="getting_started_steps">
-      <li class="getting_started">
-        <h3>Mirrors</h3>
-        <ul>
-        	<li>
-        		<a href="${tg.url('/mirror/myMirrors')}"> My Mirrors </a>
-        	</li>
-        	<li>
-        		<a href="${tg.url('/mirror/newMirror')}"> Add New Mirror </a>
-        	</li>
-        </ul>
-      </li>
-      
-      <li class="getting_started" py:if="'admin' in tg.identity.groups">
-        <h3>Releases</h3>
-        <ul>
-        	<li>
-        		<a href="${tg.url('/release/listReleases')}"> List Releases </a>
-        	</li>
-        	<li>
-        		<a href="${tg.url('/release/newRelease')}"> Add New Release </a>
-        	</li>
-        </ul>
-      </li>
-      <li class="getting_started" py:if="'admin' in tg.identity.groups">
-        <h3>Architectures</h3>
-        <ul>
-        	<li>
-        		<a href="${tg.url('/arch/listArchs')}"> List Archs </a>
-        	</li>
-        	<li>
-        		<a href="${tg.url('/arch/newArch')}"> Add New Arch </a>
-        	</li>
-        </ul>
-	</li>
-	</ul>
-  </div>
-  <!-- End of getting_started -->
+<div id="Sites">
+<h3>My Sites and Hosts <a href="/site/0/new/">[Add Site]</a></h3>
+<ul>
+	  <li py:for="site in sites">
+	  <a href="${'/site/'+str(site.id)}"><span py:replace="site.name">Site Name</span></a>
+	  
+	  <UL>
+	  <LI py:for="h in site.hosts">
+	  <a href="${'/host/'+str(h.id)}"><span py:replace="h.name">Host Name</span></a>
+	  </LI>
+	  </UL>
+	  </li>
+</ul>
+</div>
+<div id="RSYNC ACL">
+<h3><a href="/rsync_acl">rsync acl</a></h3>
+</div>
+<div id="adminstuff" py:if="'admin' in tg.identity.groups">
+<div id="categories">
+<h3>Categories</h3>
+<ul>
+	  <li py:for="c in categories">
+	  <span py:replace="c.name">Category Name</span>&nbsp;
+	  <span py:replace="c.directory.name">Directory Name</span>
+	  </li>
+</ul>
+</div>
+<div id="Arches">
+<h3>Arches</h3>
+<ul>
+	  <li py:for="arch in arches">
+	  <span py:replace="arch.name">Arch Name</span>	
+	  </li>
+</ul>
+</div>
+<div id="Products">
+<h3>Products</h3>
+<ul>
+	  <li py:for="p in products">
+	  <span py:replace="p.name">Host Name</span>	
+	  </li>
+</ul>
+</div>
+<div id="Versions">
+<h3>Versions</h3>
+<ul>
+	  <li py:for="v in versions">
+	  <span py:replace="v.product.name">Product Name</span>	
+	  <span py:replace="v.name">Version Name</span>	
+	  </li>
+</ul>
+</div>
+<div id="Repositories">
+<h3>Repositories</h3>
+<ul>
+	  <li py:for="r in repositories">
+  	  <span py:replace="r.name">Repository Name</span>	
+	  </li>
+</ul>
+</div>
+<div id="Directories">
+<h3>Directories</h3>
+<ul>
+	  <li py:for="d in directories">
+	  <span py:replace="d.name">Directory Name</span>	
+	  </li>
+</ul>
+</div>
 </div>
 </body>
 </html>

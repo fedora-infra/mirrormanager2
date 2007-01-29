@@ -1,11 +1,22 @@
 from mirrors.model import *
 import socket
 import re
+import pickle
+import bz2
 
 redhat = None
 core = None
 fedora = None
 rhel = None
+
+Group(group_name='user', display_name='User')
+Group(group_name='admin', display_name='Admin')
+u = User(user_name='test', email_address='test@fedoraproject.org', display_name='Test', password='test')
+u.addGroup(Group.by_group_name('user'))
+a = User(user_name='admin', email_address='admin@fedoraproject.org', display_name='Admin', password='admin')
+a.addGroup(Group.by_group_name('user'))
+a.addGroup(Group.by_group_name('admin'))
+
 
 
 def make_directories():
@@ -29,7 +40,6 @@ def make_directories():
                             parent = parent[0]
 
                         child = Directory(name=name)
-                        DirectoryTree(parent=parent, child=child)
                     
         finally:
             f.close()
@@ -93,6 +103,7 @@ def make_repositories():
                     name = rename_SRPMS_source(name)
                     name='-'.join(name)
                     name='%s-%s-%s' % (cat.product.name, category, name)
+                    shortname = '%s-%s' % (category, ver)
                     dirs = Directory.select(Directory.q.name==dirname)
                     dir = None
                     if dirs.count() > 0:
@@ -101,6 +112,8 @@ def make_repositories():
 
         finally:
             f.close()
+    # assign shortnames to repositories like yum default mirrorlists expects
+    
         
 
 
@@ -121,57 +134,15 @@ def make_sites():
                 path = s[3:]
                     
                 if Site.select(Site.q.name==name).count() == 0:
-                    site = Site(name=name)
+                    site = Site(name=name, password="password", private=False)
                 else:
                     site = Site.select(Site.q.name==name)[0]
 
-                ip = socket.gethostbyname(name)
-                if ip is not None:
-                    SiteIP(site=site, address=ip)
-
-                host = Host(site=site, name=name, pull_from=redhat)
-                path = '/'.join(path)
-                index = path.find('/6/$ARCH')
-                path = path[:index]
-                url = '%s%s%s' % (protocol, name, path)
-                hc = HostCategory(host=host, category=Category.select(Category.q.name==category)[0])
-                HostCategoryURL(hostcategory=hc, protocol=protocol, path=path)
+                if Host.select(Host.q.name==name).count() == 0:
+                    host = Host(site=site, name=name)
 
         finally:
             f.close()
-
-def mirrordir_to_url(mirrorDirectory):
-    url = mirrorDirectory.url
-    hostcategory = url.hostcategory
-    category = hostcategory.category
-    cdir = category.directory
-    # fixme not sure what I should be doing here...
-    # this sucks
-    
-    
-    
-    
-    
-
-                
-# fixme!!
-def make_mirrors_subdirs(host, path, directory):
-    """Recursively walk the directory tree from this point down
-    adding new Mirrors"""
-    for s in DirectoryTree.select(DirectoryTree.q.parent==directory):
-       # Mirror(host=cu.host, path='something', directory=s.child)
-        pass
-
-
-def make_mirrors():
-    for host in Host.select():
-        for category in host.categories:
-            directory    = Directory.get(category.directory.id)
-            # fixme find path below cu.path that matches directory
-            path = '%s/%s' % (cu.url, 'something')
-            MirrorDirectory(directory=directory, url=cu, path=path)
-#            make_mirrors_subdirs(cu.host, cu.path, directory)
-                
 
 
 
@@ -197,28 +168,33 @@ if not Arch.select().count():
     Arch(name='i386')
     Arch(name='x86_64')
     Arch(name='ppc')
+    Arch(name='sparc')
+    Arch(name='ia64')
 
 
 if not Site.select().count() and not Host.select().count():
     print "Creating Sites and Hosts"
-    redhat = Site(name='Red Hat', admin_active=True, user_active=True)
-    Host(name='master', pull_from=None, site=redhat)
-    Host(name='download1.fedora.redhat.com', pull_from=redhat, site=redhat)
-    Host(name='download2.fedora.redhat.com', pull_from=redhat, site=redhat)
-    Host(name='download3.fedora.redhat.com', pull_from=redhat, site=redhat)
+    redhat = Site(name='Red Hat', password="password", orgUrl="http://www.redhat.com")
+    Host(name='master', site=redhat)
+    Host(name='download1.fedora.redhat.com', site=redhat)
+    Host(name='download2.fedora.redhat.com', site=redhat)
+    Host(name='download3.fedora.redhat.com', site=redhat)
 
-    dell = Site(name='Dell', admin_active=True, user_active=True, private=True)
-    Host(name='humbolt.us.dell.com', pull_from=redhat, site=dell)
-    Host(name='linuxlib.us.dell.com', pull_from=dell, site=dell)
-
-    korg = Site(name='kernel.org', admin_active=True, user_active=True)
-    Host(name='mirrors.kernel.org', pull_from=redhat, site=korg)
+    dell = Site(name='Dell', private=True, password="password", orgUrl="http://www.dell.com")
+    Host(name='linuxlib.us.dell.com', site=dell)
+    humbolt = Host(name='humbolt.us.dell.com', site=dell)
+    f = open('../fedora-test-data/humbolt-pickle.bz2')
+    pbz = f.read()
+    f.close()
+    humbolt.config = pickle.loads(bz2.decompress(pbz))
     
+    
+
+
 
 if not SiteAdmin.select().count():
     SiteAdmin(username='mdomsch', site=redhat)
     SiteAdmin(username='mdomsch', site=dell)
-    SiteAdmin(username='hpa', site=korg)
 
 # create our default products
 rhel = Product(name='rhel')

@@ -1,5 +1,5 @@
 from formencode import Invalid, schema
-from formencode.validators import URL,String, Email, FieldsMatch
+from formencode.validators import URL, String, Email, FieldsMatch
 
 class URLWithArchValidator(URL):
     messages = {"no_arch":"No $ARCH variable in url"}
@@ -21,5 +21,16 @@ class RegisterSchema(schema.Schema):
     
     chained_validators = [FieldsMatch("password1", "password2")]
     
-    
+class SiteSchema(schema.Schema):
+    filter_extra_fields = True
+    allow_extra_fields = True    
+    name = String(not_empty=True)
+    password = String(not_empty=True)
+    orgUrl = URL(not_empty=True)
+    private = String(if_missing='unchecked')
+
+class SiteAdminSchema(schema.Schema):
+    filter_extra_fields = True
+    allow_extra_fields = True    
+    username = String(not_empty=True)
     

@@ -16,27 +16,26 @@ class HostConfig(object):
                         'global': {},
                         'site': {},
                         'host': {},
+                        'stats': {},
                         }
 
 
 def gen_dirtree(path):
     # structure here is:
-    # dirtree is a list
-    # [
-    #   { 'dirpath' : dirpath,
-    #     'files'   : {
+    # dirtree is a dict
+    # {
+    #   dirpath :
+    #                {
     #                   filename1 : size1,
     #                   filename2 : size2,
     #                   ...
-    #                 }
-    #   }
+    #                 },
     #   ...
-    # ]
+    # }
     # 
 
-    dirtree = []
+    dirtree = {}
     for dirpath, dirnames, filenames in os.walk(path):
-        result = {'dirpath': dirpath}
 
         # trim filenames list
         date_file_list = []
@@ -45,7 +44,7 @@ def gen_dirtree(path):
             f = os.path.join(dirpath, name)
             s = os.stat(f)
             lastmod_date = time.localtime(s.st_mtime)
-            date_file_tuple = (lastmod_date, f, s.st_size)
+            date_file_tuple = (lastmod_date, name, s.st_size)
             date_file_list.append(date_file_tuple)
             if name.endswith('.rpm') or name.endswith('.html'):
                 count=count+1
@@ -60,8 +59,12 @@ def gen_dirtree(path):
         for mtime, name, size in date_file_list:
             statfiles[name] = size
 
-        result['files'] = statfiles
-        dirtree.append(result)
+        if path.endswith('/'):
+            short_path = dirpath[len(path):]
+        else:
+            short_path = dirpath[len(path)+1:]
+        if len(short_path) > 0:
+            dirtree[short_path] = statfiles
 
     return dirtree
 
@@ -106,13 +109,33 @@ def parse_global(conf, section, item):
 
 def parse_site(conf, section, item):
     required_options = [ 'name', 'password' ]
-    optional_options = [ 'organization', 'orgurl', 'private' ]
-    return parse_section(conf, section, item, required_options, optional_options)
+    return parse_section(conf, section, item, required_options, [])
 
 def parse_host(conf, section, item):
     required_options = [ 'name' ]
-    optional_options = [ 'country', 'countries_allowed', 'netblocks', 'private' ]
+    optional_options = [ 'acl_ips', 'private_rsync', 'country', 'countries_allowed', 'netblocks', 'private' ]
     return parse_section(conf, section, item, required_options, optional_options)
+
+def get_stats(conf, section):
+    if conf.has_option(section, 'enabled'):
+        if conf.get(section, 'enabled') != '1':
+            return None
+    statsdata = {}
+    for name, value in conf.items(section):
+        if name == 'enabled':
+            continue
+        filenames = parse_value(conf.get(section, name))
+        if type(filenames) != list:
+            filenames = [ filenames ]
+        for fn in filenames:
+            try:
+                f = open(fn, 'r')
+                contents = contents + f.readlines()
+                statsdata[name] = pickle.dumps(contents, -1)
+                f.close()
+            except:
+                pass
+    return statsdata
 
 def parse_category(conf, section, item):
     required_options = [ 'enabled', 'path', 'urls' ]
@@ -129,7 +152,9 @@ def config(cfg, item):
     conf.read(cfg)
 
     try:
-        for section, parsefunc in [ ('global', parse_global), ('site', parse_site), ('host', parse_host) ]:
+        # don't grab parse_stats here
+        for section, parsefunc in [ ('global', parse_global), ('site', parse_site),
+                                    ('host', parse_host)]:
             if conf.has_section(section):
                 if not parsefunc(conf, section, item):
                     return False
@@ -138,7 +163,7 @@ def config(cfg, item):
                 sys.exit(1)
 
         for section in conf.sections():
-            if section in [ 'global', 'site', 'host']:
+            if section in [ 'global', 'site', 'host', 'stats']:
                 continue
             else:
                 parse_category(conf, section, item)
@@ -183,6 +208,11 @@ def main():
                       dest="debug",
                       default=False,
                       help='Enable debugging output')
+    parser.add_option("-s", "--stats",
+                      action="store_true",
+                      dest="stats",
+                      default=False,
+                      help='Send stats')
 
 
     (options, args) = parser.parse_args()
@@ -203,6 +233,10 @@ def main():
         outfile.write(pbz)
         outfile.close()
 
+    if options.stats:
+        statdata = get_stats(conf, 'stats')
+
+    # upload pbz and statsdata here
     
 
 
