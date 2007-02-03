@@ -14,7 +14,8 @@
 	  
 	  <UL>
 	  <LI py:for="h in site.hosts">
-	  <a href="${'/host/'+str(h.id)}"><span py:replace="h.name">Host Name</span></a>
+	  <a href="${'/host/'+str(h.id)}"><span
+	  py:replace="h.name">Host Name</span></a>
 	  </LI>
 	  </UL>
 	  </li>

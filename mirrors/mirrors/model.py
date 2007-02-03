@@ -17,29 +17,69 @@ class Site(SQLObject):
     user_active  = BoolCol(default=True)
     admins = MultipleJoin('SiteAdmin')
     hosts  = MultipleJoin('Host')
+    private_rsync_sites_allowed = MultipleJoin('HostPrivateRsyncSites')
 
-    def delete(self):
+    def destroySelf(self):
         """Cascade the delete operation"""
         for h in self.hosts:
             h.destroySelf()
         for a in self.admins:
             a.destroySelf()
-        self.destroySelf()
+        SQLObject.destroySelf(self)
 
 class SiteAdmin(SQLObject):
     username = StringCol()
     site = ForeignKey('Site')
 
+class HostCategory(SQLObject):
+    host = ForeignKey('Host')
+    category = ForeignKey('Category')
+    hcindex = DatabaseIndex('host', 'category', unique=True)
+    enabled = BoolCol(default=True)
+    path = StringCol()
+    upstream = StringCol(default=None)
+    dirtree = PickleCol(default=None)
+    urls = MultipleJoin('HostCategoryURL')
+
+    def destroySelf(self):
+        """Cascade the delete operation"""
+        for b in urls:
+            b.destroySelf()
+        SQLObject.destroySelf(self)
+
+class HostCategoryURL(SQLObject):
+    hc = ForeignKey('HostCategory')
+    url = StringCol(alternateID=True)
+    
 class Host(SQLObject):
     name = StringCol()
     site = ForeignKey('Site')
     robot_email = StringCol(default=None)
     admin_active = BoolCol(default=True)
     user_active = BoolCol(default=True)
-    _country = StringCol(default=None)
+    country = StringCol(default=None)
     _config = PickleCol(default=None)
     _timestamp = DateTimeCol(default=None)
+    private = BoolCol(default=False)
+    private_rsync_url = StringCol(default=None)
+    countries_allowed = MultipleJoin('HostCountryAllowed')
+    netblocks = MultipleJoin('HostNetblock')
+    acl_ips = MultipleJoin('HostAclIP')
+    categories = MultipleJoin('HostCategory')
     mirrors = MultipleJoin('MirrorDirectory')
+
+    def destroySelf(self):
+        """Cascade the delete operation"""
+        s = [self.countries_allowed,
+             self.netblocks,
+             self.acl_ips,
+             self.categories,
+             self.mirrors]
+        for a in s:
+            for b in a:
+                b.destroySelf()
+        SQLObject.destroySelf(self)
+            
 
     def is_admin_active(self):
         return self.admin_active and self.site.admin_active
@@ -58,46 +98,7 @@ class Host(SQLObject):
     def _get_timestamp(self):
         return self._timestamp
 
-    # virtual attributes grabbed from the config
-    def _get_private(self):
-        if self._config is not None and self._config.has_key('host'):
-            if self._config['host'].has_key('private'):
-                return self._config['host']['private'] == '1'
-        return False
-
-    def _get_country(self):
-        if self._config is not None and self._config.has_key('host'):
-            if self._config['host'].has_key('country'):
-                return self._config['host']['country']
-            else:
-                return self._country
-        return None
-
-    def _get_countries_allowed(self):
-        if self._config is not None and self._config.has_key('host'):
-            if self._config['host'].has_key('countries_allowed'):
-                return self._config['host']['countries_allowed']
-        return None
-        
-    def _get_netblocks(self):
-        if self._config is not None and self._config.has_key('host'):
-            if self._config['host'].has_key('netblocks'):
-                return self._config['host']['netblocks']
-        return None
-
-    def _get_private_rsync(self):
-        if self._config is not None and self._config.has_key('host'):
-            if self._config['host'].has_key('private_rsync'):
-                return self._config['host']['private_rsync']
-        return None
-
-    def _get_acl_ips(self):
-        if self._config is not None and self._config.has_key('host'):
-            if self._config['host'].has_key('acl_ips'):
-                return self._config['host']['acl_ips']
-        return None
-
-    def _get_categories(self):
+    def _get_config_categories(self):
         noncategories = ['global', 'site', 'host', 'stats']
         result = []
         for key in self._config.keys():
@@ -105,30 +106,98 @@ class Host(SQLObject):
                 result.append(key)
         return result
 
-    def has_category(self, category):
-        return self._config.has_key(category)
+    def category_enabled(self, cname):
+        return self.has_category(cname) and self._config[cname]['enabled'] == '1'
 
-    def category_enabled(self, category):
-        return self._config[category]['enabled'] == '1'
+    def category_path(self, cname):
+        return self._config[cname]['path']
 
-    def category_path(self, category):
-        return self._config[category]['path']
-
-    def category_urls(self, category):
-        urls = self._config[category]['urls']
+    def category_urls(self, cname):
+        urls = self._config[cname]['urls']
         if type(urls) == list:
             return urls
         elif type(urls) == str:
             return [urls]
+
+
     
-    def category_upstream(self, category):
-        return self._config[category]['upstream']
+    def category_upstream(self, cname):
+        return self._config[cname]['upstream']
 
-    def category_dirtree(self, category):
-        return self._config[category]['dirtree']
+    def category_dirtree(self, cname):
+        return self._config[cname]['dirtree']
 
-    def category_dir(self, category, dir):
-        return self._config[category]['dirtree'].has_key(dir)
+    def has_category_dir(self, cname, dir):
+        return self._config[cname]['dirtree'].has_key(dir)
+
+class HostAclIP(SQLObject):
+    host = ForeignKey('Host')
+    ip = StringCol()
+
+class HostCountryAllowed(SQLObject):
+    host = ForeignKey('Host')
+    country = StringCol()
+
+class HostNetblock(SQLObject):
+    host = ForeignKey('Host')
+    netblock = StringCol()
+    
+
+def category_mirrors(category):
+    result = []
+    # pub/fedora/linux/core
+    topdir = category.directory.name
+    for h in Host.select():
+        if h.has_category(category.name):
+            result.append(h)
+    return result
+
+
+def directory_mirrors(dirname, country=None, include_private=False):
+    """Given a directory like pub/fedora/linux/core/5/i386/os,
+    what active hosts have this directory?  To find that,
+    we need to know the category the directory falls under,
+    then need to look up each host to see if it has that category,
+    and if so, if it has that directory under the category."""
+    origdir = dirname
+    result = []
+    category = None
+    while category is None and len(dirname) > 0:
+        try:
+            d = Directory.byName(dirname)
+        except SQLObjectNotFound:
+            return result
+        if len(d.category) > 0:
+            category = d.category[0]
+            break
+        else:
+            dirname = dirname.split('/')[:-1]
+            dirname = '/'.join(dirname)
+            
+    if category is None:
+        return None
+
+    dirname = origdir[len(category.directory.name)+1:]
+    print dirname
+
+    hosts = category_mirrors(category)
+    for h in hosts:
+        if h.is_active() and h.has_category_dir(category.name, dirname):
+            if h.private and not include_private:
+                continue
+            result.append((category.name, dirname, h))
+    return result
+
+def directory_mirror_urls(dname, country=None, include_private=False):
+    result = []
+    for cname, dirname, host in directory_mirrors(dname, include_private):
+        if not host.is_active():
+            continue
+        if host.private and not include_private:
+            continue
+        for u in host.category_urls(cname):
+            result.append('%s/%s' % (u, dirname))
+    return result
 
 
 class HostStats(SQLObject):

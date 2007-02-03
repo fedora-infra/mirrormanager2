@@ -5,22 +5,50 @@
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
 </head>
 <body>
+Last Checked In: ${values.timestamp}
 ${form(value=values, action=action)}
-<h2>Host Data</h2>
-To edit this data, you must run report_mirror on the actual host.
-These may be blank for any host that hasn't checked in yet.
 <P>
 <UL>
-<LI>Country: ${values.country}</LI>
-<LI>Last Checked In: ${values.timestamp}</LI>
-<LI>Robot Email: ${values.robot_email}</LI>
-<LI>Private: ${values.private}</LI>
-<?python import pprint
-   pp = pprint.PrettyPrinter(indent=4)
-   config = pp.pformat(values.config) ?>
-
-<LI>Config: ${config}</LI>
+<div py:if="values is not None and action.endswith('update')">
+     <LI>
+     <label for="acl_ips">ACL IPs: </label> <a href="/host_acl_ip/0/new?hostid=${values.id}">[Add]</a>
+	<ul>
+	<li py:for="a in values.acl_ips">
+		  <span py:replace="a.ip">ACL IP</span><a href="/host_acl_ip/${a.id}/delete">[Delete]</a>
+        </li>
+        </ul>
+     </LI>
+	<LI>
+	<label for="countries_allowed">Countries Allowed: </label> <a
+	href="/host_country_allowed/0/new?hostid=${values.id}">[Add]</a>
+	<ul>
+	<li py:for="a in values.countries_allowed">
+		  <span py:replace="a.country">Country</span><a href="/host_country_allowed/${a.id}/delete">[Delete]</a>
+        </li>
+        </ul>
+	</LI>
+	<LI>
+	<label for="netblocks">Netblocks: </label> <a href="/host_netblock/0/new?hostid=${values.id}">[Add]</a>
+	<ul>
+	<li py:for="a in values.netblocks">
+		  <span py:replace="a.netblock">Netblock</span><a href="/host_netblock/${a.id}/delete">[Delete]</a>
+        </li>
+        </ul>
+	</LI>
+</div>
 </UL>
+<hr></hr>
+<h2>Categories Carried</h2>
+<a href="/host_category/0/new?hostid=${values.id}">[Add Category]</a>
+<UL>
+<LI py:for="c in values.categories">
+    <a href="/host_category/${c.id}"><span
+    py:replace="c.category.name">Category Name</span></a> <a href="/host_category/${c.id}/delete">[Delete]</a>
+</LI>
+</UL>
+</P>
+<P>
+<a href="/host/${values.id}/delete">[Delete Host]</a>
 </P>
 </body>
 </html>
