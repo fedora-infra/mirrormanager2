@@ -18,6 +18,21 @@ from mirrors.lib import createErrorString
 
 log = logging.getLogger("mirrors.controllers")
 
+def is_siteadmin(site, identity):
+    if identity.in_group("admin"):
+        return True
+    
+    for a in site.admins:
+        if a.username == identity.current.user_name:
+            return True
+    return False
+
+def siteadmin_check(site, identity):
+    if not is_siteadmin(site, identity):
+        turbogears.flash("Error:You are not an admin for Site %s" % site.name)
+        raise redirect("/")
+
+
 # From the TurboGears book
 class content:
     @turbogears.expose()
@@ -53,15 +68,6 @@ class content:
 
 
 
-def is_siteadmin(site, identity):
-    if identity.in_group("admin"):
-        return True
-    
-    for a in site.admins:
-        if a.username == identity.current.user_name:
-            return True
-    return False
-
 class SiteFields(widgets.WidgetsList):
     name     = widgets.TextField(validator=validators.NotEmpty)
     password = widgets.TextField(validator=validators.NotEmpty)
@@ -83,9 +89,7 @@ class SiteController(controllers.Controller, content):
     
     @expose(template="mirrors.templates.site")
     def read(self, site):
-        if not is_siteadmin(site, identity):
-            turbogears.flash("Error:You are not an admin for Site %s" % site.name)
-            raise turbogears.redirect("/")
+        siteadmin_check(site, identity)
         submit_action = "/site/%s/update" % site.id
         return dict(form=site_form, values=site, action=submit_action)
 
@@ -113,9 +117,7 @@ class SiteController(controllers.Controller, content):
     @expose(template="mirrors.templates.site")
     @validate(form=site_form)
     def update(self, site, **kwargs):
-        if not is_siteadmin(site, identity):
-            turbogears.flash("Error:You are not an admin for Site %s" % site.name)
-            raise redirect("/")
+        siteadmin_check(site, identity)
         if not identity.in_group("admin") and kwargs.has_key('admin_active'):
             del kwargs['admin_active']
         site.set(**kwargs)
@@ -125,10 +127,7 @@ class SiteController(controllers.Controller, content):
 
     @expose(template="mirrors.templates.site")
     def delete(self, site, **kwargs):
-        if not is_siteadmin(site, identity):
-            turbogears.flash("Error:You are not an admin for Site %s" % site.name)
-            raise turbogears.redirect("/")
-
+        siteadmin_check(site, identity)
         site.destroySelf()
         raise turbogears.redirect("/")
 
@@ -156,10 +155,7 @@ class SiteAdminController(controllers.Controller, content):
         except sqlobject.SQLObjectNotFound:
             raise redirect("/")
 
-        if not is_siteadmin(site, identity):
-            turbogears.flash("Error:You are not an admin for Site %s" % site.name)
-            raise redirect("/")
-            
+        siteadmin_check(site, identity)
         submit_action = "/siteadmin/0/create?siteid=%s" % siteid
         return dict(form=siteadmin_form, values=None, action=submit_action, title="New Site Admin")
     
@@ -178,10 +174,7 @@ class SiteAdminController(controllers.Controller, content):
             turbogears.flash("Error: Site %s does not exist" % siteid)
             raise redirect("/")
 
-        if not is_siteadmin(site, identity):
-            turbogears.flash("Error:You are not an admin for Site %s" % site.name)
-            raise redirect("/")
-            
+        siteadmin_check(site, identity)
         username = kwargs['username']
         try:
             siteadmin = SiteAdmin(site=site, username=username)
@@ -191,11 +184,8 @@ class SiteAdminController(controllers.Controller, content):
 
     @expose(template="mirrors.templates.siteadmin")
     def delete(self, siteadmin, **kwargs):
-        site = siteadmin.site
-        if not is_siteadmin(site, identity):
-            turbogears.flash("Error:You are not an admin for Site %s" % site.name)
-            raise turbogears.redirect("/")
-
+        site = siteadmin.my_site()
+        siteadmin_check(site, identity)
         siteadmin.destroySelf()
         raise turbogears.redirect("/site/%s" % site.id)
 
@@ -221,20 +211,14 @@ class HostController(controllers.Controller, content):
 
     @expose(template="mirrors.templates.host")
     def read(self, host):
-        site = host.site
-        if not is_siteadmin(site, identity):
-            turbogears.flash("Error:You are not an admin for Site %s" % site.name)
-            raise turbogears.redirect("/")
+        siteadmin_check(host.my_site(), identity)
         submit_action = "/host/%s/update" % host.id
         return dict(form=host_form, values=host, action=submit_action, acl_ips=host.acl_ips)
 
     @expose(template="mirrors.templates.host")
     @validate(form=host_form)
     def update(self, host, **kwargs):
-        site = host.site
-        if not is_siteadmin(site, identity):
-            turbogears.flash("Error:You are not an admin for Site %s" % site.name)
-            raise redirect("/")
+        siteadmin_check(host.my_site(), identity)
         if not identity.in_group("admin") and kwargs.has_key('admin_active'):
             del kwargs['admin_active']
         host.set(**kwargs)
@@ -244,11 +228,7 @@ class HostController(controllers.Controller, content):
 
     @expose()
     def delete(self, host, **kwargs):
-        site = host.site
-        if not is_siteadmin(site, identity):
-            turbogears.flash("Error:You are not an admin for Site %s" % site.name)
-            raise turbogears.redirect("/")
-
+        siteadmin_check(host.my_site(), identity)
         host.destroySelf()
         raise turbogears.redirect("/")
 
@@ -259,8 +239,8 @@ class HostController(controllers.Controller, content):
 class HostCategoryFields(widgets.WidgetsList):
     category = widgets.SingleSelectField(options = [(c.id, c.name) for c in Category.select()])
     enabled = widgets.CheckBox(default=True)
-    path = widgets.TextField(validator=validators.NotEmpty)
-    upstream = widgets.TextField(validator=validators.URL)
+    path = widgets.TextField(validator=validators.NotEmpty, label="Path on your disk")
+    upstream = widgets.TextField()
 
 host_category_form = widgets.TableForm(fields=HostCategoryFields(),
                                        submit_text="Save Host Category")
@@ -280,17 +260,14 @@ class HostCategoryController(controllers.Controller, content):
             host = Host.get(hostid)
         except sqlobject.SQLObjectNotFound:
             raise redirect("/")
+        siteadmin_check(host.my_site(), identity)
         submit_action = "/host_category/0/create?hostid=%s" % hostid
         return dict(form=host_category_form, values=None, action=submit_action)
     
     
     @expose(template="mirrors.templates.hostcategory")
     def read(self, hostcategory):
-        host = hostcategory.host
-        site = host.site
-        if not is_siteadmin(site, identity):
-            turbogears.flash("Error:You are not an admin for Site %s" % site.name)
-            raise turbogears.redirect("/")
+        siteadmin_check(hostcategory.my_site(), identity)
         submit_action = "/host_category/%s/update" % hostcategory.id
         return dict(form=host_category_form, values=hostcategory, action=submit_action)
 
@@ -319,11 +296,7 @@ class HostCategoryController(controllers.Controller, content):
     @expose(template="mirrors.templates.hostcategory")
     @validate(form=host_category_form)
     def update(self, hostcategory, **kwargs):
-        host = hostcategory.host
-        site = host.site
-        if not is_siteadmin(site, identity):
-            turbogears.flash("Error:You are not an admin for Site %s" % site.name)
-            raise redirect("/")
+        siteadmin_check(hostcategory.my_site(), identity)
         hostcategory.set(**kwargs)
         hostcategory.sync()
         turbogears.flash("HostCategory Updated")
@@ -331,14 +304,9 @@ class HostCategoryController(controllers.Controller, content):
 
     @expose(template="mirrors.templates.hostcategory")
     def delete(self, hostcategory, **kwargs):
-        host = hostcategory.host
-        site = host.site
-        if not is_siteadmin(site, identity):
-            turbogears.flash("Error:You are not an admin for Site %s" % site.name)
-            raise turbogears.redirect("/")
-
+        siteadmin_check(hostcategory.my_site(), identity)
         hostcategory.destroySelf()
-        raise turbogears.redirect("/host/%s" % host.id)
+        raise turbogears.redirect("/host/%s" % hostcategory.host.id)
 
 
 class HostListitemController(controllers.Controller, content):
@@ -357,11 +325,7 @@ class HostListitemController(controllers.Controller, content):
         except sqlobject.SQLObjectNotFound:
             raise redirect("/")
 
-        site = host.site
-        if not is_siteadmin(site, identity):
-            turbogears.flash("Error:You are not an admin for Site %s" % site.name)
-            raise redirect("/")
-            
+        siteadmin_check(host.my_site(), identity)
         submit_action = "%s/0/create?hostid=%s" % (self.submit_action_prefix, hostid)
         return dict(form=self.form, values=None, action=submit_action, title=self.title)
     
@@ -380,11 +344,7 @@ class HostListitemController(controllers.Controller, content):
             turbogears.flash("Error: Host %s does not exist" % hostid)
             raise redirect("/")
 
-        site = host.site
-        if not is_siteadmin(site, identity):
-            turbogears.flash("Error:You are not an admin for Site %s" % site.name)
-            raise redirect("/")
-            
+        siteadmin_check(host.my_site(), identity)
 
         try:
             self.do_create(host, kwargs)
@@ -395,11 +355,7 @@ class HostListitemController(controllers.Controller, content):
     @expose(template="mirrors.templates.boringform")
     def delete(self, thing, **kwargs):
         host = thing.host
-        site = host.site
-        if not is_siteadmin(site, identity):
-            turbogears.flash("Error:You are not an admin for Site %s" % site.name)
-            raise turbogears.redirect("/")
-
+        siteadmin_check(host.my_site(), identity)
         thing.destroySelf()
         raise turbogears.redirect("/host/%s" % host.id)
 
@@ -417,10 +373,10 @@ class HostAclIPController(HostListitemController):
     form = host_acl_ip_form
 
     def do_get(self, id):
-        return dict(values=HostAclIP.get(id))
+        return dict(values=HostAclIp.get(id))
 
     def do_create(self, host, kwargs):
-        HostAclIP(host=host, ip=kwargs['ip'])
+        HostAclIp(host=host, ip=kwargs['ip'])
 
 
 
@@ -460,6 +416,86 @@ class HostCountryAllowedController(HostListitemController):
 
 
 
+#########################################################3
+# HostCategoryURL
+#########################################################3
+class HostCategoryUrlFields(widgets.WidgetsList):
+    url = widgets.TextField()
+
+host_category_url_form = widgets.TableForm(fields=HostCategoryUrlFields(),
+                                               submit_text="Create URL")
+
+class HostCategoryUrlController(controllers.Controller, content):
+    require = identity.not_anonymous()
+    title = "Host Category URL"
+    form = host_category_url_form
+
+    def get(self, id):
+        return dict(values=HostCategoryUrl.get(id))
+    
+    @expose(template="mirrors.templates.boringform")
+    def new(self, **kwargs):
+        try:
+            hcid=kwargs['hcid']
+            host_category = HostCategory.get(hcid)
+        except sqlobject.SQLObjectNotFound:
+            raise redirect("/")
+
+        host = host_category.host
+        siteadmin_check(host.my_site(), identity)
+            
+        submit_action = "/host_category_url/0/create?hcid=%s" % hcid
+        return dict(form=self.form, values=None, action=submit_action, title=self.title)
+
+    @expose(template="mirrors.templates.boringform")
+    @error_handler(new)
+    @validate(form=form)
+    def create(self, **kwargs):
+        if not kwargs.has_key('hcid'):
+            turbogears.flash("Error: form didn't provide hcid")
+            raise redirect("/")
+        hcid = kwargs['hcid']
+
+        try:
+            hc = HostCategory.get(hcid)
+        except sqlobject.SQLObjectNotFound:
+            turbogears.flash("Error: HostCategory %s does not exist" % hcid)
+            raise redirect("/")
+
+        siteadmin_check(hc.my_site(), identity)
+
+        try:
+            del kwargs['hcid']
+            HostCategoryUrl(host_category=hc, **kwargs)
+        except: # probably sqlite IntegrityError but we can't catch that for some reason... 
+            turbogears.flash("Error: entity already exists")
+        raise turbogears.redirect("/host_category/%s" % hcid)
+
+    @expose(template="mirrors.templates.boringform")
+    def read(self, hcurl):
+        siteadmin_check(hcurl.my_site(), identity)
+        submit_action = "/host_category_url/%s/update" % hcurl.id
+        return dict(form=self.form, values=hcurl, action=submit_action, title=self.title)
+        
+    @expose(template="mirrors.templates.boringform")
+    def update(self, hcurl, **kwargs):
+        siteadmin_check(hcurl.my_site(), identity)
+        hcurl.set(**kwargs)
+        hcurl.sync()
+        submit_action = "/host_category_url/%s/update" % hcurl.id
+        return dict(form=self.form, values=hcurl, action=submit_action, title=self.title)
+        
+            
+    
+
+    @expose(template="mirrors.templates.boringform")
+    def delete(self, hcurl, **kwargs):
+        hc = hcurl.host_category
+        siteadmin_check(hcurl.my_site(), identity)
+        hcurl.destroySelf()
+        raise turbogears.redirect("/host_category/%s" % hc.id)
+
+
 
 # This exports the /pub/fedora/linux/core/... directory tree.
 # For each directory requested, it returns the mirrors of that directory.
@@ -488,6 +524,7 @@ class Root(controllers.RootController, content):
     host_acl_ip = HostAclIPController()
     host_netblock = HostNetblockController()
     host_category = HostCategoryController()
+    host_category_url = HostCategoryUrlController()
     
     @expose(template="mirrors.templates.welcome")
     @identity.require(identity.in_any_group("admin", "user"))
@@ -507,6 +544,7 @@ class Root(controllers.RootController, content):
                     "directories":Directory.select(),
                     "categories":Category.select(),
                     "repositories":Repository.select(),
+                    "embargoed_countries":EmbargoedCountry.select(),
                     }
         else:
             return {"sites":sites}

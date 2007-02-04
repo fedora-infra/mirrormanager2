@@ -31,6 +31,10 @@ class SiteAdmin(SQLObject):
     username = StringCol()
     site = ForeignKey('Site')
 
+    def my_site(self):
+        return self.site
+    
+
 class HostCategory(SQLObject):
     host = ForeignKey('Host')
     category = ForeignKey('Category')
@@ -39,7 +43,7 @@ class HostCategory(SQLObject):
     path = StringCol()
     upstream = StringCol(default=None)
     dirtree = PickleCol(default=None)
-    urls = MultipleJoin('HostCategoryURL')
+    urls = MultipleJoin('HostCategoryUrl')
 
     def destroySelf(self):
         """Cascade the delete operation"""
@@ -47,8 +51,11 @@ class HostCategory(SQLObject):
             b.destroySelf()
         SQLObject.destroySelf(self)
 
-class HostCategoryURL(SQLObject):
-    hc = ForeignKey('HostCategory')
+    def my_site(self):
+        return self.host.my_site()
+
+class HostCategoryUrl(SQLObject):
+    host_category = ForeignKey('HostCategory')
     url = StringCol(alternateID=True)
     
 class Host(SQLObject):
@@ -64,7 +71,7 @@ class Host(SQLObject):
     private_rsync_url = StringCol(default=None)
     countries_allowed = MultipleJoin('HostCountryAllowed')
     netblocks = MultipleJoin('HostNetblock')
-    acl_ips = MultipleJoin('HostAclIP')
+    acl_ips = MultipleJoin('HostAclIp')
     categories = MultipleJoin('HostCategory')
     mirrors = MultipleJoin('MirrorDirectory')
 
@@ -130,17 +137,29 @@ class Host(SQLObject):
     def has_category_dir(self, cname, dir):
         return self._config[cname]['dirtree'].has_key(dir)
 
-class HostAclIP(SQLObject):
+    def my_site(self):
+        return self.site
+
+class HostAclIp(SQLObject):
     host = ForeignKey('Host')
     ip = StringCol()
+
+    def my_site(self):
+        return self.host.my_site()
 
 class HostCountryAllowed(SQLObject):
     host = ForeignKey('Host')
     country = StringCol()
 
+    def my_site(self):
+        return self.host.my_site()
+
 class HostNetblock(SQLObject):
     host = ForeignKey('Host')
     netblock = StringCol()
+
+    def my_site(self):
+        return self.host.my_site()
     
 
 def category_mirrors(category):
@@ -254,6 +273,9 @@ class MirrorDirectory(SQLObject):
     """To cache lookups"""
     host = ForeignKey('Host')
     directory = ForeignKey('Directory')
+
+class EmbargoedCountry(SQLObject):
+    country_code = StringCol()
 
 
 from turbogears import identity 

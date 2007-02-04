@@ -149,7 +149,7 @@ def make_sites():
 def make_versions():
     # create our default versions
     versions = []
-    for ver in range(1,7):
+    for ver in range(1,8):
         versions.append(str(ver))
     versions.append('development')
     for ver in versions:
@@ -158,6 +158,10 @@ def make_versions():
 
     for ver in ['4', '5']:
         Version(name=ver, product=rhel)
+
+def make_embargoed_countries():
+    for cc in ['cu', 'ir', 'kp', 'sd', 'sy' ]:
+        EmbargoedCountry(country_code=cc)
 
 
 
@@ -206,6 +210,9 @@ if not Version.select().count():
 
 if not Directory.select().count():
     make_directories()
+
+if not EmbargoedCountry.select().count():
+    make_embargoed_countries()
 
 # create our default Repositories
 core = Category(name='core',

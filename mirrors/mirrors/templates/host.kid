@@ -7,7 +7,6 @@
 <body>
 Last Checked In: ${values.timestamp}
 ${form(value=values, action=action)}
-<P>
 <UL>
 <div py:if="values is not None and action.endswith('update')">
      <LI>
@@ -40,13 +39,21 @@ ${form(value=values, action=action)}
 <hr></hr>
 <h2>Categories Carried</h2>
 <a href="/host_category/0/new?hostid=${values.id}">[Add Category]</a>
+
+<div py:if="values.categories is not None">
 <UL>
 <LI py:for="c in values.categories">
     <a href="/host_category/${c.id}"><span
     py:replace="c.category.name">Category Name</span></a> <a href="/host_category/${c.id}/delete">[Delete]</a>
+    <UL>
+    <LI py:for="u in c.urls">
+    <a href="${u.url}"><span py:replace="u.url">URL</span></a>  <a href="/host_category_url/${u.id}/delete">[Delete]</a>
+    </LI>
+    </UL>
+
 </LI>
 </UL>
-</P>
+</div>
 <P>
 <a href="/host/${values.id}/delete">[Delete Host]</a>
 </P>

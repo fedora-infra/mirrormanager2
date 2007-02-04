@@ -75,6 +75,14 @@
 	  </li>
 </ul>
 </div>
+<div id="Embargoed Countries">
+<h3>Embargoed Counries</h3>
+<ul>
+	  <li py:for="cc in embargoed_countries">
+  	  <span py:replace="cc.country_code">Country Code</span>	
+	  </li>
+</ul>
+</div>
 </div>
 </body>
 </html>
