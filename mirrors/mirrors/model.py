@@ -1,4 +1,6 @@
 from sqlobject import *
+from sqlobject.sqlbuilder import *
+from turbogears import identity
 import pickle
 import sys
 
@@ -7,6 +9,15 @@ from turbogears.database import PackageHub
 
 hub = PackageHub("mirrors")
 __connection__ = hub
+
+            
+class SiteToSite(SQLObject):
+    upstream_site = ForeignKey('Site')
+    downstream_site = ForeignKey('Site')
+    idx = DatabaseIndex('upstream_site', 'downstream_site', unique=True)
+
+    def my_site(self):
+        return self.upstream_site
 
 class Site(SQLObject):
     name = StringCol(alternateID=True)
@@ -17,7 +28,6 @@ class Site(SQLObject):
     user_active  = BoolCol(default=True)
     admins = MultipleJoin('SiteAdmin')
     hosts  = MultipleJoin('Host')
-    private_rsync_sites_allowed = MultipleJoin('HostPrivateRsyncSites')
 
     def destroySelf(self):
         """Cascade the delete operation"""
@@ -25,7 +35,52 @@ class Site(SQLObject):
             h.destroySelf()
         for a in self.admins:
             a.destroySelf()
+        for s in SiteToSite.select(OR(SiteToSite.q.upstream_siteID == self,
+                                        SiteToSite.q.downstream_siteID == self)):
+            s.destroySelf()
         SQLObject.destroySelf(self)
+
+
+    def _get_downstream_sites(self):
+        return SiteToSite.select(SiteToSite.q.upstream_siteID == self.id)
+
+    def _get_upstream_sites(self):
+        return SiteToSite.select(SiteToSite.q.downstream_siteID == self.id)
+
+    def add_downstream_site(self, site):
+        SiteToSite(upstream_site=self, downstream_site=site)
+
+    def del_downstream_site(self, site):
+        for s in SiteToSite.select(AND(SiteToSite.q.upstream_siteID == self.id,
+                                       SiteToSite.q.downstream_siteID == site.id)):
+            s.destroySelf()
+        
+
+    def is_siteadmin(self, identity):
+        if identity.in_group("sysadmin"):
+            return True
+        for a in self.admins:
+            if a.username == identity.current.user_name:
+                return True
+        return False
+
+    def is_downstream_siteadmin(self, identity):
+        """If you are a sysadmin of one of my immediate downstream sites,
+        you can see some of my site details, but you can't edit them.
+        """
+        for d in self.downstream_sites:
+            for a in d.downstream_site.admins:
+                if a.username == identity.current.user_name:
+                    return True
+        return False
+
+    def is_downstream_siteadmin_byname(self, name):
+        for d in self.downstream_sites:
+            for a in d.downstream_site.admins:
+                if a.username == name:
+                    return True
+        return False
+        
 
 class SiteAdmin(SQLObject):
     username = StringCol()
@@ -33,7 +88,11 @@ class SiteAdmin(SQLObject):
 
     def my_site(self):
         return self.site
-    
+
+def user_sites(identity):
+    return Site.select(join=INNERJOINOn(Site, SiteAdmin, AND(SiteAdmin.q.siteID == Site.q.id,
+                                                             SiteAdmin.q.username == identity.current.user_name)))
+
 
 class HostCategory(SQLObject):
     host = ForeignKey('Host')
@@ -57,10 +116,15 @@ class HostCategory(SQLObject):
 class HostCategoryUrl(SQLObject):
     host_category = ForeignKey('HostCategory')
     url = StringCol(alternateID=True)
+    private = BoolCol(default=False)
+
+    def my_site(self):
+        return self.host_category.my_site()
     
 class Host(SQLObject):
     name = StringCol()
     site = ForeignKey('Site')
+    idx = DatabaseIndex('site', 'name', unique=True)
     robot_email = StringCol(default=None)
     admin_active = BoolCol(default=True)
     user_active = BoolCol(default=True)
@@ -68,7 +132,6 @@ class Host(SQLObject):
     _config = PickleCol(default=None)
     _timestamp = DateTimeCol(default=None)
     private = BoolCol(default=False)
-    private_rsync_url = StringCol(default=None)
     countries_allowed = MultipleJoin('HostCountryAllowed')
     netblocks = MultipleJoin('HostNetblock')
     acl_ips = MultipleJoin('HostAclIp')

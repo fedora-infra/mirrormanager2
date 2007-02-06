@@ -10,16 +10,20 @@ fedora = None
 rhel = None
 
 Group(group_name='user', display_name='User')
-Group(group_name='admin', display_name='Admin')
+Group(group_name='sysadmin', display_name='Admin')
 u = User(user_name='test', email_address='test@fedoraproject.org', display_name='Test', password='test')
 u.addGroup(Group.by_group_name('user'))
+test2 = User(user_name='test2', email_address='test2@fedoraproject.org', display_name='Test2', password='test')
+test2.addGroup(Group.by_group_name('user'))
 a = User(user_name='admin', email_address='admin@fedoraproject.org', display_name='Admin', password='admin')
 a.addGroup(Group.by_group_name('user'))
-a.addGroup(Group.by_group_name('admin'))
+a.addGroup(Group.by_group_name('sysadmin'))
 
 
 
 def make_directories():
+    Directory(name='pub/fedora/linux/releases')
+    Directory(name='pub/epel')
     testfiles = {'core':'../fedora-test-data/fedora-linux-core-dirsonly.txt', 'extras': '../fedora-test-data/fedora-linux-extras-dirsonly.txt'}
     for category, file in testfiles.iteritems():
         f = open(file, 'r')
@@ -168,21 +172,16 @@ def make_embargoed_countries():
 #check if a configuration already exists. Create one if it doesn't
 if not Arch.select().count():
     print "Creating Arches"
-    Arch(name='source')
-    Arch(name='i386')
-    Arch(name='x86_64')
-    Arch(name='ppc')
-    Arch(name='sparc')
-    Arch(name='ia64')
+    for a in ['source', 'i386', 'x86_64', 'ppc', 'ppc64', 'sparc', 'ia64']:
+        Arch(name=a)
 
 
 if not Site.select().count() and not Host.select().count():
     print "Creating Sites and Hosts"
     redhat = Site(name='Red Hat', password="password", orgUrl="http://www.redhat.com")
     Host(name='master', site=redhat)
-    Host(name='download1.fedora.redhat.com', site=redhat)
-    Host(name='download2.fedora.redhat.com', site=redhat)
-    Host(name='download3.fedora.redhat.com', site=redhat)
+    for n in range(1,4):
+        host = Host(name='download%s.fedora.redhat.com' % n, site=redhat)
 
     dell = Site(name='Dell', private=True, password="password", orgUrl="http://www.dell.com")
     Host(name='linuxlib.us.dell.com', site=dell)
@@ -217,22 +216,19 @@ if not EmbargoedCountry.select().count():
 # create our default Repositories
 core = Category(name='core',
                 product = fedora,
-                directory = Directory.select(Directory.q.name=='pub/fedora/linux/core')[0])
+                directory = Directory.byName('pub/fedora/linux/core'))
 
 extras = Category(name='extras',
                   product = fedora,
-                  directory = Directory.select(Directory.q.name=='pub/fedora/linux/extras')[0])
+                  directory = Directory.byName('pub/fedora/linux/extras'))
 
+releases = Category(name='releases',
+                   product = fedora,
+                   directory = Directory.byName('pub/fedora/linux/releases'))
 
-# release = Category(name='release',
-#                    product = fedora,
-#                    directory = Directory.select(Directory.q.name=='pub/fedora/linux/release')[0])
-
-# epel = Category(name='epel',
-#                 product = rhel,
-#                 directory = Directory.select(Directory.q.name=='pub/epel/')[0])
-
-                
+epel = Category(name='epel',
+                product = rhel,
+                directory = Directory.byName('pub/epel'))
 
 
 

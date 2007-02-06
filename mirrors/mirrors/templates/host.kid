@@ -5,28 +5,44 @@
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
 </head>
 <body>
-Last Checked In: ${values.timestamp}
-${form(value=values, action=action)}
-<UL>
+<h2>${title}</h2>
+<?python
+downstream_siteadmin=values.site.is_downstream_siteadmin_byname(tg.identity.user.user_name)
+?> 
+ 
+${form(value=values, action=action, disabled_fields=disabled_fields)}
+
+
 <div py:if="values is not None and action.endswith('update')">
-     <LI>
-     <label for="acl_ips">ACL IPs: </label> <a href="/host_acl_ip/0/new?hostid=${values.id}">[Add]</a>
-	<ul>
-	<li py:for="a in values.acl_ips">
-		  <span py:replace="a.ip">ACL IP</span><a href="/host_acl_ip/${a.id}/delete">[Delete]</a>
-        </li>
-        </ul>
-     </LI>
+Last Checked In: ${values.timestamp}
+<UL>
 	<LI>
-	<label for="countries_allowed">Countries Allowed: </label> <a
-	href="/host_country_allowed/0/new?hostid=${values.id}">[Add]</a>
+	<label for="countries_allowed">Countries Allowed: </label>
+	<div py:if="not downstream_siteadmin">
+	<a href="/host_country_allowed/0/new?hostid=${values.id}">[Add]</a>
+	</div>
 	<ul>
 	<li py:for="a in values.countries_allowed">
-		  <span py:replace="a.country">Country</span><a href="/host_country_allowed/${a.id}/delete">[Delete]</a>
+		  <span py:replace="a.country">Country</span>
+		  <div py:if="downstream_siteadmin">
+		  <a
+		  href="/host_country_allowed/${a.id}/delete">[Delete]</a>
+		  </div>
         </li>
         </ul>
 	</LI>
-	<LI>
+	<div py:if="not downstream_siteadmin">
+
+	     <LI>
+	          <label for="acl_ips">ACL IPs: </label>
+		  <a href="/host_acl_ip/0/new?hostid=${values.id}">[Add]</a>
+		  <ul>
+		  <li py:for="a in values.acl_ips">
+		  <span py:replace="a.ip">ACL IP</span><a href="/host_acl_ip/${a.id}/delete">[Delete]</a>
+		  </li>
+		  </ul>
+	     </LI>
+     	<LI>
 	<label for="netblocks">Netblocks: </label> <a href="/host_netblock/0/new?hostid=${values.id}">[Add]</a>
 	<ul>
 	<li py:for="a in values.netblocks">
@@ -34,20 +50,27 @@ ${form(value=values, action=action)}
         </li>
         </ul>
 	</LI>
-</div>
+     </div>
 </UL>
 <hr></hr>
 <h2>Categories Carried</h2>
+<div py:if="not downstream_siteadmin">
 <a href="/host_category/0/new?hostid=${values.id}">[Add Category]</a>
+</div>
 
 <div py:if="values.categories is not None">
 <UL>
 <LI py:for="c in values.categories">
     <a href="/host_category/${c.id}"><span
-    py:replace="c.category.name">Category Name</span></a> <a href="/host_category/${c.id}/delete">[Delete]</a>
+    py:replace="c.category.name">Category Name</span></a>
+    <div py:if="not downstream_siteadmin"><a href="/host_category/${c.id}/delete">[Delete]</a></div>
     <UL>
     <LI py:for="u in c.urls">
-    <a href="${u.url}"><span py:replace="u.url">URL</span></a>  <a href="/host_category_url/${u.id}/delete">[Delete]</a>
+    <div py:if="u.private">(Mirrors)</div>
+    <a href="${u.url}"><span py:replace="u.url">URL</span></a>
+    <div py:if="not downstream_siteadmin">
+    <a href="/host_category_url/${u.id}/delete">[Delete]</a>
+    </div>
     </LI>
     </UL>
 
@@ -55,7 +78,10 @@ ${form(value=values, action=action)}
 </UL>
 </div>
 <P>
+<div py:if="not downstream_siteadmin">
 <a href="/host/${values.id}/delete">[Delete Host]</a>
+</div>
 </P>
+</div>
 </body>
 </html>

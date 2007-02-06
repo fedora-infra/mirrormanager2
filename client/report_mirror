@@ -113,7 +113,8 @@ def parse_site(conf, section, item):
 
 def parse_host(conf, section, item):
     required_options = [ 'name' ]
-    return parse_section(conf, section, item, required_options, [])
+    optional_options = [ 'acl_ips', 'private_rsync_url', 'country', 'countries_allowed', 'netblocks', 'private', 'user_active', 'robot_email' ]
+    return parse_section(conf, section, item, required_options, optional_options)
 
 def get_stats(conf, section):
     if conf.has_option(section, 'enabled'):

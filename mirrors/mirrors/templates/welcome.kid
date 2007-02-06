@@ -7,7 +7,8 @@
 </head>
 <body>
 <div id="Sites">
-<h3>My Sites and Hosts <a href="/site/0/new/">[Add Site]</a></h3>
+<h3>My Sites and Hosts</h3>
+<a href="/site/0/new/">[Add Site]</a>
 <ul>
 	  <li py:for="site in sites">
 	  <a href="${'/site/'+str(site.id)}"><span py:replace="site.name">Site Name</span></a>
@@ -24,7 +25,7 @@
 <div id="RSYNC ACL">
 <h3><a href="/rsync_acl">rsync acl</a></h3>
 </div>
-<div id="adminstuff" py:if="'admin' in tg.identity.groups">
+<div id="adminstuff" py:if="'sysadmin' in tg.identity.groups">
 <div id="categories">
 <h3>Categories</h3>
 <ul>

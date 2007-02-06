@@ -18,19 +18,16 @@ from mirrors.lib import createErrorString
 
 log = logging.getLogger("mirrors.controllers")
 
-def is_siteadmin(site, identity):
-    if identity.in_group("admin"):
-        return True
-    
-    for a in site.admins:
-        if a.username == identity.current.user_name:
-            return True
-    return False
-
 def siteadmin_check(site, identity):
-    if not is_siteadmin(site, identity):
+    if not site.is_siteadmin(identity):
         turbogears.flash("Error:You are not an admin for Site %s" % site.name)
         raise redirect("/")
+
+def downstream_siteadmin_check(site, identity):
+    if not site.is_siteadmin(identity) and not site.is_downstream_siteadmin(identity):
+        turbogears.flash("Error:You are not an admin for Site %s or for a Site immediately downstream from Site %s" % (site.name, site.name))
+        raise redirect("/")
+
 
 
 # From the TurboGears book
@@ -71,7 +68,7 @@ class content:
 class SiteFields(widgets.WidgetsList):
     name     = widgets.TextField(validator=validators.NotEmpty)
     password = widgets.TextField(validator=validators.NotEmpty)
-    orgUrl   = widgets.TextField(label="Organization URL", validator=validators.URL)
+    orgUrl   = widgets.TextField(label="Organization URL", validator=validators.URL, attrs=dict(size='30'))
     private  = widgets.CheckBox()
     admin_active = widgets.CheckBox("admin_active",default=True)
     user_active = widgets.CheckBox(default=True)
@@ -81,29 +78,41 @@ site_form = widgets.TableForm(fields=SiteFields(),
                               submit_text="Save Site")
 
 
-class SiteController(controllers.Controller, content):
+class SiteController(controllers.Controller, identity.SecureResource, content):
     require = identity.not_anonymous()
 
+    def disabled_fields(self, site=None):
+        disabled_fields = []
+        if not identity.in_group("sysadmin"):
+            disabled_fields.append('admin_active')
+        if site is not None:
+            if not site.is_siteadmin(identity):
+                for a in ['password', 'user_active', 'private']:
+                    disabled_fields.append(a)
+            
+        return disabled_fields
+
     def get(self, id):
-        return dict(values=Site.get(id))
+        site = Site.get(id)
+        return dict(values=site, disabled_fields=self.disabled_fields(site=site))
     
     @expose(template="mirrors.templates.site")
     def read(self, site):
-        siteadmin_check(site, identity)
+        downstream_siteadmin_check(site, identity)
         submit_action = "/site/%s/update" % site.id
-        return dict(form=site_form, values=site, action=submit_action)
+        return dict(form=site_form, values=site, action=submit_action, disabled_fields=self.disabled_fields(site=site))
 
     @expose(template="mirrors.templates.site")
     def new(self, **kwargs):
         submit_action = "/site/0/create"
-        return dict(form=site_form, values=None, action=submit_action)
+        return dict(form=site_form, values=None, action=submit_action, disabled_fields=self.disabled_fields())
     
     @expose(template="mirrors.templates.site")
     @error_handler(new)
     @validate(form=site_form)
     def create(self, **kwargs):
         try:
-            if not identity.in_group("admin") and kwargs.has_key('admin_active'):
+            if not identity.in_group("sysadmin") and kwargs.has_key('admin_active'):
                 del kwargs['admin_active']
             site = Site(**kwargs)
             id = site.id
@@ -118,7 +127,7 @@ class SiteController(controllers.Controller, content):
     @validate(form=site_form)
     def update(self, site, **kwargs):
         siteadmin_check(site, identity)
-        if not identity.in_group("admin") and kwargs.has_key('admin_active'):
+        if not identity.in_group("sysadmin") and kwargs.has_key('admin_active'):
             del kwargs['admin_active']
         site.set(**kwargs)
         site.sync()
@@ -132,7 +141,7 @@ class SiteController(controllers.Controller, content):
         raise turbogears.redirect("/")
 
 
-
+##############################################
 class SiteAdminFields(widgets.WidgetsList):
     username = widgets.TextField(validator=validators.NotEmpty)
 
@@ -141,7 +150,7 @@ siteadmin_form = widgets.TableForm(fields=SiteAdminFields(),
                               submit_text="Create Site Admin")
 
 
-class SiteAdminController(controllers.Controller, content):
+class SiteAdminController(controllers.Controller, identity.SecureResource, content):
     require = identity.not_anonymous()
 
     def get(self, id):
@@ -190,12 +199,74 @@ class SiteAdminController(controllers.Controller, content):
         raise turbogears.redirect("/site/%s" % site.id)
 
 
+##############################################
+class SiteToSiteFields(widgets.WidgetsList):
+    sites = widgets.MultipleSelectField(options=[(s.id, s.name) for s in Site.select()], size=15)
+                                        
+
+site_to_site_form = widgets.TableForm(fields=SiteToSiteFields(),
+                                      submit_text="Add Downstream Site")
+
+
+class SiteToSiteController(controllers.Controller, identity.SecureResource, content):
+    require = identity.not_anonymous()
+
+    def get(self, id):
+        return dict(values=SiteToSite.get(id))
+    
+    @expose(template="mirrors.templates.boringform")
+    def new(self, **kwargs):
+        siteid=kwargs['siteid']
+        try:
+            site = Site.get(siteid)
+        except sqlobject.SQLObjectNotFound:
+            raise redirect("/")
+
+        siteadmin_check(site, identity)
+        submit_action = "/site2site/0/create?siteid=%s" % siteid
+        return dict(form=site_to_site_form, values=None, action=submit_action, title="Add Downstream Site")
+    
+    @expose()
+    @error_handler(new)
+    @validate(form=site_to_site_form)
+    def create(self, **kwargs):
+        if not kwargs.has_key('siteid'):
+            turbogears.flash("Error: form didn't provide siteid")
+            raise redirect("/")
+        siteid = kwargs['siteid']
+
+        try:
+            site = Site.get(siteid)
+        except sqlobject.SQLObjectNotFound:
+            turbogears.flash("Error: Site %s does not exist" % siteid)
+            raise redirect("/")
+
+        siteadmin_check(site, identity)
+        sites = kwargs['sites']
+        print sites
+        for dssite in sites:
+            if dssite == site.id:
+                continue
+            try:
+                site2site = SiteToSite(upstream_site=site, downstream_site=dssite)
+            except: 
+                pass
+        raise turbogears.redirect("/site/%s" % siteid)
+
+    @expose()
+    def delete(self, site2site, **kwargs):
+        site = site2site.my_site()
+        siteadmin_check(site, identity)
+        site2site.destroySelf()
+        raise turbogears.redirect("/site/%s" % site.id)
+
+
 class HostFields(widgets.WidgetsList):
+    name = widgets.TextField(validator=validators.NotEmpty, attrs=dict(size='30'))
     admin_active = widgets.CheckBox("admin_active")
-    user_active = widgets.CheckBox()
-    country = widgets.TextField(validator=validators.NotEmpty)
+    user_active = widgets.CheckBox(default=True)
+    country = widgets.TextField()
     private = widgets.CheckBox()
-    private_rsync_url = widgets.TextField()
     robot_email = widgets.TextField(validator=validators.Email)
     
 
@@ -203,23 +274,66 @@ class HostFields(widgets.WidgetsList):
 host_form = widgets.TableForm(fields=HostFields(),
                               submit_text="Save Host")
 
-class HostController(controllers.Controller, content):
+class HostController(controllers.Controller, identity.SecureResource, content):
     require = identity.not_anonymous()
 
+    def disabled_fields(self, host=None):
+        disabled_fields = []
+        if not identity.in_group("sysadmin"):
+            disabled_fields.append('admin_active')
+
+        if host is not None:
+            site = host.my_site()
+            if not site.is_siteadmin(identity):
+                for a in ['user_active', 'private', 'robot_email']:
+                    disabled_fields.append(a)
+        return disabled_fields
+
+
     def get(self, id):
-        return dict(values=Host.get(id))
+        host = Host.get(id)
+        return dict(values=host)
+
+    @expose(template="mirrors.templates.host")
+    def new(self, **kwargs):
+        try:
+            siteid=kwargs['siteid']
+            site = Site.get(siteid)
+        except sqlobject.SQLObjectNotFound:
+            raise redirect("/")
+        submit_action = "/host/0/create?siteid=%s" % siteid
+        return dict(form=host_form, values=None, action=submit_action, disabled_fields=self.disabled_fields(),
+                    title="Create Host")
+
+    @expose(template="mirrors.templates.host")
+    @error_handler()
+    @validate(form=host_form)
+    def create(self, **kwargs):
+        if not identity.in_group("sysadmin") and kwargs.has_key('admin_active'):
+            del kwargs['admin_active']
+        site = Site.get(kwargs['siteid'])
+        del kwargs['siteid']
+        try:
+            host = Host(site=site, **kwargs)
+            submit_action = "/host/%s/update" % host.id
+        except: # probably sqlite IntegrityError but we can't catch that for some reason... 
+            turbogears.flash("Error:Host %s already exists" % kwargs['name'])
+            submit_action = "/host/0/create?siteid=%s" % site.id
+        raise turbogears.redirect("/")
+
 
     @expose(template="mirrors.templates.host")
     def read(self, host):
-        siteadmin_check(host.my_site(), identity)
+        downstream_siteadmin_check(host.my_site(), identity)
         submit_action = "/host/%s/update" % host.id
-        return dict(form=host_form, values=host, action=submit_action, acl_ips=host.acl_ips)
+        return dict(form=host_form, values=host, action=submit_action,
+                    disabled_fields=self.disabled_fields(host=host), title="Host")
 
     @expose(template="mirrors.templates.host")
     @validate(form=host_form)
     def update(self, host, **kwargs):
         siteadmin_check(host.my_site(), identity)
-        if not identity.in_group("admin") and kwargs.has_key('admin_active'):
+        if not identity.in_group("sysadmin") and kwargs.has_key('admin_active'):
             del kwargs['admin_active']
         host.set(**kwargs)
         host.sync()
@@ -239,15 +353,15 @@ class HostController(controllers.Controller, content):
 class HostCategoryFields(widgets.WidgetsList):
     category = widgets.SingleSelectField(options = [(c.id, c.name) for c in Category.select()])
     enabled = widgets.CheckBox(default=True)
-    path = widgets.TextField(validator=validators.NotEmpty, label="Path on your disk")
-    upstream = widgets.TextField()
+    path = widgets.TextField(validator=validators.NotEmpty, label="Path on your disk", attrs=dict(size='30'))
+    upstream = widgets.TextField(attrs=dict(size='30'))
 
 host_category_form = widgets.TableForm(fields=HostCategoryFields(),
                                        submit_text="Save Host Category")
 
 
 
-class HostCategoryController(controllers.Controller, content):
+class HostCategoryController(controllers.Controller, identity.SecureResource, content):
     require = identity.not_anonymous()
 
     def get(self, id):
@@ -267,7 +381,7 @@ class HostCategoryController(controllers.Controller, content):
     
     @expose(template="mirrors.templates.hostcategory")
     def read(self, hostcategory):
-        siteadmin_check(hostcategory.my_site(), identity)
+        downstream_siteadmin_check(hostcategory.my_site(), identity)
         submit_action = "/host_category/%s/update" % hostcategory.id
         return dict(form=host_category_form, values=hostcategory, action=submit_action)
 
@@ -309,7 +423,7 @@ class HostCategoryController(controllers.Controller, content):
         raise turbogears.redirect("/host/%s" % hostcategory.host.id)
 
 
-class HostListitemController(controllers.Controller, content):
+class HostListitemController(controllers.Controller, identity.SecureResource, content):
     require = identity.not_anonymous()
     title = ""
     form = None
@@ -344,7 +458,7 @@ class HostListitemController(controllers.Controller, content):
             turbogears.flash("Error: Host %s does not exist" % hostid)
             raise redirect("/")
 
-        siteadmin_check(host.my_site(), identity)
+        downstream_siteadmin_check(host.my_site(), identity)
 
         try:
             self.do_create(host, kwargs)
@@ -420,12 +534,13 @@ class HostCountryAllowedController(HostListitemController):
 # HostCategoryURL
 #########################################################3
 class HostCategoryUrlFields(widgets.WidgetsList):
-    url = widgets.TextField()
+    url = widgets.TextField(attrs=dict(size='30'))
+    private  = widgets.CheckBox(default=False, label="For other mirrors only")
 
 host_category_url_form = widgets.TableForm(fields=HostCategoryUrlFields(),
                                                submit_text="Create URL")
 
-class HostCategoryUrlController(controllers.Controller, content):
+class HostCategoryUrlController(controllers.Controller, identity.SecureResource, content):
     require = identity.not_anonymous()
     title = "Host Category URL"
     form = host_category_url_form
@@ -473,7 +588,7 @@ class HostCategoryUrlController(controllers.Controller, content):
 
     @expose(template="mirrors.templates.boringform")
     def read(self, hcurl):
-        siteadmin_check(hcurl.my_site(), identity)
+        downstream_siteadmin_check(hcurl.my_site(), identity)
         submit_action = "/host_category_url/%s/update" % hcurl.id
         return dict(form=self.form, values=hcurl, action=submit_action, title=self.title)
         
@@ -525,18 +640,18 @@ class Root(controllers.RootController, content):
     host_netblock = HostNetblockController()
     host_category = HostCategoryController()
     host_category_url = HostCategoryUrlController()
+    site2site = SiteToSiteController()
     
     @expose(template="mirrors.templates.welcome")
-    @identity.require(identity.in_any_group("admin", "user"))
+    @identity.require(identity.not_anonymous())
     def index(self):
-        if "admin" in identity.current.groups:
+        if "sysadmin" in identity.current.groups:
             sites = Site.select()
         else:
-            sites = Site.select(join=INNERJOINOn(Site, SiteAdmin, AND(SiteAdmin.q.siteID == Site.q.id,
-                                                                      SiteAdmin.q.username == identity.current.user_name)))
+            sites = user_sites(identity)
 
             
-        if "admin" in identity.current.groups:
+        if "sysadmin" in identity.current.groups:
             return {"sites":sites,
                     "arches":Arch.select(),
                     "products":Product.select(),
