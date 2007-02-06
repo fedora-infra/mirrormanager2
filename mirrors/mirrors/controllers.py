@@ -140,6 +140,13 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
         site.destroySelf()
         raise turbogears.redirect("/")
 
+    @expose(template="mirrors.templates.site")
+    def s2s_delete(self, site, **kwargs):
+        siteadmin_check(site, identity)
+        dsite = Site.get(kwargs['dsite'])
+        site.del_downstream_site(dsite)
+        raise turbogears.redirect("/site/%s" % site.id)
+
 
 ##############################################
 class SiteAdminFields(widgets.WidgetsList):

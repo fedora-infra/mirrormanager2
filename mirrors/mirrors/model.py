@@ -42,17 +42,17 @@ class Site(SQLObject):
 
 
     def _get_downstream_sites(self):
-        return SiteToSite.select(SiteToSite.q.upstream_siteID == self.id)
+        return [s2s.downstream_site for s2s in SiteToSite.selectBy(upstream_site=self)]
 
     def _get_upstream_sites(self):
-        return SiteToSite.select(SiteToSite.q.downstream_siteID == self.id)
+        return [s2s.upstream_site for s2s in SiteToSite.selectBy(downstream_site=self)]
 
     def add_downstream_site(self, site):
-        SiteToSite(upstream_site=self, downstream_site=site)
+        if site is not None:
+            SiteToSite(upstream_site=self, downstream_site=site)
 
     def del_downstream_site(self, site):
-        for s in SiteToSite.select(AND(SiteToSite.q.upstream_siteID == self.id,
-                                       SiteToSite.q.downstream_siteID == site.id)):
+        for s in SiteToSite.selectBy(upstream_site=self, downstream_site=site):
             s.destroySelf()
         
 
@@ -69,14 +69,14 @@ class Site(SQLObject):
         you can see some of my site details, but you can't edit them.
         """
         for d in self.downstream_sites:
-            for a in d.downstream_site.admins:
+            for a in d.admins:
                 if a.username == identity.current.user_name:
                     return True
         return False
 
     def is_downstream_siteadmin_byname(self, name):
         for d in self.downstream_sites:
-            for a in d.downstream_site.admins:
+            for a in d.admins:
                 if a.username == name:
                     return True
         return False

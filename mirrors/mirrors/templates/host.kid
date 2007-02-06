@@ -18,16 +18,16 @@ Last Checked In: ${values.timestamp}
 <UL>
 	<LI>
 	<label for="countries_allowed">Countries Allowed: </label>
-	<div py:if="not downstream_siteadmin">
+	<span py:if="not downstream_siteadmin">
 	<a href="/host_country_allowed/0/new?hostid=${values.id}">[Add]</a>
-	</div>
+	</span>
 	<ul>
 	<li py:for="a in values.countries_allowed">
 		  <span py:replace="a.country">Country</span>
-		  <div py:if="downstream_siteadmin">
+		  <span py:if="downstream_siteadmin">
 		  <a
 		  href="/host_country_allowed/${a.id}/delete">[Delete]</a>
-		  </div>
+		  </span>
         </li>
         </ul>
 	</LI>
@@ -63,14 +63,14 @@ Last Checked In: ${values.timestamp}
 <LI py:for="c in values.categories">
     <a href="/host_category/${c.id}"><span
     py:replace="c.category.name">Category Name</span></a>
-    <div py:if="not downstream_siteadmin"><a href="/host_category/${c.id}/delete">[Delete]</a></div>
+    <span py:if="not downstream_siteadmin"><a href="/host_category/${c.id}/delete">[Delete]</a></span>
     <UL>
     <LI py:for="u in c.urls">
     <div py:if="u.private">(Mirrors)</div>
     <a href="${u.url}"><span py:replace="u.url">URL</span></a>
-    <div py:if="not downstream_siteadmin">
+    <span py:if="not downstream_siteadmin">
     <a href="/host_category_url/${u.id}/delete">[Delete]</a>
-    </div>
+    </span>
     </LI>
     </UL>
 
@@ -78,9 +78,9 @@ Last Checked In: ${values.timestamp}
 </UL>
 </div>
 <P>
-<div py:if="not downstream_siteadmin">
+<span py:if="not downstream_siteadmin">
 <a href="/host/${values.id}/delete">[Delete Host]</a>
-</div>
+</span>
 </P>
 </div>
 </body>
