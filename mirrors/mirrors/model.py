@@ -282,12 +282,23 @@ class Host(SQLObject):
     def _get_timestamp(self):
         return self._timestamp
 
+    def has_category(self, cname):
+        return HostCategory.selectBy(host=self, category=Category.byName(cname)).count() > 0
+    
     def has_category_dir(self, cname, dir):
         try:
             for hc in HostCategory.selectBy(host=self, category=Category.byName(cname)):
+                if len(dir)==0:
+                    return True
                 return hc.dirtree.has_key(dir)
         except:
             return False
+
+    def category_urls(self, cname):
+        for hc in self.categories:
+            if hc.category.name == cname:
+                return [hcurl.url for hcurl in HostCategoryUrl.selectBy(host_category=hc, private=False)]
+        
 
     def my_site(self):
         return self.site
@@ -349,19 +360,20 @@ def directory_mirrors(dirname, country=None, include_private=False):
         return None
 
     dirname = origdir[len(category.directory.name)+1:]
-    print dirname
 
     hosts = category_mirrors(category)
     for h in hosts:
         if h.is_active() and h.has_category_dir(category.name, dirname):
             if h.private and not include_private:
                 continue
+            if country is not None and h.country is not None and h.country != country and country != 'global':
+                continue
             result.append((category.name, dirname, h))
     return result
 
 def directory_mirror_urls(dname, country=None, include_private=False):
     result = []
-    for cname, dirname, host in directory_mirrors(dname, include_private):
+    for cname, dirname, host in directory_mirrors(dname, country, include_private):
         if not host.is_active():
             continue
         if host.private and not include_private:

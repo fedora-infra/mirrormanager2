@@ -632,13 +632,22 @@ class PubController(controllers.Controller):
     def default(self, *vpath, **params):
         path = 'pub/' + '/'.join(vpath)
         country = None
+        include_private=False
         if params.has_key('country'):
             country = params['country']
-        urls = directory_mirror_urls(path, country=country)
+        if params.has_key('include_private'):
+            include_private = params['include_private']
+        urls = directory_mirror_urls(path, country=country, include_private=include_private)
         for u in urls:
             if not u.startswith('http://') and not u.startswith('ftp://'):
                 urls.remove(u)
         return dict(values=urls)
+
+#fixme - this is just a stub
+class PublicListController(controllers.Controller):
+    @expose(template="mirrors.templates.publiclist")
+    def index(self, *vpath, **params):
+        return dict()
 
         
 
