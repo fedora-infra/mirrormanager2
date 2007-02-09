@@ -638,10 +638,10 @@ class PubController(controllers.Controller):
         if params.has_key('include_private'):
             include_private = params['include_private']
         urls = directory_mirror_urls(path, country=country, include_private=include_private)
-        for u in urls:
+        for u, country in urls:
             if not u.startswith('http://') and not u.startswith('ftp://'):
-                urls.remove(u)
-        return dict(values=urls)
+                urls.remove((u, country))
+        return dict(values=[u for u, v in urls])
 
 #fixme - this is just a stub
 class PublicListController(controllers.Controller):

@@ -31,29 +31,49 @@ __connection__ = hub
 
 
 def trim_url_list(urls):
-    for u in urls:
+    for u, country in urls:
         us = u.split('/')
         uprotocol = us[0]
         umachine = us[2]
         if uprotocol.startswith('ftp'):
-            for v in urls:
+            for v, vc in urls:
                 vs = v.split('/')
                 vprotocol = vs[0]
                 vmachine = vs[2]
                 if umachine == vmachine and vprotocol.startswith('http'):
-                    del urls[urls.index(u)]
+                    urls.remove((u, country))
     return urls
 
 
-
 for r in Repository.select():
+    seen_countries = {}
     urls = directory_mirror_urls(r.directory.name, include_private=True) # fixme - won't include private when we have real data
-    for u in urls:
-        if not u.startswith('http') and not u.startswith('ftp'):
-            urls.remove(u)
     urls = trim_url_list(urls)
+    for u, country in urls:
+        if country is None:
+            country = ''
+        if not u.startswith('http') and not u.startswith('ftp'):
+            urls.remove((u, country))
+            continue
+        if seen_countries.has_key('country'):
+            seen_countries[country].append(u)
+        else:
+            seen_countries[country] = [u]
 
-    f = open('mirrorlists/%s' % r.name, 'w')
-    for u in urls:
+# write the global list
+    for u, country in urls:
+        f = open('mirrorlists/%s' % (r.name), 'w')
         f.write("%s\n" % u)
-    f.close()
+        f.close()
+
+# write the per-country lists
+    for country in seen_countries.keys():
+        if country == '':
+            fname_suffix = ''
+        else:
+            fname_suffix = '-%s' % country
+        
+        f = open('mirrorlists/%s%s' % (r.name, fname_suffix), 'w')
+        for u in seen_countries[country]:
+            f.write("%s\n" % u)
+        f.close()

@@ -379,7 +379,8 @@ def directory_mirror_urls(dname, country=None, include_private=False):
         if host.private and not include_private:
             continue
         for u in host.category_urls(cname):
-            result.append('%s/%s' % (u, dirname))
+            fullurl = '%s/%s' % (u, dirname)
+            result.append((fullurl, host.country))
     return result
 
 
