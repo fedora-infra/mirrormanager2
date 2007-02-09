@@ -10,7 +10,6 @@ from tgfastdata import DataController
 import sqlobject
 from sqlobject.sqlbuilder import *
 
-from mirrors import json
 from mirrors import my_validators
 from mirrors.model import *
 from mirrors.lib import createErrorString
@@ -359,7 +358,8 @@ class HostController(controllers.Controller, identity.SecureResource, content):
 ##################################################################33
 class HostCategoryFields(widgets.WidgetsList):
     category = widgets.SingleSelectField(options = [(c.id, c.name) for c in Category.select()])
-    enabled = widgets.CheckBox(default=True)
+    admin_active = widgets.CheckBox(default=True)
+    user_active = widgets.CheckBox(default=True)
     path = widgets.TextField(validator=validators.NotEmpty, label="Path on your disk", attrs=dict(size='30'))
     upstream = widgets.TextField(attrs=dict(size='30'))
 
@@ -370,6 +370,12 @@ host_category_form = widgets.TableForm(fields=HostCategoryFields(),
 
 class HostCategoryController(controllers.Controller, identity.SecureResource, content):
     require = identity.not_anonymous()
+
+    def disabled_fields(self, host=None):
+        disabled_fields = []
+        if not identity.in_group("sysadmin"):
+            disabled_fields.append('admin_active')
+        return disabled_fields
 
     def get(self, id):
         return dict(values=HostCategory.get(id))
@@ -383,14 +389,14 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
             raise redirect("/")
         siteadmin_check(host.my_site(), identity)
         submit_action = "/host_category/0/create?hostid=%s" % hostid
-        return dict(form=host_category_form, values=None, action=submit_action)
+        return dict(form=host_category_form, values=None, action=submit_action, disabled_fields=self.disabled_fields())
     
     
     @expose(template="mirrors.templates.hostcategory")
     def read(self, hostcategory):
         downstream_siteadmin_check(hostcategory.my_site(), identity)
         submit_action = "/host_category/%s/update" % hostcategory.id
-        return dict(form=host_category_form, values=hostcategory, action=submit_action)
+        return dict(form=host_category_form, values=hostcategory, action=submit_action, disabled_fields=self.disabled_fields())
 
     @expose(template="mirrors.templates.hostcategory")
     @error_handler(new)
@@ -618,7 +624,6 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
         raise turbogears.redirect("/host_category/%s" % hc.id)
 
 
-
 # This exports the /pub/fedora/linux/core/... directory tree.
 # For each directory requested, it returns the mirrors of that directory.
 
@@ -637,7 +642,7 @@ class PubController(controllers.Controller):
 
         
 
-class Root(controllers.RootController, content):
+class Root(controllers.RootController):
     site = SiteController()
     siteadmin = SiteAdminController()
     host = HostController()
@@ -648,6 +653,8 @@ class Root(controllers.RootController, content):
     host_category = HostCategoryController()
     host_category_url = HostCategoryUrlController()
     site2site = SiteToSiteController()
+    from mirrors.xmlrpc import XmlrpcController
+    xmlrpc = XmlrpcController()
     
     @expose(template="mirrors.templates.welcome")
     @identity.require(identity.not_anonymous())
@@ -670,6 +677,7 @@ class Root(controllers.RootController, content):
                     }
         else:
             return {"sites":sites}
+
 
     @expose(template="mirrors.templates.rsync_acl", format="plain", content_type="text/plain")
     def rsync_acl(self):
@@ -761,3 +769,4 @@ class Root(controllers.RootController, content):
         
         raise redirect("/")
         
+

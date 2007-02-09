@@ -98,7 +98,8 @@ class HostCategory(SQLObject):
     host = ForeignKey('Host')
     category = ForeignKey('Category')
     hcindex = DatabaseIndex('host', 'category', unique=True)
-    enabled = BoolCol(default=True)
+    admin_active = BoolCol(default=True)
+    user_active = BoolCol(default=True)
     path = StringCol()
     upstream = StringCol(default=None)
     dirtree = PickleCol(default=None)
@@ -149,7 +150,120 @@ class Host(SQLObject):
             for b in a:
                 b.destroySelf()
         SQLObject.destroySelf(self)
+
+    def _get_config_categories(self):
+        noncategories = ['version', 'global', 'site', 'host', 'stats']
+        return [key for key in self._config.keys() if key not in noncategories]
+
+
+    def _uploaded_config(self, config):
+        if config['site'].has_key('user_active'):
+            self.site.user_active = config['site']['user_active']
+        if config['host'].has_key('country'):
+            self.country = config['host']['country']
+        if config['host'].has_key('private'):
+            self.private = config['host']['private']
+        if config['host'].has_key('robot_email'):
+            self.robot_email = config['host']['robot_email']
+        if config['host'].has_key('user_active'):
+            self.user_active = config['host']['user_active']
+        self.site.sync()
+        self.sync()
+
+        if config['host'].has_key('acl_ips'):
+            if type(config['host']['acl_ips']) == list:
+                data = config['host']['acl_ips']
+            else:
+                data = [config['host']['acl_ips']]
+            for a in data:
+                if HostAclIp.selectBy(host=self, ip=a).count() == 0:
+                    HostAclIp(host=self, ip=a)
+            for h in HostAclIp.selectBy(host=self):
+                if h.ip not in data:
+                    h.destroySelf()
+
+        if config['host'].has_key('countries_allowed'):
+            if type(config['host']['countries_allowed']) == list:
+                data = config['host']['countries_allowed']
+            else:
+                data = [config['host']['countries_allowed']]
+            for a in data:
+                if HostCountryAllowed.selectBy(host=self, country=a).count() == 0:
+                    HostCountryAllowed(host=self, country=a)
+            for h in HostCountryAllowed.selectBy(host=self):
+                if h.country not in data:
+                    h.destroySelf()
+
+        if config['host'].has_key('netblocks'):
+            if type(config['host']['netblocks']) == list:
+                data = config['host']['netblocks']
+            else:
+                data = [config['host']['netblocks']]
+            for a in data:
+                if HostNetblock.selectBy(host=self, netblock=a).count() == 0:
+                    HostNetblock(host=self, netblock=a)
+            for h in HostNetblock.selectBy(host=self):
+                if h.netblock not in data:
+                    h.destroySelf()
+
+        # now fill in the host category data (HostCategory and HostCategoryURL)
+        for c in self.config_categories:
+            category = Category.selectBy(name=c)
+            if category.count() > 0:
+                category = category[0]
+            else: # not a category the database knows about, ignore it
+                continue
+            if not config[c].has_key('enabled') or config[c]['enabled'] != '1':
+                continue
+            if config[c].has_key('path'):
+                path = config[c]['path']
+            else:
+                path = None
+            hc = HostCategory.selectBy(host=self, category=category)
+            if hc.count() > 0:            
+                hc = hc[0]
+            else:
+                hc = HostCategory(host=self, category=category, path=path)
+            if path is not None:
+                hc.path = path
+            if config[c].has_key('user_active'):
+                hc.user_active = config[c]['user_active']
+            if config[c].has_key('upstream'):
+                hc.upstream = config[c]['upstream']
+            if config[c].has_key('dirtree'):
+                hc.dirtree = config[c]['dirtree']
+            hc.sync()
+
+            if config[c].has_key('urls'):
+                urls = config[c]['urls']
+                if type(urls) != list:
+                    urls = [urls]
+                for u in urls:
+                    if HostCategoryUrl.selectBy(host_category=hc,
+                                                url=u,
+                                                private=False).count() == 0:
+                        HostCategoryUrl(host_category=hc, url=u,
+                                        private=False)
+                    for hcurl in HostCategoryUrl.selectBy(host_category=hc, private=False):
+                        if hcurl.url not in urls:
+                            hcurl.destroySelf()
+                                                          
+            if config[c].has_key('private_urls'):
+                urls = config[c]['private_urls'];
+                if type(urls) != list:
+                    urls = [urls]
+                for u in urls:
+                    if HostCategoryUrl.selectBy(host_category=hc,
+                                                url=u,
+                                                private=True).count() == 0:
+                        HostCategoryUrl(host_category=hc, url=u,
+                                        private=True)
+                    for hcurl in HostCategoryUrl.selectBy(host_category=hc, private=True):
+                        if hcurl.url not in urls:
+                            hcurl.destroySelf()
             
+                                                          
+
 
     def is_admin_active(self):
         return self.admin_active and self.site.admin_active
@@ -157,48 +271,23 @@ class Host(SQLObject):
     def is_active(self):
         return self.admin_active and self.user_active and self.site.user_active
     
-
     def _get_config(self):
         return self._config
 
     def _set_config(self, config):
         self._config = config
         self._timestamp = DateTimeCol.now()
+        self._uploaded_config(config)
 
     def _get_timestamp(self):
         return self._timestamp
 
-    def _get_config_categories(self):
-        noncategories = ['global', 'site', 'host', 'stats']
-        result = []
-        for key in self._config.keys():
-            if key not in noncategories:
-                result.append(key)
-        return result
-
-    def category_enabled(self, cname):
-        return self.has_category(cname) and self._config[cname]['enabled'] == '1'
-
-    def category_path(self, cname):
-        return self._config[cname]['path']
-
-    def category_urls(self, cname):
-        urls = self._config[cname]['urls']
-        if type(urls) == list:
-            return urls
-        elif type(urls) == str:
-            return [urls]
-
-
-    
-    def category_upstream(self, cname):
-        return self._config[cname]['upstream']
-
-    def category_dirtree(self, cname):
-        return self._config[cname]['dirtree']
-
     def has_category_dir(self, cname, dir):
-        return self._config[cname]['dirtree'].has_key(dir)
+        try:
+            for hc in HostCategory.selectBy(host=self, category=Category.byName(cname)):
+                return hc.dirtree.has_key(dir)
+        except:
+            return False
 
     def my_site(self):
         return self.site

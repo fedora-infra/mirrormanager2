@@ -3,11 +3,13 @@
 import os, sys
 from os.path import join
 import pickle
-import bz2
 import re
 import ConfigParser
 import pprint
 import time
+import xmlrpclib
+import base64
+import bz2
 
 class HostConfig(object):
     """Holder for config info from the configuration file"""
@@ -108,12 +110,12 @@ def parse_global(conf, section, item):
     return True
 
 def parse_site(conf, section, item):
-    required_options = [ 'name', 'password' ]
+    required_options = [ 'enabled', 'name', 'password', 'user_active' ]
     return parse_section(conf, section, item, required_options, [])
 
 def parse_host(conf, section, item):
-    required_options = [ 'name' ]
-    optional_options = [ 'acl_ips', 'private_rsync_url', 'country', 'countries_allowed', 'netblocks', 'private', 'user_active', 'robot_email' ]
+    required_options = [ 'enabled', 'name' ]
+    optional_options = [ 'acl_ips', 'country', 'countries_allowed', 'netblocks', 'private', 'user_active', 'robot_email' ]
     return parse_section(conf, section, item, required_options, optional_options)
 
 def get_stats(conf, section):
@@ -138,8 +140,8 @@ def get_stats(conf, section):
     return statsdata
 
 def parse_category(conf, section, item):
-    required_options = [ 'enabled', 'path', 'urls' ]
-    optional_options = [ 'upstream' ]
+    required_options = [ 'enabled', 'path', 'urls', 'user_active' ]
+    optional_options = [ 'upstream', 'private_urls' ]
     if not parse_section(conf, section, item, required_options, optional_options):
         return False
 
@@ -216,9 +218,6 @@ def main():
 
 
     (options, args) = parser.parse_args()
-    if options.output is None:
-        usage()
-
     item = HostConfig()
     if not config(options.config, item):
         sys.exit(1)
@@ -227,17 +226,22 @@ def main():
         pp = pprint.PrettyPrinter(indent=4)
         pp.pprint(item.config)
         
-    pbz = bz2.compress(pickle.dumps(item.config, -1))
+    p = pickle.dumps(item.config, -1)
     if options.output is not None:
         outfile = open(options.output, 'wb')
-        outfile.write(pbz)
+        outfile.write(p)
         outfile.close()
 
     if options.stats:
         statdata = get_stats(conf, 'stats')
 
-    # upload pbz and statsdata here
-    
+    # upload p and statsdata here
+    if not item.config.has_key('global') or not item.config['global'].has_key('enabled') or item.config['global']['enabled'] != '1':
+        sys.exit(1)
+
+#   print "Connecting to %s" % item.config['global']['server']
+    server = xmlrpclib.ServerProxy(item.config['global']['server'])
+    print server.checkin(base64.urlsafe_b64encode(bz2.compress(p)))
 
 
 if __name__ == '__main__':

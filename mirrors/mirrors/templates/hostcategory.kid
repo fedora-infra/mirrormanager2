@@ -12,7 +12,7 @@
 </head>
 <body>
 
-${form(value=values, action=action)}
+${form(value=values, action=action, disabled_fields=disabled_fields)}
 <div py:if="values is not None">
 <h3>URLs serving this content</h3>
 	<a href="/host_category_url/0/new?hcid=${values.id}">[Add]</a>
