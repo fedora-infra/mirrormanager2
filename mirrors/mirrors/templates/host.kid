@@ -7,7 +7,9 @@
 <body>
 <h2>${title}</h2>
 <?python
-downstream_siteadmin=values.site.is_downstream_siteadmin_byname(tg.identity.user.user_name)
+downstream_siteadmin=False
+if values is not None:
+   downstream_siteadmin=values.site.is_downstream_siteadmin_byname(tg.identity.user.user_name)
 ?> 
  
 ${form(value=values, action=action, disabled_fields=disabled_fields)}
