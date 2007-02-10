@@ -75,9 +75,10 @@ def read_host_config(config):
 
         h = Host.selectBy(name=host['name'], siteID=thesite.id)
         if h.count() == 0:
-            thehost = Host(name=host['name'], site=thesite, config=config)
+            thehost = Host(name=host['name'], site=thesite)
         else:
             thehost = h[0]
-            thehost.config = config
+        thehost.config = config
+        thehost.sync()
 
         return (thesite, thehost, config)
