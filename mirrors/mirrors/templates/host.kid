@@ -16,7 +16,7 @@ ${form(value=values, action=action, disabled_fields=disabled_fields)}
 
 
 <div py:if="values is not None and action.endswith('update')">
-Last Checked In: ${values.timestamp}
+Last Checked In: ${values.lastCheckedIn}<br></br>
 <UL>
 	<LI>
 	<label for="countries_allowed">Countries Allowed: </label>

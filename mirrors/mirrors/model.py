@@ -113,17 +113,29 @@ class HostCategory(SQLObject):
     user_active = BoolCol(default=True)
     path = StringCol()
     upstream = StringCol(default=None)
-    dirtree = PickleCol(default=None)
+    dirs = MultipleJoin('HostCategoryDir')
     urls = MultipleJoin('HostCategoryUrl')
 
     def destroySelf(self):
         """Cascade the delete operation"""
         for b in urls:
             b.destroySelf()
+        for d in dirs:
+            d.destroySelf()
         SQLObject.destroySelf(self)
 
     def my_site(self):
         return self.host.my_site()
+
+class HostCategoryDir(SQLObject):
+    host_category = ForeignKey('HostCategory')
+    # subset of the path starting below HostCategory.path
+    path = StringCol()
+    hcdindex = DatabaseIndex('host_category', 'path', unique=True)
+    up2date = BoolCol(default=True)
+    files = PickleCol(default=None)
+    lastCrawled = DateTimeCol(default=None)
+    
 
 class HostCategoryUrl(SQLObject):
     host_category = ForeignKey('HostCategory')
@@ -142,21 +154,19 @@ class Host(SQLObject):
     user_active = BoolCol(default=True)
     country = StringCol(default=None)
     _config = PickleCol(default=None)
-    _timestamp = DateTimeCol(default=None)
+    lastCheckedIn = DateTimeCol(default=None)
     private = BoolCol(default=False)
     countries_allowed = MultipleJoin('HostCountryAllowed')
     netblocks = MultipleJoin('HostNetblock')
     acl_ips = MultipleJoin('HostAclIp')
     categories = MultipleJoin('HostCategory')
-    mirrors = MultipleJoin('MirrorDirectory')
 
     def destroySelf(self):
         """Cascade the delete operation"""
         s = [self.countries_allowed,
              self.netblocks,
              self.acl_ips,
-             self.categories,
-             self.mirrors]
+             self.categories]
         for a in s:
             for b in a:
                 b.destroySelf()
@@ -241,8 +251,22 @@ class Host(SQLObject):
                 hc.user_active = config[c]['user_active']
             if config[c].has_key('upstream'):
                 hc.upstream = config[c]['upstream']
+
+            # and now one HostCategoryDir for each dir in the dirtree
             if config[c].has_key('dirtree'):
-                hc.dirtree = config[c]['dirtree']
+                for d in config[c]['dirtree'].keys():
+                    hcdir = HostCategoryDir.selectBy(host_category = hc, path=d)
+                    if hcdir.count() > 0:
+                        hcdir = hcdir[0]
+                        hcdir.files = config[c]['dirtree'][d]
+                        hcdir.up2date = True
+                        hcdir.sync()
+                    else:
+                        hcdir = HostCategoryDir(host_category=hc, path=d, files=config[c]['dirtree'][d])
+                for d in HostCategoryDir.selectBy(host_category=hc):
+                    if d.path not in config[c]['dirtree'].keys():
+                        d.destroySelf()
+
             hc.sync()
 
             if config[c].has_key('urls'):
@@ -287,11 +311,8 @@ class Host(SQLObject):
 
     def _set_config(self, config):
         self._config = config
-        self._timestamp = datetime.utcnow()
+        self.lastCheckedIn = datetime.utcnow()
         self._uploaded_config(config)
-
-    def _get_timestamp(self):
-        return self._timestamp
 
     def has_category(self, cname):
         return HostCategory.selectBy(host=self, category=Category.byName(cname)).count() > 0
@@ -301,7 +322,10 @@ class Host(SQLObject):
             for hc in HostCategory.selectBy(host=self, category=Category.byName(cname)):
                 if len(dir)==0:
                     return True
-                return hc.dirtree.has_key(dir)
+                for d in hc.dirs:
+                    if dir == d.path:
+                        return True
+                return False
         except:
             return False
 
@@ -423,7 +447,6 @@ class Directory(SQLObject):
     # e.g. pub/fedora/linux/release
     name = StringCol(alternateID=True)
     repository = MultipleJoin('Repository')
-    mirrors = MultipleJoin('MirrorDirectory')
     category = MultipleJoin('Category')
 
 
@@ -444,11 +467,6 @@ class Repository(SQLObject):
     arch = ForeignKey('Arch')
     directory = ForeignKey('Directory')
     shortnameIndex = DatabaseIndex('shortname')
-
-class MirrorDirectory(SQLObject):
-    """To cache lookups"""
-    host = ForeignKey('Host')
-    directory = ForeignKey('Directory')
 
 class EmbargoedCountry(SQLObject):
     country_code = StringCol()
@@ -525,8 +543,6 @@ class User(SQLObject):
     # groups this user belongs to
     groups = RelatedJoin("Group", intermediateTable="user_group",
                          joinColumn="user_id", otherColumn="group_id")
-
-    mirrors = MultipleJoin("Mirror")
 
     def _get_permissions(self):
         perms = set()

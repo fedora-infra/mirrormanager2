@@ -21,6 +21,13 @@ ${form(value=values, action=action, disabled_fields=disabled_fields)}
 	  <span py:replace="url.url">URL</span> <a href="/host_category_url/${url.id}/delete">[Delete]</a>
 	  </li>
 </ul>
+
+<h3>Directories this host carries</h3>
+<UL>
+<LI py:for="dir in values.dirs">
+    <span py:replace="dir.path">Path</span>
+</LI>
+</UL>
 </div>
 </body>
 </html>

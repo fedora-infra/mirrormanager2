@@ -724,12 +724,8 @@ class Root(controllers.RootController):
         rsync_acl_list = []
         for h in Host.select():
             if h.is_active():
-                n = h.acl_ips
-                if n is not None:
-                    if type(n) == list:
-                        rsync_acl_list.splice(h.acl_ips)
-                    else:
-                        rsync_acl_list.append(h.acl_ips)
+                for n in h.acl_ips:
+                    rsync_acl_list.append(n.ip)
         return dict(values=rsync_acl_list)
 
     @expose(template="mirrors.templates.login")
