@@ -7,13 +7,7 @@ import pickle
 
 class XmlrpcController(controllers.Controller):
     def __init__(self):
-        cherrypy.config.update({'xmlrpc_filter.on': True,
-                                'server.max_request_size': 1048576})
-
-
-    def echo(self, data):
-        return data
-    echo.exposed = True
+        cherrypy.config.update({'xmlrpc_filter.on': True})
 
     def checkin(self, p):
         config = pickle.loads(bz2.decompress(base64.urlsafe_b64decode(p)))
@@ -23,7 +17,3 @@ class XmlrpcController(controllers.Controller):
         else:
             return 'error checking in'
     checkin.exposed = True
-
-    def good(self, pbz):
-        return 'good'
-    good.exposed = True

@@ -65,8 +65,9 @@ class content:
 
 
 class SiteFields(widgets.WidgetsList):
-    name     = widgets.TextField(validator=validators.NotEmpty)
-    password = widgets.TextField(validator=validators.NotEmpty)
+    licensesAccepted = widgets.CheckBox(label="I agree to the Fedora Legal policies linked above")
+    name     = widgets.TextField(validator=validators.NotEmpty, label="Site Name")
+    password = widgets.TextField(validator=validators.NotEmpty, label="Site Password")
     orgUrl   = widgets.TextField(label="Organization URL", validator=validators.URL, attrs=dict(size='30'))
     private  = widgets.CheckBox()
     admin_active = widgets.CheckBox("admin_active",default=True)
@@ -110,25 +111,42 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
     @error_handler(new)
     @validate(form=site_form)
     def create(self, **kwargs):
+        if not kwargs.has_key('licensesAccepted') or not kwargs['licensesAccepted']:
+            turbogears.flash("Error:You must accept the license agreements to create a Site")
+            raise turbogears.redirect("/")
+        if not identity.in_group("sysadmin") and kwargs.has_key('admin_active'):
+            del kwargs['admin_active']
+        kwargs['licensesAcceptedBy'] = identity.current.user_name
+        kwargs['createdBy'] = identity.current.user_name
         try:
-            if not identity.in_group("sysadmin") and kwargs.has_key('admin_active'):
-                del kwargs['admin_active']
             site = Site(**kwargs)
-            id = site.id
+            site.accept_licenses(identity)
             SiteAdmin(site=site, username=identity.current.user_name)
-            submit_action = "/site/%s/update" % id
         except: # probably sqlite IntegrityError but we can't catch that for some reason... 
             turbogears.flash("Error:Site %s already exists" % kwargs['name'])
-            submit_action = "/site/0/create"
+        turbogears.flash("Site created.")
         raise turbogears.redirect("/")
 
     @expose(template="mirrors.templates.site")
     @validate(form=site_form)
     def update(self, site, **kwargs):
         siteadmin_check(site, identity)
+        if kwargs.has_key('licensesAccepted') and kwargs['licensesAccepted']:
+            kwargs['licensesAcceptedBy'] = identity.current.user_name
+        else:
+            turbogears.flash("Error:You must accept the license agreements to update a Site")
+            return dict(form=site_form, values=site, action = "/site/%s/update" % site.id,
+                        disabled_fields=self.disabled_fields())
+
+        # in case we ever have to reset the licensesAccepted field for everyone
+        # we drop it here as we're not letting them uncheck it anyow.
+        if kwargs.has_key('licensesAccepted'):
+            del kwargs['licensesAccepted']
         if not identity.in_group("sysadmin") and kwargs.has_key('admin_active'):
             del kwargs['admin_active']
         site.set(**kwargs)
+        if not site.licensesAccepted:
+            site.accept_licenses(identity)
         site.sync()
         turbogears.flash("Site Updated")
         raise turbogears.redirect("/")
@@ -207,7 +225,10 @@ class SiteAdminController(controllers.Controller, identity.SecureResource, conte
 
 ##############################################
 class SiteToSiteFields(widgets.WidgetsList):
-    sites = widgets.MultipleSelectField(options=[(s.id, s.name) for s in Site.select()], size=15)
+    def get_sites_options():
+        return [(s.id, s.name) for s in Site.select()]
+
+    sites = widgets.MultipleSelectField(options=get_sites_options, size=15)
                                         
 
 site_to_site_form = widgets.TableForm(fields=SiteToSiteFields(),
@@ -268,7 +289,7 @@ class SiteToSiteController(controllers.Controller, identity.SecureResource, cont
 
 
 class HostFields(widgets.WidgetsList):
-    name = widgets.TextField(validator=validators.NotEmpty, attrs=dict(size='30'))
+    name = widgets.TextField(validator=validators.NotEmpty, attrs=dict(size='30'), label="Host Name")
     admin_active = widgets.CheckBox("admin_active")
     user_active = widgets.CheckBox(default=True)
     country = widgets.TextField()
@@ -357,7 +378,10 @@ class HostController(controllers.Controller, identity.SecureResource, content):
 # HostCategory
 ##################################################################33
 class HostCategoryFields(widgets.WidgetsList):
-    category = widgets.SingleSelectField(options = [(c.id, c.name) for c in Category.select()])
+    def get_category_options():
+        return [(c.id, c.name) for c in Category.select()]
+
+    category = widgets.SingleSelectField(options=get_category_options)
     admin_active = widgets.CheckBox(default=True)
     user_active = widgets.CheckBox(default=True)
     path = widgets.TextField(validator=validators.NotEmpty, label="Path on your disk", attrs=dict(size='30'))
@@ -641,13 +665,20 @@ class PubController(controllers.Controller):
         for u, country in urls:
             if not u.startswith('http://') and not u.startswith('ftp://'):
                 urls.remove((u, country))
-        return dict(values=[u for u, v in urls])
+        return dict(values=[u for u, country in urls])
 
 #fixme - this is just a stub
 class PublicListController(controllers.Controller):
     @expose(template="mirrors.templates.publiclist")
     def index(self, *vpath, **params):
         return dict()
+
+#http://mirrors.fedoraproject.org/mirrorlist?repo=core-$releasever&arch=$basearch
+#http://mirrors.fedoraproject.org/mirrorlist?repo=core-debug-$releasever&arch=$basearch
+    @expose(template="mirrors.templates.mirrorlist", format="plain", content_type="text/plain")
+    def mirrorlist(self, repo=None, arch=None, country=None):
+        pass
+
 
         
 
@@ -664,6 +695,7 @@ class Root(controllers.RootController):
     site2site = SiteToSiteController()
     from mirrors.xmlrpc import XmlrpcController
     xmlrpc = XmlrpcController()
+#    public = PublicListController()
     
     @expose(template="mirrors.templates.welcome")
     @identity.require(identity.not_anonymous())
@@ -687,7 +719,6 @@ class Root(controllers.RootController):
         else:
             return {"sites":sites}
 
-
     @expose(template="mirrors.templates.rsync_acl", format="plain", content_type="text/plain")
     def rsync_acl(self):
         rsync_acl_list = []
@@ -700,12 +731,6 @@ class Root(controllers.RootController):
                     else:
                         rsync_acl_list.append(h.acl_ips)
         return dict(values=rsync_acl_list)
-
-#http://mirrors.fedoraproject.org/mirrorlist?repo=core-$releasever&arch=$basearch
-#http://mirrors.fedoraproject.org/mirrorlist?repo=core-debug-$releasever&arch=$basearch
-    @expose(template="mirrors.templates.mirrorlist", format="plain", content_type="text/plain")
-    def mirrorlist(self, repo=None, arch=None, country=None):
-        pass
 
     @expose(template="mirrors.templates.login")
     def login(self, forward_url=None, previous_url=None, *args, **kw):
@@ -722,8 +747,8 @@ class Root(controllers.RootController):
             msg=_("The credentials you supplied were not correct or "
                    "did not grant access to this resource.")
         elif identity.get_identity_errors():
-            msg=_("You must provide your credentials before accessing "
-                   "this resmailource.")
+            msg=_("You must provide your Fedora Account System credentials before accessing "
+                   "this resource.")
         else:
             msg=_("Please log in.")
             forward_url= cherrypy.request.headers.get("Referer", "/")

@@ -8,9 +8,31 @@
 <?python
 if 'sysadmin' not in tg.identity.groups:
    disabled_fields.append('admin_active')
-
-downstream_siteadmin=values.is_downstream_siteadmin_byname(tg.identity.user.user_name)
+if values is not None and not action.endswith('create'):
+   downstream_siteadmin=values.is_downstream_siteadmin_byname(tg.identity.user.user_name)
+else:
+   downstream_siteadmin=False
 ?> 
+
+<div py:if="values is not None">
+Created At: ${values.createdAt}<br></br>
+Created By: ${values.createdBy}<br></br>
+Licenses Accepted At: ${values.licensesAcceptedAt}<br></br>
+Licenses Accepted By: ${values.licensesAcceptedBy}
+</div>
+
+<P>
+By serving as a Mirror Server for Fedora, you must agree to comply with
+Fedora's <a href="http://fedoraproject.org/wiki/Legal">legal terms and
+conditions</a>, including <a
+href="http://fedoraproject.org/wiki/Legal/TrademarkGuidelines">
+Trademarks</a> and <a
+href="http://fedoraproject.org/wiki/Legal/Export">Export
+Restrictions</a>.  
+Mirror server administrators are not required to sign the Fedora
+<a href="http://fedoraproject.org/wiki/Legal/Licenses/CLA">Contributor License Agreement</a>.
+</P>
+
 
 ${form(value=values, action=action, disabled_fields=disabled_fields)}
 
@@ -48,6 +70,7 @@ ${form(value=values, action=action, disabled_fields=disabled_fields)}
 </LI>
 </UL>
 </div>
+<hr></hr>
 <div py:if="not downstream_siteadmin"><a href="/site/${values.id}/delete">[Delete Site]</a></div>
 </div>
 </body>

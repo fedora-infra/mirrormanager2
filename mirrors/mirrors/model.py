@@ -3,6 +3,7 @@ from sqlobject.sqlbuilder import *
 from turbogears import identity
 import pickle
 import sys
+from datetime import datetime
 
 from turbogears.database import PackageHub
 
@@ -26,6 +27,11 @@ class Site(SQLObject):
     private = BoolCol(default=False)
     admin_active = BoolCol(default=True)
     user_active  = BoolCol(default=True)
+    createdAt = DateTimeCol(default=datetime.utcnow())
+    createdBy = StringCol(default=None)
+    licensesAccepted  = BoolCol(default=False)
+    licensesAcceptedAt = DateTimeCol(default=datetime.utcnow())
+    licensesAcceptedBy = StringCol(default=None)
     admins = MultipleJoin('SiteAdmin')
     hosts  = MultipleJoin('Host')
 
@@ -35,11 +41,10 @@ class Site(SQLObject):
             h.destroySelf()
         for a in self.admins:
             a.destroySelf()
-        for s in SiteToSite.select(OR(SiteToSite.q.upstream_siteID == self,
-                                        SiteToSite.q.downstream_siteID == self)):
+        for s in SiteToSite.select(OR(SiteToSite.q.upstream_siteID == self.id,
+                                        SiteToSite.q.downstream_siteID == self.id)):
             s.destroySelf()
         SQLObject.destroySelf(self)
-
 
     def _get_downstream_sites(self):
         return [s2s.downstream_site for s2s in SiteToSite.selectBy(upstream_site=self)]
@@ -80,6 +85,12 @@ class Site(SQLObject):
                 if a.username == name:
                     return True
         return False
+
+    def accept_licenses(self, identity):
+        self.licensesAcceptedBy = identity.current.user_name
+        self.licensesAcceptedAt = datetime.utcnow()
+        self.licensesAccepted = True
+
         
 
 class SiteAdmin(SQLObject):
@@ -266,7 +277,7 @@ class Host(SQLObject):
 
 
     def is_admin_active(self):
-        return self.admin_active and self.site.admin_active
+        return self.admin_active and self.site.admin_active and self.site.licensesAccepted
 
     def is_active(self):
         return self.admin_active and self.user_active and self.site.user_active
@@ -276,7 +287,7 @@ class Host(SQLObject):
 
     def _set_config(self, config):
         self._config = config
-        self._timestamp = DateTimeCol.now()
+        self._timestamp = datetime.utcnow()
         self._uploaded_config(config)
 
     def _get_timestamp(self):
@@ -386,7 +397,7 @@ def directory_mirror_urls(dname, country=None, include_private=False):
 
 class HostStats(SQLObject):
     host = ForeignKey('Host')
-    _timestamp = DateTimeCol(default=None)
+    _timestamp = DateTimeCol(default=datetime.utcnow())
 
 
 class Arch(SQLObject):
@@ -443,9 +454,10 @@ class EmbargoedCountry(SQLObject):
     country_code = StringCol()
 
 
-from turbogears import identity 
-from datetime import datetime
-
+###############################################################
+# These classes are only used if you're not using the
+# Fedora Account System or some other backend that provides
+# Identity management
 class Visit(SQLObject):
     class sqlmeta:
         table = "visit"

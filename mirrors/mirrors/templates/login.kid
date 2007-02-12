@@ -79,14 +79,14 @@
         <p>${message}</p>
         <br />
         <p>
-        	You can <a href="${tg.url('/register')}">register</a> 
-        	online and create a user to manage your fedora mirrors.
+        	You must <a
+    href="https://admin.fedora.redhat.com/accounts">register</a> for your Fedora Account System account to manage your mirrors.
         </p>
         <form action="${previous_url}" method="POST">
             <table>
                 <tr>
                     <td class="label">
-                        <label for="user_name">User Name:</label>
+                        <label for="user_name">FAS Username:</label>
                     </td>
                     <td class="field">
                         <input type="text" id="user_name" name="user_name"/>
