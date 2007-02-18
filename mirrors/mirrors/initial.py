@@ -22,28 +22,23 @@ a.addGroup(Group.by_group_name('sysadmin'))
 
 
 def make_directories():
-    Directory(name='pub/fedora/linux/releases')
-    Directory(name='pub/epel')
     testfiles = {'core':'../fedora-test-data/fedora-linux-core-dirsonly.txt', 'extras': '../fedora-test-data/fedora-linux-extras-dirsonly.txt'}
-    for category, file in testfiles.iteritems():
+    for cname, file in testfiles.iteritems():
         f = open(file, 'r')
+        try:
+            category = Category.byName(cname)
+        except:
+            category = None
         try:
             for line in f:
                 line = line.strip()
                 if re.compile('^\.$').match(line):
-                    name = 'pub/fedora/linux/%s' % (category)
-                    Directory(name=name)
+                    name = 'pub/fedora/linux/%s' % (cname)
+                    # Directory(name=name, category=category) was made already
                 else:
-                    name = 'pub/fedora/linux/%s/%s' % (category, line)
-                    parent = None
-                    index = name.rfind('/')
-                    if index > 0:
-                        parentname = name[:index]
-                        parent = Directory.select(Directory.q.name==parentname)
-                        if parent.count():
-                            parent = parent[0]
-
-                        child = Directory(name=name)
+                    name = 'pub/fedora/linux/%s/%s' % (cname, line)
+                    child = Directory(name=name)
+                    child.addCategory(category)
                     
         finally:
             f.close()
@@ -99,7 +94,7 @@ def make_repositories():
                     path = line.split()[4]
                     index = path.find('/repodata/repomd.xml')
                     path = path[:index]
-                    cat = Category.select(Category.q.name==category)[0]
+                    cat = Category.byName(category)
                     (ver, arch) = guess_ver_arch_from_path(cat, path)
                     path = trim_os_from_dirname(path)
                     dirname = 'pub/fedora/linux/%s/%s'  % (category, path)
@@ -108,10 +103,7 @@ def make_repositories():
                     name='-'.join(name)
                     name='%s-%s-%s' % (cat.product.name, category, name)
                     shortname = '%s-%s' % (category, ver)
-                    dirs = Directory.select(Directory.q.name==dirname)
-                    dir = None
-                    if dirs.count() > 0:
-                        dir = dirs[0]
+                    dir = Directory.byName(dirname)
                     Repository(name=name, category=cat, version=ver, arch=arch, directory=dir)
 
         finally:
@@ -182,6 +174,8 @@ if not Site.select().count() and not Host.select().count():
     Host(name='master', site=redhat)
     for n in range(1,4):
         host = Host(name='download%s.fedora.redhat.com' % n, site=redhat)
+    pt = Host(name='publictest7.fedora.redhat.com', site=redhat)
+    HostAclIp(host=pt, ip='publictest7.fedora.redhat.com')
 
     dell = Site(name='Dell', private=True, password="password", orgUrl="http://www.dell.com")
     Host(name='linuxlib.us.dell.com', site=dell)
@@ -207,33 +201,39 @@ fedora = Product(name='fedora')
 if not Version.select().count():
     make_versions()
 
-if not Directory.select().count():
-    make_directories()
-
 if not EmbargoedCountry.select().count():
     make_embargoed_countries()
 
-# create our default Repositories
+# create our default Categories
+directory = Directory(name='pub/fedora/linux/core')
 core = Category(name='core',
                 product = fedora,
-                directory = Directory.byName('pub/fedora/linux/core'))
+                topdir = directory)
+directory.addCategory(core)
 
+directory = Directory(name='pub/fedora/linux/extras')
 extras = Category(name='extras',
                   product = fedora,
-                  directory = Directory.byName('pub/fedora/linux/extras'))
+                  topdir = directory)
+directory.addCategory(extras)
 
+directory = Directory(name='pub/fedora/linux/releases')
 releases = Category(name='releases',
                    product = fedora,
-                   directory = Directory.byName('pub/fedora/linux/releases'))
+                   topdir = directory)
+directory.addCategory(releases)
 
+directory = Directory(name='pub/epel')
 epel = Category(name='epel',
                 product = rhel,
-                directory = Directory.byName('pub/epel'))
+                topdir=directory)
+directory.addCategory(epel)
 
 
+#make_directories()
 
-if not Repository.select().count():
-    make_repositories()
+#if not Repository.select().count():
+#    make_repositories()
 
 make_sites()
 #make_mirrors()

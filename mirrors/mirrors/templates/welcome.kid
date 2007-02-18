@@ -31,7 +31,7 @@
 <ul>
 	  <li py:for="c in categories">
 	  <span py:replace="c.name">Category Name</span>&nbsp;
-	  <span py:replace="c.directory.name">Directory Name</span>
+	  <span py:replace="c.topdir.name">Directory Name</span>
 	  </li>
 </ul>
 </div>

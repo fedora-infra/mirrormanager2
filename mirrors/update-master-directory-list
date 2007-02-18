@@ -1,0 +1,176 @@
+#!/usr/bin/python
+import pkg_resources
+pkg_resources.require("TurboGears")
+
+from sqlobject import *
+import sys, os, string
+import turbogears
+from mirrors.model import *
+
+# look on the command line for a desired config file
+if len(sys.argv) > 1:
+    turbogears.update_config(configfile=sys.argv[1], 
+        modulename="mirrors.config")
+else:
+    print "usage: update-master-directory-list dev.cfg"
+    sys.exit(1)
+    
+
+from turbogears.database import PackageHub
+hub = PackageHub("mirrors")
+__connection__ = hub
+
+def trim_os_from_dirname(dirname):
+    # trim the /os off the name
+    index = dirname.rfind('/os')
+    if index > 0:
+        dirname = dirname[:index]
+    return dirname
+
+def rename_SRPMS_source(l):
+    rc = []
+    for i in l:
+        if i == 'source':
+            pass
+        elif i == 'SRPMS':
+            rc.append('source')
+        else:
+            rc.append(i)
+    return rc
+
+def guess_ver_arch_from_path(category, path):
+    arch = None
+    for a in Arch.select():
+        if path.find(a.name) != -1:
+            arch = a
+    if path.find('SRPMS') != -1:
+        arch = Arch.byName('source')
+
+    ver = None
+    for v in Version.select(Version.q.productID==category.product.id):
+        s = '/%s' % (v.name)
+        if path.find(s) != -1:
+            ver = v
+
+    return (ver, arch)
+
+def make_repository(dir, category):
+    path = dir.name[len(category.topdir.name)+1:-len('/repodata')]
+    (ver, arch) = guess_ver_arch_from_path(category, path)
+    path = trim_os_from_dirname(path)
+    name=path.split('/')
+    name = rename_SRPMS_source(name)
+    name='-'.join(name)
+    name='%s-%s-%s' % (category.product.name, category.name, name)
+    shortname = '%s-%s' % (category.name, ver)
+    try:
+        repo = Repository(name=name, category=category, version=ver, arch=arch, directory=dir)
+    except:
+        pass
+
+    # assign shortnames to repositories like yum default mirrorlists expects
+
+
+
+def nuke_gone_directories(category, category_directories):
+    """ deleting a Directory has a ripple effect through the whole
+        database.  Be really sure you're ready do to this.  It comes
+        in handy when say a Test release is dropped."""
+        
+    for d in Directory.select():
+        if len(d.categories == 1) and category in d.categories:
+            if not category_directories.has_key(d.name):
+                d.destroySelf()
+
+def make_one_directory(line, category, path, category_directories):
+    d = line.split()[4]
+    if re.compile('^\.$').match(d):
+        dname = path
+    else:
+        dname = "%s/%s" % (path, d)
+    category_directories[dname] = {'files':{}, 'isRepository':False}
+    if d.endswith('repodata'):
+        category_directories[dname]['isRepository'] = True
+    return dname
+
+def add_file_to_directory(line, dname, path, category_directories):
+    perm, size, date, time, filepath = line.split()
+    year, month, day = date.split('/')
+    hour, minute, second = time.split(':')
+    dt = datetime(int(year), int(month), int(day), int(hour), int(minute), int(second))
+    l = filepath.split('/')
+    filename = l[-1]
+    subpath = l[:-1]
+    if len(subpath) > 0:
+        dirpath = ("%s/" % path) + '/'.join(subpath)
+    else:
+        dirpath = path
+    category_directories[dirpath]['files'][filename] = {'size':size,
+                                                        'stat':dt}
+
+def short_filelist(files):
+    html=0
+    rpms=0
+    hdrs=0
+    for f in files.keys():
+        if f.endswith('.html'): html=html+1
+        if f.endswith('.rpm'):  rpms=rpms+1
+        if f.endswith('.hdr'):  hdrs=hdrs+1
+    if html>10 or rpms > 10 or hdrs > 10:
+        rc = {}
+        for k in files.keys()[0:10]:
+            rc[k] = files[k]
+        return rc
+    else:
+        return files
+def sync_category_directories(category, category_directories):
+    for dirpath, value in category_directories.iteritems():
+        try:
+            dir = Directory.byName(dirpath)
+        except SQLObjectNotFound:
+            dir = Directory(name=dirpath)
+        dir.files = short_filelist(value['files'])
+        dir.addCategory(category)
+        if value['isRepository']:
+            make_repository(dir, category)
+        
+
+def parse_rsync_listing(cname, f, path):
+    category = Category.byName(cname)
+    category_directories = {}
+    for line in f.readlines():
+        line.strip()
+        if line.startswith('d'):
+            dname = make_one_directory(line, category, path, category_directories)
+        else:
+            add_file_to_directory(line, dname, path, category_directories)
+    sync_category_directories(category, category_directories)
+
+
+
+def sync_directories_using_rsync():
+    categories = {'core':('fedora-linux-core','pub/fedora/linux/core'),
+#                  'extras':('fedora-linux-extras','pub/fedora/linux/extras'),
+#                  'releases':('fedora-linux-releases','pub/fedora/linux/releases'),
+#                  'epel':('epel','pub/epel'),
+                  }
+
+    for cname, (rsync_module, path) in categories.iteritems():
+        cmd = 'rsync -r download1.fedora.redhat.com::' + rsync_module
+
+        try:
+            f = os.popen(cmd)
+        except:
+            continue
+        parse_rsync_listing(cname, f, path)
+
+
+def sync_directories_from_file(filename, cname, path):
+    f = open(filename, 'r')
+    parse_rsync_listing(cname, f, path)
+    f.close()
+
+
+# fixme this is quick and dirty
+sync_directories_from_file('/tmp/fedora-linux-core.txt', 'core', 'pub/fedora/linux/core')
+sync_directories_from_file('/tmp/fedora-linux-extras.txt', 'extras', 'pub/fedora/linux/extras')

@@ -377,18 +377,36 @@ class HostController(controllers.Controller, identity.SecureResource, content):
 ##################################################################33
 # HostCategory
 ##################################################################33
-class HostCategoryFields(widgets.WidgetsList):
+class HostCategoryFieldsNew(widgets.WidgetsList):
     def get_category_options():
         return [(c.id, c.name) for c in Category.select()]
-
     category = widgets.SingleSelectField(options=get_category_options)
     admin_active = widgets.CheckBox(default=True)
     user_active = widgets.CheckBox(default=True)
-    path = widgets.TextField(validator=validators.NotEmpty, label="Path on your disk", attrs=dict(size='30'))
-    upstream = widgets.TextField(attrs=dict(size='30'))
+    path = widgets.TextField(validator=validators.NotEmpty, label="Path on your disk", attrs=dict(size='30'), help_text='e.g. /var/ftp/pub/fedora/linux/core')
+    upstream = widgets.TextField(attrs=dict(size='30'), help_text='e.g. rsync://download.fedora.redhat.com/fedora-linux-core')
 
-host_category_form = widgets.TableForm(fields=HostCategoryFields(),
+class LabelObjName(widgets.Label):
+        template = """
+        <label xmlns:py="http://purl.org/kid/ns#"
+        id="${field_id}"
+        class="${field_class}"
+        py:content="value.name"
+        />
+        """                             
+
+class HostCategoryFieldsRead(widgets.WidgetsList):
+    category = LabelObjName()
+    admin_active = widgets.CheckBox(default=True)
+    user_active = widgets.CheckBox(default=True)
+    path = widgets.TextField(validator=validators.NotEmpty, label="Path on your disk", attrs=dict(size='30'), help_text='e.g. /var/ftp/pub/fedora/linux/core')
+    upstream = widgets.TextField(attrs=dict(size='30'), help_text='e.g. rsync://download.fedora.redhat.com/fedora-linux-core')
+
+host_category_form_new = widgets.TableForm(fields=HostCategoryFieldsNew(),
                                        submit_text="Save Host Category")
+
+host_category_form_read = widgets.TableForm(fields=HostCategoryFieldsRead(),
+                                            submit_text="Save Host Category")
 
 
 
@@ -406,6 +424,7 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
 
     @expose(template="mirrors.templates.hostcategory")
     def new(self, **kwargs):
+
         try:
             hostid=kwargs['hostid']
             host = Host.get(hostid)
@@ -413,18 +432,19 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
             raise redirect("/")
         siteadmin_check(host.my_site(), identity)
         submit_action = "/host_category/0/create?hostid=%s" % hostid
-        return dict(form=host_category_form, values=None, action=submit_action, disabled_fields=self.disabled_fields())
+        return dict(form=host_category_form_new, values=None, action=submit_action, disabled_fields=self.disabled_fields())
     
     
     @expose(template="mirrors.templates.hostcategory")
     def read(self, hostcategory):
         downstream_siteadmin_check(hostcategory.my_site(), identity)
         submit_action = "/host_category/%s/update" % hostcategory.id
-        return dict(form=host_category_form, values=hostcategory, action=submit_action, disabled_fields=self.disabled_fields())
+        disabled_fields=self.disabled_fields()
+        return dict(form=host_category_form_read, values=hostcategory, action=submit_action, disabled_fields=self.disabled_fields())
 
     @expose(template="mirrors.templates.hostcategory")
     @error_handler(new)
-    @validate(form=host_category_form)
+    @validate(form=host_category_form_new)
     def create(self, **kwargs):
         if not kwargs.has_key('hostid'):
             turbogears.flash("Error: form didn't provide hostid")
@@ -445,7 +465,7 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
 
 
     @expose(template="mirrors.templates.hostcategory")
-    @validate(form=host_category_form)
+    @validate(form=host_category_form_read)
     def update(self, hostcategory, **kwargs):
         siteadmin_check(hostcategory.my_site(), identity)
         hostcategory.set(**kwargs)

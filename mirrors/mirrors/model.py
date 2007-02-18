@@ -4,6 +4,7 @@ from turbogears import identity
 import pickle
 import sys
 from datetime import datetime
+from string import rstrip, strip
 
 from turbogears.database import PackageHub
 
@@ -111,7 +112,7 @@ class HostCategory(SQLObject):
     hcindex = DatabaseIndex('host', 'category', unique=True)
     admin_active = BoolCol(default=True)
     user_active = BoolCol(default=True)
-    path = StringCol()
+    path = StringCol() # path on host's disk e.g. /var/ftp/pub/fedora/linux/core
     upstream = StringCol(default=None)
     dirs = MultipleJoin('HostCategoryDir')
     urls = MultipleJoin('HostCategoryUrl')
@@ -237,7 +238,7 @@ class Host(SQLObject):
             if not config[c].has_key('enabled') or config[c]['enabled'] != '1':
                 continue
             if config[c].has_key('path'):
-                path = config[c]['path']
+                path = rstrip(config[c]['path'], '/')
             else:
                 path = None
             hc = HostCategory.selectBy(host=self, category=category)
@@ -255,6 +256,7 @@ class Host(SQLObject):
             # and now one HostCategoryDir for each dir in the dirtree
             if config[c].has_key('dirtree'):
                 for d in config[c]['dirtree'].keys():
+                    d = strip(d, '/')
                     hcdir = HostCategoryDir.selectBy(host_category = hc, path=d)
                     if hcdir.count() > 0:
                         hcdir = hcdir[0]
@@ -334,6 +336,18 @@ class Host(SQLObject):
             if hc.category.name == cname:
                 return [hcurl.url for hcurl in HostCategoryUrl.selectBy(host_category=hc, private=False)]
         
+    def directory_urls(self, directory, category):
+        """Given what we know about the host and the categories it carries
+        return the URLs by which we can get at it (whether or not it's actually present can be determined later."""
+        result = []
+        for hc in self.categories:
+            if category != hc.category:
+                continue
+            dirname = directory.name[(len(category.topdir.name)+1):]
+            for hcu in self.category_urls(category.name):
+                fullurl = '%s/%s' % (hcu, dirname)
+                result.append((fullurl, self.country))
+        return result
 
     def my_site(self):
         return self.site
@@ -363,7 +377,7 @@ class HostNetblock(SQLObject):
 def category_mirrors(category):
     result = []
     # pub/fedora/linux/core
-    topdir = category.directory.name
+    topdir = category.topdir.name
     for h in Host.select():
         if h.has_category(category.name):
             result.append(h)
@@ -379,31 +393,25 @@ def directory_mirrors(dirname, country=None, include_private=False):
     origdir = dirname
     result = []
     category = None
-    while category is None and len(dirname) > 0:
-        try:
-            d = Directory.byName(dirname)
-        except SQLObjectNotFound:
-            return result
-        if len(d.category) > 0:
-            category = d.category[0]
-            break
-        else:
-            dirname = dirname.split('/')[:-1]
-            dirname = '/'.join(dirname)
-            
-    if category is None:
+    try:
+        d = Directory.byName(dirname)
+    except SQLObjectNotFound:
+        return result
+
+    if len(d.categories) == 0:
         return None
 
-    dirname = origdir[len(category.directory.name)+1:]
-
-    hosts = category_mirrors(category)
-    for h in hosts:
-        if h.is_active() and h.has_category_dir(category.name, dirname):
-            if h.private and not include_private:
-                continue
-            if country is not None and h.country is not None and h.country != country and country != 'global':
-                continue
-            result.append((category.name, dirname, h))
+    for category in d.categories:
+        # dirname is the subpath starting below the category's top-level directory
+        dirname = origdir[len(category.topdir.name)+1:]
+        hosts = category_mirrors(category)
+        for h in hosts:
+            if h.is_active() and h.has_category_dir(category.name, dirname):
+                if h.private and not include_private:
+                    continue
+                if country is not None and h.country is not None and h.country != country and country != 'global':
+                    continue
+                result.append((category.name, dirname, h))
     return result
 
 def directory_mirror_urls(dname, country=None, include_private=False):
@@ -422,6 +430,8 @@ def directory_mirror_urls(dname, country=None, include_private=False):
 class HostStats(SQLObject):
     host = ForeignKey('Host')
     _timestamp = DateTimeCol(default=datetime.utcnow())
+    type = StringCol(default=None)
+    data = PickleCol(default=None)
 
 
 class Arch(SQLObject):
@@ -446,8 +456,16 @@ class Directory(SQLObject):
     # e.g. pub/epel
     # e.g. pub/fedora/linux/release
     name = StringCol(alternateID=True)
-    repository = MultipleJoin('Repository')
-    category = MultipleJoin('Category')
+    files = PickleCol(default={})
+    categories = RelatedJoin('Category')
+    repository = SingleJoin('Repository') # zero or one repository, set if this dir contains a yum repo
+
+    def destroySelf(self):
+        if self.repository is not None:
+            self.repository.destroySelf()
+        # don't destroy a whole category if only deleting a directory
+        SQLObject.destroySelf(self)
+    
 
 
 class Category(SQLObject):
@@ -456,8 +474,14 @@ class Category(SQLObject):
     name = StringCol(alternateID=True)
     product = ForeignKey('Product')
     canonicalhost = StringCol(default='http://download.fedora.redhat.com')
-    directory = ForeignKey('Directory')
+    topdir = ForeignKey('Directory', default=None)
+    directories = RelatedJoin('Directory') # all the directories that are part of this category
+    hostCategories = MultipleJoin('HostCategory')
 
+    def destroySelf(self):
+        for hc in self.hostCategories:
+            hc.destroySelf()
+        SQLObject.destroySelf(self)
 
 class Repository(SQLObject):
     name = StringCol(alternateID=True)

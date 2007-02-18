@@ -1,0 +1,82 @@
+#!/usr/bin/python
+import pkg_resources
+pkg_resources.require("TurboGears")
+
+from sqlobject import *
+import sys, os, string
+import turbogears
+from mirrors.model import *
+from urlgrabber.grabber import URLGrabber, URLGrabError
+from datetime import datetime
+
+# look on the command line for a desired config file
+if len(sys.argv) > 1:
+    turbogears.update_config(configfile=sys.argv[1], 
+        modulename="mirrors.config")
+else:
+    print "usage: crawler dev.cfg"
+    sys.exit(1)
+    
+
+from turbogears.database import PackageHub
+hub = PackageHub("mirrors")
+__connection__ = hub
+
+os.chdir('/tmp/foo')
+g = URLGrabber(range=(0,2), throttle=0, http_headers = [('Pragma', 'no-cache')], copy_local=0, keepalive=1)
+def url_file_exists(url, file):
+    graburl = "%s/%s" % (url, file)
+    print graburl
+    try:
+        result = g.urlgrab(graburl, filename='/dev/null', range=(0,2))
+    except URLGrabError, e:
+        if e.errno != 14 and e.errno != 4:
+            print '[Errno %i] %s' % (e.errno, e.strerror)
+        return False
+    except OSError, e:
+        if e.errno == 1:
+            pass
+    return True
+
+def doit(include_private=False):
+    for host in Host.select():
+        if host.private and not include_private:
+            continue
+        for hc in host.categories:
+            category = hc.category
+            for d in category.directories:
+                urls = host.directory_urls(d, category)
+                hcd = None
+                try:
+                    hcd = HostCategoryDir.selectBy(host_category=hc, path=d.name[len(category.topdir.name)+1:])
+                except SQLObjectNotFound:
+                    hcd = None
+                
+                for u in urls:
+                    url = u[0]
+                    if url.startswith('http'):
+                        has_all_files=True
+                        if len(d.files.keys()) > 0:
+                            for file in d.files.keys():
+                                if url_file_exists(url, file):
+                                    # fixme sometimes this returns true when it shouldn't, e.g. humbolt carrying s390 stuff
+                                    #                                print "%s/%s" % (url, file)
+                                    if hcd is None:
+                                        hcd = HostCategoryDir(host_category=hc, path=d.name[len(category.topdir.name)+1:],
+                                                              lastCrawled=datetime.utcnow(), up2date=True)
+                                    else:
+                                        hcd.lastCrawled=datetime.utcnow()
+                                        hcd.up2date=True
+                                else:
+                                    has_all_files=False
+                                    if hcd is not None:
+                                        hcd.lastCrawled=datetime.utcnow()
+                                        hcd.up2date=False
+                                        break
+                            if has_all_files:
+                                #print url
+                                pass
+
+                    
+
+doit(include_private=True)

@@ -11,7 +11,6 @@
 <title>Host Category</title>
 </head>
 <body>
-
 ${form(value=values, action=action, disabled_fields=disabled_fields)}
 <div py:if="values is not None">
 <h3>URLs serving this content</h3>
