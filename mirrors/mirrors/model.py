@@ -119,9 +119,9 @@ class HostCategory(SQLObject):
 
     def destroySelf(self):
         """Cascade the delete operation"""
-        for b in urls:
+        for b in self.urls:
             b.destroySelf()
-        for d in dirs:
+        for d in self.dirs:
             d.destroySelf()
         SQLObject.destroySelf(self)
 
@@ -475,7 +475,7 @@ class Category(SQLObject):
     product = ForeignKey('Product')
     canonicalhost = StringCol(default='http://download.fedora.redhat.com')
     topdir = ForeignKey('Directory', default=None)
-    directories = RelatedJoin('Directory') # all the directories that are part of this category
+    directories = RelatedJoin('Directory', orderBy='name') # all the directories that are part of this category
     hostCategories = MultipleJoin('HostCategory')
 
     def destroySelf(self):
