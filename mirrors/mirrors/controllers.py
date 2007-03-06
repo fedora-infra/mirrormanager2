@@ -125,7 +125,7 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
         except: # probably sqlite IntegrityError but we can't catch that for some reason... 
             turbogears.flash("Error:Site %s already exists" % kwargs['name'])
         turbogears.flash("Site created.")
-        raise turbogears.redirect("/")
+        raise turbogears.redirect("/site/%s" % site.id)
 
     @expose(template="mirrors.templates.site")
     @validate(form=site_form)
@@ -213,6 +213,7 @@ class SiteAdminController(controllers.Controller, identity.SecureResource, conte
             siteadmin = SiteAdmin(site=site, username=username)
         except: # probably sqlite IntegrityError but we can't catch that for some reason... 
             turbogears.flash("Error:SiteAdmin %s already exists" % kwargs['username'])
+        turbogears.flash("SiteAdmin created.")
         raise turbogears.redirect("/site/%s" % siteid)
 
     @expose(template="mirrors.templates.siteadmin")
@@ -226,7 +227,7 @@ class SiteAdminController(controllers.Controller, identity.SecureResource, conte
 ##############################################
 class SiteToSiteFields(widgets.WidgetsList):
     def get_sites_options():
-        return [(s.id, s.name) for s in Site.select()]
+        return [(s.id, s.name) for s in Site.select(orderBy='name')]
 
     sites = widgets.MultipleSelectField(options=get_sites_options, size=15)
                                         
@@ -278,6 +279,7 @@ class SiteToSiteController(controllers.Controller, identity.SecureResource, cont
                 site2site = SiteToSite(upstream_site=site, downstream_site=dssite)
             except: 
                 pass
+        turbogears.flash("SiteToSite created.")
         raise turbogears.redirect("/site/%s" % siteid)
 
     @expose()
@@ -346,7 +348,9 @@ class HostController(controllers.Controller, identity.SecureResource, content):
         except: # probably sqlite IntegrityError but we can't catch that for some reason... 
             turbogears.flash("Error:Host %s already exists" % kwargs['name'])
             submit_action = "/host/0/create?siteid=%s" % site.id
-        raise turbogears.redirect("/")
+        
+        turbogears.flash("Host created.")
+        raise turbogears.redirect("/host/%s" % host.id)
 
 
     @expose(template="mirrors.templates.host")
@@ -379,7 +383,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
 ##################################################################33
 class HostCategoryFieldsNew(widgets.WidgetsList):
     def get_category_options():
-        return [(c.id, c.name) for c in Category.select()]
+        return [(c.id, c.name) for c in Category.select(orderBy='name')]
     category = widgets.SingleSelectField(options=get_category_options)
     admin_active = widgets.CheckBox(default=True)
     user_active = widgets.CheckBox(default=True)
@@ -461,7 +465,8 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
             turbogears.flash("Error: Host already has category %s.  Try again." % category.name)
 #            submit_action = "/host_category/0/create"
             raise turbogears.redirect("/host_category/0/create?hostid=%s" % hostid)
-        raise turbogears.redirect("/host/%s" % hostid)
+        turbogears.flash("HostCategory created.")
+        raise turbogears.redirect("/host_category/%s" % hostcategory.id)
 
 
     @expose(template="mirrors.templates.hostcategory")
@@ -641,6 +646,7 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
             HostCategoryUrl(host_category=hc, **kwargs)
         except: # probably sqlite IntegrityError but we can't catch that for some reason... 
             turbogears.flash("Error: entity already exists")
+        turbogears.flash("Success: HostCategoryURL created.")
         raise turbogears.redirect("/host_category/%s" % hcid)
 
     @expose(template="mirrors.templates.boringform")
@@ -721,7 +727,7 @@ class Root(controllers.RootController):
     @identity.require(identity.not_anonymous())
     def index(self):
         if "sysadmin" in identity.current.groups:
-            sites = Site.select()
+            sites = Site.select(orderBy='name')
         else:
             sites = user_sites(identity)
 
@@ -731,9 +737,9 @@ class Root(controllers.RootController):
                     "arches":Arch.select(),
                     "products":Product.select(),
                     "versions":Version.select(),
-                    "directories":Directory.select(),
+                    "directories":Directory.select(orderBy='name'),
                     "categories":Category.select(),
-                    "repositories":Repository.select(),
+                    "repositories":Repository.select(orderBy='name'),
                     "embargoed_countries":EmbargoedCountry.select(),
                     }
         else:
