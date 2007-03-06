@@ -123,14 +123,15 @@ def short_filelist(files):
         return rc
     else:
         return files
+
 def sync_category_directories(category, category_directories):
     for dirpath, value in category_directories.iteritems():
         try:
             dir = Directory.byName(dirpath)
         except SQLObjectNotFound:
             dir = Directory(name=dirpath)
+            dir.addCategory(category)
         dir.files = short_filelist(value['files'])
-        dir.addCategory(category)
         if value['isRepository']:
             make_repository(dir, category)
         
@@ -141,7 +142,11 @@ def parse_rsync_listing(cname, f, path):
     for line in f.readlines():
         line.strip()
         if line.startswith('d'):
-            dname = make_one_directory(line, category, path, category_directories)
+            if re.compile('^\.$').match(line):
+                # we know the top-level category directory already exists, don't try to re-make it
+                pass
+            else:
+                dname = make_one_directory(line, category, path, category_directories)
         else:
             add_file_to_directory(line, dname, path, category_directories)
     sync_category_directories(category, category_directories)
