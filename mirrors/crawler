@@ -6,8 +6,11 @@ from sqlobject import *
 import sys, os, string
 import turbogears
 from mirrors.model import *
-from urlgrabber.grabber import URLGrabber, URLGrabError
 from datetime import datetime
+from ftplib import FTP
+import httplib
+from urlparse import urlsplit
+
 
 # look on the command line for a desired config file
 if len(sys.argv) > 1:
@@ -22,61 +25,183 @@ from turbogears.database import PackageHub
 hub = PackageHub("mirrors")
 __connection__ = hub
 
-os.chdir('/tmp/foo')
-g = URLGrabber(range=(0,2), throttle=0, http_headers = [('Pragma', 'no-cache')], copy_local=0, keepalive=1)
-def url_file_exists(url, file):
-    graburl = "%s/%s" % (url, file)
-    print graburl
-    try:
-        result = g.urlgrab(graburl, filename='/dev/null', range=(0,2))
-    except URLGrabError, e:
-        if e.errno != 14 and e.errno != 4:
-            print '[Errno %i] %s' % (e.errno, e.strerror)
+os.chdir('/tmp')
+
+
+################################################
+# overrides for httplib because we're
+# handling keepalives ourself
+################################################
+class myHTTPResponse(httplib.HTTPResponse):
+    def begin(self):
+        httplib.HTTPResponse.begin(self)
+        self.will_close=False
+
+    def isclosed(self):
+        """This is a hack, because otherwise httplib will fail getresponse()"""
+        return True
+
+    def keepalive_ok(self):
+        try:
+            ka = self.msg.getheader('keep-alive')
+            maxidx = ka.index('max=')
+            max = ka[maxidx+4:]
+            if max == '1':
+                return False
+            return True
+        except:
+            return False
+
+class myHTTPConnection(httplib.HTTPConnection):
+    #debuglevel=2
+    response_class=myHTTPResponse
+    
+    def end_request(self):
+        self.__response = None
+
+class hostState:
+    def __init__(self):
+        self.httpconn = None
+        self.ftpconn = None
+
+    def close_http(self):
+        if self.httpconn is not None:
+            self.httpconn.close()
+            self.httpconn = None
+
+    def close_ftp(self):
+        if self.ftpconn is not None:
+            self.ftpconn.close()
+            self.ftpconn = None
+
+    def close(self):
+        self.close_http()
+        self.close_ftp()
+            
+
+def check_url(hoststate, url):
+    if url.startswith('http:'):
+        return check_head(hoststate, url)
+    elif url.startswith('ftp:'):
+        return check_ftp_nlst(hoststate, url)
+
+
+def check_ftp_nlst(hoststate, url):
+    scheme, netloc, path, query, fragment = urlsplit(url)
+    if hoststate.ftpconn is None:
+        hoststate.ftpconn = FTP(netloc)
+        hoststate.ftpconn.login()
+    files = hoststate.ftpconn.nlst(path)
+    if len(files) > 0:
+        return True
+    return False
+
+class HTTPUnknown(Exception):
+    pass
+
+def check_head(hoststate, url):
+    """ Returns tuple:
+    True - URL exists
+    False - URL doesn't exist
+    """
+    scheme, netloc, path, query, fragment = urlsplit(url)
+    
+    if hoststate.httpconn is None:
+        hoststate.httpconn = myHTTPConnection(netloc)
+    
+    hoststate.httpconn.request('HEAD', url,
+                               headers={'Connection':'Keep-Alive'})
+    
+    r = hoststate.httpconn.getresponse()
+    status = r.status
+    hoststate.httpconn.end_request()
+    if not r.keepalive_ok():
+        hoststate.httpconn.close()
+        hoststate.httpconn = None
+    
+
+    if status >= 200 and status < 300:
+        return True
+    if status >= 300 and status < 400:
+        location = r.getheader('Location')
+        #print "Redirect to %s" % location
+        return check_url(hoststate, location)
+    if status == 404:
         return False
-    except OSError, e:
-        if e.errno == 1:
-            pass
-    return True
+    if status >= 500:
+        return None
+
+    print "status = %s" % status
+    raise HTTPUnknown()
+
+
+def sync_hcds(hc, host_category_dirs):
+    for h in host_category_dirs:
+        try:
+            hcd = HostCategoryDir.selectBy(host_category=hc, path=h)
+        except SQLObjectNotFound:
+            hcd = HostCategoryDir(host_category=hc, path=h,
+                                  lastCrawled=datetime.utcnow(), up2date=True)
+        hcd.lastCrawled=datetime.utcnow()
+        hcd.up2date=True
+
+def method_pref(urls):
+    pref = None
+    for u, country in urls:
+        if u.startswith('http:'):
+            pref = u
+            break
+    if pref is None:
+        for u, country in urls:
+            if u.startswith('ftp:'):
+                pref = u
+                break
+    return pref
+        
+
 
 def doit(include_private=False):
     for host in Host.select():
+        next_host=False
+        host_category_dirs = []
         if host.private and not include_private:
             continue
+        hoststate = hostState()
         for hc in host.categories:
             category = hc.category
-            for d in category.directories:
-                urls = host.directory_urls(d, category)
-                hcd = None
-                try:
-                    hcd = HostCategoryDir.selectBy(host_category=hc, path=d.name[len(category.topdir.name)+1:])
-                except SQLObjectNotFound:
-                    hcd = None
-                
-                for u in urls:
-                    url = u[0]
-                    if url.startswith('http'):
-                        has_all_files=True
-                        if len(d.files.keys()) > 0:
-                            for file in d.files.keys():
-                                if url_file_exists(url, file):
-                                    # fixme sometimes this returns true when it shouldn't, e.g. humbolt carrying s390 stuff
-                                    #                                print "%s/%s" % (url, file)
-                                    if hcd is None:
-                                        hcd = HostCategoryDir(host_category=hc, path=d.name[len(category.topdir.name)+1:],
-                                                              lastCrawled=datetime.utcnow(), up2date=True)
-                                    else:
-                                        hcd.lastCrawled=datetime.utcnow()
-                                        hcd.up2date=True
-                                else:
-                                    has_all_files=False
-                                    if hcd is not None:
-                                        hcd.lastCrawled=datetime.utcnow()
-                                        hcd.up2date=False
-                                        break
-                            if has_all_files:
-                                #print url
-                                pass
+            trydirs = category.directories
+            for d in trydirs:
+                # fixme this is inefficient to do this lookup once per directory
+                # when it could be done once per category
+                url = method_pref(host.directory_urls(d, category))
+                if url is None:
+                    continue
+                has_all_files=False
+                for file in d.files.keys():
+                    has_all_files=True
+                    graburl = "%s/%s" % (url, file)
+                    exists = check_url(hoststate, graburl)
+                    if exists is None:
+                        # very odd 500 error from server
+                        # can't really count on it now
+                        # go to the next host
+                        next_host = True
+                        break
+                    if not exists:
+                        has_all_files=False
+                        for t in trydirs:
+                            if d == t or t.name.startswith("%s/" % d.name):
+                                trydirs.remove(t)
+                        break
+                if next_host:
+                    break
+                if has_all_files:
+                    host_category_dirs.append(d)
+                    print url
 
-                    
+            if next_host:
+                break
+        hoststate.close()
+
 
 doit(include_private=True)
