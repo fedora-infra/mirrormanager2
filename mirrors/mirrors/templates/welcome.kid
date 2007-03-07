@@ -11,11 +11,11 @@
 <a href="/site/0/new/">[Add Site]</a>
 <ul>
 	  <li py:for="site in sites">
-	  <a href="${'/site/'+str(site.id)}"><span py:replace="site.name">Site Name</span></a>
+	  <a href="${tg.url('/site/'+str(site.id))}"><span py:replace="site.name">Site Name</span></a>
 	  
 	  <UL>
 	  <LI py:for="h in site.hosts">
-	  <a href="${'/host/'+str(h.id)}"><span
+	  <a href="${tg.url('/host/'+str(h.id))}"><span
 	  py:replace="h.name">Host Name</span></a>
 	  </LI>
 	  </UL>
@@ -23,7 +23,7 @@
 </ul>
 </div>
 <div id="RSYNC ACL">
-<h3><a href="/rsync_acl">rsync acl</a></h3>
+<h3><a href="${tg.url('/rsync_acl')}">rsync acl</a></h3>
 </div>
 <div id="adminstuff" py:if="'sysadmin' in tg.identity.groups">
 <div id="categories">

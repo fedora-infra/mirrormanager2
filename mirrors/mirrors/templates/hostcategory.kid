@@ -14,10 +14,11 @@
 ${form(value=values, action=action, disabled_fields=disabled_fields)}
 <div py:if="values is not None">
 <h3>URLs serving this content</h3>
-	<a href="/host_category_url/0/new?hcid=${values.id}">[Add]</a>
+	<a href="${tg.url('/host_category_url/0/new?hcid=' + str(values.id))}">[Add]</a>
 <ul>
 	  <li py:for="url in values.urls">
-	  <span py:replace="url.url">URL</span> <a href="/host_category_url/${url.id}/delete">[Delete]</a>
+	  <span py:replace="url.url">URL</span> <a
+	  href="${tg.url('/host_category_url/' + str(url.id) + '/delete')}">[Delete]</a>
 	  </li>
 </ul>
 

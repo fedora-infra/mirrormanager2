@@ -39,10 +39,10 @@
 	        <a href="${tg.url('/')}">Main</a>
 		    <span py:if="tg.config('identity.on',False) and not 'logging_in' in locals()">
 		        <span py:if="tg.identity.anonymous">
-		            <a href="/login">Login</a>
+		            <a href="${tg.url('/login')}">Login</a>
 		        </span>
 		        <span py:if="not tg.identity.anonymous">
-		            <a href="/logout">Logout</a>
+		            <a href="${tg.url('/logout')}">Logout</a>
 		        </span>
 		    </span>	
 

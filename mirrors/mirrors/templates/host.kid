@@ -21,14 +21,14 @@ Last Checked In: ${values.lastCheckedIn}<br></br>
 	<LI>
 	<label for="countries_allowed">Countries Allowed: </label>
 	<span py:if="not downstream_siteadmin">
-	<a href="/host_country_allowed/0/new?hostid=${values.id}">[Add]</a>
+	<a href="${tg.url('/host_country_allowed/0/new?hostid=' + str(values.id))}">[Add]</a>
 	</span>
 	<ul>
 	<li py:for="a in values.countries_allowed">
 		  <span py:replace="a.country">Country</span>
 		  <span py:if="downstream_siteadmin">
 		  <a
-		  href="/host_country_allowed/${a.id}/delete">[Delete]</a>
+		  href="${tg.url('/host_country_allowed/' + str(a.id) + '/delete')}">[Delete]</a>
 		  </span>
         </li>
         </ul>
@@ -37,18 +37,21 @@ Last Checked In: ${values.lastCheckedIn}<br></br>
 
 	     <LI>
 	          <label for="acl_ips">ACL IPs: </label>
-		  <a href="/host_acl_ip/0/new?hostid=${values.id}">[Add]</a>
+		  <a href="${tg.url('/host_acl_ip/0/new?hostid=' + str(values.id))}">[Add]</a>
 		  <ul>
 		  <li py:for="a in values.acl_ips">
-		  <span py:replace="a.ip">ACL IP</span><a href="/host_acl_ip/${a.id}/delete">[Delete]</a>
+		  <span py:replace="a.ip">ACL IP</span><a
+	          href="${tg.url('/host_acl_ip/' + str(a.id) + '/delete')}">[Delete]</a>
 		  </li>
 		  </ul>
 	     </LI>
      	<LI>
-	<label for="netblocks">Netblocks: </label> <a href="/host_netblock/0/new?hostid=${values.id}">[Add]</a>
+	<label for="netblocks">Netblocks: </label> <a
+	          href="${tg.url('/host_netblock/0/new?hostid=' + str(values.id))}">[Add]</a>
 	<ul>
 	<li py:for="a in values.netblocks">
-		  <span py:replace="a.netblock">Netblock</span><a href="/host_netblock/${a.id}/delete">[Delete]</a>
+		  <span py:replace="a.netblock">Netblock</span><a
+	          href="${tg.url('/host_netblock/' + str(a.id) + '/delete')}">[Delete]</a>
         </li>
         </ul>
 	</LI>
@@ -57,22 +60,25 @@ Last Checked In: ${values.lastCheckedIn}<br></br>
 <hr></hr>
 <h2>Categories Carried</h2>
 <div py:if="not downstream_siteadmin">
-<a href="/host_category/0/new?hostid=${values.id}">[Add Category]</a>
+<a href="${tg.url('/host_category/0/new?hostid=' + str(values.id))}">[Add Category]</a>
 </div>
 
 <div py:if="values.categories is not None">
 <UL>
 <LI py:for="c in values.categories">
-    <a href="/host_category/${c.id}"><span
+    <a href="${tg.url('/host_category/' + str(c.id))}"><span
     py:replace="c.category.name">Category Name</span></a>
-    <span py:if="not downstream_siteadmin"><a href="/host_category/${c.id}/delete">[Delete]</a></span>
+    <span py:if="not downstream_siteadmin"><a
+    href="${tg.url('/host_category/' + str(c.id) + '/delete')}">[Delete]</a></span>
     <UL>
     <LI py:for="u in c.urls">
     <div py:if="u.private">(Mirrors)</div>
     <a href="${u.url}"><span py:replace="u.url">URL</span></a>
+    <!--
     <span py:if="not downstream_siteadmin">
-    <a href="/host_category_url/${u.id}/delete">[Delete]</a>
+    <a href="${tg.url('/host_category_url/' + str(u.id) + '/delete')}">[Delete]</a>
     </span>
+    --> 
     </LI>
     </UL>
 
@@ -81,7 +87,7 @@ Last Checked In: ${values.lastCheckedIn}<br></br>
 </div>
 <P>
 <span py:if="not downstream_siteadmin">
-<a href="/host/${values.id}/delete">[Delete Host]</a>
+<a href="${tg.url('/host/' + str(values.id) + '/delete')}">[Delete Host]</a>
 </span>
 </P>
 </div>
