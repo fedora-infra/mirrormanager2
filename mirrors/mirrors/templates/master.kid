@@ -72,7 +72,7 @@
 	map(connect_func, elements);
 </script>
 
-		<div id="footer"> <img src="/static/images/under_the_hood_blue.png" /></div>
+		<div id="footer"> <img src="${tg.url('/static/images/under_the_hood_blue.png')}" /></div>
 	</div>
 </body>
 
