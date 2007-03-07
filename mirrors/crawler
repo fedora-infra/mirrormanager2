@@ -59,6 +59,10 @@ class myHTTPConnection(httplib.HTTPConnection):
     def end_request(self):
         self.__response = None
 
+
+################################################
+# the magic begins
+
 class hostState:
     def __init__(self):
         self.httpconn = None
@@ -77,7 +81,6 @@ class hostState:
     def close(self):
         self.close_http()
         self.close_ftp()
-            
 
 def check_url(hoststate, url):
     if url.startswith('http:'):
@@ -110,7 +113,8 @@ def check_head(hoststate, url):
         hoststate.httpconn = myHTTPConnection(netloc)
     
     hoststate.httpconn.request('HEAD', url,
-                               headers={'Connection':'Keep-Alive'})
+                               headers={'Connection':'Keep-Alive',
+                                        'Pragma':'no-cache'})
     
     r = hoststate.httpconn.getresponse()
     status = r.status
