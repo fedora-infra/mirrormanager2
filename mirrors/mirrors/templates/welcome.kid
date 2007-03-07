@@ -8,7 +8,7 @@
 <body>
 <div id="Sites">
 <h3>My Sites and Hosts</h3>
-<a href="/site/0/new/">[Add Site]</a>
+<a href="${tg.url('/site/0/new/')}">[Add Site]</a>
 <ul>
 	  <li py:for="site in sites">
 	  <a href="${tg.url('/site/'+str(site.id))}"><span py:replace="site.name">Site Name</span></a>
