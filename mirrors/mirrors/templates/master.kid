@@ -15,7 +15,7 @@
         }
     </style>
     <style type="text/css" media="screen">
-@import "/static/css/style.css";
+@import "${tg.url('/static/css/style.css')}";
 </style>
 </head>
 
