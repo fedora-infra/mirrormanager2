@@ -99,12 +99,12 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
     @expose(template="mirrors.templates.site")
     def read(self, site):
         downstream_siteadmin_check(site, identity)
-        submit_action = "/site/%s/update" % site.id
+        submit_action = turbogears.url("/site/%s/update" % site.id)
         return dict(form=site_form, values=site, action=submit_action, disabled_fields=self.disabled_fields(site=site))
 
     @expose(template="mirrors.templates.site")
     def new(self, **kwargs):
-        submit_action = "/site/0/create"
+        submit_action = turbogears.url("/site/0/create")
         return dict(form=site_form, values=None, action=submit_action, disabled_fields=self.disabled_fields())
     
     @expose(template="mirrors.templates.site")
@@ -189,7 +189,7 @@ class SiteAdminController(controllers.Controller, identity.SecureResource, conte
             raise redirect("/")
 
         siteadmin_check(site, identity)
-        submit_action = "/siteadmin/0/create?siteid=%s" % siteid
+        submit_action = turbogears.url("/siteadmin/0/create?siteid=%s" % siteid)
         return dict(form=siteadmin_form, values=None, action=submit_action, title="New Site Admin")
     
     @expose(template="mirrors.templates.siteadmin")
@@ -251,7 +251,7 @@ class SiteToSiteController(controllers.Controller, identity.SecureResource, cont
             raise redirect("/")
 
         siteadmin_check(site, identity)
-        submit_action = "/site2site/0/create?siteid=%s" % siteid
+        submit_action = turbogears.url("/site2site/0/create?siteid=%s" % siteid)
         return dict(form=site_to_site_form, values=None, action=submit_action, title="Add Downstream Site")
     
     @expose()
@@ -330,7 +330,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
             site = Site.get(siteid)
         except sqlobject.SQLObjectNotFound:
             raise redirect("/")
-        submit_action = "/host/0/create?siteid=%s" % siteid
+        submit_action = turbogears.url("/host/0/create?siteid=%s" % siteid)
         return dict(form=host_form, values=None, action=submit_action, disabled_fields=self.disabled_fields(),
                     title="Create Host")
 
@@ -344,10 +344,10 @@ class HostController(controllers.Controller, identity.SecureResource, content):
         del kwargs['siteid']
         try:
             host = Host(site=site, **kwargs)
-            submit_action = "/host/%s/update" % host.id
+            submit_action = turbogears.url("/host/%s/update" % host.id)
         except: # probably sqlite IntegrityError but we can't catch that for some reason... 
             turbogears.flash("Error:Host %s already exists" % kwargs['name'])
-            submit_action = "/host/0/create?siteid=%s" % site.id
+            submit_action = turbogears.url("/host/0/create?siteid=%s" % site.id)
         
         turbogears.flash("Host created.")
         raise turbogears.redirect("/host/%s" % host.id)
@@ -356,7 +356,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
     @expose(template="mirrors.templates.host")
     def read(self, host):
         downstream_siteadmin_check(host.my_site(), identity)
-        submit_action = "/host/%s/update" % host.id
+        submit_action = turbogears.url("/host/%s/update" % host.id)
         return dict(form=host_form, values=host, action=submit_action,
                     disabled_fields=self.disabled_fields(host=host), title="Host")
 
@@ -435,14 +435,14 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
         except sqlobject.SQLObjectNotFound:
             raise redirect("/")
         siteadmin_check(host.my_site(), identity)
-        submit_action = "/host_category/0/create?hostid=%s" % hostid
+        submit_action = turbogears.url("/host_category/0/create?hostid=%s" % hostid)
         return dict(form=host_category_form_new, values=None, action=submit_action, disabled_fields=self.disabled_fields())
     
     
     @expose(template="mirrors.templates.hostcategory")
     def read(self, hostcategory):
         downstream_siteadmin_check(hostcategory.my_site(), identity)
-        submit_action = "/host_category/%s/update" % hostcategory.id
+        submit_action = turbogears.url("/host_category/%s/update" % hostcategory.id)
         disabled_fields=self.disabled_fields()
         return dict(form=host_category_form_read, values=hostcategory, action=submit_action, disabled_fields=self.disabled_fields())
 
@@ -458,12 +458,12 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
         host = Host.get(hostid)
         category = Category.get(kwargs['category'])
         del kwargs['category']
-#            submit_action = "/host_category/%s/update" % id
+#            submit_action = turbogears.url("/host_category/%s/update" % id)
         try:
             hostcategory = HostCategory(host=host, category=category, **kwargs)
         except:
             turbogears.flash("Error: Host already has category %s.  Try again." % category.name)
-#            submit_action = "/host_category/0/create"
+#            submit_action = turbogears.url("/host_category/0/create")
             raise turbogears.redirect("/host_category/0/create?hostid=%s" % hostid)
         turbogears.flash("HostCategory created.")
         raise turbogears.redirect("/host_category/%s" % hostcategory.id)
@@ -502,7 +502,7 @@ class HostListitemController(controllers.Controller, identity.SecureResource, co
             raise redirect("/")
 
         siteadmin_check(host.my_site(), identity)
-        submit_action = "%s/0/create?hostid=%s" % (self.submit_action_prefix, hostid)
+        submit_action = turbogears.url("%s/0/create?hostid=%s" % (self.submit_action_prefix, hostid))
         return dict(form=self.form, values=None, action=submit_action, title=self.title)
     
     @expose(template="mirrors.templates.boringform")
@@ -544,7 +544,7 @@ host_acl_ip_form = widgets.TableForm(fields=HostAclIPFields(),
                                      submit_text="Create Host ACL IP")
 
 class HostAclIPController(HostListitemController):
-    submit_action_prefix="/host_acl_ip"
+    submit_action_prefix = "/host_acl_ip"
     title = "New Host ACL IP"
     form = host_acl_ip_form
 
@@ -621,7 +621,7 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
         host = host_category.host
         siteadmin_check(host.my_site(), identity)
             
-        submit_action = "/host_category_url/0/create?hcid=%s" % hcid
+        submit_action = turbogears.url("/host_category_url/0/create?hcid=%s" % hcid)
         return dict(form=self.form, values=None, action=submit_action, title=self.title)
 
     @expose(template="mirrors.templates.boringform")
@@ -652,7 +652,7 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
     @expose(template="mirrors.templates.boringform")
     def read(self, hcurl):
         downstream_siteadmin_check(hcurl.my_site(), identity)
-        submit_action = "/host_category_url/%s/update" % hcurl.id
+        submit_action = turbogears.url("/host_category_url/%s/update" % hcurl.id)
         return dict(form=self.form, values=hcurl, action=submit_action, title=self.title)
         
     @expose(template="mirrors.templates.boringform")
@@ -660,7 +660,7 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
         siteadmin_check(hcurl.my_site(), identity)
         hcurl.set(**kwargs)
         hcurl.sync()
-        submit_action = "/host_category_url/%s/update" % hcurl.id
+        submit_action = turbogears.url("/host_category_url/%s/update" % hcurl.id)
         return dict(form=self.form, values=hcurl, action=submit_action, title=self.title)
         
             
