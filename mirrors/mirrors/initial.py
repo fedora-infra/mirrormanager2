@@ -235,5 +235,5 @@ directory.addCategory(epel)
 #if not Repository.select().count():
 #    make_repositories()
 
-make_sites()
+#make_sites()
 #make_mirrors()

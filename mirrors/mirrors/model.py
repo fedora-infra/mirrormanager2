@@ -154,6 +154,8 @@ class Host(SQLObject):
     admin_active = BoolCol(default=True)
     user_active = BoolCol(default=True)
     country = StringCol(default=None)
+    bandwidth = StringCol(default=None)
+    comment = StringCol(default=None)
     _config = PickleCol(default=None)
     lastCheckedIn = DateTimeCol(default=None)
     private = BoolCol(default=False)

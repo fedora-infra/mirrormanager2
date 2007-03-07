@@ -297,7 +297,8 @@ class HostFields(widgets.WidgetsList):
     country = widgets.TextField()
     private = widgets.CheckBox()
     robot_email = widgets.TextField(validator=validators.Email)
-    
+    bandwidth = widgets.TextField()
+    comment = widgets.TextField()
 
 
 host_form = widgets.TableForm(fields=HostFields(),
