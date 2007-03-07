@@ -135,7 +135,7 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
             kwargs['licensesAcceptedBy'] = identity.current.user_name
         else:
             turbogears.flash("Error:You must accept the license agreements to update a Site")
-            return dict(form=site_form, values=site, action = "/site/%s/update" % site.id,
+            return dict(form=site_form, values=site, action = turbogears.url("/site/%s/update" % site.id),
                         disabled_fields=self.disabled_fields())
 
         # in case we ever have to reset the licensesAccepted field for everyone
@@ -149,7 +149,7 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
             site.accept_licenses(identity)
         site.sync()
         turbogears.flash("Site Updated")
-        raise turbogears.redirect("/")
+        raise turbogears.redirect("/site/%s" % site.id)
 
     @expose(template="mirrors.templates.site")
     def delete(self, site, **kwargs):
@@ -369,7 +369,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
         host.set(**kwargs)
         host.sync()
         turbogears.flash("Host Updated")
-        raise turbogears.redirect("/")
+        raise turbogears.redirect("/host/%s" % host.id)
 
     @expose()
     def delete(self, host, **kwargs):
