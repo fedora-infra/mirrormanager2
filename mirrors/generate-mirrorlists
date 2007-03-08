@@ -60,16 +60,16 @@ for r in Repository.select():
         else:
             seen_countries[country] = [u]
 
-# write the global list
+    # write the global list
+    f = open('mirrorlists/%s' % (r.name), 'w')
     for u, country in urls:
-        f = open('mirrorlists/%s' % (r.name), 'w')
         f.write("%s\n" % u)
-        f.close()
+    f.close()
 
 # write the per-country lists
     for country in seen_countries.keys():
         if country == '':
-            fname_suffix = ''
+            continue
         else:
             fname_suffix = '-%s' % country
         
