@@ -55,7 +55,7 @@ def guess_ver_arch_from_path(category, path):
     return (ver, arch)
 
 def make_repository(dir, category):
-    path = dir.name[len(category.topdir.name)+1:-len('/repodata')]
+    path = dir.name[len(category.topdir.name)+1:]
     (ver, arch) = guess_ver_arch_from_path(category, path)
     path = trim_os_from_dirname(path)
     name=path.split('/')
@@ -90,8 +90,14 @@ def make_one_directory(line, category, path, category_directories):
         dname = "%s/%s" % (path, d)
     category_directories[dname] = {'files':{}, 'isRepository':False}
     if d.endswith('repodata'):
-        category_directories[dname]['isRepository'] = True
-    return dname
+        parent_dname = dname[:-len('/repodata')]
+        try:
+            category_directories[parent_dname]['isRepository'] = True
+        except KeyError:
+            category_directories[parent_dname] = {'files':{}, 'isRepository':True}
+        
+            
+    return dname, category_directories
 
 def add_file_to_directory(line, dname, path, category_directories):
     perm, size, date, time, filepath = line.split()
@@ -146,7 +152,7 @@ def parse_rsync_listing(cname, f, path):
                 # we know the top-level category directory already exists, don't try to re-make it
                 pass
             else:
-                dname = make_one_directory(line, category, path, category_directories)
+                dname, category_directories = make_one_directory(line, category, path, category_directories)
         else:
             add_file_to_directory(line, dname, path, category_directories)
     sync_category_directories(category, category_directories)
