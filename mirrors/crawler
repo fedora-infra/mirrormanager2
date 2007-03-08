@@ -82,27 +82,33 @@ class hostState:
         self.close_http()
         self.close_ftp()
 
-def check_url(hoststate, url):
+def check_url(hoststate, url, filedata):
     if url.startswith('http:'):
-        return check_head(hoststate, url)
+        return check_head(hoststate, url, filedata)
     elif url.startswith('ftp:'):
-        return check_ftp_nlst(hoststate, url)
+        return check_ftp(hoststate, url, filedata)
 
+ftp_results = []
+def check_ftp_callback(line):
+    global ftp_results
+    ftp_results = line.split()
 
-def check_ftp_nlst(hoststate, url):
+def check_ftp(hoststate, url, filedata):
+    global ftp_results
+    ftp_results = []
     scheme, netloc, path, query, fragment = urlsplit(url)
     if hoststate.ftpconn is None:
         hoststate.ftpconn = FTP(netloc)
         hoststate.ftpconn.login()
-    files = hoststate.ftpconn.nlst(path)
-    if len(files) > 0:
+    hoststate.ftpconn.dir(path, check_ftp_callback)
+    if len(ftp_results) > 0 and ftp_results[4] == filedata['size']:
         return True
     return False
 
 class HTTPUnknown(Exception):
     pass
 
-def check_head(hoststate, url):
+def check_head(hoststate, url, filedata):
     """ Returns tuple:
     True - URL exists
     False - URL doesn't exist
@@ -122,14 +128,20 @@ def check_head(hoststate, url):
     if not r.keepalive_ok():
         hoststate.httpconn.close()
         hoststate.httpconn = None
-    
+
+    content_length = r.getheader('Content-Length')
+    #last_modified  = r.getheader('Last-Modified')
 
     if status >= 200 and status < 300:
-        return True
+        # fixme should check last_modified too
+        if filedata['size'] == content_length:
+            return True
+        else:
+            return False
     if status >= 300 and status < 400:
         location = r.getheader('Location')
         #print "Redirect to %s" % location
-        return check_url(hoststate, location)
+        return check_url(hoststate, location, filedata)
     if status == 404:
         return False
     if status >= 500:
@@ -139,15 +151,35 @@ def check_head(hoststate, url):
     raise HTTPUnknown()
 
 
-def sync_hcds(hc, host_category_dirs):
-    for h in host_category_dirs:
-        try:
-            hcd = HostCategoryDir.selectBy(host_category=hc, path=h)
-        except SQLObjectNotFound:
-            hcd = HostCategoryDir(host_category=hc, path=h,
+def sync_hcds(host, host_category_dirs):
+    current_hcds = []
+    for hc, d in host_category_dirs:
+        topname = hc.category.topdir.name
+        path = d.name[len(topname)+1:]
+
+        hcd = HostCategoryDir.selectBy(host_category=hc, path=path)
+        if hcd.count() > 0:
+            hcd = hcd[0]
+        else:
+            hcd = HostCategoryDir(host_category=hc, path=path,
                                   lastCrawled=datetime.utcnow(), up2date=True)
+
         hcd.lastCrawled=datetime.utcnow()
         hcd.up2date=True
+        hcd.sync()
+        if hcd not in current_hcds:
+            current_hcds.append(hcd)
+
+    # now-historical HostCategoryDirs are not up2date
+    # we wait for a cascading Directory delete to delete this
+    # (though it won't right now...)
+    for hc in host.categories:
+        for hcd in hc.dirs:
+            if hcd not in current_hcds:
+                hcd.lastCrawled=datetime.utcnow()
+                hcd.up2date=False
+                hcd.sync()
+    
 
 def method_pref(urls):
     pref = None
@@ -184,7 +216,7 @@ def doit(include_private=False):
                 for file in d.files.keys():
                     has_all_files=True
                     graburl = "%s/%s" % (url, file)
-                    exists = check_url(hoststate, graburl)
+                    exists = check_url(hoststate, graburl, d.files[file])
                     if exists is None:
                         # very odd 500 error from server
                         # can't really count on it now
@@ -200,12 +232,14 @@ def doit(include_private=False):
                 if next_host:
                     break
                 if has_all_files:
-                    host_category_dirs.append(d)
+                    host_category_dirs.append((hc, d))
                     print url
 
             if next_host:
                 break
         hoststate.close()
+        # sync_hcds here
+        sync_hcds(host, host_category_dirs)
 
 
 doit(include_private=True)
