@@ -152,8 +152,8 @@ def check_head(hoststate, url, filedata):
 
 
 def sync_hcds(host, host_category_dirs):
-    current_hcds = []
-    for hc, d in host_category_dirs:
+    current_hcds = {}
+    for hc, d in host_category_dirs.keys():
         topname = hc.category.topdir.name
         path = d.name[len(topname)+1:]
 
@@ -167,15 +167,16 @@ def sync_hcds(host, host_category_dirs):
         hcd.lastCrawled=datetime.utcnow()
         hcd.up2date=True
         hcd.sync()
-        if hcd not in current_hcds:
-            current_hcds.append(hcd)
+        current_hcds[hcd] = True
 
     # now-historical HostCategoryDirs are not up2date
     # we wait for a cascading Directory delete to delete this
     # (though it won't right now...)
     for hc in host.categories:
         for hcd in hc.dirs:
-            if hcd not in current_hcds:
+            try:
+                thcd = current_hcds[hcd]
+            except KeyError:
                 hcd.lastCrawled=datetime.utcnow()
                 hcd.up2date=False
                 hcd.sync()
@@ -195,11 +196,24 @@ def method_pref(urls):
     return pref
         
 
+def add_parents(host_category_dirs, hc, d):
+    splitpath = d.name.split('/')
+    if len(splitpath[:-1]) > 0:
+        parent = '/'.join(splitpath[:-1])
+        try:
+            hcd = host_category_dirs[(hc, parent)]
+        except KeyError:
+            parentDir = Directory.byName(parent)
+            host_category_dirs[(hc, parentDir)] = True
+        if parentDir != hc.category.topdir: # stop at top of the category
+            return add_parents(host_category_dirs, hc, parentDir)
+    
+    return host_category_dirs
 
 def doit(include_private=False):
     for host in Host.select():
         next_host=False
-        host_category_dirs = []
+        host_category_dirs = {}
         if host.private and not include_private:
             continue
         hoststate = hostState()
@@ -232,8 +246,10 @@ def doit(include_private=False):
                 if next_host:
                     break
                 if has_all_files:
-                    host_category_dirs.append((hc, d))
+                    host_category_dirs[(hc, d)] = True
                     print url
+                    # make sure our parent dirs appear on the list too
+                    host_category_dirs = add_parents(host_category_dirs, hc, d)
 
             if next_host:
                 break
