@@ -388,7 +388,6 @@ class HostCategoryFieldsNew(widgets.WidgetsList):
     category = widgets.SingleSelectField(options=get_category_options)
     admin_active = widgets.CheckBox(default=True)
     user_active = widgets.CheckBox(default=True)
-    path = widgets.TextField(validator=validators.NotEmpty, label="Path on your disk", attrs=dict(size='30'), help_text='e.g. /var/ftp/pub/fedora/linux/core')
     upstream = widgets.TextField(attrs=dict(size='30'), help_text='e.g. rsync://download.fedora.redhat.com/fedora-linux-core')
 
 class LabelObjName(widgets.Label):
@@ -404,7 +403,6 @@ class HostCategoryFieldsRead(widgets.WidgetsList):
     category = LabelObjName()
     admin_active = widgets.CheckBox(default=True)
     user_active = widgets.CheckBox(default=True)
-    path = widgets.TextField(validator=validators.NotEmpty, label="Path on your disk", attrs=dict(size='30'), help_text='e.g. /var/ftp/pub/fedora/linux/core')
     upstream = widgets.TextField(attrs=dict(size='30'), help_text='e.g. rsync://download.fedora.redhat.com/fedora-linux-core')
 
 host_category_form_new = widgets.TableForm(fields=HostCategoryFieldsNew(),

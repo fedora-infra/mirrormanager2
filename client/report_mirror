@@ -146,7 +146,9 @@ def parse_category(conf, section, item):
         return False
 
     dirtree = gen_dirtree(conf.get(section, 'path'))
-    item.config[section]['dirtree'] = dirtree
+    item.config[section.lower()]['dirtree'] = dirtree
+    # database doesn't need to know the disk path
+    del item.config[section.lower()]['path']
 
 def config(cfg, item):
     broken = False

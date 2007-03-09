@@ -112,7 +112,6 @@ class HostCategory(SQLObject):
     hcindex = DatabaseIndex('host', 'category', unique=True)
     admin_active = BoolCol(default=True)
     user_active = BoolCol(default=True)
-    path = StringCol() # path on host's disk e.g. /var/ftp/pub/fedora/linux/core
     upstream = StringCol(default=None)
     dirs = MultipleJoin('HostCategoryDir')
     urls = MultipleJoin('HostCategoryUrl')
@@ -239,17 +238,11 @@ class Host(SQLObject):
                 continue
             if not config[c].has_key('enabled') or config[c]['enabled'] != '1':
                 continue
-            if config[c].has_key('path'):
-                path = rstrip(config[c]['path'], '/')
-            else:
-                path = None
             hc = HostCategory.selectBy(host=self, category=category)
             if hc.count() > 0:            
                 hc = hc[0]
             else:
-                hc = HostCategory(host=self, category=category, path=path)
-            if path is not None:
-                hc.path = path
+                hc = HostCategory(host=self, category=category)
             if config[c].has_key('user_active'):
                 hc.user_active = config[c]['user_active']
             if config[c].has_key('upstream'):
