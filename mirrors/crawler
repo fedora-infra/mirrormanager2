@@ -165,7 +165,7 @@ def sync_hcds(host, host_category_dirs):
                                   lastCrawled=datetime.utcnow(), up2date=True)
 
         hcd.lastCrawled=datetime.utcnow()
-        hcd.up2date=True
+        hcd.up2date=host_category_dirs[(hc, d)]
         hcd.sync()
         current_hcds[hcd] = True
 
@@ -250,6 +250,8 @@ def doit(include_private=False):
                     print url
                     # make sure our parent dirs appear on the list too
                     host_category_dirs = add_parents(host_category_dirs, hc, d)
+                else:
+                    host_category_dirs[(hc, d)] = False
 
             if next_host:
                 break
