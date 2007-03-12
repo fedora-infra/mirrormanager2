@@ -10,6 +10,8 @@ from datetime import datetime
 from ftplib import FTP
 import httplib
 from urlparse import urlsplit
+import threading
+from threading import local
 
 
 # look on the command line for a desired config file
@@ -82,26 +84,35 @@ class hostState:
         self.close_http()
         self.close_ftp()
 
+class Crawler(threading.Thread):
+    def __init__(self, hostid=None, include_private=False):
+        threading.Thread.__init__(self)
+        self.include_private = include_private
+        self.hostid = hostid
+        sqlhub.threadConnection = hub.getConnection().transaction()
+
+    def run(self):
+        per_host(host=self.hostid, include_private=self.include_private)
+
+
 def check_url(hoststate, url, filedata):
     if url.startswith('http:'):
         return check_head(hoststate, url, filedata)
     elif url.startswith('ftp:'):
         return check_ftp(hoststate, url, filedata)
 
-ftp_results = []
+mydata = local()
 def check_ftp_callback(line):
-    global ftp_results
-    ftp_results = line.split()
+    mydata.ftp_results = line.split()
 
 def check_ftp(hoststate, url, filedata):
-    global ftp_results
-    ftp_results = []
+    mydata.ftp_results = []
     scheme, netloc, path, query, fragment = urlsplit(url)
     if hoststate.ftpconn is None:
         hoststate.ftpconn = FTP(netloc)
         hoststate.ftpconn.login()
     hoststate.ftpconn.dir(path, check_ftp_callback)
-    if len(ftp_results) > 0 and ftp_results[4] == filedata['size']:
+    if len(mydata.ftp_results) > 0 and mydata.ftp_results[4] == filedata['size']:
         return True
     return False
 
@@ -122,8 +133,12 @@ def check_head(hoststate, url, filedata):
                                headers={'Connection':'Keep-Alive',
                                         'Pragma':'no-cache'})
     
-    r = hoststate.httpconn.getresponse()
-    status = r.status
+    try:
+        r = hoststate.httpconn.getresponse()
+        status = r.status
+    except:
+        raise HTTPUnknown()
+
     hoststate.httpconn.end_request()
     if not r.keepalive_ok():
         hoststate.httpconn.close()
@@ -210,54 +225,73 @@ def add_parents(host_category_dirs, hc, d):
     
     return host_category_dirs
 
-def doit(include_private=False):
-    for host in Host.select():
-        next_host=False
-        host_category_dirs = {}
-        if host.private and not include_private:
-            continue
-        hoststate = hostState()
-        for hc in host.categories:
-            category = hc.category
-            trydirs = category.directories
-            for d in trydirs:
-                # fixme this is inefficient to do this lookup once per directory
-                # when it could be done once per category
-                url = method_pref(host.directory_urls(d, category))
-                if url is None:
-                    continue
-                has_all_files=False
-                for file in d.files.keys():
-                    has_all_files=True
-                    graburl = "%s/%s" % (url, file)
+def per_host(host, include_private=False):
+    host = Host.get(host)
+    next_host=False
+    host_category_dirs = {}
+    if host.private and not include_private:
+        return
+    # Don't crawl Red Hat sites for now
+    if host.site.name == "Red Hat":
+        return
+    hoststate = hostState()
+    for hc in host.categories:
+        category = hc.category
+        trydirs = category.directories
+        for d in trydirs:
+            # fixme this is inefficient to do this lookup once per directory
+            # when it could be done once per category
+            url = method_pref(host.directory_urls(d, category))
+            if url is None:
+                continue
+            has_all_files=False
+            for file in d.files.keys():
+                has_all_files=True
+                graburl = "%s/%s" % (url, file)
+                try:
                     exists = check_url(hoststate, graburl, d.files[file])
-                    if exists is None:
-                        # very odd 500 error from server
-                        # can't really count on it now
-                        # go to the next host
-                        next_host = True
-                        break
-                    if not exists:
-                        has_all_files=False
-                        for t in trydirs:
-                            if d == t or t.name.startswith("%s/" % d.name):
-                                trydirs.remove(t)
-                        break
-                if next_host:
+                except:
+                    exists = None
+                if exists is None:
+                    # very odd 500 error from server
+                    # can't really count on it now
+                    # go to the next host
+                    next_host = True
                     break
-                if has_all_files:
-                    host_category_dirs[(hc, d)] = True
-                    print url
-                    # make sure our parent dirs appear on the list too
-                    host_category_dirs = add_parents(host_category_dirs, hc, d)
-                else:
-                    host_category_dirs[(hc, d)] = False
-
+                if not exists:
+                    has_all_files=False
+                    for t in trydirs:
+                        if d == t or t.name.startswith("%s/" % d.name):
+                            trydirs.remove(t)
+                    break
             if next_host:
                 break
-        hoststate.close()
-        # sync_hcds here
-        sync_hcds(host, host_category_dirs)
+            if has_all_files:
+                host_category_dirs[(hc, d)] = True
+                print url
+                # make sure our parent dirs appear on the list too
+                host_category_dirs = add_parents(host_category_dirs, hc, d)
+            else:
+                host_category_dirs[(hc, d)] = False
+
+        if next_host:
+            break
+    hoststate.close()
+    # sync_hcds here
+    sync_hcds(host, host_category_dirs)
 
 
-doit(include_private=True)
+
+
+
+def doit_thread(include_private=False):
+    crawlers = [Crawler(hostid=host.id, include_private=include_private) for host in Host.select()]
+
+    for c in crawlers:
+        c.start()
+    for c in crawlers:
+        c.join()
+
+
+
+doit_thread(include_private=True)
