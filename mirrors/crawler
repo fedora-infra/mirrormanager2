@@ -44,15 +44,35 @@ class myHTTPResponse(httplib.HTTPResponse):
         return True
 
     def keepalive_ok(self):
+        # HTTP/1.1 connections stay open until closed
+        if self.version == 11:
+            ka = self.msg.getheader('connection')
+            if ka and "close" in ka.lower():
+                return False
+            else:
+                return True
+
+        # other HTTP connections may have a connection: keep-alive header
+        ka = self.msg.getheader('connection')
+        if ka and "keep-alive" in ka.lower():
+            return True
+
         try:
             ka = self.msg.getheader('keep-alive')
-            maxidx = ka.index('max=')
-            max = ka[maxidx+4:]
-            if max == '1':
+            if ka is not None:
+                maxidx = ka.index('max=')
+                max = ka[maxidx+4:]
+                if max == '1':
+                    return False
+                return True
+            else:
+                ka = self.msg.getheader('connection')
+                if ka and "keep-alive" in ka.lower():
+                    return True
                 return False
-            return True
         except:
             return False
+        return False
 
 class myHTTPConnection(httplib.HTTPConnection):
     #debuglevel=2
@@ -294,4 +314,4 @@ def doit_thread(include_private=False):
 
 
 
-doit_thread(include_private=True)
+doit_thread(include_private=False)
