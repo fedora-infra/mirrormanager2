@@ -292,7 +292,7 @@ class SiteToSiteController(controllers.Controller, identity.SecureResource, cont
 
 class HostFields(widgets.WidgetsList):
     name = widgets.TextField(validator=validators.NotEmpty, attrs=dict(size='30'), label="Host Name")
-    admin_active = widgets.CheckBox("admin_active")
+    admin_active = widgets.CheckBox("admin_active", default=True)
     user_active = widgets.CheckBox(default=True)
     country = widgets.TextField()
     private = widgets.CheckBox()
@@ -692,11 +692,11 @@ class PubController(controllers.Controller):
                 urls.remove((u, country))
         return dict(values=[u for u, country in urls])
 
-#fixme - this is just a stub
 class PublicListController(controllers.Controller):
     @expose(template="mirrors.templates.publiclist")
     def index(self, *vpath, **params):
-        return dict()
+        return dict(hosts=[h for h in Host.select(orderBy='country') if not h.private and h.is_active],
+                    products=[p for p in Product.select()])
 
 #http://mirrors.fedoraproject.org/mirrorlist?repo=core-$releasever&arch=$basearch
 #http://mirrors.fedoraproject.org/mirrorlist?repo=core-debug-$releasever&arch=$basearch
@@ -720,7 +720,7 @@ class Root(controllers.RootController):
     site2site = SiteToSiteController()
     from mirrors.xmlrpc import XmlrpcController
     xmlrpc = XmlrpcController()
-#    public = PublicListController()
+    publiclist = PublicListController()
     
     @expose(template="mirrors.templates.welcome")
     @identity.require(identity.not_anonymous())
