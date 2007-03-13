@@ -160,7 +160,7 @@ def parse_rsync_listing(cname, f, path):
 
 
 def sync_directories_using_rsync():
-    categories = {'core':('fedora-linux-core','pub/fedora/linux/core'),
+    categories = {'Fedora Core':('fedora-linux-core','pub/fedora/linux/core'),
 #                  'extras':('fedora-linux-extras','pub/fedora/linux/extras'),
 #                  'releases':('fedora-linux-releases','pub/fedora/linux/releases'),
 #                  'epel':('epel','pub/epel'),
@@ -183,5 +183,5 @@ def sync_directories_from_file(filename, cname, path):
 
 
 # fixme this is quick and dirty
-sync_directories_from_file('/tmp/fedora-linux-core.txt', 'core', 'pub/fedora/linux/core')
-sync_directories_from_file('/tmp/fedora-linux-extras.txt', 'extras', 'pub/fedora/linux/extras')
+sync_directories_from_file('/tmp/fedora-linux-core.txt', 'Fedora Core', 'pub/fedora/linux/core')
+sync_directories_from_file('/tmp/fedora-linux-extras.txt', 'Fedora Extras', 'pub/fedora/linux/extras')
