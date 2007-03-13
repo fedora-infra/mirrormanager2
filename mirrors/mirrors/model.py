@@ -14,6 +14,8 @@ __connection__ = hub
 
             
 class SiteToSite(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     upstream_site = ForeignKey('Site')
     downstream_site = ForeignKey('Site')
     idx = DatabaseIndex('upstream_site', 'downstream_site', unique=True)
@@ -22,6 +24,8 @@ class SiteToSite(SQLObject):
         return self.upstream_site
 
 class Site(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     name = StringCol(alternateID=True)
     password = StringCol(default=None)
     orgUrl = StringCol(default=None)
@@ -95,6 +99,8 @@ class Site(SQLObject):
         
 
 class SiteAdmin(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     username = StringCol()
     site = ForeignKey('Site')
 
@@ -107,6 +113,8 @@ def user_sites(identity):
 
 
 class HostCategory(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     host = ForeignKey('Host')
     category = ForeignKey('Category')
     hcindex = DatabaseIndex('host', 'category', unique=True)
@@ -128,6 +136,8 @@ class HostCategory(SQLObject):
         return self.host.my_site()
 
 class HostCategoryDir(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     host_category = ForeignKey('HostCategory')
     # subset of the path starting below HostCategory.path
     path = StringCol()
@@ -138,6 +148,8 @@ class HostCategoryDir(SQLObject):
     
 
 class HostCategoryUrl(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     host_category = ForeignKey('HostCategory')
     url = StringCol(alternateID=True)
     private = BoolCol(default=False)
@@ -146,6 +158,8 @@ class HostCategoryUrl(SQLObject):
         return self.host_category.my_site()
     
 class Host(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     name = StringCol()
     site = ForeignKey('Site')
     idx = DatabaseIndex('site', 'name', unique=True)
@@ -348,6 +362,8 @@ class Host(SQLObject):
         return self.site
 
 class HostAclIp(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     host = ForeignKey('Host')
     ip = StringCol()
 
@@ -355,6 +371,8 @@ class HostAclIp(SQLObject):
         return self.host.my_site()
 
 class HostCountryAllowed(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     host = ForeignKey('Host')
     country = StringCol()
 
@@ -362,6 +380,8 @@ class HostCountryAllowed(SQLObject):
         return self.host.my_site()
 
 class HostNetblock(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     host = ForeignKey('Host')
     netblock = StringCol()
 
@@ -423,6 +443,8 @@ def directory_mirror_urls(dname, country=None, include_private=False):
 
 
 class HostStats(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     host = ForeignKey('Host')
     _timestamp = DateTimeCol(default=datetime.utcnow())
     type = StringCol(default=None)
@@ -430,21 +452,29 @@ class HostStats(SQLObject):
 
 
 class Arch(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     name = StringCol(alternateID=True)
 
 # e.g. 'fedora' and 'rhel'
 class Product(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     name = StringCol(alternateID=True)
     versions = MultipleJoin('Version')
     categories = MultipleJoin('Category')
 
 class Version(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     name = StringCol()
     product = ForeignKey('Product')
     isTest = BoolCol(default=False)
 
 
 class Directory(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     # Full path
     # e.g. pub/fedora/linux/core/6/i386/os
     # e.g. pub/fedora/linux/extras
@@ -464,6 +494,8 @@ class Directory(SQLObject):
 
 
 class Category(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     # Top-level mirroring
     # e.g. core, extras, release, epel
     name = StringCol(alternateID=True)
@@ -479,6 +511,8 @@ class Category(SQLObject):
         SQLObject.destroySelf(self)
 
 class Repository(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     name = StringCol(alternateID=True)
     shortname = StringCol(default=None)
     category = ForeignKey('Category')
@@ -488,6 +522,8 @@ class Repository(SQLObject):
     shortnameIndex = DatabaseIndex('shortname')
 
 class EmbargoedCountry(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     country_code = StringCol()
 
 
