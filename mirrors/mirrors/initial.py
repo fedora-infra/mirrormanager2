@@ -22,7 +22,7 @@ a.addGroup(Group.by_group_name('sysadmin'))
 
 
 def make_directories():
-    testfiles = {'core':'../fedora-test-data/fedora-linux-core-dirsonly.txt', 'extras': '../fedora-test-data/fedora-linux-extras-dirsonly.txt'}
+    testfiles = {'Fedora Core':'../fedora-test-data/fedora-linux-core-dirsonly.txt', 'Fedora Extras': '../fedora-test-data/fedora-linux-extras-dirsonly.txt'}
     for cname, file in testfiles.iteritems():
         f = open(file, 'r')
         try:
@@ -83,7 +83,7 @@ def guess_ver_arch_from_path(category, path):
 # lines look like
 # -rw-r--r--         951 2007/01/10 14:17:39 updates/testing/6/SRPMS/repodata/repomd.xml
 def make_repositories():
-    testfiles = {'core':'../fedora-test-data/fedora-linux-core.txt', 'extras': '../fedora-test-data/fedora-linux-extras.txt'}
+    testfiles = {'Fedora Core':'../fedora-test-data/fedora-linux-core.txt', 'Fedora Extras': '../fedora-test-data/fedora-linux-extras.txt'}
     for category, file in testfiles.iteritems():
         f = open(file, 'r')
         try:
@@ -114,7 +114,7 @@ def make_repositories():
 
 
 def make_sites():
-    testfiles = {'core':'../fedora-test-data/mirror-hosts-core.txt', 'extras': '../fedora-test-data/mirror-hosts-extras.txt'}
+    testfiles = {'Fedora Core':'../fedora-test-data/mirror-hosts-core.txt', 'Fedora Extras': '../fedora-test-data/mirror-hosts-extras.txt'}
     for category, file in testfiles.iteritems():
         # These are all fedora-core-6 mirrors, but they may not carry all arches or content.
         # That's ok, we'll figure out what they've got.
@@ -156,7 +156,7 @@ def make_versions():
         Version(name=ver, product=rhel)
 
 def make_embargoed_countries():
-    for cc in ['cu', 'ir', 'kp', 'sd', 'sy' ]:
+    for cc in ['cu', 'ir', 'iq', 'kp', 'sd', 'sy' ]:
         EmbargoedCountry(country_code=cc)
 
 
@@ -194,8 +194,8 @@ if not SiteAdmin.select().count():
     SiteAdmin(username='mdomsch', site=dell)
 
 # create our default products
-rhel = Product(name='rhel')
-fedora = Product(name='fedora')
+rhel = Product(name='RHEL')
+fedora = Product(name='Fedora')
 
 
 if not Version.select().count():
@@ -206,25 +206,25 @@ if not EmbargoedCountry.select().count():
 
 # create our default Categories
 directory = Directory(name='pub/fedora/linux/core')
-core = Category(name='core',
+core = Category(name='Fedora Core',
                 product = fedora,
                 topdir = directory)
 directory.addCategory(core)
 
 directory = Directory(name='pub/fedora/linux/extras')
-extras = Category(name='extras',
+extras = Category(name='Fedora Extras',
                   product = fedora,
                   topdir = directory)
 directory.addCategory(extras)
 
 directory = Directory(name='pub/fedora/linux/releases')
-releases = Category(name='releases',
+releases = Category(name='Fedora Releases',
                    product = fedora,
                    topdir = directory)
 directory.addCategory(releases)
 
 directory = Directory(name='pub/epel')
-epel = Category(name='epel',
+epel = Category(name='Fedora EPEL',
                 product = rhel,
                 topdir=directory)
 directory.addCategory(epel)
