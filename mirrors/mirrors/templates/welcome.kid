@@ -22,6 +22,9 @@
 	  </li>
 </ul>
 </div>
+<div id="PublicList">
+<h3><a href="${tg.url('/publiclist')}">public list</a></h3>
+</div>
 <div id="RSYNC ACL">
 <h3><a href="${tg.url('/rsync_acl')}">rsync acl</a></h3>
 </div>
