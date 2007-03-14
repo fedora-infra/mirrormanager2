@@ -294,17 +294,19 @@ def per_host(host, include_private=False):
 
 
 
-def doit_thread(include_private=False, hostname=None):
+def doit_thread(include_private=False, hostname=None, threads=10):
     if hostname:
-        crawlers = [Crawler(hostid=host.id, include_private=include_private) for host in Host.selectBy(name=hostname)]
+        hosts = list(Host.selectBy(name=hostname))
     else:
-        crawlers = [Crawler(hostid=host.id, include_private=include_private) for host in Host.select()]
+        hosts = list(Host.select())
 
-    for c in crawlers:
-        c.start()
-    for c in crawlers:
-        c.join()
-
+    while len(hosts) > 0:
+        crawlers = [Crawler(hostid=host.id, include_private=include_private) for host in hosts[:min(len(hosts), threads)]]
+        for c in crawlers:
+            c.start()
+        for c in crawlers:
+            c.join()
+        hosts = hosts[min(len(hosts), threads):]
 
 
 
@@ -326,6 +328,10 @@ def main():
                       action="store_true", dest="include_private", default=False,
                       help="Include hosts marked 'private' in the crawl")
 
+    parser.add_option("-t", "--threads",
+                      dest="threads", default=10,
+                      help="max threads to start in parallel")
+
     (options, args) = parser.parse_args()
     if options.debug_http:
         global http_debuglevel
@@ -340,7 +346,7 @@ def main():
     
     os.chdir('/tmp')
 
-    doit_thread(include_private=options.include_private, hostname=options.hostname)
+    doit_thread(include_private=options.include_private, hostname=options.hostname, threads=options.threads)
 
 
 
