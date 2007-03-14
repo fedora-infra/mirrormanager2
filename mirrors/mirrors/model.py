@@ -316,6 +316,9 @@ class Host(SQLObject):
 
     def is_active(self):
         return self.admin_active and self.user_active and self.site.user_active
+
+    def is_private(self):
+        return self.private or self.site.private
     
     def _get_config(self):
         return self._config
@@ -422,7 +425,7 @@ def directory_mirrors(dirname, country=None, include_private=False):
         hosts = category_mirrors(category)
         for h in hosts:
             if h.is_active() and h.has_category_dir(category.name, dirname):
-                if h.private and not include_private:
+                if h.is_private() and not include_private:
                     continue
                 if country is not None and h.country is not None and h.country != country and country != 'global':
                     continue
@@ -434,7 +437,7 @@ def directory_mirror_urls(dname, country=None, include_private=False):
     for cname, dirname, host in directory_mirrors(dname, country, include_private):
         if not host.is_active():
             continue
-        if host.private and not include_private:
+        if host.is_private() and not include_private:
             continue
         for u in host.category_urls(cname):
             fullurl = '%s/%s' % (u, dirname)
