@@ -67,11 +67,11 @@ class content:
 class SiteFields(widgets.WidgetsList):
     licensesAccepted = widgets.CheckBox(label="I agree to the Fedora Legal policies linked above")
     name     = widgets.TextField(validator=validators.NotEmpty, label="Site Name")
-    password = widgets.TextField(validator=validators.NotEmpty, label="Site Password")
+    password = widgets.TextField(validator=validators.NotEmpty, label="Site Password", help_text="used by report_mirrors script")
     orgUrl   = widgets.TextField(label="Organization URL", validator=validators.URL, attrs=dict(size='30'))
-    private  = widgets.CheckBox()
+    private  = widgets.CheckBox(help_text="e.g. Not available to the public")
     admin_active = widgets.CheckBox("admin_active",default=True)
-    user_active = widgets.CheckBox(default=True)
+    user_active = widgets.CheckBox(default=True, help_text="Clear to temporarily disable this site.")
 
 
 site_form = widgets.TableForm(fields=SiteFields(),
@@ -293,10 +293,10 @@ class SiteToSiteController(controllers.Controller, identity.SecureResource, cont
 class HostFields(widgets.WidgetsList):
     name = widgets.TextField(validator=validators.NotEmpty, attrs=dict(size='30'), label="Host Name")
     admin_active = widgets.CheckBox("admin_active", default=True)
-    user_active = widgets.CheckBox(default=True)
+    user_active = widgets.CheckBox(default=True, help_text="Clear to temporarily disable this host")
     country = widgets.TextField()
-    private = widgets.CheckBox()
-    robot_email = widgets.TextField(validator=validators.Email)
+    private = widgets.CheckBox(help_text="e.g. not available to the public")
+    robot_email = widgets.TextField(validator=validators.Email, help_text="for email notifications of upstream content updates")
     bandwidth = widgets.TextField()
     comment = widgets.TextField()
 
@@ -387,7 +387,7 @@ class HostCategoryFieldsNew(widgets.WidgetsList):
         return [(c.id, c.name) for c in Category.select(orderBy='name')]
     category = widgets.SingleSelectField(options=get_category_options)
     admin_active = widgets.CheckBox(default=True)
-    user_active = widgets.CheckBox(default=True)
+    user_active = widgets.CheckBox(default=True, help_text="Clear to temporarily disable this category")
     upstream = widgets.TextField(attrs=dict(size='30'), help_text='e.g. rsync://download.fedora.redhat.com/fedora-linux-core')
 
 class LabelObjName(widgets.Label):
