@@ -695,7 +695,7 @@ class PubController(controllers.Controller):
 class PublicListController(controllers.Controller):
     @expose(template="mirrors.templates.publiclist")
     def index(self, *vpath, **params):
-        return dict(hosts=[h for h in Host.select(orderBy='country') if not h.private and h.is_active],
+        return dict(hosts=[h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active()],
                     products=[p for p in Product.select()])
 
 #http://mirrors.fedoraproject.org/mirrorlist?repo=core-$releasever&arch=$basearch
