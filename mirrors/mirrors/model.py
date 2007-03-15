@@ -5,6 +5,7 @@ import pickle
 import sys
 from datetime import datetime
 from string import rstrip, strip
+import re
 
 from turbogears.database import PackageHub
 
@@ -364,6 +365,30 @@ class Host(SQLObject):
     def my_site(self):
         return self.site
 
+    def product_version_arch_dirs(self, productname, vername, archname):
+        """ has a category of product, and an hcd that matches version """
+        result = []
+        try:
+            product = Product.byName(productname)
+        except SQLObjectNotFound:
+            return result
+        if vername is not None and archname is not None:
+            desiredPath = '/%s/.*%s' % (vername, archname)
+        elif vername is not None:
+            desiredPath = '/%s' % vername
+        else:
+            desiredPath = '.*'
+            
+        r = re.compile(desiredPath)
+        for hc in self.categories:
+            if productname == hc.category.product.name:
+                for hcd in hc.dirs:
+                    if r.search(hcd.path):
+                        result.append(hcd)
+        return result
+        
+
+
 class HostAclIp(SQLObject):
     class sqlmeta:
         cacheValues = False
@@ -458,6 +483,8 @@ class Arch(SQLObject):
     class sqlmeta:
         cacheValues = False
     name = StringCol(alternateID=True)
+
+primary_arches = ['i386','x86_64','ppc']
 
 # e.g. 'fedora' and 'rhel'
 class Product(SQLObject):

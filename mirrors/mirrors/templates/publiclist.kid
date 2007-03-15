@@ -6,19 +6,23 @@
 <title>Public Active Mirrors</title>
 </head>
 <body>
-<h2>By Version</h2>
+You may trim the selection through the links below.
 <table border='1'>
-<tr><th>Product</th><th>Version</th></tr>
+<tr><th>Product</th><th colspan='0'>Version</th></tr>
 <tr py:for="p in products">
-<td><span py:replace="p.name">Product Name</span></td>
-<td>
-<span py:for="v in p.versions">
-      <a href="${tg.url('/publiclist/' + str(p.id) + '/' + str(p.id))}"><span py:replace="v.name">Version</span></a>
-</span>
+<td><a href="${tg.url('/publiclist/' + p.name + '/')}"><span py:replace="p.name">Product Name</span></a></td>
+<td py:for="v in p.versions">
+<table>
+<tr><a href="${tg.url('/publiclist/' + p.name + '/' + v.name + '/')}"><b><span py:replace="v.name">Version</span></b></a></tr>
+<tr>
+	<br py:for="a in arches"><a href="${tg.url('/publiclist/' +
+	p.name + '/' + v.name + '/' + a + '/')}"><span py:replace="a">Arch</span></a></br>
+</tr>
+</table>
 </td>
 </tr>
 </table>
-<h2>Public Active Mirrors</h2>
+<h2>${title} Public Active Mirrors</h2>
 <table border='1'>
 <tr><th>Country</th><th>Site</th><th>Host</th><th>Content</th><th>Bandwidth</th><th>Comments</th></tr>
 <tr py:for="host in hosts">

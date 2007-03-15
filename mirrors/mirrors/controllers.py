@@ -696,7 +696,32 @@ class PublicListController(controllers.Controller):
     @expose(template="mirrors.templates.publiclist")
     def index(self, *vpath, **params):
         return dict(hosts=[h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active()],
-                    products=[p for p in Product.select()])
+                    products=list(Product.select()), title='', arches=primary_arches)
+
+    @expose(template="mirrors.templates.publiclist")
+    def default(self, *vpath, **params):
+        product = ver = arch = None
+        if len(vpath) == 1:
+            product = vpath[0]
+            title=product
+        elif len(vpath) == 2:
+            product = vpath[0]
+            ver = vpath[1]
+            title = '%s/%s' % (product, ver)
+        elif len(vpath) == 3:
+            product = vpath[0]
+            ver = vpath[1]
+            arch = vpath[2]
+            title = '%s/%s/%s' % (product, ver, arch)
+        else:
+            raise redirect('/publiclist')
+
+        return dict(hosts=[h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active() and \
+                           len(h.product_version_arch_dirs(product, ver, arch)) > 0],
+                    products=list(Product.select()),
+                    arches=primary_arches, title=title)
+        
+        
 
 #http://mirrors.fedoraproject.org/mirrorlist?repo=core-$releasever&arch=$basearch
 #http://mirrors.fedoraproject.org/mirrorlist?repo=core-debug-$releasever&arch=$basearch
