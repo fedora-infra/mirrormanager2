@@ -450,20 +450,30 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
     @validate(form=host_category_form_new)
     def create(self, **kwargs):
         if not kwargs.has_key('hostid'):
-            turbogears.flash("Error: form didn't provide hostid")
+            turbogears.flash("Error: form did not provide hostid")
             raise redirect("/")
         hostid = kwargs['hostid']
         del kwargs['hostid']
-        host = Host.get(hostid)
-        category = Category.get(kwargs['category'])
+
+        try:
+            host = Host.get(hostid)
+        except SQLObjectNotFound:
+            turbogears.flash("Error: invalid hostid - foul play?")
+            raise turbogears.redirect("/")
+            
+        try:
+            category = Category.get(kwargs['category'])
+        except SQLObjectNotFound:
+            turbogears.flash("Error: invalid category - foul play?")
+            raise turbogears.redirect("/host_category/0/new?hostid=%s" % hostid)
+            
         del kwargs['category']
-#            submit_action = turbogears.url("/host_category/%s/update" % id)
+
         try:
             hostcategory = HostCategory(host=host, category=category, **kwargs)
         except:
             turbogears.flash("Error: Host already has category %s.  Try again." % category.name)
-#            submit_action = turbogears.url("/host_category/0/create")
-            raise turbogears.redirect("/host_category/0/create?hostid=%s" % hostid)
+            raise turbogears.redirect("/host_category/0/new?hostid=%s" % hostid)
         turbogears.flash("HostCategory created.")
         raise turbogears.redirect("/host_category/%s" % hostcategory.id)
 
@@ -509,7 +519,7 @@ class HostListitemController(controllers.Controller, identity.SecureResource, co
     @validate(form=form)
     def create(self, **kwargs):
         if not kwargs.has_key('hostid'):
-            turbogears.flash("Error: form didn't provide siteid")
+            turbogears.flash("Error: form did not provide siteid")
             raise redirect("/")
         hostid = kwargs['hostid']
 
