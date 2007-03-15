@@ -482,6 +482,8 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
     @validate(form=host_category_form_read)
     def update(self, hostcategory, **kwargs):
         siteadmin_check(hostcategory.my_site(), identity)
+        del kwargs['category']
+        
         hostcategory.set(**kwargs)
         hostcategory.sync()
         turbogears.flash("HostCategory Updated")
