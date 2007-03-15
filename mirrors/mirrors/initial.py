@@ -9,16 +9,16 @@ core = None
 fedora = None
 rhel = None
 
-Group(group_name='user', display_name='User')
-Group(group_name='sysadmin', display_name='Admin')
-u = User(user_name='test', email_address='test@fedoraproject.org', display_name='Test', password='test')
-u.addGroup(Group.by_group_name('user'))
-test2 = User(user_name='test2', email_address='test2@fedoraproject.org', display_name='Test2', password='test')
-test2.addGroup(Group.by_group_name('user'))
-a = User(user_name='admin', email_address='admin@fedoraproject.org', display_name='Admin', password='admin')
-a.addGroup(Group.by_group_name('user'))
-a.addGroup(Group.by_group_name('sysadmin'))
-
+def add_test_groups_and_users():
+    Group(group_name='user', display_name='User')
+    Group(group_name='sysadmin', display_name='Admin')
+    u = User(user_name='test', email_address='test@fedoraproject.org', display_name='Test', password='test')
+    u.addGroup(Group.by_group_name('user'))
+    test2 = User(user_name='test2', email_address='test2@fedoraproject.org', display_name='Test2', password='test')
+    test2.addGroup(Group.by_group_name('user'))
+    a = User(user_name='admin', email_address='admin@fedoraproject.org', display_name='Admin', password='admin')
+    a.addGroup(Group.by_group_name('user'))
+    a.addGroup(Group.by_group_name('sysadmin'))
 
 
 def make_directories():
@@ -170,7 +170,7 @@ if not Arch.select().count():
 
 if not Site.select().count() and not Host.select().count():
     print "Creating Sites and Hosts"
-    redhat = Site(name='Red Hat', password="password", orgUrl="http://www.redhat.com")
+    redhat = Site(name='Red Hat', password="password", orgUrl="http://www.redhat.com", private=True)
     Host(name='master', site=redhat)
     for n in range(1,4):
         host = Host(name='download%s.fedora.redhat.com' % n, site=redhat)
@@ -237,3 +237,4 @@ directory.addCategory(epel)
 
 #make_sites()
 #make_mirrors()
+#add_test_groups_and_users()
