@@ -8,7 +8,7 @@
 <body>
 You may trim the selection through the links below.
 <table border='1'>
-<tr><th>Product</th><th colspan='0'>Version</th></tr>
+<tr><th>Product</th><th colspan='0'>Version / Arch</th></tr>
 <tr py:for="p in products">
 <td><a href="${tg.url('/publiclist/' + p.name + '/')}"><span py:replace="p.name">Product Name</span></a></td>
 <td py:for="v in p.versions">

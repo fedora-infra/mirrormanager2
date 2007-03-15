@@ -373,9 +373,9 @@ class Host(SQLObject):
         except SQLObjectNotFound:
             return result
         if vername is not None and archname is not None:
-            desiredPath = '/%s/.*%s' % (vername, archname)
+            desiredPath = '(^|/)%s/.*%s/' % (vername, archname)
         elif vername is not None:
-            desiredPath = '/%s' % vername
+            desiredPath = '(^|/)%s/' % vername
         else:
             desiredPath = '.*'
             
@@ -491,7 +491,7 @@ class Product(SQLObject):
     class sqlmeta:
         cacheValues = False
     name = StringCol(alternateID=True)
-    versions = MultipleJoin('Version')
+    versions = MultipleJoin('Version', orderBy='name')
     categories = MultipleJoin('Category')
 
 class Version(SQLObject):

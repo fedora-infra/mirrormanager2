@@ -696,7 +696,7 @@ class PublicListController(controllers.Controller):
     @expose(template="mirrors.templates.publiclist")
     def index(self, *vpath, **params):
         return dict(hosts=[h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active()],
-                    products=list(Product.select()), title='', arches=primary_arches)
+                    products=list(Product.select(orderBy='name')), title='', arches=primary_arches)
 
     @expose(template="mirrors.templates.publiclist")
     def default(self, *vpath, **params):
@@ -718,7 +718,7 @@ class PublicListController(controllers.Controller):
 
         return dict(hosts=[h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active() and \
                            len(h.product_version_arch_dirs(product, ver, arch)) > 0],
-                    products=list(Product.select()),
+                    products=list(Product.select(orderBy='name')),
                     arches=primary_arches, title=title)
         
         
