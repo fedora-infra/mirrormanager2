@@ -228,9 +228,13 @@ def add_parents(host_category_dirs, hc, d):
         try:
             hcd = host_category_dirs[(hc, parent)]
         except KeyError:
-            parentDir = Directory.byName(parent)
-            host_category_dirs[(hc, parentDir)] = True
-        if parentDir != hc.category.topdir: # stop at top of the category
+            try:
+                parentDir = Directory.byName(parent)
+                host_category_dirs[(hc, parentDir)] = True
+            except SQLObjectNotFound: # recursed out of the directory structure
+                parentDir = None
+                
+        if parentDir and parentDir != hc.category.topdir: # stop at top of the category
             return add_parents(host_category_dirs, hc, parentDir)
     
     return host_category_dirs
