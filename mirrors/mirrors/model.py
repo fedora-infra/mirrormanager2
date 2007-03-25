@@ -27,17 +27,17 @@ class SiteToSite(SQLObject):
 class Site(SQLObject):
     class sqlmeta:
         cacheValues = False
-    name = StringCol(alternateID=True)
-    password = StringCol(default=None)
-    orgUrl = StringCol(default=None)
+    name = UnicodeCol(alternateID=True)
+    password = UnicodeCol(default=None)
+    orgUrl = UnicodeCol(default=None)
     private = BoolCol(default=False)
     admin_active = BoolCol(default=True)
     user_active  = BoolCol(default=True)
     createdAt = DateTimeCol(default=datetime.utcnow())
-    createdBy = StringCol(default=None)
+    createdBy = UnicodeCol(default=None)
     licensesAccepted  = BoolCol(default=False)
     licensesAcceptedAt = DateTimeCol(default=datetime.utcnow())
-    licensesAcceptedBy = StringCol(default=None)
+    licensesAcceptedBy = UnicodeCol(default=None)
     admins = MultipleJoin('SiteAdmin')
     hosts  = MultipleJoin('Host')
 
@@ -102,7 +102,7 @@ class Site(SQLObject):
 class SiteAdmin(SQLObject):
     class sqlmeta:
         cacheValues = False
-    username = StringCol()
+    username = UnicodeCol()
     site = ForeignKey('Site')
 
     def my_site(self):
@@ -121,7 +121,7 @@ class HostCategory(SQLObject):
     hcindex = DatabaseIndex('host', 'category', unique=True)
     admin_active = BoolCol(default=True)
     user_active = BoolCol(default=True)
-    upstream = StringCol(default=None)
+    upstream = UnicodeCol(default=None)
     dirs = MultipleJoin('HostCategoryDir')
     urls = MultipleJoin('HostCategoryUrl')
 
@@ -141,7 +141,7 @@ class HostCategoryDir(SQLObject):
         cacheValues = False
     host_category = ForeignKey('HostCategory')
     # subset of the path starting below HostCategory.path
-    path = StringCol()
+    path = UnicodeCol()
     hcdindex = DatabaseIndex('host_category', 'path', unique=True)
     up2date = BoolCol(default=True)
     files = PickleCol(default=None)
@@ -152,7 +152,7 @@ class HostCategoryUrl(SQLObject):
     class sqlmeta:
         cacheValues = False
     host_category = ForeignKey('HostCategory')
-    url = StringCol(alternateID=True)
+    url = UnicodeCol(alternateID=True)
     private = BoolCol(default=False)
 
     def my_site(self):
@@ -161,15 +161,15 @@ class HostCategoryUrl(SQLObject):
 class Host(SQLObject):
     class sqlmeta:
         cacheValues = False
-    name = StringCol()
+    name = UnicodeCol()
     site = ForeignKey('Site')
     idx = DatabaseIndex('site', 'name', unique=True)
-    robot_email = StringCol(default=None)
+    robot_email = UnicodeCol(default=None)
     admin_active = BoolCol(default=True)
     user_active = BoolCol(default=True)
     country = StringCol(default=None)
-    bandwidth = StringCol(default=None)
-    comment = StringCol(default=None)
+    bandwidth = UnicodeCol(default=None)
+    comment = UnicodeCol(default=None)
     _config = PickleCol(default=None)
     lastCheckedIn = DateTimeCol(default=None)
     private = BoolCol(default=False)
@@ -393,7 +393,7 @@ class HostAclIp(SQLObject):
     class sqlmeta:
         cacheValues = False
     host = ForeignKey('Host')
-    ip = StringCol()
+    ip = UnicodeCol()
 
     def my_site(self):
         return self.host.my_site()
@@ -475,14 +475,14 @@ class HostStats(SQLObject):
         cacheValues = False
     host = ForeignKey('Host')
     _timestamp = DateTimeCol(default=datetime.utcnow())
-    type = StringCol(default=None)
+    type = UnicodeCol(default=None)
     data = PickleCol(default=None)
 
 
 class Arch(SQLObject):
     class sqlmeta:
         cacheValues = False
-    name = StringCol(alternateID=True)
+    name = UnicodeCol(alternateID=True)
 
 primary_arches = ['i386','x86_64','ppc']
 
@@ -490,14 +490,14 @@ primary_arches = ['i386','x86_64','ppc']
 class Product(SQLObject):
     class sqlmeta:
         cacheValues = False
-    name = StringCol(alternateID=True)
+    name = UnicodeCol(alternateID=True)
     versions = MultipleJoin('Version', orderBy='name')
     categories = MultipleJoin('Category')
 
 class Version(SQLObject):
     class sqlmeta:
         cacheValues = False
-    name = StringCol()
+    name = UnicodeCol()
     product = ForeignKey('Product')
     isTest = BoolCol(default=False)
 
@@ -510,7 +510,7 @@ class Directory(SQLObject):
     # e.g. pub/fedora/linux/extras
     # e.g. pub/epel
     # e.g. pub/fedora/linux/release
-    name = StringCol(alternateID=True)
+    name = UnicodeCol(alternateID=True)
     files = PickleCol(default={})
     categories = RelatedJoin('Category')
     repository = SingleJoin('Repository') # zero or one repository, set if this dir contains a yum repo
@@ -528,9 +528,9 @@ class Category(SQLObject):
         cacheValues = False
     # Top-level mirroring
     # e.g. core, extras, release, epel
-    name = StringCol(alternateID=True)
+    name = UnicodeCol(alternateID=True)
     product = ForeignKey('Product')
-    canonicalhost = StringCol(default='http://download.fedora.redhat.com')
+    canonicalhost = UnicodeCol(default='http://download.fedora.redhat.com')
     topdir = ForeignKey('Directory', default=None)
     directories = RelatedJoin('Directory', orderBy='name') # all the directories that are part of this category
     hostCategories = MultipleJoin('HostCategory')
@@ -543,8 +543,8 @@ class Category(SQLObject):
 class Repository(SQLObject):
     class sqlmeta:
         cacheValues = False
-    name = StringCol(alternateID=True)
-    shortname = StringCol(default=None)
+    name = UnicodeCol(alternateID=True)
+    shortname = UnicodeCol(default=None)
     category = ForeignKey('Category')
     version = ForeignKey('Version')
     arch = ForeignKey('Arch')
