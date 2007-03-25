@@ -1,0 +1,339 @@
+#!/usr/bin/python
+import pkg_resources
+pkg_resources.require("TurboGears")
+
+from sqlobject import *
+import sys, os, string
+import turbogears
+from mirrors.model import *
+from datetime import datetime
+from ftplib import FTP
+import httplib
+from urlparse import urlsplit
+from optparse import OptionParser
+
+from turbogears.database import PackageHub
+
+http_debuglevel=0
+
+
+
+################################################
+# overrides for httplib because we're
+# handling keepalives ourself
+################################################
+class myHTTPResponse(httplib.HTTPResponse):
+    def begin(self):
+        self.debuglevel = http_debuglevel
+        httplib.HTTPResponse.begin(self)
+        self.will_close=False
+
+    def isclosed(self):
+        """This is a hack, because otherwise httplib will fail getresponse()"""
+        return True
+
+    def keepalive_ok(self):
+        # HTTP/1.1 connections stay open until closed
+        if self.version == 11:
+            ka = self.msg.getheader('connection')
+            if ka and "close" in ka.lower():
+                return False
+            else:
+                return True
+
+        # other HTTP connections may have a connection: keep-alive header
+        ka = self.msg.getheader('connection')
+        if ka and "keep-alive" in ka.lower():
+            return True
+
+        try:
+            ka = self.msg.getheader('keep-alive')
+            if ka is not None:
+                maxidx = ka.index('max=')
+                max = ka[maxidx+4:]
+                if max == '1':
+                    return False
+                return True
+            else:
+                ka = self.msg.getheader('connection')
+                if ka and "keep-alive" in ka.lower():
+                    return True
+                return False
+        except:
+            return False
+        return False
+
+class myHTTPConnection(httplib.HTTPConnection):
+    response_class=myHTTPResponse
+    
+    def end_request(self):
+        self.__response = None
+
+
+################################################
+# the magic begins
+
+class hostState:
+    def __init__(self):
+        self.httpconn = None
+        self.ftpconn = None
+
+    def close_http(self):
+        if self.httpconn is not None:
+            self.httpconn.close()
+            self.httpconn = None
+
+    def close_ftp(self):
+        if self.ftpconn is not None:
+            self.ftpconn.close()
+            self.ftpconn = None
+
+    def close(self):
+        self.close_http()
+        self.close_ftp()
+
+
+
+def check_url(hoststate, url, filedata):
+    if url.startswith('http:'):
+        return check_head(hoststate, url, filedata)
+    elif url.startswith('ftp:'):
+        return check_ftp(hoststate, url, filedata)
+
+def check_ftp_callback(line):
+    ftp_results = line.split()
+
+def check_ftp(hoststate, url, filedata):
+    ftp_results = []
+    scheme, netloc, path, query, fragment = urlsplit(url)
+    if hoststate.ftpconn is None:
+        hoststate.ftpconn = FTP(netloc)
+        hoststate.ftpconn.login()
+    hoststate.ftpconn.dir(path, check_ftp_callback)
+    if len(ftp_results) > 0 and ftp_results[4] == filedata['size']:
+        return True
+    return False
+
+class HTTPUnknown(Exception):
+    pass
+
+def check_head(hoststate, url, filedata):
+    """ Returns tuple:
+    True - URL exists
+    False - URL doesn't exist
+    """
+    scheme, netloc, path, query, fragment = urlsplit(url)
+    
+    if hoststate.httpconn is None:
+        hoststate.httpconn = myHTTPConnection(netloc)
+        hoststate.httpconn.set_debuglevel(http_debuglevel)
+    
+    hoststate.httpconn.request('HEAD', url,
+                               headers={'Connection':'Keep-Alive',
+                                        'Pragma':'no-cache'})
+    
+    try:
+        r = hoststate.httpconn.getresponse()
+        status = r.status
+    except:
+        raise HTTPUnknown()
+
+    hoststate.httpconn.end_request()
+    if not r.keepalive_ok():
+        hoststate.httpconn.close()
+        hoststate.httpconn = None
+
+    content_length = r.getheader('Content-Length')
+    #last_modified  = r.getheader('Last-Modified')
+
+    if status >= 200 and status < 300:
+        # fixme should check last_modified too
+        if filedata['size'] == content_length:
+            return True
+        else:
+            return False
+    if status >= 300 and status < 400:
+        location = r.getheader('Location')
+        #print "Redirect to %s" % location
+        return check_url(hoststate, location, filedata)
+    if status == 404:
+        return False
+    if status >= 500:
+        return None
+
+    print "status = %s" % status
+    raise HTTPUnknown()
+
+
+def sync_hcds(host, host_category_dirs):
+    current_hcds = {}
+    for hc, d in host_category_dirs.keys():
+        topname = hc.category.topdir.name
+        path = d.name[len(topname)+1:]
+
+        hcd = HostCategoryDir.selectBy(host_category=hc, path=path)
+        if hcd.count() > 0:
+            hcd = hcd[0]
+        else:
+            hcd = HostCategoryDir(host_category=hc, path=path,
+                                  lastCrawled=datetime.utcnow(), up2date=True)
+
+        hcd.lastCrawled=datetime.utcnow()
+        hcd.up2date=host_category_dirs[(hc, d)]
+        hcd.sync()
+        current_hcds[hcd] = True
+
+    # now-historical HostCategoryDirs are not up2date
+    # we wait for a cascading Directory delete to delete this
+    # (though it won't right now...)
+    for hc in host.categories:
+        for hcd in hc.dirs:
+            try:
+                thcd = current_hcds[hcd]
+            except KeyError:
+                hcd.lastCrawled=datetime.utcnow()
+                hcd.up2date=False
+                hcd.sync()
+    
+
+def method_pref(urls):
+    pref = None
+    for u in urls:
+        if u.startswith('http:'):
+            pref = u
+            break
+    if pref is None:
+        for u in urls:
+            if u.startswith('ftp:'):
+                pref = u
+                break
+    return pref
+        
+
+def add_parents(host_category_dirs, hc, d):
+    splitpath = d.name.split('/')
+    if len(splitpath[:-1]) > 0:
+        parent = '/'.join(splitpath[:-1])
+        try:
+            hcd = host_category_dirs[(hc, parent)]
+        except KeyError:
+            try:
+                parentDir = Directory.byName(parent)
+                host_category_dirs[(hc, parentDir)] = True
+            except SQLObjectNotFound: # recursed out of the directory structure
+                parentDir = None
+                
+        if parentDir and parentDir != hc.category.topdir: # stop at top of the category
+            return add_parents(host_category_dirs, hc, parentDir)
+    
+    return host_category_dirs
+
+def per_host(host, include_private=False):
+    host = Host.get(host)
+    print "Process for host %s" % host.name
+    next_host=False
+    host_category_dirs = {}
+    if host.private and not include_private:
+        return
+    # Don't crawl Red Hat sites for now
+    if host.site.name == "Red Hat":
+        return
+    hoststate = hostState()
+    for hc in host.categories:
+        category = hc.category
+        trydirs = category.directories
+        categoryUrl = method_pref(host.category_urls(category.name))
+        if categoryUrl is None:
+            continue
+        categoryPrefixLen = len(category.topdir.name)+1
+        
+        for d in trydirs:
+            dirname = d.name[categoryPrefixLen:]
+            url = '%s/%s' % (categoryUrl, dirname)
+
+            has_all_files=False
+            for file in d.files.keys():
+                has_all_files=True
+                graburl = "%s/%s" % (url, file)
+                try:
+                    exists = check_url(hoststate, graburl, d.files[file])
+                except:
+                    exists = None
+                if exists is None:
+                    # very odd 500 error from server
+                    # can't really count on it now
+                    # go to the next host
+                    next_host = True
+                    break
+                if not exists:
+                    has_all_files=False
+                    for t in trydirs:
+                        if d == t or t.name.startswith("%s/" % d.name):
+                            trydirs.remove(t)
+                    break
+            if next_host:
+                break
+            if has_all_files:
+                host_category_dirs[(hc, d)] = True
+                print url
+                # make sure our parent dirs appear on the list too
+                host_category_dirs = add_parents(host_category_dirs, hc, d)
+            else:
+                host_category_dirs[(hc, d)] = False
+
+        if next_host:
+            break
+    hoststate.close()
+    sync_hcds(host, host_category_dirs)
+
+
+def main():
+    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option("-c", "--config",
+                      dest="config", default='dev.cfg',
+                      help="TurboGears config file to use")
+
+    parser.add_option("--hostname",
+                      dest="hostname", default=None,
+                      help="Crawl a single host at site")
+
+    parser.add_option("--site",
+                      dest="site", default=None,
+                      help="Crawl a single host at site")
+
+    parser.add_option("--debug-http",
+                      action="store_true", dest="debug_http", default=False,
+                      help="Dump HTTP headers for each transaction")
+
+    parser.add_option("--include-private",
+                      action="store_true", dest="include_private", default=False,
+                      help="Include hosts marked 'private' in the crawl")
+
+    (options, args) = parser.parse_args()
+    if options.debug_http:
+        global http_debuglevel
+        http_debuglevel = 2
+
+    turbogears.update_config(configfile=options.config,
+                             modulename="mirrors.config")
+    global hub
+    global __connection__
+    hub = PackageHub("mirrors")
+    __connection__ = hub
+    
+    os.chdir('/tmp')
+
+    try:
+        site = Site.byName(options.site)
+        host = Host.selectBy(name=options.hostname, site=site)[0]
+    except:
+        print "Site %s Host %s not found." % (options.site, options.hostname)
+        sys.exit(1)
+
+    per_host(host.id, include_private=options.include_private)
+
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+        
