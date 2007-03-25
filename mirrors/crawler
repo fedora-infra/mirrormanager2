@@ -6,312 +6,70 @@ from sqlobject import *
 import sys, os, string
 import turbogears
 from mirrors.model import *
-from datetime import datetime
-from ftplib import FTP
-import httplib
 from urlparse import urlsplit
-import threading
-from threading import local
 from optparse import OptionParser
 
+from turbogears.database import PackageHub
+hub = __connection__ = None
 
-http_debuglevel=0
+def per_host(host, include_private=False, config=None):
+    if host.is_private() and not include_private:
+        return
 
+    program='./crawler_perhost'
+    args = []
+    args.append('-c "%s"' % config)
+    args.append('--site="%s"' % host.site.name)
+    args.append('--hostname="%s"' % host.name)
+    if include_private:
+        args.append('--include-private')
 
+    b = ""
+    for a in args:
+        b += a
+        b += " "
 
-################################################
-# overrides for httplib because we're
-# handling keepalives ourself
-################################################
-class myHTTPResponse(httplib.HTTPResponse):
-    def begin(self):
-        self.debuglevel = http_debuglevel
-        httplib.HTTPResponse.begin(self)
-        self.will_close=False
+    b += "&"
 
-    def isclosed(self):
-        """This is a hack, because otherwise httplib will fail getresponse()"""
-        return True
-
-    def keepalive_ok(self):
-        # HTTP/1.1 connections stay open until closed
-        if self.version == 11:
-            ka = self.msg.getheader('connection')
-            if ka and "close" in ka.lower():
-                return False
-            else:
-                return True
-
-        # other HTTP connections may have a connection: keep-alive header
-        ka = self.msg.getheader('connection')
-        if ka and "keep-alive" in ka.lower():
-            return True
-
-        try:
-            ka = self.msg.getheader('keep-alive')
-            if ka is not None:
-                maxidx = ka.index('max=')
-                max = ka[maxidx+4:]
-                if max == '1':
-                    return False
-                return True
-            else:
-                ka = self.msg.getheader('connection')
-                if ka and "keep-alive" in ka.lower():
-                    return True
-                return False
-        except:
-            return False
-        return False
-
-class myHTTPConnection(httplib.HTTPConnection):
-    response_class=myHTTPResponse
-    
-    def end_request(self):
-        self.__response = None
-
-
-################################################
-# the magic begins
-
-class hostState:
-    def __init__(self):
-        self.httpconn = None
-        self.ftpconn = None
-
-    def close_http(self):
-        if self.httpconn is not None:
-            self.httpconn.close()
-            self.httpconn = None
-
-    def close_ftp(self):
-        if self.ftpconn is not None:
-            self.ftpconn.close()
-            self.ftpconn = None
-
-    def close(self):
-        self.close_http()
-        self.close_ftp()
-
-class Crawler(threading.Thread):
-    def __init__(self, hostid=None, include_private=False):
-        threading.Thread.__init__(self)
-        self.include_private = include_private
-        self.hostid = hostid
-        sqlhub.threadConnection = hub.getConnection().transaction()
-
-    def run(self):
-        per_host(host=self.hostid, include_private=self.include_private)
-
-
-def check_url(hoststate, url, filedata):
-    if url.startswith('http:'):
-        return check_head(hoststate, url, filedata)
-    elif url.startswith('ftp:'):
-        return check_ftp(hoststate, url, filedata)
-
-mydata = local()
-def check_ftp_callback(line):
-    mydata.ftp_results = line.split()
-
-def check_ftp(hoststate, url, filedata):
-    mydata.ftp_results = []
-    scheme, netloc, path, query, fragment = urlsplit(url)
-    if hoststate.ftpconn is None:
-        hoststate.ftpconn = FTP(netloc)
-        hoststate.ftpconn.login()
-    hoststate.ftpconn.dir(path, check_ftp_callback)
-    if len(mydata.ftp_results) > 0 and mydata.ftp_results[4] == filedata['size']:
-        return True
-    return False
-
-class HTTPUnknown(Exception):
-    pass
-
-def check_head(hoststate, url, filedata):
-    """ Returns tuple:
-    True - URL exists
-    False - URL doesn't exist
-    """
-    scheme, netloc, path, query, fragment = urlsplit(url)
-    
-    if hoststate.httpconn is None:
-        hoststate.httpconn = myHTTPConnection(netloc)
-        hoststate.httpconn.set_debuglevel(http_debuglevel)
-    
-    hoststate.httpconn.request('HEAD', url,
-                               headers={'Connection':'Keep-Alive',
-                                        'Pragma':'no-cache'})
-    
-    try:
-        r = hoststate.httpconn.getresponse()
-        status = r.status
-    except:
-        raise HTTPUnknown()
-
-    hoststate.httpconn.end_request()
-    if not r.keepalive_ok():
-        hoststate.httpconn.close()
-        hoststate.httpconn = None
-
-    content_length = r.getheader('Content-Length')
-    #last_modified  = r.getheader('Last-Modified')
-
-    if status >= 200 and status < 300:
-        # fixme should check last_modified too
-        if filedata['size'] == content_length:
-            return True
-        else:
-            return False
-    if status >= 300 and status < 400:
-        location = r.getheader('Location')
-        #print "Redirect to %s" % location
-        return check_url(hoststate, location, filedata)
-    if status == 404:
-        return False
-    if status >= 500:
-        return None
-
-    print "status = %s" % status
-    raise HTTPUnknown()
-
-
-def sync_hcds(host, host_category_dirs):
-    current_hcds = {}
-    for hc, d in host_category_dirs.keys():
-        topname = hc.category.topdir.name
-        path = d.name[len(topname)+1:]
-
-        hcd = HostCategoryDir.selectBy(host_category=hc, path=path)
-        if hcd.count() > 0:
-            hcd = hcd[0]
-        else:
-            hcd = HostCategoryDir(host_category=hc, path=path,
-                                  lastCrawled=datetime.utcnow(), up2date=True)
-
-        hcd.lastCrawled=datetime.utcnow()
-        hcd.up2date=host_category_dirs[(hc, d)]
-        hcd.sync()
-        current_hcds[hcd] = True
-
-    # now-historical HostCategoryDirs are not up2date
-    # we wait for a cascading Directory delete to delete this
-    # (though it won't right now...)
-    for hc in host.categories:
-        for hcd in hc.dirs:
-            try:
-                thcd = current_hcds[hcd]
-            except KeyError:
-                hcd.lastCrawled=datetime.utcnow()
-                hcd.up2date=False
-                hcd.sync()
-    
-
-def method_pref(urls):
-    pref = None
-    for u, country in urls:
-        if u.startswith('http:'):
-            pref = u
-            break
-    if pref is None:
-        for u, country in urls:
-            if u.startswith('ftp:'):
-                pref = u
-                break
-    return pref
         
-
-def add_parents(host_category_dirs, hc, d):
-    splitpath = d.name.split('/')
-    if len(splitpath[:-1]) > 0:
-        parent = '/'.join(splitpath[:-1])
-        try:
-            hcd = host_category_dirs[(hc, parent)]
-        except KeyError:
-            try:
-                parentDir = Directory.byName(parent)
-                host_category_dirs[(hc, parentDir)] = True
-            except SQLObjectNotFound: # recursed out of the directory structure
-                parentDir = None
-                
-        if parentDir and parentDir != hc.category.topdir: # stop at top of the category
-            return add_parents(host_category_dirs, hc, parentDir)
-    
-    return host_category_dirs
-
-def per_host(host, include_private=False):
-    host = Host.get(host)
-    next_host=False
-    host_category_dirs = {}
-    if host.private and not include_private:
-        return
-    # Don't crawl Red Hat sites for now
-    if host.site.name == "Red Hat":
-        return
-    hoststate = hostState()
-    for hc in host.categories:
-        category = hc.category
-        trydirs = category.directories
-        for d in trydirs:
-            # fixme this is inefficient to do this lookup once per directory
-            # when it could be done once per category
-            url = method_pref(host.directory_urls(d, category))
-            if url is None:
-                continue
-            has_all_files=False
-            for file in d.files.keys():
-                has_all_files=True
-                graburl = "%s/%s" % (url, file)
-                try:
-                    exists = check_url(hoststate, graburl, d.files[file])
-                except:
-                    exists = None
-                if exists is None:
-                    # very odd 500 error from server
-                    # can't really count on it now
-                    # go to the next host
-                    next_host = True
-                    break
-                if not exists:
-                    has_all_files=False
-                    for t in trydirs:
-                        if d == t or t.name.startswith("%s/" % d.name):
-                            trydirs.remove(t)
-                    break
-            if next_host:
-                break
-            if has_all_files:
-                host_category_dirs[(hc, d)] = True
-                print url
-                # make sure our parent dirs appear on the list too
-                host_category_dirs = add_parents(host_category_dirs, hc, d)
-            else:
-                host_category_dirs[(hc, d)] = False
-
-        if next_host:
-            break
-    hoststate.close()
-    # sync_hcds here
-    sync_hcds(host, host_category_dirs)
+    print "%s %s" % (program, b)
+    #os.execvp(program, args)
 
 
-
-
-
-def doit_thread(include_private=False, hostname=None, threads=10):
-    if hostname:
-        hosts = list(Host.selectBy(name=hostname))
-    else:
-        hosts = list(Host.select())
+def doit_fork(include_private=False, threads=10, config=None):
+    hosts = list(Host.select())
 
     while len(hosts) > 0:
-        crawlers = [Crawler(hostid=host.id, include_private=include_private) for host in hosts[:min(len(hosts), threads)]]
-        for c in crawlers:
-            c.start()
-        for c in crawlers:
-            c.join()
+        pids = []
+        for host in hosts[:min(len(hosts), threads)]:
+            try:
+                pid = os.fork()
+            except OSError:
+                sys.exit("Unable to create child process.")
+                
+            if pid == 0:
+                # child
+                per_host(host, include_private=include_private, config=config)
+                # never returns
+
+            else:
+                pids.append(pid)
+        while len(pids) > 0:
+            donepid, exitstatus = os.wait()
+            pids.remove(donepid)
+        
         hosts = hosts[min(len(hosts), threads):]
 
+def doit(include_private=False, threads=10, config=None):
+    hosts = list(Host.select())
+
+    while len(hosts) > 0:
+        pids = []
+        for host in hosts[:min(len(hosts), threads)]:
+            per_host(host, include_private=include_private, config=config)
+        print "wait"
+        
+        hosts = hosts[min(len(hosts), threads):]
 
 
 def main():
@@ -319,14 +77,6 @@ def main():
     parser.add_option("-c", "--config",
                       dest="config", default='dev.cfg',
                       help="TurboGears config file to use")
-
-    parser.add_option("--hostname",
-                      dest="hostname", default=None,
-                      help="Crawl a single host")
-
-    parser.add_option("--debug-http",
-                      action="store_true", dest="debug_http", default=False,
-                      help="Dump HTTP headers for each transaction")
 
     parser.add_option("--include-private",
                       action="store_true", dest="include_private", default=False,
@@ -337,21 +87,15 @@ def main():
                       help="max threads to start in parallel")
 
     (options, args) = parser.parse_args()
-    if options.debug_http:
-        global http_debuglevel
-        http_debuglevel = 2
 
     turbogears.update_config(configfile=options.config,
                              modulename="mirrors.config")
-    
-    from turbogears.database import PackageHub
+    global hub
+    global __connection__
     hub = PackageHub("mirrors")
     __connection__ = hub
     
-    os.chdir('/tmp')
-
-    doit_thread(include_private=options.include_private, hostname=options.hostname, threads=options.threads)
-
+    doit(include_private=options.include_private, threads=options.threads, config=options.config)
 
 
 
