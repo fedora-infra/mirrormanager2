@@ -348,7 +348,7 @@ class Host(SQLObject):
         for hc in self.categories:
             if hc.category.name == cname:
                 return [hcurl.url for hcurl in HostCategoryUrl.selectBy(host_category=hc, private=False)]
-        
+
     def directory_urls(self, directory, category):
         """Given what we know about the host and the categories it carries
         return the URLs by which we can get at it (whether or not it's actually present can be determined later."""
@@ -480,31 +480,23 @@ class HostStats(SQLObject):
 
 
 class Arch(SQLObject):
-    class sqlmeta:
-        cacheValues = False
     name = UnicodeCol(alternateID=True)
 
 primary_arches = ['i386','x86_64','ppc']
 
 # e.g. 'fedora' and 'rhel'
 class Product(SQLObject):
-    class sqlmeta:
-        cacheValues = False
     name = UnicodeCol(alternateID=True)
     versions = MultipleJoin('Version', orderBy='name')
     categories = MultipleJoin('Category')
 
 class Version(SQLObject):
-    class sqlmeta:
-        cacheValues = False
     name = UnicodeCol()
     product = ForeignKey('Product')
     isTest = BoolCol(default=False)
 
 
 class Directory(SQLObject):
-    class sqlmeta:
-        cacheValues = False
     # Full path
     # e.g. pub/fedora/linux/core/6/i386/os
     # e.g. pub/fedora/linux/extras
@@ -541,8 +533,6 @@ class Category(SQLObject):
         SQLObject.destroySelf(self)
 
 class Repository(SQLObject):
-    class sqlmeta:
-        cacheValues = False
     name = UnicodeCol(alternateID=True)
     shortname = UnicodeCol(default=None)
     category = ForeignKey('Category')
@@ -552,8 +542,6 @@ class Repository(SQLObject):
     shortnameIndex = DatabaseIndex('shortname')
 
 class EmbargoedCountry(SQLObject):
-    class sqlmeta:
-        cacheValues = False
     country_code = StringCol()
 
 
