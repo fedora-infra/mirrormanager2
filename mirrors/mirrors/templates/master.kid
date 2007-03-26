@@ -62,16 +62,6 @@
     <div id="main_content" py:content="[item.text]+item[:]"/>
 
 	<!-- End of main_content -->
-<script>
-	elements = getElementsByTagAndClassName("a", "delete_link");
-
-	connect_func = function(element) {
-		connect(element, 'onclick', function (event) { if (!confirm("Are you sure?")) event.stop(); });
-	}
-
-	map(connect_func, elements);
-</script>
-
 		<div id="footer"> <img src="${tg.url('/static/images/under_the_hood_blue.png')}" /></div>
 	</div>
 </body>
