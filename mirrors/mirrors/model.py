@@ -122,7 +122,7 @@ class HostCategory(SQLObject):
     admin_active = BoolCol(default=True)
     user_active = BoolCol(default=True)
     upstream = UnicodeCol(default=None)
-    dirs = MultipleJoin('HostCategoryDir')
+    dirs = MultipleJoin('HostCategoryDir', orderBy='path')
     urls = MultipleJoin('HostCategoryUrl')
 
     def destroySelf(self):
