@@ -66,9 +66,9 @@ class content:
 
 class SiteFields(widgets.WidgetsList):
     licensesAccepted = widgets.CheckBox(label="I agree to the Fedora Legal policies linked above")
-    name     = widgets.TextField(validator=validators.NotEmpty, label="Site Name")
-    password = widgets.TextField(validator=validators.NotEmpty, label="Site Password", help_text="used by report_mirrors script")
-    orgUrl   = widgets.TextField(label="Organization URL", validator=validators.URL, attrs=dict(size='30'))
+    name     = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty), label="Site Name")
+    password = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty), label="Site Password", help_text="used by report_mirrors script")
+    orgUrl   = widgets.TextField(label="Organization URL", validator=validators.Any(validators.All(validators.UnicodeString,validators.URL),validators.Empty), attrs=dict(size='30'), help_text="Company/School/Organization URL e.g. http://www.redhat.com") 
     private  = widgets.CheckBox(help_text="e.g. Not available to the public")
     admin_active = widgets.CheckBox("admin_active",default=True)
     user_active = widgets.CheckBox(default=True, help_text="Clear to temporarily disable this site.")
@@ -92,10 +92,10 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
             
         return disabled_fields
 
-    def get(self, id):
+    def get(self, id, tg_errors=None, tg_source=None, **kwargs):
         site = Site.get(id)
         return dict(values=site, disabled_fields=self.disabled_fields(site=site))
-    
+
     @expose(template="mirrors.templates.site")
     def read(self, site):
         downstream_siteadmin_check(site, identity)
@@ -108,8 +108,8 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
         return dict(form=site_form, values=None, action=submit_action, disabled_fields=self.disabled_fields())
     
     @expose(template="mirrors.templates.site")
-    @error_handler(new)
     @validate(form=site_form)
+    @error_handler(new)
     def create(self, **kwargs):
         if not kwargs.has_key('licensesAccepted') or not kwargs['licensesAccepted']:
             turbogears.flash("Error:You must accept the license agreements to create a Site")
@@ -129,8 +129,18 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
 
     @expose(template="mirrors.templates.site")
     @validate(form=site_form)
-    def update(self, site, **kwargs):
+    @error_handler()
+    def update(self, site, tg_errors=None, **kwargs):
         siteadmin_check(site, identity)
+
+        if tg_errors is not None:
+            errstr = ""
+            for k, v in tg_errors.iteritems():
+                errstr += "%s: %s\n" % (k, v)
+            turbogears.flash("Error: %s" % errstr)
+            return dict(form=site_form, values=site, action = turbogears.url("/site/%s/update" % site.id),
+                        disabled_fields=self.disabled_fields())
+        
         if kwargs.has_key('licensesAccepted') and kwargs['licensesAccepted']:
             kwargs['licensesAcceptedBy'] = identity.current.user_name
         else:
@@ -167,7 +177,7 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
 
 ##############################################
 class SiteAdminFields(widgets.WidgetsList):
-    username = widgets.TextField(validator=validators.NotEmpty)
+    username = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty))
 
 
 siteadmin_form = widgets.TableForm(fields=SiteAdminFields(),
@@ -255,8 +265,8 @@ class SiteToSiteController(controllers.Controller, identity.SecureResource, cont
         return dict(form=site_to_site_form, values=None, action=submit_action, title="Add Downstream Site")
     
     @expose()
-    @error_handler(new)
     @validate(form=site_to_site_form)
+    @error_handler(new)
     def create(self, **kwargs):
         if not kwargs.has_key('siteid'):
             turbogears.flash("Error: form didn't provide siteid")
@@ -291,14 +301,15 @@ class SiteToSiteController(controllers.Controller, identity.SecureResource, cont
 
 
 class HostFields(widgets.WidgetsList):
-    name = widgets.TextField(validator=validators.NotEmpty, attrs=dict(size='30'), label="Host Name")
+    name = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty), attrs=dict(size='30'), label="Host Name")
     admin_active = widgets.CheckBox("admin_active", default=True)
     user_active = widgets.CheckBox(default=True, help_text="Clear to temporarily disable this host")
-    country = widgets.TextField()
+    country = widgets.TextField(validator=validators.Any(validators.Regex(r'^[a-zA-Z][a-zA-Z]$'),validators.Empty),
+                                help_text="2-letter ISO country code" )
     private = widgets.CheckBox(help_text="e.g. not available to the public")
-    robot_email = widgets.TextField(validator=validators.Email, help_text="for email notifications of upstream content updates")
-    bandwidth = widgets.TextField()
-    comment = widgets.TextField()
+    robot_email = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.Email), help_text="for email notifications of upstream content updates")
+    bandwidth = widgets.TextField(validator=validators.Any(validators.UnicodeString, validators.Empty))
+    comment = widgets.TextField(validator=validators.Any(validators.UnicodeString, validators.Empty))
 
 
 host_form = widgets.TableForm(fields=HostFields(),
@@ -336,8 +347,8 @@ class HostController(controllers.Controller, identity.SecureResource, content):
                     title="Create Host")
 
     @expose(template="mirrors.templates.host")
-    @error_handler()
     @validate(form=host_form)
+    @error_handler()
     def create(self, **kwargs):
         if not identity.in_group("sysadmin") and kwargs.has_key('admin_active'):
             del kwargs['admin_active']
@@ -363,8 +374,19 @@ class HostController(controllers.Controller, identity.SecureResource, content):
 
     @expose(template="mirrors.templates.host")
     @validate(form=host_form)
-    def update(self, host, **kwargs):
+    @error_handler()
+    def update(self, host, tg_errors=None, **kwargs):
         siteadmin_check(host.my_site(), identity)
+
+        if tg_errors is not None:
+            errstr = ""
+            for k, v in tg_errors.iteritems():
+                errstr += "%s: %s\n" % (k, v)
+            turbogears.flash("Error: %s" % errstr)
+            return dict(form=host_form, values=host, action = turbogears.url("/host/%s/update" % host.id),
+                        disabled_fields=self.disabled_fields(host=host), title="Host")
+
+
         if not identity.in_group("sysadmin") and kwargs.has_key('admin_active'):
             del kwargs['admin_active']
         host.set(**kwargs)
@@ -388,7 +410,7 @@ class HostCategoryFieldsNew(widgets.WidgetsList):
     category = widgets.SingleSelectField(options=get_category_options)
     admin_active = widgets.CheckBox(default=True)
     user_active = widgets.CheckBox(default=True, help_text="Clear to temporarily disable this category")
-    upstream = widgets.TextField(attrs=dict(size='30'), help_text='e.g. rsync://download.fedora.redhat.com/fedora-linux-core')
+    upstream = widgets.TextField(validator=validators.Any(validators.UnicodeString,validators.Empty), attrs=dict(size='30'), help_text='e.g. rsync://download.fedora.redhat.com/fedora-linux-core')
 
 class LabelObjName(widgets.Label):
         template = """
@@ -403,7 +425,8 @@ class HostCategoryFieldsRead(widgets.WidgetsList):
     category = LabelObjName()
     admin_active = widgets.CheckBox(default=True)
     user_active = widgets.CheckBox(default=True)
-    upstream = widgets.TextField(attrs=dict(size='30'), help_text='e.g. rsync://download.fedora.redhat.com/fedora-linux-core')
+    upstream = widgets.TextField(attrs=dict(size='30'), validator=validators.Any(validators.UnicodeString,validators.Empty),
+                                 help_text='e.g. rsync://download.fedora.redhat.com/fedora-linux-core')
 
 host_category_form_new = widgets.TableForm(fields=HostCategoryFieldsNew(),
                                        submit_text="Save Host Category")
@@ -446,8 +469,8 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
         return dict(form=host_category_form_read, values=hostcategory, action=submit_action, disabled_fields=self.disabled_fields())
 
     @expose(template="mirrors.templates.hostcategory")
-    @error_handler(new)
     @validate(form=host_category_form_new)
+    @error_handler(new)
     def create(self, **kwargs):
         if not kwargs.has_key('hostid'):
             turbogears.flash("Error: form did not provide hostid")
@@ -480,9 +503,19 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
 
     @expose(template="mirrors.templates.hostcategory")
     @validate(form=host_category_form_read)
-    def update(self, hostcategory, **kwargs):
+    @error_handler()
+    def update(self, hostcategory, tg_errors=None, **kwargs):
         siteadmin_check(hostcategory.my_site(), identity)
         del kwargs['category']
+
+        if tg_errors is not None:
+            errstr = ""
+            for k, v in tg_errors.iteritems():
+                errstr += "%s: %s\n" % (k, v)
+            turbogears.flash("Error: %s" % errstr)
+            return dict(form=host_category_form_read, values=hostcategory, action = turbogears.url("/host_category/%s/update" % hostcategory.id),
+                        disabled_fields=self.disabled_fields())
+        
         
         hostcategory.set(**kwargs)
         hostcategory.sync()
@@ -517,8 +550,8 @@ class HostListitemController(controllers.Controller, identity.SecureResource, co
         return dict(form=self.form, values=None, action=submit_action, title=self.title)
     
     @expose(template="mirrors.templates.boringform")
-    @error_handler(new)
     @validate(form=form)
+    @error_handler(new)
     def create(self, **kwargs):
         if not kwargs.has_key('hostid'):
             turbogears.flash("Error: form did not provide siteid")
@@ -549,7 +582,7 @@ class HostListitemController(controllers.Controller, identity.SecureResource, co
 
 
 class HostAclIPFields(widgets.WidgetsList):
-    ip = widgets.TextField(label="IP", validator=validators.NotEmpty)
+    ip = widgets.TextField(label="IP", validator=validators.All(validators.UnicodeString,validators.NotEmpty))
 
 host_acl_ip_form = widgets.TableForm(fields=HostAclIPFields(),
                                      submit_text="Create Host ACL IP")
@@ -568,7 +601,7 @@ class HostAclIPController(HostListitemController):
 
 
 class HostNetblockFields(widgets.WidgetsList):
-    netblock = widgets.TextField(validator=validators.NotEmpty)
+    netblock = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty))
 
 host_netblock_form = widgets.TableForm(fields=HostNetblockFields(),
                                        submit_text="Create Host Netblock")
@@ -585,7 +618,8 @@ class HostNetblockController(HostListitemController):
         HostNetblock(host=host, netblock=kwargs['netblock'])
 
 class HostCountryAllowedFields(widgets.WidgetsList):
-    country = widgets.TextField(validator=validators.NotEmpty)
+    country = widgets.TextField(validator=validators.Regex(r'^[a-zA-Z][a-zA-Z]$'),
+                                help_text="2-letter ISO country code")
 
 host_country_allowed_form = widgets.TableForm(fields=HostCountryAllowedFields(),
                                               submit_text="Create Country Allowed")
@@ -607,7 +641,7 @@ class HostCountryAllowedController(HostListitemController):
 # HostCategoryURL
 #########################################################3
 class HostCategoryUrlFields(widgets.WidgetsList):
-    url = widgets.TextField(attrs=dict(size='30'))
+    url = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
     private  = widgets.CheckBox(default=False, label="For other mirrors only")
 
 host_category_url_form = widgets.TableForm(fields=HostCategoryUrlFields(),
@@ -636,8 +670,8 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
         return dict(form=self.form, values=None, action=submit_action, title=self.title)
 
     @expose(template="mirrors.templates.boringform")
-    @error_handler(new)
     @validate(form=form)
+    @error_handler(new)
     def create(self, **kwargs):
         if not kwargs.has_key('hcid'):
             turbogears.flash("Error: form didn't provide hcid")
