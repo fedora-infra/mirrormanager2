@@ -22,9 +22,9 @@ ${form(value=values, action=action, disabled_fields=disabled_fields)}
 	  </li>
 </ul>
 
-<h3>Directories this host carries</h3>
+<h3>Up-to-Date Directories this host carries</h3>
 <UL>
-<LI py:for="dir in values.dirs">
+<LI py:for="dir in values.dirs" py:if="dir.up2date">
     <span py:replace="dir.path">Path</span>
 </LI>
 </UL>
