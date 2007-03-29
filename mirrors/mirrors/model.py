@@ -490,6 +490,14 @@ class Product(SQLObject):
     versions = MultipleJoin('Version', orderBy='name')
     categories = MultipleJoin('Category')
 
+    def destroySelf(self):
+        for v in self.versions:
+            v.destroySelf()
+        for c in self.categories:
+            c.destroySelf()
+        SQLObject.destroySelf(self)
+        
+
 class Version(SQLObject):
     name = UnicodeCol()
     product = ForeignKey('Product')

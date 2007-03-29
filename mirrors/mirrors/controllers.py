@@ -719,6 +719,168 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
         raise turbogears.redirect("/host_category/%s" % hc.id)
 
 
+#########################################################3
+# SimpleDbObject
+#########################################################3
+class SimpleDbObjectController(controllers.Controller, identity.SecureResource, content):
+    require = identity.in_group("sysadmin")
+    title = "My Title"
+    form = None
+    myClass = None
+    url_prefix=None
+
+    def get(self, id):
+        return dict(values=self.myClass.get(id))
+    
+    @expose(template="mirrors.templates.boringform")
+    def new(self, **kwargs):
+            
+        submit_action = turbogears.url("/%s/0/create" % self.url_prefix)
+        return dict(form=self.form, values=None, action=submit_action, title=self.title)
+
+    @expose(template="mirrors.templates.boringform")
+    def create(self, **kwargs):
+        try:
+            obj = self.myClass(**kwargs)
+        except: # probably sqlite IntegrityError but we can't catch that for some reason... 
+            turbogears.flash("Error: Object already exists")
+            raise redirect("/")
+        turbogears.flash("Success: Object created.")
+        raise turbogears.redirect("/")
+
+
+    @expose(template="mirrors.templates.boringform")
+    def delete(self, obj, **kwargs):
+        obj.destroySelf()
+        raise turbogears.redirect("/")
+
+#########################################################3
+# Arch
+#########################################################3
+
+class ArchFields(widgets.WidgetsList):
+    name = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
+
+arch_form = widgets.TableForm(fields=ArchFields(), submit_text="Create Arch")
+
+class ArchController(SimpleDbObjectController):
+    title="Arch"
+    myClass = Arch
+    url_prefix="arch"
+    form = arch_form
+    
+    @expose(template="mirrors.templates.boringform")
+    @validate(form=arch_form)
+    @error_handler(SimpleDbObjectController.new)
+    def create(self, **kwargs):
+        SimpleDbObjectController.create(self, **kwargs)
+
+#########################################################3
+# EmbargoedCountry
+#########################################################3
+
+class EmbargoedCountryFields(widgets.WidgetsList):
+    country_code = widgets.TextField(validator=validators.Regex(r'^[a-zA-Z][a-zA-Z]$'),
+                                     help_text="2-letter ISO country code" )
+
+embargoed_country_form = widgets.TableForm(fields=EmbargoedCountryFields(), submit_text="Create Embargoed Country")
+
+class EmbargoedCountryController(SimpleDbObjectController):
+    title="Embargoed Country"
+    myClass = EmbargoedCountry
+    url_prefix="embargoed_country"
+    form = embargoed_country_form
+    
+    @expose(template="mirrors.templates.boringform")
+    @validate(form=embargoed_country_form)
+    @error_handler(SimpleDbObjectController.new)
+    def create(self, **kwargs):
+        SimpleDbObjectController.create(self, **kwargs)
+
+
+#########################################################3
+# Product
+#########################################################3
+class ProductFields(widgets.WidgetsList):
+    name = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
+
+product_form = widgets.TableForm(fields=ProductFields(), submit_text="Create Product")
+
+class ProductController(SimpleDbObjectController):
+    title = "Product"
+    form = product_form
+    myClass = Product
+    url_prefix="product"
+
+    @expose(template="mirrors.templates.boringform")
+    @validate(form=product_form)
+    @error_handler(SimpleDbObjectController.new)
+    def create(self, **kwargs):
+        SimpleDbObjectController.create(self, **kwargs)
+
+#########################################################3
+# Version
+#########################################################3
+class VersionFields(widgets.WidgetsList):
+    def get_products_options():
+        return [(p.id, p.name) for p in Product.select(orderBy='name')]
+
+    product = widgets.SingleSelectField(options=get_products_options)
+    name = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
+    isTest = widgets.CheckBox(label="is a Test release")
+
+version_form = widgets.TableForm(fields=VersionFields(), submit_text="Create Version")
+
+
+class VersionController(controllers.Controller, identity.SecureResource, content):
+    require = identity.in_group("sysadmin")
+    title = "Version"
+    form = version_form
+
+    def get(self, id):
+        return dict(values=Version.get(id))
+    
+    @expose(template="mirrors.templates.boringform")
+    def new(self, **kwargs):
+            
+        submit_action = turbogears.url("/version/0/create")
+        return dict(form=self.form, values=None, action=submit_action, title=self.title)
+
+    @expose(template="mirrors.templates.boringform")
+    def read(self, version):
+        submit_action = turbogears.url("/version/%s/update" % version.id)
+        return dict(form=version_form, values=version, action=submit_action, title=self.title)
+
+
+    @expose(template="mirrors.templates.boringform")
+    @validate(form=form)
+    @error_handler(new)
+    def create(self, **kwargs):
+        try:
+            product=Product.get(kwargs['product'])
+        except SQLObjectNotFound:
+            turbogears.flash("Error: invalid product - foul play?")
+            raise redirect("/")
+
+        del kwargs['product']
+
+        try:
+            version = Version(product=product, **kwargs)
+        except: # probably sqlite IntegrityError but we can't catch that for some reason... 
+            turbogears.flash("Error: Version %s already exists" % name)
+            raise redirect("/")
+        turbogears.flash("Success: Version created.")
+        raise turbogears.redirect("/")
+
+
+    @expose(template="mirrors.templates.boringform")
+    def delete(self, version, **kwargs):
+        version.destroySelf()
+        raise turbogears.redirect("/")
+
+
+
+
 # This exports the /pub/fedora/linux/core/... directory tree.
 # For each directory requested, it returns the mirrors of that directory.
 
@@ -789,6 +951,10 @@ class Root(controllers.RootController):
     host_category = HostCategoryController()
     host_category_url = HostCategoryUrlController()
     site2site = SiteToSiteController()
+    product = ProductController()
+    version = VersionController()
+    arch = ArchController()
+    embargoed_country = EmbargoedCountryController()
     from mirrors.xmlrpc import XmlrpcController
     xmlrpc = XmlrpcController()
     publiclist = PublicListController()

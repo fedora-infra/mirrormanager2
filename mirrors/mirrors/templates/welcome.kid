@@ -40,26 +40,31 @@
 </div>
 <div id="Arches">
 <h3>Arches</h3>
+<a href="${tg.url('/arch/0/new')}">[Add]</a>
+
 <ul>
 	  <li py:for="arch in arches">
-	  <span py:replace="arch.name">Arch Name</span>	
+	  <span py:replace="arch.name">Arch Name</span>	 <a href="${tg.url('/arch/'+str(arch.id)+'/delete')}">[Delete]</a>
 	  </li>
 </ul>
 </div>
 <div id="Products">
 <h3>Products</h3>
+<a href="${tg.url('/product/0/new')}">[Add]</a>
 <ul>
 	  <li py:for="p in products">
-	  <span py:replace="p.name">Host Name</span>	
+	  <span py:replace="p.name">Product</span> <a href="${tg.url('/product/'+str(p.id)+'/delete')}">[Delete]</a>
 	  </li>
 </ul>
 </div>
 <div id="Versions">
 <h3>Versions</h3>
+<a href="${tg.url('/version/0/new')}">[Add]</a>
 <ul>
 	  <li py:for="v in versions">
 	  <span py:replace="v.product.name">Product Name</span>	
-	  <span py:replace="v.name">Version Name</span>	
+	  <span py:replace="v.name">Version Name</span>
+	   <a href="${tg.url('/version/'+str(v.id)+'/delete')}">[Delete]</a>	
 	  </li>
 </ul>
 </div>
@@ -81,9 +86,11 @@
 </div>
 <div id="Embargoed Countries">
 <h3>Embargoed Counries</h3>
+<a href="${tg.url('/embargoed_country/0/new')}">[Add]</a>
 <ul>
 	  <li py:for="cc in embargoed_countries">
-  	  <span py:replace="cc.country_code">Country Code</span>	
+  	  <span py:replace="cc.country_code">Country Code</span>	   <a href="${tg.url('/embargoed_country/'+str(cc.id)+'/delete')}">[Delete]</a>	
+	
 	  </li>
 </ul>
 </div>
