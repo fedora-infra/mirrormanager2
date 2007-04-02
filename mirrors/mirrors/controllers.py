@@ -1029,8 +1029,10 @@ def do_mirrorlist(*args, **kwargs):
     s = kwargs['repo'].rfind('-') + 1
     prefix = kwargs['repo'][:s]
     version= kwargs['repo'][s:]
+    addFc = False
     if version.startswith('fc'):
         version = version[2:]
+        addFc = True
 
 
     pname = None
@@ -1058,7 +1060,10 @@ def do_mirrorlist(*args, **kwargs):
     except SQLObjectNotFound:
         return dict(values=[])
 
-    prefix += version.name
+    if addFc:
+        prefix += 'fc' + version.name
+    else:
+        prefix += version.name
     repos = Repository.selectBy(prefix=prefix, category=category, version=version, arch=arch)
     if repos.count() == 0:
         return dict(values=['#no repositories match'])

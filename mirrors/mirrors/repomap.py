@@ -68,19 +68,19 @@ def repo_prefix(path, category, ver):
         if isUpdatesReleased:
             # updates-released-
             if isDebug:
-                prefix = u'updates-released-debug-%s' % version
+                prefix = u'updates-released-debug-fc%s' % version
             elif isSource:
-                prefix = u'updates-released-source-%s' % version
+                prefix = u'updates-released-source-fc%s' % version
             else:
-                prefix = u'updates-released-%s' % version
+                prefix = u'updates-released-fc%s' % version
         elif isUpdatesTesting:
             # updates-testing-
             if isDebug:
-                prefix = u'updates-testing-debug-%s' % version
+                prefix = u'updates-testing-debug-fc%s' % version
             elif isSource:
-                prefix = u'updates-testing-source-%s' % version
+                prefix = u'updates-testing-source-fc%s' % version
             else:
-                prefix = u'updates-testing-%s' % version
+                prefix = u'updates-testing-fc%s' % version
         elif isRawhide:
             # rawhide
             if isDebug:
