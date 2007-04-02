@@ -6,6 +6,8 @@ from sqlobject import *
 import sys, os, string
 import turbogears
 from mirrors.model import *
+from mirrors.repomap import *
+import re
 
 # look on the command line for a desired config file
 if len(sys.argv) > 1:
@@ -40,21 +42,31 @@ def rename_SRPMS_source(l):
 
 def guess_ver_arch_from_path(category, path):
     arch = None
-    for a in Arch.select():
-        if path.find(a.name) != -1:
-            arch = a
-    if path.find('SRPMS') != -1:
+    if 'SRPMS' in path:
         arch = Arch.byName('source')
+    else:
+        for a in Arch.select():
+            if a.name in path:
+                arch = a
+                break
 
     ver = None
-    for v in Version.select(Version.q.productID==category.product.id):
-        s = '/%s' % (v.name)
-        if path.find(s) != -1:
+    for v in Version.selectBy(product=category.product):
+        s = '.*(^|/)%s(/|$).*' % (v.name)
+        if re.compile(s).match(path):
             ver = v
+            break
 
     return (ver, arch)
 
+
+from mirrors.repomap import *
+
+
+
+
 def make_repository(dir, category):
+    repo = None
     path = dir.name[len(category.topdir.name)+1:]
     (ver, arch) = guess_ver_arch_from_path(category, path)
     path = trim_os_from_dirname(path)
@@ -62,14 +74,16 @@ def make_repository(dir, category):
     name = rename_SRPMS_source(name)
     name='-'.join(name)
     name='%s-%s-%s' % (category.product.name, category.name, name)
-    shortname = '%s-%s' % (category.name, ver)
+
+    prefix = repo_prefix(path, category, ver)
     try:
-        repo = Repository(name=name, category=category, version=ver, arch=arch, directory=dir)
+        repo = Repository(name=name, category=category, version=ver, arch=arch, directory=dir, prefix=prefix)
     except:
         pass
 
-    # assign shortnames to repositories like yum default mirrorlists expects
+    return repo
 
+    
 
 
 def nuke_gone_directories(category, category_directories):

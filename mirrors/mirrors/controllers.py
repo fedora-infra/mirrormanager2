@@ -413,13 +413,14 @@ class HostCategoryFieldsNew(widgets.WidgetsList):
     upstream = widgets.TextField(validator=validators.Any(validators.UnicodeString,validators.Empty), attrs=dict(size='30'), help_text='e.g. rsync://download.fedora.redhat.com/fedora-linux-core')
 
 class LabelObjName(widgets.Label):
-        template = """
-        <label xmlns:py="http://purl.org/kid/ns#"
-        id="${field_id}"
-        class="${field_class}"
-        py:content="value.name"
-        />
-        """                             
+    template = """
+    <label xmlns:py="http://purl.org/kid/ns#"
+    id="${field_id}"
+    class="${field_class}"
+    py:if="value is not None"
+    py:content="value.name"
+    />
+    """
 
 class HostCategoryFieldsRead(widgets.WidgetsList):
     category = LabelObjName()
@@ -738,7 +739,6 @@ class SimpleDbObjectController(controllers.Controller, identity.SecureResource, 
         submit_action = turbogears.url("/%s/0/create" % self.url_prefix)
         return dict(form=self.form, values=None, action=submit_action, title=self.title)
 
-    @expose(template="mirrors.templates.boringform")
     def create(self, **kwargs):
         try:
             obj = self.myClass(**kwargs)
@@ -748,6 +748,16 @@ class SimpleDbObjectController(controllers.Controller, identity.SecureResource, 
         turbogears.flash("Success: Object created.")
         raise turbogears.redirect("/")
 
+    @expose(template="mirrors.templates.boringform")
+    def read(self, obj):
+        submit_action = turbogears.url("/%s/%s/update" % (self.url_prefix, obj.id))
+        return dict(form=self.form, values=obj, action=submit_action, title=self.title)
+        
+    def update(self, obj, **kwargs):
+        obj.set(**kwargs)
+        obj.sync()
+        submit_action = turbogears.url("/%s/%s/update" % (self.url_prefix, obj.id))
+        return dict(form=self.form, values=obj, action=submit_action, title=self.title)
 
     @expose(template="mirrors.templates.boringform")
     def delete(self, obj, **kwargs):
@@ -802,7 +812,8 @@ class EmbargoedCountryController(SimpleDbObjectController):
 # Product
 #########################################################3
 class ProductFields(widgets.WidgetsList):
-    name = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
+    name = widgets.TextField(validator=validators.All(validators.UnicodeString, validators.NotEmpty),
+                             attrs=dict(size='30'))
 
 product_form = widgets.TableForm(fields=ProductFields(), submit_text="Create Product")
 
@@ -817,6 +828,40 @@ class ProductController(SimpleDbObjectController):
     @error_handler(SimpleDbObjectController.new)
     def create(self, **kwargs):
         SimpleDbObjectController.create(self, **kwargs)
+
+
+#########################################################3
+# Repository
+#########################################################3
+class RepositoryFields(widgets.WidgetsList):
+    name = widgets.TextField(validator=validators.All(validators.UnicodeString, validators.NotEmpty), attrs=dict(size='30'))
+    prefix = widgets.TextField(validator=validators.All(validators.UnicodeString, validators.NotEmpty), attrs=dict(size='30'))
+    category = LabelObjName()
+    version = LabelObjName()
+    arch = LabelObjName()
+    directory = LabelObjName()
+
+repository_form = widgets.TableForm(fields=RepositoryFields(), submit_text="Edit Repository")
+
+class RepositoryController(SimpleDbObjectController):
+    title = "Repository"
+    form = repository_form
+    myClass = Repository
+    url_prefix="repository"
+
+    @expose(template="mirrors.templates.boringform")
+    @validate(form=repository_form)
+    @error_handler(SimpleDbObjectController.new)
+    def create(self, **kwargs):
+        return SimpleDbObjectController.create(self, **kwargs)
+    
+
+    @expose(template="mirrors.templates.boringform")
+    @validate(form=repository_form)
+    @error_handler(SimpleDbObjectController.new)
+    def update(self, obj, **kwargs):
+        return SimpleDbObjectController.update(self, obj, **kwargs)
+
 
 #########################################################3
 # Version
@@ -928,16 +973,123 @@ class PublicListController(controllers.Controller):
                            len(h.product_version_arch_dirs(product, ver, arch)) > 0],
                     products=list(Product.select(orderBy='name')),
                     arches=primary_arches, title=title)
+
+
         
-        
+def trim_url_list(urls):
+    for u, country in urls:
+        us = u.split('/')
+        uprotocol = us[0]
+        umachine = us[2]
+        if uprotocol.startswith('ftp'):
+            for v, vc in urls:
+                vs = v.split('/')
+                vprotocol = vs[0]
+                vmachine = vs[2]
+                if umachine == vmachine and vprotocol.startswith('http'):
+                    urls.remove((u, country))
+    return urls
+
+def urllist(r):
+    seen_countries = {}
+    urls = directory_mirror_urls(r.directory.name, include_private=True) # fixme - won't include private when we have real data
+    urls = trim_url_list(urls)
+    for u, country in urls:
+        if country is None:
+            country = ''
+        if not u.startswith('http') and not u.startswith('ftp'):
+            urls.remove((u, country))
+            continue
+        country = country.upper()
+        if seen_countries.has_key('country'):
+            seen_countries[country].append(u)
+        else:
+            seen_countries[country] = [u]
+
+    return seen_countries
+
+from repomap import repomap
+import GeoIP
+
+gi = GeoIP.new(GeoIP.GEOIP_MEMORY_CACHE)
+
 
 #http://mirrors.fedoraproject.org/mirrorlist?repo=core-$releasever&arch=$basearch
 #http://mirrors.fedoraproject.org/mirrorlist?repo=core-debug-$releasever&arch=$basearch
-    @expose(template="mirrors.templates.mirrorlist", format="plain", content_type="text/plain")
-    def mirrorlist(self, repo=None, arch=None, country=None):
-        pass
+
+def do_mirrorlist(*args, **kwargs):
+    if not kwargs.has_key('repo') or not kwargs.has_key('arch'):
+        return dict(values=[])
+
+    try:
+        arch = Arch.byName(kwargs['arch'])
+    except SQLObjectNotFound:
+        return dict(values=[])
+
+    s = kwargs['repo'].rfind('-') + 1
+    prefix = kwargs['repo'][:s]
+    version= kwargs['repo'][s:]
+    if version.startswith('fc'):
+        version = version[2:]
 
 
+    pname = None
+    cname = None
+    
+    try:
+        pname = repomap[prefix][0]
+        cname = repomap[prefix][1]
+    except KeyError:
+        return dict(values=[])
+
+    try:
+        product = Product.byName(pname)
+    except KeyError:
+        return dict(values=[])
+
+
+    try:
+        category = Category.byName(cname)
+    except SQLObjectNotFound:
+        return dict(values=[])
+
+    try:
+        version = Version.selectBy(product=product, name=version)[0]
+    except SQLObjectNotFound:
+        return dict(values=[])
+
+    prefix += version.name
+    repos = Repository.selectBy(prefix=prefix, category=category, version=version, arch=arch)
+    if repos.count() == 0:
+        return dict(values=['#no repositories match'])
+    
+    seen_countries = urllist(repos[0])
+    returnedCountryList = []
+    countryCode = None
+
+    # fixme
+    # this works, but doesn't trim list by per-host allowed-countries,
+    # and doesn't add by continent if the list is too short
+    # this probably needs to be in its own function in the model instead.
+    if kwargs.has_key('country'):
+        countryCode = kwargs['country']
+        if countryCode == 'global' or len(countryCode) < 2:
+            countryCode = None
+        else:
+            countryCode = kwargs['country'][:2].upper()
+    else:
+        client_ip = cherrypy.request.remote_addr
+        countryCode = gi.country_code_by_addr(client_ip)
+        if countryCode == '':
+            countryCode = None
+
+    if countryCode is None:
+        return dict(values=seen_countries.values())
+    else:
+        returnedCountryList.extend(seen_countries[countryCode])
+        if len(returnedCountryList) < 4:
+            returnedCountryList = seen_countries.values()
+    return dict(values=returnedCountryList)
         
 
 class Root(controllers.RootController):
@@ -955,6 +1107,7 @@ class Root(controllers.RootController):
     version = VersionController()
     arch = ArchController()
     embargoed_country = EmbargoedCountryController()
+    repository = RepositoryController()
     from mirrors.xmlrpc import XmlrpcController
     xmlrpc = XmlrpcController()
     publiclist = PublicListController()
@@ -989,6 +1142,10 @@ class Root(controllers.RootController):
                 for n in h.acl_ips:
                     rsync_acl_list.append(n.ip)
         return dict(values=rsync_acl_list)
+
+    @expose(template="mirrors.templates.rsync_acl", format="plain", content_type="text/plain")
+    def mirrorlist(self, *args, **kwargs):
+        return do_mirrorlist(*args, **kwargs)
 
     @expose(template="mirrors.templates.login")
     def login(self, forward_url=None, previous_url=None, *args, **kw):

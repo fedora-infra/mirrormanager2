@@ -542,12 +542,11 @@ class Category(SQLObject):
 
 class Repository(SQLObject):
     name = UnicodeCol(alternateID=True)
-    shortname = UnicodeCol(default=None)
+    prefix = UnicodeCol(default=None)
     category = ForeignKey('Category')
     version = ForeignKey('Version')
     arch = ForeignKey('Arch')
     directory = ForeignKey('Directory')
-    shortnameIndex = DatabaseIndex('shortname')
 
 class EmbargoedCountry(SQLObject):
     country_code = StringCol()

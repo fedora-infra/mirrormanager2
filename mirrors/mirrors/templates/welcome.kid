@@ -72,7 +72,10 @@
 <h3>Repositories</h3>
 <ul>
 	  <li py:for="r in repositories">
-  	  <span py:replace="r.name">Repository Name</span>	
+	  <a href="${tg.url('/repository/'+str(r.id)+'/')}">
+     	  <span py:replace="r.name">Repository Name
+	   </span></a>	
+	   <a href="${tg.url('/repository/'+str(r.id)+'/delete')}">[Delete]</a>	
 	  </li>
 </ul>
 </div>
