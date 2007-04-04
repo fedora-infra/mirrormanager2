@@ -137,8 +137,6 @@ class HostCategory(SQLObject):
         return self.host.my_site()
 
 class HostCategoryDir(SQLObject):
-    class sqlmeta:
-        cacheValues = False
     host_category = ForeignKey('HostCategory')
     # subset of the path starting below HostCategory.path
     path = UnicodeCol()
@@ -332,17 +330,17 @@ class Host(SQLObject):
     def has_category(self, cname):
         return HostCategory.selectBy(host=self, category=Category.byName(cname)).count() > 0
     
-    def has_category_dir(self, cname, dir):
-        try:
-            for hc in HostCategory.selectBy(host=self, category=Category.byName(cname)):
-                if len(dir)==0:
-                    return True
-                for d in hc.dirs:
-                    if dir == d.path:
-                        return True
-                return False
-        except:
-            return False
+    def has_category_dir(self, category, dir):
+        if len(dir)==0:
+            return True
+
+        sr = HostCategory.select(join=INNERJOINOn(HostCategory, HostCategoryDir,
+                                                  AND(HostCategory.q.hostID == self.id,
+                                                      HostCategory.q.id == category.id,
+                                                      HostCategory.q.id == HostCategoryDir.q.host_categoryID,
+                                                      HostCategoryDir.q.path == dir)),
+                                 limit=1)
+        return sr.count() > 0
 
     def category_urls(self, cname):
         for hc in self.categories:
@@ -418,13 +416,20 @@ class HostNetblock(SQLObject):
     
 
 def category_mirrors(category):
-    result = []
-    # pub/fedora/linux/core
-    topdir = category.topdir.name
-    for h in Host.select():
-        if h.has_category(category.name):
-            result.append(h)
-    return result
+    return [hc.host for hc in HostCategory.selectBy(category=category)]
+
+
+def _directory_mirrors(directory, country):
+
+    sql = "SELECT category.id, host_category.id, host.id "
+    sql += "FROM category, host_category, host "
+    sql += "WHERE category.id = host_category.category_id AND "
+    sql += "host_category.hostID = host.id "
+    if country is not None:
+        sql += "AND host.country = '%s' " % country
+    sql += "ORDER BY host.id"
+    
+    result = directory.queryAll(sql)
 
 
 def directory_mirrors(dirname, country=None, include_private=False):
@@ -436,6 +441,8 @@ def directory_mirrors(dirname, country=None, include_private=False):
     origdir = dirname
     result = []
     category = None
+    if country.lower() == u'global':
+        country = None
     try:
         d = Directory.byName(dirname)
     except SQLObjectNotFound:
@@ -444,26 +451,21 @@ def directory_mirrors(dirname, country=None, include_private=False):
     if len(d.categories) == 0:
         return None
 
-    for category in d.categories:
+    result = _directory_mirrors(d, country)
+    for categoryId, hostcategoryId, hostId in result:
+        host = Host.get(hostId)
+        if host.is_private() and not include_private:
+            continue
+        category = Category.get(categoryId)
         # dirname is the subpath starting below the category's top-level directory
         dirname = origdir[len(category.topdir.name)+1:]
-        hosts = category_mirrors(category)
-        for h in hosts:
-            if h.is_active() and h.has_category_dir(category.name, dirname):
-                if h.is_private() and not include_private:
-                    continue
-                if country is not None and h.country is not None and h.country != country and country != 'global':
-                    continue
-                result.append((category.name, dirname, h))
+        if host.is_active() and host.has_category_dir(category, dirname):
+            result.append((category.name, dirname, host))
     return result
 
 def directory_mirror_urls(dname, country=None, include_private=False):
     result = []
     for cname, dirname, host in directory_mirrors(dname, country, include_private):
-        if not host.is_active():
-            continue
-        if host.is_private() and not include_private:
-            continue
         for u in host.category_urls(cname):
             fullurl = '%s/%s' % (u, dirname)
             result.append((fullurl, host.country))

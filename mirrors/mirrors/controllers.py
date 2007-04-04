@@ -992,7 +992,7 @@ def trim_url_list(urls):
 
 def urllist(r):
     seen_countries = {}
-    urls = directory_mirror_urls(r.directory.name, include_private=True) # fixme - won't include private when we have real data
+    urls = directory_mirror_urls(r.directory.name, include_private=False)
     urls = trim_url_list(urls)
     for u, country in urls:
         if country is None:
