@@ -939,7 +939,13 @@ class PubController(controllers.Controller):
             country = params['country']
         if params.has_key('include_private'):
             include_private = params['include_private']
-        urls = directory_mirror_urls(path, country=country, include_private=include_private)
+
+        try:
+            directory = Directory.byName(path)
+        except SQLObjectNotFound:
+            return dict(values=[])
+            
+        urls = directory_mirror_urls(directory, country=country, include_private=include_private)
         for u, country in urls:
             if not u.startswith('http://') and not u.startswith('ftp://'):
                 urls.remove((u, country))
@@ -992,7 +998,7 @@ def trim_url_list(urls):
 
 def urllist(r):
     seen_countries = {}
-    urls = directory_mirror_urls(r.directory.name, include_private=False)
+    urls = directory_mirror_urls(r.directory, include_private=False)
     urls = trim_url_list(urls)
     for u, country in urls:
         if country is None:

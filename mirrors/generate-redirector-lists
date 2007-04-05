@@ -47,7 +47,7 @@ def trim_url_list(urls):
 
 for d in Directory.select():
     seen_countries = {}
-    urls = directory_mirror_urls(d.name, include_private=True) # fixme - won't include private when we have real data
+    urls = directory_mirror_urls(d, include_private=True) # fixme - won't include private when we have real data
     urls = trim_url_list(urls)
     for u, country in urls:
         if country is None:
