@@ -47,33 +47,35 @@ def trim_url_list(urls):
 
 for r in Repository.select():
     seen_countries = {}
-    urls = directory_mirror_urls(r.directory.name, include_private=True) # fixme - won't include private when we have real data
+    urls = directory_mirror_urls(r.directory, include_private=False)
     urls = trim_url_list(urls)
     for u, country in urls:
-        if country is None:
-            country = ''
         if not u.startswith('http') and not u.startswith('ftp'):
             urls.remove((u, country))
             continue
-        if seen_countries.has_key('country'):
+        if country is None:
+            country = 'global'
+        if seen_countries.has_key(country):
             seen_countries[country].append(u)
         else:
             seen_countries[country] = [u]
 
     # write the global list
-    f = open('mirrorlists/%s' % (r.name), 'w')
-    for u, country in urls:
-        f.write("%s\n" % u)
-    f.close()
+    if r.prefix is not None and r.arch is not None:
+        fname = 'mirrorlists/%s-global-%s.txt' % (r.prefix, r.arch.name)
+        f = open(fname, 'w')
+        for u, country in urls:
+            f.write("%s\n" % u)
+        f.close()
 
 # write the per-country lists
     for country in seen_countries.keys():
-        if country == '':
+        if country == 'global':
             continue
-        else:
-            fname_suffix = '-%s' % country
-        
-        f = open('mirrorlists/%s%s' % (r.name, fname_suffix), 'w')
-        for u in seen_countries[country]:
-            f.write("%s\n" % u)
-        f.close()
+
+        if r.prefix is not None and r.arch is not None:
+            fname = 'mirrorlists/%s-%s-%s.txt' % (r.prefix, country.upper(), r.arch.name)
+            f = open(fname, 'w')
+            for u in seen_countries[country]:
+                f.write("%s\n" % u)
+            f.close()
