@@ -130,7 +130,8 @@ def check_head(hoststate, url, filedata):
     
     hoststate.httpconn.request('HEAD', url,
                                headers={'Connection':'Keep-Alive',
-                                        'Pragma':'no-cache'})
+                                        'Pragma':'no-cache',
+                                        'User-Agent':'mirrormanager-crawler/0.1 (+http://hosted.fedoraproject.org/projects/mirrormanager)'})
     
     try:
         r = hoststate.httpconn.getresponse()
