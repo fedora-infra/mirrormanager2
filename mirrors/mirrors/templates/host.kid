@@ -23,6 +23,12 @@ Last Checked In: ${values.lastCheckedIn}<br></br>
 	<span py:if="not downstream_siteadmin">
 	<a href="${tg.url('/host_country_allowed/0/new?hostid=' + str(values.id))}">[Add]</a>
 	</span>
+	<br/>
+	Some mirrors need to restrict themselves to serving only end
+	users from their country.  If you're one of these, list the
+	2-letter ISO code for the countries you will allow end users
+	to be from.  The mirrorlist CGI will try to honor this (not
+	implemented yet).
 	<ul>
 	<li py:for="a in values.countries_allowed">
 		  <span py:replace="a.country">Country</span>
@@ -34,10 +40,13 @@ Last Checked In: ${values.lastCheckedIn}<br></br>
         </ul>
 	</LI>
 	<div py:if="not downstream_siteadmin">
-
 	     <LI>
 	          <label for="acl_ips">ACL IPs: </label>
-		  <a href="${tg.url('/host_acl_ip/0/new?hostid=' + str(values.id))}">[Add]</a>
+		  <a href="${tg.url('/host_acl_ip/0/new?hostid=' + str(values.id))}">[Add]</a><br/>
+		  These host DNS names and/or IP addresses will be allowed
+		  to rsync from the master rsync/ftp servers.  List
+		  here all the machines that you use for pulling.
+		  This data is not exposed to public end users.
 		  <ul>
 		  <li py:for="a in values.acl_ips">
 		  <span py:replace="a.ip">ACL IP</span><a
@@ -47,7 +56,12 @@ Last Checked In: ${values.lastCheckedIn}<br></br>
 	     </LI>
      	<LI>
 	<label for="netblocks">Netblocks: </label> <a
-	          href="${tg.url('/host_netblock/0/new?hostid=' + str(values.id))}">[Add]</a>
+	          href="${tg.url('/host_netblock/0/new?hostid=' + str(values.id))}">[Add]</a><br/>
+		  Netblocks are used to try to guide and end user to a
+		  site-specific mirror.  For example, a university
+		  might list their netblocks, and the mirrorlist CGI
+		  would return the university-local mirror rather than
+		  a country-local mirror. (not implemented in mirrorlist CGI yet :-)
 	<ul>
 	<li py:for="a in values.netblocks">
 		  <span py:replace="a.netblock">Netblock</span><a
@@ -62,7 +76,9 @@ Last Checked In: ${values.lastCheckedIn}<br></br>
 <div py:if="not downstream_siteadmin">
 <a href="${tg.url('/host_category/0/new?hostid=' + str(values.id))}">[Add Category]</a>
 </div>
-
+<P>
+Hosts carry categories of software.  Example Fedora categories include Fedora Core and Fedora Extras.
+</P>
 <div py:if="values.categories is not None">
 <UL>
 <LI py:for="c in values.categories">

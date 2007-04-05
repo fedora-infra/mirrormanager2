@@ -14,6 +14,15 @@
 ${form(value=values, action=action, disabled_fields=disabled_fields)}
 <div py:if="values is not None">
 <h3>URLs serving this content</h3>
+<P>
+The same content may be served by multiple means: http, ftp, and rsync
+are common examples.  Content may also be served via a 'private' URL
+only visible to other mirror admins.  Such private URLs usually
+include a nonstandard rsync port, and/or a username and password.
+Admins from Mirror Sites on your SiteToSite list can see these private URLs.
+</P>
+
+
 	<a href="${tg.url('/host_category_url/0/new?hcid=' + str(values.id))}">[Add]</a>
 <ul>
 	  <li py:for="url in values.urls">

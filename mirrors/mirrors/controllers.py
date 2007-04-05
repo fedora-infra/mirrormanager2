@@ -70,7 +70,7 @@ class SiteFields(widgets.WidgetsList):
     password = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty), label="Site Password", help_text="used by report_mirrors script")
     orgUrl   = widgets.TextField(label="Organization URL", validator=validators.Any(validators.All(validators.UnicodeString,validators.URL),validators.Empty), attrs=dict(size='30'), help_text="Company/School/Organization URL e.g. http://www.redhat.com") 
     private  = widgets.CheckBox(help_text="e.g. Not available to the public")
-    admin_active = widgets.CheckBox("admin_active",default=True)
+    admin_active = widgets.CheckBox("admin_active",default=True, help_text="Clear to temporarily disable this site.")
     user_active = widgets.CheckBox(default=True, help_text="Clear to temporarily disable this site.")
 
 
@@ -177,7 +177,7 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
 
 ##############################################
 class SiteAdminFields(widgets.WidgetsList):
-    username = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty))
+    username = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty, help_text="FAS username you wish to have be an admin for this site"))
 
 
 siteadmin_form = widgets.TableForm(fields=SiteAdminFields(),
@@ -301,15 +301,16 @@ class SiteToSiteController(controllers.Controller, identity.SecureResource, cont
 
 
 class HostFields(widgets.WidgetsList):
-    name = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty), attrs=dict(size='30'), label="Host Name")
-    admin_active = widgets.CheckBox("admin_active", default=True)
+    name = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty), attrs=dict(size='30'), label="Host Name",
+                             help_text="Name of server as seen by a public end user")
+    admin_active = widgets.CheckBox("admin_active", default=True, help_text="Clear to temporarily disable this host")
     user_active = widgets.CheckBox(default=True, help_text="Clear to temporarily disable this host")
     country = widgets.TextField(validator=validators.Any(validators.Regex(r'^[a-zA-Z][a-zA-Z]$'),validators.Empty),
                                 help_text="2-letter ISO country code" )
-    private = widgets.CheckBox(help_text="e.g. not available to the public")
-    robot_email = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.Email), help_text="for email notifications of upstream content updates")
-    bandwidth = widgets.TextField(validator=validators.Any(validators.UnicodeString, validators.Empty))
-    comment = widgets.TextField(validator=validators.Any(validators.UnicodeString, validators.Empty))
+    private = widgets.CheckBox(help_text="e.g. not available to the public, an internal private mirror")
+    robot_email = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.Email), help_text="email address, will receive notice of upstream content updates")
+    bandwidth = widgets.TextField(validator=validators.Any(validators.UnicodeString, validators.Empty), help_text="text, how much bandwidth you might be able to offer to a public end user")
+    comment = widgets.TextField(validator=validators.Any(validators.UnicodeString, validators.Empty), help_text="text, anything else you'd like a public end user to know about your mirror")
 
 
 host_form = widgets.TableForm(fields=HostFields(),
