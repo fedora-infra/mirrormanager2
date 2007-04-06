@@ -7,75 +7,74 @@ from sqlobject.sqlbuilder import *
 import sys, os
 import turbogears
 from mirrors.model import *
+from optparse import OptionParser
 
 from os.path import *
 import sys
 
-# first look on the command line for a desired config file,
-# if it's not on the command line, then
-# look for setup.py in this directory. If it's not there, this script is
-# probably installed
-if len(sys.argv) > 1:
-    turbogears.update_config(configfile=sys.argv[1], 
-        modulename="mirrors.config")
-elif exists(join(dirname(__file__), "setup.py")):
-    turbogears.update_config(configfile="dev.cfg",
-        modulename="mirrors.config")
-else:
-    turbogears.update_config(configfile="prod.cfg",
-        modulename="mirrors.config")
-
 from turbogears.database import PackageHub
-hub = PackageHub("mirrors")
-__connection__ = hub
+hub = None
+__connection__ = None
 
 
-def trim_url_list(urls):
-    for u, country in urls:
-        us = u.split('/')
-        uprotocol = us[0]
-        umachine = us[2]
-        if uprotocol.startswith('ftp'):
-            for v, vc in urls:
-                vs = v.split('/')
-                vprotocol = vs[0]
-                vmachine = vs[2]
-                if umachine == vmachine and vprotocol.startswith('http'):
-                    urls.remove((u, country))
-    return urls
 
+def write_repo_files(directory='.'):
 
-for r in Repository.select():
-    seen_countries = {}
-    urls = directory_mirror_urls(r.directory, include_private=False)
-    urls = trim_url_list(urls)
-    for u, country in urls:
-        if not u.startswith('http') and not u.startswith('ftp'):
-            urls.remove((u, country))
-            continue
-        if country is None:
-            country = 'global'
-        if seen_countries.has_key(country):
-            seen_countries[country].append(u)
-        else:
-            seen_countries[country] = [u]
+    try:
+        os.makedirs(directory)
+    except OSError:
+        pass
 
-    # write the global list
-    if r.prefix is not None and r.arch is not None:
-        fname = 'mirrorlists/%s-global-%s.txt' % (r.prefix, r.arch.name)
-        f = open(fname, 'w')
-        for u, country in urls:
-            f.write("%s\n" % u)
-        f.close()
+    for r in Repository.select():
+        seen_countries = urllist(r)
 
-# write the per-country lists
-    for country in seen_countries.keys():
-        if country == 'global':
-            continue
-
+        # write the global list
         if r.prefix is not None and r.arch is not None:
-            fname = 'mirrorlists/%s-%s-%s.txt' % (r.prefix, country.upper(), r.arch.name)
+            #if u'source' in r.prefix and r.arch.name == u'source':
+            #continue
+            fname = '%s/%s-global-%s.txt' % (directory, r.prefix, r.arch.name)
             f = open(fname, 'w')
-            for u in seen_countries[country]:
-                f.write("%s\n" % u)
+            for country, urls in seen_countries.iteritems():
+                for u in urls:
+                    f.write("%s\n" % u)
             f.close()
+
+        # write the per-country lists
+        for country in seen_countries.keys():
+            if country == '':
+                continue
+
+            if r.prefix is not None and r.arch is not None:
+                #if u'source' in r.prefix and r.arch.name == u'source':
+                #continue
+                fname = '%s/%s-%s-%s.txt' % (directory, r.prefix, country.upper(), r.arch.name)
+                f = open(fname, 'w')
+                for u in seen_countries[country]:
+                    f.write("%s\n" % u)
+                f.close()
+
+def main():
+    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option("-c", "--config",
+                      dest="config", default='dev.cfg',
+                      help="TurboGears config file to use")
+
+    parser.add_option("-d", "--directory",
+                      dest='directory', default='.',
+                      help="Output directory to use")
+
+    (options, args) = parser.parse_args()
+
+    turbogears.update_config(configfile=options.config,
+                             modulename="mirrors.config")
+    global hub
+    global __connection__
+    hub = PackageHub("mirrors")
+    __connection__ = hub
+    
+    write_repo_files(options.directory)
+
+
+
+if __name__ == "__main__":
+    sys.exit(main())

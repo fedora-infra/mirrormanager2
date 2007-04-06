@@ -983,38 +983,6 @@ class PublicListController(controllers.Controller):
 
 
         
-def trim_url_list(urls):
-    for u, country in urls:
-        us = u.split('/')
-        uprotocol = us[0]
-        umachine = us[2]
-        if uprotocol.startswith('ftp'):
-            for v, vc in urls:
-                vs = v.split('/')
-                vprotocol = vs[0]
-                vmachine = vs[2]
-                if umachine == vmachine and vprotocol.startswith('http'):
-                    urls.remove((u, country))
-    return urls
-
-def urllist(r):
-    seen_countries = {}
-    urls = directory_mirror_urls(r.directory, include_private=False)
-    urls = trim_url_list(urls)
-    for u, country in urls:
-        if not u.startswith('http') and not u.startswith('ftp'):
-            urls.remove((u, country))
-            continue
-        if country is None:
-            country = ''
-        country = country.upper()
-        if seen_countries.has_key(country):
-            seen_countries[country].append(u)
-        else:
-            seen_countries[country] = [u]
-
-    return seen_countries
-
 from repomap import repomap
 import GeoIP
 
