@@ -31,7 +31,7 @@ You may trim the selection through the links below.
 <td><span py:replace="host.name">Host Name</span></td>
 <td>
 <table>
-<tr py:for="hc in host.categories" py:if="len(hc.dirs) > 0">
+<tr py:for="hc in host.categories" py:if="hc.has_up2date_dirs()">
 <td><span py:replace="hc.category.name">Category name</span></td>
 <?python
 http=None
