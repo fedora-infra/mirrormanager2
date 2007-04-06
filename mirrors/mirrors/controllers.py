@@ -1008,7 +1008,7 @@ def urllist(r):
         if country is None:
             country = ''
         country = country.upper()
-        if seen_countries.has_key('country'):
+        if seen_countries.has_key(country):
             seen_countries[country].append(u)
         else:
             seen_countries[country] = [u]
@@ -1026,12 +1026,12 @@ gi = GeoIP.new(GeoIP.GEOIP_MEMORY_CACHE)
 
 def do_mirrorlist(*args, **kwargs):
     if not kwargs.has_key('repo') or not kwargs.has_key('arch'):
-        return dict(values=[])
+        return dict(values=['#no repositories match'])
 
     try:
         arch = Arch.byName(kwargs['arch'])
     except SQLObjectNotFound:
-        return dict(values=[])
+        return dict(values=['#no repositories match'])
 
     s = kwargs['repo'].rfind('-') + 1
     prefix = kwargs['repo'][:s]
@@ -1049,23 +1049,23 @@ def do_mirrorlist(*args, **kwargs):
         pname = repomap[prefix][0]
         cname = repomap[prefix][1]
     except KeyError:
-        return dict(values=[])
+        return dict(values=['#no repositories match'])
 
     try:
         product = Product.byName(pname)
     except KeyError:
-        return dict(values=[])
-
+        return dict(values=['#no repositories match'])
 
     try:
         category = Category.byName(cname)
     except SQLObjectNotFound:
-        return dict(values=[])
-
+        return dict(values=['#no repositories match'])
     try:
         version = Version.selectBy(product=product, name=version)[0]
     except SQLObjectNotFound:
-        return dict(values=[])
+        return dict(values=['#no repositories match'])
+    except KeyError:
+        return dict(values=['#no repositories match'])
 
     if addFc:
         prefix += 'fc' + version.name
@@ -1095,13 +1095,14 @@ def do_mirrorlist(*args, **kwargs):
         if countryCode == None: countryCode = ''
 
     if countryCode == '' or not seen_countries.has_key(countryCode):
+        returnedCountryList = ['# repo = %s country = global arch = %s' % (prefix, arch.name) ]
         for c in seen_countries.values():
             returnedCountryList.extend(c)
     else:
-        
+        returnedCountryList = ['# repo = %s country = %s arch = %s' % (prefix, countryCode, arch.name) ]
         returnedCountryList.extend(seen_countries[countryCode])
-        if len(returnedCountryList) < 4:
-            returnedCountryList = []
+        if len(returnedCountryList) < 3:
+            returnedCountryList = ['# repo = %s country = global arch = %s' % (prefix, arch.name) ]
             for c in seen_countries.values():
                 returnedCountryList.extend(c)
 

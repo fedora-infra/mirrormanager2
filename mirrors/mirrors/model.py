@@ -443,6 +443,7 @@ def directory_mirrors(directory, country='', include_private=False):
     origdir = directory.name
     result = []
     category = None
+    if country is None: country=''
     if country.upper() == u'GLOBAL':
         country = ''
 
