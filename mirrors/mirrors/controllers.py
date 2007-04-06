@@ -1002,11 +1002,11 @@ def urllist(r):
     urls = directory_mirror_urls(r.directory, include_private=False)
     urls = trim_url_list(urls)
     for u, country in urls:
-        if country is None:
-            country = ''
         if not u.startswith('http') and not u.startswith('ftp'):
             urls.remove((u, country))
             continue
+        if country is None:
+            country = ''
         country = country.upper()
         if seen_countries.has_key('country'):
             seen_countries[country].append(u)
@@ -1077,30 +1077,34 @@ def do_mirrorlist(*args, **kwargs):
     
     seen_countries = urllist(repos[0])
     returnedCountryList = []
-    countryCode = None
+    countryCode = ''
 
     # fixme
     # this works, but doesn't trim list by per-host allowed-countries,
     # and doesn't add by continent if the list is too short
-    # this probably needs to be in its own function in the model instead.
+    # this probably needs to be in its own function
     if kwargs.has_key('country'):
-        countryCode = kwargs['country']
-        if countryCode == 'global' or len(countryCode) < 2:
-            countryCode = None
+        countryCode = kwargs['country'].upper()
+        if countryCode == 'GLOBAL' or len(countryCode) < 2:
+            countryCode = ''
         else:
-            countryCode = kwargs['country'][:2].upper()
+            countryCode = countryCode[:2]
     else:
         client_ip = cherrypy.request.remote_addr
         countryCode = gi.country_code_by_addr(client_ip)
-        if countryCode == '':
-            countryCode = None
+        if countryCode == None: countryCode = ''
 
-    if countryCode is None:
-        return dict(values=seen_countries.values())
+    if countryCode == '' or not seen_countries.has_key(countryCode):
+        for c in seen_countries.values():
+            returnedCountryList.extend(c)
     else:
+        
         returnedCountryList.extend(seen_countries[countryCode])
         if len(returnedCountryList) < 4:
-            returnedCountryList = seen_countries.values()
+            returnedCountryList = []
+            for c in seen_countries.values():
+                returnedCountryList.extend(c)
+
     return dict(values=returnedCountryList)
         
 

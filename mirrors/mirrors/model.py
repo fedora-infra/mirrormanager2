@@ -425,7 +425,8 @@ def _directory_mirrors(directory, country):
     sql += "FROM category, host_category, host "
     sql += "WHERE category.id = host_category.category_id AND "
     sql += "host_category.host_id = host.id "
-    if country is not None:
+    if country is not '':
+        country = country.upper()
         sql += "AND host.country = '%s' " % country
     sql += "ORDER BY host.id"
     
@@ -433,7 +434,7 @@ def _directory_mirrors(directory, country):
     return result
 
 
-def directory_mirrors(directory, country=None, include_private=False):
+def directory_mirrors(directory, country='', include_private=False):
     """Given a directory like pub/fedora/linux/core/5/i386/os,
     what active hosts have this directory?  To find that,
     we need to know the category the directory falls under,
@@ -442,8 +443,8 @@ def directory_mirrors(directory, country=None, include_private=False):
     origdir = directory.name
     result = []
     category = None
-    if country is not None and country.lower() == u'global':
-        country = None
+    if country.upper() == u'GLOBAL':
+        country = ''
 
     d = directory
 
@@ -463,12 +464,15 @@ def directory_mirrors(directory, country=None, include_private=False):
             result.append((category.name, dirname, host))
     return result
 
-def directory_mirror_urls(directory, country=None, include_private=False):
+def directory_mirror_urls(directory, country='', include_private=False):
     result = []
     for cname, dirname, host in directory_mirrors(directory, country, include_private):
         for u in host.category_urls(cname):
             fullurl = '%s/%s' % (u, dirname)
-            result.append((fullurl, host.country))
+            cc = host.country
+            if cc: cc = cc.upper()
+            else: cc=''
+            result.append((fullurl, cc))
     return result
 
 

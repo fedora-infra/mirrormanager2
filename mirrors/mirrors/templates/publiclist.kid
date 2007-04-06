@@ -26,7 +26,7 @@ You may trim the selection through the links below.
 <table border='1'>
 <tr><th>Country</th><th>Site</th><th>Host</th><th>Content</th><th>Bandwidth</th><th>Comments</th></tr>
 <tr py:for="host in hosts">
-<td><span py:replace="host.country">Country</span></td>
+<td><span py:replace="host.country.upper()">Country</span></td>
 <td><a href="${host.site.orgUrl}"><span py:replace="host.site.name">Site Name</span></a></td>
 <td><span py:replace="host.name">Host Name</span></td>
 <td>
