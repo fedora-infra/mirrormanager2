@@ -286,7 +286,8 @@ def per_host(host, include_private=False):
         if next_host:
             break
     hoststate.close()
-    sync_hcds(host, host_category_dirs)
+    if len(host_category_dirs) > 0:
+        sync_hcds(host, host_category_dirs)
 
 
 def main():
