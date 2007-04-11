@@ -66,31 +66,31 @@ class Site(SQLObject):
         for s in SiteToSite.selectBy(upstream_site=self, downstream_site=site):
             s.destroySelf()
         
+    def is_siteadmin_byname(self, name):
+        for a in self.admins:
+            if a.username == name:
+                return True
+        return False
 
     def is_siteadmin(self, identity):
         if identity.in_group("sysadmin"):
             return True
-        for a in self.admins:
-            if a.username == identity.current.user_name:
-                return True
-        return False
+        return self.is_siteadmin_byname(identity.current.user_name)
 
-    def is_downstream_siteadmin(self, identity):
-        """If you are a sysadmin of one of my immediate downstream sites,
-        you can see some of my site details, but you can't edit them.
-        """
-        for d in self.downstream_sites:
-            for a in d.admins:
-                if a.username == identity.current.user_name:
-                    return True
-        return False
-
+    
     def is_downstream_siteadmin_byname(self, name):
         for d in self.downstream_sites:
             for a in d.admins:
                 if a.username == name:
                     return True
         return False
+
+    def is_downstream_siteadmin(self, identity):
+        """If you are a sysadmin of one of my immediate downstream sites,
+        you can see some of my site details, but you can't edit them.
+        """
+        return is_downstream_siteadmin_byname(identity.current.user_name)
+
 
     def accept_licenses(self, identity):
         self.licensesAcceptedBy = identity.current.user_name

@@ -2,7 +2,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:py="http://purl.org/kid/ns#"
     py:extends="'master.kid'">
 
-
     
 
 
@@ -11,6 +10,12 @@
 <title>Host Category</title>
 </head>
 <body>
+Back to <a href="${tg.url('/site/' + str(host.site.id))}"><span
+py:replace="host.site.name">Site Name</span></a> / 
+<a href="${tg.url('/host/' + str(host.id))}"><span
+py:replace="host.name">Host Name</span></a>
+<P/>
+
 ${form(value=values, action=action, disabled_fields=disabled_fields)}
 <div py:if="values is not None">
 <h3>URLs serving this content</h3>

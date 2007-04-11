@@ -6,12 +6,16 @@
 </head>
 <body>
 <?python
+is_siteadmin = False
+if 'sysadmin' in tg.identity.groups:
+   is_siteadmin = True
+else:	
+   if values is not None and not action.endswith('create'):
+      is_siteadmin = values.is_siteadmin_byname(tg.identity.user.user_name)
+
+
 if 'sysadmin' not in tg.identity.groups:
    disabled_fields.append('admin_active')
-if values is not None and not action.endswith('create'):
-   downstream_siteadmin=values.is_downstream_siteadmin_byname(tg.identity.user.user_name)
-else:
-   downstream_siteadmin=False
 ?> 
 
 <div py:if="values is not None">
@@ -57,19 +61,18 @@ ${form(value=values, action=action, disabled_fields=disabled_fields)}
 
 <div py:if="values is not None">
 <div py:if="action.endswith('update')">
-	<label for="admins">Admins: </label> <span py:if="not
-	downstream_siteadmin"><a
+	<label for="admins">Admins: </label> <span py:if="is_siteadmin"><a
 	href="${tg.url('/siteadmin/0/new?siteid=' + str(values.id))}">[Add]</a></span>
 	<ul>
 	<li py:for="a in values.admins">
 		  <span py:replace="a.username">User Name</span> <span
-		  py:if="not downstream_siteadmin"><a
+		  py:if="is_siteadmin"><a
 		   href="${tg.url('/siteadmin/' + str(a.id) + '/delete')}">[Delete]</a></span>
         </li>
         </ul>
 <hr></hr>
 <h3>My Hosts</h3>
-<div py:if="not downstream_siteadmin"><a
+<div py:if="is_siteadmin"><a
 href="${tg.url('/host/0/new?siteid=' + str(values.id))}">[Add Host]</a></div>
 	  <UL>
 	  <LI py:for="h in values.hosts">
@@ -79,12 +82,12 @@ href="${tg.url('/host/0/new?siteid=' + str(values.id))}">[Add Host]</a></div>
 	  </UL>
 <hr></hr>
 <h3>Sites that can pull from me</h3>
-<span py:if="not downstream_siteadmin"><a
+<span py:if="is_siteadmin"><a
 href="${tg.url('/site2site/0/new?siteid=' + str(values.id))}">[Add Downstream Site]</a></span>
 <UL>
 <LI py:for="s in values.downstream_sites">
     <a href="${tg.url('/site/' + str(s.id))}"><span py:replace="s.name">Site Name</span></a>
-    <span py:if="not downstream_siteadmin"><a href="${tg.url('/site/' + str(values.id) + '/s2s_delete?dsite=' + str(s.id))}">[Delete]</a></span>
+    <span py:if="is_siteadmin"><a href="${tg.url('/site/' + str(values.id) + '/s2s_delete?dsite=' + str(s.id))}">[Delete]</a></span>
 </LI>
 </UL>
 <hr></hr>
@@ -96,7 +99,8 @@ href="${tg.url('/site2site/0/new?siteid=' + str(values.id))}">[Add Downstream Si
 </UL>
 </div>
 <hr></hr>
-<div py:if="not downstream_siteadmin"><a href="${tg.url('/site/' + str(values.id) + '/delete')}">[Delete Site]</a></div>
+<hr></hr>
+<div py:if="is_siteadmin"><a href="${tg.url('/site/' + str(values.id) + '/delete')}">[Delete Site]</a></div>
 </div>
 </body>
 </html>

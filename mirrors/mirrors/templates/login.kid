@@ -80,7 +80,8 @@
         <br />
         <p>
         	You must <a
-    href="https://admin.fedora.redhat.com/accounts">register</a> for your Fedora Account System account to manage your mirrors.
+    href="https://admin.fedora.redhat.com/accounts">register</a> for
+    your <a href="https://admin.fedoraproject.org/accounts">Fedora Account System</a> account to manage your mirrors.
         </p>
         <form action="${previous_url}" method="POST">
             <table>

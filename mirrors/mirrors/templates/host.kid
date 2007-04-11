@@ -3,77 +3,77 @@
     py:extends="'master.kid'">
 <head>
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
+<?python
+is_siteadmin = False
+if 'sysadmin' in tg.identity.groups:
+   is_siteadmin = True
+else:	
+   if values is not None and not action.endswith('create'):
+      is_siteadmin = values.is_siteadmin_byname(tg.identity.user.user_name)
+?> 
 </head>
 <body>
+Back to <a href="${tg.url('/site/' + str(site.id))}"><span
+py:replace="site.name">Site Name</span></a>
+<P/>
 <h2>${title}</h2>
-<?python
-downstream_siteadmin=False
-if values is not None:
-   downstream_siteadmin=values.site.is_downstream_siteadmin_byname(tg.identity.user.user_name)
-?> 
 
 ${form(value=values, action=action, disabled_fields=disabled_fields)}
 
 
 <div py:if="values is not None and action.endswith('update')">
 Last Checked In: ${values.lastCheckedIn}<br></br>
-<UL>
-	<LI>
-	<label for="countries_allowed">Countries Allowed: </label>
-	<span py:if="not downstream_siteadmin">
-	<a href="${tg.url('/host_country_allowed/0/new?hostid=' + str(values.id))}">[Add]</a>
-	</span>
-	<br/>
-	Some mirrors need to restrict themselves to serving only end
-	users from their country.  If you're one of these, list the
-	2-letter ISO code for the countries you will allow end users
-	to be from.  The mirrorlist CGI will try to honor this (not
-	implemented yet).
-	<ul>
-	<li py:for="a in values.countries_allowed">
-		  <span py:replace="a.country">Country</span>
-		  <span py:if="downstream_siteadmin">
-		  <a
-		  href="${tg.url('/host_country_allowed/' + str(a.id) + '/delete')}">[Delete]</a>
-		  </span>
-        </li>
-        </ul>
-	</LI>
-	<div py:if="not downstream_siteadmin">
-	     <LI>
-	          <label for="acl_ips">ACL IPs: </label>
+
+
+<div py:if="is_siteadmin">
+<h3>Master rsync server Access Control List IPs</h3>
+ These host DNS names and/or IP addresses will be allowed to rsync
+ from the master rsync/ftp servers.  List here all
+ the machines that you use for pulling.<br/>
 		  <a href="${tg.url('/host_acl_ip/0/new?hostid=' + str(values.id))}">[Add]</a><br/>
-		  These host DNS names and/or IP addresses will be allowed
-		  to rsync from the master rsync/ftp servers.  List
-		  here all the machines that you use for pulling.
-		  This data is not exposed to public end users.
 		  <ul>
 		  <li py:for="a in values.acl_ips">
-		  <span py:replace="a.ip">ACL IP</span><a
-	          href="${tg.url('/host_acl_ip/' + str(a.id) + '/delete')}">[Delete]</a>
+		  <span py:replace="a.ip">ACL IP</span>
+		  <a href="${tg.url('/host_acl_ip/' + str(a.id) + '/delete')}">[Delete]</a>
 		  </li>
 		  </ul>
-	     </LI>
-     	<LI>
-	<label for="netblocks">Netblocks: </label> <a
-	          href="${tg.url('/host_netblock/0/new?hostid=' + str(values.id))}">[Add]</a><br/>
+
+<h3>Site-local Netblocks</h3>
 		  Netblocks are used to try to guide and end user to a
 		  site-specific mirror.  For example, a university
 		  might list their netblocks, and the mirrorlist CGI
 		  would return the university-local mirror rather than
-		  a country-local mirror. (not implemented in mirrorlist CGI yet :-)
+		  a country-local mirror.
+		  Format is one of 18.0.0.0/255.0.0.0, 18.0.0.0/8, or
+		  an IPv6 prefix/length (not implemented in mirrorlist CGI yet :-)<br/>
+<a href="${tg.url('/host_netblock/0/new?hostid=' + str(values.id))}">[Add]</a><br/>
 	<ul>
 	<li py:for="a in values.netblocks">
 		  <span py:replace="a.netblock">Netblock</span><a
 	          href="${tg.url('/host_netblock/' + str(a.id) + '/delete')}">[Delete]</a>
         </li>
         </ul>
-	</LI>
-     </div>
-</UL>
+</div>
+<h3>Countries Allowed</h3>
+	Some mirrors need to restrict themselves to serving only end
+	users from their country.  If you're one of these, list the
+	2-letter ISO code for the countries you will allow end users
+	to be from.  The mirrorlist CGI will try to honor this (not
+	implemented yet).<br/>
+	<span py:if="is_siteadmin">
+	<a href="${tg.url('/host_country_allowed/0/new?hostid=' + str(values.id))}">[Add]</a>
+	</span>
+	<ul>
+	<li py:for="a in values.countries_allowed">
+		  <span py:replace="a.country">Country</span>
+		  <a href="${tg.url('/host_country_allowed/' + str(a.id) + '/delete')}">[Delete]</a>
+        </li>
+        </ul>
+
+
 <hr></hr>
 <h2>Categories Carried</h2>
-<div py:if="not downstream_siteadmin">
+<div py:if="is_siteadmin">
 <a href="${tg.url('/host_category/0/new?hostid=' + str(values.id))}">[Add Category]</a>
 </div>
 <P>
@@ -84,14 +84,14 @@ Hosts carry categories of software.  Example Fedora categories include Fedora Co
 <LI py:for="c in values.categories">
     <a href="${tg.url('/host_category/' + str(c.id))}"><span
     py:replace="c.category.name">Category Name</span></a>
-    <span py:if="not downstream_siteadmin"><a
+    <span py:if="is_siteadmin"><a
     href="${tg.url('/host_category/' + str(c.id) + '/delete')}">[Delete]</a></span>
     <UL>
     <LI py:for="u in c.urls">
     <div py:if="u.private">(Mirrors)</div>
     <a href="${u.url}"><span py:replace="u.url">URL</span></a>
     <!--
-    <span py:if="not downstream_siteadmin">
+    <span py:if="is_siteadmin">
     <a href="${tg.url('/host_category_url/' + str(u.id) + '/delete')}">[Delete]</a>
     </span>
     --> 
@@ -101,8 +101,10 @@ Hosts carry categories of software.  Example Fedora categories include Fedora Co
 </LI>
 </UL>
 </div>
+<hr/>
+<hr/>
 <P>
-<span py:if="not downstream_siteadmin">
+<span py:if="is_siteadmin">
 <a href="${tg.url('/host/' + str(values.id) + '/delete')}">[Delete Host]</a>
 </span>
 </P>
