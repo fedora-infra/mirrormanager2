@@ -61,7 +61,13 @@ def doit_fork(include_private=False, threads=10, config=None):
         hosts = hosts[min(len(hosts), threads):]
 
 def doit(include_private=False, threads=10, config=None):
-    hosts = list(Host.select())
+    initial_hosts = Host.select()
+    hosts = []
+    for h in initial_hosts:
+        if h.is_private() and not include_private: continue
+        if not h.is_active(): continue
+        hosts.append(h)
+    
 
     while len(hosts) > 0:
         pids = []
