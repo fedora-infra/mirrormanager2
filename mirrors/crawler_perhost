@@ -7,6 +7,7 @@ import sys, os, string
 import turbogears
 from mirrors.model import *
 from datetime import datetime
+import ftplib
 from ftplib import FTP
 import httplib
 from urlparse import urlsplit
@@ -85,7 +86,7 @@ class hostState:
 
     def close_ftp(self):
         if self.ftpconn is not None:
-            self.ftpconn.close()
+            self.ftpconn.quit()
             self.ftpconn = None
 
     def close(self):
@@ -94,28 +95,48 @@ class hostState:
 
 
 
+ftp_dir_results = None
+def check_ftp_dir_callback(line):
+    global ftp_dir_results
+    ftp_dir_results.append(line)
+
+def get_ftp_dir(hoststate, url):
+    global ftp_dir_results
+    ftp_dir_results = []
+    if not url.endswith('/'):
+        url += '/'
+    scheme, netloc, path, query, fragment = urlsplit(url)
+    if hoststate.ftpconn is None:
+        hoststate.ftpconn = FTP(netloc)
+        #hoststate.ftpconn.set_debuglevel(2)
+        hoststate.ftpconn.login()
+    hoststate.ftpconn.dir(path, check_ftp_dir_callback)
+    return ftp_dir_results
+
+def check_ftp_file(hoststate, url, filedata):
+    results = get_ftp_dir(hoststate, url)
+    if len(results) == 1:
+        line = results[0].split()
+        if line[4] == filedata['size']:
+            return True
+    return False
+
 def check_url(hoststate, url, filedata):
     if url.startswith('http:'):
         return check_head(hoststate, url, filedata)
     elif url.startswith('ftp:'):
-        return check_ftp(hoststate, url, filedata)
+        return check_ftp_file(hoststate, url, filedata)
 
-def check_ftp_callback(line):
-    ftp_results = line.split()
 
-def check_ftp(hoststate, url, filedata):
-    ftp_results = []
-    scheme, netloc, path, query, fragment = urlsplit(url)
-    if hoststate.ftpconn is None:
-        hoststate.ftpconn = FTP(netloc)
-        hoststate.ftpconn.login()
-    hoststate.ftpconn.dir(path, check_ftp_callback)
-    if len(ftp_results) > 0 and ftp_results[4] == filedata['size']:
-        return True
-    return False
+class HTTPUnknown(Exception): pass
+class HTTP500(Exception): pass
 
-class HTTPUnknown(Exception):
-    pass
+def handle_redirect(hoststate, url, location, filedata):
+    if location.startswith('/'):
+        scheme, netloc, path, query, fragment = urlsplit(url)
+        location = '%s:%s%s' % (scheme, netloc, location)
+    return check_url(hoststate, location, filedata)
+
 
 def check_head(hoststate, url, filedata):
     """ Returns tuple:
@@ -154,14 +175,12 @@ def check_head(hoststate, url, filedata):
         else:
             return False
     if status >= 300 and status < 400:
-        location = r.getheader('Location')
-        #print "Redirect to %s" % location
-        return check_url(hoststate, location, filedata)
+        return handle_redirect(hoststate, url, r.getheader('Location'), filedata)
     if status >= 400 and status < 500:
         # all the 403 Forbidden and 404 Not Founds
         return False
     if status >= 500:
-        return None
+        raise HTTP500()
 
     print "status = %s" % status
     raise HTTPUnknown()
@@ -169,7 +188,10 @@ def check_head(hoststate, url, filedata):
 
 def sync_hcds(host, host_category_dirs):
     current_hcds = {}
-    for hc, d in host_category_dirs.keys():
+    for (hc, d), up2date in host_category_dirs.iteritems():
+        if up2date is None:
+            continue
+
         topname = hc.category.topdir.name
         path = d.name[len(topname)+1:]
 
@@ -181,9 +203,9 @@ def sync_hcds(host, host_category_dirs):
                                   lastCrawled=datetime.utcnow(), up2date=True)
 
         hcd.lastCrawled=datetime.utcnow()
-        hcd.up2date=host_category_dirs[(hc, d)]
-        hcd.sync()
+        hcd.up2date=up2date
         current_hcds[hcd] = True
+        hcd.sync()
 
     # now-historical HostCategoryDirs are not up2date
     # we wait for a cascading Directory delete to delete this
@@ -230,10 +252,57 @@ def add_parents(host_category_dirs, hc, d):
     
     return host_category_dirs
 
+
+def try_perfile(d, hoststate, url):
+    exists = None
+    for file in d.files.keys():
+        exists = None
+        graburl = "%s/%s" % (url, file)
+        try:
+            exists = check_url(hoststate, graburl, d.files[file])
+            #print "%s %s" % (exists, graburl)
+            if exists == False:
+                return False
+        except ftplib.all_errors:
+            hoststate.close_ftp()
+            return None
+        except:
+            return None
+
+    if exists is None:
+        return None
+
+    return True
+
+
+def try_perdir(d, hoststate, url):
+    if not url.startswith('ftp'):
+        return None
+    results = {}
+    listing = get_ftp_dir(hoststate, url)
+
+    if len(listing) == 0:
+        #print 'FALSE %s' % url
+        return False
+    
+    for line in listing:
+        fields = line.split()
+        results[fields[8]] = {'size': fields[4]}
+
+    for file in d.files.keys():
+        try:
+            if results[file]['size'] != d.files[file]['size']:
+                return False
+        except:
+            return False
+    return True
+        
+    
+
 def per_host(host, include_private=False):
     host = Host.get(host)
     print "Process for host %s" % host.name
-    next_host=False
+    done_host=False
     host_category_dirs = {}
     if host.private and not include_private:
         return
@@ -253,38 +322,24 @@ def per_host(host, include_private=False):
             dirname = d.name[categoryPrefixLen:]
             url = '%s/%s' % (categoryUrl, dirname)
 
-            has_all_files=False
-            for file in d.files.keys():
-                has_all_files=True
-                graburl = "%s/%s" % (url, file)
-                try:
-                    exists = check_url(hoststate, graburl, d.files[file])
-                except:
-                    exists = None
-                if exists is None:
-                    # very odd 500 error from server
-                    # can't really count on it now
-                    # go to the next host
-                    next_host = True
-                    break
-                if not exists:
-                    has_all_files=False
-                    for t in trydirs:
-                        if d == t or t.name.startswith("%s/" % d.name):
-                            trydirs.remove(t)
-                    break
-            if next_host:
-                break
-            if has_all_files:
+            has_all_files = try_perdir(d, hoststate, url)
+            if has_all_files is None:
+                has_all_files = try_perfile(d, hoststate, url)
+
+
+            if has_all_files == False:
+                host_category_dirs[(hc, d)] = False
+                for t in trydirs:
+                    if d == t or t.name.startswith("%s/" % d.name):
+                        trydirs.remove(t)
+            elif has_all_files == True:                
                 host_category_dirs[(hc, d)] = True
                 print url
                 # make sure our parent dirs appear on the list too
                 host_category_dirs = add_parents(host_category_dirs, hc, d)
-            else:
-                host_category_dirs[(hc, d)] = False
+            elif has_all_files is None:
+                host_category_dirs[(hc, d)] = None
 
-        if next_host:
-            break
     hoststate.close()
     if len(host_category_dirs) > 0:
         sync_hcds(host, host_category_dirs)
