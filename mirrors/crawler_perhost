@@ -15,9 +15,6 @@ from optparse import OptionParser
 
 from turbogears.database import PackageHub
 
-http_debuglevel=0
-
-
 
 ################################################
 # overrides for httplib because we're
@@ -25,7 +22,6 @@ http_debuglevel=0
 ################################################
 class myHTTPResponse(httplib.HTTPResponse):
     def begin(self):
-        self.debuglevel = http_debuglevel
         httplib.HTTPResponse.begin(self)
         self.will_close=False
 
@@ -75,46 +71,92 @@ class myHTTPConnection(httplib.HTTPConnection):
 # the magic begins
 
 class hostState:
-    def __init__(self):
-        self.httpconn = None
-        self.ftpconn = None
+    def __init__(self, http_debuglevel=0, ftp_debuglevel=0):
+        self.httpconn = {}
+        self.ftpconn = {}
+        self.http_debuglevel = http_debuglevel
+        self.ftp_debuglevel = ftp_debuglevel
+        self.ftp_dir_results = None
 
-    def close_http(self):
-        if self.httpconn is not None:
-            self.httpconn.close()
-            self.httpconn = None
 
-    def close_ftp(self):
-        if self.ftpconn is not None:
-            self.ftpconn.quit()
-            self.ftpconn = None
+    def get_connection(self, url):
+        scheme, netloc, path, query, fragment = urlsplit(url)
+        if scheme == 'ftp':
+            if self.ftpconn.has_key(netloc):
+                return self.ftpconn[netloc]
+        elif scheme == 'http':
+            if self.httpconn.has_key(netloc):
+                return self.httpconn[netloc]
+        return None
+
+
+    def open_http(self, url):
+        scheme, netloc, path, query, fragment = urlsplit(url)
+        if not self.httpconn.has_key(netloc):
+            self.httpconn[netloc] = myHTTPConnection(netloc)
+            self.httpconn[netloc].set_debuglevel(self.http_debuglevel)
+        return self.httpconn[netloc]
+
+    def _open_ftp(self, netloc):
+        if not self.ftpconn.has_key(netloc):
+            self.ftpconn[netloc] = FTP(netloc)
+            self.ftpconn[netloc].set_debuglevel(self.ftp_debuglevel)
+            self.ftpconn[netloc].login()
+
+    def check_ftp_dir_callback(self, line):
+        if self.ftp_debuglevel > 0:
+            print line
+        self.ftp_dir_results.append(line)
+
+    def ftp_dir(self, url):
+        if not url.endswith('/'):
+            url += '/'
+            scheme, netloc, path, query, fragment = urlsplit(url)
+            self._open_ftp(netloc)
+            c = self.ftpconn[netloc]
+            self.ftp_dir_results = []
+            c.dir(path, self.check_ftp_dir_callback)
+
+
+    def close_http(self, url):
+        scheme, netloc, path, query, fragment = urlsplit(url)
+        if self.httpconn.has_key(netloc):
+            self.httpconn[netloc].close()
+            del self.httpconn[netloc]
+
+    def close_ftp(self, url):
+        scheme, netloc, path, query, fragment = urlsplit(url)
+        if self.ftpconn.has_key(netloc):
+            self.ftpconn[netloc].quit()
+            del self.ftpconn[netloc]
 
     def close(self):
-        self.close_http()
-        self.close_ftp()
+        for c in self.httpconn.keys():
+            self.close_http(c)
+
+        for c in self.ftpconn.keys():
+            self.close_ftp(c)
 
 
-
-ftp_dir_results = None
-def check_ftp_dir_callback(line):
-    global ftp_dir_results
-    ftp_dir_results.append(line)
 
 def get_ftp_dir(hoststate, url):
-    global ftp_dir_results
-    ftp_dir_results = []
-    if not url.endswith('/'):
-        url += '/'
-    scheme, netloc, path, query, fragment = urlsplit(url)
-    if hoststate.ftpconn is None:
-        hoststate.ftpconn = FTP(netloc)
-        #hoststate.ftpconn.set_debuglevel(2)
-        hoststate.ftpconn.login()
-    hoststate.ftpconn.dir(path, check_ftp_dir_callback)
-    return ftp_dir_results
+    try:
+        hoststate.ftp_dir(url)
+    except ftplib.error_temp, e:
+        # Returned by Boston University when directory does not exist
+        if e == 450:
+            return []
+        # Returned by Prinston University when cannot log in due to connection restrictions
+        if e == 421:
+            return None
+    except:
+            raise
+    return hoststate.ftp_dir_results
 
 def check_ftp_file(hoststate, url, filedata):
     results = get_ftp_dir(hoststate, url)
+    if results is None:
+        return None
     if len(results) == 1:
         line = results[0].split()
         if line[4] == filedata['size']:
@@ -142,28 +184,28 @@ def check_head(hoststate, url, filedata):
     """ Returns tuple:
     True - URL exists
     False - URL doesn't exist
+    None - we don't know
     """
-    scheme, netloc, path, query, fragment = urlsplit(url)
-    
-    if hoststate.httpconn is None:
-        hoststate.httpconn = myHTTPConnection(netloc)
-        hoststate.httpconn.set_debuglevel(http_debuglevel)
-    
-    hoststate.httpconn.request('HEAD', url,
-                               headers={'Connection':'Keep-Alive',
-                                        'Pragma':'no-cache',
-                                        'User-Agent':'mirrormanager-crawler/0.1 (+http://hosted.fedoraproject.org/projects/mirrormanager)'})
     
     try:
-        r = hoststate.httpconn.getresponse()
+        conn = hoststate.open_http(url)
+    except:
+        return None
+    
+    conn.request('HEAD', url,
+                 headers={'Connection':'Keep-Alive',
+                          'Pragma':'no-cache',
+                          'User-Agent':'mirrormanager-crawler/0.1 (+http://hosted.fedoraproject.org/projects/mirrormanager)'})
+    
+    try:
+        r = conn.getresponse()
         status = r.status
     except:
         raise HTTPUnknown()
 
-    hoststate.httpconn.end_request()
+    conn.end_request()
     if not r.keepalive_ok():
-        hoststate.httpconn.close()
-        hoststate.httpconn = None
+        hoststate.close_http(url)
 
     content_length = r.getheader('Content-Length')
     #last_modified  = r.getheader('Last-Modified')
@@ -264,7 +306,7 @@ def try_perfile(d, hoststate, url):
             if exists == False:
                 return False
         except ftplib.all_errors:
-            hoststate.close_ftp()
+            hoststate.close_ftp(url)
             return None
         except:
             return None
@@ -280,6 +322,8 @@ def try_perdir(d, hoststate, url):
         return None
     results = {}
     listing = get_ftp_dir(hoststate, url)
+    if listing is None:
+        return None
 
     if len(listing) == 0:
         #print 'FALSE %s' % url
@@ -299,17 +343,23 @@ def try_perdir(d, hoststate, url):
         
     
 
-def per_host(host, include_private=False):
+def per_host(host, options=None):
     host = Host.get(host)
-    print "Process for host %s" % host.name
     done_host=False
     host_category_dirs = {}
-    if host.private and not include_private:
+    if host.private and not options.include_private:
         return
     # Don't crawl Red Hat sites for now
     if host.site.name == "Red Hat":
         return
-    hoststate = hostState()
+    http_debuglevel = 0
+    ftp_debuglevel = 0
+    if options.debug_http:
+        http_debuglevel = 2
+    if options.debug_ftp:
+        ftp_debuglevel = 2
+
+    hoststate = hostState(http_debuglevel=http_debuglevel, ftp_debuglevel=ftp_debuglevel)
     for hc in host.categories:
         category = hc.category
         trydirs = category.directories
@@ -363,14 +413,15 @@ def main():
                       action="store_true", dest="debug_http", default=False,
                       help="Dump HTTP headers for each transaction")
 
+    parser.add_option("--debug-ftp",
+                      action="store_true", dest="debug_ftp", default=False,
+                      help="Dump FTP headers for each transaction")
+
     parser.add_option("--include-private",
                       action="store_true", dest="include_private", default=False,
                       help="Include hosts marked 'private' in the crawl")
 
     (options, args) = parser.parse_args()
-    if options.debug_http:
-        global http_debuglevel
-        http_debuglevel = 2
 
     turbogears.update_config(configfile=options.config,
                              modulename="mirrors.config")
@@ -388,7 +439,7 @@ def main():
         print "Site %s Host %s not found." % (options.site, options.hostname)
         sys.exit(1)
 
-    per_host(host.id, include_private=options.include_private)
+    per_host(host.id, options=options)
 
 
 
