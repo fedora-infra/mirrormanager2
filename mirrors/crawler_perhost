@@ -12,6 +12,7 @@ from ftplib import FTP
 import httplib
 from urlparse import urlsplit
 from optparse import OptionParser
+import threading
 
 from turbogears.database import PackageHub
 
@@ -341,9 +342,15 @@ def try_perdir(d, hoststate, url):
             return False
     return True
         
+must_dienow = False
+def dienow():
+    global must_dienow
+    must_dienow = True
+    print "Timeout expired, killing this process.  Better luck next time."
     
 
 def per_host(host, options=None):
+    global must_dienow
     host = Host.get(host)
     done_host=False
     host_category_dirs = {}
@@ -359,6 +366,10 @@ def per_host(host, options=None):
     if options.debug_ftp:
         ftp_debuglevel = 2
 
+    timer = threading.Timer(options.timeout_minutes * 60.0, dienow)
+    timer.start()
+
+
     hoststate = hostState(http_debuglevel=http_debuglevel, ftp_debuglevel=ftp_debuglevel)
     for hc in host.categories:
         category = hc.category
@@ -369,6 +380,8 @@ def per_host(host, options=None):
         categoryPrefixLen = len(category.topdir.name)+1
         
         for d in trydirs:
+            if must_dienow:
+                sys.exit(1)
             dirname = d.name[categoryPrefixLen:]
             url = '%s/%s' % (categoryUrl, dirname)
 
@@ -391,6 +404,7 @@ def per_host(host, options=None):
                 host_category_dirs[(hc, d)] = None
 
     hoststate.close()
+    timer.cancel()
     if len(host_category_dirs) > 0:
         sync_hcds(host, host_category_dirs)
 
@@ -420,6 +434,10 @@ def main():
     parser.add_option("--include-private",
                       action="store_true", dest="include_private", default=False,
                       help="Include hosts marked 'private' in the crawl")
+
+    parser.add_option("--timeout-minutes", type="int",
+                      dest="timeout_minutes", default=15,
+                      help="Minutes to let the crawler run before killed (default=15)")
 
     (options, args) = parser.parse_args()
 
