@@ -37,6 +37,8 @@ repomap = {
     u'extras-development' : (u'Fedora', u'Fedora Extras'),
     u'extras-development-debuginfo' : (u'Fedora', u'Fedora Extras'),
     u'extras-development-source' : (u'Fedora', u'Fedora Extras'),
+
+    u'epel-' : (u'RHEL', u'Fedora EPEL'),
     }
 
 def repo_prefix(path, category, ver):
@@ -59,6 +61,7 @@ def repo_prefix(path, category, ver):
 
     isCore = (category.name == u'Fedora Core')
     isExtras = (category.name == u'Fedora Extras')
+    isEpel = (category.name == u'Fedora EPEL')
 
     version = u'unknown'
     if not isRawhide and ver is not None:
@@ -115,5 +118,15 @@ def repo_prefix(path, category, ver):
                 prefix = u'extras-source-%s' % version
             else:
                 prefix = u'extras-%s' % version
+
+    elif isEpel:
+            # epel-
+            if isDebug:
+                prefix = u'epel-debuginfo-%s' % version
+            elif isSource:
+                prefix = u'epel-source-%s' % version
+            else:
+                prefix = u'epel-%s' % version
+        
 
     return prefix
