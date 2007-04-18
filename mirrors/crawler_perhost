@@ -110,13 +110,11 @@ class hostState:
         self.ftp_dir_results.append(line)
 
     def ftp_dir(self, url):
-        if not url.endswith('/'):
-            url += '/'
-            scheme, netloc, path, query, fragment = urlsplit(url)
-            self._open_ftp(netloc)
-            c = self.ftpconn[netloc]
-            self.ftp_dir_results = []
-            c.dir(path, self.check_ftp_dir_callback)
+        scheme, netloc, path, query, fragment = urlsplit(url)
+        self._open_ftp(netloc)
+        c = self.ftpconn[netloc]
+        self.ftp_dir_results = []
+        c.dir(path, self.check_ftp_dir_callback)
 
 
     def close_http(self, url):
@@ -148,24 +146,26 @@ def get_ftp_dir(hoststate, url):
         hoststate.ftp_dir(url)
     except ftplib.error_perm, e:
         # Returned by Princeton University when directory does not exist
-        if e == 550:
+        if str(e).startswith('550'):
             return []
     except ftplib.error_temp, e:
         # Returned by Boston University when directory does not exist
-        if e == 450:
+        if str(e).startswith('450'):
             return []
         # Returned by Princeton University when cannot log in due to connection restrictions
-        if e == 421:
+        if str(e).startswith('421'):
             print "Connections Exceeded %s" % url
             raise TryLater()
         else:
-            print "unknown error on %s" % url
+            print "unknown error %s on %s" % (e, url)
             raise
     except:
             raise
     return hoststate.ftp_dir_results
 
 def check_ftp_file(hoststate, url, filedata):
+    if url.endswith('/'):
+        url = url[:-1]
     try:
         results = get_ftp_dir(hoststate, url)
     except TryLater:
@@ -337,6 +337,8 @@ def try_perdir(d, hoststate, url):
     if not url.startswith('ftp'):
         return None
     results = {}
+    if not url.endswith('/'):
+        url += '/'
     listing = get_ftp_dir(hoststate, url)
     if listing is None:
         return None

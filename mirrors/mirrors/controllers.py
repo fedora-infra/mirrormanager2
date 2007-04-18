@@ -697,6 +697,9 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
 
         siteadmin_check(hc.my_site(), identity)
 
+        if kwargs['url'].endswith('/'):
+            kwargs['url'] = kwargs['url'][:-1]
+
         try:
             del kwargs['hcid']
             HostCategoryUrl(host_category=hc, **kwargs)
@@ -714,6 +717,8 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
     @expose(template="mirrors.templates.hostcategoryurl")
     def update(self, hcurl, **kwargs):
         siteadmin_check(hcurl.my_site(), identity)
+        if kwargs['url'].endswith('/'):
+            kwargs['url'] = kwargs['url'][:-1]
         hcurl.set(**kwargs)
         hcurl.sync()
         submit_action = turbogears.url("/host_category_url/%s/update" % hcurl.id)
