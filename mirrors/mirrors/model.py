@@ -564,6 +564,8 @@ class Directory(SQLObject):
     repository = SingleJoin('Repository') # zero or one repository, set if this dir contains a yum repo
 
     def destroySelf(self):
+        for c in self.categories:
+            self.removeCategory(c)
         if self.repository is not None:
             self.repository.destroySelf()
         # don't destroy a whole category if only deleting a directory
