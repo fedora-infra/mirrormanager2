@@ -88,7 +88,7 @@ def main():
                       action="store_true", dest="include_private", default=False,
                       help="Include hosts marked 'private' in the crawl")
 
-    parser.add_option("-t", "--threads",
+    parser.add_option("-t", "--threads", type="int",
                       dest="threads", default=10,
                       help="max threads to start in parallel")
 

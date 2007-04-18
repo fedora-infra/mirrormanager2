@@ -139,23 +139,37 @@ class hostState:
             self.close_ftp(c)
 
 
+class TryLater(Exception):
+    pass
+
 
 def get_ftp_dir(hoststate, url):
     try:
         hoststate.ftp_dir(url)
+    except ftplib.error_perm, e:
+        # Returned by Princeton University when directory does not exist
+        if e == 550:
+            return []
     except ftplib.error_temp, e:
         # Returned by Boston University when directory does not exist
         if e == 450:
             return []
-        # Returned by Prinston University when cannot log in due to connection restrictions
+        # Returned by Princeton University when cannot log in due to connection restrictions
         if e == 421:
-            return None
+            print "Connections Exceeded %s" % url
+            raise TryLater()
+        else:
+            print "unknown error on %s" % url
+            raise
     except:
             raise
     return hoststate.ftp_dir_results
 
 def check_ftp_file(hoststate, url, filedata):
-    results = get_ftp_dir(hoststate, url)
+    try:
+        results = get_ftp_dir(hoststate, url)
+    except TryLater:
+        raise
     if results is None:
         return None
     if len(results) == 1:
@@ -242,8 +256,7 @@ def sync_hcds(host, host_category_dirs):
         if hcd.count() > 0:
             hcd = hcd[0]
         else:
-            hcd = HostCategoryDir(host_category=hc, path=path,
-                                  lastCrawled=datetime.utcnow(), up2date=True)
+            hcd = HostCategoryDir(host_category=hc, path=path)
 
         hcd.lastCrawled=datetime.utcnow()
         hcd.up2date=up2date
@@ -306,6 +319,8 @@ def try_perfile(d, hoststate, url):
             #print "%s %s" % (exists, graburl)
             if exists == False:
                 return False
+        except TryLater:
+            raise
         except ftplib.all_errors:
             hoststate.close_ftp(url)
             return None
@@ -366,8 +381,9 @@ def per_host(host, options=None):
     if options.debug_ftp:
         ftp_debuglevel = 2
 
-    timer = threading.Timer(options.timeout_minutes * 60.0, dienow)
-    timer.start()
+    if options.timeout_minutes > 0:
+        timer = threading.Timer(options.timeout_minutes * 60.0, dienow)
+        timer.start()
 
 
     hoststate = hostState(http_debuglevel=http_debuglevel, ftp_debuglevel=ftp_debuglevel)
@@ -385,26 +401,32 @@ def per_host(host, options=None):
             dirname = d.name[categoryPrefixLen:]
             url = '%s/%s' % (categoryUrl, dirname)
 
-            has_all_files = try_perdir(d, hoststate, url)
-            if has_all_files is None:
-                has_all_files = try_perfile(d, hoststate, url)
+            try:
+                has_all_files = try_perdir(d, hoststate, url)
+                if has_all_files is None:
+                    has_all_files = try_perfile(d, hoststate, url)
 
 
-            if has_all_files == False:
-                host_category_dirs[(hc, d)] = False
-                for t in trydirs:
-                    if d == t or t.name.startswith("%s/" % d.name):
-                        trydirs.remove(t)
-            elif has_all_files == True:                
-                host_category_dirs[(hc, d)] = True
-                print url
-                # make sure our parent dirs appear on the list too
-                host_category_dirs = add_parents(host_category_dirs, hc, d)
-            elif has_all_files is None:
-                host_category_dirs[(hc, d)] = None
+                if has_all_files == False:
+                    host_category_dirs[(hc, d)] = False
+                    # remove subdirs of here too
+                    for t in trydirs:
+                        if d == t or t.name.startswith("%s/" % d.name):
+                            trydirs.remove(t)
+                elif has_all_files == True:                
+                    host_category_dirs[(hc, d)] = True
+                    print url
+                    # make sure our parent dirs appear on the list too
+                    host_category_dirs = add_parents(host_category_dirs, hc, d)
+                elif has_all_files is None:
+                    host_category_dirs[(hc, d)] = None
+            except TryLater:
+                timer.cancel()
+                sys.exit(1)
 
     hoststate.close()
-    timer.cancel()
+    if options.timeout_minutes > 0:
+        timer.cancel()
     if len(host_category_dirs) > 0:
         sync_hcds(host, host_category_dirs)
 
