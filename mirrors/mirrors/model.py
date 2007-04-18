@@ -89,7 +89,7 @@ class Site(SQLObject):
         """If you are a sysadmin of one of my immediate downstream sites,
         you can see some of my site details, but you can't edit them.
         """
-        return is_downstream_siteadmin_byname(identity.current.user_name)
+        return self.is_downstream_siteadmin_byname(identity.current.user_name)
 
 
     def accept_licenses(self, identity):
