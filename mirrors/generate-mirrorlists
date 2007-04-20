@@ -17,6 +17,21 @@ hub = None
 __connection__ = None
 
 
+def write_global_file(directory, prefix, archName, seen_countries):
+    fname = '%s/%s-global-%s.txt' % (directory, prefix, archName)
+    f = open(fname, 'w')
+    for country, urls in seen_countries.iteritems():
+        for u in urls:
+            f.write("%s\n" % u)
+    f.close()
+
+def write_per_country_file(directory, prefix, country, archName, seen_countries):
+    fname = '%s/%s-%s-%s.txt' % (directory, prefix, country.upper(), archName)
+    f = open(fname, 'w')
+    for u in seen_countries[country]:
+        f.write("%s\n" % u)
+    f.close()
+    
 
 def write_repo_files(directory='.'):
 
@@ -30,14 +45,12 @@ def write_repo_files(directory='.'):
 
         # write the global list
         if r.prefix is not None and r.arch is not None:
-            #if u'source' in r.prefix and r.arch.name == u'source':
-            #continue
-            fname = '%s/%s-global-%s.txt' % (directory, r.prefix, r.arch.name)
-            f = open(fname, 'w')
-            for country, urls in seen_countries.iteritems():
-                for u in urls:
-                    f.write("%s\n" % u)
-            f.close()
+            if u'source' in r.prefix and r.arch.name == u'source':
+                for a in primary_arches:
+                    write_global_file(directory, r.prefix, a, seen_countries)
+            else:
+                    write_global_file(directory, r.prefix, r.arch.name, seen_countries)
+            
 
         # write the per-country lists
         for country in seen_countries.keys():
@@ -45,13 +58,11 @@ def write_repo_files(directory='.'):
                 continue
 
             if r.prefix is not None and r.arch is not None:
-                #if u'source' in r.prefix and r.arch.name == u'source':
-                #continue
-                fname = '%s/%s-%s-%s.txt' % (directory, r.prefix, country.upper(), r.arch.name)
-                f = open(fname, 'w')
-                for u in seen_countries[country]:
-                    f.write("%s\n" % u)
-                f.close()
+                if u'source' in r.prefix and r.arch.name == u'source':
+                    for a in primary_arches:
+                        write_per_country_file(directory, r.prefix, country, a, seen_countries)
+                else:
+                    write_per_country_file(directory, r.prefix, country, r.arch.name, seen_countries)
 
 def main():
     parser = OptionParser(usage=sys.argv[0] + " [options]")
