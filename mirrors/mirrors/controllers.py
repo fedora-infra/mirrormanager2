@@ -601,7 +601,7 @@ class HostAclIPController(HostListitemController):
 
     def do_get(self, id):
         v = HostAclIp.get(id)
-        return dict(values=v, host=hostAclIp.host)
+        return dict(values=v, host=v.host)
 
     def do_create(self, host, kwargs):
         HostAclIp(host=host, ip=kwargs['ip'])
