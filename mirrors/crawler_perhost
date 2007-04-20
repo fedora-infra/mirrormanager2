@@ -460,8 +460,8 @@ def main():
                       help="Include hosts marked 'private' in the crawl")
 
     parser.add_option("--timeout-minutes", type="int",
-                      dest="timeout_minutes", default=15,
-                      help="Minutes to let the crawler run before killed (default=15)")
+                      dest="timeout_minutes", default=30,
+                      help="Minutes to let the crawler run before killed (default=30)")
 
     (options, args) = parser.parse_args()
 
