@@ -481,7 +481,7 @@ def directory_mirror_urls(directory, country='', include_private=False):
             cc = host.country
             if cc: cc = cc.upper()
             else: cc=''
-            result.append((fullurl, cc))
+            result.append((fullurl, cc, host))
     return result
 
 
@@ -490,13 +490,13 @@ def trim_url_list(urls):
     and if both http and ftp are offered,
     leave only http"""
     l = {}
-    for u, country in urls:
+    for u, country, host in urls:
         us = u.split('/')
         uprotocol = us[0]
         umachine = us[2]
-        if not l.has_key(umachine):
-            l[umachine] = {}
-        l[umachine][uprotocol] = (u, country)
+        if not l.has_key(host):
+            l[host] = {}
+        l[host][uprotocol] = (u, country, host)
 
     result = []
     for k, v in l.iteritems():
@@ -511,7 +511,7 @@ def urllist(r):
     seen_countries = {}
     urls = directory_mirror_urls(r.directory, include_private=False)
     urls = trim_url_list(urls)
-    for u, country in urls:
+    for u, country, host in urls:
         if country is None:
             country = ''
         country = country.upper()

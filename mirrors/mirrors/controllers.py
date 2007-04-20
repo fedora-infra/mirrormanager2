@@ -961,10 +961,10 @@ class PubController(controllers.Controller):
             return dict(values=[])
             
         urls = directory_mirror_urls(directory, country=country, include_private=include_private)
-        for u, country in urls:
+        for u, country, host in urls:
             if not u.startswith('http://') and not u.startswith('ftp://'):
-                urls.remove((u, country))
-        return dict(values=[u for u, country in urls])
+                urls.remove((u, country, host))
+        return dict(values=[u for u, country, host in urls])
 
 class PublicListController(controllers.Controller):
     @expose(template="mirrors.templates.publiclist")
