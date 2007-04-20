@@ -488,7 +488,7 @@ def directory_mirror_urls(directory, country='', include_private=False):
 def trim_url_list(urls):
     """ remove all but http and ftp URLs,
     and if both http and ftp are offered,
-    leave only http"
+    leave only http"""
     l = {}
     for u, country in urls:
         us = u.split('/')
