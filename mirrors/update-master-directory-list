@@ -199,3 +199,4 @@ def sync_directories_from_file(filename, cname, path):
 # fixme this is quick and dirty
 sync_directories_from_file('/tmp/fedora-linux-core.txt', 'Fedora Core', 'pub/fedora/linux/core')
 sync_directories_from_file('/tmp/fedora-linux-extras.txt', 'Fedora Extras', 'pub/fedora/linux/extras')
+sync_directories_from_file('/tmp/fedora-epel.txt', 'Fedora EPEL', 'pub/epel')
