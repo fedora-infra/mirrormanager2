@@ -485,29 +485,33 @@ def directory_mirror_urls(directory, country='', include_private=False):
     return result
 
 
-
 def trim_url_list(urls):
+    """ remove all but http and ftp URLs,
+    and if both http and ftp are offered,
+    leave only http"
+    l = {}
     for u, country in urls:
         us = u.split('/')
         uprotocol = us[0]
         umachine = us[2]
-        if uprotocol.startswith('ftp'):
-            for v, vc in urls:
-                vs = v.split('/')
-                vprotocol = vs[0]
-                vmachine = vs[2]
-                if umachine == vmachine and vprotocol.startswith('http'):
-                    urls.remove((u, country))
-    return urls
+        if not l.has_key(umachine):
+            l[umachine] = {}
+        l[umachine][uprotocol] = (u, country)
+
+    result = []
+    for k, v in l.iteritems():
+        if v.has_key(u'http:'):
+            result.append(v[u'http:'])
+        elif v.has_key(u'ftp:'):
+            result.append(v[u'ftp:'])
+
+    return result
 
 def urllist(r):
     seen_countries = {}
     urls = directory_mirror_urls(r.directory, include_private=False)
     urls = trim_url_list(urls)
     for u, country in urls:
-        if not u.startswith('http') and not u.startswith('ftp'):
-            urls.remove((u, country))
-            continue
         if country is None:
             country = ''
         country = country.upper()
