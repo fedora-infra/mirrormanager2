@@ -969,7 +969,9 @@ class PubController(controllers.Controller):
 class PublicListController(controllers.Controller):
     @expose(template="mirrors.templates.publiclist")
     def index(self, *vpath, **params):
-        return dict(hosts=[h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active()],
+        hosts = hosts=[h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active()]
+        
+        return dict(hosts=hosts, numhosts=len(hosts),
                     products=list(Product.select(orderBy='name')), title='', arches=primary_arches)
 
     @expose(template="mirrors.templates.publiclist")
@@ -990,8 +992,10 @@ class PublicListController(controllers.Controller):
         else:
             raise redirect('/publiclist')
 
-        return dict(hosts=[h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active() and \
-                           len(h.product_version_arch_dirs(product, ver, arch)) > 0],
+        hosts = [h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active() and \
+                           len(h.product_version_arch_dirs(product, ver, arch)) > 0]
+
+        return dict(hosts=hosts, numhosts=len(hosts),
                     products=list(Product.select(orderBy='name')),
                     arches=primary_arches, title=title)
 

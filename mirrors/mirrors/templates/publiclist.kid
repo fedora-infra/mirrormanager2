@@ -22,7 +22,7 @@ You may trim the selection through the links below.
 </td>
 </tr>
 </table>
-<h2>${title} Public Active Mirrors</h2>
+<h2>${title} Public Active Mirrors (${numhosts})</h2>
 <table border='1'>
 <tr><th>Country</th><th>Site</th><th>Host</th><th>Content</th><th>Bandwidth</th><th>Comments</th></tr>
 <tr py:for="host in hosts">
