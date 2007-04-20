@@ -67,7 +67,7 @@ class content:
 class SiteFields(widgets.WidgetsList):
     licensesAccepted = widgets.CheckBox(label="I agree to the Fedora Legal policies linked above")
     name     = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty), label="Site Name")
-    password = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty), label="Site Password", help_text="used by report_mirrors script")
+    password = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty), label="Site Password", help_text="used by report_mirrors script, you make this anything you want")
     orgUrl   = widgets.TextField(label="Organization URL", validator=validators.Any(validators.All(validators.UnicodeString,validators.URL),validators.Empty), attrs=dict(size='30'), help_text="Company/School/Organization URL e.g. http://www.redhat.com") 
     private  = widgets.CheckBox(help_text="e.g. Not available to the public")
     admin_active = widgets.CheckBox("admin_active",default=True, help_text="Clear to temporarily disable this site.")
