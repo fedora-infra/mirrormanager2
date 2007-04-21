@@ -39,6 +39,8 @@ repomap = {
     u'extras-development-source' : (u'Fedora', u'Fedora Extras'),
 
     u'epel-' : (u'RHEL', u'Fedora EPEL'),
+    u'epel-debuginfo-' : (u'RHEL', u'Fedora EPEL'),
+    u'epel-source-' : (u'RHEL', u'Fedora EPEL'),
     }
 
 def repo_prefix(path, category, ver):

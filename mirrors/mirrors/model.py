@@ -371,7 +371,25 @@ class Host(SQLObject):
     def my_site(self):
         return self.site
 
-    def product_version_arch_dirs(self, productname, vername, archname):
+    def _product_version_arch_dirs(self, product, re, limit=None):
+        sql = "SELECT host_category_dir.id "
+        sql += "FROM category, host_category, product, host_category_dir "
+        sql += "WHERE category.id = host_category.category_id AND "
+        sql += "host_category.host_id = %s AND " % self.id
+        sql += "category.product_id = %s AND " % product.id
+        sql += "product.id = %s AND " % product.id
+        sql += "host_category.id = host_category_dir.host_category_id  AND "
+        sql += "host_category_dir.path ~ '%s' " % re
+        sql += "ORDER BY host_category_dir.id "
+        if limit is not None:
+            sql += "LIMIT %s" % limit
+
+        result = product._connection.queryAll(sql)
+
+        return [HostCategoryDir.get(id[0]) for id in result]
+        
+
+    def product_version_arch_dirs(self, productname, vername, archname, limit=None):
         """ has a category of product, and an hcd that matches version """
         result = []
         try:
@@ -385,13 +403,7 @@ class Host(SQLObject):
         else:
             desiredPath = '.*'
             
-        r = re.compile(desiredPath)
-        for hc in self.categories:
-            if productname == hc.category.product.name:
-                for hcd in hc.dirs:
-                    if r.search(hcd.path):
-                        result.append(hcd)
-        return result
+        return self._product_version_arch_dirs(product, desiredPath, limit)
         
 
 
@@ -430,8 +442,10 @@ def category_mirrors(category):
 def _directory_mirrors(directory, country):
 
     sql = "SELECT category.id, host_category.id, host.id "
-    sql += "FROM category, host_category, host "
+    sql += "FROM category, host_category, host, category_directory "
     sql += "WHERE category.id = host_category.category_id AND "
+    sql += "category_directory.directory_id = %s AND " % directory.id
+    sql += "category_directory.category_id = host_category.category_id AND "
     sql += "host_category.host_id = host.id "
     if country is not '':
         country = country.upper()

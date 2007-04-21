@@ -993,7 +993,7 @@ class PublicListController(controllers.Controller):
             raise redirect('/publiclist')
 
         hosts = [h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active() and \
-                           len(h.product_version_arch_dirs(product, ver, arch)) > 0]
+                           len(h.product_version_arch_dirs(product, ver, arch, limit=1)) > 0]
 
         return dict(hosts=hosts, numhosts=len(hosts),
                     products=list(Product.select(orderBy='name')),
