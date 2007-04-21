@@ -1014,6 +1014,9 @@ def do_mirrorlist(*args, **kwargs):
     if not kwargs.has_key('repo') or not kwargs.has_key('arch'):
         return dict(values=['#no repositories match'])
 
+    if u'source' in kwargs['repo']:
+        kwargs['arch'] = u'source'
+
     try:
         arch = Arch.byName(kwargs['arch'])
     except SQLObjectNotFound:
