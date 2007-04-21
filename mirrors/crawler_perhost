@@ -3,7 +3,7 @@ import pkg_resources
 pkg_resources.require("TurboGears")
 
 from sqlobject import *
-import sys, os, string
+import sys, os, string, signal
 import turbogears
 from mirrors.model import *
 from datetime import datetime
@@ -360,10 +360,16 @@ def try_perdir(d, hoststate, url):
     return True
         
 must_dienow = False
+mypid = None
 def dienow():
     global must_dienow
+    global mypid
     must_dienow = True
     print "Timeout expired, killing this process.  Better luck next time."
+    os.kill(-mypid, signal.SIGTERM)
+    os._exit(0)
+    
+    
     
 
 def per_host(host, options=None):
@@ -434,6 +440,8 @@ def per_host(host, options=None):
 
 
 def main():
+    global mypid
+    mypid = os.getpid()
     parser = OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option("-c", "--config",
                       dest="config", default='dev.cfg',
