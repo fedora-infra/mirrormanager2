@@ -15,8 +15,8 @@ __connection__ = hub
 
             
 class SiteToSite(SQLObject):
-    class sqlmeta:
-        cacheValues = False
+    #class sqlmeta:
+    #    cacheValues = False
     upstream_site = ForeignKey('Site')
     downstream_site = ForeignKey('Site')
     idx = DatabaseIndex('upstream_site', 'downstream_site', unique=True)
@@ -25,8 +25,8 @@ class SiteToSite(SQLObject):
         return self.upstream_site
 
 class Site(SQLObject):
-    class sqlmeta:
-        cacheValues = False
+    #class sqlmeta:
+    #    cacheValues = False
     name = UnicodeCol(alternateID=True)
     password = UnicodeCol(default=None)
     orgUrl = UnicodeCol(default=None)
@@ -100,8 +100,8 @@ class Site(SQLObject):
         
 
 class SiteAdmin(SQLObject):
-    class sqlmeta:
-        cacheValues = False
+    #class sqlmeta:
+    #    cacheValues = False
     username = UnicodeCol()
     site = ForeignKey('Site')
 
@@ -114,8 +114,8 @@ def user_sites(identity):
 
 
 class HostCategory(SQLObject):
-    class sqlmeta:
-        cacheValues = False
+    #class sqlmeta:
+    #    cacheValues = False
     host = ForeignKey('Host')
     category = ForeignKey('Category')
     hcindex = DatabaseIndex('host', 'category', unique=True)
@@ -155,8 +155,8 @@ class HostCategoryDir(SQLObject):
     
 
 class HostCategoryUrl(SQLObject):
-    class sqlmeta:
-        cacheValues = False
+    #class sqlmeta:
+    #    cacheValues = False
     host_category = ForeignKey('HostCategory')
     url = UnicodeCol(alternateID=True)
     private = BoolCol(default=False)
@@ -165,8 +165,8 @@ class HostCategoryUrl(SQLObject):
         return self.host_category.my_site()
     
 class Host(SQLObject):
-    class sqlmeta:
-        cacheValues = False
+    #class sqlmeta:
+    #cacheValues = False
     name = UnicodeCol()
     site = ForeignKey('Site')
     idx = DatabaseIndex('site', 'name', unique=True)
@@ -408,8 +408,8 @@ class Host(SQLObject):
 
 
 class HostAclIp(SQLObject):
-    class sqlmeta:
-        cacheValues = False
+    #class sqlmeta:
+    #    cacheValues = False
     host = ForeignKey('Host')
     ip = UnicodeCol()
 
@@ -417,8 +417,8 @@ class HostAclIp(SQLObject):
         return self.host.my_site()
 
 class HostCountryAllowed(SQLObject):
-    class sqlmeta:
-        cacheValues = False
+    #class sqlmeta:
+    #    cacheValues = False
     host = ForeignKey('Host')
     country = StringCol()
 
@@ -426,8 +426,8 @@ class HostCountryAllowed(SQLObject):
         return self.host.my_site()
 
 class HostNetblock(SQLObject):
-    class sqlmeta:
-        cacheValues = False
+    #class sqlmeta:
+    #    cacheValues = False
     host = ForeignKey('Host')
     netblock = StringCol()
 
@@ -537,8 +537,8 @@ def urllist(r):
     return seen_countries
 
 class HostStats(SQLObject):
-    class sqlmeta:
-        cacheValues = False
+    #class sqlmeta:
+    #    cacheValues = False
     host = ForeignKey('Host')
     _timestamp = DateTimeCol(default=datetime.utcnow())
     type = UnicodeCol(default=None)
@@ -592,8 +592,8 @@ class Directory(SQLObject):
 
 
 class Category(SQLObject):
-    class sqlmeta:
-        cacheValues = False
+    #class sqlmeta:
+    #    cacheValues = False
     # Top-level mirroring
     # e.g. core, extras, release, epel
     name = UnicodeCol(alternateID=True)

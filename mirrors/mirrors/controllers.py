@@ -94,6 +94,7 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
 
     def get(self, id, tg_errors=None, tg_source=None, **kwargs):
         site = Site.get(id)
+        site.sqlmeta.cacheValues = False
         return dict(values=site, disabled_fields=self.disabled_fields(site=site))
 
     @expose(template="mirrors.templates.site")
@@ -189,6 +190,7 @@ class SiteAdminController(controllers.Controller, identity.SecureResource, conte
 
     def get(self, id):
         v = SiteAdmin.get(id)
+        v.sqlmeta.cacheValues = False
         return dict(values=v, site=v.site, title="Site Admin")
     
     @expose(template="mirrors.templates.boringsiteform")
@@ -252,6 +254,7 @@ class SiteToSiteController(controllers.Controller, identity.SecureResource, cont
 
     def get(self, id):
         v = SiteToSite.get(id)
+        v.sqlmeta.cacheValues = False
         return dict(values=v, site=v.upstream_site)
     
     @expose(template="mirrors.templates.boringsiteform")
@@ -337,6 +340,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
 
     def get(self, id):
         host = Host.get(id)
+        host.sqlmeta.cacheValues = False
         return dict(values=host)
 
     @expose(template="mirrors.templates.host")
@@ -452,7 +456,9 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
         return disabled_fields
 
     def get(self, id):
-        return dict(values=HostCategory.get(id))
+        hc = HostCategory.get(id)
+        hc.sqlmeta.cacheValues = False
+        return dict(values=hc)
 
     @expose(template="mirrors.templates.hostcategory")
     def new(self, **kwargs):
@@ -664,6 +670,7 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
 
     def get(self, id):
         v = HostCategoryUrl.get(id)
+        v.sqlmeta.cacheValues = False
         return dict(values=v, host_category=v.host_category)
     
     @expose(template="mirrors.templates.hostcategoryurl")
@@ -746,7 +753,9 @@ class SimpleDbObjectController(controllers.Controller, identity.SecureResource, 
     url_prefix=None
 
     def get(self, id):
-        return dict(values=self.myClass.get(id))
+        v = self.myClass.get(id)
+        v.sqlmeta.cacheValues = False
+        return dict(values=v)
     
     @expose(template="mirrors.templates.boringform")
     def new(self, **kwargs):
@@ -970,6 +979,8 @@ class PublicListController(controllers.Controller):
     @expose(template="mirrors.templates.publiclist")
     def index(self, *vpath, **params):
         hosts = hosts=[h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active()]
+        for h in hosts:
+            h.sqlmeta.cacheValues = False
         
         return dict(hosts=hosts, numhosts=len(hosts),
                     products=list(Product.select(orderBy='name')), title='', arches=primary_arches)
