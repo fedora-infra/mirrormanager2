@@ -1063,6 +1063,7 @@ def do_mirrorlist(*args, **kwargs):
     seen_countries = urllist(repos[0], clientCountry=clientCountry)
     returnedCountryList = []
     requestedCountries = []
+    returnedGlobal = False
 
     def returnGlobalList(seen_countries, repo, archName, clientCountry):
         returnedCountryList = ['# repo = %s country = global arch = %s clientCountry = %s' % (repo, archName, clientCountry) ]
@@ -1090,15 +1091,19 @@ def do_mirrorlist(*args, **kwargs):
 
     for c in requestedCountries:
         if c == '' or not seen_countries.has_key(c):
-            returnedCountrylist = returnGlobalList(seen_countries, repo, arch.name, clientCountry)
+            returnedCountryList = returnGlobalList(seen_countries, repo, arch.name, clientCountry)
+            returnedGlobal = True
             break
         else:
-            returnedCountryList = ['# repo = %s country = %s arch = %s clientCountry = %s' % (repo, c, arch.name, clientCountry) ]
             returnedCountryList.extend(seen_countries[c])
     
     if len(returnedCountryList) < 3:
         returnedCountryList = returnGlobalList(seen_countries, repo, arch.name, clientCountry)
+        returnedGlobal = True
 
+    if not returnedGlobal:
+        returnedCountryList.insert(0, '# repo = %s country = %s arch = %s clientCountry = %s' % (repo, kwargs['country'], arch.name, clientCountry))
+        
 
     return dict(values=returnedCountryList)
         
