@@ -1018,12 +1018,29 @@ import GeoIP
 gi = GeoIP.new(GeoIP.GEOIP_MEMORY_CACHE)
 
 
+def uniqueify(seq, idfun=None):
+    # order preserving
+    if idfun is None:
+        def idfun(x): return x
+    seen = {}
+    result = []
+    for item in seq:
+        marker = idfun(item)
+        # in old Python versions:
+        # if seen.has_key(marker)
+        # but in new ones:
+        if marker in seen: continue
+        seen[marker] = 1
+        result.append(item)
+    return result
+
 #http://mirrors.fedoraproject.org/mirrorlist?repo=core-$releasever&arch=$basearch
 #http://mirrors.fedoraproject.org/mirrorlist?repo=core-debug-$releasever&arch=$basearch
 
 def do_mirrorlist(*args, **kwargs):
     if not kwargs.has_key('repo') or not kwargs.has_key('arch'):
         return dict(values=['#no repositories match'])
+    repo = kwargs['repo']
 
     if u'source' in kwargs['repo']:
         kwargs['arch'] = u'source'
@@ -1031,82 +1048,57 @@ def do_mirrorlist(*args, **kwargs):
     try:
         arch = Arch.byName(kwargs['arch'])
     except SQLObjectNotFound:
-        return dict(values=['#no repositories match'])
-
-    s = kwargs['repo'].rfind('-') + 1
-    prefix = kwargs['repo'][:s]
-    version= kwargs['repo'][s:]
-    addFc = False
-    if version.startswith('fc'):
-        version = version[2:]
-        addFc = True
+        return dict(values=['# no arch specified', '# Valid archs: i386, ppc, x86_64'])
 
 
-    pname = None
-    cname = None
-    
-    try:
-        pname = repomap[prefix][0]
-        cname = repomap[prefix][1]
-    except KeyError:
-        return dict(values=['#no repositories match'])
-
-    try:
-        product = Product.byName(pname)
-    except KeyError:
-        return dict(values=['#no repositories match'])
-
-    try:
-        category = Category.byName(cname)
-    except SQLObjectNotFound:
-        return dict(values=['#no repositories match'])
-    try:
-        version = Version.selectBy(product=product, name=version)[0]
-    except SQLObjectNotFound:
-        return dict(values=['#no repositories match'])
-    except KeyError:
-        return dict(values=['#no repositories match'])
-
-    if addFc:
-        prefix += 'fc' + version.name
-    else:
-        prefix += version.name
-    repos = Repository.selectBy(prefix=prefix, category=category, version=version, arch=arch)
+    repos = Repository.selectBy(prefix=repo, arch=arch)
     if repos.count() == 0:
         return dict(values=['#no repositories match'])
+    if repos.count() > 1:
+        return dict(values=['# too many repositories match', '# Please report to fedora-infrastructure-list@redhat.com'])
     
-    seen_countries = urllist(repos[0])
+    client_ip = cherrypy.request.remote_addr
+    clientCountry = gi.country_code_by_addr(client_ip)
+
+    seen_countries = urllist(repos[0], clientCountry=clientCountry)
     returnedCountryList = []
-    countryCode = ''
+    requestedCountries = []
 
-    # fixme
-    # this works, but doesn't trim list by per-host allowed-countries,
-    # and doesn't add by continent if the list is too short
-    # this probably needs to be in its own function
-    if kwargs.has_key('country'):
-        countryCode = kwargs['country'].upper()
-        if countryCode == 'GLOBAL' or len(countryCode) < 2:
-            countryCode = ''
-        else:
-            countryCode = countryCode[:2]
-    else:
-        client_ip = cherrypy.request.remote_addr
-        countryCode = gi.country_code_by_addr(client_ip)
-        if countryCode == None: countryCode = ''
-
-    if countryCode == '' or not seen_countries.has_key(countryCode):
-        returnedCountryList = ['# repo = %s country = global arch = %s' % (prefix, arch.name) ]
+    def returnGlobalList(seen_countries, repo, archName, clientCountry):
+        returnedCountryList = ['# repo = %s country = global arch = %s clientCountry = %s' % (repo, archName, clientCountry) ]
         for c in seen_countries.values():
             returnedCountryList.extend(c)
+        return returnedCountryList
+
+
+
+    # fixme
+    # this works, but doesn't add by continent if the list is too short
+    # this probably needs to be in its own function
+    # and doesn't handle host netmasks
+    if kwargs.has_key('country'):
+        requestedCountries = uniqueify([c.upper() for c in kwargs['country'].split(',') ])
+        index=0
+        for c in requestedCountry:
+            if c == 'GLOBAL' or len(c) < 2:
+                requestedCountries[index] = c
+            else:
+                requestedCountries[index] = c[:2]
+            index += 1
     else:
-        returnedCountryList = ['# repo = %s country = %s arch = %s' % (prefix, countryCode, arch.name) ]
-        returnedCountryList.extend(seen_countries[countryCode])
-        if len(returnedCountryList) < 3:
-            returnedCountryList = ['# repo = %s country = global arch = %s' % (prefix, arch.name) ]
-            # fixme use little geoip thing here
-            # once python-GeoIP exports it sanely
-            for c in seen_countries.values():
-                returnedCountryList.extend(c)
+        requestedCountries = [clientCountry]
+
+    for c in requestedCountries:
+        if c == '' or not seen_countries.has_key(c):
+            returnedCountrylist = returnGlobalList(seen_countries, repo, arch.name, clientCountry)
+            break
+        else:
+            returnedCountryList = ['# repo = %s country = %s arch = %s clientCountry = %s' % (repo, countryCode, arch.name, clientCountry) ]
+            returnedCountryList.extend(seen_countries[countryCode])
+    
+    if len(returnedCountryList) < 3:
+        returnedCountryList = returnGlobalList(seen_countries, repo, arch.name, clientCountry)
+
 
     return dict(values=returnedCountryList)
         

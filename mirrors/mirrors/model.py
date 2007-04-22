@@ -521,14 +521,19 @@ def trim_url_list(urls):
 
     return result
 
-def urllist(r):
+def urllist(repository, clientCountry=None):
     seen_countries = {}
-    urls = directory_mirror_urls(r.directory, include_private=False)
+    urls = directory_mirror_urls(repository.directory, include_private=False)
     urls = trim_url_list(urls)
     for u, country, host in urls:
         if country is None:
             country = ''
         country = country.upper()
+        if clientCountry is not None and len(host.countries_allowed) > 0:
+            allowed=[c.country for c in host.countries_allowed]
+            if clientCountry not in allowed:
+                continue
+        
         if seen_countries.has_key(country):
             seen_countries[country].append(u)
         else:
