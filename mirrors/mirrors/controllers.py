@@ -13,6 +13,8 @@ from sqlobject.sqlbuilder import *
 from mirrors import my_validators
 from mirrors.model import *
 from mirrors.lib import createErrorString
+import mirrors.IPy
+IPy.check_addr_prefixlen = 0
 
 
 log = logging.getLogger("mirrors.controllers")
@@ -1057,10 +1059,13 @@ def do_mirrorlist(*args, **kwargs):
     if repos.count() > 1:
         return dict(values=['# too many repositories match', '# Please report to fedora-infrastructure-list@redhat.com'])
     
-    client_ip = cherrypy.request.remote_addr
+    client_ip = cherrypy.request.headers.get("X-Forwarded-For")
+    if client_ip is None:
+        client_ip = cherrypy.request.remote_addr
+    #client_ip = '143.166.1.1'
     clientCountry = gi.country_code_by_addr(client_ip)
 
-    seen_countries = urllist(repos[0], clientCountry=clientCountry)
+    seen_countries = urllist(repos[0], clientCountry=clientCountry, clientIP=client_ip)
     returnedCountryList = []
     requestedCountries = []
     returnedGlobal = False
@@ -1076,7 +1081,6 @@ def do_mirrorlist(*args, **kwargs):
     # fixme
     # this works, but doesn't add by continent if the list is too short
     # this probably needs to be in its own function
-    # and doesn't handle host netmasks
     if kwargs.has_key('country'):
         requestedCountries = uniqueify([c.upper() for c in kwargs['country'].split(',') ])
         index=0
@@ -1102,7 +1106,7 @@ def do_mirrorlist(*args, **kwargs):
         returnedGlobal = True
 
     if not returnedGlobal:
-        returnedCountryList.insert(0, '# repo = %s country = %s arch = %s clientCountry = %s' % (repo, kwargs['country'], arch.name, clientCountry))
+        returnedCountryList.insert(0, '# repo = %s arch = %s clientCountry = %s' % (repo, arch.name, clientCountry))
         
 
     return dict(values=returnedCountryList)

@@ -6,6 +6,8 @@ import sys
 from datetime import datetime
 from string import rstrip, strip
 import re
+import IPy
+IPy.check_addr_prefixlen = 0
 
 from turbogears.database import PackageHub
 
@@ -487,15 +489,37 @@ def directory_mirrors(directory, country='', include_private=False):
             result.append((category.name, dirname, host))
     return result
 
-def directory_mirror_urls(directory, country='', include_private=False):
+def _preferred_host(host, clientIP):
+    if clientIP is None:
+        return False
+    ip = IPy.IP(clientIP)
+    for n in host.netblocks:
+        if ip in IPy.IP(n.netblock):
+            return True
+    return False
+
+
+def _append_hcurl(host, cname, dirname, result):
+    for u in host.category_urls(cname):
+        fullurl = '%s/%s' % (u, dirname)
+        cc = host.country
+        if cc is not None: cc = cc.upper()
+        else: cc=''
+        result.append((fullurl, cc, host))
+    return result
+
+def directory_mirror_urls(directory, country='', include_private=False, clientIP=None):
     result = []
-    for cname, dirname, host in directory_mirrors(directory, country, include_private):
-        for u in host.category_urls(cname):
-            fullurl = '%s/%s' % (u, dirname)
-            cc = host.country
-            if cc: cc = cc.upper()
-            else: cc=''
-            result.append((fullurl, cc, host))
+    # no country or private restrictions on preferred hosts
+    dm = directory_mirrors(directory, country='', include_private=True)
+    for cname, dirname, host in dm:
+        if _preferred_host(host, clientIP):
+            result = _append_hcurl(host, cname, dirname, result)
+
+    if len(result) == 0:
+        dm = directory_mirrors(directory, country, include_private)
+        for cname, dirname, host in dm:
+            result = _append_hcurl(host, cname, dirname, result)
     return result
 
 
@@ -521,9 +545,9 @@ def trim_url_list(urls):
 
     return result
 
-def urllist(repository, clientCountry=None):
+def urllist(repository, clientCountry=None, clientIP=None):
     seen_countries = {}
-    urls = directory_mirror_urls(repository.directory, include_private=False)
+    urls = directory_mirror_urls(repository.directory, include_private=False, clientIP=clientIP)
     urls = trim_url_list(urls)
     for u, country, host in urls:
         if country is None:
