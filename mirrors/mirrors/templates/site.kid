@@ -21,8 +21,6 @@ if 'sysadmin' not in tg.identity.groups:
 <div py:if="values is not None">
 Created At: ${values.createdAt}<br></br>
 Created By: ${values.createdBy}<br></br>
-Licenses Accepted At: ${values.licensesAcceptedAt}<br></br>
-Licenses Accepted By: ${values.licensesAcceptedBy}
 </div>
 
 <P>

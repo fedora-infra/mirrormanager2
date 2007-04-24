@@ -37,7 +37,8 @@ class Site(SQLObject):
     user_active  = BoolCol(default=True)
     createdAt = DateTimeCol(default=datetime.utcnow())
     createdBy = UnicodeCol(default=None)
-    licensesAccepted  = BoolCol(default=False)
+    # fixme, delete these three columns ASAP
+    licensesAccepted  = BoolCol(default=True)
     licensesAcceptedAt = DateTimeCol(default=datetime.utcnow())
     licensesAcceptedBy = UnicodeCol(default=None)
     admins = MultipleJoin('SiteAdmin')
@@ -92,13 +93,6 @@ class Site(SQLObject):
         you can see some of my site details, but you can't edit them.
         """
         return self.is_downstream_siteadmin_byname(identity.current.user_name)
-
-
-    def accept_licenses(self, identity):
-        self.licensesAcceptedBy = identity.current.user_name
-        self.licensesAcceptedAt = datetime.utcnow()
-        self.licensesAccepted = True
-
         
 
 class SiteAdmin(SQLObject):
@@ -321,7 +315,7 @@ class Host(SQLObject):
 
 
     def is_admin_active(self):
-        return self.admin_active and self.site.admin_active and self.site.licensesAccepted
+        return self.admin_active and self.site.admin_active
 
     def is_active(self):
         return self.admin_active and self.user_active and self.site.user_active

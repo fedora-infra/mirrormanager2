@@ -67,7 +67,6 @@ class content:
 
 
 class SiteFields(widgets.WidgetsList):
-    licensesAccepted = widgets.CheckBox(label='I understand there are government export and import laws applicable to the redistribution of Fedora software and technical information.')
     name     = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty), label="Site Name")
     password = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty), label="Site Password", help_text="used by report_mirrors script, you make this anything you want")
     orgUrl   = widgets.TextField(label="Organization URL", validator=validators.Any(validators.All(validators.UnicodeString,validators.URL),validators.Empty), attrs=dict(size='30'), help_text="Company/School/Organization URL e.g. http://www.redhat.com") 
@@ -114,16 +113,11 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
     @validate(form=site_form)
     @error_handler(new)
     def create(self, **kwargs):
-        if not kwargs.has_key('licensesAccepted') or not kwargs['licensesAccepted']:
-            turbogears.flash("Error:You must accept the license agreements to create a Site")
-            raise turbogears.redirect("/")
         if not identity.in_group("sysadmin") and kwargs.has_key('admin_active'):
             del kwargs['admin_active']
-        kwargs['licensesAcceptedBy'] = identity.current.user_name
         kwargs['createdBy'] = identity.current.user_name
         try:
             site = Site(**kwargs)
-            site.accept_licenses(identity)
             SiteAdmin(site=site, username=identity.current.user_name)
         except: # probably sqlite IntegrityError but we can't catch that for some reason... 
             turbogears.flash("Error:Site %s already exists" % kwargs['name'])
@@ -143,23 +137,10 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
             turbogears.flash("Error: %s" % errstr)
             return dict(form=site_form, values=site, action = turbogears.url("/site/%s/update" % site.id),
                         disabled_fields=self.disabled_fields())
-        
-        if kwargs.has_key('licensesAccepted') and kwargs['licensesAccepted']:
-            kwargs['licensesAcceptedBy'] = identity.current.user_name
-        else:
-            turbogears.flash("Error:You must accept the license agreements to update a Site")
-            return dict(form=site_form, values=site, action = turbogears.url("/site/%s/update" % site.id),
-                        disabled_fields=self.disabled_fields())
 
-        # in case we ever have to reset the licensesAccepted field for everyone
-        # we drop it here as we're not letting them uncheck it anyow.
-        if kwargs.has_key('licensesAccepted'):
-            del kwargs['licensesAccepted']
         if not identity.in_group("sysadmin") and kwargs.has_key('admin_active'):
             del kwargs['admin_active']
         site.set(**kwargs)
-        if not site.licensesAccepted:
-            site.accept_licenses(identity)
         site.sync()
         turbogears.flash("Site Updated")
         raise turbogears.redirect("/site/%s" % site.id)
