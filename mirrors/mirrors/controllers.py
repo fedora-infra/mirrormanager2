@@ -433,6 +433,9 @@ class LabelObjName(widgets.Label):
     />
     """
 
+class InvalidData(Exception):
+    pass
+
 class HostCategoryFieldsRead(widgets.WidgetsList):
     category = LabelObjName()
     admin_active = widgets.CheckBox(default=True)
@@ -583,6 +586,9 @@ class HostListitemController(controllers.Controller, identity.SecureResource, co
 
         try:
             self.do_create(host, kwargs)
+        except InvalidData, msg:
+            turbogears.flash(msg)
+            raise turbogears.redirect("/host/%s" % host.id)
         except: # probably sqlite IntegrityError but we can't catch that for some reason... 
             turbogears.flash("Error: entity already exists")
         raise turbogears.redirect("/host/%s" % host.id)
@@ -632,6 +638,17 @@ class HostNetblockController(HostListitemController):
         return dict(values=v, host=v.host)
 
     def do_create(self, host, kwargs):
+
+        emsg = "Error: IPv4 netblocks larger than /16, and IPv6 netblocks larger than /32 can only be created by mirrormanager administrators.  Please ask mirror-admin@fedoraproject.org for assistance."
+
+        ipv4_16 = IPy.IP('10.0.0.0/16')
+        ipv6_32 = IPy.IP('fec0::/32')
+        ip = IPy.IP(kwargs['netblock'])
+        if ((ip.version() == 4 and ip.len() > ipv4_16.len()) or \
+            (ip.version() == 6 and ip.len() > ipv6_32.len())) and \
+            not identity.in_group("sysadmin"):
+                raise InvalidData, emsg
+        
         HostNetblock(host=host, netblock=kwargs['netblock'])
 
 class HostCountryAllowedFields(widgets.WidgetsList):
