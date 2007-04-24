@@ -26,18 +26,11 @@ Licenses Accepted By: ${values.licensesAcceptedBy}
 </div>
 
 <P>
-By serving as a Mirror Server for Fedora, you must agree to comply with
-Fedora's <a href="http://fedoraproject.org/wiki/Legal">legal terms and
-conditions</a>, including <a
-href="http://fedoraproject.org/wiki/Legal/TrademarkGuidelines">
-Trademarks</a> and <a
-href="http://fedoraproject.org/wiki/Legal/Export">Export
-Restrictions</a>.  
 Mirror server administrators are not required to sign the Fedora
 <a href="http://fedoraproject.org/wiki/Legal/Licenses/CLA">Contributor
 License Agreement</a>.
 </P>
-<h2>Export Compliance Agreement</h2>
+<h2>Export Compliance</h2>
 <P>
 Because Fedora software contains encryption technology, Fedora
 software and technical information is subject to the
