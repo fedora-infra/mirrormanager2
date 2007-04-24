@@ -39,7 +39,8 @@ License Agreement</a>.
 </P>
 <h2>Export Compliance Agreement</h2>
 <P>
-Fedora software and technical information is subject to the
+Because Fedora software contains encryption technology, Fedora
+software and technical information is subject to the
 U.S. Export Administration Regulations and other U.S. and foreign law,
 and may not be exported or re-exported to certain countries (currently
 Cuba, Iran, Iraq, North Korea, Sudan and Syria) or to persons or

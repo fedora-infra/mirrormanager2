@@ -67,7 +67,7 @@ class content:
 
 
 class SiteFields(widgets.WidgetsList):
-    licensesAccepted = widgets.CheckBox(label="I agree to the Fedora Legal policies linked above")
+    licensesAccepted = widgets.CheckBox(label='I understand there are government export and import laws applicable to the redistribution of Fedora software and technical information.')
     name     = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty), label="Site Name")
     password = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty), label="Site Password", help_text="used by report_mirrors script, you make this anything you want")
     orgUrl   = widgets.TextField(label="Organization URL", validator=validators.Any(validators.All(validators.UnicodeString,validators.URL),validators.Empty), attrs=dict(size='30'), help_text="Company/School/Organization URL e.g. http://www.redhat.com") 
