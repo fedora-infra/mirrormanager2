@@ -31,8 +31,8 @@ Admins from Mirror Sites on your SiteToSite list can see these private URLs.
 	<a href="${tg.url('/host_category_url/0/new?hcid=' + str(values.id))}">[Add]</a>
 <ul>
 	  <li py:for="url in values.urls">
-	  <span py:replace="url.url">URL</span> <a
-	  href="${tg.url('/host_category_url/' + str(url.id) + '/delete')}">[Delete]</a>
+	  <span py:replace="url.url">URL</span> 	      <span py:if="url.private">(Mirrors)</span>
+	  <a href="${tg.url('/host_category_url/' + str(url.id) + '/delete')}">[Delete]</a>
 	  </li>
 </ul>
 

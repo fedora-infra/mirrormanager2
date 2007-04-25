@@ -88,8 +88,8 @@ Hosts carry categories of software.  Example Fedora categories include Fedora Co
     href="${tg.url('/host_category/' + str(c.id) + '/delete')}">[Delete]</a></span>
     <UL>
     <LI py:for="u in c.urls">
-    <div py:if="u.private">(Mirrors)</div>
     <a href="${u.url}"><span py:replace="u.url">URL</span></a>
+    <span py:if="u.private">(Mirrors)</span>
     <!--
     <span py:if="is_siteadmin">
     <a href="${tg.url('/host_category_url/' + str(u.id) + '/delete')}">[Delete]</a>
