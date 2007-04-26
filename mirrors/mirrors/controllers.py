@@ -347,10 +347,12 @@ class HostController(controllers.Controller, identity.SecureResource, content):
         del kwargs['siteid']
         try:
             host = Host(site=site, **kwargs)
-            submit_action = turbogears.url("/host/%s/update" % host.id)
         except: # probably sqlite IntegrityError but we can't catch that for some reason... 
             turbogears.flash("Error:Host %s already exists" % kwargs['name'])
             submit_action = turbogears.url("/host/0/create?siteid=%s" % site.id)
+            return dict(form=host_form, values=None, action=submit_action, disabled_fields=self.disabled_fields(),
+                        title="Create Host", site=site)
+        
         
         turbogears.flash("Host created.")
         raise turbogears.redirect("/host/%s" % host.id)
