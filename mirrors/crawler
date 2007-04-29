@@ -19,8 +19,7 @@ def per_host(host, include_private=False, config=None):
     program='./crawler_perhost'
     args = []
     args.append('-c "%s"' % config)
-    args.append('--site="%s"' % host.site.name)
-    args.append('--hostname="%s"' % host.name)
+    args.append('--hostid="%s"' % host.id)
     if include_private:
         args.append('--include-private')
 

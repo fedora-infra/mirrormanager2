@@ -15,6 +15,7 @@ from optparse import OptionParser
 import threading
 
 from turbogears.database import PackageHub
+hostname = None
 
 
 ################################################
@@ -447,12 +448,8 @@ def main():
                       dest="config", default='dev.cfg',
                       help="TurboGears config file to use")
 
-    parser.add_option("--hostname",
-                      dest="hostname", default=None,
-                      help="Crawl a single host at site")
-
-    parser.add_option("--site",
-                      dest="site", default=None,
+    parser.add_option("--hostid",
+                      dest="hostid", type='int', default=None,
                       help="Crawl a single host at site")
 
     parser.add_option("--debug-http",
@@ -468,8 +465,8 @@ def main():
                       help="Include hosts marked 'private' in the crawl")
 
     parser.add_option("--timeout-minutes", type="int",
-                      dest="timeout_minutes", default=30,
-                      help="Minutes to let the crawler run before killed (default=30)")
+                      dest="timeout_minutes", default=60,
+                      help="Minutes to let the crawler run before killed (default=60)")
 
     (options, args) = parser.parse_args()
 
@@ -477,18 +474,19 @@ def main():
                              modulename="mirrors.config")
     global hub
     global __connection__
+    global hostname
     hub = PackageHub("mirrors")
     __connection__ = hub
     
     os.chdir('/tmp')
 
     try:
-        site = Site.byName(options.site)
-        host = Host.selectBy(name=options.hostname, site=site)[0]
+        host = Host.get(options.hostid)
     except:
-        print "Site %s Host %s not found." % (options.site, options.hostname)
+        print "Host %s not found." % options.hostid
         sys.exit(1)
 
+    hostname = host.name
     per_host(host.id, options=options)
 
 
