@@ -26,13 +26,13 @@ def trim(input):
     and if both http and ftp are offered,
     leave only http"""
     l = {}
-    for hostid, country, hcurl in input:
+    for hostid, country, hcurl, siteprivate, hostprivate in input:
         us = hcurl.split('/')
         uprotocol = us[0]
         umachine = us[2]
         if not l.has_key(hostid):
             l[hostid] = {}
-        l[hostid][uprotocol] = (hostid, country, hcurl)
+        l[hostid][uprotocol] = (hostid, country, hcurl, siteprivate, hostprivate)
 
     result = []
     for k, v in l.iteritems():
@@ -48,9 +48,8 @@ def trim(input):
 def populate_repo_cache(repo):
     category = repo.category
     directory = repo.directory
-
     path = directory.name[len(category.topdir.name)+1:]
-    sql  = 'SELECT host.id, host.country, host_category_url.url '
+    sql  = 'SELECT host.id, host.country, host_category_url.url, site.private, host.private '
     sql += 'FROM host_category_dir, host_category, host_category_url, host, site '
     sql += 'WHERE host_category_dir.host_category_id = host_category.id ' # join criteria
     sql += 'AND   host_category_url.host_category_id = host_category.id ' # join criteria
@@ -60,7 +59,6 @@ def populate_repo_cache(repo):
     sql += "AND host_category_dir.path = '%s' " % path # and target path
     sql += 'AND host_category_dir.up2date '
     sql += 'AND NOT host_category_url.private '
-    sql += 'AND NOT host.private  AND NOT site.private '
     sql += 'AND host.user_active AND site.user_active '
     sql += 'AND host.admin_active AND site.admin_active '
 
@@ -68,35 +66,37 @@ def populate_repo_cache(repo):
 
     result = trim(result)
     newresult = {'global': [], 'byCountry':{}, 'byHostId':{}}
-    for (hostid, country, hcurl) in result:
+    for (hostid, country, hcurl, siteprivate, hostprivate) in result:
         country = country.upper()
         v = (hostid, "%s/%s" % (hcurl, path))
-        newresult['global'].append(v)
+        if not siteprivate and not hostprivate:
+            newresult['global'].append(v)
 
-        if not newresult['byCountry'].has_key(country):
-            newresult['byCountry'][country] = [v]
-        else:
-            newresult['byCountry'][country].append(v)
+            if not newresult['byCountry'].has_key(country):
+                newresult['byCountry'][country] = [v]
+            else:
+                newresult['byCountry'][country].append(v)
 
         if not newresult['byHostId'].has_key(hostid):
             newresult['byHostId'][hostid] = [v]
         else:
             newresult['byHostId'][hostid].append(v)
 
+    global mirrorlist_cache
     mirrorlist_cache[(repo.prefix, repo.arch.name)] = newresult
-    return
 
 def populate_netblock_cache():
     cache = {}
     for host in Host.select():
         if host.is_active() and len(host.netblocks) > 0:
             for n in host.netblocks:
-                ip = IPy.IP(n.netblock)
+                ip = IP(n.netblock)
                 if cache.has_key(ip):
                     cache[ip].append(host.id)
                 else:
                     cache[ip] = [host.id]
 
+    global host_netblock_cache
     host_netblock_cache = cache
 
 def populate_host_country_allowed_cache():
@@ -104,6 +104,7 @@ def populate_host_country_allowed_cache():
     for host in Host.select():
         if host.is_active() and len(host.countries_allowed) > 0:
             cache[host.id] = [c.country.upper() for c in host.countries_allowed]
+    global host_country_allowed_cache
     host_country_allowed_cache = cache
     
 
@@ -131,7 +132,7 @@ def get_repo_cache(*args, **kwargs):
 
 def client_netblocks(ip):
     result = []
-    clientIP = IPy.IP(ip)
+    clientIP = IP(ip)
     for k,v in host_netblock_cache.iteritems():
         if clientIP in k:
             result.extend(v)

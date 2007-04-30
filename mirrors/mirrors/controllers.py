@@ -1153,6 +1153,12 @@ class Root(controllers.RootController):
     def mirrorlist(self, *args, **kwargs):
         return mirrors.mirrorlist.do_mirrorlist(*args, **kwargs)
 
+    @expose(template="mirrors.templates.rsync_acl", format="plain", content_type="text/plain")
+    def refresh_mirrorlist_cache(self, *args, **kwargs):
+        mirrors.mirrorlist.populate_all_caches()
+        return dict(values=["# Cache refreshed"])
+        
+
     @expose(template="mirrors.templates.login")
     def login(self, forward_url=None, previous_url=None, *args, **kw):
 
