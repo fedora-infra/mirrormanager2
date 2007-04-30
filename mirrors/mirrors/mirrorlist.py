@@ -90,7 +90,10 @@ def populate_netblock_cache():
     for host in Host.select():
         if host.is_active() and len(host.netblocks) > 0:
             for n in host.netblocks:
-                ip = IP(n.netblock)
+                try:
+                    ip = IP(n.netblock)
+                except:
+                    continue
                 if cache.has_key(ip):
                     cache[ip].append(host.id)
                 else:
@@ -132,7 +135,10 @@ def get_repo_cache(*args, **kwargs):
 
 def client_netblocks(ip):
     result = []
-    clientIP = IP(ip)
+    try:
+        clientIP = IP(ip)
+    except:
+        return result
     for k,v in host_netblock_cache.iteritems():
         if clientIP in k:
             result.extend(v)
