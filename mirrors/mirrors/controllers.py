@@ -15,6 +15,7 @@ from mirrors.model import *
 from mirrors.lib import createErrorString
 import mirrors.IPy
 IPy.check_addr_prefixlen = 0
+import mirrors.mirrorlist
 
 
 log = logging.getLogger("mirrors.controllers")
@@ -1019,27 +1020,12 @@ import GeoIP
 
 gi = GeoIP.new(GeoIP.GEOIP_MEMORY_CACHE)
 
-
-def uniqueify(seq, idfun=None):
-    # order preserving
-    if idfun is None:
-        def idfun(x): return x
-    seen = {}
-    result = []
-    for item in seq:
-        marker = idfun(item)
-        # in old Python versions:
-        # if seen.has_key(marker)
-        # but in new ones:
-        if marker in seen: continue
-        seen[marker] = 1
-        result.append(item)
-    return result
+from mirrors.lib import uniqueify
 
 #http://mirrors.fedoraproject.org/mirrorlist?repo=core-$releasever&arch=$basearch
 #http://mirrors.fedoraproject.org/mirrorlist?repo=core-debug-$releasever&arch=$basearch
 
-def do_mirrorlist(*args, **kwargs):
+def do_mirrorlist_old(*args, **kwargs):
     if not kwargs.has_key('repo') or not kwargs.has_key('arch'):
         return dict(values=['#no repositories match'])
     repo = kwargs['repo']
@@ -1165,7 +1151,7 @@ class Root(controllers.RootController):
 
     @expose(template="mirrors.templates.rsync_acl", format="plain", content_type="text/plain")
     def mirrorlist(self, *args, **kwargs):
-        return do_mirrorlist(*args, **kwargs)
+        return mirrors.mirrorlist.do_mirrorlist(*args, **kwargs)
 
     @expose(template="mirrors.templates.login")
     def login(self, forward_url=None, previous_url=None, *args, **kw):
