@@ -352,8 +352,13 @@ def try_perdir(d, hoststate, url):
         return False
     
     for line in listing:
+        if line.startswith('total'): # some servers first include a line starting with the word 'total' that we can ignore
+            continue
         fields = line.split()
-        results[fields[8]] = {'size': fields[4]}
+        try:
+            results[fields[8]] = {'size': fields[4]}
+        except IndexError: # line doesn't have 8 fields, it's not a dir line
+            pass
 
     for file in d.files.keys():
         try:
