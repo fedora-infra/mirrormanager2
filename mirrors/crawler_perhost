@@ -149,6 +149,9 @@ def get_ftp_dir(hoststate, url):
         # Returned by Princeton University when directory does not exist
         if str(e).startswith('550'):
             return []
+        else:
+            print "unknown permanent error %s on %s" % (e, url)
+            raise
     except ftplib.error_temp, e:
         # Returned by Boston University when directory does not exist
         if str(e).startswith('450'):
@@ -367,7 +370,7 @@ def dienow():
     global mypid
     must_dienow = True
     print "Timeout expired, killing this process.  Better luck next time."
-    os.kill(-mypid, signal.SIGTERM)
+    os.kill(mypid, signal.SIGTERM)
     os._exit(0)
     
     
