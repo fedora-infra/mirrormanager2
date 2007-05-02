@@ -15,7 +15,7 @@ from optparse import OptionParser
 import threading
 
 from turbogears.database import PackageHub
-hostname = None
+hostid = None
 
 
 ################################################
@@ -169,7 +169,7 @@ def get_ftp_dir(hoststate, url, i=0):
         else:
             print "unknown error %s on %s" % (e, url)
             raise 
-   except (EOFError, socket.error):
+    except (EOFError, socket.error):
         hoststate.close_ftp(url)
         return get_ftp_dir(hoststate, url, i+1)
         
@@ -381,8 +381,9 @@ mypid = None
 def dienow():
     global must_dienow
     global mypid
+    global hostid
     must_dienow = True
-    print "Timeout expired, killing this process.  Better luck next time."
+    print "Host %d timeout expired, killing this process.  Better luck next time." % hostid
     os.kill(mypid, signal.SIGTERM)
     os._exit(0)
     
@@ -490,7 +491,7 @@ def main():
                              modulename="mirrors.config")
     global hub
     global __connection__
-    global hostname
+    global hostid
     hub = PackageHub("mirrors")
     __connection__ = hub
     
@@ -502,7 +503,7 @@ def main():
         print "Host %s not found." % options.hostid
         sys.exit(1)
 
-    hostname = host.name
+    hostid = host.id
     per_host(host.id, options=options)
 
 
