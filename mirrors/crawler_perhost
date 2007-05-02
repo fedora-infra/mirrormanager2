@@ -3,7 +3,7 @@ import pkg_resources
 pkg_resources.require("TurboGears")
 
 from sqlobject import *
-import sys, os, string, signal
+import sys, os, string, signal, socket
 import turbogears
 from mirrors.model import *
 from datetime import datetime
@@ -142,12 +142,18 @@ class TryLater(Exception):
     pass
 
 
-def get_ftp_dir(hoststate, url):
+def get_ftp_dir(hoststate, url, i=0):
+    if i > 1:
+        raise TryLater()
+
     try:
         hoststate.ftp_dir(url)
     except ftplib.error_perm, e:
         # Returned by Princeton University when directory does not exist
         if str(e).startswith('550'):
+            return []
+        # Returned by Princeton University when directory isn't readable (pre-bitflip)
+        if str(e).startswith('553'):
             return []
         else:
             print "unknown permanent error %s on %s" % (e, url)
@@ -162,9 +168,11 @@ def get_ftp_dir(hoststate, url):
             raise TryLater()
         else:
             print "unknown error %s on %s" % (e, url)
-            raise
-    except:
-            raise
+            raise 
+   except (EOFError, socket.error):
+        hoststate.close_ftp(url)
+        return get_ftp_dir(hoststate, url, i+1)
+        
     return hoststate.ftp_dir_results
 
 def check_ftp_file(hoststate, url, filedata):
