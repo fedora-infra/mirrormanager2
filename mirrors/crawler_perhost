@@ -127,7 +127,10 @@ class hostState:
     def close_ftp(self, url):
         scheme, netloc, path, query, fragment = urlsplit(url)
         if self.ftpconn.has_key(netloc):
-            self.ftpconn[netloc].quit()
+            try:
+                self.ftpconn[netloc].quit()
+            except:
+                pass
             del self.ftpconn[netloc]
 
     def close(self):
@@ -155,6 +158,8 @@ def get_ftp_dir(hoststate, url, i=0):
         # Returned by Princeton University when directory isn't readable (pre-bitflip)
         if str(e).startswith('553'):
             return []
+        if str(e).startswith('500'): # Oops
+            raise TryLater()
         else:
             print "unknown permanent error %s on %s" % (e, url)
             raise
@@ -165,6 +170,9 @@ def get_ftp_dir(hoststate, url, i=0):
         # Returned by Princeton University when cannot log in due to connection restrictions
         if str(e).startswith('421'):
             print "Connections Exceeded %s" % url
+            raise TryLater()
+        if str(e).startswith('425'):
+            print "Failed to establish connection on %s" % url
             raise TryLater()
         else:
             print "unknown error %s on %s" % (e, url)
