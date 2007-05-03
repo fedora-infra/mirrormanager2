@@ -89,7 +89,7 @@ def parse_value(value):
         return value.split()
     return value
 
-def parse_section(conf, section, item, required_options, optional_options):
+def parse_section(conf, section, item, required_options):
     if conf.has_option(section, 'enabled'):
         if conf.get(section, 'enabled') != '1':
             return False
@@ -98,25 +98,21 @@ def parse_section(conf, section, item, required_options, optional_options):
     item.config[section.lower()] = {}
     for o in required_options:
         item.config[section.lower()][o] = parse_value(conf.get(section, o))
-    for o in optional_options:
-        if conf.has_option(section, o):
-            item.config[section.lower()][o] = parse_value(conf.get(section, o))
     return True
 
 def parse_global(conf, section, item):
     required_options = [ 'enabled', 'server' ]
-    if not parse_section(conf, section, item, required_options, []):
+    if not parse_section(conf, section, item, required_options):
         return False
     return True
 
 def parse_site(conf, section, item):
-    required_options = [ 'enabled', 'name', 'password', 'user_active' ]
-    return parse_section(conf, section, item, required_options, [])
+    required_options = [ 'enabled', 'name', 'password' ]
+    return parse_section(conf, section, item, required_options)
 
 def parse_host(conf, section, item):
     required_options = [ 'enabled', 'name' ]
-    optional_options = [ 'acl_ips', 'country', 'countries_allowed', 'netblocks', 'private', 'user_active', 'robot_email' ]
-    return parse_section(conf, section, item, required_options, optional_options)
+    return parse_section(conf, section, item, required_options)
 
 def get_stats(conf, section):
     if conf.has_option(section, 'enabled'):
@@ -140,9 +136,8 @@ def get_stats(conf, section):
     return statsdata
 
 def parse_category(conf, section, item):
-    required_options = [ 'enabled', 'path', 'urls', 'user_active' ]
-    optional_options = [ 'upstream', 'private_urls' ]
-    if not parse_section(conf, section, item, required_options, optional_options):
+    required_options = [ 'enabled', 'path' ]
+    if not parse_section(conf, section, item, required_options):
         return False
 
     dirtree = gen_dirtree(conf.get(section, 'path'))
@@ -184,16 +179,6 @@ def usage():
     print '  -o outputfile'
     print '  -c configfile'
     sys.exit(1)
-
-def print_iso_sizes(dirtree):
-    for d in dirtree:
-        dir = d['dirpath']
-        files = d['files']
-        for f in files.iterkeys():
-            if re.compile("\.iso$").search(f, 1):
-                print "%s %s" % (os.path.join(dir, f), files[f])
-
-
 
 
 def main():
