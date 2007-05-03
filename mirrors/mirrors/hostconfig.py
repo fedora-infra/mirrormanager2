@@ -44,13 +44,9 @@ def validate_config(config):
             errorprint('section [host] missing required option %s' % o)
             return False
 
-    required_options = [ 'enabled', 'path', 'urls' ]
+    required_options = [ 'dirtree' ]
     for category in config.keys():
         if category in ['global', 'site', 'host', 'version', 'stats']:
-            continue
-        # this field is a string as it comes from the config file
-        if not config[category].has_key('enabled') or config[category]['enabled'] != '1':
-            errorprint('section [%s] not enabled')
             continue
                                                                            
         for o in required_options:
@@ -63,22 +59,22 @@ def read_host_config(config):
         if not validate_config(config):
             return None
         
-        site = config['site']
-        host = config['host']
+        csite = config['site']
+        chost = config['host']
 
-        s = Site.selectBy(name=site['name'])
-        if s.count() != 1:
-            return None
-        thesite = s[0]
-        if config['site']['password'] != thesite.password:
+        try:
+            site = Site.byName(csite['name'])
+        except SQLObjectNotFound:
             return None
 
-        h = Host.selectBy(name=host['name'], siteID=thesite.id)
-        if h.count() == 0:
-            thehost = Host(name=host['name'], site=thesite)
-        else:
-            thehost = h[0]
-        thehost.config = config
-        thehost.sync()
+        if csite['password'] != site.password:
+            return None
 
-        return (thesite, thehost, config)
+        h = Host.selectBy(name=chost['name'], site=site)
+        if h.count() != 1:
+            return None
+        host = h[0]
+        host.config = config
+        host.sync()
+
+        return (site, host, config)

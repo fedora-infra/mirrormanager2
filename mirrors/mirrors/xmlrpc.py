@@ -1,5 +1,6 @@
 import cherrypy
-from turbogears import controllers
+import turbogears
+from turbogears import controllers, expose, validate, redirect, widgets, validators, error_handler, exception_handler
 from mirrors.hostconfig import *
 import bz2
 import base64
@@ -9,6 +10,7 @@ class XmlrpcController(controllers.Controller):
     def __init__(self):
         cherrypy.config.update({'xmlrpc_filter.on': True})
 
+    @expose()
     def checkin(self, p):
         config = pickle.loads(bz2.decompress(base64.urlsafe_b64decode(p)))
         r = read_host_config(config)
@@ -16,4 +18,7 @@ class XmlrpcController(controllers.Controller):
             return 'checked in successful'
         else:
             return 'error checking in'
-    checkin.exposed = True
+
+    @expose()
+    def echo(self, a):
+        return a
