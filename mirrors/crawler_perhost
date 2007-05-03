@@ -158,6 +158,10 @@ def get_ftp_dir(hoststate, url, i=0):
         # Returned by Princeton University when directory isn't readable (pre-bitflip)
         if str(e).startswith('553'):
             return []
+        # Returned by ftp2.surplux.net when cannot log in due to connection restrictions
+        if str(e).startswith('530'):
+            hoststate.close_ftp(url)
+            return get_ftp_dir(hoststate, url, i+1)
         if str(e).startswith('500'): # Oops
             raise TryLater()
         else:
@@ -405,9 +409,6 @@ def per_host(host, options=None):
     host_category_dirs = {}
     if host.private and not options.include_private:
         return
-    # Don't crawl Red Hat sites for now
-    if host.site.name == "Red Hat":
-        return
     http_debuglevel = 0
     ftp_debuglevel = 0
     if options.debug_http:
@@ -454,7 +455,7 @@ def per_host(host, options=None):
                     host_category_dirs = add_parents(host_category_dirs, hc, d)
                 elif has_all_files is None:
                     host_category_dirs[(hc, d)] = None
-            except TryLater:
+            except:
                 timer.cancel()
                 sys.exit(1)
 
