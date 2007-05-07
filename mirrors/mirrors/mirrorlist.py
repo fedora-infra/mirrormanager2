@@ -179,8 +179,9 @@ def mirrorlist_magic(*args, **kwargs):
     repo = kwargs['repo']
     arch = kwargs['arch']
 
+    header = "# repo = %s arch = %s " % (repo, arch)
     if not mirrorlist_cache.has_key((repo, arch)):
-        return [(None, '# invalid repo or arch')]
+        return [(None, header + 'error: invalid repo or arch')]
     cache = mirrorlist_cache[(repo, arch)]
 
     if kwargs.has_key('ip'):
@@ -200,8 +201,9 @@ def mirrorlist_magic(*args, **kwargs):
             for hostId in hosts:
                 if cache['byHostId'].has_key(hostId):
                     hostresults.extend(cache['byHostId'][hostId])
+                    header += 'Using preferred netblock'
             if len(hostresults) > 0:
-                message = [(None, '# netblocks')]
+                message = [(None, header)]
                 return message + hostresults
 
     # handle country request lists
@@ -209,31 +211,45 @@ def mirrorlist_magic(*args, **kwargs):
         requestedCountries = uniqueify([c.upper() for c in kwargs['country'].split(',') ])
         if 'GLOBAL' in requestedCountries:
             hostresults = trim_by_client_country(cache['global'], clientCountry)
-            message = [(None, '# global')]
+            header += 'country = global'
+            message = [(None, header)]
             return message + hostresults
 
         hostresults = []
         for c in requestedCountries:
             if cache['byCountry'].has_key(c):
                 hostresults.extend(cache['byCountry'][c])
+                header += 'country = %s' % c
         hostresults = trim_by_client_country(hostresults, clientCountry)
-        message = [(None, '# byCountry')]
+
+        # if not enough per-country mirrors, return the global list
+        if len(hostresults) < 3:
+            hostresults = trim_by_client_country(cache['global'], clientCountry)
+            header += ' country = global'
+            message = [(None, header)]
+            return message + hostresults
+
+        
+        message = [(None, header)]
         return message + hostresults
 
     # fall back to GeoIP-based lookups
     hostresults = []
     if cache['byCountry'].has_key(clientCountry):
         hostresults.extend(cache['byCountry'][clientCountry])
+        header += 'country = %s ' % clientCountry
     hostresults = trim_by_client_country(hostresults, clientCountry)
 
     # if not enough per-country mirrors, return the global list
     # fixme should maybe return lists from countries on same continent
     if len(hostresults) < 3:
         hostresults = trim_by_client_country(cache['global'], clientCountry)
-        message = [(None, '# geoIP -> global')]
+        header += 'country = global '
+        message = [(None, header)]
         return message + hostresults
 
-    message = [(None, '# geoIP -> counry')]
+    header =+ ' country = %s' % clientCountry
+    message = [(None, header)]
     return message + hostresults
 
 def do_mirrorlist(*args, **kwargs):
