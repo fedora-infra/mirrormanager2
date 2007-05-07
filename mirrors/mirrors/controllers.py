@@ -1153,6 +1153,7 @@ class Root(controllers.RootController):
     def mirrorlist(self, *args, **kwargs):
         return mirrors.mirrorlist.do_mirrorlist(*args, **kwargs)
 
+    @identity.require(identity.from_host('127.0.0.1'))
     @expose(template="mirrors.templates.rsync_acl", format="plain", content_type="text/plain")
     def refresh_mirrorlist_cache(self, *args, **kwargs):
         mirrors.mirrorlist.populate_all_caches()
