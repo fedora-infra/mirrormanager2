@@ -248,7 +248,7 @@ def mirrorlist_magic(*args, **kwargs):
         message = [(None, header)]
         return message + hostresults
 
-    header =+ ' country = %s' % clientCountry
+    header += ' country = %s' % clientCountry
     message = [(None, header)]
     return message + hostresults
 
