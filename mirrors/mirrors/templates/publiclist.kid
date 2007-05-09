@@ -1,12 +1,23 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:py="http://purl.org/kid/ns#"
-    py:extends="'master.kid'">
+    py:extends="'static.kid'">
 <head>
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
 <title>Public Active Mirrors</title>
 </head>
 <body>
-You may trim the selection through the links below.
+<h2>The Fedora Mirror System</h2>
+<P>
+Fedora is distributed to millions of systems globally.  This would not
+be possible without the donations of time, disk space, and bandwidth
+by hundreds of volunteer system administrators and their companies or
+institutions.  Your fast download experience is made possible by these
+donations.
+</P>
+<P>
+You may trim the selection through the links below, or see the <a
+href="${tg.url('/publiclist')}">whole list</a>.
+</P>
 <table border='1'>
 <tr><th>Product</th><th colspan='0'>Version / Arch</th></tr>
 <tr py:for="p in products">
@@ -57,7 +68,10 @@ for u in hc.urls:
 </tr>
 </table>
 
-
+<P>
+To become a public Fedora mirror, please see <a
+href="http://fedoraproject.org/wiki/Infrastructure/Mirroring">http://fedoraproject.org/wiki/Infrastructure/Mirroring</a>.
+</P>
 
 </body>
 </html>
