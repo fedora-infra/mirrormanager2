@@ -1004,8 +1004,8 @@ class PublicListController(controllers.Controller):
         else:
             raise redirect('/publiclist')
 
-        hosts = [h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active() and \
-                           h.has_product_version_arch_dirs(product, ver, arch)]
+        hosts = [Host.get(hostId[0]) for hostId in publiclist_hosts(product, ver, arch)]
+
 
         return dict(hosts=hosts, numhosts=len(hosts),
                     products=list(Product.select(orderBy='name')),

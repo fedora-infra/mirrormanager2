@@ -318,7 +318,50 @@ class Host(SQLObject):
         sqlresult = self._product_version_arch_dirs(product, desiredPath)
         
         return sqlresult[0][0] > 0
-        
+
+def _publiclist_hosts(product, re):
+    productId = product.id
+    sql = "SELECT host.id "
+    sql += "FROM category, host_category, host_category_dir, host, site "
+    # join conditions
+    sql += "WHERE "
+    sql += "host_category.category_id = category.id AND "
+    sql += "host_category.host_id = host.id AND "
+    sql += "host_category_dir.host_category_id = host_category.id AND "
+    sql += "category.product_id = %s AND " % productId
+    sql += "host.site_id = site.id "
+    # select conditions
+    # up2date, active, not private
+    sql += 'AND host_category_dir.up2date '
+    sql += 'AND host.user_active AND site.user_active '
+    sql += 'AND host.admin_active AND site.admin_active '
+    sql += 'AND NOT host.private '
+    sql += 'AND NOT site.private '
+
+    if re is not None:
+        sql += "AND host_category_dir.path ~ '%s' " % re
+    sql += "ORDER BY host.country "
+    sql += "LIMIT 1"
+
+    result = product._connection.queryAll(sql)
+    return result
+
+
+def publiclist_hosts(productname, vername, archname):
+        """ has a category of product, and an hcd that matches version """
+        try:
+            product = Product.byName(productname)
+        except SQLObjectNotFound:
+            return False
+        if vername is not None and archname is not None:
+            desiredPath = '(^|/)%s/.*%s/' % (vername, archname)
+        elif vername is not None:
+            desiredPath = '(^|/)%s/' % vername
+        else:
+            desiredPath = None
+
+        sqlresult = _publiclist_hosts(product, desiredPath)
+        return sqlresult
 
 
 class HostAclIp(SQLObject):
