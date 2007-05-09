@@ -982,8 +982,6 @@ class PublicListController(controllers.Controller):
     @expose(template="mirrors.templates.publiclist")
     def index(self, *vpath, **params):
         hosts = hosts=[h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active()]
-        for h in hosts:
-            h.sqlmeta.cacheValues = False
         
         return dict(hosts=hosts, numhosts=len(hosts),
                     products=list(Product.select(orderBy='name')), title='', arches=primary_arches)
@@ -1007,7 +1005,7 @@ class PublicListController(controllers.Controller):
             raise redirect('/publiclist')
 
         hosts = [h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active() and \
-                           len(h.product_version_arch_dirs(product, ver, arch, limit=1)) > 0]
+                           h.has_product_version_arch_dirs(product, ver, arch)]
 
         return dict(hosts=hosts, numhosts=len(hosts),
                     products=list(Product.select(orderBy='name')),
