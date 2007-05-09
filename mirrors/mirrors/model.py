@@ -7,6 +7,7 @@ from datetime import datetime
 from string import rstrip, strip
 import re
 import IPy
+from mirrors.lib import uniqueify
 IPy.check_addr_prefixlen = 0
 
 from turbogears.database import PackageHub
@@ -341,9 +342,9 @@ def _publiclist_hosts(product, re):
     if re is not None:
         sql += "AND host_category_dir.path ~ '%s' " % re
     sql += "ORDER BY host.country "
-    sql += "LIMIT 1"
 
     result = product._connection.queryAll(sql)
+    result = uniqueify(result)
     return result
 
 
