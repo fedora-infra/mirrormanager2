@@ -8,7 +8,7 @@ from mirrors.IPy import IP
 from mirrors.lib import uniqueify
 import GeoIP
 
-gi = GeoIP.new(GeoIP.GEOIP_MEMORY_CACHE)
+gi = GeoIP.new(GeoIP.GEOIP_STANDARD)
 
 # key is strings in tuple (repo.prefix, arch)
 mirrorlist_cache = {}
