@@ -31,15 +31,15 @@ repomap = {
     u'rawhide-source' : (u'Fedora', u'Fedora Core'),
 
     u'extras-' : (u'Fedora', u'Fedora Extras'),
-    u'extras-debuginfo-' : (u'Fedora', u'Fedora Extras'),
+    u'extras-debug-' : (u'Fedora', u'Fedora Extras'),
     u'extras-source-' : (u'Fedora', u'Fedora Extras'),
 
     u'extras-devel' : (u'Fedora', u'Fedora Extras'),
-    u'extras-devel-debuginfo' : (u'Fedora', u'Fedora Extras'),
+    u'extras-devel-debug' : (u'Fedora', u'Fedora Extras'),
     u'extras-devel-source' : (u'Fedora', u'Fedora Extras'),
 
     u'epel-' : (u'RHEL', u'Fedora EPEL'),
-    u'epel-debuginfo-' : (u'RHEL', u'Fedora EPEL'),
+    u'epel-debug-' : (u'RHEL', u'Fedora EPEL'),
     u'epel-source-' : (u'RHEL', u'Fedora EPEL'),
     }
 
@@ -107,7 +107,7 @@ def repo_prefix(path, category, ver):
         if isRawhide:
             # extras-development
             if isDebug:
-                prefix = u'extras-devel-debuginfo'
+                prefix = u'extras-devel-debug'
             elif isSource:
                 prefix = u'extras-devel-source'
             else:
@@ -115,7 +115,7 @@ def repo_prefix(path, category, ver):
         else:
             # extras-
             if isDebug:
-                prefix = u'extras-debuginfo-%s' % version
+                prefix = u'extras-debug-%s' % version
             elif isSource:
                 prefix = u'extras-source-%s' % version
             else:
@@ -124,7 +124,7 @@ def repo_prefix(path, category, ver):
     elif isEpel:
             # epel-
             if isDebug:
-                prefix = u'epel-debuginfo-%s' % version
+                prefix = u'epel-debug-%s' % version
             elif isSource:
                 prefix = u'epel-source-%s' % version
             else:
