@@ -7,7 +7,7 @@ import bz2
 redhat = None
 core = None
 fedora = None
-rhel = None
+epel = None
 
 def add_test_groups_and_users():
     Group(group_name='user', display_name='User')
@@ -153,7 +153,7 @@ def make_versions():
     Version(name='6.90', product=fedora, isTest=True)
 
     for ver in ['4', '5']:
-        Version(name=ver, product=rhel)
+        Version(name=ver, product=epel)
 
 def make_embargoed_countries():
     for cc in ['cu', 'ir', 'iq', 'kp', 'sd', 'sy' ]:
@@ -194,7 +194,7 @@ if not SiteAdmin.select().count():
     SiteAdmin(username='mdomsch', site=dell)
 
 # create our default products
-rhel = Product(name='RHEL')
+epel = Product(name='EPEL')
 fedora = Product(name='Fedora')
 
 
@@ -225,7 +225,7 @@ directory.addCategory(releases)
 
 directory = Directory(name='pub/epel')
 epel = Category(name='Fedora EPEL',
-                product = rhel,
+                product = epel,
                 topdir=directory)
 directory.addCategory(epel)
 

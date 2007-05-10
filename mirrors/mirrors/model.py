@@ -535,7 +535,7 @@ class Arch(SQLObject):
 
 primary_arches = ['i386','x86_64','ppc']
 
-# e.g. 'fedora' and 'rhel'
+# e.g. 'fedora' and 'epel'
 class Product(SQLObject):
     name = UnicodeCol(alternateID=True)
     versions = MultipleJoin('Version', orderBy='name')
