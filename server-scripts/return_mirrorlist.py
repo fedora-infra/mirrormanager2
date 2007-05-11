@@ -203,7 +203,7 @@ def handler(req):
     global next
     now = datetime.utcnow()
     if next is None or now > next:
-        reload_caches()
+        read_caches()
         next = now + datetime.timedelta(hours=1)
         
     request_data = util.FieldStorage(req)
