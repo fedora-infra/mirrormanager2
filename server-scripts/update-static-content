@@ -1,0 +1,16 @@
+#!/bin/bash
+
+[ -z "${MIRRORLIST_DIR}" ] && exit 1
+
+temp_dir_name=`mktemp -d /tmp/mirrorlists.XXXXXX`
+
+./generate-mirrorlists -c dev-postgres.cfg -d $temp_dir_name
+pushd $temp_dir_name > /dev/null 2>&1
+wget -nH --cut-dirs=1 --mirror http://localhost:8082/mirrormanager/publiclist
+wget -nH --cut-dirs=1 --mirror http://localhost:8082/mirrormanager/static/css/style.css
+wget -nH --cut-dirs=1 --mirror http://localhost:8082/mirrormanager/static/images/logo.png
+popd > /dev/null 2>&1
+mkdir -p ${MIRRORLIST_DIR}
+# because the arg list is too long for cp
+rsync -a --delete --delete-after --delay-updates $temp_dir_name/ ${MIRRORLIST_DIR}/
+rm -rf $temp_dir_name
