@@ -13,7 +13,7 @@ from sqlobject.sqlbuilder import *
 from mirrors import my_validators
 from mirrors.model import *
 from mirrors.lib import createErrorString
-import mirrors.IPy
+import IPy
 IPy.check_addr_prefixlen = 0
 import mirrors.mirrorlist
 
@@ -1156,6 +1156,13 @@ class Root(controllers.RootController):
     def refresh_mirrorlist_cache(self, *args, **kwargs):
         mirrors.mirrorlist.populate_all_caches()
         return dict(values=["# Cache refreshed"])
+
+    @identity.require(identity.from_host('127.0.0.1'))
+    @expose(template="mirrors.templates.rsync_acl", format="plain", content_type="text/plain")
+    def dump_mirrorlist_cache(self, *args, **kwargs):
+        mirrors.mirrorlist.dump_caches()
+        return dict(values=["# Cache dumped"])
+    
         
 
     @expose(template="mirrors.templates.login")

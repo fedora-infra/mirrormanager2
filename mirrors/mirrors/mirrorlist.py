@@ -4,7 +4,7 @@ from turbogears import controllers, expose, validate, redirect, widgets, validat
 from sqlobject import *
 from sqlobject.sqlbuilder import *
 from mirrors.model import *
-from mirrors.IPy import IP
+from IPy import IP
 from mirrors.lib import uniqueify
 import GeoIP
 
@@ -256,3 +256,17 @@ def do_mirrorlist(*args, **kwargs):
     results = mirrorlist_magic(*args, **kwargs)
     results =  [url for hostid, url in results]
     return dict(values=results)
+
+import pickle
+def dump_caches():
+    data = {'mirrorlist_cache':mirrorlist_cache,
+            'host_netblock_cache':host_netblock_cache,
+            'host_country_allowed_cache':host_country_allowed_cache}
+    
+    p = pickle.dumps(data)
+    try:
+        f = open('/tmp/mirrorlist_cache.pkl', 'w')
+        f.write(p)
+        f.close()
+    except:
+        pass
