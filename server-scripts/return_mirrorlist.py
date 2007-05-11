@@ -3,7 +3,7 @@ import GeoIP
 from mod_python import util
 from mod_python import apache
 import pickle
-from datetime import datetime
+from datetime import datetime, timedelta
 
 gi = GeoIP.new(GeoIP.GEOIP_STANDARD)
 
@@ -204,7 +204,7 @@ def handler(req):
     now = datetime.utcnow()
     if next is None or now > next:
         read_caches()
-        next = now + datetime.timedelta(hours=1)
+        next = now + timedelta(hours=1)
         
     request_data = util.FieldStorage(req)
     fields = ['repo', 'arch', 'country', 'ip']        
