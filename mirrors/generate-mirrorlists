@@ -7,6 +7,7 @@ from sqlobject.sqlbuilder import *
 import sys, os
 import turbogears
 from mirrors.model import *
+from mirrors.mirrorlist import global_mirrorlist, mirrorlist_byCountry, populate_all_caches
 from optparse import OptionParser
 
 from os.path import *
@@ -17,19 +18,18 @@ hub = None
 __connection__ = None
 
 
-def write_global_file(directory, prefix, archName, seen_countries):
+def write_global_file(directory, prefix, archName, glist):
     fname = '%s/%s-global-%s.txt' % (directory, prefix, archName)
     f = open(fname, 'w')
-    for country, urls in seen_countries.iteritems():
-        for u in urls:
-            f.write("%s\n" % u)
+    for u in glist:
+        f.write("%s\n" % u[1])
     f.close()
 
-def write_per_country_file(directory, prefix, country, archName, seen_countries):
+def write_per_country_file(directory, prefix, country, archName, ulist):
     fname = '%s/%s-%s-%s.txt' % (directory, prefix, country.upper(), archName)
     f = open(fname, 'w')
-    for u in seen_countries[country]:
-        f.write("%s\n" % u)
+    for u in ulist:
+        f.write("%s\n" % u[1])
     f.close()
     
 
@@ -41,28 +41,28 @@ def write_repo_files(directory='.'):
         pass
 
     for r in Repository.select():
-        seen_countries = urllist(r)
-
+        glist = global_mirrorlist(r)
         # write the global list
         if r.prefix is not None and r.arch is not None:
             if u'source' in r.prefix and r.arch.name == u'source':
                 for a in primary_arches:
-                    write_global_file(directory, r.prefix, a, seen_countries)
+                    write_global_file(directory, r.prefix, a, glist)
             else:
-                    write_global_file(directory, r.prefix, r.arch.name, seen_countries)
+                    write_global_file(directory, r.prefix, r.arch.name, glist)
             
 
         # write the per-country lists
-        for country in seen_countries.keys():
+        clist = mirrorlist_byCountry(r)
+        for country in clist.keys():
             if country == '':
                 continue
-
+            ulist = clist[country]
             if r.prefix is not None and r.arch is not None:
                 if u'source' in r.prefix and r.arch.name == u'source':
                     for a in primary_arches:
-                        write_per_country_file(directory, r.prefix, country, a, seen_countries)
+                        write_per_country_file(directory, r.prefix, country, a, ulist)
                 else:
-                    write_per_country_file(directory, r.prefix, country, r.arch.name, seen_countries)
+                    write_per_country_file(directory, r.prefix, country, r.arch.name, ulist)
 
 def main():
     parser = OptionParser(usage=sys.argv[0] + " [options]")
@@ -83,6 +83,7 @@ def main():
     hub = PackageHub("mirrors")
     __connection__ = hub
     
+    populate_all_caches()
     write_repo_files(options.directory)
 
 

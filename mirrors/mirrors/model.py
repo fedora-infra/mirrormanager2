@@ -479,48 +479,6 @@ def directory_mirror_urls(directory, country='', include_private=False, clientIP
     return result
 
 
-def trim_url_list(urls):
-    """ remove all but http and ftp URLs,
-    and if both http and ftp are offered,
-    leave only http"""
-    l = {}
-    for u, country, host in urls:
-        us = u.split('/')
-        uprotocol = us[0]
-        umachine = us[2]
-        if not l.has_key(host):
-            l[host] = {}
-        l[host][uprotocol] = (u, country, host)
-
-    result = []
-    for k, v in l.iteritems():
-        if v.has_key(u'http:'):
-            result.append(v[u'http:'])
-        elif v.has_key(u'ftp:'):
-            result.append(v[u'ftp:'])
-
-    return result
-
-def urllist(repository, clientCountry=None, clientIP=None):
-    seen_countries = {}
-    urls = directory_mirror_urls(repository.directory, include_private=False, clientIP=clientIP)
-    urls = trim_url_list(urls)
-    for u, country, host in urls:
-        if country is None:
-            country = ''
-        country = country.upper()
-        if clientCountry is not None and len(host.countries_allowed) > 0:
-            allowed=[c.country for c in host.countries_allowed]
-            if clientCountry not in allowed:
-                continue
-        
-        if seen_countries.has_key(country):
-            seen_countries[country].append(u)
-        else:
-            seen_countries[country] = [u]
-
-    return seen_countries
-
 class HostStats(SQLObject):
     #class sqlmeta:
     #    cacheValues = False

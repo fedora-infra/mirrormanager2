@@ -270,3 +270,15 @@ def dump_caches():
         f.close()
     except:
         pass
+
+
+def global_mirrorlist(repo):
+    k = (repo.prefix, repo.arch.name)
+    if mirrorlist_cache.has_key(k) and \
+       mirrorlist_cache[k].has_key('global'):
+        return mirrorlist_cache[k]['global']
+
+def mirrorlist_byCountry(repo):
+    k = (repo.prefix, repo.arch.name)
+    if mirrorlist_cache.has_key(k):
+        return mirrorlist_cache[k]['byCountry']
