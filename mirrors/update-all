@@ -55,6 +55,7 @@ date
 MIRRORLIST_DIR=${MIRRORLIST_DIR} ./update-static-content
 
 wget -O - 'http://127.0.0.1:8082/mirrormanager/refresh_mirrorlist_cache' > /dev/null 2>&1
+wget -O - 'http://127.0.0.1:8082/mirrormanager/dump_mirrorlist_cache' > /dev/null 2>&1
 
 echo -n "Ending at "
 date
