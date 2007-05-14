@@ -198,6 +198,10 @@ class Host(SQLObject):
 
 
     def _uploaded_config(self, config):
+        # handle the optional arguments
+        if config['host'].has_key('user_active'):
+            self.user_active = config['host']['user_active']
+
         # fill in the host category data (HostCategory and HostCategoryURL)
         # the category names in the config have been lowercased
         # so we have to find the matching mixed-case category name.

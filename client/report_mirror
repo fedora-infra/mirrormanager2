@@ -89,7 +89,7 @@ def parse_value(value):
         return value.split()
     return value
 
-def parse_section(conf, section, item, required_options):
+def parse_section(conf, section, item, required_options, optional_options=[]):
     if conf.has_option(section, 'enabled'):
         if conf.get(section, 'enabled') != '1':
             return False
@@ -98,6 +98,10 @@ def parse_section(conf, section, item, required_options):
     item.config[section.lower()] = {}
     for o in required_options:
         item.config[section.lower()][o] = parse_value(conf.get(section, o))
+    for o in optional_options:
+        if conf.has_option(section, o):
+            item.config[section.lower()][o] = parse_value(conf.get(section, o))
+
     return True
 
 def parse_global(conf, section, item):
@@ -112,7 +116,8 @@ def parse_site(conf, section, item):
 
 def parse_host(conf, section, item):
     required_options = [ 'enabled', 'name' ]
-    return parse_section(conf, section, item, required_options)
+    optional_options = [ 'user_active' ]
+    return parse_section(conf, section, item, required_options, optional_options=optional_options)
 
 def get_stats(conf, section):
     if conf.has_option(section, 'enabled'):
