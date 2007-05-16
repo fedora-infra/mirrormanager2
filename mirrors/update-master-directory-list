@@ -137,8 +137,15 @@ def short_filelist(files):
         if f.endswith('.rpm'):  rpms=rpms+1
         if f.endswith('.hdr'):  hdrs=hdrs+1
     if html>10 or rpms > 10 or hdrs > 10:
+        date_file_list = []
         rc = {}
-        for k in files.keys()[0:10]:
+        for k in files.keys():
+            date_file_tuple = (files[k]['stat'], k, files[k]['size'])
+            date_file_list.append(date_file_tuple)
+            date_file_list.sort()
+            date_file_list = date_file_list[-10:]
+        
+        for stat, k, size in date_file_list:
             rc[k] = files[k]
         return rc
     else:
