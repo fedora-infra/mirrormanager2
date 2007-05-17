@@ -143,6 +143,15 @@ from publictest7.fedora.redhat.com.
 	  </li>
 </ul>
 </div>
+<div id="Netblocks">
+<h3>Netblocks</h3>
+<ul>
+	  <li py:for="n in netblocks">
+	  <a href="${tg.url('/host/'+str(n.host.id)+'/')}"><span py:replace="n.host.name">Host Name</span></a> 
+ 	  <span py:replace="n.netblock">Netblock</span>
+	  </li>
+</ul>
+</div>
 </div>
 </body>
 </html>

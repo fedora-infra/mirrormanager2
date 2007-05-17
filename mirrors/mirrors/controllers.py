@@ -1051,6 +1051,7 @@ class Root(controllers.RootController):
                     "categories":Category.select(),
                     "repositories":Repository.select(orderBy='name'),
                     "embargoed_countries":EmbargoedCountry.select(),
+                    "netblocks":HostNetblock.select(orderBy='host_id'),
                     }
         else:
             return {"sites":sites}
