@@ -13,6 +13,7 @@
 # country or global is usually appended
 # basearch is always appended coming from the mirrorlist cgi
 # to the key, the value $releasever is always appended, except for rawhide and development
+# hint - this isn't actually used by anything right now
 repomap = {
     u'core-' : (u'Fedora', u'Fedora Core'),
     u'core-debug-' : (u'Fedora', u'Fedora Core'),
@@ -56,6 +57,7 @@ def repo_prefix(path, category, ver):
     isRawhide = u'development' in path
     isSource = u'source' in path or u'SRPMS' in path
     isUpdatesTesting = u'updates/testing' in path
+    isReleases = u'releases' in path
     isUpdatesReleased = False
     if not isUpdatesTesting:
         isUpdatesReleased = u'updates' in path
@@ -64,6 +66,7 @@ def repo_prefix(path, category, ver):
     isCore = (category.name == u'Fedora Core')
     isExtras = (category.name == u'Fedora Extras')
     isEpel = (category.name == u'Fedora EPEL')
+    isFedoraLinux = (category.name == u'Fedora Linux')
 
     version = u'unknown'
     if not isRawhide and ver is not None:
@@ -130,5 +133,39 @@ def repo_prefix(path, category, ver):
             else:
                 prefix = u'epel-%s' % version
         
+    if isFedoraLinux:
+        if isReleases:
+            # fedora-
+            if isDebug:
+                prefix = u'fedora-debug-%s' % version
+            elif isSource:
+                prefix = u'fedora-source-%s' % version
+            else:
+                prefix=u'fedora-%s' % version
+            
+        elif isUpdatesReleased:
+            # updates-released-
+            if isDebug:
+                prefix = u'updates-released-debug-%s' % version
+            elif isSource:
+                prefix = u'updates-released-source-%s' % version
+            else:
+                prefix = u'updates-released-%s' % version
+        elif isUpdatesTesting:
+            # updates-testing-
+            if isDebug:
+                prefix = u'updates-testing-debug-%s' % version
+            elif isSource:
+                prefix = u'updates-testing-source-%s' % version
+            else:
+                prefix = u'updates-testing-%s' % version
+        elif isRawhide:
+            # rawhide
+            if isDebug:
+                prefix = u'rawhide-debug'
+            elif isSource:
+                prefix = u'rawhide-source'
+            else:
+                prefix = u'rawhide'
 
     return prefix
