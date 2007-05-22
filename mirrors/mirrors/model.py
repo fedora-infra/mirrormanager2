@@ -547,6 +547,7 @@ class Category(SQLObject):
     product = ForeignKey('Product')
     canonicalhost = UnicodeCol(default='http://download.fedora.redhat.com')
     topdir = ForeignKey('Directory', default=None)
+    publiclist = BoolCol(default=True)
     directories = RelatedJoin('Directory', orderBy='name') # all the directories that are part of this category
     hostCategories = MultipleJoin('HostCategory')
 
