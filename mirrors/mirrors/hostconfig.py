@@ -75,6 +75,5 @@ def read_host_config(config):
             return None
         host = h[0]
         host.config = config
-        host.sync()
 
         return (site, host, config)

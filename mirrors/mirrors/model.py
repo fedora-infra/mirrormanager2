@@ -192,12 +192,18 @@ class Host(SQLObject):
                 b.destroySelf()
         SQLObject.destroySelf(self)
 
-    def _get_config_categories(self):
-        noncategories = ['version', 'global', 'site', 'host', 'stats']
-        return [key for key in self._config.keys() if key not in noncategories]
 
 
     def _uploaded_config(self, config):
+
+        def _config_categories(config):
+            noncategories = ['version', 'global', 'site', 'host', 'stats']
+            if config is not None:
+                return [key for key in config.keys() if key not in noncategories]
+            else:
+                return []
+
+
         # handle the optional arguments
         if config['host'].has_key('user_active'):
             self.user_active = config['host']['user_active']
@@ -209,7 +215,7 @@ class Host(SQLObject):
         for c in Category.select():
             cats[c.name.lower()] = c.id
 
-        for c in self.config_categories:
+        for c in _config_categories(config):
             if c not in cats:
                 continue
             category = Category.get(cats[c])
@@ -254,6 +260,7 @@ class Host(SQLObject):
     def _set_config(self, config):
         self._config = config
         self.lastCheckedIn = datetime.utcnow()
+        self.sync()
         self._uploaded_config(config)
 
     def has_category(self, cname):
