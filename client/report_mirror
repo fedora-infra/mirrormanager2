@@ -189,24 +189,24 @@ def usage():
 def main():
     from optparse import OptionParser
     parser = OptionParser(usage= sys.argv[0] + " [options] dir1 [dir2] ...")
-    parser.add_option("-o", "--output",
-                      dest="output",
-                      default=None,
-                      help="Output filename (required)")
     parser.add_option("-c", "--config",
                       dest="config",
                       default='/etc/report_mirror.conf',
                       help='Configuration filename (required)')
-    parser.add_option("-d", "--debug",
-                      action="store_true",
-                      dest="debug",
-                      default=False,
-                      help='Enable debugging output')
     parser.add_option("-s", "--stats",
                       action="store_true",
                       dest="stats",
                       default=False,
                       help='Send stats')
+    parser.add_option("-o", "--output",
+                      dest="output",
+                      default=None,
+                      help="Output filename (for debugging)")
+    parser.add_option("-d", "--debug",
+                      action="store_true",
+                      dest="debug",
+                      default=False,
+                      help='Enable debugging output')
 
 
     (options, args) = parser.parse_args()
