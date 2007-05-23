@@ -45,7 +45,7 @@ Last Checked In: ${values.lastCheckedIn}<br></br>
 		  would return the university-local mirror rather than
 		  a country-local mirror.
 		  Format is one of 18.0.0.0/255.0.0.0, 18.0.0.0/8, or
-		  an IPv6 prefix/length (not implemented in mirrorlist CGI yet :-)<br/>
+		  an IPv6 prefix/length.<br/>
 <a href="${tg.url('/host_netblock/0/new?hostid=' + str(values.id))}">[Add]</a><br/>
 	<ul>
 	<li py:for="a in values.netblocks">
@@ -58,8 +58,7 @@ Last Checked In: ${values.lastCheckedIn}<br></br>
 	Some mirrors need to restrict themselves to serving only end
 	users from their country.  If you're one of these, list the
 	2-letter ISO code for the countries you will allow end users
-	to be from.  The mirrorlist CGI will try to honor this (not
-	implemented yet).<br/>
+	to be from.  The mirrorlist CGI will honor this.<br/>
 	<span py:if="is_siteadmin">
 	<a href="${tg.url('/host_country_allowed/0/new?hostid=' + str(values.id))}">[Add]</a>
 	</span>
