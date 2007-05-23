@@ -48,8 +48,8 @@ for use by other mirrors only).
 </P>
 <P>
 A HTTP/FTP crawler will scan the public active sites every few hours
-to update its database of who has what.  That crawler current runs
-from publictest7.fedora.redhat.com.
+to update its database of who has what.  That crawler reports its
+User-Agent as mirrormanager-crawler.
 </P>
 
 <div id="Sites">
