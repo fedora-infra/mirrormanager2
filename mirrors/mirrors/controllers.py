@@ -74,6 +74,8 @@ class SiteFields(widgets.WidgetsList):
     private  = widgets.CheckBox(help_text="e.g. Not available to the public")
     admin_active = widgets.CheckBox("admin_active",default=True, help_text="Clear to temporarily disable this site.")
     user_active = widgets.CheckBox(default=True, help_text="Clear to temporarily disable this site.")
+    allSitesCanPullFromMe = widgets.CheckBox(default=False, help_text="Enable all mirror sites to pull from me without explicitly adding them to my list.")
+    downstreamComments = widgets.TextArea(validator=validators.UnicodeString, label="Comments for downstream siteadmins.")
 
 
 site_form = widgets.TableForm(fields=SiteFields(),
@@ -960,23 +962,8 @@ class PubController(controllers.Controller):
     @expose(template="mirrors.templates.mirrorlist", format="plain", content_type="text/plain")
     def default(self, *vpath, **params):
         path = 'pub/' + '/'.join(vpath)
-        country = None
-        include_private=False
-        if params.has_key('country'):
-            country = params['country']
-        if params.has_key('include_private'):
-            include_private = params['include_private']
+        return mirrors.mirrorlist.do_directorylist(*args, path=path, **kwargs)
 
-        try:
-            directory = Directory.byName(path)
-        except SQLObjectNotFound:
-            return dict(values=[])
-            
-        urls = directory_mirror_urls(directory, country=country, include_private=include_private)
-        for u, country, host in urls:
-            if not u.startswith('http://') and not u.startswith('ftp://'):
-                urls.remove((u, country, host))
-        return dict(values=[u for u, country, host in urls])
 
 class PublicListController(controllers.Controller):
     @expose(template="mirrors.templates.publiclist")

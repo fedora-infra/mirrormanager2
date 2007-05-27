@@ -38,10 +38,10 @@ class Site(SQLObject):
     user_active  = BoolCol(default=True)
     createdAt = DateTimeCol(default=datetime.utcnow())
     createdBy = UnicodeCol(default=None)
-    # fixme, delete these three columns ASAP
-    licensesAccepted  = BoolCol(default=True)
-    licensesAcceptedAt = DateTimeCol(default=datetime.utcnow())
-    licensesAcceptedBy = UnicodeCol(default=None)
+    # allow all sites to pull from me
+    allSitesCanPullFromMe = BoolCol(default=False)
+    downstreamComments = UnicodeCol(default=None)
+    
     admins = MultipleJoin('SiteAdmin')
     hosts  = MultipleJoin('Host')
 
@@ -57,10 +57,16 @@ class Site(SQLObject):
         SQLObject.destroySelf(self)
 
     def _get_downstream_sites(self):
-        return [s2s.downstream_site for s2s in SiteToSite.selectBy(upstream_site=self)]
+        if self.allSitesCanPullFromMe:
+            return [s for s in Site.select() if s != self]
+        else:
+            return [s2s.downstream_site for s2s in SiteToSite.selectBy(upstream_site=self)]
 
     def _get_upstream_sites(self):
-        return [s2s.upstream_site for s2s in SiteToSite.selectBy(downstream_site=self)]
+        open_upstreams   = [s for s in Site.select() if s != self and s.allSitesCanPullFromMe]
+        chosen_upstreams = [s2s.upstream_site for s2s in SiteToSite.selectBy(downstream_site=self)]
+        result = uniquify(open_upstreams + chosen_upstreams)
+        return result
 
     def add_downstream_site(self, site):
         if site is not None:
@@ -145,6 +151,7 @@ class HostCategoryDir(SQLObject):
     host_category = ForeignKey('HostCategory')
     # subset of the path starting below HostCategory.path
     path = UnicodeCol()
+    directory = ForeignKey('Directory')
     hcdindex = DatabaseIndex('host_category', 'path', unique=True)
     up2date = BoolCol(default=True)
     files = PickleCol(default=None)
@@ -529,11 +536,12 @@ class Directory(SQLObject):
     # e.g. pub/fedora/linux/core/6/i386/os
     # e.g. pub/fedora/linux/extras
     # e.g. pub/epel
-    # e.g. pub/fedora/linux/release
+    # e.g. pub/fedora/linux
     name = UnicodeCol(alternateID=True)
     files = PickleCol(default={})
     categories = RelatedJoin('Category')
     repository = SingleJoin('Repository') # zero or one repository, set if this dir contains a yum repo
+    host_category_dirs = RelatedJoin('HostCategoryDir')
 
     def destroySelf(self):
         for c in self.categories:
@@ -541,6 +549,8 @@ class Directory(SQLObject):
         if self.repository is not None:
             self.repository.destroySelf()
         # don't destroy a whole category if only deleting a directory
+        for hcd in self.host_category_dirs:
+            hcd.destroySelf()
         SQLObject.destroySelf(self)
     
 

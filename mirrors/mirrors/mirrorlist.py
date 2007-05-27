@@ -13,6 +13,9 @@ gi = GeoIP.new(GeoIP.GEOIP_STANDARD)
 # key is strings in tuple (repo.prefix, arch)
 mirrorlist_cache = {}
 
+# key is directory.name
+directory_mirror_cache = {}
+
 # key is an IPy.IP structure, value is list of host ids
 host_netblock_cache = {}
 
@@ -44,11 +47,7 @@ def trim(input):
     return result
 
 
-
-def populate_repo_cache(repo):
-    category = repo.category
-    directory = repo.directory
-    path = directory.name[len(category.topdir.name)+1:]
+def _do_query_directory(directory, category):
     sql  = 'SELECT host.id, host.country, host_category_url.url, site.private, host.private '
     sql += 'FROM host_category_dir, host_category, host_category_url, host, site '
     sql += 'WHERE host_category_dir.host_category_id = host_category.id ' # join criteria
@@ -56,15 +55,35 @@ def populate_repo_cache(repo):
     sql += 'AND   host_category.host_id = host.id '                       # join criteria
     sql += 'AND   host.site_id = site.id '                                # join criteria
     sql += 'AND host_category.category_id = %d ' % category.id # but select only the target category
-    sql += "AND host_category_dir.path = '%s' " % path # and target path
+    sql += "AND host_category_dir.directory_id = %s " % directory.id # and target directory
     sql += 'AND host_category_dir.up2date '
     sql += 'AND NOT host_category_url.private '
     sql += 'AND host.user_active AND site.user_active '
     sql += 'AND host.admin_active AND site.admin_active '
 
-    result = repo._connection.queryAll(sql)
-
+    result = directory._connection.queryAll(sql)
     result = trim(result)
+    return result
+
+
+def populate_directory_cache(directory):
+    repo = directory.repository
+    # if a directory is in more than one category, problem...
+    if repo is not None:
+        category = repo.category
+    else:
+        numcats = len(directories.categories)
+        if numcats == 0:
+            # no category, so we can't know a mirror host's URLs.
+            # nothing to add.
+            return
+        elif numcats >= 1:
+            # any of them will do, so just look at the first one
+            category = directory.categories[0]
+        
+    path = directory.name[len(category.topdir.name)+1:]
+    result = _do_query_directory(directory, category)
+    
     newresult = {'global': [], 'byCountry':{}, 'byHostId':{}}
     for (hostid, country, hcurl, siteprivate, hostprivate) in result:
         country = country.upper()
@@ -82,8 +101,12 @@ def populate_repo_cache(repo):
         else:
             newresult['byHostId'][hostid].append(v)
 
+    global directory_mirror_cache
+    directory_mirror_cache[directory.name] = newresult
     global mirrorlist_cache
-    mirrorlist_cache[(repo.prefix, repo.arch.name)] = newresult
+    if repo is not None:
+        mirrorlist_cache[(repo.prefix, repo.arch.name)] = newresult
+    
 
 def populate_netblock_cache():
     cache = {}
@@ -114,8 +137,8 @@ def populate_host_country_allowed_cache():
 def populate_all_caches():
     populate_host_country_allowed_cache()
     populate_netblock_cache()
-    for r in Repository.select():
-        populate_repo_cache(r)
+    for d in Directory.select():
+        populate_directory_cache(d)
     print "mirrorlist caches populated"
 
 
@@ -171,18 +194,8 @@ def trim_by_client_country(hostresults, clientCountry):
 
 
 def mirrorlist_magic(*args, **kwargs):
-    if not kwargs.has_key('repo') or not kwargs.has_key('arch'):
-        return [(None, '# either repo= or arch= not speficied')]
-
-    if u'source' in kwargs['repo']:
-        kwargs['arch'] = u'source'
-    repo = kwargs['repo']
-    arch = kwargs['arch']
-
-    header = "# repo = %s arch = %s " % (repo, arch)
-    if not mirrorlist_cache.has_key((repo, arch)):
-        return [(None, header + 'error: invalid repo or arch')]
-    cache = mirrorlist_cache[(repo, arch)]
+    cache = kwargs['cache']
+    header = kwargs['header']
 
     if kwargs.has_key('ip'):
         client_ip = kwargs['ip']
@@ -190,7 +203,6 @@ def mirrorlist_magic(*args, **kwargs):
         client_ip = cherrypy.request.headers.get("X-Forwarded-For")
         if client_ip is None:
             client_ip = cherrypy.request.remote_addr
-        #client_ip = '143.166.1.1'
     clientCountry = gi.country_code_by_addr(client_ip)
 
     # handle netblocks
@@ -252,8 +264,35 @@ def mirrorlist_magic(*args, **kwargs):
     message = [(None, header)]
     return message + hostresults
 
+def do_directorylist(*args, **kwargs):
+    if not kwargs.has_key('path')
+        return [(None, '# path= not speficied')]
+    path = kwargs['path']
+
+    header = "# path = %s" % path
+    if not directory_mirror_cache.has_key(path):
+        return [(None, header + 'error: invalid repo or arch')]
+    cache = directory_mirror_cache[path]
+
+    results = mirrorlist_magic(*args, cache=cache, header=header, **kwargs)
+    results =  [url for hostid, url in results]
+    return dict(values=results)
+
 def do_mirrorlist(*args, **kwargs):
-    results = mirrorlist_magic(*args, **kwargs)
+    if not kwargs.has_key('repo') or not kwargs.has_key('arch'):
+        return [(None, '# either repo= or arch= not speficied')]
+
+    if u'source' in kwargs['repo']:
+        kwargs['arch'] = u'source'
+    repo = kwargs['repo']
+    arch = kwargs['arch']
+
+    header = "# repo = %s arch = %s " % (repo, arch)
+    if not mirrorlist_cache.has_key((repo, arch)):
+        return [(None, header + 'error: invalid repo or arch')]
+    cache = mirrorlist_cache[(repo, arch)]
+
+    results = mirrorlist_magic(*args, cache=cache, header=header, **kwargs)
     results =  [url for hostid, url in results]
     return dict(values=results)
 
@@ -261,7 +300,8 @@ import pickle
 def dump_caches():
     data = {'mirrorlist_cache':mirrorlist_cache,
             'host_netblock_cache':host_netblock_cache,
-            'host_country_allowed_cache':host_country_allowed_cache}
+            'host_country_allowed_cache':host_country_allowed_cache,
+            'directory_mirror_cache':directory_mirror_cache}
     
     p = pickle.dumps(data)
     try:

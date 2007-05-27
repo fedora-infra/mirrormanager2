@@ -280,8 +280,10 @@ def sync_hcds(host, host_category_dirs):
         if hcd.count() > 0:
             hcd = hcd[0]
         else:
-            hcd = HostCategoryDir(host_category=hc, path=path)
+            hcd = HostCategoryDir(host_category=hc, path=path, directory=d)
 
+        if hcd.directory is None:
+            hcd.directory = d
         hcd.lastCrawled=datetime.utcnow()
         hcd.up2date=up2date
         current_hcds[hcd] = True
@@ -289,7 +291,6 @@ def sync_hcds(host, host_category_dirs):
 
     # now-historical HostCategoryDirs are not up2date
     # we wait for a cascading Directory delete to delete this
-    # (though it won't right now...)
     for hc in host.categories:
         for hcd in hc.dirs:
             try:
