@@ -74,8 +74,8 @@ class SiteFields(widgets.WidgetsList):
     private  = widgets.CheckBox(help_text="e.g. Not available to the public")
     admin_active = widgets.CheckBox("admin_active",default=True, help_text="Clear to temporarily disable this site.")
     user_active = widgets.CheckBox(default=True, help_text="Clear to temporarily disable this site.")
-    allSitesCanPullFromMe = widgets.CheckBox(default=False, help_text="Enable all mirror sites to pull from me without explicitly adding them to my list.")
-    downstreamComments = widgets.TextArea(validator=validators.UnicodeString, label="Comments for downstream siteadmins.")
+    allSitesCanPullFromMe = widgets.CheckBox(label="All sites can pull from me?", default=False, help_text="Enable all mirror sites to pull from me without explicitly adding them to my list.")
+    downstreamComments = widgets.TextArea(validator=validators.UnicodeString, label="Comments for downstream siteadmins.", cols='60')
 
 
 site_form = widgets.TableForm(fields=SiteFields(),
@@ -960,9 +960,9 @@ class VersionController(controllers.Controller, identity.SecureResource, content
 
 class PubController(controllers.Controller):
     @expose(template="mirrors.templates.mirrorlist", format="plain", content_type="text/plain")
-    def default(self, *vpath, **params):
+    def default(self, *vpath, **kwargs):
         path = 'pub/' + '/'.join(vpath)
-        return mirrors.mirrorlist.do_directorylist(*args, path=path, **kwargs)
+        return mirrors.mirrorlist.do_directorylist(path=path, **kwargs)
 
 
 class PublicListController(controllers.Controller):

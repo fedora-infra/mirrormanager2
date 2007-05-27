@@ -65,7 +65,7 @@ class Site(SQLObject):
     def _get_upstream_sites(self):
         open_upstreams   = [s for s in Site.select() if s != self and s.allSitesCanPullFromMe]
         chosen_upstreams = [s2s.upstream_site for s2s in SiteToSite.selectBy(downstream_site=self)]
-        result = uniquify(open_upstreams + chosen_upstreams)
+        result = uniqueify(open_upstreams + chosen_upstreams)
         return result
 
     def add_downstream_site(self, site):

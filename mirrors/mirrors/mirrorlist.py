@@ -72,7 +72,7 @@ def populate_directory_cache(directory):
     if repo is not None:
         category = repo.category
     else:
-        numcats = len(directories.categories)
+        numcats = len(directory.categories)
         if numcats == 0:
             # no category, so we can't know a mirror host's URLs.
             # nothing to add.
@@ -265,16 +265,16 @@ def mirrorlist_magic(*args, **kwargs):
     return message + hostresults
 
 def do_directorylist(*args, **kwargs):
-    if not kwargs.has_key('path')
-        return [(None, '# path= not speficied')]
+    if not kwargs.has_key('path'):
+        return dict(values=['# path= not speficied'])
     path = kwargs['path']
 
-    header = "# path = %s" % path
+    header = "# path = %s " % path
     if not directory_mirror_cache.has_key(path):
-        return [(None, header + 'error: invalid repo or arch')]
+        return dict(values=[header + 'no mirrors found'])
     cache = directory_mirror_cache[path]
 
-    results = mirrorlist_magic(*args, cache=cache, header=header, **kwargs)
+    results = mirrorlist_magic(cache=cache, header=header, *args, **kwargs)
     results =  [url for hostid, url in results]
     return dict(values=results)
 
@@ -292,7 +292,7 @@ def do_mirrorlist(*args, **kwargs):
         return [(None, header + 'error: invalid repo or arch')]
     cache = mirrorlist_cache[(repo, arch)]
 
-    results = mirrorlist_magic(*args, cache=cache, header=header, **kwargs)
+    results = mirrorlist_magic(cache=cache, header=header, *args, **kwargs)
     results =  [url for hostid, url in results]
     return dict(values=results)
 
