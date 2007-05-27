@@ -959,7 +959,7 @@ class VersionController(controllers.Controller, identity.SecureResource, content
 # For each directory requested, it returns the mirrors of that directory.
 
 class PubController(controllers.Controller):
-    @expose(template="mirrors.templates.mirrorlist", format="plain", content_type="text/plain")
+    @expose(template="mirrors.templates.rsync_acl", format="plain", content_type="text/plain")
     def default(self, *vpath, **kwargs):
         path = 'pub/' + '/'.join(vpath)
         return mirrors.mirrorlist.do_directorylist(path=path, **kwargs)
