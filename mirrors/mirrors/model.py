@@ -243,7 +243,16 @@ class Host(SQLObject):
                         hcdir.up2date = True
                         hcdir.sync()
                     else:
-                        hcdir = HostCategoryDir(host_category=hc, path=d, files=config[c]['dirtree'][d])
+                        if len(d) > 0:
+                            dname = "%s/%s" % (hc.category.topdir.name, d)
+                        else:
+                            dname = hc.category.topdir.name
+                        dir = None
+                        try:
+                            dir = Directory.byName(dname)
+                        except:
+                            pass
+                        hcdir = HostCategoryDir(host_category=hc, path=d, directory=dir, files=config[c]['dirtree'][d])
                 for d in HostCategoryDir.selectBy(host_category=hc):
                     if d.path not in config[c]['dirtree'].keys():
                         d.destroySelf()
