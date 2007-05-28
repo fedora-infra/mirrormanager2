@@ -300,8 +300,7 @@ import pickle
 def dump_caches():
     data = {'mirrorlist_cache':mirrorlist_cache,
             'host_netblock_cache':host_netblock_cache,
-            'host_country_allowed_cache':host_country_allowed_cache,
-            'directory_mirror_cache':directory_mirror_cache}
+            'host_country_allowed_cache':host_country_allowed_cache}
     
     p = pickle.dumps(data)
     try:
