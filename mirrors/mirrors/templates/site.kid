@@ -74,6 +74,7 @@ href="${tg.url('/host/0/new?siteid=' + str(values.id))}">[Add Host]</a></div>
 	  </UL>
 <hr></hr>
 <h3>Sites that can pull from me</h3>
+<div py:if="not values.allSitesCanPullFromMe">
 <span py:if="is_siteadmin"><a
 href="${tg.url('/site2site/0/new?siteid=' + str(values.id))}">[Add Downstream Site]</a></span>
 <UL>
@@ -82,6 +83,12 @@ href="${tg.url('/site2site/0/new?siteid=' + str(values.id))}">[Add Downstream Si
     <span py:if="is_siteadmin"><a href="${tg.url('/site/' + str(values.id) + '/s2s_delete?dsite=' + str(s.id))}">[Delete]</a></span>
 </LI>
 </UL>
+</div>
+<div py:if="values.allSitesCanPullFromMe">
+All sites allowed based on setting "All sites can pull from me"
+above.  Clear that and save to see/edit the list of explicitly allowed sites.
+</div>
+
 <hr></hr>
 <h3>Sites I can pull from</h3>
 <UL>
