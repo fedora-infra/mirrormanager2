@@ -418,7 +418,7 @@ class LabelObjName(widgets.Label):
     py:content="value.name"
     />
     """
-
+#leave this here so emacs highlighting works"
 class InvalidData(Exception):
     pass
 
@@ -711,6 +711,22 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
 
         if kwargs['url'].endswith('/'):
             kwargs['url'] = kwargs['url'][:-1]
+
+        # This is ugly.  We've got this fake site 'Fedora Mirror'
+        # which has all the hosts that didn't register themselves.
+        # if someone now tries to register one, they get to the point
+        # of making the hcurl, and it fails.  In this case, if the duplicate
+        # belongs to a 'Fedora Mirror' site, great!  Nuke the host from
+        # the Fedora Mirror site, and continue on.
+        try:
+            existing_hcurl = HostCategoryUrl.byUrl(kwargs['url'])
+        except SQLObjectNotFound:
+            pass
+        else:
+            otherhost = existing_hcurl.host_category.host
+            othersite = otherhost.site
+            if othersite.name == u'Fedora Mirror':
+                otherhost.destroySelf()
 
         try:
             del kwargs['hcid']
