@@ -42,8 +42,8 @@ href="${tg.url('/publiclist')}">whole list</a>.
 <td><span py:replace="host.name">Host Name</span></td>
 <td>
 <table>
-<tr py:for="hc in host.categories">
-<td py:if="hc.category.publiclist"><span py:replace="hc.category.name">Category name</span></td>
+<tr py:for="hc in host.categories" py:if="hc.category.publiclist">
+<td><span py:replace="hc.category.name">Category name</span></td>
 <?python
 http=None
 ftp=None
