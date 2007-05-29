@@ -9,6 +9,8 @@ pushd $temp_dir_name > /dev/null 2>&1
 wget -nH --cut-dirs=1 --mirror http://localhost:8082/mirrormanager/publiclist
 wget -nH --cut-dirs=1 --mirror http://localhost:8082/mirrormanager/static/css/style.css
 wget -nH --cut-dirs=1 --mirror http://localhost:8082/mirrormanager/static/images/logo.png
+wget -nH --cut-dirs=1 --mirror http://localhost:8082/mirrormanager/static/images/favicon.ico
+touch robots.txt
 # remove /mirrormanager in the URLs
 find . -name index.html -type f | xargs -n 20 perl -p -i -e 's:/mirrormanager/:/:g'
 popd > /dev/null 2>&1
