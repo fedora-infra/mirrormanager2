@@ -550,7 +550,7 @@ class Directory(SQLObject):
     files = PickleCol(default={})
     categories = RelatedJoin('Category')
     repository = SingleJoin('Repository') # zero or one repository, set if this dir contains a yum repo
-    host_category_dirs = RelatedJoin('HostCategoryDir')
+    host_category_dirs = MultipleJoin('HostCategoryDir')
 
     def destroySelf(self):
         for c in self.categories:
