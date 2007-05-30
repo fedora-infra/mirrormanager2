@@ -988,7 +988,7 @@ class PublicListController(controllers.Controller):
         hosts = hosts=[h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active()]
         
         return dict(hosts=hosts, numhosts=len(hosts),
-                    products=list(Product.select(orderBy='name')), title='', arches=primary_arches, product=None, ver=None, arch=None, categories=None)
+                    products=list(Product.select(orderBy='name')), title='', arches=primary_arches, product=None, ver=None, arch=None, valid_categories=None)
 
     @expose(template="mirrors.templates.publiclist")
     def default(self, *vpath, **params):
@@ -1014,11 +1014,11 @@ class PublicListController(controllers.Controller):
         except:
             pass
 
-        categories = categorymap(product, ver)
+        valid_categories = categorymap(product, ver)
 
         return dict(hosts=hosts, numhosts=len(hosts),
                     products=list(Product.select(orderBy='name')),
-                    arches=primary_arches, title=title, product=product, ver=ver, arch=arch, categories=categories)
+                    arches=primary_arches, title=title, product=product, ver=ver, arch=arch, valid_categories=valid_categories)
 
 
 

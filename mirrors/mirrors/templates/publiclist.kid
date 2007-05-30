@@ -42,8 +42,7 @@ href="${tg.url('/publiclist')}">whole list</a>.
 <td><span py:replace="host.name">Host Name</span></td>
 <td>
 <table>
-<tr py:for="hc in host.categories" py:if="hc.category.publiclist and
-categories is None or hc.category.name in categories">
+<tr py:for="hc in host.categories" py:if="hc.category.publiclist and (valid_categories is None or hc.category.name in valid_categories)">
 <td><span py:replace="hc.category.name">Category name</span></td>
 <?python
 http=None
