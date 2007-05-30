@@ -131,7 +131,7 @@ def repo_prefix(path, category, ver):
             if not isEverything:
                 prefix = None
             # fedora-
-            elif if isDebug:
+            elif isDebug:
                 prefix = u'fedora-debug-%s' % version
             elif isSource:
                 prefix = u'fedora-source-%s' % version
