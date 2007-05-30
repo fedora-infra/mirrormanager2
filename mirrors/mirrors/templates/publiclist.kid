@@ -37,12 +37,13 @@ href="${tg.url('/publiclist')}">whole list</a>.
 <table border='1'>
 <tr><th>Country</th><th>Site</th><th>Host</th><th>Content</th><th>Bandwidth</th><th>Comments</th></tr>
 <tr py:for="host in hosts">
-<td><span py:replace="host.country.upper()">Country</span></td>
+<td><span py:if="host.country is not None" py:replace="host.country.upper()">Country</span></td>
 <td><a href="${host.site.orgUrl}"><span py:replace="host.site.name">Site Name</span></a></td>
 <td><span py:replace="host.name">Host Name</span></td>
 <td>
 <table>
-<tr py:for="hc in host.categories" py:if="hc.category.publiclist">
+<tr py:for="hc in host.categories" py:if="hc.category.publiclist and
+categories is None or hc.category.name in categories">
 <td><span py:replace="hc.category.name">Category name</span></td>
 <?python
 http=None

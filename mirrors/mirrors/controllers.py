@@ -16,6 +16,7 @@ from mirrors.lib import createErrorString
 import IPy
 IPy.check_addr_prefixlen = 0
 import mirrors.mirrorlist
+from mirrors.categorymap import categorymap
 
 
 log = logging.getLogger("mirrors.controllers")
@@ -987,7 +988,7 @@ class PublicListController(controllers.Controller):
         hosts = hosts=[h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active()]
         
         return dict(hosts=hosts, numhosts=len(hosts),
-                    products=list(Product.select(orderBy='name')), title='', arches=primary_arches)
+                    products=list(Product.select(orderBy='name')), title='', arches=primary_arches, product=None, ver=None, arch=None, categories=None)
 
     @expose(template="mirrors.templates.publiclist")
     def default(self, *vpath, **params):
@@ -1007,12 +1008,17 @@ class PublicListController(controllers.Controller):
         else:
             raise redirect('/publiclist')
 
-        hosts = [Host.get(hostId[0]) for hostId in publiclist_hosts(product, ver, arch)]
+        hosts = []
+        try:
+            hosts = [Host.get(hostId[0]) for hostId in publiclist_hosts(product, ver, arch)]
+        except:
+            pass
 
+        categories = categorymap(product, ver)
 
         return dict(hosts=hosts, numhosts=len(hosts),
                     products=list(Product.select(orderBy='name')),
-                    arches=primary_arches, title=title)
+                    arches=primary_arches, title=title, product=product, ver=ver, arch=arch, categories=categories)
 
 
 
