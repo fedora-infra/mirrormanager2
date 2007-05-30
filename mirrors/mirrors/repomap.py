@@ -27,9 +27,9 @@ repomap = {
     u'updates-testing-debug-' : (u'Fedora', u'Fedora Core'),
     u'updates-testing-source-' : (u'Fedora', u'Fedora Core'),
 
-    u'rawhide' : (u'Fedora', u'Fedora Core'),
-    u'rawhide-debug' : (u'Fedora', u'Fedora Core'),
-    u'rawhide-source' : (u'Fedora', u'Fedora Core'),
+    u'rawhide' : (u'Fedora', u'Fedora Linux'),
+    u'rawhide-debug' : (u'Fedora', u'Fedora Linux'),
+    u'rawhide-source' : (u'Fedora', u'Fedora Linux'),
 
     u'extras-' : (u'Fedora', u'Fedora Extras'),
     u'extras-debug-' : (u'Fedora', u'Fedora Extras'),
@@ -61,6 +61,7 @@ def repo_prefix(path, category, ver):
     isUpdatesReleased = False
     if not isUpdatesTesting:
         isUpdatesReleased = u'updates' in path
+    isEverything = u'Everything' in path
     
 
     isCore = (category.name == u'Fedora Core')
@@ -91,12 +92,8 @@ def repo_prefix(path, category, ver):
                 prefix = u'updates-testing-fc%s' % version
         elif isRawhide:
             # rawhide
-            if isDebug:
-                prefix = u'rawhide-debug'
-            elif isSource:
-                prefix = u'rawhide-source'
-            else:
-                prefix = u'rawhide'
+            # Core rawhide is dead.
+            prefix = None
         else:
             # core-
             if isDebug:
@@ -109,12 +106,8 @@ def repo_prefix(path, category, ver):
     elif isExtras:
         if isRawhide:
             # extras-development
-            if isDebug:
-                prefix = u'extras-devel-debug'
-            elif isSource:
-                prefix = u'extras-devel-source'
-            else:
-                prefix = u'extras-devel'
+            # extras-development is dead.
+            prefix = None
         else:
             # extras-
             if isDebug:
@@ -133,10 +126,12 @@ def repo_prefix(path, category, ver):
             else:
                 prefix = u'epel-%s' % version
         
-    if isFedoraLinux:
+    elif isFedoraLinux:
         if isReleases:
+            if not isEverything:
+                prefix = None
             # fedora-
-            if isDebug:
+            elif if isDebug:
                 prefix = u'fedora-debug-%s' % version
             elif isSource:
                 prefix = u'fedora-source-%s' % version
