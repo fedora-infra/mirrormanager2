@@ -21,6 +21,20 @@ class HostConfig(object):
                         'stats': {},
                         }
 
+_translation = [chr(_x) for _x in range(256)]
+def _translate(s, altchars):
+    translation = _translation[:]
+    for k, v in altchars.items():
+        translation[ord(k)] = v
+    return s.translate(''.join(translation))
+
+def urlsafe_b64encode(s):
+   import binascii
+   altchars = '-_'
+   encoded = binascii.b2a_base64(s)[:-1]
+   if altchars is not None:
+      return _translate(encoded, {'+': altchars[0], '/': altchars[1]})
+   return encoded
 
 def gen_dirtree(path):
     # structure here is:
@@ -67,11 +81,13 @@ def gen_dirtree(path):
             short_path = dirpath[len(path)+1:]
         if len(short_path) > 0:
             dirtree[short_path] = statfiles
+        else:
+            dirtree[''] = statfiles
 
     return dirtree
 
 def errorprint(error):
-    print >> sys.stderr, error
+    sys.stderr.write(error+'\n')
 
 class MissingOption(Exception):
     pass
@@ -178,17 +194,11 @@ def config(cfg, item):
 
     return True
 
-def usage():
-    print 'Usage: report_mirror [options]'
-    print '  options:'
-    print '  -o outputfile'
-    print '  -c configfile'
-    sys.exit(1)
 
 
 def main():
     from optparse import OptionParser
-    parser = OptionParser(usage= sys.argv[0] + " [options] dir1 [dir2] ...")
+    parser = OptionParser(usage= sys.argv[0] + " [options]")
     parser.add_option("-c", "--config",
                       dest="config",
                       default='/etc/report_mirror.conf',
@@ -198,10 +208,19 @@ def main():
                       dest="stats",
                       default=False,
                       help='Send stats')
+    parser.add_option("-i", "--input",
+                      dest="input",
+                      default=None,
+                      help="Input filename (for debugging)")
     parser.add_option("-o", "--output",
                       dest="output",
                       default=None,
                       help="Output filename (for debugging)")
+    parser.add_option("-n", "--no-send",
+                      action="store_true",
+                      dest="no_send",
+                      default=False,
+                      help="Don't send data to the server.")
     parser.add_option("-d", "--debug",
                       action="store_true",
                       dest="debug",
@@ -211,14 +230,21 @@ def main():
 
     (options, args) = parser.parse_args()
     item = HostConfig()
-    if not config(options.config, item):
-        sys.exit(1)
+    if not options.input:
+        if not config(options.config, item):
+            sys.exit(1)
 
-    if options.debug:
-        pp = pprint.PrettyPrinter(indent=4)
-        pp.pprint(item.config)
+        if options.debug:
+            pp = pprint.PrettyPrinter(indent=4)
+            pp.pprint(item.config)
         
-    p = pickle.dumps(item.config, -1)
+        p = pickle.dumps(item.config, -1)
+    else:
+        infile = open(options.input, 'rb')
+        p = infile.read()
+        infile.close()
+        item.config = pickle.loads(p)
+        
     if options.output is not None:
         outfile = open(options.output, 'wb')
         outfile.write(p)
@@ -231,9 +257,17 @@ def main():
     if not item.config.has_key('global') or not item.config['global'].has_key('enabled') or item.config['global']['enabled'] != '1':
         sys.exit(1)
 
-#   print "Connecting to %s" % item.config['global']['server']
-    server = xmlrpclib.ServerProxy(item.config['global']['server'])
-    print server.checkin(base64.urlsafe_b64encode(bz2.compress(p)))
+    if not options.no_send:
+        #   print "Connecting to %s" % item.config['global']['server']
+        server = xmlrpclib.ServerProxy(item.config['global']['server'])
+        data = None
+        try:
+            data = base64.urlsafe_b64encode(bz2.compress(p))
+        except AttributeError:
+            data = urlsafe_b64encode(bz2.compress(p))
+
+        if data is not None:
+            print server.checkin(data)
 
 
 if __name__ == '__main__':
