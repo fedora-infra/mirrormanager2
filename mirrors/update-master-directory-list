@@ -46,7 +46,7 @@ def guess_ver_arch_from_path(category, path):
         arch = Arch.byName('source')
     else:
         for a in Arch.select():
-            if a.name in path:
+            if '/' + a.name + '/' in path:
                 arch = a
                 break
 
