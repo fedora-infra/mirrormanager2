@@ -202,9 +202,9 @@ def check_ftp_file(hoststate, url, filedata):
             return True
     return False
 
-def check_url(hoststate, url, filedata):
+def check_url(hoststate, url, filedata, recursion):
     if url.startswith('http:'):
-        return check_head(hoststate, url, filedata)
+        return check_head(hoststate, url, filedata, recursion)
     elif url.startswith('ftp:'):
         return check_ftp_file(hoststate, url, filedata)
 
@@ -212,14 +212,16 @@ def check_url(hoststate, url, filedata):
 class HTTPUnknown(Exception): pass
 class HTTP500(Exception): pass
 
-def handle_redirect(hoststate, url, location, filedata):
+def handle_redirect(hoststate, url, location, filedata, recursion):
+    if recursion > 10:
+        raise HTTPUnknown()
     if location.startswith('/'):
         scheme, netloc, path, query, fragment = urlsplit(url)
         location = '%s:%s%s' % (scheme, netloc, location)
-    return check_url(hoststate, location, filedata)
+    return check_url(hoststate, location, filedata, recursion+1)
 
 
-def check_head(hoststate, url, filedata):
+def check_head(hoststate, url, filedata, recursion):
     """ Returns tuple:
     True - URL exists
     False - URL doesn't exist
@@ -256,7 +258,7 @@ def check_head(hoststate, url, filedata):
         else:
             return False
     if status >= 300 and status < 400:
-        return handle_redirect(hoststate, url, r.getheader('Location'), filedata)
+        return handle_redirect(hoststate, url, r.getheader('Location'), filedata, recursion)
     if status >= 400 and status < 500:
         # all the 403 Forbidden and 404 Not Founds
         return False
@@ -340,7 +342,7 @@ def try_perfile(d, hoststate, url):
         exists = None
         graburl = "%s/%s" % (url, file)
         try:
-            exists = check_url(hoststate, graburl, d.files[file])
+            exists = check_url(hoststate, graburl, d.files[file], 0)
             #print "%s %s" % (exists, graburl)
             if exists == False:
                 return False
