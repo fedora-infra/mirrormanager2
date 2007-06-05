@@ -44,7 +44,7 @@ get_rsync_lists
 echo -n "get_rsync_lists finished at "
 date
 ./update-master-directory-list dev-postgres.cfg
-./crawler -c dev-postgres.cfg | bash
+./crawler -c dev-postgres.cfg --threads 15 | bash
 
 echo -n "Ending at "
 date
