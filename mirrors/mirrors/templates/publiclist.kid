@@ -13,6 +13,7 @@ be possible without the donations of time, disk space, and bandwidth
 by hundreds of volunteer system administrators and their companies or
 institutions.  Your fast download experience is made possible by these
 donations.
+This list is dynamically generated every hour, listing only up-to-date mirrors.
 </P>
 <P>
 You may trim the selection through the links below, or see the <a
