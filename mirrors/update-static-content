@@ -6,10 +6,13 @@ temp_dir_name=`mktemp -d /tmp/mirrorlists.XXXXXX`
 
 ./generate-mirrorlists -c dev-postgres.cfg -d $temp_dir_name
 pushd $temp_dir_name > /dev/null 2>&1
-wget -nH --cut-dirs=1 --mirror http://localhost:8082/mirrormanager/publiclist
-wget -nH --cut-dirs=1 --mirror http://localhost:8082/mirrormanager/static/css/style.css
-wget -nH --cut-dirs=1 --mirror http://localhost:8082/mirrormanager/static/images/logo.png
-wget -nH --cut-dirs=1 --mirror http://localhost:8082/mirrormanager/static/images/favicon.ico
+# don't use --mirror because it turns on timestamping, which causes
+# an extra HEAD request for each page, which to cherrypy just causes
+# twice as many database lookups.
+wget -nH --cut-dirs=1 -r -l inf --no-remove-listing http://localhost:8082/mirrormanager/publiclist
+wget -nH --cut-dirs=1 -r -l inf --no-remove-listing http://localhost:8082/mirrormanager/static/css/style.css
+wget -nH --cut-dirs=1 -r -l inf --no-remove-listing http://localhost:8082/mirrormanager/static/images/logo.png
+wget -nH --cut-dirs=1 -r -l inf --no-remove-listing http://localhost:8082/mirrormanager/static/images/favicon.ico
 wget http://localhost:8082/mirrormanager/static/images/favicon.ico
 touch robots.txt
 # remove /mirrormanager in the URLs
