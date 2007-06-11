@@ -986,7 +986,6 @@ class PubController(controllers.Controller):
 
 class PublicListController(controllers.Controller):
     @expose(template="mirrors.templates.publiclist")
-    @identity.require(identity.from_host('127.0.0.1') or identity.not_anonymous())
     def index(self, *vpath, **params):
         hosts = hosts=[h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active()]
         
@@ -994,7 +993,6 @@ class PublicListController(controllers.Controller):
                     products=list(Product.select(orderBy='name')), title='', arches=primary_arches, product=None, ver=None, arch=None, valid_categories=None)
 
     @expose(template="mirrors.templates.publiclist")
-    @identity.require(identity.from_host('127.0.0.1') or identity.not_anonymous())
     def default(self, *vpath, **params):
         product = ver = arch = None
         if len(vpath) == 1:
