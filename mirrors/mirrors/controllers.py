@@ -125,8 +125,10 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
             SiteAdmin(site=site, username=identity.current.user_name)
         except: # probably sqlite IntegrityError but we can't catch that for some reason... 
             turbogears.flash("Error:Site %s already exists" % kwargs['name'])
-        turbogears.flash("Site created.")
-        raise turbogears.redirect("/site/%s" % site.id)
+            raise turbogears.redirect("/site/0/create")
+        else:
+            turbogears.flash("Site created.")
+            raise turbogears.redirect("/site/%s" % site.id)
 
     @expose(template="mirrors.templates.site")
     @validate(form=site_form)
@@ -984,6 +986,7 @@ class PubController(controllers.Controller):
 
 class PublicListController(controllers.Controller):
     @expose(template="mirrors.templates.publiclist")
+    @identity.require(identity.from_host('127.0.0.1') or identity.not_anonymous())
     def index(self, *vpath, **params):
         hosts = hosts=[h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active()]
         
@@ -991,6 +994,7 @@ class PublicListController(controllers.Controller):
                     products=list(Product.select(orderBy='name')), title='', arches=primary_arches, product=None, ver=None, arch=None, valid_categories=None)
 
     @expose(template="mirrors.templates.publiclist")
+    @identity.require(identity.from_host('127.0.0.1') or identity.not_anonymous())
     def default(self, *vpath, **params):
         product = ver = arch = None
         if len(vpath) == 1:
