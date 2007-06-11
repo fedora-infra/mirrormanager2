@@ -13,8 +13,8 @@ gi = GeoIP.new(GeoIP.GEOIP_STANDARD)
 # key is strings in tuple (repo.prefix, arch)
 mirrorlist_cache = {}
 
-# key is directory.name
-directory_mirror_cache = {}
+# key is directory.name, returns keys for mirrorlist_cache
+directory_name_to_mirrorlist = {}
 
 # key is an IPy.IP structure, value is list of host ids
 host_netblock_cache = {}
@@ -101,8 +101,9 @@ def populate_directory_cache(directory):
         else:
             newresult['byHostId'][hostid].append(v)
 
-    global directory_mirror_cache
-    directory_mirror_cache[directory.name] = newresult
+    global directory_name_to_mirrorlist
+    if repo is not None:
+        directory_name_to_mirrorlist[directory.name] = (repo.prefix, repo.arch.name)
     global mirrorlist_cache
     if repo is not None:
         mirrorlist_cache[(repo.prefix, repo.arch.name)] = newresult
@@ -137,8 +138,8 @@ def populate_host_country_allowed_cache():
 def populate_all_caches():
     populate_host_country_allowed_cache()
     populate_netblock_cache()
-    for d in Directory.select():
-        populate_directory_cache(d)
+    for r in Repository.select():
+        populate_directory_cache(r.directory)
     print "mirrorlist caches populated"
 
 
@@ -270,9 +271,9 @@ def do_directorylist(*args, **kwargs):
     path = kwargs['path']
 
     header = "# path = %s " % path
-    if not directory_mirror_cache.has_key(path):
+    if not directory_name_to_mirrorlist.has_key(path):
         return dict(values=[header + 'no mirrors found'])
-    cache = directory_mirror_cache[path]
+    cache = mirrorlist_cache[directory_name_to_mirrorlist[path]]
 
     results = mirrorlist_magic(cache=cache, header=header, *args, **kwargs)
     results =  [url for hostid, url in results]
@@ -300,7 +301,8 @@ import pickle
 def dump_caches():
     data = {'mirrorlist_cache':mirrorlist_cache,
             'host_netblock_cache':host_netblock_cache,
-            'host_country_allowed_cache':host_country_allowed_cache}
+            'host_country_allowed_cache':host_country_allowed_cache,
+            'directory_name_to_mirrorlist':directory_name_to_mirrorlist}
     
     p = pickle.dumps(data)
     try:
