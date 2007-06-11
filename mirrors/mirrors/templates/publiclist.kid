@@ -25,7 +25,12 @@ href="${tg.url('/publiclist')}">whole list</a>.
 <td><a href="${tg.url('/publiclist/' + p.name + '/')}"><span py:replace="p.name">Product Name</span></a></td>
 <td py:for="v in p.versions">
 <table>
-<tr><a href="${tg.url('/publiclist/' + p.name + '/' + v.name + '/')}"><b><span py:replace="v.name">Version</span></b></a></tr>
+<?python
+vername=v.name
+if vername == u'development':
+    vername=u'rawhide'
+?>
+<tr><a href="${tg.url('/publiclist/' + p.name + '/' + v.name + '/')}"><b><span py:replace="vername">Version</span></b></a></tr>
 <tr>
 	<br py:for="a in arches"><a href="${tg.url('/publiclist/' +
 	p.name + '/' + v.name + '/' + a + '/')}"><span py:replace="a">Arch</span></a></br>
