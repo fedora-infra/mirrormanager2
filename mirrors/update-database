@@ -43,8 +43,8 @@ function get_rsync_lists()
 get_rsync_lists
 echo -n "get_rsync_lists finished at "
 date
-./update-master-directory-list dev-postgres.cfg
-./crawler -c dev-postgres.cfg --threads 15 | bash
+./update-master-directory-list prod.cfg
+./crawler -c prod.cfg --threads 15 | bash
 
 echo -n "Ending at "
 date

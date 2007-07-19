@@ -4,7 +4,7 @@
 
 temp_dir_name=`mktemp -d /tmp/mirrorlists.XXXXXX`
 
-./generate-mirrorlists -c dev-postgres.cfg -d $temp_dir_name
+./generate-mirrorlists -c prod.cfg -d $temp_dir_name
 pushd $temp_dir_name > /dev/null 2>&1
 # don't use --mirror because it turns on timestamping, which causes
 # an extra HEAD request for each page, which to cherrypy just causes
