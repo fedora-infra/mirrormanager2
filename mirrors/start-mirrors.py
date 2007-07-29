@@ -25,6 +25,5 @@ else:
 
 from mirrors.controllers import Root
 import mirrors.mirrorlist
-mirrors.mirrorlist.populate_all_caches()
 
 turbogears.start_server(Root())
