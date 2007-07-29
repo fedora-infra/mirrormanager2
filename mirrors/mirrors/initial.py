@@ -63,21 +63,23 @@ def rename_SRPMS_source(l):
 
 def guess_ver_arch_from_path(category, path):
     arch = None
-    for a in Arch.select():
-        if path.find(a.name) != -1:
-            arch = a
-    if path.find('SRPMS') != -1:
-        arch = Arch.select(Arch.q.name=='source')
+    if 'SRPMS' in path:
+        arch = Arch.byName('source')
+    else:
+        for a in Arch.select():
+            s = '.*(^|/)%s(/|$).*' % (a.name)
+            if re.compile(s).match(path):
+                arch = a
+                break
 
     ver = None
-    for v in Version.select(Version.q.productID==category.product.id):
-        s = '/%s' % (v.name)
-        if path.find(s) != -1:
+    for v in Version.selectBy(product=category.product):
+        s = '.*(^|/)%s(/|$).*' % (v.name)
+        if re.compile(s).match(path):
             ver = v
+            break
 
     return (ver, arch)
-
-        
 
 
 # lines look like
