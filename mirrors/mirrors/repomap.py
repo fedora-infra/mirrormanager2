@@ -57,6 +57,7 @@ def repo_prefix(path, category, ver):
     isRawhide = u'development' in path
     isSource = u'source' in path or u'SRPMS' in path
     isUpdatesTesting = u'updates/testing' in path
+    isTesting = u'testing' in path
     isReleases = u'releases' in path
     isUpdatesReleased = False
     if not isUpdatesTesting:
@@ -118,14 +119,23 @@ def repo_prefix(path, category, ver):
                 prefix = u'extras-%s' % version
 
     elif isEpel:
-            # epel-
+        # epel-
+        if isTesting:
+            # testing-
+            if isDebug:
+                prefix = u'testing-debug-epel%s' % version
+            elif isSource:
+                prefix = u'testing-source-epel%s' % version
+            else:
+                prefix = u'testing-epel%s' % version
+        else:
             if isDebug:
                 prefix = u'epel-debug-%s' % version
             elif isSource:
                 prefix = u'epel-source-%s' % version
             else:
                 prefix = u'epel-%s' % version
-        
+
     elif isFedoraLinux:
         if isReleases:
             if not isEverything:
