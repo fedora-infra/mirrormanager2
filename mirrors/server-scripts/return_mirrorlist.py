@@ -85,6 +85,11 @@ def trim_by_client_country(hostresults, clientCountry):
     return results
 
 
+def real_client_ip(xforwardedfor):
+    """Only the last-most entry listed is the where the client
+    connection to us came from, so that's the only one we can trust in
+    any way."""
+    return xforwardedfor.split(',')[-1].strip()
 
 def mirrorlist_magic(req, *args, **kwargs):
     if not kwargs.has_key('repo') or not kwargs.has_key('arch'):
@@ -105,7 +110,7 @@ def mirrorlist_magic(req, *args, **kwargs):
         client_ip = kwargs['ip']
     else:
         if req.headers_in.has_key('X-Forwarded-For'):
-            client_ip = req.headers_in['X-Forwarded-For']
+            client_ip = real_client_ip(req.headers_in['X-Forwarded-For'])
             
     clientCountry = gi.country_code_by_addr(client_ip)
 
