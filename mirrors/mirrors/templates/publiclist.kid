@@ -7,40 +7,40 @@
 </head>
 <body>
 <h2>The Fedora Mirror System</h2>
-<P>
+<p>
 Fedora is distributed to millions of systems globally.  This would not
 be possible without the donations of time, disk space, and bandwidth
 by hundreds of volunteer system administrators and their companies or
 institutions.  Your fast download experience is made possible by these
 donations.
 This list is dynamically generated every hour, listing only up-to-date mirrors.
-</P>
-<P>
+</p>
+<p>
 You may trim the selection through the links below, or see the <a
 href="${tg.url('/publiclist')}">whole list</a>.
-</P>
-<table border='1'>
-<tr><th>Product</th><th colspan='0'>Version / Arch</th></tr>
-<tr py:for="p in products">
-<td><a href="${tg.url('/publiclist/' + p.name + '/')}"><span py:replace="p.name">Product Name</span></a></td>
-<td py:for="v in p.versions">
-<table>
+</p>
+<div py:strip="" py:for="p in products">
+  <table class="product">
+  <tr>
+  <th><a href="${tg.url('/publiclist/' + p.name + '/')}"><span py:replace="p.name">Product Name</span></a></th>
+  <div py:strip="" py:for="v in p.versions">
 <?python
 vername=v.name
 if vername == u'development':
     vername=u'rawhide'
 ?>
-<tr><a href="${tg.url('/publiclist/' + p.name + '/' + v.name + '/')}"><b><span py:replace="vername">Version</span></b></a></tr>
-<tr>
-	<br py:for="a in arches"><a href="${tg.url('/publiclist/' +
-	p.name + '/' + v.name + '/' + a + '/')}"><span py:replace="a">Arch</span></a></br>
-</tr>
-</table>
-</td>
-</tr>
-</table>
+    <td>
+      <strong><a href="${tg.url('/publiclist/' + p.name + '/' + v.name + '/')}"><span py:replace="vername">Version</span></a></strong>
+      <ul>
+        <li py:for="a in arches"><a href="${tg.url('/publiclist/' + p.name + '/' + v.name + '/' + a + '/')}"><span py:replace="a">Arch</span></a></li>
+      </ul>
+    </td>
+  </div>
+  </tr>
+  </table>
+</div>
 <h2>${title} Public Active Mirrors (${numhosts})</h2>
-<table border='1'>
+<table class="mirrors">
 <tr><th>Country</th><th>Site</th><th>Host</th><th>Content</th><th>Bandwidth</th><th>Comments</th></tr>
 <tr py:for="host in hosts">
 <td><span py:if="host.country is not None" py:replace="host.country.upper()">Country</span></td>

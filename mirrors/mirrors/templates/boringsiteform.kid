@@ -6,9 +6,10 @@
 <title>${title}</title>
 </head>
 <body>
+<p>
 Back to <a href="${tg.url('/site/' + str(site.id))}"><span
 py:replace="site.name">Site Name</span></a>
-<P/>
+</p>
 
 ${form(value=values, action=action)}
 </body>

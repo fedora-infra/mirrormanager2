@@ -23,13 +23,13 @@ Created At: ${values.createdAt}<br></br>
 Created By: ${values.createdBy}<br></br>
 </div>
 
-<P>
+<p>
 Mirror server administrators are not required to sign the Fedora
 <a href="http://fedoraproject.org/wiki/Legal/Licenses/CLA">Contributor
 License Agreement</a>.
-</P>
+</p>
 <h2>Export Compliance</h2>
-<P>
+<p>
 Because Fedora software contains encryption technology, Fedora
 software and technical information is subject to the
 U.S. Export Administration Regulations and other U.S. and foreign law,
@@ -47,7 +47,7 @@ information to individuals or entities located in one of these
 countries or otherwise affected by these restrictions.  You are also
 responsible for compliance with foreign law requirements applicable to
 the import and use of Fedora software and technical information.
-</P>
+</p>
 
 ${form(value=values, action=action, disabled_fields=disabled_fields)}
 
@@ -62,43 +62,42 @@ ${form(value=values, action=action, disabled_fields=disabled_fields)}
 		   href="${tg.url('/siteadmin/' + str(a.id) + '/delete')}">[Delete]</a></span>
         </li>
         </ul>
-<hr></hr>
+<hr />
 <h3>My Hosts</h3>
 <div py:if="is_siteadmin"><a
 href="${tg.url('/host/0/new?siteid=' + str(values.id))}">[Add Host]</a></div>
-	  <UL>
-	  <LI py:for="h in values.hosts">
+	  <ul>
+	  <li py:for="h in values.hosts">
 	  <a href="${tg.url('/host/' + str(h.id))}"><span
 	  py:replace="h.name">Host Name</span></a>
-	  </LI>
-	  </UL>
-<hr></hr>
+	  </li>
+	  </ul>
+<hr />
 <h3>Sites that can pull from me</h3>
 <div py:if="not values.allSitesCanPullFromMe">
 <span py:if="is_siteadmin"><a
 href="${tg.url('/site2site/0/new?siteid=' + str(values.id))}">[Add Downstream Site]</a></span>
-<UL>
-<LI py:for="s in values.downstream_sites">
+<ul>
+<li py:for="s in values.downstream_sites">
     <a href="${tg.url('/site/' + str(s.id))}"><span py:replace="s.name">Site Name</span></a>
     <span py:if="is_siteadmin"><a href="${tg.url('/site/' + str(values.id) + '/s2s_delete?dsite=' + str(s.id))}">[Delete]</a></span>
-</LI>
-</UL>
+</li>
+</ul>
 </div>
 <div py:if="values.allSitesCanPullFromMe">
 All sites allowed based on setting "All sites can pull from me"
 above.  Clear that and save to see/edit the list of explicitly allowed sites.
 </div>
 
-<hr></hr>
+<hr />
 <h3>Sites I can pull from</h3>
-<UL>
-<LI py:for="s in values.upstream_sites">
+<ul>
+<li py:for="s in values.upstream_sites">
     <a href="${tg.url('/site/' + str(s.id))}"><span py:replace="s.name">Site Name</span></a>
-</LI>
-</UL>
+</li>
+</ul>
 </div>
-<hr></hr>
-<hr></hr>
+<hr />
 <div py:if="is_siteadmin"><a href="${tg.url('/site/' + str(values.id) + '/delete')}">[Delete Site]</a></div>
 </div>
 </body>

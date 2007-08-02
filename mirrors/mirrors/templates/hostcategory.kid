@@ -10,22 +10,23 @@
 <title>Host Category</title>
 </head>
 <body>
+<p>
 Back to <a href="${tg.url('/site/' + str(host.site.id))}"><span
 py:replace="host.site.name">Site Name</span></a> / 
 <a href="${tg.url('/host/' + str(host.id))}"><span
 py:replace="host.name">Host Name</span></a>
-<P/>
+</p>
 
 ${form(value=values, action=action, disabled_fields=disabled_fields)}
 <div py:if="values is not None">
 <h3>URLs serving this content</h3>
-<P>
+<p>
 The same content may be served by multiple means: http, ftp, and rsync
 are common examples.  Content may also be served via a 'private' URL
 only visible to other mirror admins.  Such private URLs usually
 include a nonstandard rsync port, and/or a username and password.
 Admins from Mirror Sites on your SiteToSite list can see these private URLs.
-</P>
+</p>
 
 
 	<a href="${tg.url('/host_category_url/0/new?hcid=' + str(values.id))}">[Add]</a>
@@ -37,11 +38,11 @@ Admins from Mirror Sites on your SiteToSite list can see these private URLs.
 </ul>
 
 <h3>Up-to-Date Directories this host carries</h3>
-<UL>
-<LI py:for="dir in values.dirs" py:if="dir.up2date">
+<ul>
+<li py:for="dir in values.dirs" py:if="dir.up2date">
     <span py:replace="dir.path">Path</span>
-</LI>
-</UL>
+</li>
+</ul>
 </div>
 </body>
 </html>
