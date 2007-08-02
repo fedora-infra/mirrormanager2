@@ -1,0 +1,149 @@
+*
+{
+  margin: 0;
+  padding: 0;
+}
+
+html, body
+{
+  height: 100%;
+}
+
+body
+{
+  height: 100%;
+  font-size: 76%;
+  background: #FFFFFF url(http://fedoraproject.org/images/border-left.png) 0 0 repeat-y;
+}
+
+a img
+{
+  border: none;
+}
+
+#wrapper
+{
+  margin-left: 18px;
+  font: normal 2.3ex/1.5 sans-serif;
+  min-height: 100%;
+  background: #FFFFFF url(http://fedoraproject.org/images/border-right.png) 100% 0 repeat-y;
+  padding-right: 18px;
+}
+
+#head
+{
+  border-top: 10px solid #337ACC;
+  padding: 1ex 2ex 17px;
+  background: #FFFFFF url(http://fedoraproject.org/images/line.png) 0 100% repeat-x;
+}
+
+#head h1 a
+{
+  display: block;
+  text-indent: -9999px;
+  background: url(http://fedoraproject.org/images/fedora-logo.png) 20px 50% no-repeat;
+  height: 73px;
+  width: 138px;
+  overflow: hidden;
+}
+
+#content
+{
+  margin: 0 2ex;
+  height: 1%; /* Haslayout fix */
+  background: red;
+  padding: 1ex 1ex 120px;
+  color: #666666;
+  background: #FFFFFF;
+}
+
+#content h2
+{
+  font-size: 3.25ex;
+}
+
+#content h2 div {
+  font-size: 1ex;
+  font-weight: normal;
+}
+
+#content h3
+{
+  color: #337acc;
+  margin: 1.5ex 0;
+  font-size: 2.5ex;
+}
+
+#content table
+{
+  font-size: 1.4ex;
+}
+
+#content p
+{
+  margin: 1ex 5ex 1ex 0;
+}
+
+#content img
+{
+  margin: 2ex 0;
+}
+
+#content a
+{
+  color: #337ACC;
+}
+
+#footer
+{
+  position: relative;
+  font: normal 1.5ex/1.5 sans-serif;
+  clear: both;
+  text-align: center;
+  background: #FFFFFF url(http://fedoraproject.org/images/line-bottom.png) 0 0 repeat-x;
+  margin: -90px 0 0;
+  border-bottom: 10px solid #337ACC;
+  height: 80px;
+  color: #AAAAAA;
+}
+
+#bottom
+{
+  background: #FFFFFF url(http://fedoraproject.org/images/border-right.png) 100% 0 repeat-y;
+  margin-left: 18px;
+  padding-right: 18px;
+}
+
+#footer ul
+{
+  list-style: none;
+}
+
+#footer li
+{
+  display: inline;
+  border-left: 1px solid #AAAAAA;
+  padding: 0 0.75ex;
+  margin-left: -1px;
+}
+
+#footer li.first
+{
+  border-left: none;
+}
+
+#footer a
+{
+  color: #223344;
+}
+
+#footer a:hover
+{
+  color: #112233;
+}
+
+#footer .copy
+{
+  padding-top: 3ex;
+}
+

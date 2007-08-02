@@ -1,225 +1,32 @@
-/*
- * Quick mash-up of CSS for the TG quick start page.
- */
+#content ol, #content ul 
+{ 
+  padding-left: 3ex; 
+} 
 
-html, body{
-  color: black;
-  background-color: #ddd;
-  font: x-small "Lucida Grande", "Lucida Sans Unicode", geneva, verdana, sans-serif;
-  margin: 0;
-  padding: 0;
+#content table
+{
+  border-collapse: collapse;
 }
 
-#header {
-  height: 80px;
-  width: 850px;
-  background: white URL('../images/logo.png') no-repeat center;
-  margin: 0 auto 0 auto;
-
+#content table th
+{
+  background: #DDDDDD;
 }
 
-
-#menu {
-  margin: 0 auto 20px auto;	
+#content table th, #content table td
+{
+  border: 1px solid #000000;
+  padding: 0.6ex;
 }
 
-#menu_links {
-	font: x-small "Lucida Grande", "Lucida Sans Unicode", geneva, verdana, sans-serif;
+table.mirrors
+{
+  margin: 1ex 0;
+  width: 98%
 }
 
-#welcome {
-	display: inline;
-	float: right;
-}	
-
-a.link, a, a.active {
-  color: #369;
+.products th, .products td
+{
+  width: 10ex; 
 }
 
-
-#main_content {
-  color: black;
-  font-size: 127%;
-  background-color: white;
-  height: 100%;
-  margin: 0 auto 0 auto;
-}
-
-#sidebar {
-  border: 1px solid #aaa;
-  background-color: #eee;
-  margin: 0.5em;
-  padding: 1em;
-  float: right;
-  width: 200px;
-  font-size: 88%;
-}
-
-#sidebar h2 {
-  margin-top: 0;
-}
-
-#sidebar ul {
-  margin-left: 1.5em;
-  padding-left: 0;
-}
-
-h1,h2,h3,h4,h5,h6,#getting_started_steps {
-  font-family: "Century Schoolbook L", Georgia, serif;
-  font-weight: bold;
-}
-
-h2 {
-  font-size:150%
-}
-
-#getting_started_steps a {
-  text-decoration:none;
-}
-
-#getting_started_steps a:hover {
-  text-decoration:underline;
-}
-
-#getting_started_steps li {
-  font-size:80%
-  margin-bottom: 0.5em;
-}
-
-#getting_started_steps h2 {
-  font-size:120%;
-}
-
-#getting_started_steps p {
-  font: 100% "Lucida Grande", "Lucida Sans Unicode", geneva, verdana, sans-serif;
-}
-
-#footer {
-  color: #999;
-  background-color: white;
-  padding: 10px;
-  font-size: 80%;
-  text-align: center;
-  margin: 0 auto 1em auto;
-}
-
-.code {
-  font-family: monospace;
-}
-
-span.code {
-  font-weight: bold;
-  background: #eee;
-}
-
-#status_block {
-	margin: 0 auto 0.5em auto;
-	padding: 15px 10px 15px 55px;
-  background: #cec URL('../images/ok.png') left center no-repeat;
-	border: 1px solid #9c9;
-  width: 450px;
-  font-size: 120%;
-  font-weight: bolder;
-}
-
-.notice {
-  margin: 0.5em auto 0.5em auto;
-  padding: 15px 10px 15px 55px;
-  width: 450px;
-  background: #eef URL('../images/info.png') left center no-repeat;
-  border: 1px solid #cce;
-}
-
-fieldset {
-	width: 400px;
-	margin: 0 auto 0.5em auto;
-	padding: 15px 10px 15px 40px;
-	
-}
-
-textarea {
-	width: 200px;
-	height: 50px;	
-	border: 1px solid;
-	margin-bottom: 20px;
-}
-
-input {
-	border: 1px solid	
-}
-
-button {
-	position: relative;
-	float: right;
-}
-
-label.textarea {
-	position: relative;
-	top: -40px;
-}
-
-.flash {
-	text-align: center;	
-}
-
-.error_flash {
-	color: red;
-}
-
-table.list {
-	margin: 0 auto 0.5em auto;
-	background-color:#e3e3e3;
-	font-size:12px;
-	font-family:verdana,sans-serif;
-	border:none;
-	width:100%;		
-}
-
-table.list th {
-	background-color:#f0f0f0;
-	color:#333;	
-}
-
-table.list tr.even {
-		background-color:#fff;
-}
-
-table.list tr.odd {
-		background-color:#edf3fe;
-}
-
-div.links {
-	border: 1px solid;
-	border: 1px solid #aaa;
-	background-color: #eee;
-	margin: 0.5em;
-	padding: 1em;
-	width: 200px
-}
-
-div.head {
-	border: 1px solid;
-	border: 1px solid #aaa;
-	background-color: #eee;	
-	margin: 0 auto 0.5em auto;
-	width: 250px;
-}
-
-div.page_body {
-	margin: 0 auto 0 auto;
-	width: 850px;
-	background-color: white;	
-}
-
-
-.label {
-	display: inline;
-	font-weight: bold;
-	color: black;
-}
-
-.value {
-	display: inline;
-	color: blue;
-}
-\ No newline

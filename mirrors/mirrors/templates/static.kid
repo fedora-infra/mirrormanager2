@@ -3,7 +3,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:py="http://purl.org/kid/ns#" py:extends="sitetemplate">
   <head py:match="item.tag=='{http://www.w3.org/1999/xhtml}head'" py:attrs="item.items()">
     <title py:replace="''">Your title goes here</title>
-    <link rel="stylesheet" type="text/css" media="all" href="http://fedoraproject.org/style.css" />
+    <link rel="stylesheet" type="text/css" media="all" href="/static/css/fedora.css" />
+    <link rel="stylesheet" type="text/css" media="all" href="/static/css/style.css" />
     <!--[if lt IE 7]>
     <style type="text/css">
       #wrapper
@@ -13,12 +14,8 @@
     </style>
     <![endif]-->
     <style type="text/css">
-      table
+      ol, ul
       {
-        font-size: 1.4ex;
-      }
-
-      ol, ul {
         padding-left: 3ex;
       }
 
@@ -26,11 +23,6 @@
       {
         margin: 1ex 0;
         width: 98%
-      }
-
-      #content
-      {
-        margin-left: 2ex!important;
       }
 
       th, td
