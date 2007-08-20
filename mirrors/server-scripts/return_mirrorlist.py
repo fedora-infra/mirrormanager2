@@ -184,8 +184,7 @@ def read_caches():
             'host_country_allowed_cache':host_country_allowed_cache}
     
     f = open('/tmp/mirrorlist_cache.pkl', 'r')
-    p = f.read()
-    data = pickle.loads(p)
+    data = pickle.load(f)
     f.close()
 
     global mirrorlist_cache
