@@ -179,6 +179,10 @@ def do_mirrorlist(req, *args, **kwargs):
     return results
 
 def read_caches():
+    global mirrorlist_cache
+    global host_netblock_cache
+    global host_country_allowed_cache
+
     data = {'mirrorlist_cache':mirrorlist_cache,
             'host_netblock_cache':host_netblock_cache,
             'host_country_allowed_cache':host_country_allowed_cache}
@@ -186,10 +190,6 @@ def read_caches():
     f = open('/tmp/mirrorlist_cache.pkl', 'r')
     data = pickle.load(f)
     f.close()
-
-    global mirrorlist_cache
-    global host_netblock_cache
-    global host_country_allowed_cache
 
     if 'mirrorlist_cache' in data:
         mirrorlist_cache = data['mirrorlist_cache']
