@@ -6,11 +6,12 @@
 <title>${title}</title>
 </head>
 <body>
+<p>
 Back to <a href="${tg.url('/site/' + str(host.site.id))}"><span
 py:replace="host.site.name">Site Name</span></a> / 
 <a href="${tg.url('/host/' + str(host.id))}"><span
 py:replace="host.name">Host Name</span></a>
-<P/>
+</p>
 
 ${form(value=values, action=action)}
 </body>

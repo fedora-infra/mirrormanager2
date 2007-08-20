@@ -10,13 +10,14 @@ host = host_category.host
 </head>
 
 <body>
+<p>
 Back to <a href="${tg.url('/site/' + str(host.site.id))}"><span
 py:replace="host.site.name">Site Name</span></a> / 
 <a href="${tg.url('/host/' + str(host.id))}"><span
 py:replace="host.name">Host Name</span></a> /
 <a href="${tg.url('/host_category/' + str(host_category.id))}"><span
 py:replace="host_category.category.name">Host Category Name</span></a> /
-<P/>
+</p>
 ${form(value=values, action=action)}
 </body>
 </html>

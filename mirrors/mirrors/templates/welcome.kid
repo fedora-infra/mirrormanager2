@@ -9,48 +9,48 @@
 <h2>Workflow</h2>
 
 Create:
-<OL>
-<LI> a new Site</LI>
-<LI> a new Host in your Site</LI>
-<LI> a new ACL IP for your Host (DNS name preferred, IP ok too)</LI>
-<LI>two new Category entries for your Host, one for Fedora Core, and one
-  for Fedora Extras if you carry it.</LI>
-<LI> For each of FC and FE, one or more URLs by which end users can get
+<ol>
+<li> a new Site</li>
+<li> a new Host in your Site</li>
+<li> a new ACL IP for your Host (DNS name preferred, IP ok too)</li>
+<li>two new Category entries for your Host, one for Fedora Core, and one
+  for Fedora Extras if you carry it.</li>
+<li> For each of FC and FE, one or more URLs by which end users can get
   at your data (HTTP, FTP, and rsync).  If you also make your content
   available for other mirrors via a private rsync URL, create one of
-  those too.</LI>
-</OL>
+  those too.</li>
+</ol>
 
 <h2>Overview</h2>
-<P>
-<b>Sites</b> are the administrative container.  Sites have
-<b>SiteAdmins</b> which are usernames in the Fedora Account System.
-Such people may edit the details of their Sites.  Sites, via <b>SiteToSite</b> can also give
+<p>
+<strong>Sites</strong> are the administrative container.  Sites have
+<strong>SiteAdmins</strong> which are usernames in the Fedora Account System.
+Such people may edit the details of their Sites.  Sites, via <strong>SiteToSite</strong> can also give
 read-only access to admins of other Sites, for purposes of seeing the
 site-private URLs among other things.  Sites may be marked Private
 (e.g. for a company-internal mirror).  As such, they won't appear on
 the public lists.  Sites can be temporarily marked
 inactive, e.g. if you need to take a host down for maintenance.
-</P>
-<P>
-Sites have one or more <b>Hosts</b>, which are machines serving
+</p>
+<p>
+Sites have one or more <strong>Hosts</strong>, which are machines serving
 content to end users.  Hosts may also be marked Private.  Hosts get
 their data by pulling from one of the master rsync servers.  The master
 rsync servers require a DNS name or IP address to be in their Access
-Control List.  As such, each Host should create one or more <b>ACL
-IPs</b>.  Hosts can also be temporarily marked inactive.
-</P>
-<P>
-Hosts carry content by <b>Category</b>.  Fedora's categories include
+Control List.  As such, each Host should create one or more <strong>ACL
+IPs</strong>.  Hosts can also be temporarily marked inactive.
+</p>
+<p>
+Hosts carry content by <strong>Category</strong>.  Fedora's categories include
 Fedora Core and Fedora Extras.  Hosts expose a Category via one or
-more <b>URLs</b> (public URLs for anonymous http/ftp/rsync, or private URLs
+more <strong>URLs</strong> (public URLs for anonymous http/ftp/rsync, or private URLs
 for use by other mirrors only).
-</P>
-<P>
+</p>
+<p>
 A HTTP/FTP crawler will scan the public active sites every few hours
 to update its database of who has what.  That crawler reports its
 User-Agent as mirrormanager-crawler.
-</P>
+</p>
 
 <div id="Sites">
 <h3>My Sites and Hosts</h3>
@@ -59,12 +59,12 @@ User-Agent as mirrormanager-crawler.
 	  <li py:for="site in sites">
 	  <a href="${tg.url('/site/'+str(site.id))}"><span py:replace="site.name">Site Name</span></a>
 	  
-	  <UL>
-	  <LI py:for="h in site.hosts">
+	  <ul>
+	  <li py:for="h in site.hosts">
 	  <a href="${tg.url('/host/'+str(h.id))}"><span
 	  py:replace="h.name">Host Name</span></a>
-	  </LI>
-	  </UL>
+	  </li>
+	  </ul>
 	  </li>
 </ul>
 </div>

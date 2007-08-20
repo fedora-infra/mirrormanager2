@@ -1,38 +1,63 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <?python import sitetemplate ?>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:py="http://purl.org/kid/ns#" py:extends="sitetemplate">
-
-<head py:match="item.tag=='{http://www.w3.org/1999/xhtml}head'" py:attrs="item.items()">
-    <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
+  <head py:match="item.tag=='{http://www.w3.org/1999/xhtml}head'" py:attrs="item.items()">
     <title py:replace="''">Your title goes here</title>
-    <meta py:replace="item[:]"/>
+    <link rel="stylesheet" type="text/css" media="all" href="/static/css/fedora.css" />
+    <link rel="stylesheet" type="text/css" media="all" href="/static/css/style.css" />
+    <!--[if lt IE 7]>
     <style type="text/css">
-        #pageLogin
-        {
-            font-size: 10px;
-            font-family: verdana;
-            text-align: right;
-        }
+      #wrapper
+      {
+      height: 100%;
+      }
     </style>
-    <style type="text/css" media="screen">
-@import "${tg.url('/static/css/style.css')}";
-</style>
-</head>
+    <![endif]-->
+    <style type="text/css">
+      ol, ul
+      {
+        padding-left: 3ex;
+      }
 
-<body py:match="item.tag=='{http://www.w3.org/1999/xhtml}body'" py:attrs="item.items()">
+      table.mirrors
+      {
+        margin: 1ex 0;
+        width: 98%
+      }
 
-	
-<div class="page_body">
-<div id="header"></div>
-<div id="menu">
-     <div id="welcome"></div>
-
-<div id="menu_links"></div>
-</div>
-    <div id="main_content" py:content="[item.text]+item[:]"/>
-
-	<!-- End of main_content -->
-	</div>
-</body>
-
+      th, td
+      {
+        width: 10ex;
+      }
+    </style>
+  </head>
+  <body py:match="item.tag=='{http://www.w3.org/1999/xhtml}body'" py:attrs="item.items()">
+    <div id="wrapper">
+      <div id="head">
+        <h1><a href="http://fedoraproject.org/index.html">Fedora</a></h1>
+      </div>
+      <div id="content">
+        <div id="menu">
+          <div id="welcome"></div>
+          <div id="menu_links"></div>
+        </div>
+        <div py:replace="[item.text]+item[:]"/>
+      </div>
+    </div>
+    <div id="bottom">
+      <div id="footer">
+        <p class="copy">
+        Copyright &copy; 2007 Red Hat, Inc. and others.  All Rights Reserved.
+        Please send any comments or corrections to the <a href="mailto:webmaster@fedoraproject.org">websites team</a>.
+        </p>
+        <p class="disclaimer">
+        The Fedora Project is maintained and driven by the community and sponsored by Red Hat.  This is a community maintained site.  Red Hat is not responsible for content.
+        </p>
+        <ul>
+          <li class="first"><a href="http://fedoraproject.org/wiki/Legal">Legal</a></li>
+          <li><a href="http://fedoraproject.org/wiki/Legal/TrademarkGuidelines">Trademark Guidelines</a></li>
+        </ul>
+      </div>
+    </div>
+  </body>
 </html>

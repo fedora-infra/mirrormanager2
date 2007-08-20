@@ -13,9 +13,10 @@ else:
 ?> 
 </head>
 <body>
+<p>
 Back to <a href="${tg.url('/site/' + str(site.id))}"><span
 py:replace="site.name">Site Name</span></a>
-<P/>
+</p>
 <h2>${title}</h2>
 
 ${form(value=values, action=action, disabled_fields=disabled_fields)}
@@ -75,18 +76,18 @@ Last Checked In: ${values.lastCheckedIn}<br></br>
 <div py:if="is_siteadmin">
 <a href="${tg.url('/host_category/0/new?hostid=' + str(values.id))}">[Add Category]</a>
 </div>
-<P>
+<p>
 Hosts carry categories of software.  Example Fedora categories include Fedora Core and Fedora Extras.
-</P>
+</p>
 <div py:if="values.categories is not None">
-<UL>
-<LI py:for="c in values.categories">
+<ul>
+<li py:for="c in values.categories">
     <a href="${tg.url('/host_category/' + str(c.id))}"><span
     py:replace="c.category.name">Category Name</span></a>
     <span py:if="is_siteadmin"><a
     href="${tg.url('/host_category/' + str(c.id) + '/delete')}">[Delete]</a></span>
-    <UL>
-    <LI py:for="u in c.urls">
+    <ul>
+    <li py:for="u in c.urls">
     <a href="${u.url}"><span py:replace="u.url">URL</span></a>
     <span py:if="u.private">(Mirrors)</span>
     <!--
@@ -94,19 +95,18 @@ Hosts carry categories of software.  Example Fedora categories include Fedora Co
     <a href="${tg.url('/host_category_url/' + str(u.id) + '/delete')}">[Delete]</a>
     </span>
     --> 
-    </LI>
-    </UL>
+    </li>
+    </ul>
 
-</LI>
-</UL>
+</li>
+</ul>
 </div>
-<hr/>
-<hr/>
-<P>
+<hr />
+<p>
 <span py:if="is_siteadmin">
 <a href="${tg.url('/host/' + str(values.id) + '/delete')}">[Delete Host]</a>
 </span>
-</P>
+</p>
 </div>
 </body>
 </html>

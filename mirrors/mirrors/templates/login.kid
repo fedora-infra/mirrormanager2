@@ -77,7 +77,6 @@
     <div id="loginBox">
         <h1>Login</h1>
         <p>${message}</p>
-        <br />
         <p>
         	You must <a
     href="https://admin.fedoraproject.org/accounts/">register</a> for
