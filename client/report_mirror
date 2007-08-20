@@ -58,11 +58,14 @@ def gen_dirtree(path):
         count=0
         for name in filenames:
             f = os.path.join(dirpath, name)
-            s = os.stat(f)
+            try:
+                s = os.stat(f)
+            except OSError:
+                continue
             lastmod_date = time.localtime(s.st_mtime)
             date_file_tuple = (lastmod_date, name, s.st_size)
             date_file_list.append(date_file_tuple)
-            if name.endswith('.rpm') or name.endswith('.html'):
+            if name.endswith('.rpm') or name.endswith('.html') or name.endswith('.hdr'):
                 count=count+1
             # we only want to remember the most recent 10 if they're
             # directories full of .rpm or .html (repoview) files
@@ -166,7 +169,7 @@ def parse_category(conf, section, item):
     # database doesn't need to know the disk path
     del item.config[section.lower()]['path']
 
-def config(cfg, item):
+def config(cfg, item, crawl=True):
     broken = False
     conf = ConfigParser.ConfigParser()
     conf.read(cfg)
@@ -185,7 +188,7 @@ def config(cfg, item):
         for section in conf.sections():
             if section in [ 'global', 'site', 'host', 'stats']:
                 continue
-            else:
+            elif crawl:
                 parse_category(conf, section, item)
 
     except MissingOption:
@@ -231,19 +234,20 @@ def main():
     (options, args) = parser.parse_args()
     item = HostConfig()
     if not options.input:
-        if not config(options.config, item):
+        if not config(options.config, item, crawl=True):
             sys.exit(1)
 
-        if options.debug:
-            pp = pprint.PrettyPrinter(indent=4)
-            pp.pprint(item.config)
-        
         p = pickle.dumps(item.config, -1)
     else:
         infile = open(options.input, 'rb')
         p = infile.read()
         infile.close()
         item.config = pickle.loads(p)
+        config(options.config, item, crawl=False)
+
+    if options.debug:
+        pp = pprint.PrettyPrinter(indent=4)
+        pp.pprint(item.config)
         
     if options.output is not None:
         outfile = open(options.output, 'wb')
