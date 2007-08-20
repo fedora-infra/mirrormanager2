@@ -304,10 +304,9 @@ def dump_caches():
             'host_country_allowed_cache':host_country_allowed_cache,
             'directory_name_to_mirrorlist':directory_name_to_mirrorlist}
     
-    p = pickle.dumps(data)
     try:
         f = open('/tmp/mirrorlist_cache.pkl', 'w')
-        f.write(p)
+        pickle.dump(data, f)
         f.close()
     except:
         pass
