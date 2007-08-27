@@ -561,7 +561,12 @@ class Directory(SQLObject):
         for hcd in self.host_category_dirs:
             hcd.destroySelf()
         SQLObject.destroySelf(self)
-    
+
+    def has_isos(self):
+        for f in self.files.keys():
+            if f.endswith('.iso'):
+                return True
+        return False
 
 
 class Category(SQLObject):
