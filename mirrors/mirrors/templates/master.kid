@@ -5,6 +5,7 @@
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
     <title py:replace="''">Your title goes here</title>
     <link rel="stylesheet" type="text/css" media="all" href="/static/css/fedora.css" />
+    <link rel="stylesheet" type="text/css" media="all" href="/static/css/main.css" />
     <link rel="stylesheet" type="text/css" media="all" href="/static/css/style.css" />
     <!--[if lt IE 7]>
     <style type="text/css">
@@ -14,11 +15,6 @@
       }
     </style>
     <![endif]-->
-  <style type="text/css" media="screen">
-    @import "http://translate.fedoraproject.org/data/fedora/style.css";
-    @import "http://translate.fedoraproject.org/data/main.css";
-    @import "${tg.url('/static/css/style.css')}";
-  </style>
 </head>
   <body py:match="item.tag=='{http://www.w3.org/1999/xhtml}body'" py:attrs="item.items()">
   <div id="wrapper">
