@@ -54,3 +54,8 @@ table.minilist caption {
   color: white;
 }
 
+table.altrows table tr th,
+table.altrows table tr td {
+  border: inherit !important;
+  background: inherit !important;
+}
