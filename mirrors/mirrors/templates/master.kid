@@ -27,8 +27,6 @@
           <h2>Navigation</h2>
           <ul>
             <li><a href="/" py:attrs="title=_('Mirror Manager main page')">Main</a></li>
-            <li><a href="/publiclist/" py:attrs="title=_('Public mirror list')">Public list</a></li>
-            <li><a href="/rsync acl/" py:attrs="title=_('rsync access control list')">rsync ACL</a></li>
           </ul>
           <h2>Fedora websites</h2>
           <ul>
