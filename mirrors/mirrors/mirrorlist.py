@@ -138,8 +138,9 @@ def populate_host_country_allowed_cache():
 def populate_all_caches():
     populate_host_country_allowed_cache()
     populate_netblock_cache()
-    for r in Repository.select():
-        populate_directory_cache(r.directory)
+    for d in Directory.select():
+        if d.has_isos() or d.repository is not None:
+            populate_directory_cache(d)
     print "mirrorlist caches populated"
 
 
