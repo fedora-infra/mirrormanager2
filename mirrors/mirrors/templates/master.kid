@@ -14,72 +14,73 @@
       }
     </style>
     <![endif]-->
-    <style type="text/css">
-      #content td.label, #content table th
-      {
-          text-align: right;
-      } 
-
-      #content td.label, #content table th
-      {
-        text-align: right;
-      }
-
-      #content table th, #content table td
-      {
-        background: none;
-        border: none;
-        width: auto;
-        vertical-align: top;
-      }
-    </style>
-  </head>
+  <style type="text/css" media="screen">
+    @import "http://translate.fedoraproject.org/data/fedora/style.css";
+    @import "http://translate.fedoraproject.org/data/main.css";
+    @import "${tg.url('/static/css/style.css')}";
+  </style>
+</head>
   <body py:match="item.tag=='{http://www.w3.org/1999/xhtml}body'" py:attrs="item.items()">
-    <div id="wrapper">
-      <div id="head">
-        <h1><a href="http://fedoraproject.org/index.html">Fedora</a></h1>
-      </div>
-      <div id="content">
-        <div id="menu">
-          <div id="welcome">
-            <span py:if="tg.config('identity.on',False) and not 'logging_in' in locals()">
-              <span py:if="not tg.identity.anonymous">Welcome ${tg.identity.user.display_name}.</span>
+  <div id="wrapper">
+    <div id="head">
+      <h1><a href="http://fedoraproject.org/" py:attrs="title=_('Fedora Project homepage')">Fedora</a></h1>
+    </div>
+    <div id="wrapper2">
+      <div id="sidebar">
+        <div id="nav">
+          <h2>Navigation</h2>
+          <ul>
+            <li><a href="/" py:attrs="title=_('Mirror Manager main page')">Main</a></li>
+            <li><a href="/publiclist/" py:attrs="title=_('Public mirror list')">Public list</a></li>
+            <li><a href="/rsync acl/" py:attrs="title=_('rsync access control list')">rsync ACL</a></li>
+          </ul>
+          <h2>Fedora websites</h2>
+          <ul>
+            <li><a href="http://fedoraproject.org/" py:attrs="title=_('Fedora Project homepage')">Fedora Home</a></li>
+            <li><a href="http://docs.fedoraproject.org/" py:attrs="title=_('Fedora documentation')">Docs</a>
+              <span class="navnote">Fedora documentation</span></li>
+            <li><a href="http://fedoraproject.org/wiki/" py:attrs="title=_('Collaborative knowledge')">Wiki</a>
+              <span class="navnote">Collaborative knowledge</span></li>
+            <li><a href="http://planet.fedoraproject.org/" py:attrs="title=_('The voices of the community')">Planet</a>
+              <span class="navnote">The voices of the community</span></li>
+            <li><a href="http://fedorapeople.org/" title="_('Community webpages')">People</a>
+              <span class="navnote">Community webpages</span></li>
+          </ul>
+          <div py:if="tg.config('identity.on')" id="pageLogin">
+            <span py:if="tg.identity.anonymous">
+            <h2>Login</h2>
+            <a href="${tg.url('/login')}">Login</a>
+            </span>
+            <span py:if="not tg.identity.anonymous">
+              <h2>Logged in</h2>
+              Welcome ${tg.identity.user.display_name}.
+              <ul><li><a href="${tg.url('/logout')}">Logout</a></li></ul>
             </span>
           </div>
-          <div id="menu_links" >
-            <a href="${tg.url('/')}">Main</a>
-            <span py:if="tg.config('identity.on',False) and not 'logging_in' in locals()">
-              <span py:if="tg.identity.anonymous">
-                <a href="${tg.url('/login')}">Login</a>
-              </span>
-              <span py:if="not tg.identity.anonymous">
-                <a href="${tg.url('/logout')}">Logout</a>
-              </span>
-            </span>	
-          </div>
+        </div>
+      </div>
+      <div id="content">
           <div py:if="tg_flash" class="notice">
             <div py:if="not tg_flash.startswith('Error:')" py:replace="tg_flash" />
             <div py:if="tg_flash.startswith('Error:')" py:content="tg_flash" class="error_flash"></div>
           </div>
-        </div>
         <div py:replace="[item.text]+item[:]"/>
       </div>
     </div>
     <div id="bottom">
       <div id="footer">
-        <p class="copy">
-        Copyright &copy; 2007 Red Hat, Inc. and others.  All Rights Reserved.
+        <p class="copy">Copyright &copy; 2007 Red Hat, Inc. and others.  All Rights Reserved.
         Please send any comments or corrections to the <a href="mailto:webmaster@fedoraproject.org">websites team</a>.
         </p>
         <p class="disclaimer">
         The Fedora Project is maintained and driven by the community and sponsored by Red Hat.  This is a community maintained site.  Red Hat is not responsible for content.
         </p>
         <ul>
-
           <li class="first"><a href="http://fedoraproject.org/wiki/Legal">Legal</a></li>
           <li><a href="http://fedoraproject.org/wiki/Legal/TrademarkGuidelines">Trademark Guidelines</a></li>
         </ul>
       </div>
     </div>
-  </body>
+  </div>
+</body>
 </html>

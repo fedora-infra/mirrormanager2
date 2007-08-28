@@ -3,10 +3,38 @@
     py:extends="'static.kid'">
 <head>
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
-<title>Public Active Mirrors</title>
+<title>Fedora Public Active Mirrors</title>
+
 </head>
 <body>
-<h2>The Fedora Mirror System</h2>
+<div class="floatright">
+<table cellspacing="0" class="compact altrows minilist">
+  <caption><strong>Mirror list filter</strong></caption>
+  <tr><th colspan="2">Version</th><th colspan='0'>Architecture</th></tr>
+  <span py:for="p in products">
+  <tr class="separator" py:attrs="{'rowspan': len(p.versions)}">
+    <th colspan="0">
+      <a href="${tg.url('/publiclist/' + p.name + '/')}" py:content="p.name" />
+    </th>
+  </tr>
+  <tr py:for="i,v in enumerate(p.versions)"
+      py:attrs="{'class': i%2 and 'odd' or 'even'}">
+<?python
+vername=v.name
+if vername == u'development':
+    vername=u'rawhide'
+?>
+    <td></td><td><a href="${tg.url('/publiclist/' + p.name + '/' + v.name + '/')}">
+      <strong py:content="vername" /></a></td>
+	<td py:for="a in arches"><a href="${tg.url('/publiclist/' +
+	p.name + '/' + v.name + '/' + a + '/')}" py:content="a" /></td>
+  </tr>
+  </span>
+</table>
+</div>
+
+<h1 class="icon48 download">Fedora Public Active Mirrors</h1>
+
 <p>
 Fedora is distributed to millions of systems globally.  This would not
 be possible without the donations of time, disk space, and bandwidth
@@ -16,33 +44,24 @@ donations.
 This list is dynamically generated every hour, listing only up-to-date mirrors.
 </p>
 <p>
-You may trim the selection through the links below, or see the <a
+To become a public Fedora mirror, please see <a
+href="http://fedoraproject.org/wiki/Infrastructure/Mirroring">our wiki page on Mirroring</a>.
+</p>
+
+<p>
+You may trim the selection through the links on the right, or see the <a
 href="${tg.url('/publiclist')}">whole list</a>.
 </p>
-<div py:strip="" py:for="p in products">
-  <table class="product">
-  <tr>
-  <th><a href="${tg.url('/publiclist/' + p.name + '/')}"><span py:replace="p.name">Product Name</span></a></th>
-  <div py:strip="" py:for="v in p.versions">
-<?python
-vername=v.name
-if vername == u'development':
-    vername=u'rawhide'
-?>
-    <td>
-      <strong><a href="${tg.url('/publiclist/' + p.name + '/' + v.name + '/')}"><span py:replace="vername">Version</span></a></strong>
-      <ul>
-        <li py:for="a in arches"><a href="${tg.url('/publiclist/' + p.name + '/' + v.name + '/' + a + '/')}"><span py:replace="a">Arch</span></a></li>
-      </ul>
-    </td>
-  </div>
-  </tr>
-  </table>
-</div>
-<h2>${title} Public Active Mirrors (${numhosts})</h2>
-<table class="mirrors">
+
+<div class="keepleft">
+
+<h2 class="icon24 download" style="clear: both;">${title} Public Active Mirrors (${numhosts})</h2>
+
+<p py:if="len(hosts) == 0">There are no mirrors matching your your search criteria.</p>
+<table py:if="len(hosts)" cellspacing="0" class="altrows mirrors">
 <tr><th>Country</th><th>Site</th><th>Host</th><th>Content</th><th>Bandwidth</th><th>Comments</th></tr>
-<tr py:for="host in hosts">
+<tr py:for="i,host in enumerate(hosts)"
+    py:attrs="{'class': i%2 and 'odd' or 'even'}">
 <td><span py:if="host.country is not None" py:replace="host.country.upper()">Country</span></td>
 <td><a href="${host.site.orgUrl}"><span py:replace="host.site.name">Site Name</span></a></td>
 <td><span py:replace="host.name">Host Name</span></td>
@@ -73,11 +92,6 @@ for u in hc.urls:
 <td><span py:replace="host.comment">Comment</span></td>
 </tr>
 </table>
-
-<P>
-To become a public Fedora mirror, please see <a
-href="http://fedoraproject.org/wiki/Infrastructure/Mirroring">http://fedoraproject.org/wiki/Infrastructure/Mirroring</a>.
-</P>
-
+</div>
 </body>
 </html>

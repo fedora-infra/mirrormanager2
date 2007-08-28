@@ -75,7 +75,7 @@
 
 <body>
     <div id="loginBox">
-        <h1>Login</h1>
+        <h1 class="icon48 password">Login</h1>
         <p>${message}</p>
         <p>
         	You must <a
@@ -102,7 +102,7 @@
                 </tr>
                 <tr>
                     <td colspan="2" class="buttons">
-                        <input type="submit" name="login" value="Login"/>
+                        <input class="submitbutton bigsubmit login" type="submit" name="login" value="Login"/>
                     </td>
                 </tr>
             </table>

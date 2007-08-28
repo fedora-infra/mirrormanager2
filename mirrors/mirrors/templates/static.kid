@@ -5,6 +5,7 @@
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
     <title py:replace="''">Your title goes here</title>
     <link rel="stylesheet" type="text/css" media="all" href="/static/css/fedora.css" />
+    <link rel="stylesheet" type="text/css" media="all" href="/static/css/main.css" />
     <link rel="stylesheet" type="text/css" media="all" href="/static/css/style.css" />
     <!--[if lt IE 7]>
     <style type="text/css">
@@ -14,51 +15,38 @@
       }
     </style>
     <![endif]-->
-    <style type="text/css">
-      ol, ul
-      {
-        padding-left: 3ex;
-      }
-
-      table.mirrors
-      {
-        margin: 1ex 0;
-        width: 98%
-      }
-
-      th, td
-      {
-        width: 10ex;
-      }
-    </style>
   </head>
   <body py:match="item.tag=='{http://www.w3.org/1999/xhtml}body'" py:attrs="item.items()">
     <div id="wrapper">
-      <div id="head">
-        <h1><a href="http://fedoraproject.org/index.html">Fedora</a></h1>
+    <div id="head">
+      <h1><a href="http://fedoraproject.org/" py:attrs="title=_('Fedora Project homepage')">Fedora</a></h1>
+    </div>
+    <div id="wrapper2">
+      <div id="sidebar">
+        <div id="nav">
+          <h2>Navigation</h2>
+          <ul>
+            <li><a href="/publiclist/" py:attrs="title=_('Public mirror list')">Public list</a></li>
+          </ul>
+          <h2>Fedora websites</h2>
+          <ul>
+            <li><a href="http://fedoraproject.org/" py:attrs="title=_('Fedora Project homepage')">Fedora Home</a></li>
+            <li><a href="http://docs.fedoraproject.org/" py:attrs="title=_('Fedora documentation')">Docs</a>
+              <span class="navnote">Fedora documentation</span></li>
+            <li><a href="http://fedoraproject.org/wiki/" py:attrs="title=_('Collaborative knowledge')">Wiki</a>
+              <span class="navnote">Collaborative knowledge</span></li>
+            <li><a href="http://planet.fedoraproject.org/" py:attrs="title=_('The voices of the community')">Planet</a>
+              <span class="navnote">The voices of the community</span></li>
+            <li><a href="http://fedorapeople.org/" title="_('Community webpages')">People</a>
+              <span class="navnote">Community webpages</span></li>
+          </ul>
+        </div>
       </div>
       <div id="content">
-        <div id="menu">
-          <div id="welcome"></div>
-          <div id="menu_links"></div>
-        </div>
         <div py:replace="[item.text]+item[:]"/>
       </div>
-    </div>
-    <div id="bottom">
-      <div id="footer">
-        <p class="copy">
-        Copyright &copy; 2007 Red Hat, Inc. and others.  All Rights Reserved.
-        Please send any comments or corrections to the <a href="mailto:webmaster@fedoraproject.org">websites team</a>.
-        </p>
-        <p class="disclaimer">
-        The Fedora Project is maintained and driven by the community and sponsored by Red Hat.  This is a community maintained site.  Red Hat is not responsible for content.
-        </p>
-        <ul>
-          <li class="first"><a href="http://fedoraproject.org/wiki/Legal">Legal</a></li>
-          <li><a href="http://fedoraproject.org/wiki/Legal/TrademarkGuidelines">Trademark Guidelines</a></li>
-        </ul>
-      </div>
-    </div>
-  </body>
+    </div> <!-- wrapper2 -->
+
+  </div>
+</body>
 </html>

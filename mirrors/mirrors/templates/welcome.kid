@@ -6,7 +6,10 @@
 <title>Welcome to Fedora Mirror Manager</title>
 </head>
 <body>
-<h2>Workflow</h2>
+
+<h1 class="icon48 download">Welcome to Fedora Mirror Manager</h1>
+
+<h2 class="icon16">Workflow</h2>
 
 Create:
 <ol>
@@ -21,7 +24,7 @@ Create:
   those too.</li>
 </ol>
 
-<h2>Overview</h2>
+<h2 class="icon16">Overview</h2>
 <p>
 <strong>Sites</strong> are the administrative container.  Sites have
 <strong>SiteAdmins</strong> which are usernames in the Fedora Account System.
