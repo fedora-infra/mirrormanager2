@@ -59,13 +59,15 @@ href="${tg.url('/publiclist')}">whole list</a>.
 
 <p py:if="len(hosts) == 0">There are no mirrors matching your your search criteria.</p>
 
+<table border="1" class="altrows">
 <tr><th>Country</th><th>Site</th><th>Host</th><th>Content</th><th>Bandwidth</th><th>Comments</th></tr>
-<div py:for="i,host in enumerate(hosts)"
+<tr py:for="i,host in enumerate(hosts)"
     py:attrs="{'class': i%2 and 'odd' or 'even'}">
-<span py:if="host.country is not None" py:replace="host.country.upper()">Country</span>
-<a href="${host.site.orgUrl}"><span py:replace="host.site.name">Site Name</span></a>
-<span py:replace="host.name">Host Name</span>
+<td><span py:if="host.country is not None" py:replace="host.country.upper()">Country</span></td>
+<td><a href="${host.site.orgUrl}"><span py:replace="host.site.name">Site Name</span></a></td>
+<td><span py:replace="host.name">Host Name</span></td>
 
+<td>
 <table>
 <tr py:for="hc in host.categories" py:if="hc.category.publiclist and (valid_categories is None or hc.category.name in valid_categories)">
 <td><span py:replace="hc.category.name">Category name</span></td>
@@ -87,6 +89,8 @@ for u in hc.urls:
 <td><span py:if="rsync is not None"><a href="${rsync}">rsync</a></span></td>
 </tr>
 </table>
+
+
 </td>
 <td><span py:replace="host.bandwidth">Bandwidth</span></td>
 <td><span py:replace="host.comment">Comment</span></td>
