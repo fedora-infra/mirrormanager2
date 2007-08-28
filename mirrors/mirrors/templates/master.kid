@@ -39,7 +39,7 @@
               <span class="navnote">Collaborative knowledge</span></li>
             <li><a href="http://planet.fedoraproject.org/" py:attrs="title=_('The voices of the community')">Planet</a>
               <span class="navnote">The voices of the community</span></li>
-            <li><a href="http://fedorapeople.org/" title="_('Community webpages')">People</a>
+            <li><a href="http://fedorapeople.org/" py:attrs="title=_('Community webpages')">People</a>
               <span class="navnote">Community webpages</span></li>
           </ul>
           <div py:if="tg.config('identity.on')" id="pageLogin">

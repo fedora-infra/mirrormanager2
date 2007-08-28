@@ -58,14 +58,14 @@ href="${tg.url('/publiclist')}">whole list</a>.
 <h2 class="icon24 download" style="clear: both;">${title} Public Active Mirrors (${numhosts})</h2>
 
 <p py:if="len(hosts) == 0">There are no mirrors matching your your search criteria.</p>
-<table py:if="len(hosts)" cellspacing="0" class="altrows mirrors">
+
 <tr><th>Country</th><th>Site</th><th>Host</th><th>Content</th><th>Bandwidth</th><th>Comments</th></tr>
-<tr py:for="i,host in enumerate(hosts)"
+<div py:for="i,host in enumerate(hosts)"
     py:attrs="{'class': i%2 and 'odd' or 'even'}">
-<td><span py:if="host.country is not None" py:replace="host.country.upper()">Country</span></td>
-<td><a href="${host.site.orgUrl}"><span py:replace="host.site.name">Site Name</span></a></td>
-<td><span py:replace="host.name">Host Name</span></td>
-<td>
+<span py:if="host.country is not None" py:replace="host.country.upper()">Country</span>
+<a href="${host.site.orgUrl}"><span py:replace="host.site.name">Site Name</span></a>
+<span py:replace="host.name">Host Name</span>
+
 <table>
 <tr py:for="hc in host.categories" py:if="hc.category.publiclist and (valid_categories is None or hc.category.name in valid_categories)">
 <td><span py:replace="hc.category.name">Category name</span></td>
