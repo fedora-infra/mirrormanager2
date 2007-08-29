@@ -201,7 +201,7 @@ select:focus {
 }
 
 p.bullet {
-  background: url('/static/images/fedora/iimages/arrowS.png') 1.3em 0.5em no-repeat;
+  background: url('/static/images/fedora/images/arrowS.png') 1.3em 0.5em no-repeat;
   padding-left: 2.7em !important;
 }
 
