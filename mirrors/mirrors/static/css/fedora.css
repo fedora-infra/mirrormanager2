@@ -16,7 +16,7 @@ body
 {
   min-height: 100%;
   font-size: 1em;
-  background: #FFFFFF url(/static/images/fedora/images/border-left.png) 0 0 repeat-y;
+  background: #FFFFFF url(/mirrormanager/static/images/fedora/images/border-left.png) 0 0 repeat-y;
 }
 
     
@@ -30,7 +30,7 @@ div#wrapper
   margin-left: 18px;
   font: normal 0.9em/1.5 sans-serif;
   min-height: 100%;
-  background: #FFFFFF url(/static/images/fedora/images/border-right.png) 100% 0 repeat-y;
+  background: #FFFFFF url(/mirrormanager/static/images/fedora/images/border-right.png) 100% 0 repeat-y;
 }
 
 div#wrapper2 {
@@ -47,14 +47,14 @@ div.wrapper3 { /* half of wrapper2, for consistent tables */
   border-top: 10px solid #337ACC;
   padding: 1ex 17px;
   margin-right: 18px;
-  background: #FFFFFF url(/static/images/fedora/images/line.png) 0 100% repeat-x;
+  background: #FFFFFF url(/mirrormanager/static/images/fedora/images/line.png) 0 100% repeat-x;
 }
 
 #head h1 a
 {
   display: block;
   text-indent: -9999px;
-  background: url(/static/images/fedora/images/fedora-logo.png) 20px 50% no-repeat;
+  background: url(/mirrormanager/static/images/fedora/images/fedora-logo.png) 20px 50% no-repeat;
   height: 73px;
   width: 138px;
   overflow: hidden;
@@ -72,7 +72,7 @@ div.wrapper3 { /* half of wrapper2, for consistent tables */
 #banner
 {
   text-indent: -9999px;
-  background: url(/static/images/fedora/images/banner.jpg) 0 0 no-repeat;
+  background: url(/mirrormanager/static/images/fedora/images/banner.jpg) 0 0 no-repeat;
   height: 75px;
   width: 400px;
   margin: 0 auto;
@@ -227,7 +227,7 @@ ol {
 }
 
 ul {
-	list-style: url(/static/images/fedora/images/arrowS.png) circle;
+	list-style: url(/mirrormanager/static/images/fedora/images/arrowS.png) circle;
 }
 
 ol {
@@ -260,7 +260,7 @@ ol li p {
 
 .download
 {
-  list-style-image: url(/static/images/fedora/images/arrowS.png);
+  list-style-image: url(/mirrormanager/static/images/fedora/images/arrowS.png);
   list-style-position: outside;
   margin: 1.6ex 3ex;
 }
@@ -317,7 +317,7 @@ ol li p {
   font: normal 1.3ex sans-serif;
   clear: both;
   text-align: center;
-  background: #FFFFFF url(/static/images/fedora/images/line-bottom.png) 0 0 repeat-x;
+  background: #FFFFFF url(/mirrormanager/static/images/fedora/images/line-bottom.png) 0 0 repeat-x;
   margin: 0 0 0;
   border-bottom: 10px solid #337ACC;
   height: 80px;
@@ -327,7 +327,7 @@ ol li p {
 
 #bottom
 {
-  background: #FFFFFF url(/static/images/fedora/images/border-right.png) 100% 0 repeat-y;
+  background: #FFFFFF url(/mirrormanager/static/images/fedora/images/border-right.png) 100% 0 repeat-y;
   margin-right: 18px;
   margin-top: 5em;
   bottom: 0;

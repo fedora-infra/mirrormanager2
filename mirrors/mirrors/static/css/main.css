@@ -76,14 +76,14 @@ p.bigdescription {
 
 .icon16 {
   padding-left: 24px;
-  background-image: url(/static/images/fedora/icons/applications-system16.png);
+  background-image: url(/mirrormanager/static/images/fedora/icons/applications-system16.png);
   background-repeat: no-repeat;
   background-position: 0 50%;
 }
 
 .icon24 {
   padding-left: 34px;
-  background-image: url(/static/images/fedora/icons/emblem-system24.png);
+  background-image: url(/mirrormanager/static/images/fedora/icons/emblem-system24.png);
   background-repeat: no-repeat;
   background-position: 0 50%;
 }
@@ -92,7 +92,7 @@ p.bigdescription {
   padding-left: 60px; /* keep the same as text48 */
   line-height: 48px;
   min-height: 48px;
-  background-image: url(/static/images/fedora/icons/emblem-systemL.png);
+  background-image: url(/mirrormanager/static/images/fedora/icons/emblem-systemL.png);
   background-repeat: no-repeat;
   background-position: 0 50%;
 }
@@ -103,19 +103,19 @@ p.bigdescription {
 
 
 h1.password {
-  background-image: url(/static/images/fedora/icons/dialog-passwordL.png);
+  background-image: url(/mirrormanager/static/images/fedora/icons/dialog-passwordL.png);
 }
 
 h2.password {
-  background-image: url(/static/images/fedora/icons/dialog-password24.png);
+  background-image: url(/mirrormanager/static/images/fedora/icons/dialog-password24.png);
 }
 
 h1.download {
-  background-image: url(/static/images/fedora/icons/emblem-downloadsL.png);
+  background-image: url(/mirrormanager/static/images/fedora/icons/emblem-downloadsL.png);
 }
 
 h2.download {
-  background-image: url(/static/images/fedora/icons/emblem-downloads24.png);
+  background-image: url(/mirrormanager/static/images/fedora/icons/emblem-downloads24.png);
 }
 
 #content {
@@ -201,7 +201,7 @@ select:focus {
 }
 
 p.bullet {
-  background: url('/static/images/fedora/images/arrowS.png') 1.3em 0.5em no-repeat;
+  background: url(/mirrormanager/static/images/fedora/images/arrowS.png) 1.3em 0.5em no-repeat;
   padding-left: 2.7em !important;
 }
 
@@ -261,28 +261,28 @@ input.submitbutton.bigsubmit {
 }
 
 input.submitbutton.bigsubmit.next {
-  background-image: url('/static/images/fedora/icons/go-right16.png');
+  background-image: url(/mirrormanager/static/images/fedora/icons/go-right16.png);
   background-position: 95% 50%;
   background-repeat: no-repeat;
   padding-right: 30px;
 } 
 
 input.submitbutton.bigsubmit.search {
-  background-image: url('/static/images/fedora/icons/system-search16.png');
+  background-image: url(/mirrormanager/static/images/fedora/icons/system-search16.png);
   background-position: 95% 50%;
   background-repeat: no-repeat;
   padding-right: 30px;
 } 
 
 input.submitbutton.bigsubmit.ok {
-  background-image: url('/static/images/fedora/icons/dialog-ok16.png');
+  background-image: url(/mirrormanager/static/images/fedora/icons/dialog-ok16.png);
   background-position: 95% 50%;
   background-repeat: no-repeat;
   padding-right: 30px;
 } 
 
 input.submitbutton.bigsubmit.login {
-  background-image: url('/static/images/fedora/icons/emblem-readonly16.png');
+  background-image: url(/mirrormanager/static/images/fedora/icons/emblem-readonly16.png);
   background-position: 95% 50%;
   background-repeat: no-repeat;
   padding-right: 30px;
