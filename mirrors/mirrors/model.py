@@ -125,6 +125,7 @@ class HostCategory(SQLObject):
     admin_active = BoolCol(default=True)
     user_active = BoolCol(default=True)
     upstream = UnicodeCol(default=None)
+    always_up2date = BoolCol(default=False)
     dirs = MultipleJoin('HostCategoryDir', orderBy='path')
     urls = MultipleJoin('HostCategoryUrl')
 
@@ -138,13 +139,6 @@ class HostCategory(SQLObject):
 
     def my_site(self):
         return self.host.my_site()
-
-    def has_up2date_dirs(self):
-        sr = HostCategory.select(join=INNERJOINOn(HostCategory, HostCategoryDir,
-                                                  AND(HostCategoryDir.q.host_categoryID == self.id,
-                                                      HostCategoryDir.q.up2date == True)),
-                                 limit=1)
-        return sr.count() > 0
 
 
 class HostCategoryDir(SQLObject):

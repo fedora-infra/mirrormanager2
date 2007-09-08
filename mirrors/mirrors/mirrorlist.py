@@ -54,7 +54,7 @@ def _do_query_directories():
     sql += 'AND   host_category.host_id = host.id '                       # join criteria
     sql += 'AND   host.site_id = site.id '                                # join criteria
     sql += 'AND   host_category_dir.directory_id = directory.id '         # join criteria
-    sql += 'AND host_category_dir.up2date '
+    sql += 'AND (host_category_dir.up2date OR host_category.always_up2date) '
     sql += 'AND NOT host_category_url.private '
     sql += 'AND host.user_active AND site.user_active '
     sql += 'AND host.admin_active AND site.admin_active '

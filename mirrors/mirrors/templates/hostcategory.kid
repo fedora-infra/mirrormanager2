@@ -38,6 +38,14 @@ Admins from Mirror Sites on your SiteToSite list can see these private URLs.
 </ul>
 
 <h3>Up-to-Date Directories this host carries</h3>
+<div py:if="values.always_up2date">
+<p>
+<em>Note:</em> This HostCategory is marked <em>always_up2date</em>.
+It is believed to carry the complete content of the master under this
+category, and is always in sync with the master.  Consult a sysadmin if this is incorrect.
+</p>
+</div>
+
 <ul>
 <li py:for="dir in values.dirs" py:if="dir.up2date">
     <span py:replace="dir.path">Path</span>

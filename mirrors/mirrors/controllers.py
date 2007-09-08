@@ -408,9 +408,10 @@ class HostCategoryFieldsNew(widgets.WidgetsList):
     def get_category_options():
         return [(c.id, c.name) for c in Category.select(orderBy='name')]
     category = widgets.SingleSelectField(options=get_category_options)
-    admin_active = widgets.CheckBox(default=True)
+    admin_active = widgets.CheckBox(default=True, help_text="unused")
     user_active = widgets.CheckBox(default=True, help_text="Clear to temporarily disable this category")
     upstream = widgets.TextField(validator=validators.Any(validators.UnicodeString,validators.Empty), attrs=dict(size='30'), help_text='e.g. rsync://download.fedora.redhat.com/fedora-linux-core')
+    always_up2date = widgets.CheckBox(default=False, help_text="Set to force belief that the whole category is always in sync.")
 
 class LabelObjName(widgets.Label):
     template = """
@@ -431,6 +432,7 @@ class HostCategoryFieldsRead(widgets.WidgetsList):
     user_active = widgets.CheckBox(default=True)
     upstream = widgets.TextField(attrs=dict(size='30'), validator=validators.Any(validators.UnicodeString,validators.Empty),
                                  help_text='e.g. rsync://download.fedora.redhat.com/fedora-linux-core')
+    always_up2date = widgets.CheckBox(default=False, help_text="Set to force belief that the whole category is always in sync.  Be careful with this.")
 
 host_category_form_new = widgets.TableForm(fields=HostCategoryFieldsNew(),
                                        submit_text="Save Host Category")
@@ -447,6 +449,7 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
         disabled_fields = []
         if not identity.in_group("sysadmin"):
             disabled_fields.append('admin_active')
+            disabled_fields.append('always_up2date')
         return disabled_fields
 
     def get(self, id):
