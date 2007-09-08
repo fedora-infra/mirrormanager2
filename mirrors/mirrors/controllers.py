@@ -973,17 +973,6 @@ class VersionController(controllers.Controller, identity.SecureResource, content
 
 
 
-
-# This exports the /pub/fedora/linux/core/... directory tree.
-# For each directory requested, it returns the mirrors of that directory.
-
-class PubController(controllers.Controller):
-    @expose(template="mirrors.templates.rsync_acl", format="plain", content_type="text/plain")
-    def default(self, *vpath, **kwargs):
-        path = 'pub/' + '/'.join(vpath)
-        return mirrors.mirrorlist.do_directorylist(path=path, **kwargs)
-
-
 class PublicListController(controllers.Controller):
     @expose(template="mirrors.templates.publiclist")
     def index(self, *vpath, **params):
@@ -1028,7 +1017,6 @@ class Root(controllers.RootController):
     site = SiteController()
     siteadmin = SiteAdminController()
     host = HostController()
-    pub = PubController()
     host_country_allowed = HostCountryAllowedController()
     host_acl_ip = HostAclIPController()
     host_netblock = HostNetblockController()
@@ -1075,10 +1063,6 @@ class Root(controllers.RootController):
                 for n in h.acl_ips:
                     rsync_acl_list.append(n.ip)
         return dict(values=rsync_acl_list)
-
-    @expose(template="mirrors.templates.rsync_acl", format="plain", content_type="text/plain")
-    def mirrorlist(self, *args, **kwargs):
-        return mirrors.mirrorlist.do_mirrorlist(*args, **kwargs)
 
     @identity.require(identity.from_host('127.0.0.1'))
     @expose(template="mirrors.templates.rsync_acl", format="plain", content_type="text/plain")
