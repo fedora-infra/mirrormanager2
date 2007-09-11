@@ -4,10 +4,9 @@
 #  by Matt Domsch <Matt_Domsch@dell.com>
 # Licensed under the MIT/X11 license
 
-import socket
+import socket, random
 import cPickle as pickle
-from string import zfill, atoi
-from random import randint
+from string import zfill, atoi, strip
 from mod_python import util, apache
 
 socketfile = '/tmp/mirrormanager_mirrorlist_server.sock'
@@ -21,7 +20,6 @@ def get_mirrorlist(d):
 
     p = pickle.dumps(d)
     del d
-    
     size = len(p)
     s.sendall(zfill('%s' % size, 10))
 
@@ -67,17 +65,17 @@ def request_setup(req, request_data):
     fields = ['repo', 'arch', 'country', 'path', 'netblock']
     d = {}
     for f in fields:
-        if f in request_data:
-            d[f] = request_data[f]
+        if request_data.has_key(f):
+            d[f] = strip(request_data[f])
 
-     client_ip = req.get_remote_host()
-     if kwargs.has_key('ip'):
-         client_ip = kwargs['ip']
-     else:
-         if req.headers_in.has_key('X-Forwarded-For'):
-             client_ip = real_client_ip(req.headers_in['X-Forwarded-For'])
-     d['client_ip'] = client_ip
-     return d
+    if request_data.has_key('ip'):
+        client_ip = strip(request_data['ip'])
+    elif req.headers_in.has_key('X-Forwarded-For'):
+        client_ip = real_client_ip(strip(req.headers_in['X-Forwarded-For']))
+    else:
+        client_ip = req.get_remote_host()
+    d['client_ip'] = client_ip
+    return d
 
 
 def handler(req):
@@ -89,7 +87,7 @@ def handler(req):
     except: # most likely socket.error, but we'll catch everything
         return apache.HTTP_SERVICE_UNAVAILABLE
         
-    if d.has_key('redirect'):
+    if request_data.has_key('redirect'):
         urls = drop_null_hostids(results)
         if len(urls) == 0:
             return apache.HTTP_NOT_FOUND
