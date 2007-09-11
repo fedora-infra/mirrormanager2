@@ -1,15 +1,13 @@
 * add Directory FK to HostCategoryDir
+
 * Let report_mirror work from behind an http proxy.  It presently
   doesn't try to connect to the proxy server.
+
 * handle download.fp.o
+  - this should be a trivial Apache rewrite rule now.
+
 * do xmlrpc between report_mirrorlist.py and mirrormanager so we don't
   need a file in /tmp.
-* Designate a way for mirrors to claim themselves to be always
-  up-to-date.  Probably will require a sysadmin to set this bit, as
-  it's somewhat dangerous.  But there are cases, e.g. a local
-  out-of-line squid proxy, where it makes sense to do it.  This change
-  will change the schema, and has repercussions throughout the code,
-  so I haven't wanted to make it lightly.
 
 * Some people want metalink support.  Conceptually it's possible, and
   even pretty easy once we've got the daemon above working right.  But
@@ -17,3 +15,6 @@
   even sent some code that doesn't quite integrate but was a starting
   point, and I haven't had time to get to it.  It's not looking good
   for me to add that right now, but I'd be happy to review patches.
+
+* send emails to mirror admins when their servers drop out of the
+  mirrorlists
