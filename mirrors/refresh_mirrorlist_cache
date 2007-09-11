@@ -1,0 +1,42 @@
+#!/usr/bin/python
+import pkg_resources
+pkg_resources.require("TurboGears")
+
+from sqlobject import *
+import sys, os, string
+import turbogears
+from mirrors.model import *
+from mirrors.mirrorlist import populate_all_caches, dump_caches
+from optparse import OptionParser
+
+from turbogears.database import PackageHub
+hub = __connection__ = None
+
+def doit():
+    populate_all_caches()
+    dump_caches()
+    
+
+
+def main():
+    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option("-c", "--config",
+                      dest="config", default='dev.cfg',
+                      help="TurboGears config file to use")
+
+    (options, args) = parser.parse_args()
+
+    turbogears.update_config(configfile=options.config,
+                             modulename="mirrors.config")
+    global hub
+    global __connection__
+    hub = PackageHub("mirrors")
+    __connection__ = hub
+    
+    doit()
+
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+        

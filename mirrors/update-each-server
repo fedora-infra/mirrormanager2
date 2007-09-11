@@ -11,6 +11,5 @@ trap "rm -f ${LOCKFILE}" QUIT TERM INT HUP EXIT
 cd ${MM_DIR}
 MIRRORLIST_DIR=${MIRRORLIST_DIR} ./update-static-content
 
-wget -O - 'http://127.0.0.1:8082/mirrormanager/refresh_mirrorlist_cache' > /dev/null 2>&1
-wget -O - 'http://127.0.0.1:8082/mirrormanager/dump_mirrorlist_cache' > /dev/null 2>&1
+./refresh_mirrorlist_cache
 killall -HUP mirrorlist_server.py
