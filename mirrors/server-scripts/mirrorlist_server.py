@@ -319,6 +319,7 @@ class ForkingUnixStreamServer(ForkingMixIn, UnixStreamServer):
 
 
 def main():
+    oldumask = os.umask(0)
     try:
         os.unlink(socketfile)
     except:
