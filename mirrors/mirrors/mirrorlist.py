@@ -22,64 +22,66 @@ def trim(input):
     """ remove all but http and ftp URLs,
     and if both http and ftp are offered,
     leave only http"""
-    result = []
-    lastdir = None
-    for (directoryname, hostid, country, hcurl, siteprivate, hostprivate) in input:
-        if lastdir is None or directoryname != lastdir:
-            lastdir = directoryname
-            l = {}
-    
+    l = {}
+    for hostid, country, hcurl, siteprivate, hostprivate in input:
         us = hcurl.split('/')
         uprotocol = us[0]
         umachine = us[2]
         if not l.has_key(hostid):
             l[hostid] = {}
-        l[hostid][uprotocol] = (directoryname, hostid, country, hcurl, siteprivate, hostprivate)
+        l[hostid][uprotocol] = (hostid, country, hcurl, siteprivate, hostprivate)
 
-        r = []
-        for k, v in l.iteritems():
-            if v.has_key(u'http:'):
-                r.append(v[u'http:'])
-            elif v.has_key(u'ftp:'):
-                r.append(v[u'ftp:'])
-        result.extend(r)
+    result = []
+    for k, v in l.iteritems():
+        if v.has_key(u'http:'):
+            result.append(v[u'http:'])
+        elif v.has_key(u'ftp:'):
+            result.append(v[u'ftp:'])
 
     return result
 
-def _do_query_directories():
-    sql  = 'SELECT directory.name, host.id, host.country, host_category_url.url, site.private, host.private '
-    sql += 'FROM directory, host_category_dir, host_category, host_category_url, host, site '
+def _do_query_directory(directory, category):
+    sql  = 'SELECT host.id, host.country, host_category_url.url, site.private, host.private '
+    sql += 'FROM host_category_dir, host_category, host_category_url, host, site '
     sql += 'WHERE host_category_dir.host_category_id = host_category.id ' # join criteria
     sql += 'AND   host_category_url.host_category_id = host_category.id ' # join criteria
     sql += 'AND   host_category.host_id = host.id '                       # join criteria
     sql += 'AND   host.site_id = site.id '                                # join criteria
-    sql += 'AND   host_category_dir.directory_id = directory.id '         # join criteria
+    sql += 'AND host_category.category_id = %d ' % category.id # but select only the target category
+    sql += "AND host_category_dir.directory_id = %s " % directory.id # and target directory
     sql += 'AND (host_category_dir.up2date OR host_category.always_up2date) '
     sql += 'AND NOT host_category_url.private '
     sql += 'AND host.user_active AND site.user_active '
     sql += 'AND host.admin_active AND site.admin_active '
-    sql += 'ORDER BY directory.name '
 
     result = directory._connection.queryAll(sql)
+    result = trim(result)
     return result
 
-
-def populate_directory_cache():
-    result = _do_query_directories()
-    result = trim(result)
+def populate_directory_cache(directory):
+    repo = directory.repository
+    # if a directory is in more than one category, problem...
+    if repo is not None:
+        category = repo.category
+    else:
+        numcats = len(directory.categories)
+        if numcats == 0:
+            # no category, so we can't know a mirror host's URLs.
+            # nothing to add.
+            return
+        elif numcats >= 1:
+            # any of them will do, so just look at the first one
+            category = directory.categories[0]
+        
+    path = directory.name[len(category.topdir.name)+1:]
+    result = _do_query_directory(directory, category)
     
-    lastdir = None
-    for (directoryname, hostid, country, hcurl, siteprivate, hostprivate) in result:
-        if lastdir is None or directoryname != lastdir:
-            lastdir = directoryname
-            newresult = {'global':[], 'bycountry':{}, 'byhostid':{}}
-            d = Directory.byName(directoryname)
-            repo = d.repository
+    newresult = {'global':[], 'byCountry':{}, 'byHostId':{}, 'subpath':path}
+    for (hostid, country, hcurl, siteprivate, hostprivate) in result:
         country = country.upper()
-        v = (hostid, "%s/%s" % (hcurl, path))
+        v = (hostid, hcurl)
         if not siteprivate and not hostprivate:
             newresult['global'].append(v)
-
             if not newresult['byCountry'].has_key(country):
                 newresult['byCountry'][country] = [v]
             else:
@@ -90,12 +92,11 @@ def populate_directory_cache():
         else:
             newresult['byHostId'][hostid].append(v)
 
-        global mirrorlist_cache
-        mirrorlist_cache[directoryname] = newresult
-        global repo_arch_to_directoryname
-        if repo is not None:
-            repo_arch_to_directoryname[(repo.prefix, repo.arch.name)] = directory.name
-    
+    global mirrorlist_cache
+    mirrorlist_cache[directory.name] = newresult
+    global repo_arch_to_directoryname
+    if repo is not None:
+        repo_arch_to_directoryname[(repo.prefix, repo.arch.name)] = directory.name
 
 def populate_netblock_cache():
     cache = {}
@@ -126,12 +127,13 @@ def populate_host_country_allowed_cache():
 def populate_all_caches():
     populate_host_country_allowed_cache()
     populate_netblock_cache()
-    populate_directory_cache()
+    for d in Directory.select():
+        populate_directory_cache(d)
     print "mirrorlist caches populated"
 
 
 
-import pickle
+import cPickle as pickle
 def dump_caches():
     data = {'mirrorlist_cache':mirrorlist_cache,
             'host_netblock_cache':host_netblock_cache,

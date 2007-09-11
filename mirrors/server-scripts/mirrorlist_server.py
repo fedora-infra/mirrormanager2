@@ -157,6 +157,13 @@ def do_geoip(kwargs, cache, clientCountry, header):
     hostresults = trim_by_client_country(hostresults, clientCountry)
     return (header, hostresults)
 
+def append_path(hostresults, cache):
+    results = []
+    path = cache['subpath']
+    for (hostid, hcurl) in hostresults:
+        results.append((hostid, "%s/%s" % (hcurl, path)))
+    return results
+
 
 def do_mirrorlist(kwargs):
     if not (kwargs.has_key('repo') and kwargs.has_key('arch')) and not kwargs.has_key('path'):
@@ -234,6 +241,7 @@ def do_mirrorlist(kwargs):
     random.shuffle(global_results)
     
     hostresults = uniqueify(netblock_results + country_results + geoip_results + continent_results + global_results)
+    hostresults = append_path(hostresults, cache)
     message = [(None, header)]
     return append_filename_to_results(file, message + hostresults)
 
