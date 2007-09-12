@@ -15,7 +15,6 @@ from mirrors.model import *
 from mirrors.lib import createErrorString
 import IPy
 IPy.check_addr_prefixlen = 0
-import mirrors.mirrorlist
 from mirrors.categorymap import categorymap
 
 
@@ -1066,20 +1065,6 @@ class Root(controllers.RootController):
                 for n in h.acl_ips:
                     rsync_acl_list.append(n.ip)
         return dict(values=rsync_acl_list)
-
-    @identity.require(identity.from_host('127.0.0.1'))
-    @expose(template="mirrors.templates.rsync_acl", format="plain", content_type="text/plain")
-    def refresh_mirrorlist_cache(self, *args, **kwargs):
-        mirrors.mirrorlist.populate_all_caches()
-        return dict(values=["# Cache refreshed"])
-
-    @identity.require(identity.from_host('127.0.0.1'))
-    @expose(template="mirrors.templates.rsync_acl", format="plain", content_type="text/plain")
-    def dump_mirrorlist_cache(self, *args, **kwargs):
-        mirrors.mirrorlist.dump_caches()
-        return dict(values=["# Cache dumped"])
-    
-        
 
     @expose(template="mirrors.templates.login")
     def login(self, forward_url=None, previous_url=None, *args, **kw):
