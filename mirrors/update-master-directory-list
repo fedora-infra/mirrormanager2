@@ -40,6 +40,24 @@ def rename_SRPMS_source(l):
             rc.append(i)
     return rc
 
+
+def _get_version_from_path(path):
+    s = r'/([\.\d]+)?/'
+    m = re.search(re.compile(s), path)
+    return m.group(1)
+
+def create_version_from_path(category, path):
+    ver = None
+    vname = _get_version_from_path(path)
+    if vname is not None and vname != '':
+        if '/test/' in path:
+            isTest = True
+        else:
+            isTest = False
+        ver = Version(product=category.product, name=vname, isTest=isTest)
+
+    return ver
+
 def guess_ver_arch_from_path(category, path):
     arch = None
     if 'SRPMS' in path:
@@ -58,6 +76,10 @@ def guess_ver_arch_from_path(category, path):
             ver = v
             break
 
+    # create Versions if we can figure it out...
+    if ver is None:
+        ver = create_version_from_path(category, path)
+        
     return (ver, arch)
 
 
