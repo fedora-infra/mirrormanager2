@@ -12,12 +12,15 @@
   <caption><strong>Mirror list filter</strong></caption>
   <tr><th colspan="2">Version</th><th colspan='0'>Architecture</th></tr>
   <span py:for="p in products">
-  <tr class="separator" py:attrs="{'rowspan': len(p.versions)}">
+  <?python
+displayversions = [v for v in p.versions if v.display]
+?>
+  <tr class="separator" py:attrs="{'rowspan': len(displayversions)}">
     <th colspan="0">
       <a href="${tg.url('/publiclist/' + p.name + '/')}" py:content="p.name" />
     </th>
   </tr>
-  <tr py:for="i,v in enumerate(p.versions)"
+  <tr py:for="i,v in enumerate(displayversions)"
       py:attrs="{'class': i%2 and 'odd' or 'even'}">
 <?python
 vername=v.name

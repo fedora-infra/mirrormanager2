@@ -923,29 +923,16 @@ class VersionFields(widgets.WidgetsList):
     product = widgets.SingleSelectField(options=get_products_options)
     name = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
     isTest = widgets.CheckBox(label="is a Test release")
+    display = widgets.CheckBox(label="display in the publiclist chooser")
 
 version_form = widgets.TableForm(fields=VersionFields(), submit_text="Create Version")
 
 
-class VersionController(controllers.Controller, identity.SecureResource, content):
-    require = identity.in_group("sysadmin")
+class VersionController(SimpleDbObjectController):
     title = "Version"
+    myClass = Version
+    url_prefix="version"
     form = version_form
-
-    def get(self, id):
-        return dict(values=Version.get(id))
-    
-    @expose(template="mirrors.templates.boringform")
-    def new(self, **kwargs):
-            
-        submit_action = turbogears.url("/version/0/create")
-        return dict(form=self.form, values=None, action=submit_action, title=self.title)
-
-    @expose(template="mirrors.templates.boringform")
-    def read(self, version):
-        submit_action = turbogears.url("/version/%s/update" % version.id)
-        return dict(form=version_form, values=version, action=submit_action, title=self.title)
-
 
     @expose(template="mirrors.templates.boringform")
     @validate(form=form)
@@ -959,20 +946,7 @@ class VersionController(controllers.Controller, identity.SecureResource, content
 
         del kwargs['product']
 
-        try:
-            version = Version(product=product, **kwargs)
-        except: # probably sqlite IntegrityError but we can't catch that for some reason... 
-            turbogears.flash("Error: Version %s already exists" % name)
-            raise redirect("/")
-        turbogears.flash("Success: Version created.")
-        raise turbogears.redirect("/")
-
-
-    @expose(template="mirrors.templates.boringform")
-    def delete(self, version, **kwargs):
-        version.destroySelf()
-        raise turbogears.redirect("/")
-
+        SimpleDbObjectController.create(self, **kwargs)
 
 
 class PublicListController(controllers.Controller):
