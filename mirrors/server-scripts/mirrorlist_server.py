@@ -273,6 +273,7 @@ def read_caches():
 
 class MirrorlistHandler(StreamRequestHandler):
     def handle(self):
+        random.seed()
         try:
             # read size of incoming pickle
             readlen = 0
