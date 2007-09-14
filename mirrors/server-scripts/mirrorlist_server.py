@@ -151,7 +151,7 @@ def do_netblocks(kwargs, cache, header):
                 
 def do_geoip(kwargs, cache, clientCountry, header):
     hostresults = []
-    if cache['byCountry'].has_key(clientCountry):
+    if clientCountry is not None and cache['byCountry'].has_key(clientCountry):
         hostresults.extend(cache['byCountry'][clientCountry])
         header += 'country = %s ' % clientCountry
     hostresults = trim_by_client_country(hostresults, clientCountry)
@@ -159,9 +159,12 @@ def do_geoip(kwargs, cache, clientCountry, header):
 
 def append_path(hostresults, cache):
     results = []
-    path = cache['subpath']
-    for (hostid, hcurl) in hostresults:
-        results.append((hostid, "%s/%s" % (hcurl, path)))
+    if 'subpath' in cache:
+        path = cache['subpath']
+        for (hostid, hcurl) in hostresults:
+            results.append((hostid, "%s/%s" % (hcurl, path)))
+    else:
+        results = hostresults
     return results
 
 
