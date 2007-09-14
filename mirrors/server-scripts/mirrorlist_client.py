@@ -4,7 +4,7 @@
 #  by Matt Domsch <Matt_Domsch@dell.com>
 # Licensed under the MIT/X11 license
 
-import socket, random
+import socket
 import cPickle as pickle
 from string import zfill, atoi, strip
 from mod_python import util, apache
@@ -58,7 +58,9 @@ def drop_null_hostids(results):
 
 def do_redirect(req, results):
     # interesting, we shouldn't have to str() this, but apparently we do.
-    util.redirect(req, str(random.choice(results)))
+    # the results list is in priority order, sublists randomized, so we can choose
+    # the first entry
+    util.redirect(req, str(results[0]))
 
 
 def request_setup(req, request_data):
