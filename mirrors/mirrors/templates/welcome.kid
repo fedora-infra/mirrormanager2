@@ -111,8 +111,10 @@ User-Agent as mirrormanager-crawler.
 <a href="${tg.url('/version/0/new')}">[Add]</a>
 <ul>
 	  <li py:for="v in versions">
+	  <a href="${tg.url('/version/'+str(v.id)+'/')}">
 	  <span py:replace="v.product.name">Product Name</span>	
 	  <span py:replace="v.name">Version Name</span>
+	  </a>
 	   <a href="${tg.url('/version/'+str(v.id)+'/delete')}">[Delete]</a>	
 	  </li>
 </ul>

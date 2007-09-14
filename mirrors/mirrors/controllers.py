@@ -794,7 +794,7 @@ class SimpleDbObjectController(controllers.Controller, identity.SecureResource, 
             obj = self.myClass(**kwargs)
         except: # probably sqlite IntegrityError but we can't catch that for some reason... 
             turbogears.flash("Error: Object already exists")
-            raise redirect("/")
+            raise redirect("/%s/0/new" % self.url_prefix)
         turbogears.flash("Success: Object created.")
         raise turbogears.redirect("/")
 
@@ -923,7 +923,7 @@ class VersionFields(widgets.WidgetsList):
     product = widgets.SingleSelectField(options=get_products_options)
     name = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
     isTest = widgets.CheckBox(label="is a Test release")
-    display = widgets.CheckBox(label="display in the publiclist chooser")
+    display = widgets.CheckBox(label="display in the publiclist chooser", default=True)
 
 version_form = widgets.TableForm(fields=VersionFields(), submit_text="Create Version")
 
@@ -936,7 +936,7 @@ class VersionController(SimpleDbObjectController):
 
     @expose(template="mirrors.templates.boringform")
     @validate(form=form)
-    @error_handler(new)
+    @error_handler(SimpleDbObjectController.new)
     def create(self, **kwargs):
         try:
             product=Product.get(kwargs['product'])
@@ -947,6 +947,12 @@ class VersionController(SimpleDbObjectController):
         del kwargs['product']
 
         SimpleDbObjectController.create(self, **kwargs)
+
+    @expose(template="mirrors.templates.boringform")
+    @validate(form=form)
+    @error_handler()
+    def update(self, obj, **kwargs):
+        return SimpleDbObjectController.update(self, obj, **kwargs)
 
 
 class PublicListController(controllers.Controller):
