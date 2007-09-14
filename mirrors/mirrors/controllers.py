@@ -924,6 +924,8 @@ class VersionFields(widgets.WidgetsList):
     name = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
     isTest = widgets.CheckBox(label="is a Test release")
     display = widgets.CheckBox(label="display in the publiclist chooser", default=True)
+    display_name = widgets.TextField(validator=validators.Any(validators.UnicodeString, validators.Empty),
+                                     attrs=dict(size='30'), help_text="Name displayed to users (optional)" )
 
 version_form = widgets.TableForm(fields=VersionFields(), submit_text="Create Version")
 

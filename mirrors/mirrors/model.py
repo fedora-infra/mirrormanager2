@@ -533,6 +533,7 @@ class Version(SQLObject):
     product = ForeignKey('Product')
     isTest = BoolCol(default=False)
     display = BoolCol(default=True)
+    display_name = UnicodeCol(default=None)
 
 
 class Directory(SQLObject):

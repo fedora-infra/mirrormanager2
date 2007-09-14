@@ -23,12 +23,12 @@ displayversions = [v for v in p.versions if v.display]
   <tr py:for="i,v in enumerate(displayversions)"
       py:attrs="{'class': i%2 and 'odd' or 'even'}">
 <?python
-vername=v.name
-if vername == u'development':
-    vername=u'rawhide'
+display_name = v.name
+if v.display_name is not None and v.display_name != '':
+   display_name = v.display_name
 ?>
     <td></td><td><a href="${tg.url('/publiclist/' + p.name + '/' + v.name + '/')}">
-      <strong py:content="vername" /></a></td>
+      <strong py:content="display_name" /></a></td>
 	<td py:for="a in arches"><a href="${tg.url('/publiclist/' +
 	p.name + '/' + v.name + '/' + a + '/')}" py:content="a" /></td>
   </tr>
