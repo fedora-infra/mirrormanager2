@@ -50,12 +50,14 @@ def trim(input):
 
 def _do_query_directories():
     sql  = 'SELECT directory.name, host.id, host.country, host_category_url.url, site.private, host.private '
-    sql += 'FROM directory, host_category_dir, host_category, host_category_url, host, site '
+    sql += 'FROM directory, host_category_dir, host_category, host_category_url, host, site, category_directory '
     sql += 'WHERE host_category_dir.host_category_id = host_category.id ' # join criteria
     sql += 'AND   host_category_url.host_category_id = host_category.id ' # join criteria
     sql += 'AND   host_category.host_id = host.id '                       # join criteria
     sql += 'AND   host.site_id = site.id '                                # join criteria
     sql += 'AND   host_category_dir.directory_id = directory.id '         # join criteria
+    sql += 'AND   category_directory.directory_id = directory.id '         # join criteria (dir for this category)
+    sql += 'AND   category_directory.category_id = host_category.category_id ' # join criteria
     sql += 'AND (host_category_dir.up2date OR host_category.always_up2date) '
     sql += 'AND NOT host_category_url.private '
     sql += 'AND host.user_active AND site.user_active '
