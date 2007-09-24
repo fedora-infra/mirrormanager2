@@ -56,8 +56,10 @@ def doit():
     # first, create a figure.
     dpi=100
     dimx=800/dpi
-    dimy=600/dpi
+    dimy=400/dpi
     fig=figure(figsize=(dimx,dimy), dpi=dpi, frameon=False, facecolor='blue')
+    # take up the whole space
+    fig.add_axes([0.0, 0.0, 1.0, 1.0])
     canvas = FigureCanvas(fig)
     # background color will be used for 'wet' areas.
     # use zorder=10 to make sure markers are drawn last.
