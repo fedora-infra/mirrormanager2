@@ -1,0 +1,101 @@
+#!/usr/bin/python
+#
+# Copyright 2007 Dell, Inc.
+#   by Matt Domsch <Matt_Domsch@dell.com>
+# Based on examples from python-GeoIP and python-basemap-examples
+# Licensed under the GNU General Public License v2
+# because it uses data from python-basemap-data which is GPL
+# while the rest of MirrorManager is licensed MIT/X11
+
+
+import pkg_resources
+pkg_resources.require("TurboGears")
+
+from sqlobject import *
+import sys, os, string
+import turbogears
+from mirrors.model import *
+from optparse import OptionParser
+import GeoIP
+import matplotlib
+matplotlib.use('Agg2')
+from pylab import *
+
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.toolkits.basemap import Basemap
+
+gi = GeoIP.open("/usr/share/GeoIP/GeoLiteCity.dat", GeoIP.GEOIP_STANDARD)
+
+
+from turbogears.database import PackageHub
+hub = __connection__ = None
+
+def lookup_host_locations():
+    results = []
+    for h in Host.select():
+        if h.private or h.site.private or \
+               not h.user_active or not h.admin_active or \
+               not h.site.user_active or not h.site.admin_active:
+            continue
+        try:
+            gir = gi.record_by_name(h.name)
+        except:
+            continue
+        if gir != None:
+            t = (h.name, gir['country_code'], gir['latitude'], gir['longitude'])
+            print "%s %s %s %s" % t
+            results.append(t)
+
+    return results
+
+def doit():
+
+    m = Basemap(llcrnrlon=-180.,llcrnrlat=-90,urcrnrlon=180.,urcrnrlat=90.,\
+                resolution='c',projection='cyl')
+    # plot them as filled circles on the map.
+    # first, create a figure.
+    dpi=100
+    dimx=800/dpi
+    dimy=600/dpi
+    fig=figure(figsize=(dimx,dimy), dpi=dpi, frameon=False, facecolor='blue')
+    canvas = FigureCanvas(fig)
+    # background color will be used for 'wet' areas.
+    # use zorder=10 to make sure markers are drawn last.
+    # (otherwise they are covered up when continents are filled)
+    results = lookup_host_locations()
+    for t in results:
+        lat=t[2]
+        lon=t[3]
+        # draw a red dot at the center.
+        xpt, ypt = m(lon, lat)
+        m.plot([xpt],[ypt],'ro', zorder=10)
+    
+    # draw coasts and fill continents.
+    m.drawcoastlines(linewidth=0.5)
+    m.drawcountries(linewidth=0.5)
+    m.fillcontinents(color='green')
+    canvas.print_figure('/tmp/map.png', dpi=100)
+
+
+def main():
+    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option("-c", "--config",
+                      dest="config", default='dev.cfg',
+                      help="TurboGears config file to use")
+
+    (options, args) = parser.parse_args()
+
+    turbogears.update_config(configfile=options.config,
+                             modulename="mirrors.config")
+    global hub
+    global __connection__
+    hub = PackageHub("mirrors")
+    __connection__ = hub
+    
+    doit()
+
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+        
