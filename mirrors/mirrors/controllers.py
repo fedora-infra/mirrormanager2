@@ -230,7 +230,8 @@ class SiteToSiteFields(widgets.WidgetsList):
     def get_sites_options():
         return [(s.id, s.name) for s in Site.select(orderBy='name')]
 
-    sites = widgets.MultipleSelectField(options=get_sites_options, size=15)
+    sites = widgets.MultipleSelectField(options=get_sites_options, size=15,
+                                        validator=validators.NotEmpty())
                                         
 
 site_to_site_form = widgets.TableForm(fields=SiteToSiteFields(),
@@ -406,7 +407,8 @@ class HostController(controllers.Controller, identity.SecureResource, content):
 class HostCategoryFieldsNew(widgets.WidgetsList):
     def get_category_options():
         return [(c.id, c.name) for c in Category.select(orderBy='name')]
-    category = widgets.SingleSelectField(options=get_category_options)
+    category = widgets.SingleSelectField(options=get_category_options,
+                                         validator=validators.NotEmpty())
     admin_active = widgets.CheckBox(default=True, help_text="unused")
     user_active = widgets.CheckBox(default=True, help_text="Clear to temporarily disable this category")
     upstream = widgets.TextField(validator=validators.Any(validators.UnicodeString,validators.Empty), attrs=dict(size='30'), help_text='e.g. rsync://download.fedora.redhat.com/fedora-linux-core')
@@ -920,7 +922,8 @@ class VersionFields(widgets.WidgetsList):
     def get_products_options():
         return [(p.id, p.name) for p in Product.select(orderBy='name')]
 
-    product = widgets.SingleSelectField(options=get_products_options)
+    product = widgets.SingleSelectField(options=get_products_options,
+                                        validator=validators.NotEmpty())
     name = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
     isTest = widgets.CheckBox(label="is a Test release")
     display = widgets.CheckBox(label="display in the publiclist chooser", default=True)
