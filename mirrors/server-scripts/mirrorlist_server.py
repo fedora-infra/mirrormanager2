@@ -30,6 +30,8 @@ host_country_allowed_cache = {}
 
 repo_arch_to_directoryname = {}
 
+# redirect from a repo with one name to a repo with another
+repo_redirect = {}
 
 def uniqueify(seq, idfun=None):
     # order preserving
@@ -169,6 +171,7 @@ def append_path(hostresults, cache):
 
 
 def do_mirrorlist(kwargs):
+    global repo_redirect
     if not (kwargs.has_key('repo') and kwargs.has_key('arch')) and not kwargs.has_key('path'):
         return [(None, '# either path=, or repo= and arch= must be specified')]
 
@@ -194,7 +197,7 @@ def do_mirrorlist(kwargs):
     else:
         if u'source' in kwargs['repo']:
             kwargs['arch'] = u'source'
-        repo = kwargs['repo']
+        repo = repo_redirect.get(kwargs['repo'], kwargs['repo'])
         arch = kwargs['arch']
         header = "# repo = %s arch = %s " % (repo, arch)
 
@@ -248,6 +251,27 @@ def do_mirrorlist(kwargs):
     message = [(None, header)]
     return append_filename_to_results(file, message + hostresults)
 
+
+def read_repo_redirect():
+    global repo_redirect
+    data = {}
+    try:
+        f = open('repo_redirect.txt', 'r')
+    except:
+        return
+
+    for line in f.readlines():
+        if line.startswith('#') or len(line.strip()) == 0:
+            continue
+        sline = line.split('=')
+        try:
+            data[sline[0].strip()] = sline[1].strip()
+        except:
+            pass
+
+    f.close()
+    if len(data):
+        repo_redirect = data
 
 def read_caches():
     global mirrorlist_cache
@@ -314,6 +338,7 @@ def sighup_handler(signum, frame):
     signal.signal(signal.SIGHUP, signal.SIG_IGN)
     if signum == signal.SIGHUP:
         read_caches()
+        read_repo_redirect()
     signal.signal(signal.SIGHUP, sighup_handler)
 
 class ForkingUnixStreamServer(ForkingMixIn, UnixStreamServer):
@@ -332,6 +357,7 @@ def main():
     global gi
     gi = GeoIP.new(GeoIP.GEOIP_STANDARD)
     read_caches()
+    read_repo_redirect()
     setup_continents()
     signal.signal(signal.SIGHUP, sighup_handler)
     ss = ForkingUnixStreamServer(socketfile, MirrorlistHandler)
