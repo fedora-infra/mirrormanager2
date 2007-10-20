@@ -6,13 +6,16 @@
 
 from SocketServer import StreamRequestHandler, ForkingMixIn, UnixStreamServer, BaseServer
 import cPickle as pickle
-import os, sys, signal, random, socket
+import os, sys, signal, random, socket, getopt
 from string import zfill, atoi
 
 from IPy import IP
 import GeoIP
 
+# can be overridden on the command line
 socketfile = '/tmp/mirrormanager_mirrorlist_server.sock'
+repo_redirect_file = 'repo_redirect.txt'
+cachefile = '/tmp/mirrorlist_cache.pkl'
 
 gi = None
 
@@ -171,7 +174,6 @@ def append_path(hostresults, cache):
 
 
 def do_mirrorlist(kwargs):
-    global repo_redirect
     if not (kwargs.has_key('repo') and kwargs.has_key('arch')) and not kwargs.has_key('path'):
         return [(None, '# either path=, or repo= and arch= must be specified')]
 
@@ -251,12 +253,11 @@ def do_mirrorlist(kwargs):
     message = [(None, header)]
     return append_filename_to_results(file, message + hostresults)
 
-
 def read_repo_redirect():
     global repo_redirect
     data = {}
     try:
-        f = open('repo_redirect.txt', 'r')
+        f = open(repo_redirect_file, 'r')
     except:
         return
 
@@ -281,7 +282,7 @@ def read_caches():
 
     data = {}
     try:
-        f = open('/tmp/mirrorlist_cache.pkl', 'r')
+        f = open(cachefile, 'r')
         data = pickle.load(f)
         f.close()
     except:
@@ -346,8 +347,21 @@ class ForkingUnixStreamServer(ForkingMixIn, UnixStreamServer):
         signal.signal(signal.SIGHUP, signal.SIG_IGN)
         BaseServer.finish_request(self, request, client_address)
 
+def parse_args():
+    global cachefile
+    global repo_redirect_file
+    global socketfile
+    opts, args = getopt.getopt(sys.argv[1:], "c:r:s:", ["cache", "repo_redirect", "socket"])
+    for option, argument in opts:
+        if option in ("-c", "--cache"):
+            cachefile = argument
+        if option in ("-r", "--repo_redirect"):
+            repo_redirect_file = argument
+        if option in ("-s", "--socket"):
+            socketfile = argument
 
 def main():
+    parse_args()
     oldumask = os.umask(0)
     try:
         os.unlink(socketfile)
