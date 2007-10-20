@@ -951,7 +951,7 @@ class VersionController(SimpleDbObjectController):
 
         del kwargs['product']
 
-        SimpleDbObjectController.create(self, **kwargs)
+        SimpleDbObjectController.create(self, product=product, **kwargs)
 
     @expose(template="mirrors.templates.boringform")
     @validate(form=form)
