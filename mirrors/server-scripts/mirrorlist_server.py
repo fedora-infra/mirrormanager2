@@ -217,17 +217,19 @@ def do_mirrorlist(kwargs):
     continent_results = []
     global_results = []
         
-    header, netblock_results = do_netblocks(kwargs, cache, header)
-    if len(netblock_results) > 0:
-        done=1
+    # if they specify a country, don't use netblocks
+    if not 'country' in kwargs:
+        header, netblock_results = do_netblocks(kwargs, cache, header)
+        if len(netblock_results) > 0:
+            done=1
 
     client_ip = kwargs['client_ip']
     clientCountry = gi.country_code_by_addr(client_ip)
     
     if not done:
         header, country_results  = do_country(kwargs, cache, clientCountry, header)
-        if len(country_results) > 0:
-            done = 1
+        # only give countries they ask for
+        done = 1
 
     if not done:
         header, geoip_results    = do_geoip(kwargs, cache, clientCountry, header)
