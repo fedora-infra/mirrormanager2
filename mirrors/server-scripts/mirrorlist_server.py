@@ -228,8 +228,8 @@ def do_mirrorlist(kwargs):
     
     if not done:
         header, country_results  = do_country(kwargs, cache, clientCountry, header)
-        # only give countries they ask for
-        done = 1
+        if len(country_results) > 0:
+            done = 1
 
     if not done:
         header, geoip_results    = do_geoip(kwargs, cache, clientCountry, header)
