@@ -341,6 +341,12 @@ class Host(SQLObject):
         
         return sqlresult[0][0] > 0
 
+    def set_not_up2date(self):
+        for hc in self.categories:
+            for hcd in hc.dirs:
+                hcd.up2date=False
+                hcd.sync()
+
 def _publiclist_hosts(product, re):
     productId = product.id
     sql = "SELECT host.id "

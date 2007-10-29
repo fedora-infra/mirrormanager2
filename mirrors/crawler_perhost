@@ -268,7 +268,6 @@ def check_head(hoststate, url, filedata, recursion):
     print "status = %s" % status
     raise HTTPUnknown()
 
-
 def sync_hcds(host, host_category_dirs):
     current_hcds = {}
     for (hc, d), up2date in host_category_dirs.iteritems():
@@ -395,14 +394,20 @@ must_dienow = False
 mypid = None
 def dienow():
     global must_dienow
-    global mypid
-    global hostid
     must_dienow = True
     print "Host %d timeout expired, killing this process.  Better luck next time." % hostid
-    os.kill(mypid, signal.SIGTERM)
+    os.kill(mypid, signal.SIGUSR1)
     os._exit(0)
     
-    
+
+def sigusr1_handler(signum, frame):
+    if signum == signal.SIGUSR1:
+        signal.signal(signal.SIGUSR1, signal.SIG_IGN)
+        try:
+            Host.get(hostid).set_not_up2date()
+        except:
+            pass
+    os._exit(1)
     
 
 def per_host(host, options=None):
@@ -423,6 +428,7 @@ def per_host(host, options=None):
         timer = threading.Timer(options.timeout_minutes * 60.0, dienow)
         timer.start()
 
+    signal.signal(signal.SIGUSR1, sigusr1_handler)
 
     hoststate = hostState(http_debuglevel=http_debuglevel, ftp_debuglevel=ftp_debuglevel)
     for hc in host.categories:
@@ -460,13 +466,18 @@ def per_host(host, options=None):
                     host_category_dirs[(hc, d)] = None
             except:
                 timer.cancel()
+                host.set_not_up2date()
                 sys.exit(1)
 
     hoststate.close()
     if options.timeout_minutes > 0:
         timer.cancel()
+
     if len(host_category_dirs) > 0:
         sync_hcds(host, host_category_dirs)
+    else:
+        host.set_not_up2date()
+
 
 
 def main():
