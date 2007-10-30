@@ -356,11 +356,17 @@ class MirrorlistHandler(StreamRequestHandler):
                 readlen = len(p)
             d = pickle.loads(p)
             self.connection.shutdown(socket.SHUT_RD)
+        except:
+            pass
 
+        try:
             results = do_mirrorlist(d)
-            del d
-            del p
+        except:
+            results = [(None, '# Server Error')]
+        del d
+        del p
 
+        try:
             p = pickle.dumps(results)
             self.connection.sendall(zfill('%s' % len(p), 10))
             del results
