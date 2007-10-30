@@ -15,6 +15,7 @@ import GeoIP
 # can be overridden on the command line
 socketfile = '/tmp/mirrormanager_mirrorlist_server.sock'
 repo_redirect_file = 'repo_redirect.txt'
+country_continent_redirect_file = 'country_continent_redirect.txt'
 cachefile = '/tmp/mirrorlist_cache.pkl'
 
 gi = None
@@ -100,8 +101,30 @@ def append_filename_to_results(file, results):
 
 continents = {}
 
+def read_country_continent_redirect():
+    data = {}
+    try:
+        f = open(country_continent_redirect_file, 'r')
+    except:
+        return
+
+    for line in f.readlines():
+        if line.startswith('#') or len(line.strip()) == 0:
+            continue
+        sline = line.split('=')
+        try:
+            data[sline[0].strip().upper()] = sline[1].strip().upper()
+        except:
+            pass
+
+    f.close()
+    for country, continent in data.iteritems():
+        GeoIP.country_continents[country] = continent
+        
+
 def setup_continents():
     global continents
+    read_country_continent_redirect()
     for c in GeoIP.country_continents.keys():
         continent = GeoIP.country_continents[c]
         if continent not in continents:
@@ -115,30 +138,37 @@ def do_global(kwargs, cache, clientCountry, header):
     header += 'country = global '
     return (header, hostresults)
 
-
-def do_countrylist(kwargs, cache, clientCountry, requestedCountries, header):
+def do_countrylist(kwargs, cache, clientCountry, requested_countries, header):
     hostresults = []
-    for c in requestedCountries:
+    for c in requested_countries:
         if cache['byCountry'].has_key(c):
             hostresults.extend(cache['byCountry'][c])
             header += 'country = %s ' % c
     hostresults = trim_by_client_country(hostresults, clientCountry)
     return (header, hostresults)
-    
-def do_continent(kwargs, cache, clientCountry, header):
-    if clientCountry is not None:
-        requestedCountries = uniqueify([c.upper() for c in continents[GeoIP.country_continents[clientCountry]] if c != clientCountry ])
-        return do_countrylist(kwargs, cache, clientCountry, requestedCountries, header)
-    return (header, [])
-                
-def do_country(kwargs, cache, clientCountry, header):
-    if kwargs.has_key('country'):
-        requestedCountries = uniqueify([c.upper() for c in kwargs['country'].split(',') ])
-        if 'GLOBAL' in requestedCountries:
-            return do_global(kwargs, cache, clientCountry, header)
-        return do_countrylist(kwargs, cache, clientCountry, requestedCountries, header)
-    return (header, [])
 
+def get_same_continent_countries(clientCountry, requested_countries):
+    result = []
+    for r in requested_countries:
+        if r is not None:
+            requestedCountries = [c.upper() for c in continents[GeoIP.country_continents[r]] \
+                                      if c != clientCountry ]
+            result.extend(requestedCountries)
+    uniqueify(result)
+    return result
+    
+def do_continent(kwargs, cache, clientCountry, requested_countries, header):
+    if len(requested_countries) > 0:
+        rc = requested_countries
+    else:
+        rc = [clientCountry]
+    clist = get_same_continent_countries(clientCountry, rc)
+    return do_countrylist(kwargs, cache, clientCountry, clist, header)
+                
+def do_country(kwargs, cache, clientCountry, requested_countries, header):
+    if 'GLOBAL' in requested_countries:
+        return do_global(kwargs, cache, clientCountry, header)
+    return do_countrylist(kwargs, cache, clientCountry, requested_countries, header)
 
 def do_netblocks(kwargs, cache, header):
     client_ip = kwargs['client_ip']    
@@ -216,6 +246,10 @@ def do_mirrorlist(kwargs):
     geoip_results = []
     continent_results = []
     global_results = []
+
+    requested_countries = []
+    if kwargs.has_key('country'):
+        requested_countries = uniqueify([c.upper() for c in kwargs['country'].split(',') ])
         
     # if they specify a country, don't use netblocks
     if not 'country' in kwargs:
@@ -226,10 +260,11 @@ def do_mirrorlist(kwargs):
     client_ip = kwargs['client_ip']
     clientCountry = gi.country_code_by_addr(client_ip)
     
-    if not done:
-        header, country_results  = do_country(kwargs, cache, clientCountry, header)
-        if len(country_results) > 0:
-            done = 1
+    if not done and 'country' in kwargs:
+        header, country_results  = do_country(kwargs, cache, clientCountry, requested_countries, header)
+        if len(country_results) == 0:
+            header, continent_results = do_continent(kwargs, cache, clientCountry, requested_countries, header)
+        done = 1
 
     if not done:
         header, geoip_results    = do_geoip(kwargs, cache, clientCountry, header)
@@ -237,7 +272,7 @@ def do_mirrorlist(kwargs):
             done = 1
 
     if not done:
-        header, continent_results = do_continent(kwargs, cache, clientCountry, header)
+        header, continent_results = do_continent(kwargs, cache, clientCountry, [], header)
         if len(geoip_results) + len(continent_results) >= 3:
             done = 1
 
@@ -352,8 +387,9 @@ class ForkingUnixStreamServer(ForkingMixIn, UnixStreamServer):
 def parse_args():
     global cachefile
     global repo_redirect_file
+    global country_continent_redirect_file
     global socketfile
-    opts, args = getopt.getopt(sys.argv[1:], "c:r:s:", ["cache", "repo_redirect", "socket"])
+    opts, args = getopt.getopt(sys.argv[1:], "c:G:r:s:", ["cache", "continent_redirect", "repo_redirect", "socket"])
     for option, argument in opts:
         if option in ("-c", "--cache"):
             cachefile = argument
@@ -361,6 +397,8 @@ def parse_args():
             repo_redirect_file = argument
         if option in ("-s", "--socket"):
             socketfile = argument
+        if option in ("-G", "--continent_redirect"):
+            country_continent_redirect_file = argument
 
 def main():
     parse_args()
