@@ -341,12 +341,6 @@ class Host(SQLObject):
         
         return sqlresult[0][0] > 0
 
-    def set_not_up2date(self):
-        for hc in self.categories:
-            for hcd in hc.dirs:
-                hcd.up2date=False
-                hcd.sync()
-
 def _publiclist_hosts(product, re):
     productId = product.id
     sql = "SELECT host.id "
@@ -360,7 +354,7 @@ def _publiclist_hosts(product, re):
     sql += "host.site_id = site.id "
     # select conditions
     # up2date, active, not private
-    sql += 'AND host_category_dir.up2date '
+    sql += 'AND (host_category_dir.up2date OR host_category.always_up2date) '
     sql += 'AND host.user_active AND site.user_active '
     sql += 'AND host.admin_active AND site.admin_active '
     sql += 'AND NOT host.private '
