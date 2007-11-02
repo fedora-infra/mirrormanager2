@@ -17,6 +17,14 @@ socketfile = '/tmp/mirrormanager_mirrorlist_server.sock'
 repo_redirect_file = 'repo_redirect.txt'
 country_continent_redirect_file = 'country_continent_redirect.txt'
 cachefile = '/tmp/mirrorlist_cache.pkl'
+# at a point in time when we're no longer serving content for versions
+# that don't use yum prioritymethod=fallback
+# (e.g. after Fedora 7 is past end-of-life)
+# then we can set this value to True
+# this only affects results requested using path=...
+# for dirs which aren't repositories (such as iso/)
+# because we don't know the Version associated with that dir here.
+default_ordered_mirrorlist = False
 
 gi = None
 
@@ -240,6 +248,7 @@ def do_mirrorlist(kwargs):
             return [(None, header + 'error: invalid repo or arch')]
 
 
+    ordered_mirrorlist = cache.get('ordered_mirrorlist', default_ordered_mirrorlist)
     done = 0
     netblock_results = []
     country_results = []
@@ -255,7 +264,8 @@ def do_mirrorlist(kwargs):
     if not 'country' in kwargs:
         header, netblock_results = do_netblocks(kwargs, cache, header)
         if len(netblock_results) > 0:
-            done=1
+            if not ordered_mirrorlist:
+                done=1
 
     client_ip = kwargs['client_ip']
     clientCountry = gi.country_code_by_addr(client_ip)
@@ -269,12 +279,14 @@ def do_mirrorlist(kwargs):
     if not done:
         header, geoip_results    = do_geoip(kwargs, cache, clientCountry, header)
         if len(geoip_results) >= 3:
-            done = 1
+            if not ordered_mirrorlist:
+                done = 1
 
     if not done:
         header, continent_results = do_continent(kwargs, cache, clientCountry, [], header)
         if len(geoip_results) + len(continent_results) >= 3:
-            done = 1
+            if not ordered_mirrorlist:
+                done = 1
 
     if not done:
         header, global_results = do_global(kwargs, cache, clientCountry, header)
