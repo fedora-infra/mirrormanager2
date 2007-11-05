@@ -82,18 +82,11 @@ def client_in_host_allowed(clientCountry, hostID):
 
 
 def trim_by_client_country(hostresults, clientCountry):
-    if clientCountry is None:
-        return hostresults
-
     results = []
-
     for hostid, hcurl in hostresults:
-        if not host_country_allowed_cache.has_key(hostid):
+        if hostid not in host_country_allowed_cache or \
+                clientCountry in host_country_allowed_cache[hostid]:
             results.append((hostid, hcurl))
-        else:
-            if clientCountry in host_country_allowed_cache[hostid]:
-                results.append((hostid, hcurl))
-
     return results
 
 
