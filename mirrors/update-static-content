@@ -2,8 +2,8 @@
 
 [ -z "${MIRRORLIST_DIR}" ] && exit 1
 
-
 temp_dir_name=`mktemp -d /tmp/mirrorlists.XXXXXX`
+trap "rm -rf $temp_dir_name" QUIT TERM INT HUP EXIT
 
 ./generate-mirrorlists -c prod.cfg -d $temp_dir_name
 pushd $temp_dir_name > /dev/null 2>&1
@@ -11,6 +11,11 @@ pushd $temp_dir_name > /dev/null 2>&1
 # an extra HEAD request for each page, which to cherrypy just causes
 # twice as many database lookups.
 wget -nH --cut-dirs=1 -r -l inf --no-remove-listing http://localhost:8082/mirrormanager/publiclist
+if [ $? -ne 0 ]; then
+    # touch the existing files so our proxy caches refresh
+    find ${MIRRORLIST_DIR} -type f -exec touch \{\} \;
+    exit 1
+fi
 
 rsync -va ${MIRRORLIST_DIR}/../mirrors/static .
 ln static/images/favicon.ico
@@ -23,4 +28,3 @@ popd > /dev/null 2>&1
 mkdir -p ${MIRRORLIST_DIR}
 # because the arg list is too long for cp
 rsync -a --delete --delete-after --delay-updates $temp_dir_name/ ${MIRRORLIST_DIR}/
-rm -rf $temp_dir_name
