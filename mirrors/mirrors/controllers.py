@@ -923,7 +923,7 @@ class VersionFields(widgets.WidgetsList):
         return [(p.id, p.name) for p in Product.select(orderBy='name')]
 
     product = widgets.SingleSelectField(options=get_products_options,
-                                        validator=validators.NotEmpty())
+                                        validator=validators.NotEmpty)
     name = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
     isTest = widgets.CheckBox(label="is a Test release")
     display = widgets.CheckBox(label="display in the publiclist chooser", default=True)
@@ -963,8 +963,8 @@ class VersionController(SimpleDbObjectController):
 # RepositoryRedirect
 #########################################################3
 class RepositoryRedirectFields(widgets.WidgetsList):
-    fromRepo = widgets.TextField(validators.All(validators.NotEmpty(), validator=validators.UnicodeString)) 
-    toRepo = widgets.TextField(validators.All(validators.NotEmpty(), validator=validators.UnicodeString)) 
+    fromRepo = widgets.TextField(validator=validators.All(validators.NotEmpty, validators.UnicodeString)) 
+    toRepo = widgets.TextField(validator=validators.All(validators.NotEmpty, validators.UnicodeString)) 
 
 repository_redirect_form = widgets.TableForm(fields=RepositoryRedirectFields(), submit_text="Create Repository Redirect")
 
@@ -990,8 +990,8 @@ class RepositoryRedirectController(SimpleDbObjectController):
 # CountryContinentRedirect
 #########################################################3
 class CountryContinentRedirectFields(widgets.WidgetsList):
-    country = widgets.TextField(validators.All(validators.NotEmpty(), validator=validators.UnicodeString)) 
-    continent = widgets.TextField(validators.All(validators.NotEmpty(), validator=validators.UnicodeString)) 
+    country = widgets.TextField(validator=validators.All(validators.NotEmpty, validators.UnicodeString)) 
+    continent = widgets.TextField(validator=validators.All(validators.NotEmpty, validators.UnicodeString)) 
 
 country_continent_redirect_form = widgets.TableForm(fields=CountryContinentRedirectFields(), submit_text="Create Country->Continent Redirect")
 
