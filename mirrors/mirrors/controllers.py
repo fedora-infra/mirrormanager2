@@ -959,6 +959,60 @@ class VersionController(SimpleDbObjectController):
     def update(self, obj, **kwargs):
         return SimpleDbObjectController.update(self, obj, **kwargs)
 
+#########################################################3
+# RepositoryRedirect
+#########################################################3
+class RepositoryRedirectFields(widgets.WidgetsList):
+    fromRepo = widgets.TextField(validators.All(validators.NotEmpty(), validator=validators.UnicodeString)) 
+    toRepo = widgets.TextField(validators.All(validators.NotEmpty(), validator=validators.UnicodeString)) 
+
+repository_redirect_form = widgets.TableForm(fields=RepositoryRedirectFields(), submit_text="Create Repository Redirect")
+
+class RepositoryRedirectController(SimpleDbObjectController):
+    title = "RepositoryRedirect"
+    myClass = RepositoryRedirect
+    url_prefix="repository_redirect"
+    form = repository_redirect_form
+
+    @expose(template="mirrors.templates.boringform")
+    @validate(form=form)
+    @error_handler(SimpleDbObjectController.new)
+    def create(self, **kwargs):
+        SimpleDbObjectController.create(self, **kwargs)
+
+    @expose(template="mirrors.templates.boringform")
+    @validate(form=form)
+    @error_handler()
+    def update(self, obj, **kwargs):
+        return SimpleDbObjectController.update(self, obj, **kwargs)
+
+#########################################################3
+# CountryContinentRedirect
+#########################################################3
+class CountryContinentRedirectFields(widgets.WidgetsList):
+    country = widgets.TextField(validators.All(validators.NotEmpty(), validator=validators.UnicodeString)) 
+    continent = widgets.TextField(validators.All(validators.NotEmpty(), validator=validators.UnicodeString)) 
+
+country_continent_redirect_form = widgets.TableForm(fields=CountryContinentRedirectFields(), submit_text="Create Country->Continent Redirect")
+
+class CountryContinentRedirectController(SimpleDbObjectController):
+    title = "CountryContinentRedirect"
+    myClass = CountryContinentRedirect
+    url_prefix="country_continent_redirect"
+    form = country_continent_redirect_form
+
+    @expose(template="mirrors.templates.boringform")
+    @validate(form=form)
+    @error_handler(SimpleDbObjectController.new)
+    def create(self, **kwargs):
+        SimpleDbObjectController.create(self, **kwargs)
+
+    @expose(template="mirrors.templates.boringform")
+    @validate(form=form)
+    @error_handler()
+    def update(self, obj, **kwargs):
+        return SimpleDbObjectController.update(self, obj, **kwargs)
+
 
 class PublicListController(controllers.Controller):
     @expose(template="mirrors.templates.publiclist")
@@ -1038,6 +1092,8 @@ class Root(controllers.RootController):
                     "repositories":Repository.select(orderBy='name'),
                     "embargoed_countries":EmbargoedCountry.select(),
                     "netblocks":HostNetblock.select(orderBy='host_id'),
+                    "repository_redirects":RepositoryRedirect.select(orderBy='fromRepo'),
+                    "country_continent_redirects":CountryContinentRedirect.select(orderBy='country'),
                     }
         else:
             return {"sites":sites}

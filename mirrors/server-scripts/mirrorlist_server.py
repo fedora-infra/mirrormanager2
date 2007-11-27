@@ -14,8 +14,6 @@ import GeoIP
 
 # can be overridden on the command line
 socketfile = '/tmp/mirrormanager_mirrorlist_server.sock'
-repo_redirect_file = 'repo_redirect.txt'
-country_continent_redirect_file = 'country_continent_redirect.txt'
 cachefile = '/tmp/mirrorlist_cache.pkl'
 
 gi = None
@@ -36,6 +34,9 @@ repo_arch_to_directoryname = {}
 
 # redirect from a repo with one name to a repo with another
 repo_redirect = {}
+
+# our own private copy of country_continents to be edited
+country_continents = GeoIP.country_continents
 
 def uniqueify(seq, idfun=None):
     # order preserving
@@ -94,32 +95,17 @@ def append_filename_to_results(file, results):
 
 continents = {}
 
-def read_country_continent_redirect():
-    data = {}
-    try:
-        f = open(country_continent_redirect_file, 'r')
-    except:
-        return
-
-    for line in f.readlines():
-        if line.startswith('#') or len(line.strip()) == 0:
-            continue
-        sline = line.split('=')
-        try:
-            data[sline[0].strip().upper()] = sline[1].strip().upper()
-        except:
-            pass
-
-    f.close()
-    for country, continent in data.iteritems():
-        GeoIP.country_continents[country] = continent
-        
+def handle_country_continent_redirect():
+    global country_continents
+    country_continents = GeoIP.country_continents
+    for country, continent in country_continent_redirect_cache.iteritems():
+        country_continents[country] = continent
 
 def setup_continents():
     global continents
-    read_country_continent_redirect()
-    for c in GeoIP.country_continents.keys():
-        continent = GeoIP.country_continents[c]
+    handle_country_continent_redirect()
+    for c in country_continents.keys():
+        continent = country_continents[c]
         if continent not in continents:
             continents[continent] = [c]
         else:
@@ -144,7 +130,7 @@ def get_same_continent_countries(clientCountry, requested_countries):
     result = []
     for r in requested_countries:
         if r is not None:
-            requestedCountries = [c.upper() for c in continents[GeoIP.country_continents[r]] \
+            requestedCountries = [c.upper() for c in continents[country_continents[r]] \
                                       if c != clientCountry ]
             result.extend(requestedCountries)
     uniqueify(result)
@@ -283,32 +269,14 @@ def do_mirrorlist(kwargs):
     message = [(None, header)]
     return append_filename_to_results(file, message + hostresults)
 
-def read_repo_redirect():
-    global repo_redirect
-    data = {}
-    try:
-        f = open(repo_redirect_file, 'r')
-    except:
-        return
-
-    for line in f.readlines():
-        if line.startswith('#') or len(line.strip()) == 0:
-            continue
-        sline = line.split('=')
-        try:
-            data[sline[0].strip()] = sline[1].strip()
-        except:
-            pass
-
-    f.close()
-    if len(data):
-        repo_redirect = data
 
 def read_caches():
     global mirrorlist_cache
     global host_netblock_cache
     global host_country_allowed_cache
     global repo_arch_to_directoryname
+    global repo_redirect
+    global country_continent_redirect_cache
 
     data = {}
     try:
@@ -326,8 +294,13 @@ def read_caches():
         host_country_allowed_cache = data['host_country_allowed_cache']
     if 'repo_arch_to_directoryname' in data:
         repo_arch_to_directoryname = data['repo_arch_to_directoryname']
+    if 'repo_redirect_cache' in data:
+        repo_redirect = data['repo_redirect_cache']
+    if 'country_continent_redirect_cache' in data:
+        country_continent_redirect_cache = data['country_continent_redirect_cache']
 
     del data
+    setup_continents()
 
 class MirrorlistHandler(StreamRequestHandler):
     def handle(self):
@@ -375,7 +348,6 @@ def sighup_handler(signum, frame):
     signal.signal(signal.SIGHUP, signal.SIG_IGN)
     if signum == signal.SIGHUP:
         read_caches()
-        read_repo_redirect()
     signal.signal(signal.SIGHUP, sighup_handler)
 
 class ForkingUnixStreamServer(ForkingMixIn, UnixStreamServer):
@@ -385,19 +357,13 @@ class ForkingUnixStreamServer(ForkingMixIn, UnixStreamServer):
 
 def parse_args():
     global cachefile
-    global repo_redirect_file
-    global country_continent_redirect_file
     global socketfile
-    opts, args = getopt.getopt(sys.argv[1:], "c:G:r:s:", ["cache", "continent_redirect", "repo_redirect", "socket"])
+    opts, args = getopt.getopt(sys.argv[1:], "c:s:", ["cache", "socket"])
     for option, argument in opts:
         if option in ("-c", "--cache"):
             cachefile = argument
-        if option in ("-r", "--repo_redirect"):
-            repo_redirect_file = argument
         if option in ("-s", "--socket"):
             socketfile = argument
-        if option in ("-G", "--continent_redirect"):
-            country_continent_redirect_file = argument
 
 def main():
     parse_args()
@@ -410,8 +376,6 @@ def main():
     global gi
     gi = GeoIP.new(GeoIP.GEOIP_STANDARD)
     read_caches()
-    read_repo_redirect()
-    setup_continents()
     signal.signal(signal.SIGHUP, sighup_handler)
     ss = ForkingUnixStreamServer(socketfile, MirrorlistHandler)
     ss.request_queue_size = 100

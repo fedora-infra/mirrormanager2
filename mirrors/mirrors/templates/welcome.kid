@@ -157,6 +157,23 @@ User-Agent as mirrormanager-crawler.
 	  </li>
 </ul>
 </div>
+<div id="Repository Redirects">
+<h3>Repository Redirects</h3>
+<ul>
+	  <li py:for="r in repository_redirects">
+	  <a href="${tg.url('/repository_redirect/'+str(r.id)+'/')}"><span py:replace="r.fromRepo">from
+	  Repo</span> -&gt; <span py:replace="r.toRepo">to Repo</span></a> 
+	  </li>
+</ul>
+</div>
+<div id="Country Continent Redirects">
+<h3>Country Continent Redirects</h3>
+<ul>
+	  <li py:for="c in country_continent_redirects">
+	  <a href="${tg.url('/country_continent_redirect/'+str(c.id)+'/')}"><span py:replace="c.country">Country</span></a> -&gt; <span py:replace="c.continent">Continent</span>
+	  </li>
+</ul>
+</div>
 </div>
 </body>
 </html>

@@ -591,6 +591,23 @@ class Repository(SQLObject):
     arch = ForeignKey('Arch')
     directory = ForeignKey('Directory')
 
+class RepositoryRedirect(SQLObject):
+    """ Uses strings to allow for effective named aliases, and for repos that may not exist yet """
+    fromRepo = UnicodeCol(alternateID=True)
+    toRepo = UnicodeCol(default=None)
+    idx = DatabaseIndex('fromRepo', 'toRepo', unique=True)
+
+class CountryContinentRedirect(SQLObject):
+    country = UnicodeCol(alternateID=True)
+    continent = UnicodeCol()
+
+    def _set_country(self, country):
+        self._SO_set_country(country.upper())
+
+    def _set_continent(self, continent):
+        self._SO_set_continent(continent.upper())
+
+
 class EmbargoedCountry(SQLObject):
     country_code = StringCol()
 
