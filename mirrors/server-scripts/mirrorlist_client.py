@@ -4,7 +4,7 @@
 #  by Matt Domsch <Matt_Domsch@dell.com>
 # Licensed under the MIT/X11 license
 
-import socket, urllib
+import socket
 import cPickle as pickle
 from string import zfill, atoi, strip
 from mod_python import util, apache
@@ -81,7 +81,6 @@ def request_setup(req, request_data):
 
 
 def handler(req):
-    req.args = urllib.quote(req.args)
     request_data = util.FieldStorage(req)
     d = request_setup(req, request_data)
 
