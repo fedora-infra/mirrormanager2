@@ -42,9 +42,11 @@ repo_arch_to_directoryname = {}
 
 # redirect from a repo with one name to a repo with another
 repo_redirect = {}
+country_continent_redirect_cache = {}
 
 # our own private copy of country_continents to be edited
 country_continents = GeoIP.country_continents
+
 
 def uniqueify(seq, idfun=None):
     # order preserving
