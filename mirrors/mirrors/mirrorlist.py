@@ -98,15 +98,17 @@ def populate_directory_cache():
             del directory
             del category
             
-        country = country.upper()
+        if country is not None:
+            country = country.upper()
         v = (hostid, hcurl)
         if not siteprivate and not hostprivate:
             cache[directoryname]['global'].append(v)
 
-            if not cache[directoryname]['byCountry'].has_key(country):
-                cache[directoryname]['byCountry'][country] = [v]
-            else:
-                cache[directoryname]['byCountry'][country].append(v)
+            if country is not None:
+                if not cache[directoryname]['byCountry'].has_key(country):
+                    cache[directoryname]['byCountry'][country] = [v]
+                else:
+                    cache[directoryname]['byCountry'][country].append(v)
 
         if not cache[directoryname]['byHostId'].has_key(hostid):
             cache[directoryname]['byHostId'][hostid] = [v]
