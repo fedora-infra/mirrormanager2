@@ -170,7 +170,7 @@ def dump_caches():
             'host_netblock_cache':host_netblock_cache,
             'host_country_allowed_cache':host_country_allowed_cache,
             'repo_arch_to_directoryname':repo_arch_to_directoryname,
-            'repository_redirect_cache':repository_redirect_cache(),
+            'repo_redirect_cache':repository_redirect_cache(),
             'country_continent_redirect_cache':country_continent_redirect_cache()}
     
     try:
