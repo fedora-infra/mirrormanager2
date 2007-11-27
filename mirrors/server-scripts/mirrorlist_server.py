@@ -166,7 +166,7 @@ def do_netblocks(kwargs, cache, header):
             for hostId in hosts:
                 if cache['byHostId'].has_key(hostId):
                     hostresults.extend(cache['byHostId'][hostId])
-                    header += 'Using preferred netblock'
+                    header += 'Using preferred netblock '
             if len(hostresults) > 0:
                 return (header, hostresults)
     return (header, [])
@@ -264,8 +264,7 @@ def do_mirrorlist(kwargs):
     if not done:
         header, continent_results = do_continent(kwargs, cache, clientCountry, [], header)
         if len(geoip_results) + len(continent_results) >= 3:
-            if not ordered_mirrorlist:
-                done = 1
+            done = 1
 
     if not done:
         header, global_results = do_global(kwargs, cache, clientCountry, header)
