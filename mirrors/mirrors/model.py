@@ -405,7 +405,7 @@ class HostCountryAllowed(SQLObject):
     #class sqlmeta:
     #    cacheValues = False
     host = ForeignKey('Host')
-    country = StringCol()
+    country = StringCol(notNone=True)
 
     def my_site(self):
         return self.host.my_site()
@@ -598,8 +598,8 @@ class RepositoryRedirect(SQLObject):
     idx = DatabaseIndex('fromRepo', 'toRepo', unique=True)
 
 class CountryContinentRedirect(SQLObject):
-    country = UnicodeCol(alternateID=True)
-    continent = UnicodeCol()
+    country = UnicodeCol(alternateID=True, notNone=True)
+    continent = UnicodeCol(notNone=True)
 
     def _set_country(self, country):
         self._SO_set_country(country.upper())
@@ -609,7 +609,7 @@ class CountryContinentRedirect(SQLObject):
 
 
 class EmbargoedCountry(SQLObject):
-    country_code = StringCol()
+    country_code = StringCol(notNone=True)
 
 
 ###############################################################
