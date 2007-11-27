@@ -540,6 +540,7 @@ class Version(SQLObject):
     isTest = BoolCol(default=False)
     display = BoolCol(default=True)
     display_name = UnicodeCol(default=None)
+    ordered_mirrorlist = BoolCol(default=True)
 
 
 class Directory(SQLObject):

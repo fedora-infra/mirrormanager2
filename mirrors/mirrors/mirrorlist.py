@@ -76,13 +76,14 @@ def populate_directory_cache():
     cache = {}
     for (directoryname, hostid, country, hcurl, siteprivate, hostprivate) in result:
         if directoryname not in cache:
-            cache[directoryname] = {'global':[], 'byCountry':{}, 'byHostId':{}}
+            cache[directoryname] = {'global':[], 'byCountry':{}, 'byHostId':{}, 'ordered_mirrorlist':False}
             directory = Directory.byName(directoryname)
             repo = directory.repository
             # if a directory is in more than one category, problem...
             if repo is not None:
                 repo_arch_to_directoryname[(repo.prefix, repo.arch.name)] = directory.name
                 category = repo.category
+                cache[directoryname]['ordered_mirrorlist'] = repo.version.ordered_mirrorlist
             else:
                 numcats = len(directory.categories)
                 if numcats == 0:
