@@ -113,6 +113,7 @@ def handle_country_continent_redirect():
 
 def setup_continents():
     global continents
+    continents = {}
     handle_country_continent_redirect()
     for c in country_continents.keys():
         continent = country_continents[c]
