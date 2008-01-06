@@ -270,10 +270,12 @@ def check_head(hoststate, url, filedata, recursion):
 
 def sync_hcds(host, host_category_dirs):
     current_hcds = {}
+    now = datetime.utcnow()
     for (hc, d), up2date in host_category_dirs.iteritems():
         if up2date is None:
             continue
 
+        hc.host.lastCrawled = now
         topname = hc.category.topdir.name
         path = d.name[len(topname)+1:]
 
@@ -285,7 +287,7 @@ def sync_hcds(host, host_category_dirs):
 
         if hcd.directory is None:
             hcd.directory = d
-        hcd.lastCrawled=datetime.utcnow()
+        hcd.lastCrawled=now
         hcd.up2date=up2date
         current_hcds[hcd] = True
         hcd.sync()

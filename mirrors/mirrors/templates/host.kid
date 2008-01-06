@@ -24,6 +24,7 @@ ${form(value=values, action=action, disabled_fields=disabled_fields)}
 
 <div py:if="values is not None and action.endswith('update')">
 Last Checked In: ${values.lastCheckedIn}<br></br>
+Last Crawled: ${values.lastCrawled}<br></br>
 
 
 <div py:if="is_siteadmin">
