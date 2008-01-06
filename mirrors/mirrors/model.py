@@ -176,6 +176,7 @@ class Host(SQLObject):
     comment = UnicodeCol(default=None)
     _config = PickleCol(default=None)
     lastCheckedIn = DateTimeCol(default=None)
+    lastCrawled = DateTimeCol(default=None)
     private = BoolCol(default=False)
     countries_allowed = MultipleJoin('HostCountryAllowed')
     netblocks = MultipleJoin('HostNetblock')
