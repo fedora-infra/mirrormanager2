@@ -25,6 +25,7 @@ touch robots.txt
 # remove /mirrormanager in the URLs
 find . -name index.html -type f | xargs -n 20 perl -p -i -e 's:/mirrormanager/:/:g'
 popd > /dev/null 2>&1
-mkdir -p ${MIRRORLIST_DIR}
+mkdir -m 0775 -p ${MIRRORLIST_DIR}
 # because the arg list is too long for cp
+chmod 0775 $temp_dir_name/
 rsync -a --delete --delete-after --delay-updates $temp_dir_name/ ${MIRRORLIST_DIR}/
