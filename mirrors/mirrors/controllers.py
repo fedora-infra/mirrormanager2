@@ -1084,7 +1084,7 @@ class Root(controllers.RootController):
 
     @expose(template="mirrors.templates.adminview")
     @identity.require(identity.in_group('sysadmin'))
-    def index(self):
+    def adminview(self):
         return {"sites":Site.select(orderBy='name'),
                 "arches":Arch.select(),
                 "products":Product.select(),
