@@ -1080,23 +1080,23 @@ class Root(controllers.RootController):
             sites = Site.select(orderBy='name')
         else:
             sites = user_sites(identity)
+        return {"sites":sites}
 
-            
-        if "sysadmin" in identity.current.groups:
-            return {"sites":sites,
-                    "arches":Arch.select(),
-                    "products":Product.select(),
-                    "versions":Version.select(),
-                    "directories":Directory.select(orderBy='name'),
-                    "categories":Category.select(),
-                    "repositories":Repository.select(orderBy='name'),
-                    "embargoed_countries":EmbargoedCountry.select(),
-                    "netblocks":HostNetblock.select(orderBy='host_id'),
-                    "repository_redirects":RepositoryRedirect.select(orderBy='fromRepo'),
-                    "country_continent_redirects":CountryContinentRedirect.select(orderBy='country'),
-                    }
-        else:
-            return {"sites":sites}
+    @expose(template="mirrors.templates.adminview")
+    @identity.require(identity.in_group('sysadmin'))
+    def index(self):
+        return {"sites":Site.select(orderBy='name'),
+                "arches":Arch.select(),
+                "products":Product.select(),
+                "versions":Version.select(),
+                "directories":Directory.select(orderBy='name'),
+                "categories":Category.select(),
+                "repositories":Repository.select(orderBy='name'),
+                "embargoed_countries":EmbargoedCountry.select(),
+                "netblocks":HostNetblock.select(orderBy='host_id'),
+                "repository_redirects":RepositoryRedirect.select(orderBy='fromRepo'),
+                "country_continent_redirects":CountryContinentRedirect.select(orderBy='country'),
+                }
 
     @expose(template="mirrors.templates.rsync_acl", format="plain", content_type="text/plain")
     def rsync_acl(self):
