@@ -271,7 +271,11 @@ def main():
             data = urlsafe_b64encode(bz2.compress(p))
 
         if data is not None:
-            print server.checkin(data)
+            try:
+                print server.checkin(data)
+            except xmlrpclib.Fault:
+                print "Error checking in.  Connection closed before checkin complete.  Please try again later."
+                sys.exit(1)                
 
 
 if __name__ == '__main__':
