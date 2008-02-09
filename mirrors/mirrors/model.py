@@ -260,7 +260,7 @@ class Host(SQLObject):
                         d.destroySelf()
                         deleted += 1
 
-                message += "Category %s directories updated: %s  added: %s  deleted %s\n" % (marked_up2date, added, deleted)
+                message += "Category %s directories updated: %s  added: %s  deleted %s\n" % (category.name, marked_up2date, added, deleted)
             hc.sync()
 
         return message
