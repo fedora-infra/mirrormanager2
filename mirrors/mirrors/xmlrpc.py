@@ -13,11 +13,11 @@ class XmlrpcController(controllers.Controller):
     @expose()
     def checkin(self, p):
         config = pickle.loads(bz2.decompress(base64.urlsafe_b64decode(p)))
-        r = read_host_config(config)
+        r, message = read_host_config(config)
         if r is not None:
-            return 'checked in successful'
+            return message + 'checked in successful'
         else:
-            return 'error checking in'
+            return message + 'error checking in'
 
     @expose()
     def echo(self, a):

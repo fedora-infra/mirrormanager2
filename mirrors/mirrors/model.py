@@ -197,6 +197,7 @@ class Host(SQLObject):
 
 
     def _uploaded_config(self, config):
+        message = ''
 
         def _config_categories(config):
             noncategories = ['version', 'global', 'site', 'host', 'stats']
@@ -227,6 +228,9 @@ class Host(SQLObject):
             else:
                 hc = HostCategory(host=self, category=category)
 
+            marked_up2date = 0
+            deleted = 0
+            added = 0
             # and now one HostCategoryDir for each dir in the dirtree
             if config[c].has_key('dirtree'):
                 for d in config[c]['dirtree'].keys():
@@ -237,6 +241,7 @@ class Host(SQLObject):
                         hcdir.files = config[c]['dirtree'][d]
                         hcdir.up2date = True
                         hcdir.sync()
+                        marked_up2date += 1
                     else:
                         if len(d) > 0:
                             dname = "%s/%s" % (hc.category.topdir.name, d)
@@ -248,12 +253,16 @@ class Host(SQLObject):
                         except:
                             pass
                         hcdir = HostCategoryDir(host_category=hc, path=d, directory=dir, files=config[c]['dirtree'][d])
+                        added += 1
                 for d in HostCategoryDir.selectBy(host_category=hc):
                     if d.path not in config[c]['dirtree'].keys():
                         d.destroySelf()
+                        deleted += 1
 
+                message += "Category %s directories updated: %s  added: %s  deleted %s\n" % (marked_up2date, added, deleted)
             hc.sync()
-                                                          
+
+        return message
 
 
     def is_admin_active(self):
@@ -269,10 +278,15 @@ class Host(SQLObject):
         return self._config
 
     def _set_config(self, config):
-        self._config = config
+        # really, we don't store the config anymore
+        self._config = None
         self.lastCheckedIn = datetime.utcnow()
+
+    def checkin(self, config):
+        message = self._uploaded_config(config)
+        self.config = config
         self.sync()
-        self._uploaded_config(config)
+        return message
 
     def has_category(self, cname):
         return HostCategory.selectBy(host=self, category=Category.byName(cname)).count() > 0

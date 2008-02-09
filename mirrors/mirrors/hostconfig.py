@@ -4,45 +4,43 @@ import pickle
 import pprint
 
 
-def errorprint(error):
-    print >> sys.stderr, error
-
 def validate_config(config):
+    message = ''
     if type(config) != dict:
-        errorprint('config file is not a dict')
-        return False
+        message += 'config file is not a dict.\nPlease update your copy of report_mirror.\n'
+        return (False, message)
     if not config.has_key('version'):
-        errorprint('no version')
-        return False
+        message += 'config file has no version field.\n'
+        return (False, message)
     # this field is an integer
     if config['version'] != 0:
-        errorprint('version %s not 0' % (config['version']))
-        return False
+        message += 'config file version is not 0, is %s.\n' % (config['version'])
+        return (False, message)
 
     for section in ['global', 'site', 'host']:
         if not config.has_key(section):
-            errorprint('missing section %s' % (section))
-            return False
+            message += 'config file missing section %s.\n' % (section)
+            return (False, message)
 
     g = config['global']
     # this field is a string as it comes from the config file
     if not g.has_key('enabled') or g['enabled'] != '1':
-        errorprint('section [global] not enabled')
-        return False
+        message += 'config file section [global] not enabled.\n'
+        return (False, message)
 
     site = config['site']
     required_options = [ 'name', 'password' ]
     for o in required_options:
         if not site.has_key(o):
-            errorprint('section [site] missing required option %s' % o)
-            return False
+            message += 'config file [site] missing required option %s.\n' % (o)
+            return (False, message)
 
     host = config['host']
     required_options = [ 'name' ]
     for o in required_options:
         if not host.has_key(o):
-            errorprint('section [host] missing required option %s' % o)
-            return False
+            message +=  'section [host] missing required option %s.\n' % (o)
+            return (False, message)
 
     required_options = [ 'dirtree' ]
     for category in config.keys():
@@ -51,29 +49,29 @@ def validate_config(config):
                                                                            
         for o in required_options:
             if not config[category].has_key(o):
-                errorprint('section [%s] missing required option %s' % (category, o))
-                return False
-    return True
+                message += 'section [%s] missing required option %s.\n' % (category, o)
+                return (False, message)
+    return (True, message)
 
 def read_host_config(config):
-        if not validate_config(config):
-            return None
+    rc, message = validate_config(config)
+    if not rc:
+        return (None, message + 'Invalid config file provided, please check your report_mirror.conf.')
         
-        csite = config['site']
-        chost = config['host']
+    csite = config['site']
+    chost = config['host']
 
-        try:
-            site = Site.byName(csite['name'])
-        except SQLObjectNotFound:
-            return None
+    try:
+        site = Site.byName(csite['name'])
+    except SQLObjectNotFound:
+        return (None, 'Config file site name or password incorrect.\n')
 
-        if csite['password'] != site.password:
-            return None
+    if csite['password'] != site.password:
+        return (None, 'Config file site name or password incorrect.\n')
 
-        h = Host.selectBy(name=chost['name'], site=site)
-        if h.count() != 1:
-            return None
-        host = h[0]
-        host.config = config
-
-        return (site, host, config)
+    h = Host.selectBy(name=chost['name'], site=site)
+    if h.count() != 1:
+        return (None, 'Config file host name for site not found.\n')
+    host = h[0]
+    message = host.checkin(config)
+    return (True, message)
