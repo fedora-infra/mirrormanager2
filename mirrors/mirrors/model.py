@@ -247,13 +247,14 @@ class Host(SQLObject):
                             dname = "%s/%s" % (hc.category.topdir.name, d)
                         else:
                             dname = hc.category.topdir.name
-                        dir = None
+
+                        # Don't create an entry for a directory the database doesn't know about
                         try:
                             dir = Directory.byName(dname)
+                            hcdir = HostCategoryDir(host_category=hc, path=d, directory=dir, files=config[c]['dirtree'][d])
+                            added += 1
                         except:
                             pass
-                        hcdir = HostCategoryDir(host_category=hc, path=d, directory=dir, files=config[c]['dirtree'][d])
-                        added += 1
                 for d in HostCategoryDir.selectBy(host_category=hc):
                     if d.path not in config[c]['dirtree'].keys():
                         d.destroySelf()
