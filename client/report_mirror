@@ -10,6 +10,7 @@ import time
 import xmlrpclib
 import base64
 import bz2
+import socket
 
 class HostConfig(object):
     """Holder for config info from the configuration file"""
@@ -110,11 +111,17 @@ def parse_value(value):
 
 def parse_section(conf, section, item, required_options, optional_options=[]):
     if conf.has_option(section, 'enabled'):
-        if conf.get(section, 'enabled') != '1':
+        if conf.get(section, 'enabled') != '1' and section.lower() in item.config:
+            print 'removing disabled section %s' % (section)
+            del item.config[section.lower()]
             return False
+
     if not check_required_options(conf, section, required_options):
         return False
-    item.config[section.lower()] = {}
+
+    if not section.lower() in item.config:
+        item.config[section.lower()] = {}
+
     for o in required_options:
         item.config[section.lower()][o] = parse_value(conf.get(section, o))
     for o in optional_options:
@@ -159,13 +166,14 @@ def get_stats(conf, section):
                 pass
     return statsdata
 
-def parse_category(conf, section, item):
+def parse_category(conf, section, item, crawl):
     required_options = [ 'enabled', 'path' ]
     if not parse_section(conf, section, item, required_options):
         return False
 
-    dirtree = gen_dirtree(conf.get(section, 'path'))
-    item.config[section.lower()]['dirtree'] = dirtree
+    if crawl:
+        dirtree = gen_dirtree(conf.get(section, 'path'))
+        item.config[section.lower()]['dirtree'] = dirtree
     # database doesn't need to know the disk path
     del item.config[section.lower()]['path']
 
@@ -188,8 +196,7 @@ def config(cfg, item, crawl=True):
         for section in conf.sections():
             if section in [ 'global', 'site', 'host', 'stats']:
                 continue
-            elif crawl:
-                parse_category(conf, section, item)
+            parse_category(conf, section, item, crawl)
 
     except MissingOption:
         errorprint('Invalid configuration - Exiting')
@@ -233,17 +240,17 @@ def main():
 
     (options, args) = parser.parse_args()
     item = HostConfig()
-    if not options.input:
+    if options.input:
+        infile = open(options.input, 'rb')
+        item.config = pickle.load(infile)
+        infile.close()
+        if not config(options.config, item, crawl=False):
+            sys.exit(1)
+    else:
         if not config(options.config, item, crawl=True):
             sys.exit(1)
 
-        p = pickle.dumps(item.config, -1)
-    else:
-        infile = open(options.input, 'rb')
-        p = infile.read()
-        infile.close()
-        item.config = pickle.loads(p)
-        config(options.config, item, crawl=False)
+    p = pickle.dumps(item.config, -1)
 
     if options.debug:
         pp = pprint.PrettyPrinter(indent=4)
@@ -273,6 +280,8 @@ def main():
         if data is not None:
             try:
                 print server.checkin(data)
+            except socket.error, m:
+                print "Error checking in: %s.  Please try again later." % (m[1])
             except xmlrpclib.Fault:
                 print "Error checking in.  Connection closed before checkin complete.  Please try again later."
                 sys.exit(1)                
