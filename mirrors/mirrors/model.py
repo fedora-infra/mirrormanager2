@@ -238,7 +238,8 @@ class Host(SQLObject):
                     hcdir = HostCategoryDir.selectBy(host_category = hc, path=d)
                     if hcdir.count() > 0:
                         hcdir = hcdir[0]
-                        hcdir.files = config[c]['dirtree'][d]
+                        # don't store files, we don't need it right now
+                        hcdir.files = None
                         hcdir.up2date = True
                         hcdir.sync()
                         marked_up2date += 1
@@ -251,7 +252,7 @@ class Host(SQLObject):
                         # Don't create an entry for a directory the database doesn't know about
                         try:
                             dir = Directory.byName(dname)
-                            hcdir = HostCategoryDir(host_category=hc, path=d, directory=dir, files=config[c]['dirtree'][d])
+                            hcdir = HostCategoryDir(host_category=hc, path=d, directory=dir)
                             added += 1
                         except:
                             pass
