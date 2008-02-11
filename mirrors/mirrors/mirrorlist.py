@@ -67,7 +67,7 @@ def _do_query_directories():
     sql += 'UNION '
     sql  = 'SELECT directory.name, host.id, host.country, host_category_url.url, site.private, host.private '
     sql += 'FROM directory, host_category, host_category_url, host, site, category_directory '
-    sql += 'AND   host_category_url.host_category_id = host_category.id ' # join criteria
+    sql += 'WHERE host_category_url.host_category_id = host_category.id ' # join criteria
     sql += 'AND   host_category.host_id = host.id '                       # join criteria
     sql += 'AND   host.site_id = site.id '                                # join criteria
     sql += 'AND   category_directory.directory_id = directory.id '         # join criteria (dir for this category)
