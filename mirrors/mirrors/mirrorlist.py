@@ -171,6 +171,13 @@ def country_continent_redirect_cache():
         cache[c.country] = c.continent
     return cache
 
+def disabled_repository_cache():
+    cache = {}
+    for r in Repository.select():
+        if r.disabled:
+            cache[r.prefix] = True
+    return cache
+
 def populate_all_caches():
     populate_host_country_allowed_cache()
     populate_netblock_cache()
@@ -186,7 +193,8 @@ def dump_caches():
             'host_country_allowed_cache':host_country_allowed_cache,
             'repo_arch_to_directoryname':repo_arch_to_directoryname,
             'repo_redirect_cache':repository_redirect_cache(),
-            'country_continent_redirect_cache':country_continent_redirect_cache()}
+            'country_continent_redirect_cache':country_continent_redirect_cache(),
+            'disabled_repositories':disabled_repository_cache()}
     
     try:
         f = open('/tmp/mirrorlist_cache.pkl', 'w')

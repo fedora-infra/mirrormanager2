@@ -608,6 +608,7 @@ class Repository(SQLObject):
     version = ForeignKey('Version')
     arch = ForeignKey('Arch')
     directory = ForeignKey('Directory')
+    disabled = BoolCol(default=False)
 
 class RepositoryRedirect(SQLObject):
     """ Uses strings to allow for effective named aliases, and for repos that may not exist yet """

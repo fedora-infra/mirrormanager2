@@ -47,6 +47,7 @@ country_continent_redirect_cache = {}
 # our own private copy of country_continents to be edited
 country_continents = GeoIP.country_continents
 
+disabled_repositories = {}
 
 def uniqueify(seq, idfun=None):
     # order preserving
@@ -223,6 +224,9 @@ def do_mirrorlist(kwargs):
         arch = kwargs['arch']
         header = "# repo = %s arch = %s " % (repo, arch)
 
+        if repo in disabled_repositories:
+            return [(None, header + 'repo disabled')]
+
         try:
             dir = repo_arch_to_directoryname[(repo, arch)]
             cache = mirrorlist_cache[dir]
@@ -291,6 +295,7 @@ def read_caches():
     global repo_arch_to_directoryname
     global repo_redirect
     global country_continent_redirect_cache
+    global disabled_repositories
 
     data = {}
     try:
@@ -312,6 +317,8 @@ def read_caches():
         repo_redirect = data['repo_redirect_cache']
     if 'country_continent_redirect_cache' in data:
         country_continent_redirect_cache = data['country_continent_redirect_cache']
+    if 'disabled_repositories' in data:
+        disabled_repositories = data['disabled_repositories']
 
     del data
     setup_continents()
