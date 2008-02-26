@@ -326,38 +326,6 @@ class Host(SQLObject):
     def my_site(self):
         return self.site
 
-    def _product_version_arch_dirs(self, product, re):
-        sql = "SELECT COUNT(*) "
-        sql += "FROM category, host_category, product, host_category_dir "
-        sql += "WHERE category.id = host_category.category_id AND "
-        sql += "host_category.host_id = %s AND " % self.id
-        sql += "category.product_id = %s AND " % product.id
-        sql += "product.id = %s AND " % product.id
-        sql += "host_category.id = host_category_dir.host_category_id "
-        if re is not None:
-            sql += "AND host_category_dir.path ~ '%s' " % re
-        sql += "LIMIT 1"
-
-        result = product._connection.queryAll(sql)
-        return result
-
-    def has_product_version_arch_dirs(self, productname, vername, archname):
-        """ has a category of product, and an hcd that matches version """
-        try:
-            product = Product.byName(productname)
-        except SQLObjectNotFound:
-            return False
-        if vername is not None and archname is not None:
-            desiredPath = '(^|/)%s/.*%s/' % (vername, archname)
-        elif vername is not None:
-            desiredPath = '(^|/)%s/' % vername
-        else:
-            desiredPath = None
-
-        sqlresult = self._product_version_arch_dirs(product, desiredPath)
-        
-        return sqlresult[0][0] > 0
-
     def set_not_up2date(self):
         for hc in self.categories:
             for hcd in hc.dirs:
@@ -435,92 +403,6 @@ class HostNetblock(SQLObject):
 
     def my_site(self):
         return self.host.my_site()
-    
-
-def category_mirrors(category):
-    return [hc.host for hc in HostCategory.selectBy(category=category)]
-
-
-def _directory_mirrors(directory, country):
-
-    sql = "SELECT category.id, host_category.id, host.id "
-    sql += "FROM category, host_category, host, category_directory "
-    sql += "WHERE category.id = host_category.category_id AND "
-    sql += "category_directory.directory_id = %s AND " % directory.id
-    sql += "category_directory.category_id = host_category.category_id AND "
-    sql += "host_category.host_id = host.id "
-    if country is not '':
-        country = country.upper()
-        sql += "AND host.country = '%s' " % country
-    sql += "ORDER BY host.id"
-    
-    result = directory._connection.queryAll(sql)
-    return result
-
-
-def directory_mirrors(directory, country='', include_private=False):
-    """Given a directory like pub/fedora/linux/core/5/i386/os,
-    what active hosts have this directory?  To find that,
-    we need to know the category the directory falls under,
-    then need to look up each host to see if it has that category,
-    and if so, if it has that directory under the category."""
-    origdir = directory.name
-    result = []
-    category = None
-    if country is None: country=''
-    if country.upper() == u'GLOBAL':
-        country = ''
-
-    d = directory
-
-    if len(d.categories) == 0:
-        return result
-
-    dm = _directory_mirrors(d, country)
-    for categoryId, hostcategoryId, hostId in dm:
-        host = Host.get(hostId)
-        if host.is_private() and not include_private:
-            continue
-        category = Category.get(categoryId)
-        # dirname is the subpath starting below the category's top-level directory
-        dirname = origdir[len(category.topdir.name)+1:]
-        hcd_exists = host.has_category_dir(category, dirname)
-        if host.is_active() and hcd_exists:
-            result.append((category.name, dirname, host))
-    return result
-
-def _preferred_host(host, clientIP):
-    if clientIP is None:
-        return False
-    ip = IPy.IP(clientIP)
-    for n in host.netblocks:
-        if ip in IPy.IP(n.netblock):
-            return True
-    return False
-
-
-def _append_hcurl(host, cname, dirname, result):
-    for u in host.category_urls(cname):
-        fullurl = '%s/%s' % (u, dirname)
-        cc = host.country
-        if cc is not None: cc = cc.upper()
-        else: cc=''
-        result.append((fullurl, cc, host))
-    return result
-
-def directory_mirror_urls(directory, country='', include_private=False, clientIP=None):
-    result = []
-    # no country or private restrictions on preferred hosts
-    dm = directory_mirrors(directory, country='', include_private=True)
-    for cname, dirname, host in dm:
-        if _preferred_host(host, clientIP):
-            result = _append_hcurl(host, cname, dirname, result)
-
-    if len(result) == 0:
-        dm = directory_mirrors(directory, country, include_private)
-        for cname, dirname, host in dm:
-            result = _append_hcurl(host, cname, dirname, result)
-    return result
 
 
 class HostStats(SQLObject):
