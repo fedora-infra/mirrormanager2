@@ -450,6 +450,7 @@ class Directory(SQLObject):
     # e.g. pub/fedora/linux
     name = UnicodeCol(alternateID=True)
     files = PickleCol(default={})
+    readable = BoolCol(default=True)
     categories = RelatedJoin('Category')
     repository = SingleJoin('Repository') # zero or one repository, set if this dir contains a yum repo
     host_category_dirs = MultipleJoin('HostCategoryDir')

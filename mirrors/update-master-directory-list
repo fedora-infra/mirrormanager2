@@ -120,18 +120,22 @@ def nuke_gone_directories(category, category_directories):
                 d.destroySelf()
 
 def make_one_directory(line, category, path, category_directories):
+    readable=True
     d = line.split()[4]
     if re.compile('^\.$').match(d):
         dname = path
     else:
         dname = "%s/%s" % (path, d)
-    category_directories[dname] = {'files':{}, 'isRepository':False}
+    perms = line.split()[0]
+    if not re.compile('^d......r.x').match(perms):
+        readable=False
+    category_directories[dname] = {'files':{}, 'isRepository':False, 'readable':readable}
     if d.endswith('repodata'):
         parent_dname = dname[:-len('/repodata')]
         try:
             category_directories[parent_dname]['isRepository'] = True
         except KeyError:
-            category_directories[parent_dname] = {'files':{}, 'isRepository':True}
+            category_directories[parent_dname] = {'files':{}, 'isRepository':True, 'readable':readable}
         
             
     return dname, category_directories
@@ -178,8 +182,10 @@ def sync_category_directories(category, category_directories):
     for dirpath, value in category_directories.iteritems():
         try:
             dir = Directory.byName(dirpath)
+            if dir.readable != value['readable']:
+                dir.readable = value['readable']
         except SQLObjectNotFound:
-            dir = Directory(name=dirpath)
+            dir = Directory(name=dirpath,readable=value['readable'])
             dir.addCategory(category)
         dir.files = short_filelist(value['files'])
         if value['isRepository']:

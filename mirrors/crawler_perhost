@@ -444,6 +444,14 @@ def per_host(host, options=None):
         for d in trydirs:
             if must_dienow:
                 sys.exit(1)
+
+            if not d.readable:
+                # remove subdirs of here too
+                for t in trydirs:
+                    if d == t or t.name.startswith("%s/" % d.name):
+                        trydirs.remove(t)
+                continue
+
             dirname = d.name[categoryPrefixLen:]
             url = '%s/%s' % (categoryUrl, dirname)
 
