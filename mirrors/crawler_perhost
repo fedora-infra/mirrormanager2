@@ -296,6 +296,8 @@ def sync_hcds(host, host_category_dirs):
     # we wait for a cascading Directory delete to delete this
     for hc in host.categories:
         for hcd in hc.dirs:
+            if hcd.directory is not None and not hcd.directory.readable:
+                continue
             try:
                 thcd = current_hcds[hcd]
             except KeyError:
