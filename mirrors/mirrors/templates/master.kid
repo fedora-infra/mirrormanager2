@@ -47,7 +47,7 @@
             </span>
             <span py:if="not tg.identity.anonymous">
               <h2>Logged in</h2>
-              Welcome ${tg.identity.user.display_name}.
+              Welcome ${tg.identity.display_name}.
               <ul><li><a href="${tg.url('/logout')}">Logout</a></li></ul>
             </span>
           </div>
