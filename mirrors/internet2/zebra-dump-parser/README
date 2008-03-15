@@ -1,0 +1,17 @@
+Another source of BGP dumps is RIPE RIS, e.g.:
+http://data.ris.ripe.net/rrc00/2003.04/bview.20030408.0000.gz
+
+A good table to map ASNs to their own name is available at
+http://www.potaroo.net/bgp/iana/asn-ctl.txt .
+
+
+To test aslookup.pl you can set $format = 1 and then run:
+
+zcat bview.20030321.1600.gz | time ./zebra-dump-parser.pl >DUMP 2>DUMPERR
+sort < DUMP | uniq | time ./aggregate-by-asn.pl > routes.tmp
+mv routes.tmp routes
+
+Please let me know if you ever find a use for this software.
+I *know* that many people are downloading it, but nobody ever reports back...
+
+Marco d'Itri <md@linux.it>
