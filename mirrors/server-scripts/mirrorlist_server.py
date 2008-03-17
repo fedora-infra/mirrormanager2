@@ -203,13 +203,14 @@ def do_netblocks(kwargs, cache, header):
     return (header, [])
 
 def do_internet2(kwargs, cache, clientCountry, header):
+    hostresults = []
     client_ip = kwargs['client_ip']
     if OrderedIP(client_ip) in internet2_netblocks:
         header += 'Using Internet2 '
-        hostresults = cache['Internet2']
-        hostresults = trim_by_client_country(hostresults, clientCountry)
-        return (header, hostresults)
-    return (header, [])
+        if clientCountry is not None and cache['byCountryInternet2'].has_key(clientCountry):
+            hostresults.extend(cache['byCountryInternet2'][clientCountry])
+            hostresults = trim_by_client_country(hostresults, clientCountry)
+    return (header, hostresults)
 
                 
 def do_geoip(kwargs, cache, clientCountry, header):

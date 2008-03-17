@@ -91,7 +91,7 @@ def populate_directory_cache():
     cache = {}
     for (directoryname, hostid, country, hcurl, siteprivate, hostprivate, i2, i2_clients) in result:
         if directoryname not in cache:
-            cache[directoryname] = {'global':[], 'byCountry':{}, 'byHostId':{}, 'ordered_mirrorlist':False, 'Internet2':[]}
+            cache[directoryname] = {'global':[], 'byCountry':{}, 'byHostId':{}, 'ordered_mirrorlist':False, 'byCountryInternet2':{}}
             directory = Directory.byName(directoryname)
             repo = directory.repository
             # if a directory is in more than one category, problem...
@@ -126,13 +126,16 @@ def populate_directory_cache():
                 else:
                     cache[directoryname]['byCountry'][country].append(v)
 
+        if country is not None and i2 and ((not siteprivate and not hostprivate) or i2_clients):
+            if not cache[directoryname]['byCountryInternet2'].has_key(country):
+                cache[directoryname]['byCountryInternet2'][country] = [v]
+            else:
+                cache[directoryname]['byCountryInternet2'][country].append(v)
+
         if not cache[directoryname]['byHostId'].has_key(hostid):
             cache[directoryname]['byHostId'][hostid] = [v]
         else:
             cache[directoryname]['byHostId'][hostid].append(v)
-
-        if i2 and ((not siteprivate and not hostprivate) or i2_clients):
-            cache[directoryname]['Internet2'].append(v)
 
     global mirrorlist_cache
     mirrorlist_cache = cache
