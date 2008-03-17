@@ -204,7 +204,7 @@ def do_netblocks(kwargs, cache, header):
 
 def do_internet2(kwargs, cache, clientCountry, header):
     client_ip = kwargs['client_ip']
-    if client_ip in internet2_netblocks:
+    if OrderedIP(client_ip) in internet2_netblocks:
         header += 'Using Internet2 '
         hostresults = cache['Internet2']
         hostresults = trim_by_client_country(hostresults, clientCountry)
