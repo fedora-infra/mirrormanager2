@@ -16,7 +16,7 @@ import bisect
 # can be overridden on the command line
 socketfile = '/tmp/mirrormanager_mirrorlist_server.sock'
 cachefile = '/tmp/mirrorlist_cache.pkl'
-internet2_netblocks_file = None
+internet2_netblocks_file = '/tmp/mirrormanager_i2_netblocks.txt'
 # at a point in time when we're no longer serving content for versions
 # that don't use yum prioritymethod=fallback
 # (e.g. after Fedora 7 is past end-of-life)
