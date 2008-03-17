@@ -12,4 +12,5 @@ cd ${MM_DIR}
 MIRRORLIST_DIR=${MIRRORLIST_DIR} ./update-static-content
 
 ./refresh_mirrorlist_cache -c prod.cfg
+./get_internet2_netblocks > /tmp/mirrormanager_i2_netblocks.txt
 killall -HUP mirrorlist_server.py
