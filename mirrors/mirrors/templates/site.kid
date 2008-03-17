@@ -11,7 +11,7 @@ if 'sysadmin' in tg.identity.groups:
    is_siteadmin = True
 else:	
    if values is not None and not action.endswith('create'):
-      is_siteadmin = values.is_siteadmin_byname(tg.identity.user.user_name)
+      is_siteadmin = values.is_siteadmin_byname(tg.identity.user_name)
 
 
 if 'sysadmin' not in tg.identity.groups:
