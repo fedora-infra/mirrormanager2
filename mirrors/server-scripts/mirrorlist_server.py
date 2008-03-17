@@ -11,10 +11,12 @@ from string import zfill, atoi
 
 from IPy import IP
 import GeoIP
+import bisect
 
 # can be overridden on the command line
 socketfile = '/tmp/mirrormanager_mirrorlist_server.sock'
 cachefile = '/tmp/mirrorlist_cache.pkl'
+internet2_netblocks_file = None
 # at a point in time when we're no longer serving content for versions
 # that don't use yum prioritymethod=fallback
 # (e.g. after Fedora 7 is past end-of-life)
@@ -48,6 +50,31 @@ country_continent_redirect_cache = {}
 country_continents = GeoIP.country_continents
 
 disabled_repositories = {}
+
+class OrderedNetblocks(list):
+    def __contains__(self, item):
+        if self.__len__() == 0:
+            return False
+        index = bisect.bisect(self, item)
+        if index == 0:
+            return False
+        if item in self.__getitem__(index-1):
+            return True
+        return False
+
+class OrderedIP(IP):
+    """Override comparison function so that a list of our objects is in ascending order
+    based on their starting IP, without regard to netblock size."""
+    def __cmp__(self, other):
+        if self.ip < other.ip:
+            return -1
+        elif self.ip > other.ip:
+            return 1
+        else:
+            return 0
+
+
+internet2_netblocks = OrderedNetblocks([])
 
 def uniqueify(seq, idfun=None):
     # order preserving
@@ -174,6 +201,16 @@ def do_netblocks(kwargs, cache, header):
             if len(hostresults) > 0:
                 return (header, hostresults)
     return (header, [])
+
+def do_internet2(kwargs, cache, clientCountry, header):
+    client_ip = kwargs['client_ip']
+    if client_ip in internet2_netblocks:
+        header += 'Using Internet2 '
+        hostresults = cache['Internet2']
+        hostresults = trim_by_client_country(hostresults, clientCountry)
+        return (header, hostresults)
+    return (header, [])
+
                 
 def do_geoip(kwargs, cache, clientCountry, header):
     hostresults = []
@@ -237,6 +274,7 @@ def do_mirrorlist(kwargs):
     ordered_mirrorlist = cache.get('ordered_mirrorlist', default_ordered_mirrorlist)
     done = 0
     netblock_results = []
+    internet2_results = []
     country_results = []
     geoip_results = []
     continent_results = []
@@ -263,6 +301,12 @@ def do_mirrorlist(kwargs):
         done = 1
 
     if not done:
+        header, internet2_results = do_internet2(kwargs, cache, clientCountry, header)
+        if len(internet2_results) + len(netblock_results) >= 3:
+            if not ordered_mirrorlist:
+                done = 1
+
+    if not done:
         header, geoip_results    = do_geoip(kwargs, cache, clientCountry, header)
         if len(geoip_results) >= 3:
             if not ordered_mirrorlist:
@@ -278,15 +322,39 @@ def do_mirrorlist(kwargs):
 
     random.shuffle(netblock_results)
     random.shuffle(country_results)
+    random.shuffle(internet2_results)
     random.shuffle(geoip_results)
     random.shuffle(continent_results)
     random.shuffle(global_results)
     
-    hostresults = uniqueify(netblock_results + country_results + geoip_results + continent_results + global_results)
+    hostresults = uniqueify(netblock_results + country_results + internet2_results + geoip_results + continent_results + global_results)
     hostresults = append_path(hostresults, cache)
     message = [(None, header)]
     return append_filename_to_results(file, message + hostresults)
 
+
+def setup_internet2_netblocks():
+    i2_netblocks = OrderedNetblocks([])
+    n = []
+    if internet2_netblocks_file is not None:
+        try:
+            f = open(internet2_netblocks_file, 'r')
+            for l in f.readlines():
+                s = l.split()
+                start, mask = s[0].split('/')
+                n.append((int(mask), start))
+            f.close()
+        except:
+            pass
+        # This ensures we fill in the biggest netblocks first, and don't include
+        # smaller netblocks that are fully contained in an existing netblock.
+        n.sort()
+        for l in n:
+            ip = OrderedIP("%s/%s" % (l[1], l[0]))
+            if ip not in i2_netblocks:
+                bisect.insort(i2_netblocks, ip)
+    global internet2_netblocks
+    internet2_netblocks = i2_netblocks
 
 def read_caches():
     global mirrorlist_cache
@@ -322,6 +390,7 @@ def read_caches():
 
     del data
     setup_continents()
+    setup_internet2_netblocks()
 
 class MirrorlistHandler(StreamRequestHandler):
     def handle(self):
@@ -379,10 +448,13 @@ class ForkingUnixStreamServer(ForkingMixIn, UnixStreamServer):
 def parse_args():
     global cachefile
     global socketfile
-    opts, args = getopt.getopt(sys.argv[1:], "c:s:", ["cache", "socket"])
+    global internet2_netblocks_file
+    opts, args = getopt.getopt(sys.argv[1:], "c:i:s:", ["cache", "internet2_netblocks", "socket"])
     for option, argument in opts:
         if option in ("-c", "--cache"):
             cachefile = argument
+        if option in ("-i", "--internet2_netblocks"):
+            internet2_netblocks_file = argument
         if option in ("-s", "--socket"):
             socketfile = argument
 

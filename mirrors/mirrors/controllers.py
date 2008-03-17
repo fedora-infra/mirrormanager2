@@ -303,10 +303,11 @@ class HostFields(widgets.WidgetsList):
     country = widgets.TextField(validator=validators.Any(validators.Regex(r'^[a-zA-Z][a-zA-Z]$'),validators.Empty),
                                 help_text="2-letter ISO country code" )
     private = widgets.CheckBox(help_text="e.g. not available to the public, an internal private mirror")
+    internet2 = widgets.CheckBox(help_text="on Internet2")
+    internet2_clients = widgets.CheckBox(help_text="serves Internet2 clients, even if private")
     robot_email = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.Email), help_text="email address, will receive notice of upstream content updates")
     bandwidth = widgets.TextField(validator=validators.Any(validators.UnicodeString, validators.Empty), help_text="text, how much bandwidth you might be able to offer to a public end user")
     comment = widgets.TextField(validator=validators.Any(validators.UnicodeString, validators.Empty), help_text="text, anything else you'd like a public end user to know about your mirror")
-
 
 host_form = widgets.TableForm(fields=HostFields(),
                               submit_text="Save Host")

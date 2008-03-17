@@ -50,7 +50,7 @@ def trim(input):
 
 def _do_query_directories():
     sql =  'SELECT * FROM '
-    sql += '(SELECT directory.name AS dname, host.id, host.country, host_category_url.url, site.private, host.private '
+    sql += '(SELECT directory.name AS dname, host.id, host.country, host_category_url.url, site.private, host.private, host.internet2, host.internet2_clients '
     sql += 'FROM directory, host_category_dir, host_category, host_category_url, host, site, category_directory '
     sql += 'WHERE host_category_dir.host_category_id = host_category.id ' # join criteria
     sql += 'AND   host_category_url.host_category_id = host_category.id ' # join criteria
@@ -65,7 +65,7 @@ def _do_query_directories():
     sql += 'AND host.admin_active AND site.admin_active '
     # now add the always_up2date host_categories
     sql += 'UNION '
-    sql += 'SELECT directory.name AS dname, host.id, host.country, host_category_url.url, site.private, host.private '
+    sql += 'SELECT directory.name AS dname, host.id, host.country, host_category_url.url, site.private, host.private, host.internet2, host.internet2_clients '
     sql += 'FROM directory, host_category, host_category_url, host, site, category_directory '
     sql += 'WHERE host_category_url.host_category_id = host_category.id ' # join criteria
     sql += 'AND   host_category.host_id = host.id '                       # join criteria
@@ -89,9 +89,9 @@ def populate_directory_cache():
     result = trim(result)
 
     cache = {}
-    for (directoryname, hostid, country, hcurl, siteprivate, hostprivate) in result:
+    for (directoryname, hostid, country, hcurl, siteprivate, hostprivate, i2, i2_clients) in result:
         if directoryname not in cache:
-            cache[directoryname] = {'global':[], 'byCountry':{}, 'byHostId':{}, 'ordered_mirrorlist':False}
+            cache[directoryname] = {'global':[], 'byCountry':{}, 'byHostId':{}, 'ordered_mirrorlist':False, 'Internet2':[]}
             directory = Directory.byName(directoryname)
             repo = directory.repository
             # if a directory is in more than one category, problem...
@@ -130,6 +130,9 @@ def populate_directory_cache():
             cache[directoryname]['byHostId'][hostid] = [v]
         else:
             cache[directoryname]['byHostId'][hostid].append(v)
+
+        if i2 and ((not siteprivate and not hostprivate) or i2_clients):
+            cache[directoryname]['Internet2'].append(v)
 
     global mirrorlist_cache
     mirrorlist_cache = cache

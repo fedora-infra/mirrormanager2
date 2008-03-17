@@ -178,6 +178,8 @@ class Host(SQLObject):
     lastCheckedIn = DateTimeCol(default=None)
     lastCrawled = DateTimeCol(default=None)
     private = BoolCol(default=False)
+    internet2 = BoolCol(default=False)
+    internet2_clients = BoolCol(default=False)
     countries_allowed = MultipleJoin('HostCountryAllowed')
     netblocks = MultipleJoin('HostNetblock')
     acl_ips = MultipleJoin('HostAclIp')
