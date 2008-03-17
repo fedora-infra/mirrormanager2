@@ -24,7 +24,7 @@ def trim(input):
     leave only http"""
     result = []
     seen = {}
-    for (directoryname, hostid, country, hcurl, siteprivate, hostprivate) in input:
+    for (directoryname, hostid, country, hcurl, siteprivate, hostprivate, i2, i2_clients) in input:
         if directoryname not in seen:
             seen[directoryname] = {}
     
@@ -33,7 +33,7 @@ def trim(input):
         umachine = us[2]
         if hostid not in seen[directoryname]:
             seen[directoryname][hostid] = {}
-        seen[directoryname][hostid][uprotocol] = (directoryname, hostid, country, hcurl, siteprivate, hostprivate)
+        seen[directoryname][hostid][uprotocol] = (directoryname, hostid, country, hcurl, siteprivate, hostprivate, i2, i2_clients)
 
     for directoryname in seen.keys():
         for k, v in seen[directoryname].iteritems():
