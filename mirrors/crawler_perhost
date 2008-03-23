@@ -157,7 +157,7 @@ def get_ftp_dir(hoststate, url, i=0):
             return []
         # Returned by Princeton University when directory isn't readable (pre-bitflip)
         if str(e).startswith('553'):
-            return []
+            return None
         # Returned by ftp2.surplux.net when cannot log in due to connection restrictions
         if str(e).startswith('530'):
             hoststate.close_ftp(url)
@@ -259,10 +259,15 @@ def check_head(hoststate, url, filedata, recursion):
             return False
     if status >= 300 and status < 400:
         return handle_redirect(hoststate, url, r.getheader('Location'), filedata, recursion)
-    if status >= 400 and status < 500:
-        # all the 403 Forbidden and 404 Not Founds
-        return False
-    if status >= 500:
+    elif status >= 400 and status < 500:
+        if status == 403: # forbidden
+            # may be a hidden dir still
+            return None
+        elif status == 404 or status == 410: # not found / gone
+            return False
+        # we don't know
+        return None
+    elif status >= 500:
         raise HTTP500()
 
     print "status = %s" % status
