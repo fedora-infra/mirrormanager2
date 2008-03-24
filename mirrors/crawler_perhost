@@ -233,7 +233,13 @@ def check_head(hoststate, url, filedata, recursion):
     except:
         return None
     
-    conn.request('HEAD', url,
+    scheme, netloc, path, query, fragment = urlsplit(url)
+    reqpath = path
+    if len(query) > 0:
+        reqpath += "?%s" % query
+    if len(fragment) > 0:
+        reqpath += "#%s" % fragment
+    conn.request('HEAD', reqpath,
                  headers={'Connection':'Keep-Alive',
                           'Pragma':'no-cache',
                           'User-Agent':'mirrormanager-crawler/0.1 (+http://hosted.fedoraproject.org/projects/mirrormanager)'})
