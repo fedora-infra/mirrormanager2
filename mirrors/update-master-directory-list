@@ -119,7 +119,14 @@ def nuke_gone_directories(category, category_directories):
             if not category_directories.has_key(d.name):
                 d.destroySelf()
 
+unreadable_dirs = {}
+
+def parent_dir(path):
+    sdir = path.split('/')[:-1]
+    return '/'.join(sdir)
+
 def make_one_directory(line, category, path, category_directories):
+    global unreadble_dirs
     readable=True
     d = line.split()[4]
     if re.compile('^\.$').match(d):
@@ -127,8 +134,10 @@ def make_one_directory(line, category, path, category_directories):
     else:
         dname = "%s/%s" % (path, d)
     perms = line.split()[0]
-    if not re.compile('^d......r.x').match(perms):
+    if not re.compile('^d......r.x').match(perms) or parent_dir(dname) in unreadable_dirs:
         readable=False
+        unreadable_dirs[dname] = True
+
     category_directories[dname] = {'files':{}, 'isRepository':False, 'readable':readable}
     if d.endswith('repodata'):
         parent_dname = dname[:-len('/repodata')]
