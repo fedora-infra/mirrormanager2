@@ -6,7 +6,7 @@
 
 import socket
 import cPickle as pickle
-from string import zfill, atoi, strip
+from string import zfill, atoi, strip, replace
 from mod_python import util, apache
 
 socketfile = '/tmp/mirrormanager_mirrorlist_server.sock'
@@ -69,6 +69,9 @@ def request_setup(req, request_data):
     for f in fields:
         if request_data.has_key(f):
             d[f] = strip(request_data[f])
+            # add back '+' that were converted to ' ' by util.FieldStorage
+            if f == 'path':
+                d[f] = replace(d[f], ' ', '+')
 
     if request_data.has_key('ip'):
         client_ip = strip(request_data['ip'])
