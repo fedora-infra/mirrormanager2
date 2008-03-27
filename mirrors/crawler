@@ -46,6 +46,10 @@ class ForkingMaster:
             self.active_children = []
         self.active_children.append(p.pid)
 
+    def wait_for_completion(self):
+        self.max_children = 0
+        self.collect_children()
+
 
 def doit(include_private=False, threads=10, config=None):
     master = ForkingMaster(max_children=threads)
@@ -60,6 +64,8 @@ def doit(include_private=False, threads=10, config=None):
     
         args = commonargs + ['--hostid=%s' % h.id]
         master.process_request(command, args)
+        
+    master.wait_for_completion()
 
 
 def main():
