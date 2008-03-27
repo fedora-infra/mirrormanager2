@@ -55,6 +55,10 @@ href="http://fedoraproject.org/wiki/Infrastructure/Mirroring">our wiki page on M
 You may trim the selection through the links on the right, or see the <a
 href="${tg.url('/publiclist')}">whole list</a>.
 </p>
+<p>
+I2 means both Internet2 and it's peer high speed research
+and development networks globally.
+</p>
 
 <div class="keepleft">
 
@@ -63,7 +67,7 @@ href="${tg.url('/publiclist')}">whole list</a>.
 <p py:if="len(hosts) == 0">There are no mirrors matching your your search criteria.</p>
 
 <table border="1" class="altrows">
-<tr><th>Country</th><th>Site</th><th>Host</th><th>Content</th><th>Bandwidth</th><th>Comments</th></tr>
+<tr><th>Country</th><th>Site</th><th>Host</th><th>Content</th><th>Bandwidth</th><th>I2</th><th>Comments</th></tr>
 <tr py:for="i,host in enumerate(hosts)"
     py:attrs="{'class': i%2 and 'odd' or 'even'}">
 <td><span py:if="host.country is not None" py:replace="host.country.upper()">Country</span></td>
@@ -92,10 +96,15 @@ for u in hc.urls:
 <td><span py:if="rsync is not None"><a href="${rsync}">rsync</a></span></td>
 </tr>
 </table>
-
-
 </td>
 <td><span py:replace="host.bandwidth">Bandwidth</span></td>
+<td>
+<?python
+   i2='No'
+   if host.internet2:
+       i2='Yes'
+?>
+<span py:replace="i2">Internet2</span></td>
 <td><span py:replace="host.comment">Comment</span></td>
 </tr>
 </table>
