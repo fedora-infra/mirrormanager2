@@ -17,19 +17,19 @@ cd ${MM_DIR}
 function get_rsync_lists()
 {
     local REPOS
-    REPOS[0]='/pub/fedora/linux/core'
-    REPOS[1]='/pub/fedora/linux/extras'
-    REPOS[2]='/pub/epel'
-    REPOS[3]='/pub/fedora/web'
-    REPOS[4]='/pub/fedora/linux'
+    REPOS[0]='/pub/epel'
+    REPOS[1]='/pub/fedora/web'
+    REPOS[2]='/pub/fedora/linux'
+#    REPOS[3]='/pub/fedora/linux/core'
+#    REPOS[4]='/pub/fedora/linux/extras'
     local FILES
-    FILES[0]='fedora-linux-core.txt'
-    FILES[1]='fedora-linux-extras.txt'
-    FILES[2]='fedora-epel.txt'
-    FILES[3]='fedora-web.txt'
-    FILES[4]='fedora-linux.txt'
+    FILES[0]='fedora-epel.txt'
+    FILES[1]='fedora-web.txt'
+    FILES[2]='fedora-linux.txt'
     local EXCLUDES
-    EXCLUDES[4]='--exclude=core/ --exclude=extras/'
+    EXCLUDES[2]='--exclude=core/ --exclude=extras/'
+#    FILES[3]='fedora-linux-core.txt'
+#    FILES[4]='fedora-linux-extras.txt'
     local i=0
     while [ $i -lt ${#FILES[@]} ]; do
 	pushd ${REPOS[$i]} > /dev/null 2>&1
