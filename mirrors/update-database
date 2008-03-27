@@ -44,7 +44,7 @@ get_rsync_lists
 echo -n "get_rsync_lists finished at "
 date
 ./update-master-directory-list prod.cfg
-./crawler -c prod.cfg --threads 15 | bash
+./crawler -c prod.cfg --threads 15
 
 echo -n "Ending at "
 date
