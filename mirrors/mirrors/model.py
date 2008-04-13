@@ -388,6 +388,30 @@ class HostAclIp(SQLObject):
     def my_site(self):
         return self.host.my_site()
 
+def _rsync_acl_list(dbobject, internet2_only, public_only):
+    sql = "SELECT host_acl_ip.ip "
+    sql += "FROM host, site, host_acl_ip "
+    # join conditions
+    sql += "WHERE "
+    sql += "host.site_id = site.id AND "
+    sql += "host_acl_ip.host_id = host.id "
+    # select conditions
+    # admin_active
+    sql += 'AND host.admin_active AND site.admin_active '
+    if internet2_only:
+        sql += 'AND host.internet2 '
+    if public_only:
+        sql += 'AND NOT host.private '
+        sql += 'AND NOT site.private '
+
+    result = dbobject._connection.queryAll(sql)
+    return result
+
+def rsync_acl_list(internet2_only=False,public_only=False):
+    d = Directory.select()[0]
+    result = _rsync_acl_list(d, internet2_only, public_only)
+    return [t[0] for t in result]
+
 class HostCountryAllowed(SQLObject):
     #class sqlmeta:
     #    cacheValues = False

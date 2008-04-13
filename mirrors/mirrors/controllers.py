@@ -1100,13 +1100,16 @@ class Root(controllers.RootController):
                 }
 
     @expose(template="mirrors.templates.rsync_acl", format="plain", content_type="text/plain")
-    def rsync_acl(self):
-        rsync_acl_list = []
-        for h in Host.select():
-            if h.is_active():
-                for n in h.acl_ips:
-                    rsync_acl_list.append(n.ip)
-        return dict(values=rsync_acl_list)
+    def rsync_acl(self, **kwargs):
+        internet2_only=False
+        public_only=False
+        if 'internet2_only' in kwargs:
+            internet2_only = True
+        if 'public_only' in kwargs:
+            public_only = True
+
+        result = rsync_acl_list(internet2_only=internet2_only, public_only=public_only)
+        return dict(values=result)
 
     @expose(template="mirrors.templates.login")
     def login(self, forward_url=None, previous_url=None, *args, **kw):
