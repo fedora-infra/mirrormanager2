@@ -1,0 +1,89 @@
+#!/usr/bin/python
+#
+# Copyright 2007 Dell, Inc.
+#   by Matt Domsch <Matt_Domsch@dell.com>
+# MIT/X11 license
+
+
+import pkg_resources
+pkg_resources.require("TurboGears")
+
+from sqlobject import *
+import sys, os, string
+import turbogears
+from mirrors.model import *
+from optparse import OptionParser
+
+from turbogears.database import PackageHub
+hub = __connection__ = None
+
+repos = {'fedora-%s':'rawhide', 'fedora-debug-%s':'rawhide-debug', 'fedora-source-%s':'rawhide-source', 
+         'updates-released-f%s':'rawhide', 'updates-released-debug-f%s':'rawhide-debug', 'updates-released-source-f%s':'rawhide-source',
+         'updates-testing-f%s':'rawhide', 'updates-testing-debug-f%s':'rawhide-debug', 'updates-testing-source-f%s':'rawhide-source' }
+
+
+def add_version_redirect_to_rawhide(version):
+    for fromRepo,toRepo in repos.iteritems():
+        RepositoryRedirect(fromRepo=fromRepo % (version), toRepo=toRepo)
+
+def remove_version_redirect_to_rawhide(version):
+    for fromRepo,toRepo in repos.iteritems():
+        try:
+            r = RepositoryRedirect.selectBy(fromRepo=fromRepo % (version), toRepo=toRepo)[0]
+            r.destroySelf()
+        except:
+            pass
+
+def list_redirects():
+    for r in RepositoryRedirect.select():
+        print "%s => %s" % (r.fromRepo, r.toRepo)
+
+
+def doit(options, args):
+    if options.add:
+        add_version_redirect_to_rawhide(options.version)
+    elif options.remove:
+        remove_version_redirect_to_rawhide(options.version)
+    list_redirects()
+    return 0
+
+
+def main():
+    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option("-c", "--config",
+                      dest="config", default='dev.cfg',
+                      help="TurboGears config file to use")
+    parser.add_option("-a", "--add",
+                      dest="add", action="store_true", default=False,
+                      help="Add version redirects to rawhide")
+    parser.add_option("-r", "--remove",
+                      dest="remove", action="store_true", default=False,
+                      help="Remove version redirects to rawhide")
+    parser.add_option("-v", "--version",
+                      dest="version", default=None,
+                      help="Specify version for add/remove redirects")
+
+    (options, args) = parser.parse_args()
+
+    turbogears.update_config(configfile=options.config,
+                             modulename="mirrors.config")
+    global hub
+    global __connection__
+    hub = PackageHub("mirrors")
+    __connection__ = hub
+    
+    if options.add and options.version is None:
+        parser.print_help()
+        sys.exit(1)
+
+    if options.remove and options.version is None:
+        parser.print_help()
+        sys.exit(1)
+
+    doit(options, args)
+
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+        
