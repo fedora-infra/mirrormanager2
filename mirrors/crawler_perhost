@@ -447,6 +447,8 @@ def per_host(host, options=None):
 
     hoststate = hostState(http_debuglevel=http_debuglevel, ftp_debuglevel=ftp_debuglevel)
     for hc in host.categories:
+        if hc.always_up2date:
+            continue
         category = hc.category
         trydirs = category.directories
         categoryUrl = method_pref(host.category_urls(category.name))
