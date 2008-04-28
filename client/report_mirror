@@ -133,6 +133,7 @@ def parse_section(conf, section, item, required_options, optional_options=[]):
 def parse_global(conf, section, item):
     required_options = [ 'enabled', 'server' ]
     if not parse_section(conf, section, item, required_options):
+        errorprint('missing required options (server AND enabled) in [%s] section' % (section))
         return False
     return True
 
@@ -180,6 +181,10 @@ def parse_category(conf, section, item, crawl):
 def config(cfg, item, crawl=True):
     broken = False
     conf = ConfigParser.ConfigParser()
+    files = conf.read(cfg)
+    if files == []:
+        errorprint('Configuration file %s not found' % (cfg))
+        return False
     conf.read(cfg)
 
     try:
