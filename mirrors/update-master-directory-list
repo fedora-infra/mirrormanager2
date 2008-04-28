@@ -201,7 +201,7 @@ def sync_category_directories(category, category_directories):
             make_repository(dir, category)
         
 
-def parse_rsync_listing(cname, f, path):
+def parse_rsync_listing(cname, f):
     category = Category.byName(cname)
     category_directories = {}
     for line in f.readlines():
@@ -211,39 +211,33 @@ def parse_rsync_listing(cname, f, path):
                 # we know the top-level category directory already exists, don't try to re-make it
                 pass
             else:
-                dname, category_directories = make_one_directory(line, category, path, category_directories)
+                dname, category_directories = make_one_directory(line, category, category.topdir.name, category_directories)
         else:
-            add_file_to_directory(line, dname, path, category_directories)
+            add_file_to_directory(line, dname, category.topdir.name, category_directories)
     sync_category_directories(category, category_directories)
 
 
 
-def sync_directories_using_rsync():
-    categories = {'Fedora Core':('fedora-linux-core','pub/fedora/linux/core'),
-#                  'extras':('fedora-linux-extras','pub/fedora/linux/extras'),
-#                  'releases':('fedora-linux-releases','pub/fedora/linux/releases'),
-#                  'epel':('epel','pub/epel'),
-                  }
+def sync_directories_using_rsync(rsyncpath, cname):
+    cmd = 'rsync -r ' + rsyncpath
+    try:
+        f = os.popen(cmd)
+    except:
+        print "Unable to parse category %s rsyncpath %s" % (cname, rsyncpath)
+        return
+    parse_rsync_listing(cname, f)
+    f.close()
 
-    for cname, (rsync_module, path) in categories.iteritems():
-        cmd = 'rsync -r download1.fedora.redhat.com::' + rsync_module
-
-        try:
-            f = os.popen(cmd)
-        except:
-            continue
-        parse_rsync_listing(cname, f, path)
-
-
-def sync_directories_from_file(filename, cname, path):
+def sync_directories_from_file(filename, cname):
     f = open(filename, 'r')
-    parse_rsync_listing(cname, f, path)
+    parse_rsync_listing(cname, f)
     f.close()
 
 
 # fixme this is quick and dirty
-#sync_directories_from_file('/tmp/fedora-linux-core.txt', 'Fedora Core', 'pub/fedora/linux/core')
-#sync_directories_from_file('/tmp/fedora-linux-extras.txt', 'Fedora Extras', 'pub/fedora/linux/extras')
-sync_directories_from_file('/tmp/fedora-epel.txt', 'Fedora EPEL', 'pub/epel')
-sync_directories_from_file('/tmp/fedora-web.txt', 'Fedora Web', 'pub/fedora/web')
-sync_directories_from_file('/tmp/fedora-linux.txt', 'Fedora Linux', 'pub/fedora/linux')
+#sync_directories_from_file('/tmp/fedora-linux-core.txt', 'Fedora Core')
+#sync_directories_from_file('/tmp/fedora-linux-extras.txt', 'Fedora Extras')
+sync_directories_from_file('/tmp/fedora-epel.txt', 'Fedora EPEL')
+sync_directories_from_file('/tmp/fedora-web.txt', 'Fedora Web')
+sync_directories_from_file('/tmp/fedora-linux.txt', 'Fedora Linux')
+sync_directories_using_rsync('rsync://secondary.fedoraproject.org/fedora-secondary/', 'Fedora Secondary Arches')
