@@ -181,8 +181,8 @@ class Host(SQLObject):
     internet2 = BoolCol(default=False)
     internet2_clients = BoolCol(default=False)
     countries_allowed = MultipleJoin('HostCountryAllowed')
-    netblocks = MultipleJoin('HostNetblock')
-    acl_ips = MultipleJoin('HostAclIp')
+    netblocks = MultipleJoin('HostNetblock', orderBy='netblock')
+    acl_ips = MultipleJoin('HostAclIp', orderBy='ip')
     categories = MultipleJoin('HostCategory')
 
     def destroySelf(self):
