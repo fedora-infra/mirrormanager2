@@ -240,4 +240,4 @@ def sync_directories_from_file(filename, cname):
 sync_directories_from_file('/tmp/fedora-epel.txt', 'Fedora EPEL')
 sync_directories_from_file('/tmp/fedora-web.txt', 'Fedora Web')
 sync_directories_from_file('/tmp/fedora-linux.txt', 'Fedora Linux')
-sync_directories_using_rsync('rsync://secondary.fedoraproject.org/fedora-secondary/', 'Fedora Secondary Arches')
+sync_directories_using_rsync('rsync://secondary1.fedora.phx.redhat.com/fedora-secondary/', 'Fedora Secondary Arches')
