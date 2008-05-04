@@ -69,6 +69,7 @@ def repo_prefix(path, category, ver):
     isExtras = (category.name == u'Fedora Extras')
     isEpel = (category.name == u'Fedora EPEL')
     isFedoraLinux = (category.name == u'Fedora Linux')
+    isFedoraSecondary = (category.name == u'Fedora Secondary Arches')
 
     version = u'unknown'
     if not isRawhide and ver is not None:
@@ -136,7 +137,7 @@ def repo_prefix(path, category, ver):
             else:
                 prefix = u'epel-%s' % version
 
-    elif isFedoraLinux:
+    elif isFedoraLinux or isFedoraSecondary:
         if isReleases:
             if not isEverything:
                 prefix = None
