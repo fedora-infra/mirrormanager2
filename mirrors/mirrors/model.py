@@ -241,9 +241,10 @@ class Host(SQLObject):
                     if hcdir.count() > 0:
                         hcdir = hcdir[0]
                         # don't store files, we don't need it right now
-                        hcdir.files = None
-                        hcdir.up2date = True
-                        hcdir.sync()
+                        # hcdir.files = None
+                        if hcdir.up2date != True:
+                            hcdir.up2date = True
+                            hcdir.sync()
                         marked_up2date += 1
                     else:
                         if len(d) > 0:
