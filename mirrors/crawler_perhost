@@ -298,10 +298,11 @@ def sync_hcds(host, host_category_dirs):
 
         if hcd.directory is None:
             hcd.directory = d
-        hcd.lastCrawled=now
-        hcd.up2date=up2date
+        if hcd.up2date != up2date:
+            hcd.up2date=up2date
+            hcd.sync()
         current_hcds[hcd] = True
-        hcd.sync()
+
 
     # now-historical HostCategoryDirs are not up2date
     # we wait for a cascading Directory delete to delete this
@@ -312,9 +313,9 @@ def sync_hcds(host, host_category_dirs):
             try:
                 thcd = current_hcds[hcd]
             except KeyError:
-                hcd.lastCrawled=datetime.utcnow()
-                hcd.up2date=False
-                hcd.sync()
+                if hcd.up2date != False:
+                    hcd.up2date=False
+                    hcd.sync()
     
 
 def method_pref(urls):

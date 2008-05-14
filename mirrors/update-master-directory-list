@@ -196,7 +196,8 @@ def sync_category_directories(category, category_directories):
         except SQLObjectNotFound:
             dir = Directory(name=dirpath,readable=value['readable'])
             dir.addCategory(category)
-        dir.files = short_filelist(value['files'])
+        if dir.files != short_filelist(value['files']):
+            dir.files = short_filelist(value['files'])
         if value['isRepository']:
             make_repository(dir, category)
         
