@@ -16,8 +16,8 @@ Create:
 <li> a new Site</li>
 <li> a new Host in your Site</li>
 <li> a new ACL IP for your Host (DNS name preferred, IP ok too)</li>
-<li>two new Category entries for your Host, one for Fedora Core, and one
-  for Fedora Extras if you carry it.</li>
+<li> a new Category entry for your Host, for Fedora Linux (Fedora 7
+  and newer).</li>
 <li> For each of FC and FE, one or more URLs by which end users can get
   at your data (HTTP, FTP, and rsync).  If you also make your content
   available for other mirrors via a private rsync URL, create one of
@@ -45,7 +45,7 @@ IPs</strong>.  Hosts can also be temporarily marked inactive.
 </p>
 <p>
 Hosts carry content by <strong>Category</strong>.  Fedora's categories include
-Fedora Core and Fedora Extras.  Hosts expose a Category via one or
+Fedora Linux (Fedora 7 and newer).  Hosts expose a Category via one or
 more <strong>URLs</strong> (public URLs for anonymous http/ftp/rsync, or private URLs
 for use by other mirrors only).
 </p>
