@@ -9,6 +9,7 @@ from turbogears import identity
 from tgfastdata import DataController
 import sqlobject
 from sqlobject.sqlbuilder import *
+from string import strip
 
 from mirrors import my_validators
 from mirrors.model import *
@@ -717,8 +718,10 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
 
         siteadmin_check(hc.my_site(), identity)
 
-        if kwargs['url'].endswith('/'):
-            kwargs['url'] = kwargs['url'][:-1]
+        kwargs['url'] = strip(kwargs['url'])
+        while kwargs['url'].endswith('/'):
+            kwargs['url'] = strip(kwargs['url'][:-1])
+
 
         # This is ugly.  We've got this fake site 'Fedora Mirror'
         # which has all the hosts that didn't register themselves.
