@@ -221,7 +221,7 @@ def handle_redirect(hoststate, url, location, filedata, recursion):
     return check_url(hoststate, location, filedata, recursion+1)
 
 
-def check_head(hoststate, url, filedata, recursion):
+def check_head(hoststate, url, filedata, recursion, retry=0):
     """ Returns tuple:
     True - URL exists
     False - URL doesn't exist
@@ -244,11 +244,17 @@ def check_head(hoststate, url, filedata, recursion):
                           'Pragma':'no-cache',
                           'User-Agent':'mirrormanager-crawler/0.1 (+http://hosted.fedoraproject.org/projects/mirrormanager)'})
     
+    r = None
     try:
         r = conn.getresponse()
         status = r.status
     except:
-        raise HTTPUnknown()
+        if retry == 0:
+            # retry once
+            hoststate.close_http(url)
+            return check_head(hoststate, url, filedata, recursion, retry=1)
+        else:
+            raise HTTPUnknown()
 
     conn.end_request()
     if not r.keepalive_ok():
