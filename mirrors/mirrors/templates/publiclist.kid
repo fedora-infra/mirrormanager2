@@ -56,7 +56,7 @@ You may trim the selection through the links on the right, or see the <a
 href="${tg.url('/publiclist')}">whole list</a>.
 </p>
 <p>
-I2 means both Internet2 and it's peer high speed research
+I2 means both Internet2 and its peer high speed research
 and development networks globally.
 </p>
 
