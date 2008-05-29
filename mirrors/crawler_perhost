@@ -487,7 +487,7 @@ def per_host(host, options=None):
                     host_category_dirs[(hc, d)] = False
                     # remove subdirs of here too
                     for t in trydirs:
-                        if d == t or t.name.startswith("%s/" % d.name):
+                        if t.name.startswith("%s/" % d.name):
                             skipdirs.add(t)
                 elif has_all_files == True:                
                     host_category_dirs[(hc, d)] = True
