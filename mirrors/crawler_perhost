@@ -467,12 +467,9 @@ def per_host(host, options=None):
             continue
         categoryPrefixLen = len(category.topdir.name)+1
         
-        #skipdirs=set()
         for d in trydirs:
             if must_dienow:
                 sys.exit(1)
-            #if d in skipdirs:
-            #    continue
 
             # go ahead and scan "unreadable" directories so we can
             # find leaks, and speed up release day showing who has
@@ -489,10 +486,6 @@ def per_host(host, options=None):
 
                 if has_all_files == False:
                     host_category_dirs[(hc, d)] = False
-                    # remove subdirs of here too
-                    #for t in trydirs:
-                    #   if t.name.startswith("%s/" % d.name):
-                    #       skipdirs.add(t)
                 elif has_all_files == True:                
                     host_category_dirs[(hc, d)] = True
                     print url
