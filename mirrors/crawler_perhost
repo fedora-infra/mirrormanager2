@@ -420,13 +420,17 @@ def dienow():
     print "Host %d timeout expired, killing this process.  Better luck next time." % hostid
     os.kill(mypid, signal.SIGUSR1)
     os._exit(0)
+
+def mark_not_up2date(host):
+    host.set_not_up2date()
+    host.lastCrawled = datetime.utcnow()
     
 
 def sigusr1_handler(signum, frame):
     if signum == signal.SIGUSR1:
         signal.signal(signal.SIGUSR1, signal.SIG_IGN)
         try:
-            Host.get(hostid).set_not_up2date()
+            mark_not_up2date(Host.get(hostid))
         except:
             pass
     os._exit(1)
@@ -498,7 +502,7 @@ def per_host(host, options=None):
                     host_category_dirs[(hc, d)] = None
             except:
                 timer.cancel()
-                host.set_not_up2date()
+                mark_not_up2date(host)
                 sys.exit(1)
 
     hoststate.close()
@@ -508,8 +512,7 @@ def per_host(host, options=None):
     if len(host_category_dirs) > 0:
         sync_hcds(host, host_category_dirs)
     else:
-        host.set_not_up2date()
-
+        mark_not_up2date(host)
 
 
 def main():
