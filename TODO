@@ -2,9 +2,7 @@
 
 * Let report_mirror work from behind an http proxy.  It presently
   doesn't try to connect to the proxy server.
-
-* handle download.fp.o
-  - this should be a trivial Apache rewrite rule now.
+  - httplib + libcurl please
 
 * do xmlrpc between report_mirrorlist.py and mirrormanager so we don't
   need a file in /tmp.
@@ -18,3 +16,16 @@
 
 * send emails to mirror admins when their servers drop out of the
   mirrorlists
+
+* Track multiple master mirrors (e.g. secondary arches)
+  - done via separate directory trees (e.g. pub/fedora and pub/secondary) right nowa
+
+* per-repository source dir repositories
+
+* primary/secondary arch distinction
+
+* weighted probabilities of getting a particular mirror, by available
+  bandwidth. This will let lower-bandwidth mirrors get chosen less
+  often.
+
+* push mirroring
