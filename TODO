@@ -1,5 +1,3 @@
-* add Directory FK to HostCategoryDir
-
 * Let report_mirror work from behind an http proxy.  It presently
   doesn't try to connect to the proxy server.
   - httplib + libcurl please
@@ -7,20 +5,20 @@
 * do xmlrpc between report_mirrorlist.py and mirrormanager so we don't
   need a file in /tmp.
 
-* Some people want metalink support.  Conceptually it's possible, and
-  even pretty easy once we've got the daemon above working right.  But
-  as noted on f-d-l, it's been 10 weeks since someone asked for it and
-  even sent some code that doesn't quite integrate but was a starting
-  point, and I haven't had time to get to it.  It's not looking good
-  for me to add that right now, but I'd be happy to review patches.
+* Some people want metalink support.  Conceptually it's possible, but
+  as noted on f-d-l, it's been a year or more since someone asked for
+  it and even sent some code that doesn't quite integrate but was a
+  starting point, and I haven't had time to get to it.  It's not
+  looking good for me to add that right now, but I'd be happy to
+  review patches.
 
 * send emails to mirror admins when their servers drop out of the
-  mirrorlists
+  mirrorlists, with why.
 
 * Track multiple master mirrors (e.g. secondary arches)
-  - done via separate directory trees (e.g. pub/fedora and pub/secondary) right nowa
+  - done via separate directory trees (e.g. pub/fedora and pub/secondary) right now
 
-* per-repository source dir repositories
+* per-repository source dir repositories, as secondary arches don't all use the main SRPMS dir :-(
 
 * primary/secondary arch distinction
 
@@ -28,4 +26,4 @@
   bandwidth. This will let lower-bandwidth mirrors get chosen less
   often.
 
-* push mirroring
+* push mirroring.  Shell out to remote servers when content is changed on the master, to trigger them into syncing.
