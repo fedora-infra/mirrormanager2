@@ -130,7 +130,7 @@ def shuffle(hostresults):
     newlist = weighted_shuffle(l)
     results = []
     for (bandwidth, data) in newlist:
-        results.append(data))
+        results.append(data)
     return results
 
 def append_filename_to_results(file, results):

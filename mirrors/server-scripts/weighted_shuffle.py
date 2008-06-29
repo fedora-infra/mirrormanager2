@@ -5,7 +5,7 @@
 import random
 import bisect
 
-class WeightedListItem():
+class WeightedListItem:
     start = 0
     weight = 0
     data = None
