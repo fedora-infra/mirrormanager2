@@ -20,7 +20,7 @@ py:replace="site.name">Site Name</span></a>
 <h2>${title}</h2>
 
 ${form(value=values, action=action, disabled_fields=disabled_fields)}
-
+<p>* = Required</p>
 
 <div py:if="values is not None and action.endswith('update')">
 Last Checked In: ${values.lastCheckedIn}<br></br>

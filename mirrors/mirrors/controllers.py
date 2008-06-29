@@ -298,16 +298,16 @@ class SiteToSiteController(controllers.Controller, identity.SecureResource, cont
 ##############################################
 class HostFields(widgets.WidgetsList):
     name = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty), attrs=dict(size='30'), label="Host Name",
-                             help_text="Name of server as seen by a public end user")
+                             help_text="* Name of server as seen by a public end user")
     admin_active = widgets.CheckBox("admin_active", default=True, help_text="Clear to temporarily disable this host")
     user_active = widgets.CheckBox(default=True, help_text="Clear to temporarily disable this host")
-    country = widgets.TextField(validator=validators.Any(validators.Regex(r'^[a-zA-Z][a-zA-Z]$'),validators.Empty),
+    country = widgets.TextField(validator=validators.All(validators.Regex(r'^[a-zA-Z][a-zA-Z]$'),validators.NotEmpty),
                                 help_text="2-letter ISO country code" )
+    bandwidth_int = widgets.TextField(validator=validators.All(validators.Int, validators.NotEmpty), help_text="* integer megabits/sec, how much bandwidth you offer to a public end user")
     private = widgets.CheckBox(help_text="e.g. not available to the public, an internal private mirror")
     internet2 = widgets.CheckBox(help_text="on Internet2")
     internet2_clients = widgets.CheckBox(help_text="serves Internet2 clients, even if private")
     robot_email = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.Email), help_text="email address, will receive notice of upstream content updates")
-    bandwidth = widgets.TextField(validator=validators.Any(validators.Int, validators.Empty), help_text="integer (in megabits/sec), how much bandwidth you offer to a public end user")
     comment = widgets.TextField(validator=validators.Any(validators.UnicodeString, validators.Empty), help_text="text, anything else you'd like a public end user to know about your mirror")
 
 host_form = widgets.TableForm(fields=HostFields(),

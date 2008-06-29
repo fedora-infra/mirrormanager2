@@ -97,7 +97,7 @@ for u in hc.urls:
 </tr>
 </table>
 </td>
-<td><span py:replace="host.bandwidth">Bandwidth</span></td>
+<td><span py:replace="host.bandwidth_int">Bandwidth</span></td>
 <td>
 <?python
    i2='No'

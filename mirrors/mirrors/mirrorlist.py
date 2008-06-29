@@ -168,7 +168,7 @@ def populate_host_country_allowed_cache():
 def host_bandwidth_cache():
     cache = {}
     for host in Host.select():
-        cache[host.id] = host.bandwidth
+        cache[host.id] = host.bandwidth_int
     return cache
 
 def repository_redirect_cache():
