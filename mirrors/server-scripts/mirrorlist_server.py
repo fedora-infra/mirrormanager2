@@ -12,6 +12,7 @@ from string import zfill, atoi
 from IPy import IP
 import GeoIP
 import bisect
+from weighted_shuffle import weighted_shuffle
 
 # can be overridden on the command line
 socketfile = '/tmp/mirrormanager_mirrorlist_server.sock'
@@ -50,6 +51,7 @@ country_continent_redirect_cache = {}
 country_continents = GeoIP.country_continents
 
 disabled_repositories = {}
+host_bandwidth_cache = {}
 
 class OrderedNetblocks(list):
     def __contains__(self, item):
@@ -120,6 +122,16 @@ def trim_by_client_country(hostresults, clientCountry):
             results.append((hostid, hcurl))
     return results
 
+def shuffle(hostresults):
+    l = []
+    for hostid, hcurl in hostresults:
+        item = (host_bandwidth_cache[hostid], (hostid, hcurl))
+        l.append(item)
+    newlist = weighted_shuffle(l)
+    results = []
+    for (bandwidth, data) in newlist:
+        results.append(data))
+    return results
 
 def append_filename_to_results(file, results):
     if file is None:
@@ -321,12 +333,12 @@ def do_mirrorlist(kwargs):
     if not done:
         header, global_results = do_global(kwargs, cache, clientCountry, header)
 
-    random.shuffle(netblock_results)
-    random.shuffle(country_results)
-    random.shuffle(internet2_results)
-    random.shuffle(geoip_results)
-    random.shuffle(continent_results)
-    random.shuffle(global_results)
+    netblock_results  = shuffle(netblock_results)
+    country_results   = shuffle(country_results)
+    internet2_results = shuffle(internet2_results)
+    geoip_results     = shuffle(geoip_results)
+    continent_results = shuffle(continent_results)
+    global_results    = shuffle(global_results)
     
     hostresults = uniqueify(netblock_results + country_results + internet2_results + geoip_results + continent_results + global_results)
     hostresults = append_path(hostresults, cache)
@@ -365,6 +377,7 @@ def read_caches():
     global repo_redirect
     global country_continent_redirect_cache
     global disabled_repositories
+    global host_bandwidth_cache
 
     data = {}
     try:
@@ -388,6 +401,8 @@ def read_caches():
         country_continent_redirect_cache = data['country_continent_redirect_cache']
     if 'disabled_repositories' in data:
         disabled_repositories = data['disabled_repositories']
+    if 'host_bandwidth_cache' in data:
+        host_bandwidth_cache = data['host_bandwidth_cache']
 
     del data
     setup_continents()

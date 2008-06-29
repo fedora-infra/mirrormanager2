@@ -165,6 +165,12 @@ def populate_host_country_allowed_cache():
     global host_country_allowed_cache
     host_country_allowed_cache = cache
 
+def host_bandwidth_cache():
+    cache = {}
+    for host in Host.select():
+        cache[host.id] = host.bandwidth
+    return cache
+
 def repository_redirect_cache():
     cache = {}
     for r in RepositoryRedirect.select():
@@ -200,7 +206,8 @@ def dump_caches():
             'repo_arch_to_directoryname':repo_arch_to_directoryname,
             'repo_redirect_cache':repository_redirect_cache(),
             'country_continent_redirect_cache':country_continent_redirect_cache(),
-            'disabled_repositories':disabled_repository_cache()}
+            'disabled_repositories':disabled_repository_cache(),
+            'host_bandwidth_cache':host_bandwidth_cache()}
     
     try:
         f = open('/tmp/mirrorlist_cache.pkl', 'w')

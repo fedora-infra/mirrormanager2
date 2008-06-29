@@ -307,7 +307,7 @@ class HostFields(widgets.WidgetsList):
     internet2 = widgets.CheckBox(help_text="on Internet2")
     internet2_clients = widgets.CheckBox(help_text="serves Internet2 clients, even if private")
     robot_email = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.Email), help_text="email address, will receive notice of upstream content updates")
-    bandwidth = widgets.TextField(validator=validators.Any(validators.UnicodeString, validators.Empty), help_text="text, how much bandwidth you might be able to offer to a public end user")
+    bandwidth = widgets.TextField(validator=validators.Any(validators.Int, validators.Empty), help_text="integer (in megabits/sec), how much bandwidth you offer to a public end user")
     comment = widgets.TextField(validator=validators.Any(validators.UnicodeString, validators.Empty), help_text="text, anything else you'd like a public end user to know about your mirror")
 
 host_form = widgets.TableForm(fields=HostFields(),

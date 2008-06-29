@@ -67,7 +67,7 @@ and development networks globally.
 <p py:if="len(hosts) == 0">There are no mirrors matching your your search criteria.</p>
 
 <table border="1" class="altrows">
-<tr><th>Country</th><th>Site</th><th>Host</th><th>Content</th><th>Bandwidth</th><th>I2</th><th>Comments</th></tr>
+<tr><th>Country</th><th>Site</th><th>Host</th><th>Content</th><th>Bandwidth (Mbits/sec)</th><th>I2</th><th>Comments</th></tr>
 <tr py:for="i,host in enumerate(hosts)"
     py:attrs="{'class': i%2 and 'odd' or 'even'}">
 <td><span py:if="host.country is not None" py:replace="host.country.upper()">Country</span></td>
