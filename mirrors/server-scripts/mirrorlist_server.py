@@ -307,17 +307,17 @@ def do_mirrorlist(kwargs):
     client_ip = kwargs['client_ip']
     clientCountry = gi.country_code_by_addr(client_ip)
     
-    if not done and 'country' in kwargs:
-        header, country_results  = do_country(kwargs, cache, clientCountry, requested_countries, header)
-        if len(country_results) == 0:
-            header, continent_results = do_continent(kwargs, cache, clientCountry, requested_countries, header)
-        done = 1
-
     if not done:
         header, internet2_results = do_internet2(kwargs, cache, clientCountry, header)
         if len(internet2_results) + len(netblock_results) >= 3:
             if not ordered_mirrorlist:
                 done = 1
+
+    if not done and 'country' in kwargs:
+        header, country_results  = do_country(kwargs, cache, clientCountry, requested_countries, header)
+        if len(country_results) == 0:
+            header, continent_results = do_continent(kwargs, cache, clientCountry, requested_countries, header)
+        done = 1
 
     if not done:
         header, geoip_results    = do_geoip(kwargs, cache, clientCountry, header)
@@ -333,14 +333,14 @@ def do_mirrorlist(kwargs):
     if not done:
         header, global_results = do_global(kwargs, cache, clientCountry, header)
 
-    netblock_results  = shuffle(netblock_results)
+    random.shuffle(netblock_results)
+    random.shuffle(internet2_results)
     country_results   = shuffle(country_results)
-    internet2_results = shuffle(internet2_results)
     geoip_results     = shuffle(geoip_results)
     continent_results = shuffle(continent_results)
     global_results    = shuffle(global_results)
     
-    hostresults = uniqueify(netblock_results + country_results + internet2_results + geoip_results + continent_results + global_results)
+    hostresults = uniqueify(netblock_results + internet2_results + country_results + geoip_results + continent_results + global_results)
     hostresults = append_path(hostresults, cache)
     message = [(None, header)]
     return append_filename_to_results(file, message + hostresults)
