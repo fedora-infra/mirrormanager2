@@ -446,6 +446,7 @@ class Arch(SQLObject):
     name = UnicodeCol(alternateID=True)
 
 primary_arches = ['i386','x86_64','ppc']
+display_publiclist_arches = primary_arches + ['ia64', 'sparc']
 
 # e.g. 'fedora' and 'epel'
 class Product(SQLObject):
