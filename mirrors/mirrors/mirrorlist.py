@@ -18,36 +18,6 @@ host_netblock_cache = {}
 # key is hostid, value is list of countries to allow
 host_country_allowed_cache = {}
 
-def trim(input):
-    """ remove all but http and ftp URLs,
-    and if both http and ftp are offered,
-    leave only http"""
-    result = []
-    seen = {}
-    for (directoryname, hostid, country, hcurl, siteprivate, hostprivate, i2, i2_clients) in input:
-        if directoryname not in seen:
-            seen[directoryname] = {}
-    
-        us = hcurl.split('/')
-        uprotocol = us[0]
-        umachine = us[2]
-        if hostid not in seen[directoryname]:
-            seen[directoryname][hostid] = {}
-        seen[directoryname][hostid][uprotocol] = (directoryname, hostid, country, hcurl, siteprivate, hostprivate, i2, i2_clients)
-
-    for directoryname in seen.keys():
-        for k, v in seen[directoryname].iteritems():
-            if v.has_key(u'http:'):
-                r = v[u'http:']
-            elif v.has_key(u'ftp:'):
-                r = v[u'ftp:']
-
-            result.append(r)
-
-    return result
-
-
-
 def _do_query_directories():
     sql =  'SELECT * FROM '
     sql += '(SELECT directory.name AS dname, host.id, host.country, host_category_url.url, site.private, host.private, host.internet2, host.internet2_clients '
@@ -86,7 +56,6 @@ def _do_query_directories():
 def populate_directory_cache():
     global repo_arch_to_directoryname
     result = _do_query_directories()
-    result = trim(result)
 
     cache = {}
     for (directoryname, hostid, country, hcurl, siteprivate, hostprivate, i2, i2_clients) in result:
@@ -171,6 +140,12 @@ def host_bandwidth_cache():
         cache[host.id] = host.bandwidth_int
     return cache
 
+def host_country_cache():
+    cache = {}
+    for host in Host.select():
+        cache[host.id] = host.country
+    return cache
+
 def repository_redirect_cache():
     cache = {}
     for r in RepositoryRedirect.select():
@@ -208,6 +183,7 @@ def dump_caches():
             'country_continent_redirect_cache':country_continent_redirect_cache(),
             'disabled_repositories':disabled_repository_cache(),
             'host_bandwidth_cache':host_bandwidth_cache()}
+            'host_country_cache':host_country_cache()}
     
     try:
         f = open('/tmp/mirrorlist_cache.pkl', 'w')

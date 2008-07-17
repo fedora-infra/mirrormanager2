@@ -53,6 +53,35 @@ def real_client_ip(xforwardedfor):
     any way."""
     return xforwardedfor.split(',')[-1].strip()
 
+def trim_to_preferred_protocols(input):
+    """ remove all but http and ftp URLs,
+    and if both http and ftp are offered,
+    leave only http"""
+    hosts = {}
+    result = []
+    for v in input:
+        (hostid, hcurl) = v
+        if hostid not in hosts:
+            hosts[hostid] = {'https': None, 'http': None, 'ftp': None}
+        if hcurl.startswith('https:'):
+            hosts[hostid]['https'] = v
+        elif hcurl.startswith('http:'):
+            hosts[hostid]['http'] = v
+        elif hcurl.startswith('ftp:'):
+            hosts[hostid]['ftp'] = v
+            
+    for (hostid, hcurl) in input:
+        if hosts[hostid]['https'] is not None:
+            result.append(hosts[hostid]['https'])
+        elif hosts[hostid]['http'] is not None:
+            result.append(hosts[hostid]['http'])
+        elif hosts[hostid]['ftp'] is not None:
+            result.append(hosts[hostid]['ftp'])
+            
+    result = uniquify(result)
+    return result
+
+
 def drop_null_hostids(results):
     return [ url for hostid, url in results if hostid is not None ]
 
@@ -92,18 +121,25 @@ def handler(req):
     except: # most likely socket.error, but we'll catch everything
         return apache.HTTP_SERVICE_UNAVAILABLE
         
-    if request_data.has_key('redirect'):
-        urls = drop_null_hostids(results)
-        if len(urls) == 0:
-            return apache.HTTP_NOT_FOUND
-        else:
-            do_redirect(req, urls)
-            # this raises an exception so we're done now.
-        
-    req.content_type = "text/plain"
-    result = ""
-    for row in results:
-        result += row[1] + '\n'
-        
-    req.write(result)
-    return apache.OK
+
+    fname = req.parsed_uri[apache.URI_PATH]
+    if fname == '/mirrorlist':
+        results = trim_to_preferred_protocols(results)
+        if request_data.has_key('redirect'):
+            urls = drop_null_hostids(results)
+            if len(urls) == 0:
+                return apache.HTTP_NOT_FOUND
+            else:
+                do_redirect(req, urls)
+                # this raises an exception so we're done now.
+
+        req.content_type = "text/plain"
+        result = ""
+        for (hostid, hcurl) in results:
+            result += hcurl + '\n'
+
+        req.write(result)
+        return apache.OK
+    elif fname == '/metalink':
+        # fixme
+        return apache.HTTP_SERVICE_UNAVAILABLE

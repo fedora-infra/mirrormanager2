@@ -137,10 +137,9 @@ def append_filename_to_results(file, results):
     if file is None:
         return results
     newresults = []
-    for country, hcurl in results:
-        if country is not None:
-            hcurl = hcurl + '/%s' % (file)
-        newresults.append((country, hcurl))
+    for (hostid, hcurl) in results:
+        hcurl = hcurl + '/%s' % (file)
+        newresults.append((hostid, hcurl))
     return newresults
 
 continents = {}
@@ -243,6 +242,11 @@ def append_path(hostresults, cache):
         results = hostresults
     return results
 
+def uniq_host_count(hostresults):
+    hosts = set()
+    for (hostid, hcurl) in hostresults:
+        set.add(hostid)
+    return len(hosts)
 
 def do_mirrorlist(kwargs):
     if not (kwargs.has_key('repo') and kwargs.has_key('arch')) and not kwargs.has_key('path'):
@@ -309,7 +313,7 @@ def do_mirrorlist(kwargs):
     
     if not done:
         header, internet2_results = do_internet2(kwargs, cache, clientCountry, header)
-        if len(internet2_results) + len(netblock_results) >= 3:
+        if uniq_host_count(internet2_results) + uniq_host_count(netblock_results) >= 3:
             if not ordered_mirrorlist:
                 done = 1
 
@@ -321,13 +325,13 @@ def do_mirrorlist(kwargs):
 
     if not done:
         header, geoip_results    = do_geoip(kwargs, cache, clientCountry, header)
-        if len(geoip_results) >= 3:
+        if uniq_host_count(geoip_results) >= 3:
             if not ordered_mirrorlist:
                 done = 1
 
     if not done:
         header, continent_results = do_continent(kwargs, cache, clientCountry, [], header)
-        if len(geoip_results) + len(continent_results) >= 3:
+        if uniq_host_count(geoip_results) + uniq_host_count(continent_results) >= 3:
             done = 1
 
     if not done:
