@@ -521,6 +521,19 @@ class Repository(SQLObject):
     arch = ForeignKey('Arch')
     directory = ForeignKey('Directory')
     disabled = BoolCol(default=False)
+    yumRepository = MultipleJoin('YumRepository')
+
+    # fixme add method to trim any extra historical YumRepository
+    # objects. When a given Repository has >1 YumRepository, keep only
+    # most recent 7 days worth.
+    
+
+class YumRepository(SQLObject):
+    repository = ForeignKey('Repository')
+    timestamp = DateTimeCol()
+    sha1 = UnicodeCol()
+    md5 = UnicodeCol()
+    idx = DatabaseIndex('repository', 'sha1', unique=True)
 
 class RepositoryRedirect(SQLObject):
     """ Uses strings to allow for effective named aliases, and for repos that may not exist yet """

@@ -84,7 +84,38 @@ def guess_ver_arch_from_path(category, path):
 
 
 from mirrors.repomap import *
+import sha
+import md5
+import yum.repoMDObject
 
+# fixme send patch to yum list to add this to repoMDObject natively
+def repomd_newest_timestamp(self):
+    timestamp = 0
+    for ft in self.fileTypes():
+        thisdata = self.repoData[ft]
+        timestamp = max(int(thisdata.timestamp), timestamp)
+    return timestamp
+
+def make_yum_repository(dir)
+    repomd_fname = os.path.join(dir.name, 'repodata', 'repomd.xml')
+    if not os.path.exists(repomd_fname):
+        return
+    try:
+        f = open(repomd_fname, 'r')
+        repomd = read()
+        f.close()
+    except:
+        return
+    sha1 = sha.new(repomd)
+    md5 = md5.new(repomd)
+
+    yumrepo = yum.repoMDObject.RepoMD('repoid', repomd_fname)
+    yumrepo.timestamp = repomd_newest_timestamp()
+    ts = datetime.datetime.fromtimestamp(yumrepo.timestamp())
+    try:
+        yr = YumRepository(repository=directory.repository, sha1=sha1.hexdigest(), md5=md5.hexdigest(), timestamp=ts)
+    except:
+        pass
 
 
 
@@ -200,7 +231,7 @@ def sync_category_directories(category, category_directories):
             dir.files = short_filelist(value['files'])
         if value['isRepository']:
             make_repository(dir, category)
-        
+            make_yum_repository(dir)
 
 def parse_rsync_listing(cname, f):
     category = Category.byName(cname)
