@@ -52,6 +52,8 @@ country_continents = GeoIP.country_continents
 
 disabled_repositories = {}
 host_bandwidth_cache = {}
+host_country_cache = {}
+yum_repository_cache = {}
 
 class OrderedNetblocks(list):
     def __contains__(self, item):
@@ -382,6 +384,8 @@ def read_caches():
     global country_continent_redirect_cache
     global disabled_repositories
     global host_bandwidth_cache
+    global host_country_cache
+    global yum_repository_cache
 
     data = {}
     try:
@@ -407,6 +411,10 @@ def read_caches():
         disabled_repositories = data['disabled_repositories']
     if 'host_bandwidth_cache' in data:
         host_bandwidth_cache = data['host_bandwidth_cache']
+    if 'host_country_cache' in data:
+        host_country_cache = data['host_country_cache']
+    if 'yum_repository_cache' in data:
+        yum_repository_cache = data['yum_repository_cache']
 
     del data
     setup_continents()

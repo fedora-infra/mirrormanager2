@@ -165,12 +165,20 @@ def disabled_repository_cache():
             cache[r.prefix] = True
     return cache
 
+def yum_repository_cache():
+    cache = {}
+    for r in Repository.select():
+        cache[r.directory.name] = []
+        for y in r.yumRepositories:
+            c = dict(timestamp=y.timestamp, sha1=y.sha1, md5=y.md5)
+            cache[r.directory.name].append(c)
+    return cache
+
 def populate_all_caches():
     populate_host_country_allowed_cache()
     populate_netblock_cache()
     populate_directory_cache()
     print "mirrorlist caches populated"
-
 
 
 import cPickle as pickle
@@ -183,7 +191,8 @@ def dump_caches():
             'country_continent_redirect_cache':country_continent_redirect_cache(),
             'disabled_repositories':disabled_repository_cache(),
             'host_bandwidth_cache':host_bandwidth_cache()}
-            'host_country_cache':host_country_cache()}
+            'host_country_cache':host_country_cache(),
+            'yum_repository_cache':yum_repository_cache()}
     
     try:
         f = open('/tmp/mirrorlist_cache.pkl', 'w')
