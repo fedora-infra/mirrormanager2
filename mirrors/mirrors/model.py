@@ -4,6 +4,7 @@ from turbogears import identity
 import pickle
 import sys
 from datetime import datetime
+from time import time
 from string import rstrip, strip
 import re
 import IPy
@@ -521,12 +522,26 @@ class Repository(SQLObject):
     arch = ForeignKey('Arch')
     directory = ForeignKey('Directory')
     disabled = BoolCol(default=False)
-    yumRepository = MultipleJoin('YumRepository')
+    yumRepositories = MultipleJoin('YumRepository')
 
-    # fixme add method to trim any extra historical YumRepository
-    # objects. When a given Repository has >1 YumRepository, keep only
-    # most recent 7 days worth.
-    
+    def age_yum_repositories(self):
+        """Keep at least 1 YumRepository entry, removing any others
+        that are more than 7 days old."""
+        weekago = int(time.time()) - (60*60*24*7)
+        latest = None
+        latest_timestamp = 0
+        if len(yumRepositories) > 1:
+            for r in yumRepositories:
+                if r.timestamp > latest_timestamp:
+                    latest=r
+                    latest_timestamp=r.timestamp
+            for r in yumRepositories:
+                if r != latest and r.timestamp < weekago:
+                    r.destroySelf()
+
+def age_yum_repositories():
+    for r in Repository.select():
+        r.age_yum_repositories()
 
 class YumRepository(SQLObject):
     repository = ForeignKey('Repository')

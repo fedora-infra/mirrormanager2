@@ -232,6 +232,7 @@ def sync_category_directories(category, category_directories):
         if value['isRepository']:
             make_repository(dir, category)
             make_yum_repository(dir)
+    age_yum_repositories()
 
 def parse_rsync_listing(cname, f):
     category = Category.byName(cname)
