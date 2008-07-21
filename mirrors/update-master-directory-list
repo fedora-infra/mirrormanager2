@@ -88,12 +88,13 @@ import sha
 import md5
 import yum.repoMDObject
 
-# fixme send patch to yum list to add this to repoMDObject natively
-def repomd_newest_timestamp(self):
+# Something like this is committed to yum upstream, but may not be in the copy we are using.
+def set_repomd_timestamp(yumrepo):
     timestamp = 0
-    for ft in self.fileTypes():
-        thisdata = self.repoData[ft]
+    for ft in yumrepo.fileTypes():
+        thisdata = yumrepo.repoData[ft]
         timestamp = max(int(thisdata.timestamp), timestamp)
+    yumrepo.timestamp = timestamp
     return timestamp
 
 def make_yum_repository(dir)
@@ -110,13 +111,13 @@ def make_yum_repository(dir)
     md5 = md5.new(repomd)
 
     yumrepo = yum.repoMDObject.RepoMD('repoid', repomd_fname)
-    yumrepo.timestamp = repomd_newest_timestamp()
-    ts = datetime.datetime.fromtimestamp(yumrepo.timestamp())
+    if 'timestamp' not in yumrepo.__dict__:
+        set_repomd_timestamp(yumrepo)
+    ts = datetime.datetime.fromtimestamp(yumrepo.timestamp)
     try:
         yr = YumRepository(repository=directory.repository, sha1=sha1.hexdigest(), md5=md5.hexdigest(), timestamp=ts)
     except:
         pass
-
 
 
 def make_repository(dir, category):
