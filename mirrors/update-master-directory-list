@@ -115,7 +115,7 @@ def make_yum_repository(dir)
         set_repomd_timestamp(yumrepo)
     ts = datetime.datetime.fromtimestamp(yumrepo.timestamp)
     try:
-        yr = YumRepository(repository=directory.repository, sha1=sha1.hexdigest(), md5=md5.hexdigest(), timestamp=ts)
+        yr = YumRepository(repository=directory.repository, sha1=sha1.hexdigest(), md5=md5.hexdigest(), timestamp=ts, size=len(repomd))
     except:
         pass
 

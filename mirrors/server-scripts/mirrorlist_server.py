@@ -97,6 +97,51 @@ def uniqueify(seq, idfun=None):
     return result
 
 
+##### Metalink Support #####
+def indent(n):
+    return ' ' * n * 2
+
+def metalink_failuredoc(directory, file):
+    doc = ''
+    doc += '<HTML>\n'
+    doc += '<HEAD><TITLE>%s not found</TITLE></HEAD>\n'
+    doc += '<BODY>%s/%s not found or has no metalink</BODY>' % (directory, file)
+    doc += '</HTML>\n'
+    return doc
+
+def metalink(directory, file, hostresults):
+    preference = 100
+    pubdate = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S %z")
+    try:
+        y = yum_repository_cache[directory]
+    except KeyError:
+        return (200, metalink_failuredoc(directory, file))
+    doc = ''
+    doc += '<?xml version="1.0" encoding="utf-8"?>\n'
+    doc += '<metalink version="3.0" xmlns="http://www.metalinker.org/" type="dynamic" generator="mirrormanager" pubdate="%s">\n' % pubdate
+    doc += indent(1) + '<files>\n'
+    doc += indent(2) + '<file name="%s">\n' % (file)
+    doc += indent(3) + '<size>%s</size>\n' % y.size
+    doc += indent(3) + '<verification>\n'
+    doc += indent(4) + '<hash type="md5">%s</hash>\n' % y.md5
+    doc += indent(4) + '<hash type="sha1">%s</hash>\n' % y.sha1
+    doc += indent(3) + '</verification>\n'
+    doc += indent(3) + '<resources maxconnections="1">\n'
+    for (hostid, hcurl) in hostresults:
+        if hostid is None:
+            continue
+        protocol = hcurl.split(':')[0]
+        doc += indent(4) + '<url protocol="%s" location="%s" preference="%s">' % (protocol, host_country_cache[hostid], preference)
+        doc += hcurl + '/repodata/repomd.xml'
+        doc += '</url>\n'
+        preference = max(preference-1, 1)
+    doc += indent(3) + '</resources>\n'
+    doc += indent(2) + '</file>\n'
+    doc += indent(1) + '</files>\n'
+    doc += '</metalink>\n'
+
+    return doc
+
 def client_netblocks(ip):
     result = []
     try:
@@ -252,7 +297,7 @@ def uniq_host_count(hostresults):
 
 def do_mirrorlist(kwargs):
     if not (kwargs.has_key('repo') and kwargs.has_key('arch')) and not kwargs.has_key('path'):
-        return [(None, '# either path=, or repo= and arch= must be specified')]
+        return dict(resulttype='mirrorlist', returncode=200, results=[(None, '# either path=, or repo= and arch= must be specified')])
 
     file = None
     cache = None
@@ -271,7 +316,7 @@ def do_mirrorlist(kwargs):
             try:
                 cache = mirrorlist_cache['/'.join(sdir)]
             except KeyError:
-                return [(None, header + 'error: invalid path')]
+                return dict(resulttype='mirrorlist', returncode=200, results=[(None, header + 'error: invalid path')])
         
     else:
         if u'source' in kwargs['repo']:
@@ -281,13 +326,12 @@ def do_mirrorlist(kwargs):
         header = "# repo = %s arch = %s " % (repo, arch)
 
         if repo in disabled_repositories:
-            return [(None, header + 'repo disabled')]
-
+            return dict(resulttype='mirrorlist', returncode=200, results=[(None, header + 'repo disabled')])
         try:
             dir = repo_arch_to_directoryname[(repo, arch)]
             cache = mirrorlist_cache[dir]
         except KeyError:
-            return [(None, header + 'error: invalid repo or arch')]
+            return dict(resulttype='mirrorlist', returncode=200, results=[(None, header + 'error: invalid repo or arch')])
 
 
     ordered_mirrorlist = cache.get('ordered_mirrorlist', default_ordered_mirrorlist)
@@ -349,7 +393,11 @@ def do_mirrorlist(kwargs):
     hostresults = uniqueify(netblock_results + internet2_results + country_results + geoip_results + continent_results + global_results)
     hostresults = append_path(hostresults, cache)
     message = [(None, header)]
-    return append_filename_to_results(file, message + hostresults)
+    r = append_filename_to_results(file, message + hostresults))
+    if 'metalink' in d and d['metalink']:
+        (returncode, results)=metalink(dir, file, r))
+        return dict(resulttype='metalink', returncode=returncode, results=results)
+    return dict(resulttype='mirrorlist', returncode=200, results=r)
 
 
 def setup_internet2_netblocks():
@@ -444,14 +492,19 @@ class MirrorlistHandler(StreamRequestHandler):
             pass
 
         try:
-            results = do_mirrorlist(d)
+            r = do_mirrorlist(d)
+            results = r['results']
+            returncode = r['returncode']
+            resulttype = r['resulttype']
         except:
+            resulttype = 'mirrorlist'
             results = [(None, '# Server Error')]
+            returncode = 500
         del d
         del p
 
         try:
-            p = pickle.dumps(results)
+            p = pickle.dumps({'resulttype':resulttype, 'results':results, 'returncode':returncode})
             self.connection.sendall(zfill('%s' % len(p), 10))
             del results
 

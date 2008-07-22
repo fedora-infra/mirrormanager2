@@ -109,6 +109,11 @@ def request_setup(req, request_data):
     else:
         client_ip = req.get_remote_host()
     d['client_ip'] = client_ip
+
+    d['metalink'] = False
+    fname = req.parsed_uri[apache.URI_PATH]
+    if fname == '/metalink':
+        d['metalink'] = True
     return d
 
 
@@ -117,13 +122,17 @@ def handler(req):
     d = request_setup(req, request_data)
 
     try:
-        results = get_mirrorlist(d)
+        r = get_mirrorlist(d)
+        resulttype=r['resulttype']
+        results = r['results']
+        returncode = r['returncode']
     except: # most likely socket.error, but we'll catch everything
         return apache.HTTP_SERVICE_UNAVAILABLE
-        
 
-    fname = req.parsed_uri[apache.URI_PATH]
-    if fname == '/mirrorlist':
+    if returncode == 500:
+        req.status = apache.HTTP_INTERNAL_SERVER_ERROR
+
+    if resulttype == 'mirrorlist':
         results = trim_to_preferred_protocols(results)
         if request_data.has_key('redirect'):
             urls = drop_null_hostids(results)
@@ -140,6 +149,7 @@ def handler(req):
 
         req.write(result)
         return apache.OK
-    elif fname == '/metalink':
-        # fixme
-        return apache.HTTP_SERVICE_UNAVAILABLE
+    else:
+        req.content_type = "application/metalink+xml"
+        req.write(results)
+        return returncode

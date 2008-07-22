@@ -170,7 +170,7 @@ def yum_repository_cache():
     for r in Repository.select():
         cache[r.directory.name] = []
         for y in r.yumRepositories:
-            c = dict(timestamp=y.timestamp, sha1=y.sha1, md5=y.md5)
+            c = dict(timestamp=y.timestamp, sha1=y.sha1, md5=y.md5, size=y.size)
             cache[r.directory.name].append(c)
     return cache
 
