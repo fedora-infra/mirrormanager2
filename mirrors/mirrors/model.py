@@ -546,6 +546,7 @@ def age_yum_repositories():
 class YumRepository(SQLObject):
     repository = ForeignKey('Repository')
     timestamp = DateTimeCol()
+    size = IntCol()
     sha1 = UnicodeCol()
     md5 = UnicodeCol()
     idx = DatabaseIndex('repository', 'sha1', unique=True)
