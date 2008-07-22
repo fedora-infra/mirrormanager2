@@ -484,6 +484,7 @@ class Directory(SQLObject):
     categories = RelatedJoin('Category')
     repository = SingleJoin('Repository') # zero or one repository, set if this dir contains a yum repo
     host_category_dirs = MultipleJoin('HostCategoryDir')
+    fileDetails = MultipleJoin('FileDetail')
 
     def destroySelf(self):
         for c in self.categories:
@@ -494,6 +495,21 @@ class Directory(SQLObject):
         for hcd in self.host_category_dirs:
             hcd.destroySelf()
         SQLObject.destroySelf(self)
+
+    def age_file_details(self):
+        """Keep at least 1 FileDetail entry, removing any others
+        that are more than 7 days old."""
+        weekago = int(time.time()) - (60*60*24*7)
+        latest = None
+        latest_timestamp = 0
+        if len(fileDetails) > 1:
+            for f in fileDetails:
+                if f.timestamp > latest_timestamp:
+                    latest=f
+                    latest_timestamp=f.timestamp
+            for f in fileDetails:
+                if f != latest and f.timestamp < weekago:
+                    f.destroySelf()
 
 
 class Category(SQLObject):
@@ -522,34 +538,18 @@ class Repository(SQLObject):
     arch = ForeignKey('Arch')
     directory = ForeignKey('Directory')
     disabled = BoolCol(default=False)
-    yumRepositories = MultipleJoin('YumRepository')
 
-    def age_yum_repositories(self):
-        """Keep at least 1 YumRepository entry, removing any others
-        that are more than 7 days old."""
-        weekago = int(time.time()) - (60*60*24*7)
-        latest = None
-        latest_timestamp = 0
-        if len(yumRepositories) > 1:
-            for r in yumRepositories:
-                if r.timestamp > latest_timestamp:
-                    latest=r
-                    latest_timestamp=r.timestamp
-            for r in yumRepositories:
-                if r != latest and r.timestamp < weekago:
-                    r.destroySelf()
+def ageFileDetails():
+    for d in Directory.select():
+        d.age_file_details()
 
-def age_yum_repositories():
-    for r in Repository.select():
-        r.age_yum_repositories()
-
-class YumRepository(SQLObject):
-    repository = ForeignKey('Repository')
-    timestamp = DateTimeCol()
-    size = IntCol()
-    sha1 = UnicodeCol()
-    md5 = UnicodeCol()
-    idx = DatabaseIndex('repository', 'sha1', unique=True)
+class FileDetail(SQLObject):
+    directory = ForeignKey('Directory')
+    timestamp = DateTimeCol(default=None)
+    size = IntCol(default=0)
+    sha1 = UnicodeCol(default=None)
+    md5 = UnicodeCol(default=None)
+    idx = DatabaseIndex('directory', 'sha1', unique=True)
 
 class RepositoryRedirect(SQLObject):
     """ Uses strings to allow for effective named aliases, and for repos that may not exist yet """
