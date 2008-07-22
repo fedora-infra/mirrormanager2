@@ -97,12 +97,15 @@ def set_repomd_timestamp(yumrepo):
     yumrepo.timestamp = timestamp
     return timestamp
 
-def make_yum_repository(dir)
-    repomd_fname = os.path.join(dir.name, 'repodata', 'repomd.xml')
-    if not os.path.exists(repomd_fname):
+# FIXME for small files we can/should read them and calculate the checksums
+# but we definitely don't want to do this for large files like ISOs.
+# instead, grab the checksums from the corresponding SHA1SUM file if we can.
+def make_repomd_file_details(dir)
+    fname = os.path.join(dir.name, 'repodata', 'repomd.xml')
+    if not os.path.exists(fname):
         return
     try:
-        f = open(repomd_fname, 'r')
+        f = open(fname, 'r')
         repomd = read()
         f.close()
     except:
@@ -115,7 +118,7 @@ def make_yum_repository(dir)
         set_repomd_timestamp(yumrepo)
     ts = datetime.datetime.fromtimestamp(yumrepo.timestamp)
     try:
-        yr = YumRepository(repository=directory.repository, sha1=sha1.hexdigest(), md5=md5.hexdigest(), timestamp=ts, size=len(repomd))
+        yr = FileDetail(directory=dir, sha1=sha1.hexdigest(), md5=md5.hexdigest(), timestamp=ts, size=len(repomd))
     except:
         pass
 
@@ -232,8 +235,8 @@ def sync_category_directories(category, category_directories):
             dir.files = short_filelist(value['files'])
         if value['isRepository']:
             make_repository(dir, category)
-            make_yum_repository(dir)
-    age_yum_repositories()
+            make_repomd_file_details(dir)
+    ageFileDetails()
 
 def parse_rsync_listing(cname, f):
     category = Category.byName(cname)
