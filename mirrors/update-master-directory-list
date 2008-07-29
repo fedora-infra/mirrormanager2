@@ -8,6 +8,7 @@ import turbogears
 from mirrors.model import *
 from mirrors.repomap import *
 import re
+import glob
 
 # look on the command line for a desired config file
 if len(sys.argv) > 1:
@@ -97,10 +98,64 @@ def set_repomd_timestamp(yumrepo):
     yumrepo.timestamp = timestamp
     return timestamp
 
-# FIXME for small files we can/should read them and calculate the checksums
-# but we definitely don't want to do this for large files like ISOs.
-# instead, grab the checksums from the corresponding SHA1SUM file if we can.
-def make_repomd_file_details(dir)
+def make_file_details_from_checksums(dir):
+    def _parse_checksum_file(path):
+        r = {}
+        try:
+            f = open(path, 'r')
+            for line in f.readlines():
+                line = line.strip()
+                s = line.split()
+                if len(s) < 2:
+                    continue
+                r[s[1]] = s[0]
+            f.close()
+        except:
+            pass
+        return r
+
+    def _checksums_from_globs(dirname, g):
+        d = {}
+        checksum_files = []
+        for f in g:
+            checksum_files.extend(glob.glob(os.path.join(dirname, f)))
+        for f in checksum_files:
+            d.update(_parse_checksum_file(f))
+        return d
+
+    sha1_globs = ['*.sha1sum', 'SHA1SUM']
+    md5_globs = ['*.md5sum', 'MD5SUM']
+    md5dict = _checksums_from_globs(dir.name, md5_globs)
+    sha1dict = _checksums_from_globs(dir.name, sha1_globs)
+
+    files = set()
+    for k in md5dict.keys():
+        files.add(k)
+    for k in sha1dict.keys():
+        files.add(k)
+
+    for f in files:
+        sha1 = sha1dict.get(f)
+        md5  = md5dict.get(f)
+        s = os.stat(os.path.join(dir.name, f))
+        size = s.st_size
+        mtime = s.st_mtime
+        try:
+            fd = FileDetail.selectBy(directory=dir, filename=f)[0]
+            if fd.sha1 != sha1:
+                fd.sha1 = sha1
+            if fd.md5 != md5:
+                fd.md5 = md5
+            if fd.size != size:
+                fd.size = size
+            if fd.mtime != mtime:
+                fd.mtime = mtime
+        except:
+            fd = FileDetail(directory=dir, filename=f, sha1=sha1, md5=md5, timestamp=mtime, size=size)
+    
+
+
+def make_repomd_file_details(dir):
     fname = os.path.join(dir.name, 'repodata', 'repomd.xml')
     if not os.path.exists(fname):
         return
@@ -233,6 +288,7 @@ def sync_category_directories(category, category_directories):
             dir.addCategory(category)
         if dir.files != short_filelist(value['files']):
             dir.files = short_filelist(value['files'])
+        make_file_details_from_checksums(dir)
         if value['isRepository']:
             make_repository(dir, category)
             make_repomd_file_details(dir)
