@@ -494,6 +494,8 @@ class Directory(SQLObject):
         # don't destroy a whole category if only deleting a directory
         for hcd in self.host_category_dirs:
             hcd.destroySelf()
+        for fd in self.fileDetails:
+            fd.destroySelf()
         SQLObject.destroySelf(self)
 
     def age_file_details(self):
@@ -544,12 +546,16 @@ def ageFileDetails():
         d.age_file_details()
 
 class FileDetail(SQLObject):
-    directory = ForeignKey('Directory')
+    directory = ForeignKey('Directory', notNone=True)
+    filename = UnicodeCol(notNone=True)
     timestamp = DateTimeCol(default=None)
     size = IntCol(default=0)
     sha1 = UnicodeCol(default=None)
     md5 = UnicodeCol(default=None)
-    idx = DatabaseIndex('directory', 'sha1', unique=True)
+    # fixme maybe - this will force uniqueness for dir/file combinations
+    # without regard to historical data (e.g. slightly stale mirrors)
+    # which we may have to actually deal with properly
+    idx = DatabaseIndex('directory', 'filename', unique=True)
 
 class RepositoryRedirect(SQLObject):
     """ Uses strings to allow for effective named aliases, and for repos that may not exist yet """
