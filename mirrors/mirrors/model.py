@@ -484,7 +484,7 @@ class Directory(SQLObject):
     categories = RelatedJoin('Category')
     repository = SingleJoin('Repository') # zero or one repository, set if this dir contains a yum repo
     host_category_dirs = MultipleJoin('HostCategoryDir')
-    fileDetails = MultipleJoin('FileDetail', orderBy=['filename', DESC('timestamp')])
+    fileDetails = MultipleJoin('FileDetail', orderBy=['filename', '-timestamp'])
 
     def destroySelf(self):
         for c in self.categories:
@@ -505,9 +505,12 @@ class Directory(SQLObject):
         weekago = int(time.time()) - (60*60*24*7)
 
         for f in self.fileDetails:
-            fd[f.filename] = fd.get(f.filename, []).append(f)
+            if f.filename not in fd:
+                fd[f.filename] = [f]
+            else:
+                fd[f.filename].append(f)
             
-        for filename, fds in fd:
+        for filename, fds in fd.iteritems():
             if len(fds) > 1:
                 for f in fds[1:]:
                     if f.timestamp < weekago:
@@ -547,8 +550,8 @@ def ageFileDetails():
 class FileDetail(SQLObject):
     directory = ForeignKey('Directory', notNone=True)
     filename = UnicodeCol(notNone=True)
-    timestamp = IntCol(default=None)
-    size = IntCol(default=None)
+    timestamp = BigIntCol(default=None)
+    size = BigIntCol(default=None)
     sha1 = UnicodeCol(default=None)
     md5 = UnicodeCol(default=None)
 
