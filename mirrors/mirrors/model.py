@@ -236,15 +236,15 @@ class Host(SQLObject):
             added = 0
             # and now one HostCategoryDir for each dir in the dirtree
             if config[c].has_key('dirtree'):
-                for d in config[c]['dirtree'].keys():
-                    d = strip(d, '/')
+                for k,v in config[c]['dirtree'].iteritems():
+                    d = strip(k, '/')
                     hcdir = HostCategoryDir.selectBy(host_category = hc, path=d)
                     if hcdir.count() > 0:
                         hcdir = hcdir[0]
                         # don't store files, we don't need it right now
                         # hcdir.files = None
                         is_up2date=False
-                        if len(d) > 0:
+                        if len(v) > 0:
                             is_up2date=True
                             marked_up2date += 1
                         if hcdir.up2date != is_up2date:
