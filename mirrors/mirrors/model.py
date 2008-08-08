@@ -4,7 +4,7 @@ from turbogears import identity
 import pickle
 import sys
 from datetime import datetime
-from time import time
+import time
 from string import rstrip, strip
 import re
 import IPy
@@ -499,21 +499,19 @@ class Directory(SQLObject):
         SQLObject.destroySelf(self)
 
     def age_file_details(self):
-        """Keep at least 1 FileDetail entry, removing any others
-        that are more than 7 days old."""
-        # little trick: None is always less than an integer
+        """For each file, keep at least 1 FileDetail entry, removing
+        any others that are more than 7 days old."""
+        fd = {}
         weekago = int(time.time()) - (60*60*24*7)
-        latest = None
-        latest_timestamp = 0
-        if len(fileDetails) > 1:
-            for f in fileDetails:
-                if f.timestamp > latest_timestamp:
-                    latest=f
-                    latest_timestamp=f.timestamp
-            for f in fileDetails:
-                if f != latest and f.timestamp < weekago:
-                    f.destroySelf()
 
+        for f in self.fileDetails:
+            fd[f.filename] = fd.get(f.filename, []).append(f)
+            
+        for filename, fds in fd:
+            if len(fds) > 1:
+                for f in fds[1:]:
+                    if f.timestamp < weekago:
+                        f.destroySelf()
 
 class Category(SQLObject):
     #class sqlmeta:
