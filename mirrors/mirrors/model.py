@@ -484,7 +484,7 @@ class Directory(SQLObject):
     categories = RelatedJoin('Category')
     repository = SingleJoin('Repository') # zero or one repository, set if this dir contains a yum repo
     host_category_dirs = MultipleJoin('HostCategoryDir')
-    fileDetails = MultipleJoin('FileDetail', orderBy=['filename', DESC('timestamp')])
+    fileDetails = MultipleJoin('FileDetail', orderBy=['filename', '-timestamp'])
 
     def destroySelf(self):
         for c in self.categories:
