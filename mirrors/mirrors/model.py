@@ -243,10 +243,13 @@ class Host(SQLObject):
                         hcdir = hcdir[0]
                         # don't store files, we don't need it right now
                         # hcdir.files = None
-                        if hcdir.up2date != True:
-                            hcdir.up2date = True
+                        is_up2date=False
+                        if len(d) > 0:
+                            is_up2date=True
+                            marked_up2date += 1
+                        if hcdir.up2date != is_up2date:
+                            hcdir.up2date = is_up2date
                             hcdir.sync()
-                        marked_up2date += 1
                     else:
                         if len(d) > 0:
                             dname = "%s/%s" % (hc.category.topdir.name, d)
