@@ -165,13 +165,17 @@ def disabled_repository_cache():
             cache[r.prefix] = True
     return cache
 
-def yum_repository_cache():
+def file_details_cache():
+    # cache{directoryname}{filename}[{details}]
     cache = {}
-    for r in Repository.select():
-        cache[r.directory.name] = []
-        for y in r.yumRepositories:
-            c = dict(timestamp=y.timestamp, sha1=y.sha1, md5=y.md5, size=y.size)
-            cache[r.directory.name].append(c)
+    for d in Directory.select():
+        cache[d.name] = {}
+        for fd in d.fileDetails:
+            details = dict(timestamp=y.timestamp, sha1=y.sha1, md5=y.md5, size=y.size)
+            if fd.filename not in cache[d.name]:
+                cache[d.name][fd.filename] = [details]
+            else:
+                cache[d.name][fd.filename].append(details)
     return cache
 
 def populate_all_caches():
@@ -192,7 +196,7 @@ def dump_caches():
             'disabled_repositories':disabled_repository_cache(),
             'host_bandwidth_cache':host_bandwidth_cache()}
             'host_country_cache':host_country_cache(),
-            'yum_repository_cache':yum_repository_cache()}
+            'file_details_cache':file_details_cache()}
     
     try:
         f = open('/tmp/mirrorlist_cache.pkl', 'w')
