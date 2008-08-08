@@ -484,7 +484,7 @@ class Directory(SQLObject):
     categories = RelatedJoin('Category')
     repository = SingleJoin('Repository') # zero or one repository, set if this dir contains a yum repo
     host_category_dirs = MultipleJoin('HostCategoryDir')
-    fileDetails = MultipleJoin('FileDetail')
+    fileDetails = MultipleJoin('FileDetail', orderBy=['filename', DESC('timestamp')])
 
     def destroySelf(self):
         for c in self.categories:
@@ -501,6 +501,7 @@ class Directory(SQLObject):
     def age_file_details(self):
         """Keep at least 1 FileDetail entry, removing any others
         that are more than 7 days old."""
+        # little trick: None is always less than an integer
         weekago = int(time.time()) - (60*60*24*7)
         latest = None
         latest_timestamp = 0
@@ -548,14 +549,10 @@ def ageFileDetails():
 class FileDetail(SQLObject):
     directory = ForeignKey('Directory', notNone=True)
     filename = UnicodeCol(notNone=True)
-    timestamp = DateTimeCol(default=None)
-    size = IntCol(default=0)
+    timestamp = IntCol(default=None)
+    size = IntCol(default=None)
     sha1 = UnicodeCol(default=None)
     md5 = UnicodeCol(default=None)
-    # fixme maybe - this will force uniqueness for dir/file combinations
-    # without regard to historical data (e.g. slightly stale mirrors)
-    # which we may have to actually deal with properly
-    idx = DatabaseIndex('directory', 'filename', unique=True)
 
 class RepositoryRedirect(SQLObject):
     """ Uses strings to allow for effective named aliases, and for repos that may not exist yet """
