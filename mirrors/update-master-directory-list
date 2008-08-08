@@ -297,7 +297,7 @@ def sync_category_directories(category, category_directories):
         if value['isRepository']:
             dir = Directory.byName(dirpath)
             make_repository(dir, category)
-                make_repomd_file_details(dir)
+            make_repomd_file_details(dir)
     ageFileDetails()
 
 def parse_rsync_listing(cname, f):
