@@ -156,9 +156,11 @@ def make_file_details_from_checksums(dir):
 
 
 def make_repomd_file_details(dir):
+    repodataDir = os.path.join(dir.name, 'repodata')
     fname = os.path.join(dir.name, 'repodata', 'repomd.xml')
     if not os.path.exists(fname):
         return
+    d = Directory.byName(repodataDir)
     try:
         f = open(fname, 'r')
         repomd = read()
@@ -173,7 +175,7 @@ def make_repomd_file_details(dir):
         set_repomd_timestamp(yumrepo)
     ts = datetime.datetime.fromtimestamp(yumrepo.timestamp)
     try:
-        yr = FileDetail(directory=dir, sha1=sha1.hexdigest(), md5=md5.hexdigest(), timestamp=ts, size=len(repomd))
+        yr = FileDetail(directory=d, filename='repomd.xml', sha1=sha1.hexdigest(), md5=md5.hexdigest(), timestamp=ts, size=len(repomd))
     except:
         pass
 
@@ -289,9 +291,13 @@ def sync_category_directories(category, category_directories):
         if dir.files != short_filelist(value['files']):
             dir.files = short_filelist(value['files'])
         make_file_details_from_checksums(dir)
+
+    # this has to be a second pass to be sure the child repodata/ dir is created in the db first
+    for dirpath, value in category_directories.iteritems():
         if value['isRepository']:
+            dir = Directory.byName(dirpath)
             make_repository(dir, category)
-            make_repomd_file_details(dir)
+                make_repomd_file_details(dir)
     ageFileDetails()
 
 def parse_rsync_listing(cname, f):
