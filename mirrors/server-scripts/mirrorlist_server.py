@@ -53,7 +53,7 @@ country_continents = GeoIP.country_continents
 disabled_repositories = {}
 host_bandwidth_cache = {}
 host_country_cache = {}
-yum_repository_cache = {}
+file_details_cache = {}
 
 class OrderedNetblocks(list):
     def __contains__(self, item):
@@ -98,9 +98,6 @@ def uniqueify(seq, idfun=None):
 
 
 ##### Metalink Support #####
-def indent(n):
-    return ' ' * n * 2
-
 def metalink_failuredoc(directory, file):
     doc = ''
     doc += '<HTML>\n'
@@ -111,28 +108,53 @@ def metalink_failuredoc(directory, file):
 
 def metalink(directory, file, hostresults):
     preference = 100
+    # fixme pubdate format changed in later metalink specs/drafts.
     pubdate = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S %z")
     try:
-        y = yum_repository_cache[directory]
+        fdc = file_details_cache[directory]
+        detailslist = fdc[file]
     except KeyError:
         return (200, metalink_failuredoc(directory, file))
+
+    def indent(n):
+        return ' ' * n * 2
+
     doc = ''
     doc += '<?xml version="1.0" encoding="utf-8"?>\n'
-    doc += '<metalink version="3.0" xmlns="http://www.metalinker.org/" type="dynamic" generator="mirrormanager" pubdate="%s">\n' % pubdate
+    doc += '<metalink version="3.0" xmlns="http://www.metalinker.org/" type="dynamic" generator="mirrormanager" pubdate="%s" xmlns:mm0="http://fedorahosted.org/mirrormanager">\n' % pubdate
     doc += indent(1) + '<files>\n'
-    doc += indent(2) + '<file name="%s">\n' % (file)
-    doc += indent(3) + '<size>%s</size>\n' % y.size
-    doc += indent(3) + '<verification>\n'
-    doc += indent(4) + '<hash type="md5">%s</hash>\n' % y.md5
-    doc += indent(4) + '<hash type="sha1">%s</hash>\n' % y.sha1
-    doc += indent(3) + '</verification>\n'
+    doc += indent(2) + '<file name="%s/%s">\n' % (directory, file)
+    y = detailslist[0]
+
+    def details(y, indentlevel=2):
+        doc = ''
+        if y['timestamp'] is not None:
+            doc += indent(indentlevel+1) + '<mm0:timestamp>%s</mm0:timestamp>\n' % y['timestamp']
+        if y.size is not None:
+            doc += indent(indentlevel+1) + '<size>%s</size>\n' % y.size
+        doc += indent(indentlevel+1) + '<verification>\n'
+        if y['md5'] is not None:
+            doc += indent(indentlevel+2) + '<hash type="md5">%s</hash>\n' % y['md5']
+        if y['sha1'] is not None:
+            doc += indent(indentlevel+2) + '<hash type="sha1">%s</hash>\n' % y['sha1']
+        doc += indent(indentlevel+1) + '</verification>\n'
+        return doc
+
+    doc += details(y, 2)
+    # there can be multiple files 
+    if len(detailslist) > 1:
+        doc += indent(3) + '<mm0:alternates>\n'
+        for y in detailslist[1:]:
+            doc += details(y,3)
+        doc += indent(3) + '</mm0:alternates>\n'
+
     doc += indent(3) + '<resources maxconnections="1">\n'
     for (hostid, hcurl) in hostresults:
         if hostid is None:
             continue
         protocol = hcurl.split(':')[0]
         doc += indent(4) + '<url protocol="%s" location="%s" preference="%s">' % (protocol, host_country_cache[hostid], preference)
-        doc += hcurl + '/repodata/repomd.xml'
+        doc += hcurl + '/' + filename
         doc += '</url>\n'
         preference = max(preference-1, 1)
     doc += indent(3) + '</resources>\n'
@@ -433,7 +455,7 @@ def read_caches():
     global disabled_repositories
     global host_bandwidth_cache
     global host_country_cache
-    global yum_repository_cache
+    global file_details_cache
 
     data = {}
     try:
@@ -461,8 +483,8 @@ def read_caches():
         host_bandwidth_cache = data['host_bandwidth_cache']
     if 'host_country_cache' in data:
         host_country_cache = data['host_country_cache']
-    if 'yum_repository_cache' in data:
-        yum_repository_cache = data['yum_repository_cache']
+    if 'file_details_cache' in data:
+        file_details_cache = data['file_details_cache']
 
     del data
     setup_continents()
