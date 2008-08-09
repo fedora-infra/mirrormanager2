@@ -8,6 +8,7 @@ from SocketServer import StreamRequestHandler, ForkingMixIn, UnixStreamServer, B
 import cPickle as pickle
 import os, sys, signal, random, socket, getopt
 from string import zfill, atoi
+import datetime
 
 from IPy import IP
 import GeoIP
@@ -130,8 +131,8 @@ def metalink(directory, file, hostresults):
         doc = ''
         if y['timestamp'] is not None:
             doc += indent(indentlevel+1) + '<mm0:timestamp>%s</mm0:timestamp>\n' % y['timestamp']
-        if y.size is not None:
-            doc += indent(indentlevel+1) + '<size>%s</size>\n' % y.size
+        if y['size'] is not None:
+            doc += indent(indentlevel+1) + '<size>%s</size>\n' % y['size']
         doc += indent(indentlevel+1) + '<verification>\n'
         if y['md5'] is not None:
             doc += indent(indentlevel+2) + '<hash type="md5">%s</hash>\n' % y['md5']
@@ -153,8 +154,10 @@ def metalink(directory, file, hostresults):
         if hostid is None:
             continue
         protocol = hcurl.split(':')[0]
-        doc += indent(4) + '<url protocol="%s" location="%s" preference="%s">' % (protocol, host_country_cache[hostid], preference)
-        doc += hcurl + '/' + filename
+        # fixme location is defined slightly different in the spec
+        # investigate and fix accordingly
+        doc += indent(4) + '<url protocol="%s" location="%s" preference="%s">' % (protocol, host_country_cache[hostid].upper(), preference)
+        doc += hcurl + '/' + file
         doc += '</url>\n'
         preference = max(preference-1, 1)
     doc += indent(3) + '</resources>\n'
@@ -162,7 +165,7 @@ def metalink(directory, file, hostresults):
     doc += indent(1) + '</files>\n'
     doc += '</metalink>\n'
 
-    return doc
+    return (200, doc)
 
 def client_netblocks(ip):
     result = []
@@ -339,7 +342,6 @@ def do_mirrorlist(kwargs):
                 cache = mirrorlist_cache['/'.join(sdir)]
             except KeyError:
                 return dict(resulttype='mirrorlist', returncode=200, results=[(None, header + 'error: invalid path')])
-        
     else:
         if u'source' in kwargs['repo']:
             kwargs['arch'] = u'source'
@@ -415,9 +417,10 @@ def do_mirrorlist(kwargs):
     hostresults = uniqueify(netblock_results + internet2_results + country_results + geoip_results + continent_results + global_results)
     hostresults = append_path(hostresults, cache)
     message = [(None, header)]
-    r = append_filename_to_results(file, message + hostresults))
-    if 'metalink' in d and d['metalink']:
-        (returncode, results)=metalink(dir, file, r))
+    r = append_filename_to_results(file, message + hostresults)
+    if 'metalink' in kwargs and kwargs['metalink']:
+        dir = '/'.join(sdir)
+        (returncode, results)=metalink(dir, file, r)
         return dict(resulttype='metalink', returncode=returncode, results=results)
     return dict(resulttype='mirrorlist', returncode=200, results=r)
 
