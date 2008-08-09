@@ -169,13 +169,14 @@ def file_details_cache():
     # cache{directoryname}{filename}[{details}]
     cache = {}
     for d in Directory.select():
-        cache[d.name] = {}
-        for fd in d.fileDetails:
-            details = dict(timestamp=y.timestamp, sha1=y.sha1, md5=y.md5, size=y.size)
-            if fd.filename not in cache[d.name]:
-                cache[d.name][fd.filename] = [details]
-            else:
-                cache[d.name][fd.filename].append(details)
+        if len(d.fileDetails) > 0:
+            cache[d.name] = {}
+            for fd in d.fileDetails:
+                details = dict(timestamp=fd.timestamp, sha1=fd.sha1, md5=fd.md5, size=fd.size)
+                if fd.filename not in cache[d.name]:
+                    cache[d.name][fd.filename] = [details]
+                else:
+                    cache[d.name][fd.filename].append(details)
     return cache
 
 def populate_all_caches():
