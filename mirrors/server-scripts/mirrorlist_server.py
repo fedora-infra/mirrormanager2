@@ -115,7 +115,7 @@ def metalink(directory, file, hostresults):
         fdc = file_details_cache[directory]
         detailslist = fdc[file]
     except KeyError:
-        return (200, metalink_failuredoc(directory, file))
+        return ('errordoc', 404, metalink_failuredoc(directory, file))
 
     def indent(n):
         return ' ' * n * 2
@@ -165,7 +165,7 @@ def metalink(directory, file, hostresults):
     doc += indent(1) + '</files>\n'
     doc += '</metalink>\n'
 
-    return (200, doc)
+    return ('metalink', 200, doc)
 
 def client_netblocks(ip):
     result = []
@@ -420,8 +420,8 @@ def do_mirrorlist(kwargs):
     r = append_filename_to_results(file, message + hostresults)
     if 'metalink' in kwargs and kwargs['metalink']:
         dir = '/'.join(sdir)
-        (returncode, results)=metalink(dir, file, r)
-        return dict(resulttype='metalink', returncode=returncode, results=results)
+        (resulttype, returncode, results)=metalink(dir, file, r)
+        return dict(resulttype=resulttype, returncode=returncode, results=results)
     return dict(resulttype='mirrorlist', returncode=200, results=r)
 
 
