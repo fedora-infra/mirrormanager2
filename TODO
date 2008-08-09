@@ -5,13 +5,6 @@
 * do xmlrpc between report_mirrorlist.py and mirrormanager so we don't
   need a file in /tmp.
 
-* Some people want metalink support.  Conceptually it's possible, but
-  as noted on f-d-l, it's been a year or more since someone asked for
-  it and even sent some code that doesn't quite integrate but was a
-  starting point, and I haven't had time to get to it.  It's not
-  looking good for me to add that right now, but I'd be happy to
-  review patches.
-
 * send emails to mirror admins when their servers drop out of the
   mirrorlists, with why.
 
@@ -22,8 +15,10 @@
 
 * primary/secondary arch distinction
 
-* weighted probabilities of getting a particular mirror, by available
-  bandwidth. This will let lower-bandwidth mirrors get chosen less
-  often.
-
 * push mirroring.  Shell out to remote servers when content is changed on the master, to trigger them into syncing.
+
+* on security branch, we are no longer trimming out non-preferred URL
+  methods before handing the list off as mirrorlist_cache.  This means
+  much later, when shuffled, we shuffle both preferred and
+  non-preferred methods for the same host, which isn't really what we
+  want.  Fix this.
