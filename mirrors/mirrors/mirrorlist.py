@@ -20,7 +20,7 @@ host_country_allowed_cache = {}
 
 def _do_query_directories():
     sql =  'SELECT * FROM '
-    sql += '(SELECT directory.name AS dname, host.id, host.country, host_category_url.url, site.private, host.private, host.internet2, host.internet2_clients '
+    sql += '(SELECT directory.name AS dname, host.id AS hostid, host.country, host_category_url.url, site.private, host.private, host.internet2, host.internet2_clients '
     sql += 'FROM directory, host_category_dir, host_category, host_category_url, host, site, category_directory '
     sql += 'WHERE host_category_dir.host_category_id = host_category.id ' # join criteria
     sql += 'AND   host_category_url.host_category_id = host_category.id ' # join criteria
@@ -47,7 +47,7 @@ def _do_query_directories():
     sql += 'AND host.user_active AND site.user_active '
     sql += 'AND host.admin_active AND site.admin_active) '
     sql += 'AS subquery '
-    sql += 'ORDER BY dname '
+    sql += 'ORDER BY dname, hostid '
 
     directory = Directory.select()[0]
     result = directory._connection.queryAll(sql)
@@ -169,13 +169,14 @@ def file_details_cache():
     # cache{directoryname}{filename}[{details}]
     cache = {}
     for d in Directory.select():
-        cache[d.name] = {}
-        for fd in d.fileDetails:
-            details = dict(timestamp=y.timestamp, sha1=y.sha1, md5=y.md5, size=y.size)
-            if fd.filename not in cache[d.name]:
-                cache[d.name][fd.filename] = [details]
-            else:
-                cache[d.name][fd.filename].append(details)
+        if len(d.fileDetails) > 0:
+            cache[d.name] = {}
+            for fd in d.fileDetails:
+                details = dict(timestamp=fd.timestamp, sha1=fd.sha1, md5=fd.md5, size=fd.size)
+                if fd.filename not in cache[d.name]:
+                    cache[d.name][fd.filename] = [details]
+                else:
+                    cache[d.name][fd.filename].append(details)
     return cache
 
 def populate_all_caches():
@@ -194,7 +195,7 @@ def dump_caches():
             'repo_redirect_cache':repository_redirect_cache(),
             'country_continent_redirect_cache':country_continent_redirect_cache(),
             'disabled_repositories':disabled_repository_cache(),
-            'host_bandwidth_cache':host_bandwidth_cache()}
+            'host_bandwidth_cache':host_bandwidth_cache(),
             'host_country_cache':host_country_cache(),
             'file_details_cache':file_details_cache()}
     

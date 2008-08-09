@@ -9,14 +9,21 @@ from mirrors.model import *
 from mirrors.repomap import *
 import re
 import glob
+import sha as shamod
+import md5 as md5mod
+import yum.repoMDObject
+import datetime
+
+rootdir='/'
 
 # look on the command line for a desired config file
-if len(sys.argv) > 1:
-    turbogears.update_config(configfile=sys.argv[1], 
-        modulename="mirrors.config")
-else:
-    print "usage: update-master-directory-list dev.cfg"
+if len(sys.argv) < 2:
+    print "usage: update-master-directory-list dev.cfg [rootdir]"
     sys.exit(1)
+if len(sys.argv) >= 2:
+    turbogears.update_config(configfile=sys.argv[1], modulename="mirrors.config")
+if len(sys.argv) >= 3:
+    rootdir=sys.argv[2]
     
 
 from turbogears.database import PackageHub
@@ -84,11 +91,6 @@ def guess_ver_arch_from_path(category, path):
     return (ver, arch)
 
 
-from mirrors.repomap import *
-import sha
-import md5
-import yum.repoMDObject
-
 # Something like this is committed to yum upstream, but may not be in the copy we are using.
 def set_repomd_timestamp(yumrepo):
     timestamp = 0
@@ -108,17 +110,24 @@ def make_file_details_from_checksums(dir):
                 s = line.split()
                 if len(s) < 2:
                     continue
+
+                # parse for only md5 and sha1 values
+                s0len = len(s[0])
+                if s0len != 32 and s0len != 40:
+                    continue
+                # strip off extraneous starting '*' char from name
+                s[1] = s[1].strip('*')
                 r[s[1]] = s[0]
             f.close()
         except:
             pass
         return r
 
-    def _checksums_from_globs(dirname, g):
+    def _checksums_from_globs(dirname, globs):
         d = {}
         checksum_files = []
-        for f in g:
-            checksum_files.extend(glob.glob(os.path.join(dirname, f)))
+        for g in globs:
+            checksum_files.extend(glob.glob(os.path.join(rootdir, dirname, g)))
         for f in checksum_files:
             d.update(_parse_checksum_file(f))
         return d
@@ -137,47 +146,40 @@ def make_file_details_from_checksums(dir):
     for f in files:
         sha1 = sha1dict.get(f)
         md5  = md5dict.get(f)
-        s = os.stat(os.path.join(dir.name, f))
+        s = os.stat(os.path.join(rootdir, dir.name, f))
         size = s.st_size
         mtime = s.st_mtime
         try:
-            fd = FileDetail.selectBy(directory=dir, filename=f)[0]
-            if fd.sha1 != sha1:
-                fd.sha1 = sha1
-            if fd.md5 != md5:
-                fd.md5 = md5
-            if fd.size != size:
-                fd.size = size
-            if fd.mtime != mtime:
-                fd.mtime = mtime
-        except:
+            fd = FileDetail.selectBy(directory=dir, filename=f, sha1=sha1, md5=md5, size=size, timestamp=mtime)[0]
+        except IndexError:
             fd = FileDetail(directory=dir, filename=f, sha1=sha1, md5=md5, timestamp=mtime, size=size)
     
 
 
 def make_repomd_file_details(dir):
-    repodataDir = os.path.join(dir.name, 'repodata')
-    fname = os.path.join(dir.name, 'repodata', 'repomd.xml')
-    if not os.path.exists(fname):
+    repodataDir = dir.name + '/repodata'
+    repomd_fname = os.path.join(rootdir, dir.name, 'repodata', 'repomd.xml')
+    if not os.path.exists(repomd_fname):
         return
-    d = Directory.byName(repodataDir)
     try:
-        f = open(fname, 'r')
-        repomd = read()
+        f = open(repomd_fname, 'r')
+        repomd = f.read()
         f.close()
     except:
         return
-    sha1 = sha.new(repomd)
-    md5 = md5.new(repomd)
+    size = len(repomd)
+    sha1 = shamod.new(repomd).hexdigest()
+    md5 = md5mod.new(repomd).hexdigest()
 
     yumrepo = yum.repoMDObject.RepoMD('repoid', repomd_fname)
     if 'timestamp' not in yumrepo.__dict__:
         set_repomd_timestamp(yumrepo)
-    ts = datetime.datetime.fromtimestamp(yumrepo.timestamp)
+    timestamp = yumrepo.timestamp
+    dir = Directory.byName(repodataDir)
     try:
-        yr = FileDetail(directory=d, filename='repomd.xml', sha1=sha1.hexdigest(), md5=md5.hexdigest(), timestamp=ts, size=len(repomd))
-    except:
-        pass
+        fd = FileDetail.selectBy(directory=dir, filename='repomd.xml', sha1=sha1, md5=md5, timestamp=timestamp, size=size)[0]
+    except IndexError:
+        fd = FileDetail(directory=dir, filename='repomd.xml', sha1=sha1, md5=md5, timestamp=timestamp, size=size)
 
 
 def make_repository(dir, category):
@@ -245,7 +247,7 @@ def add_file_to_directory(line, dname, path, category_directories):
     perm, size, date, time, filepath = line.split()
     year, month, day = date.split('/')
     hour, minute, second = time.split(':')
-    dt = datetime(int(year), int(month), int(day), int(hour), int(minute), int(second))
+    dt = datetime.datetime(int(year), int(month), int(day), int(hour), int(minute), int(second))
     l = filepath.split('/')
     filename = l[-1]
     subpath = l[:-1]
@@ -340,3 +342,5 @@ sync_directories_from_file('/tmp/fedora-epel.txt', 'Fedora EPEL')
 sync_directories_from_file('/tmp/fedora-web.txt', 'Fedora Web')
 sync_directories_from_file('/tmp/fedora-linux.txt', 'Fedora Linux')
 sync_directories_using_rsync('rsync://secondary1.fedora.phx.redhat.com/fedora-secondary/', 'Fedora Secondary Arches')
+
+#fixme this doesn't work for remote filesystems using rsync.  No FileDetails created for that content.
