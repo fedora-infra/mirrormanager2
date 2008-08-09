@@ -148,6 +148,9 @@ def handler(req):
     if returncode == 500:
         req.status = apache.HTTP_INTERNAL_SERVER_ERROR
 
+    if returncode == 404:
+        req.status = apache.HTTP_NOT_FOUND
+
     if resulttype == 'mirrorlist':
         results = trim_to_preferred_protocols(results)
         if request_data.has_key('redirect'):
@@ -158,14 +161,15 @@ def handler(req):
                 do_redirect(req, urls)
                 # this raises an exception so we're done now.
 
-        req.content_type = "text/plain"
         result = ""
         for (hostid, hcurl) in results:
             result += hcurl + '\n'
-
-        req.write(result)
-        return apache.OK
-    else:
+        results = result
+        req.content_type = "text/plain"
+    elif resulttype == 'metalink':
         req.content_type = "application/metalink+xml"
-        req.write(results)
-        return apache.OK
+    else:
+        req.content_type = "text/html"
+
+    req.write(results)
+    return apache.OK
