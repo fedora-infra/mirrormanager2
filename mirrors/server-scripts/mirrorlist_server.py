@@ -157,7 +157,7 @@ def metalink(directory, file, hostresults):
         # fixme location is defined slightly different in the spec
         # investigate and fix accordingly
         doc += indent(4) + '<url protocol="%s" location="%s" preference="%s">' % (protocol, host_country_cache[hostid].upper(), preference)
-        doc += hcurl + '/' + file
+        doc += hcurl
         doc += '</url>\n'
         preference = max(preference-1, 1)
     doc += indent(3) + '</resources>\n'
@@ -342,6 +342,7 @@ def do_mirrorlist(kwargs):
                 cache = mirrorlist_cache['/'.join(sdir)]
             except KeyError:
                 return dict(resulttype='mirrorlist', returncode=200, results=[(None, header + 'error: invalid path')])
+        dir = '/'.join(sdir)
     else:
         if u'source' in kwargs['repo']:
             kwargs['arch'] = u'source'
@@ -353,6 +354,9 @@ def do_mirrorlist(kwargs):
             return dict(resulttype='mirrorlist', returncode=200, results=[(None, header + 'repo disabled')])
         try:
             dir = repo_arch_to_directoryname[(repo, arch)]
+            if 'metalink' in kwargs and kwargs['metalink']:
+                dir += '/repodata'
+                file = 'repomd.xml'
             cache = mirrorlist_cache[dir]
         except KeyError:
             return dict(resulttype='mirrorlist', returncode=200, results=[(None, header + 'error: invalid repo or arch')])
@@ -419,7 +423,6 @@ def do_mirrorlist(kwargs):
     message = [(None, header)]
     r = append_filename_to_results(file, message + hostresults)
     if 'metalink' in kwargs and kwargs['metalink']:
-        dir = '/'.join(sdir)
         (resulttype, returncode, results)=metalink(dir, file, r)
         return dict(resulttype=resulttype, returncode=returncode, results=results)
     return dict(resulttype='mirrorlist', returncode=200, results=r)
