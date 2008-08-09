@@ -194,7 +194,7 @@ def dump_caches():
             'repo_redirect_cache':repository_redirect_cache(),
             'country_continent_redirect_cache':country_continent_redirect_cache(),
             'disabled_repositories':disabled_repository_cache(),
-            'host_bandwidth_cache':host_bandwidth_cache()}
+            'host_bandwidth_cache':host_bandwidth_cache(),
             'host_country_cache':host_country_cache(),
             'file_details_cache':file_details_cache()}
     
