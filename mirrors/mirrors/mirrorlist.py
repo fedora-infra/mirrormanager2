@@ -53,6 +53,16 @@ def _do_query_directories():
     result = directory._connection.queryAll(sql)
     return result
 
+def add_host_to_cache(cache, hostid, hcurl):
+    if hostid not in cache:
+        cache[hostid] = [hcurl]
+    else:
+        cache[hostid].append(hcurl)
+    return cache
+
+def add_host_to_set(s, hostid):
+    s.add(hostid)
+
 def populate_directory_cache():
     global repo_arch_to_directoryname
     result = _do_query_directories()
@@ -60,7 +70,7 @@ def populate_directory_cache():
     cache = {}
     for (directoryname, hostid, country, hcurl, siteprivate, hostprivate, i2, i2_clients) in result:
         if directoryname not in cache:
-            cache[directoryname] = {'global':[], 'byCountry':{}, 'byHostId':{}, 'ordered_mirrorlist':False, 'byCountryInternet2':{}}
+            cache[directoryname] = {'global':set(), 'byCountry':{}, 'byHostId':{}, 'ordered_mirrorlist':False, 'byCountryInternet2':{}}
             directory = Directory.byName(directoryname)
             repo = directory.repository
             # if a directory is in more than one category, problem...
@@ -85,26 +95,21 @@ def populate_directory_cache():
             
         if country is not None:
             country = country.upper()
-        v = (hostid, hcurl)
+
         if not siteprivate and not hostprivate:
-            cache[directoryname]['global'].append(v)
+            add_host_to_set(cache[directoryname]['global'], hostid)
 
             if country is not None:
-                if not cache[directoryname]['byCountry'].has_key(country):
-                    cache[directoryname]['byCountry'][country] = [v]
-                else:
-                    cache[directoryname]['byCountry'][country].append(v)
+                if country not in cache[directoryname]['byCountry']:
+                    cache[directoryname]['byCountry'][country] = set()
+                add_host_to_set(cache[directoryname]['byCountry'][country], hostid)
 
         if country is not None and i2 and ((not siteprivate and not hostprivate) or i2_clients):
-            if not cache[directoryname]['byCountryInternet2'].has_key(country):
-                cache[directoryname]['byCountryInternet2'][country] = [v]
-            else:
-                cache[directoryname]['byCountryInternet2'][country].append(v)
+            if country not in cache[directoryname]['byCountryInternet2']:
+                cache[directoryname]['byCountryInternet2'][country] = set()
+            add_host_to_set(cache[directoryname]['byCountryInternet2'][country], hostid)
 
-        if not cache[directoryname]['byHostId'].has_key(hostid):
-            cache[directoryname]['byHostId'][hostid] = [v]
-        else:
-            cache[directoryname]['byHostId'][hostid].append(v)
+        add_host_to_cache(cache[directoryname]['byHostId'], hostid, hcurl)
 
     global mirrorlist_cache
     mirrorlist_cache = cache
