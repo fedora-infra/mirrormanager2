@@ -124,7 +124,7 @@ def metalink(directory, file, hosts_and_urls):
 
     doc = ''
     doc += '<?xml version="1.0" encoding="utf-8"?>\n'
-    doc += '<metalink version="3.0" xmlns="http://www.metalinker.org/" type="dynamic" generator="mirrormanager" xmlns:mm0="http://fedorahosted.org/mirrormanager">\n' % pubdate
+    doc += '<metalink version="3.0" xmlns="http://www.metalinker.org/" type="dynamic" generator="mirrormanager" xmlns:mm0="http://fedorahosted.org/mirrormanager">\n'
     doc += indent(1) + '<files>\n'
     doc += indent(2) + '<file name="%s/%s">\n' % (directory, file)
     y = detailslist[0]
