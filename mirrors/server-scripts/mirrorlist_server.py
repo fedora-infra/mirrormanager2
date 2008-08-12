@@ -111,7 +111,8 @@ def metalink_failuredoc(directory, file):
 def metalink(directory, file, hosts_and_urls):
     preference = 100
     # fixme pubdate format changed in later metalink specs/drafts.
-    pubdate = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S %z")
+    # fixme this isn't printing the time zone anyhow, so let's not print it until this is resolved.  It's optional anyhow.
+    #pubdate = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S %z")
     try:
         fdc = file_details_cache[directory]
         detailslist = fdc[file]
@@ -123,7 +124,7 @@ def metalink(directory, file, hosts_and_urls):
 
     doc = ''
     doc += '<?xml version="1.0" encoding="utf-8"?>\n'
-    doc += '<metalink version="3.0" xmlns="http://www.metalinker.org/" type="dynamic" generator="mirrormanager" pubdate="%s" xmlns:mm0="http://fedorahosted.org/mirrormanager">\n' % pubdate
+    doc += '<metalink version="3.0" xmlns="http://www.metalinker.org/" type="dynamic" generator="mirrormanager" xmlns:mm0="http://fedorahosted.org/mirrormanager">\n' % pubdate
     doc += indent(1) + '<files>\n'
     doc += indent(2) + '<file name="%s/%s">\n' % (directory, file)
     y = detailslist[0]
@@ -154,8 +155,6 @@ def metalink(directory, file, hosts_and_urls):
     for (hostid, hcurls) in hosts_and_urls:
         for url in hcurls:
             protocol = url.split(':')[0]
-            # fixme location is defined slightly different in the spec
-            # investigate and fix accordingly
             doc += indent(4) + '<url protocol="%s" location="%s" preference="%s">' % (protocol, host_country_cache[hostid].upper(), preference)
             doc += url
             doc += '</url>\n'
