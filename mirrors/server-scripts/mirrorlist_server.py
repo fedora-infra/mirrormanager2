@@ -55,6 +55,7 @@ disabled_repositories = {}
 host_bandwidth_cache = {}
 host_country_cache = {}
 file_details_cache = {}
+hcurl_cache = {}
 
 class OrderedNetblocks(list):
     def __contains__(self, item):
@@ -310,8 +311,8 @@ def append_path(hosts, cache, file):
         subpath = cache['subpath']
     for hostid in hosts:
         hcurls = []
-        for hcurl in cache['byHostId'][hostid]:
-            s = hcurl
+        for hcurl_id in cache['byHostId'][hostid]:
+            s = hcurl_cache[hcurl_id]
             if subpath is not None:
                 s += "/" + subpath
             if file is not None:
@@ -495,6 +496,7 @@ def read_caches():
     global host_bandwidth_cache
     global host_country_cache
     global file_details_cache
+    global hcurl_cache
 
     data = {}
     try:
@@ -524,6 +526,8 @@ def read_caches():
         host_country_cache = data['host_country_cache']
     if 'file_details_cache' in data:
         file_details_cache = data['file_details_cache']
+    if 'hcurl_cache' in data:
+        hcurl_cache = data['hcurl_cache']
 
     del data
     setup_continents()
