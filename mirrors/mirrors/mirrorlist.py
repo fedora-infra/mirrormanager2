@@ -5,7 +5,6 @@ from sqlobject import *
 from sqlobject.sqlbuilder import *
 from mirrors.model import *
 from IPy import IP
-import sha
 
 # key is directoryname
 mirrorlist_cache = {}
@@ -84,18 +83,6 @@ def _do_query_directories():
     result = directory._connection.queryAll(sql)
     return result
 
-def shrink(mc):
-    subcaches = ('global', 'byCountry', 'byHostId', 'byCountryInternet2')
-    matches = {}
-    for d in mc:
-        for subcache in d:
-            s = str(subcache)
-            if s in matches:
-                d[subcache] = matches[s]
-            else:
-                matches[s] = subcache
-    return mc
-
 def populate_directory_cache():
     global repo_arch_to_directoryname
     result = _do_query_directories()
@@ -151,7 +138,7 @@ def populate_directory_cache():
             cache[directoryname]['byHostId'][hostid].append(v)
 
     global mirrorlist_cache
-    mirrorlist_cache = shrink(cache)
+    mirrorlist_cache = cache
 
 def populate_netblock_cache():
     cache = {}
