@@ -5,6 +5,7 @@ from sqlobject import *
 from sqlobject.sqlbuilder import *
 from mirrors.model import *
 from IPy import IP
+import sha
 
 # key is directoryname
 mirrorlist_cache = {}
@@ -63,6 +64,18 @@ def add_host_to_cache(cache, hostid, hcurl):
 def add_host_to_set(s, hostid):
     s.add(hostid)
 
+def shrink(mc):
+    subcaches = ('global', 'byCountry', 'byHostId', 'byCountryInternet2')
+    matches = {}
+    for d in mc:
+        for subcache in d:
+            s = sha.sha(str(subcache))
+            if s in matches:
+                d[subcache] = matches[s]
+            else:
+                matches[s] = subcache
+    return mc
+
 def populate_directory_cache():
     global repo_arch_to_directoryname
     result = _do_query_directories()
@@ -112,7 +125,7 @@ def populate_directory_cache():
         add_host_to_cache(cache[directoryname]['byHostId'], hostid, hcurl)
 
     global mirrorlist_cache
-    mirrorlist_cache = cache
+    mirrorlist_cache = shrink(cache)
 
 def populate_netblock_cache():
     cache = {}
