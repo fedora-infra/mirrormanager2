@@ -17,8 +17,6 @@
 
 * push mirroring.  Shell out to remote servers when content is changed on the master, to trigger them into syncing.
 
-* on security branch, we are no longer trimming out non-preferred URL
-  methods before handing the list off as mirrorlist_cache.  This means
-  much later, when shuffled, we shuffle both preferred and
-  non-preferred methods for the same host, which isn't really what we
-  want.  Fix this.
+* detect when master mirror changes and run update-master-directory-list, faster than every 4-6 hours.
+
+* only repositories are using the ordered_mirrorlist field, not say iso/ directories.  Do we care?
