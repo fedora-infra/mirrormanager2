@@ -6,6 +6,7 @@ from sqlobject.sqlbuilder import *
 from mirrors.model import *
 from IPy import IP
 import sha
+import pprint
 
 # key is directoryname
 mirrorlist_cache = {}
@@ -65,15 +66,17 @@ def add_host_to_set(s, hostid):
     s.add(hostid)
 
 def shrink(mc):
+    pp = pprint.PrettyPrinter()
     subcaches = ('global', 'byCountry', 'byHostId', 'byCountryInternet2')
     matches = {}
     for d in mc:
-        for subcache in d:
-            s = sha.sha(str(subcache))
+        for subcache in subcaches:
+            c = mc[d][subcache]
+            s = sha.sha(pp.pformat(c))
             if s in matches:
-                d[subcache] = matches[s]
+                d[c] = matches[s]
             else:
-                matches[s] = subcache
+                matches[s] = c
     return mc
 
 def populate_directory_cache():
