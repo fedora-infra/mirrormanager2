@@ -103,7 +103,13 @@ def populate_directory_cache():
                 elif numcats >= 1:
                     # any of them will do, so just look at the first one
                     category = directory.categories[0]
-                
+
+                # repodata/ directories aren't themselves repositories, their parent dir is
+                # we're walking the list in order, so the parent will be added to the cache before the child
+                if 'repodata' in directoryname:
+                    parent = '/'.join(directoryname.split('/')[:-1])
+                    cache[directoryname]['ordered_mirrorlist'] = cache[parent]['ordered_mirrorlist']
+        
             cache[directoryname]['subpath'] = directoryname[len(category.topdir.name)+1:]
             del repo
             del directory
