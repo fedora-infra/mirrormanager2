@@ -108,7 +108,7 @@ def metalink_failuredoc(directory, file):
     doc += '</HTML>\n'
     return doc
 
-def metalink(directory, file, hostresults):
+def metalink(directory, file, hosts_and_urls):
     preference = 100
     # fixme pubdate format changed in later metalink specs/drafts.
     pubdate = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S %z")
@@ -151,9 +151,18 @@ def metalink(directory, file, hostresults):
         doc += indent(3) + '</mm0:alternates>\n'
 
     doc += indent(3) + '<resources maxconnections="1">\n'
-    for (hostid, hcurls) in hostresults:
+    for (hostid, hcurls) in hosts_and_urls:
         for url in hcurls:
             protocol = url.split(':')[0]
+            # fixme location is defined slightly different in the spec
+            # investigate and fix accordingly
+            doc += indent(4) + '<url protocol="%s" location="%s" preference="%s">' % (protocol, host_country_cache[hostid].upper(), preference)
+            doc += url
+            doc += '</url>\n'
+        preference = max(preference-1, 1)
+    doc += indent(3) + '</resources>\n'
+    doc += indent(2) + '</file>\n'
+    doc += indent(1) + '</files>\n'
     doc += '</metalink>\n'
     return ('metalink', 200, doc)
 
@@ -171,11 +180,12 @@ def client_netblocks(ip):
 def trim_by_client_country(s, clientCountry):
     if clientCountry is None:
         return s
+    r = s.copy()
     for hostid in s:
         if hostid in host_country_allowed_cache and \
                clientCountry not in host_country_allowed_cache[hostid]:
-            s.remove(hostid)
-    return s
+            r.remove(hostid)
+    return r
 
 def shuffle(s):
     l = []
@@ -232,12 +242,12 @@ def do_countrylist(kwargs, cache, clientCountry, requested_countries, header):
                 s.add(hostid)
         return s
 
+    country_cache = {}
     for c in requested_countries:
-        if c not in cache['byCountry']:
-            del cache[c]
-        else:
+        if c in cache['byCountry']:
+            country_cache[c] = cache['byCountry'][c]
             header += 'country = %s ' % c
-    s = collapse(cache['byCountry'])
+    s = collapse(country_cache)
     s = trim_by_client_country(s, clientCountry)
     return (header, s)
 
