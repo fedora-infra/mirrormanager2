@@ -524,6 +524,7 @@ class Repository(SQLObject):
     arch = ForeignKey('Arch')
     directory = ForeignKey('Directory')
     disabled = BoolCol(default=False)
+    idx = DatabaseIndex('prefix', 'arch', unique=True)
 
 class RepositoryRedirect(SQLObject):
     """ Uses strings to allow for effective named aliases, and for repos that may not exist yet """
