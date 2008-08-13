@@ -152,7 +152,9 @@ def metalink(directory, file, hosts_and_urls):
     if len(detailslist) > 1:
         doc += indent(3) + '<mm0:alternates>\n'
         for y in detailslist[1:]:
-            doc += details(y,3)
+            doc += indent(4) + '<mm0:alternate>\n'
+            doc += details(y,5)
+            doc += indent(4) + '</mm0:alternate>\n'
         doc += indent(3) + '</mm0:alternates>\n'
 
     doc += indent(3) + '<resources maxconnections="1">\n'
