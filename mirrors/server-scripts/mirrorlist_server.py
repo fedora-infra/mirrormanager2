@@ -110,9 +110,8 @@ def metalink_failuredoc(directory, file):
 
 def metalink(directory, file, hosts_and_urls):
     preference = 100
-    # fixme pubdate format changed in later metalink specs/drafts.
-    # fixme this isn't printing the time zone anyhow, so let's not print it until this is resolved.  It's optional anyhow.
-    #pubdate = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S %z")
+    # fixme add alternate format pubdate when specified
+    pubdate = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
     try:
         fdc = file_details_cache[directory]
         detailslist = fdc[file]
@@ -124,7 +123,12 @@ def metalink(directory, file, hosts_and_urls):
 
     doc = ''
     doc += '<?xml version="1.0" encoding="utf-8"?>\n'
-    doc += '<metalink version="3.0" xmlns="http://www.metalinker.org/" type="dynamic" generator="mirrormanager" xmlns:mm0="http://fedorahosted.org/mirrormanager">\n'
+    doc += '<metalink version="3.0" xmlns="http://www.metalinker.org/"'
+    doc += ' type="dynamic"'
+    doc += ' pubdate="%s"' % pubdate
+    doc += ' generator="mirrormanager"'
+    doc += ' xmlns:mm0="http://fedorahosted.org/mirrormanager"'
+    doc += '>\n'
     doc += indent(1) + '<files>\n'
     doc += indent(2) + '<file name="%s/%s">\n' % (directory, file)
     y = detailslist[0]
