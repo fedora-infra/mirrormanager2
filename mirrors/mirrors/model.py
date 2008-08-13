@@ -545,6 +545,7 @@ class Repository(SQLObject):
     arch = ForeignKey('Arch')
     directory = ForeignKey('Directory')
     disabled = BoolCol(default=False)
+    idx = DatabaseIndex('prefix', 'arch', unique=True)
 
 def ageFileDetails():
     for d in Directory.select():
