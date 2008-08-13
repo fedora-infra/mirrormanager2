@@ -220,7 +220,7 @@ def parse_rsync_listing(cname, f):
 
 
 def sync_directories_using_rsync(rsyncpath, cname):
-    cmd = 'rsync -r ' + rsyncpath
+    cmd = 'rsync -r --exclude=.snapshot ' + rsyncpath
     try:
         f = os.popen(cmd)
     except:

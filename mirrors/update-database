@@ -33,7 +33,7 @@ function get_rsync_lists()
     local i=0
     while [ $i -lt ${#FILES[@]} ]; do
 	pushd ${REPOS[$i]} > /dev/null 2>&1
-	rsync -r ${EXCLUDES[$i]} . > /tmp/${FILES[$i]}
+	rsync -r --exclude=.snapshot ${EXCLUDES[$i]} . > /tmp/${FILES[$i]}
 	popd > /dev/null 2>&1
 	i=$(($i + 1))
     done
