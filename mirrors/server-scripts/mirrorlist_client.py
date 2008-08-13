@@ -69,43 +69,14 @@ def uniqueify(seq, idfun=None):
         result.append(item)
     return result
 
-def trim_to_preferred_protocols(input):
-    """ remove all but http and ftp URLs,
-    and if both http and ftp are offered,
-    leave only http"""
-    hosts = {}
-    result = []
-    for v in input:
-        (hostid, hcurl) = v
-        if hostid not in hosts:
-            hosts[hostid] = {'https': None, 'http': None, 'ftp': None}
-        if hcurl.startswith('https:'):
-            hosts[hostid]['https'] = v
-        elif hcurl.startswith('http:'):
-            hosts[hostid]['http'] = v
-        elif hcurl.startswith('ftp:'):
-            hosts[hostid]['ftp'] = v
-            
-    for (hostid, hcurl) in input:
-        if hosts[hostid]['https'] is not None:
-            result.append(hosts[hostid]['https'])
-        elif hosts[hostid]['http'] is not None:
-            result.append(hosts[hostid]['http'])
-        elif hosts[hostid]['ftp'] is not None:
-            result.append(hosts[hostid]['ftp'])
-            
-    result = uniqueify(result)
-    return result
 
-
-def drop_null_hostids(results):
-    return [ url for hostid, url in results if hostid is not None ]
 
 def do_redirect(req, results):
     # interesting, we shouldn't have to str() this, but apparently we do.
     # the results list is in priority order, sublists randomized, so we can choose
     # the first entry
-    util.redirect(req, str(results[0]))
+    (hostid, url) = results[0]
+    util.redirect(req, str(url))
 
 
 def request_setup(req, request_data):
@@ -139,6 +110,7 @@ def handler(req):
 
     try:
         r = get_mirrorlist(d)
+        message=r['message']
         resulttype=r['resulttype']
         results = r['results']
         returncode = r['returncode']
@@ -152,21 +124,22 @@ def handler(req):
         req.status = apache.HTTP_NOT_FOUND
 
     if resulttype == 'mirrorlist':
-        results = trim_to_preferred_protocols(results)
+        # results look like [(hostid, url), ...]
         if request_data.has_key('redirect'):
-            urls = drop_null_hostids(results)
-            if len(urls) == 0:
+            if len(results) == 0:
                 return apache.HTTP_NOT_FOUND
             else:
-                do_redirect(req, urls)
+                do_redirect(req, results)
                 # this raises an exception so we're done now.
 
-        result = ""
-        for (hostid, hcurl) in results:
-            result += hcurl + '\n'
-        results = result
+        text = ""
+        text += message + '\n'
+        for (hostid, url) in results:
+            text += url + '\n'
+        results = text
         req.content_type = "text/plain"
     elif resulttype == 'metalink':
+        # results are an XML document
         req.content_type = "application/metalink+xml"
     else:
         req.content_type = "text/html"

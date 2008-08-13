@@ -5,6 +5,8 @@ from sqlobject import *
 from sqlobject.sqlbuilder import *
 from mirrors.model import *
 from IPy import IP
+import sha
+import pprint
 
 # key is directoryname
 mirrorlist_cache = {}
@@ -20,7 +22,7 @@ host_country_allowed_cache = {}
 
 def _do_query_directories():
     sql =  'SELECT * FROM '
-    sql += '(SELECT directory.name AS dname, host.id AS hostid, host.country, host_category_url.url, site.private, host.private, host.internet2, host.internet2_clients '
+    sql += '(SELECT directory.name AS dname, host.id AS hostid, host.country, host_category_url.id, site.private, host.private, host.internet2, host.internet2_clients '
     sql += 'FROM directory, host_category_dir, host_category, host_category_url, host, site, category_directory '
     sql += 'WHERE host_category_dir.host_category_id = host_category.id ' # join criteria
     sql += 'AND   host_category_url.host_category_id = host_category.id ' # join criteria
@@ -35,7 +37,7 @@ def _do_query_directories():
     sql += 'AND host.admin_active AND site.admin_active '
     # now add the always_up2date host_categories
     sql += 'UNION '
-    sql += 'SELECT directory.name AS dname, host.id, host.country, host_category_url.url, site.private, host.private, host.internet2, host.internet2_clients '
+    sql += 'SELECT directory.name AS dname, host.id, host.country, host_category_url.id, site.private, host.private, host.internet2, host.internet2_clients '
     sql += 'FROM directory, host_category, host_category_url, host, site, category_directory '
     sql += 'WHERE host_category_url.host_category_id = host_category.id ' # join criteria
     sql += 'AND   host_category.host_id = host.id '                       # join criteria
@@ -53,6 +55,30 @@ def _do_query_directories():
     result = directory._connection.queryAll(sql)
     return result
 
+def add_host_to_cache(cache, hostid, hcurl):
+    if hostid not in cache:
+        cache[hostid] = [hcurl]
+    else:
+        cache[hostid].append(hcurl)
+    return cache
+
+def add_host_to_set(s, hostid):
+    s.add(hostid)
+
+def shrink(mc):
+    pp = pprint.PrettyPrinter()
+    subcaches = ('global', 'byCountry', 'byHostId', 'byCountryInternet2')
+    matches = {}
+    for d in mc:
+        for subcache in subcaches:
+            c = mc[d][subcache]
+            s = sha.sha(pp.pformat(c))
+            if s in matches:
+                d[c] = matches[s]
+            else:
+                matches[s] = c
+    return mc
+
 def populate_directory_cache():
     global repo_arch_to_directoryname
     result = _do_query_directories()
@@ -60,7 +86,7 @@ def populate_directory_cache():
     cache = {}
     for (directoryname, hostid, country, hcurl, siteprivate, hostprivate, i2, i2_clients) in result:
         if directoryname not in cache:
-            cache[directoryname] = {'global':[], 'byCountry':{}, 'byHostId':{}, 'ordered_mirrorlist':False, 'byCountryInternet2':{}}
+            cache[directoryname] = {'global':set(), 'byCountry':{}, 'byHostId':{}, 'ordered_mirrorlist':False, 'byCountryInternet2':{}}
             directory = Directory.byName(directoryname)
             repo = directory.repository
             # if a directory is in more than one category, problem...
@@ -77,7 +103,13 @@ def populate_directory_cache():
                 elif numcats >= 1:
                     # any of them will do, so just look at the first one
                     category = directory.categories[0]
-                
+
+                # repodata/ directories aren't themselves repositories, their parent dir is
+                # we're walking the list in order, so the parent will be added to the cache before the child
+                if 'repodata' in directoryname:
+                    parent = '/'.join(directoryname.split('/')[:-1])
+                    cache[directoryname]['ordered_mirrorlist'] = cache[parent]['ordered_mirrorlist']
+        
             cache[directoryname]['subpath'] = directoryname[len(category.topdir.name)+1:]
             del repo
             del directory
@@ -85,29 +117,24 @@ def populate_directory_cache():
             
         if country is not None:
             country = country.upper()
-        v = (hostid, hcurl)
+
         if not siteprivate and not hostprivate:
-            cache[directoryname]['global'].append(v)
+            add_host_to_set(cache[directoryname]['global'], hostid)
 
             if country is not None:
-                if not cache[directoryname]['byCountry'].has_key(country):
-                    cache[directoryname]['byCountry'][country] = [v]
-                else:
-                    cache[directoryname]['byCountry'][country].append(v)
+                if country not in cache[directoryname]['byCountry']:
+                    cache[directoryname]['byCountry'][country] = set()
+                add_host_to_set(cache[directoryname]['byCountry'][country], hostid)
 
         if country is not None and i2 and ((not siteprivate and not hostprivate) or i2_clients):
-            if not cache[directoryname]['byCountryInternet2'].has_key(country):
-                cache[directoryname]['byCountryInternet2'][country] = [v]
-            else:
-                cache[directoryname]['byCountryInternet2'][country].append(v)
+            if country not in cache[directoryname]['byCountryInternet2']:
+                cache[directoryname]['byCountryInternet2'][country] = set()
+            add_host_to_set(cache[directoryname]['byCountryInternet2'][country], hostid)
 
-        if not cache[directoryname]['byHostId'].has_key(hostid):
-            cache[directoryname]['byHostId'][hostid] = [v]
-        else:
-            cache[directoryname]['byHostId'][hostid].append(v)
+        add_host_to_cache(cache[directoryname]['byHostId'], hostid, hcurl)
 
     global mirrorlist_cache
-    mirrorlist_cache = cache
+    mirrorlist_cache = shrink(cache)
 
 def populate_netblock_cache():
     cache = {}
@@ -179,6 +206,12 @@ def file_details_cache():
                     cache[d.name][fd.filename].append(details)
     return cache
 
+def hcurl_cache():
+    cache = {}
+    for hcurl in HostCategoryUrl.select():
+        cache[hcurl.id] = hcurl.url
+    return cache
+
 def populate_all_caches():
     populate_host_country_allowed_cache()
     populate_netblock_cache()
@@ -197,7 +230,8 @@ def dump_caches():
             'disabled_repositories':disabled_repository_cache(),
             'host_bandwidth_cache':host_bandwidth_cache(),
             'host_country_cache':host_country_cache(),
-            'file_details_cache':file_details_cache()}
+            'file_details_cache':file_details_cache(),
+            'hcurl_cache':hcurl_cache()}
     
     try:
         f = open('/tmp/mirrorlist_cache.pkl', 'w')

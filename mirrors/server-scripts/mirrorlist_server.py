@@ -55,6 +55,7 @@ disabled_repositories = {}
 host_bandwidth_cache = {}
 host_country_cache = {}
 file_details_cache = {}
+hcurl_cache = {}
 
 class OrderedNetblocks(list):
     def __contains__(self, item):
@@ -107,10 +108,11 @@ def metalink_failuredoc(directory, file):
     doc += '</HTML>\n'
     return doc
 
-def metalink(directory, file, hostresults):
+def metalink(directory, file, hosts_and_urls):
     preference = 100
     # fixme pubdate format changed in later metalink specs/drafts.
-    pubdate = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S %z")
+    # fixme this isn't printing the time zone anyhow, so let's not print it until this is resolved.  It's optional anyhow.
+    #pubdate = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S %z")
     try:
         fdc = file_details_cache[directory]
         detailslist = fdc[file]
@@ -122,7 +124,7 @@ def metalink(directory, file, hostresults):
 
     doc = ''
     doc += '<?xml version="1.0" encoding="utf-8"?>\n'
-    doc += '<metalink version="3.0" xmlns="http://www.metalinker.org/" type="dynamic" generator="mirrormanager" pubdate="%s" xmlns:mm0="http://fedorahosted.org/mirrormanager">\n' % pubdate
+    doc += '<metalink version="3.0" xmlns="http://www.metalinker.org/" type="dynamic" generator="mirrormanager" xmlns:mm0="http://fedorahosted.org/mirrormanager">\n'
     doc += indent(1) + '<files>\n'
     doc += indent(2) + '<file name="%s/%s">\n' % (directory, file)
     y = detailslist[0]
@@ -150,21 +152,17 @@ def metalink(directory, file, hostresults):
         doc += indent(3) + '</mm0:alternates>\n'
 
     doc += indent(3) + '<resources maxconnections="1">\n'
-    for (hostid, hcurl) in hostresults:
-        if hostid is None:
-            continue
-        protocol = hcurl.split(':')[0]
-        # fixme location is defined slightly different in the spec
-        # investigate and fix accordingly
-        doc += indent(4) + '<url protocol="%s" location="%s" preference="%s">' % (protocol, host_country_cache[hostid].upper(), preference)
-        doc += hcurl
-        doc += '</url>\n'
+    for (hostid, hcurls) in hosts_and_urls:
+        for url in hcurls:
+            protocol = url.split(':')[0]
+            doc += indent(4) + '<url protocol="%s" location="%s" preference="%s">' % (protocol, host_country_cache[hostid].upper(), preference)
+            doc += url
+            doc += '</url>\n'
         preference = max(preference-1, 1)
     doc += indent(3) + '</resources>\n'
     doc += indent(2) + '</file>\n'
     doc += indent(1) + '</files>\n'
     doc += '</metalink>\n'
-
     return ('metalink', 200, doc)
 
 def client_netblocks(ip):
@@ -178,38 +176,33 @@ def client_netblocks(ip):
             result.extend(v)
     return result
 
-def client_in_host_allowed(clientCountry, hostID):
-    if host_country_allowed.has_key(hostID):
-        if clientCountry.upper() in host_country_allowed[hostID]:
-            return True
-        return False
-    return True
+def trim_by_client_country(s, clientCountry):
+    if clientCountry is None:
+        return s
+    r = s.copy()
+    for hostid in s:
+        if hostid in host_country_allowed_cache and \
+               clientCountry not in host_country_allowed_cache[hostid]:
+            r.remove(hostid)
+    return r
 
-
-def trim_by_client_country(hostresults, clientCountry):
-    results = []
-    for hostid, hcurl in hostresults:
-        if hostid not in host_country_allowed_cache or \
-                clientCountry in host_country_allowed_cache[hostid]:
-            results.append((hostid, hcurl))
-    return results
-
-def shuffle(hostresults):
+def shuffle(s):
     l = []
-    for hostid, hcurl in hostresults:
-        item = (host_bandwidth_cache[hostid], (hostid, hcurl))
+    for hostid in s:
+        item = (host_bandwidth_cache[hostid], hostid)
         l.append(item)
     newlist = weighted_shuffle(l)
     results = []
-    for (bandwidth, data) in newlist:
-        results.append(data)
+    for (bandwidth, hostid) in newlist:
+        results.append(hostid)
     return results
 
-def append_filename_to_results(file, results):
+def append_filename_to_results(file, hosts_and_urls):
     if file is None:
-        return results
-    newresults = []
-    for (hostid, hcurl) in results:
+        return hosts_and_urls
+    results = {}
+    for hostid in host_and_urls.keys():
+        
         hcurl = hcurl + '/%s' % (file)
         newresults.append((hostid, hcurl))
     return newresults
@@ -233,20 +226,29 @@ def setup_continents():
         else:
             continents[continent].append(c)
     
-
 def do_global(kwargs, cache, clientCountry, header):
-    hostresults = trim_by_client_country(cache['global'], clientCountry)
+    c = trim_by_client_country(cache['global'], clientCountry)
     header += 'country = global '
-    return (header, hostresults)
+    return (header, c)
 
 def do_countrylist(kwargs, cache, clientCountry, requested_countries, header):
-    hostresults = []
+
+    def collapse(d):
+        """ collapses a dict {key:set(hostids)} into a set of hostids """
+        s = set()
+        for country, hostids in d.iteritems():
+            for hostid in hostids:
+                s.add(hostid)
+        return s
+
+    country_cache = {}
     for c in requested_countries:
-        if cache['byCountry'].has_key(c):
-            hostresults.extend(cache['byCountry'][c])
+        if c in cache['byCountry']:
+            country_cache[c] = cache['byCountry'][c]
             header += 'country = %s ' % c
-    hostresults = trim_by_client_country(hostresults, clientCountry)
-    return (header, hostresults)
+    s = collapse(country_cache)
+    s = trim_by_client_country(s, clientCountry)
+    return (header, s)
 
 def get_same_continent_countries(clientCountry, requested_countries):
     result = []
@@ -272,57 +274,89 @@ def do_country(kwargs, cache, clientCountry, requested_countries, header):
     return do_countrylist(kwargs, cache, clientCountry, requested_countries, header)
 
 def do_netblocks(kwargs, cache, header):
+    hostresults = set()
     client_ip = kwargs['client_ip']    
     if not kwargs.has_key('netblock') or kwargs['netblock'] == "1":
         hosts = client_netblocks(client_ip)
         if len(hosts) > 0:
-            hostresults = []
-            for hostId in hosts:
-                if cache['byHostId'].has_key(hostId):
-                    hostresults.extend(cache['byHostId'][hostId])
-                    header += 'Using preferred netblock '
-            if len(hostresults) > 0:
-                return (header, hostresults)
-    return (header, [])
+            for hostid in hosts:
+                hostresults.add(hostid)
+                header += 'Using preferred netblock '
+    return (header, hostresults)
 
 def do_internet2(kwargs, cache, clientCountry, header):
-    hostresults = []
+    hostresults = set()
     client_ip = kwargs['client_ip']
     if OrderedIP(client_ip) in internet2_netblocks:
         header += 'Using Internet2 '
-        if clientCountry is not None and cache['byCountryInternet2'].has_key(clientCountry):
-            hostresults.extend(cache['byCountryInternet2'][clientCountry])
+        if clientCountry is not None and clientCountry in cache['byCountryInternet2']:
+            hostresults = cache['byCountryInternet2'][clientCountry]
             hostresults = trim_by_client_country(hostresults, clientCountry)
     return (header, hostresults)
 
                 
 def do_geoip(kwargs, cache, clientCountry, header):
-    hostresults = []
-    if clientCountry is not None and cache['byCountry'].has_key(clientCountry):
-        hostresults.extend(cache['byCountry'][clientCountry])
+    hostresults = set()
+    if clientCountry is not None and clientCountry in cache['byCountry']:
+        hostresults = cache['byCountry'][clientCountry]
         header += 'country = %s ' % clientCountry
-    hostresults = trim_by_client_country(hostresults, clientCountry)
+        hostresults = trim_by_client_country(hostresults, clientCountry)
     return (header, hostresults)
 
-def append_path(hostresults, cache):
+def add_host_to_cache(cache, hostid, hcurl):
+    if hostid not in cache:
+        cache[hostid] = [hcurl]
+    else:
+        cache[hostid].append(hcurl)
+    return cache
+
+def append_path(hosts, cache, file):
+    """ given a list of hosts, return a list of objects:
+    [(hostid, [hcurls]), ... ]
+    in the same order, appending file if it's not None"""
+    subpath = None
     results = []
     if 'subpath' in cache:
-        path = cache['subpath']
-        for (hostid, hcurl) in hostresults:
-            results.append((hostid, "%s/%s" % (hcurl, path)))
-    else:
-        results = hostresults
+        subpath = cache['subpath']
+    for hostid in hosts:
+        hcurls = []
+        for hcurl_id in cache['byHostId'][hostid]:
+            s = hcurl_cache[hcurl_id]
+            if subpath is not None:
+                s += "/" + subpath
+            if file is not None:
+                s += "/" + file
+            hcurls.append(s)
+        results.append((hostid, hcurls))
     return results
 
-def uniq_host_count(hostresults):
-    hosts = set()
-    for (hostid, hcurl) in hostresults:
-        set.add(hostid)
-    return len(hosts)
+def trim_to_preferred_protocols(hosts_and_urls):
+    """ remove all but http and ftp URLs,
+    and if both http and ftp are offered,
+    leave only http. Return [(hostid, url), ...] """
+    results = []
+    try_protocols = ('https', 'http', 'ftp')
+    for (hostid, hcurls) in hosts_and_urls:
+        protocols = {}
+        url = None
+        for hcurl in hcurls:
+            for p in try_protocols:
+                if hcurl.startswith(p+':'):
+                    protocols[p] = hcurl
+                    
+        for p in try_protocols:
+            if p in protocols:
+                url = protocols[p]
+                break
+ 
+        if url is not None:
+            results.append((hostid, url))
+    return results
+
 
 def do_mirrorlist(kwargs):
     if not (kwargs.has_key('repo') and kwargs.has_key('arch')) and not kwargs.has_key('path'):
-        return dict(resulttype='mirrorlist', returncode=200, results=[(None, '# either path=, or repo= and arch= must be specified')])
+        return dict(resulttype='mirrorlist', returncode=200, results=[], message='# either path=, or repo= and arch= must be specified')
 
     file = None
     cache = None
@@ -341,7 +375,7 @@ def do_mirrorlist(kwargs):
             try:
                 cache = mirrorlist_cache['/'.join(sdir)]
             except KeyError:
-                return dict(resulttype='mirrorlist', returncode=200, results=[(None, header + 'error: invalid path')])
+                return dict(resulttype='mirrorlist', returncode=200, results=[], message=header + 'error: invalid path')
         dir = '/'.join(sdir)
     else:
         if u'source' in kwargs['repo']:
@@ -351,7 +385,7 @@ def do_mirrorlist(kwargs):
         header = "# repo = %s arch = %s " % (repo, arch)
 
         if repo in disabled_repositories:
-            return dict(resulttype='mirrorlist', returncode=200, results=[(None, header + 'repo disabled')])
+            return dict(resulttype='mirrorlist', returncode=200, results=[], message=header + 'repo disabled')
         try:
             dir = repo_arch_to_directoryname[(repo, arch)]
             if 'metalink' in kwargs and kwargs['metalink']:
@@ -359,22 +393,22 @@ def do_mirrorlist(kwargs):
                 file = 'repomd.xml'
             cache = mirrorlist_cache[dir]
         except KeyError:
-            return dict(resulttype='mirrorlist', returncode=200, results=[(None, header + 'error: invalid repo or arch')])
+            return dict(resulttype='mirrorlist', returncode=200, results=[], message=header + 'error: invalid repo or arch')
 
 
     ordered_mirrorlist = cache.get('ordered_mirrorlist', default_ordered_mirrorlist)
     done = 0
-    netblock_results = []
-    internet2_results = []
-    country_results = []
-    geoip_results = []
-    continent_results = []
-    global_results = []
+    netblock_results = set()
+    internet2_results = set()
+    country_results = set()
+    geoip_results = set()
+    continent_results = set()
+    global_results = set()
 
     requested_countries = []
     if kwargs.has_key('country'):
         requested_countries = uniqueify([c.upper() for c in kwargs['country'].split(',') ])
-        
+
     # if they specify a country, don't use netblocks
     if not 'country' in kwargs:
         header, netblock_results = do_netblocks(kwargs, cache, header)
@@ -387,7 +421,7 @@ def do_mirrorlist(kwargs):
     
     if not done:
         header, internet2_results = do_internet2(kwargs, cache, clientCountry, header)
-        if uniq_host_count(internet2_results) + uniq_host_count(netblock_results) >= 3:
+        if len(internet2_results) + len(netblock_results) >= 3:
             if not ordered_mirrorlist:
                 done = 1
 
@@ -399,33 +433,42 @@ def do_mirrorlist(kwargs):
 
     if not done:
         header, geoip_results    = do_geoip(kwargs, cache, clientCountry, header)
-        if uniq_host_count(geoip_results) >= 3:
+        if len(geoip_results) >= 3:
             if not ordered_mirrorlist:
                 done = 1
 
     if not done:
         header, continent_results = do_continent(kwargs, cache, clientCountry, [], header)
-        if uniq_host_count(geoip_results) + uniq_host_count(continent_results) >= 3:
+        if len(geoip_results) + len(continent_results) >= 3:
             done = 1
 
     if not done:
         header, global_results = do_global(kwargs, cache, clientCountry, header)
 
-    random.shuffle(netblock_results)
-    random.shuffle(internet2_results)
-    country_results   = shuffle(country_results)
-    geoip_results     = shuffle(geoip_results)
-    continent_results = shuffle(continent_results)
-    global_results    = shuffle(global_results)
+    def _random_shuffle(s):
+        l = list(s)
+        random.shuffle(l)
+        return l
     
-    hostresults = uniqueify(netblock_results + internet2_results + country_results + geoip_results + continent_results + global_results)
-    hostresults = append_path(hostresults, cache)
-    message = [(None, header)]
-    r = append_filename_to_results(file, message + hostresults)
+    netblock_hosts    = _random_shuffle(netblock_results)
+    internet2_hosts   = _random_shuffle(internet2_results)
+    country_hosts     = shuffle(country_results)
+    geoip_hosts       = shuffle(geoip_results)
+    continent_hosts   = shuffle(continent_results)
+    global_hosts      = shuffle(global_results)
+
+    allhosts = uniqueify(netblock_hosts + internet2_hosts + country_hosts + geoip_hosts + continent_hosts + global_hosts)
+    hosts_and_urls = append_path(allhosts, cache, file)
+
     if 'metalink' in kwargs and kwargs['metalink']:
-        (resulttype, returncode, results)=metalink(dir, file, r)
-        return dict(resulttype=resulttype, returncode=returncode, results=results)
-    return dict(resulttype='mirrorlist', returncode=200, results=r)
+        (resulttype, returncode, results)=metalink(dir, file, hosts_and_urls)
+        d = dict(message=None, resulttype=resulttype, returncode=returncode, results=results)
+        return d
+
+    else:
+        host_url_list = trim_to_preferred_protocols(hosts_and_urls)
+        d = dict(message=header, resulttype='mirrorlist', returncode=200, results=host_url_list)
+        return d
 
 
 def setup_internet2_netblocks():
@@ -462,6 +505,7 @@ def read_caches():
     global host_bandwidth_cache
     global host_country_cache
     global file_details_cache
+    global hcurl_cache
 
     data = {}
     try:
@@ -491,6 +535,8 @@ def read_caches():
         host_country_cache = data['host_country_cache']
     if 'file_details_cache' in data:
         file_details_cache = data['file_details_cache']
+    if 'hcurl_cache' in data:
+        hcurl_cache = data['hcurl_cache']
 
     del data
     setup_continents()
@@ -521,18 +567,20 @@ class MirrorlistHandler(StreamRequestHandler):
 
         try:
             r = do_mirrorlist(d)
+            message = r['message']
             results = r['results']
             returncode = r['returncode']
             resulttype = r['resulttype']
         except:
+            message='# Server Error'
+            results = []
             resulttype = 'mirrorlist'
-            results = [(None, '# Server Error')]
             returncode = 500
         del d
         del p
 
         try:
-            p = pickle.dumps({'resulttype':resulttype, 'results':results, 'returncode':returncode})
+            p = pickle.dumps({'message':message, 'resulttype':resulttype, 'results':results, 'returncode':returncode})
             self.connection.sendall(zfill('%s' % len(p), 10))
             del results
 
