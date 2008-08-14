@@ -80,7 +80,7 @@ def request_setup(request):
     return d
 
 
-def app(environ, start_response):
+def application(environ, start_response):
     request = WSGIRequest(environ)
     response = WSGIResponse()
 
