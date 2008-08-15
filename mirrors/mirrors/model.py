@@ -559,18 +559,6 @@ class FileDetail(SQLObject):
     sha1 = UnicodeCol(default=None)
     md5 = UnicodeCol(default=None)
 
-def ageFileDetails():
-    for d in Directory.select():
-        d.age_file_details()
-
-class FileDetail(SQLObject):
-    directory = ForeignKey('Directory', notNone=True)
-    filename = UnicodeCol(notNone=True)
-    timestamp = BigIntCol(default=None)
-    size = BigIntCol(default=None)
-    sha1 = UnicodeCol(default=None)
-    md5 = UnicodeCol(default=None)
-
 class RepositoryRedirect(SQLObject):
     """ Uses strings to allow for effective named aliases, and for repos that may not exist yet """
     fromRepo = UnicodeCol(alternateID=True)
