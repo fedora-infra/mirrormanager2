@@ -154,8 +154,6 @@ def make_file_details_from_checksums(dir):
         except IndexError:
             fd = FileDetail(directory=dir, filename=f, sha1=sha1, md5=md5, timestamp=mtime, size=size)
     
->>>>>>> 56804282534924ecfe1edc7281c83bd9d5bd07b1:mirrors/update-master-directory-list
-
 def make_file_details_from_checksums(dir):
     def _parse_checksum_file(path):
         r = {}
