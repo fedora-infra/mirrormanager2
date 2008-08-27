@@ -102,10 +102,10 @@ def uniqueify(seq, idfun=None):
 ##### Metalink Support #####
 def metalink_failuredoc(directory, file):
     doc = ''
-    doc += '<HTML>\n'
-    doc += '<HEAD><TITLE>%s not found</TITLE></HEAD>\n'
-    doc += '<BODY>%s/%s not found or has no metalink</BODY>' % (directory, file)
-    doc += '</HTML>\n'
+    doc += '<?xml version="1.0" encoding="utf-8"?>\n'
+    doc += '<!--\n'
+    doc += '%s/%s not found or has no metalink\n' % (directory, file)
+    doc += '-->\n'
     return doc
 
 def metalink(directory, file, hosts_and_urls):
@@ -116,7 +116,7 @@ def metalink(directory, file, hosts_and_urls):
         fdc = file_details_cache[directory]
         detailslist = fdc[file]
     except KeyError:
-        return ('errordoc', 404, metalink_failuredoc(directory, file))
+        return ('metalink', 404, metalink_failuredoc(directory, file))
 
     def indent(n):
         return ' ' * n * 2
