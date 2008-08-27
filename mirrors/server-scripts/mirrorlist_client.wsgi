@@ -10,7 +10,7 @@ from string import zfill, atoi, strip, replace
 from paste.wsgiwrappers import *
 
 
-socketfile = '/tmp/mirrormanager_mirrorlist_server.sock'
+socketfile = '/var/run/mirrormanager/mirrorlist_server.sock'
 
 def get_mirrorlist(d):
     try:

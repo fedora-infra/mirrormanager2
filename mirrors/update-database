@@ -2,7 +2,8 @@
 
 MM_DIR=/srv/tg/mirrormanager
 MIRRORLIST_DIR=${MM_DIR}/mirrorlists
-LOCKFILE=/tmp/mirrormanager-update-all.lock
+LOCKFILE=/var/lock/mirrormanager/database/update-all.lock
+RSYNC_LISTING_DIR=/var/lib/mirrormanager/database
 
 [ -e ${LOCKFILE} ] && kill -0 $(cat ${LOCKFILE}) && exit 2
 echo $$ > ${LOCKFILE}
@@ -33,14 +34,14 @@ function get_rsync_lists()
     local i=0
     while [ $i -lt ${#FILES[@]} ]; do
 	pushd ${REPOS[$i]} > /dev/null 2>&1
-	rsync -r --exclude=.snapshot ${EXCLUDES[$i]} . > /tmp/${FILES[$i]}
+	rsync -r --exclude=.snapshot ${EXCLUDES[$i]} . > ${RSYNC_LISTING_DIR}/${FILES[$i]}
 	popd > /dev/null 2>&1
 	i=$(($i + 1))
     done
 }
 
 
-get_rsync_lists
+#get_rsync_lists
 echo -n "get_rsync_lists finished at "
 date
 ./update-master-directory-list prod.cfg

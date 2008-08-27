@@ -16,9 +16,9 @@ import bisect
 from weighted_shuffle import weighted_shuffle
 
 # can be overridden on the command line
-socketfile = '/tmp/mirrormanager_mirrorlist_server.sock'
-cachefile = '/tmp/mirrorlist_cache.pkl'
-internet2_netblocks_file = '/tmp/mirrormanager_i2_netblocks.txt'
+socketfile = '/var/run/mirrormanager/mirrorlist_server.sock'
+cachefile = '/var/lib/mirrormanager/mirrorlist_cache.pkl'
+internet2_netblocks_file = '/var/lib/mirrormanager/i2_netblocks.txt'
 # at a point in time when we're no longer serving content for versions
 # that don't use yum prioritymethod=fallback
 # (e.g. after Fedora 7 is past end-of-life)

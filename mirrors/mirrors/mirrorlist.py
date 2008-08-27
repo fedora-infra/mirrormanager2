@@ -234,7 +234,7 @@ def dump_caches():
             'hcurl_cache':hcurl_cache()}
     
     try:
-        f = open('/tmp/mirrorlist_cache.pkl', 'w')
+        f = open('/var/lib/mirrormanager/mirrorlist_cache.pkl', 'w')
         pickle.dump(data, f)
         f.close()
     except:
