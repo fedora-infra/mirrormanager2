@@ -18,7 +18,3 @@ class XmlrpcController(controllers.Controller):
             return message + 'checked in successful'
         else:
             return message + 'error checking in'
-
-    @expose()
-    def echo(self, a):
-        return a
