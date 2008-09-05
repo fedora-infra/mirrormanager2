@@ -10,7 +10,8 @@ pushd $temp_dir_name > /dev/null 2>&1
 # an extra HEAD request for each page, which to cherrypy just causes
 # twice as many database lookups.
 wget -nH --cut-dirs=1 -r -l inf --no-remove-listing http://localhost:8082/mirrormanager/publiclist
-if [ $? -ne 0 ]; then
+
+if [ $(find . -type f -name \*.html | wc -l) -lt 5 ]; then
     # touch the existing files so our proxy caches refresh
     find ${MIRRORLIST_DIR} -type f -exec touch \{\} \;
     exit 1
