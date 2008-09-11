@@ -20,7 +20,7 @@ elif exists(join(dirname(__file__), "setup.py")):
     turbogears.update_config(configfile="dev.cfg",
         modulename="mirrors.config")
 else:
-    turbogears.update_config(configfile="prod.cfg",
+    turbogears.update_config(configfile="/etc/mirrormanager/prod.cfg",
         modulename="mirrors.config")
 
 from mirrors.controllers import Root
