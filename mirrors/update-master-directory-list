@@ -399,7 +399,7 @@ def parse_rsync_listing(cname, f):
 
 
 def sync_directories_using_rsync(rsyncpath, cname, extra_rsync_args=None):
-    cmd = 'rsync -r --exclude=.snapshot'
+    cmd = 'rsync -r --exclude=.snapshot --exclude=\*.~tmp~'
     if extra_rsync_args is not None:
         cmd += ' ' + extra_rsync_args
     cmd += ' ' + rsyncpath
@@ -422,6 +422,6 @@ def sync_directories_from_file(filename, cname):
 #sync_directories_from_file('/tmp/fedora-linux-extras.txt', 'Fedora Extras')
 sync_directories_using_rsync('/pub/epel', 'Fedora EPEL')
 sync_directories_using_rsync('/pub/fedora/web', 'Fedora Web')
-sync_directories_using_rsync('/pub/fedora/linux', 'Fedora Linux', extra_rsync_args='--exclude=core/ --exclude=extras/')
+sync_directories_using_rsync('/pub/fedora/linux', 'Fedora Linux', extra_rsync_args='--exclude=\*\*/core/ --exclude=\*\*/extras/')
 sync_directories_using_rsync('rsync://secondary1.fedora.phx.redhat.com/fedora-secondary/', 'Fedora Secondary Arches')
 sync_directories_using_rsync('rsync://secondary1.fedora.phx.redhat.com/alt/', 'Fedora Other')
