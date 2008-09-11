@@ -185,6 +185,7 @@ class Host(SQLObject):
     netblocks = MultipleJoin('HostNetblock', orderBy='netblock')
     acl_ips = MultipleJoin('HostAclIp', orderBy='ip')
     categories = MultipleJoin('HostCategory')
+    exclusive_dirs = MultipleJoin('DirectoryExclusiveHost')
 
     def destroySelf(self):
         """Cascade the delete operation"""
@@ -195,6 +196,8 @@ class Host(SQLObject):
         for a in s:
             for b in a:
                 b.destroySelf()
+        for ed in self.exclusive_dirs:
+            ed.destroySelf()
         SQLObject.destroySelf(self)
 
 
@@ -486,6 +489,7 @@ class Directory(SQLObject):
     categories = RelatedJoin('Category')
     repository = SingleJoin('Repository') # zero or one repository, set if this dir contains a yum repo
     host_category_dirs = MultipleJoin('HostCategoryDir')
+    exclusive_hosts = MultipleJoin('DirectoryExclusiveHost')
 
     def destroySelf(self):
         for c in self.categories:
@@ -495,6 +499,8 @@ class Directory(SQLObject):
         # don't destroy a whole category if only deleting a directory
         for hcd in self.host_category_dirs:
             hcd.destroySelf()
+        for eh in self.exclusive_hosts:
+            eh.destroySelf()
         SQLObject.destroySelf(self)
 
 
@@ -546,6 +552,11 @@ class CountryContinentRedirect(SQLObject):
 class EmbargoedCountry(SQLObject):
     country_code = StringCol(notNone=True)
 
+
+class DirectoryExclusiveHost(SQLObject):
+    directory = ForeignKey('Directory')
+    host = ForeignKey('Host')
+    idx = DatabaseIndex('directory', 'host', unique=True)
 
 ###############################################################
 # These classes are only used if you're not using the

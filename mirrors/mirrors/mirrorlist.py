@@ -83,13 +83,39 @@ def _do_query_directories():
     result = directory._connection.queryAll(sql)
     return result
 
+def _do_query_directory_exclusive_host():
+    sql += 'SELECT directory.name AS dname, directory_exclusive_host.host_id '
+    sql += 'FROM directory, directory_exclusive_host '
+    sql += 'WHERE directory.id = directory_exclusive_host.directory_id '
+    sql += 'ORDER BY dname'
+
+    directory = Directory.select()[0]
+    result = directory._connection.queryAll(sql)
+    return result
+
+def query_directory_exclusive_host():
+    table = _do_query_directory_exclusive_host()
+    cache = {}
+    for (dname, hostid) in table:
+        if dname not in cache:
+            cache[dname] = set(hostid)
+        else:
+            cache[dname].add(hostid)
+    return cache
+
 def populate_directory_cache():
     global repo_arch_to_directoryname
     result = _do_query_directories()
     result = trim(result)
 
+    directory_exclusive_hosts = query_directory_exclusive_host()
+
     cache = {}
     for (directoryname, hostid, country, hcurl, siteprivate, hostprivate, i2, i2_clients) in result:
+        if directoryname in directory_exclusive_hosts and \
+                hostid not in directory_exclusive_hosts[directoryname]:
+            continue
+
         if directoryname not in cache:
             cache[directoryname] = {'global':[], 'byCountry':{}, 'byHostId':{}, 'ordered_mirrorlist':False, 'byCountryInternet2':{}}
             directory = Directory.byName(directoryname)
@@ -113,7 +139,7 @@ def populate_directory_cache():
             del repo
             del directory
             del category
-            
+
         if country is not None:
             country = country.upper()
         v = (hostid, hcurl)
