@@ -1,7 +1,7 @@
 #!/bin/bash
 
-MM_DIR=/srv/tg/mirrormanager
-MIRRORLIST_DIR=${MM_DIR}/mirrorlists
+MM_DIR=/usr/share/mirrormanager
+MIRRORLIST_DIR=/var/lib/mirrormanager/mirrorlists
 LOCKFILE=/var/lock/mirrormanager/database/update-all.lock
 RSYNC_LISTING_DIR=/var/lib/mirrormanager/database
 
@@ -15,37 +15,8 @@ date
 
 cd ${MM_DIR}
 
-function get_rsync_lists()
-{
-    local REPOS
-    REPOS[0]='/pub/epel'
-    REPOS[1]='/pub/fedora/web'
-    REPOS[2]='/pub/fedora/linux'
-#    REPOS[3]='/pub/fedora/linux/core'
-#    REPOS[4]='/pub/fedora/linux/extras'
-    local FILES
-    FILES[0]='fedora-epel.txt'
-    FILES[1]='fedora-web.txt'
-    FILES[2]='fedora-linux.txt'
-    local EXCLUDES
-    EXCLUDES[2]='--exclude=core/ --exclude=extras/'
-#    FILES[3]='fedora-linux-core.txt'
-#    FILES[4]='fedora-linux-extras.txt'
-    local i=0
-    while [ $i -lt ${#FILES[@]} ]; do
-	pushd ${REPOS[$i]} > /dev/null 2>&1
-	rsync -r --exclude=.snapshot ${EXCLUDES[$i]} . > ${RSYNC_LISTING_DIR}/${FILES[$i]}
-	popd > /dev/null 2>&1
-	i=$(($i + 1))
-    done
-}
-
-
-#get_rsync_lists
-echo -n "get_rsync_lists finished at "
-date
-./update-master-directory-list prod.cfg
-./crawler -c prod.cfg --threads 15
+${MM_DIR}/update-master-directory-list /etc/mirrormanager/prod.cfg
+${MM_DIR}/crawler -c /etc/mirrormanager/prod.cfg --threads 15
 
 echo -n "Ending at "
 date
