@@ -2,7 +2,7 @@
 
 MM_DIR=/usr/share/mirrormanager
 MIRRORLIST_DIR=/var/lib/mirrormanager/mirrorlists
-LOCKFILE=/var/lock/mirrormanager/update-each-server.lock
+LOCKFILE=/var/lock/mirrormanager/update-mirrorlist-server.lock
 CACHEDIR=/var/lib/mirrormanager
 
 [ -e ${LOCKFILE} ] && kill -0 $(cat ${LOCKFILE}) && exit 2
