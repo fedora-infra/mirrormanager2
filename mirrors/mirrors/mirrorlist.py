@@ -84,6 +84,7 @@ def _do_query_directories():
     return result
 
 def _do_query_directory_exclusive_host():
+    sql  =''
     sql += 'SELECT directory.name AS dname, directory_exclusive_host.host_id '
     sql += 'FROM directory, directory_exclusive_host '
     sql += 'WHERE directory.id = directory_exclusive_host.directory_id '
@@ -98,7 +99,7 @@ def query_directory_exclusive_host():
     cache = {}
     for (dname, hostid) in table:
         if dname not in cache:
-            cache[dname] = set(hostid)
+            cache[dname] = set([hostid])
         else:
             cache[dname].add(hostid)
     return cache
