@@ -1,6 +1,8 @@
 #!/bin/bash
 
-[ -z "${MIRRORLIST_DIR}" ] && exit 1
+PUBLICLIST_DIR="$1"
+[ -z "${PUBLICLIST_DIR}" ] && exit 1
+mkdir -p "${PUBLICLIST_DIR}"
 
 temp_dir_name=`mktemp -d /tmp/mirrorlists.XXXXXX`
 trap "rm -rf $temp_dir_name" QUIT TERM INT HUP EXIT
@@ -13,11 +15,11 @@ wget -nH --cut-dirs=1 -r -l inf --no-remove-listing http://localhost:8082/mirror
 
 if [ $(find . -type f -name \*.html | wc -l) -lt 5 ]; then
     # touch the existing files so our proxy caches refresh
-    find ${MIRRORLIST_DIR} -type f -exec touch \{\} \;
+    find "${PUBLICLIST_DIR}" -type f -exec touch \{\} \;
     exit 1
 fi
 
-rsync -va ${MIRRORLIST_DIR}/../mirrors/static .
+rsync -va "${PUBLICLIST_DIR}"/../mirrors/static .
 ln static/images/favicon.ico
 mkdir mirrormanager
 ln -s ../static mirrormanager/static
@@ -25,8 +27,8 @@ touch robots.txt
 # remove /mirrormanager in the URLs
 find . -name index.html -type f | xargs -n 20 perl -p -i -e 's:/mirrormanager/:/:g'
 popd > /dev/null 2>&1
-mkdir -m 0775 -p ${MIRRORLIST_DIR}
+mkdir -m 0775 -p "${PUBLICLIST_DIR}"
 # because the arg list is too long for cp
-find $temp_dir_name -type d -exec chmod 0775 \{\} \;
-find $temp_dir_name -type f -exec chmod 0664 \{\} \;
-rsync -a --delete --delete-after --delay-updates $temp_dir_name/ ${MIRRORLIST_DIR}/
+find $temp_dir_name -type d -exec chmod 0755 \{\} \;
+find $temp_dir_name -type f -exec chmod 0644 \{\} \;
+rsync -a --delete --delete-after --delay-updates $temp_dir_name/ "${PUBLICLIST_DIR}"/
