@@ -361,7 +361,11 @@ def short_filelist(files):
         return files
 
 def sync_category_directories(category, category_directories):
+    excludes=['.snapshot', '.~tmp~']
     for dirpath, value in category_directories.iteritems():
+        for e in excludes:
+            if e in dirpath:
+                continue
         try:
             dir = Directory.byName(dirpath)
             if dir.readable != value['readable']:
