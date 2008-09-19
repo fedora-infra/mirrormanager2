@@ -106,6 +106,8 @@ def populate_directory_cache():
 
     directory_exclusive_hosts = query_directory_exclusive_host()
 
+    directory_exclusive_hosts = query_directory_exclusive_host()
+
     cache = {}
     for (directoryname, hostid, country, hcurl, siteprivate, hostprivate, i2, i2_clients) in result:
         if directoryname in directory_exclusive_hosts and \
@@ -141,7 +143,7 @@ def populate_directory_cache():
             del repo
             del directory
             del category
-            
+
         if country is not None:
             country = country.upper()
 
