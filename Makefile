@@ -30,3 +30,16 @@ $(TARBALL):
 	sync ; sync ; sync ; \
 	tar cvzf $(TARBALL) -C $${tmp_dir} $(RELEASE_STRING) ; \
 	rm -rf $${tmp_dir} ;
+
+install-server:
+	mkdir -p -m 0755 $(DESTDIR)/var/lib/mirrormanager
+	mkdir -p -m 0755 $(DESTDIR)/var/run/mirrormanager
+	mkdir -p -m 0755 $(DESTDIR)/var/log/mirrormanager
+	mkdir -p -m 0755 $(DESTDIR)/var/lock/mirrormanager
+	mkdir -p -m 0755 $(DESTDIR)/usr/share/mirrormanager
+	cp -ra mirrors/	 $(DESTDIR)/usr/share/mirrormanager
+
+install-client:
+	mkdir -p -m 0755 $(DESTDIR)/etc/mirrormanager
+	install -m 0644 client/report_mirror.conf $(DESTDIR)/etc/mirrormanager/
+	install -m 0755 client/report_mirror $(DESTDIR)/usr/bin/
