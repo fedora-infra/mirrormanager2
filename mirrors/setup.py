@@ -5,7 +5,7 @@ import os
 execfile(os.path.join("mirrors", "release.py"))
 
 setup(
-    name="mirrors",
+    name="mirrormanager",
     version=version,
     
     # uncomment the following lines if you fill them out in release.py
@@ -15,9 +15,15 @@ setup(
     #url=url,
     #download_url=download_url,
     #license=license,
-    
+
+    entry_points = """
+                   [console_scripts]
+                   mirrors-start = mirrors.commands:start
+    """,
     install_requires = [
         "TurboGears >= 1.0b1",
+        "IPy",
+        "GeoIP",
     ],
     scripts = ["start-mirrors.py"],
     zip_safe=False,
@@ -41,7 +47,7 @@ setup(
         # 'python.templating.engines',
         
         # If this is a full application, uncomment the next line
-        # 'turbogears.app',
+        'turbogears.app',
     ],
     classifiers = [
         'Development Status :: 3 - Alpha',

@@ -2,13 +2,13 @@
 
 version = "1.0"
 
-# description = "Your plan to rule the world"
-# long_description = "More description about your plan"
-# author = "Your Name Here"
-# email = "YourEmail@YourDomain"
-# copyright = "Vintage 2006 - a good year indeed"
+description = "MirrorManager"
+long_description = "Fedora Content Mirror Tracker"
+author = "Matt Domsch"
+email = "Matt_Domsch@dell.com"
+copyright = "Copyright 2006-2008 Dell, Inc."
 
 # if it's open source, you might want to specify these
-# url = "http://yourcool.site/"
-# download_url = "http://yourcool.site/download"
-# license = "MIT"
+url = "http://fedorahosted.org/mirrormanager"
+download_url = "http://fedorahosted.org/releases/m/i/"
+license = "MIT"
