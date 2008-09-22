@@ -491,8 +491,10 @@ def per_host(host, options=None):
                     print url
                     # make sure our parent dirs appear on the list too
                     host_category_dirs = add_parents(host_category_dirs, hc, d)
-                elif has_all_files is None:
-                    host_category_dirs[(hc, d)] = None
+                else:
+                    # could be a dir with no files.
+                    # defer decision on this dir, let a child decide.
+                    pass
             except:
                 timer.cancel()
                 mark_not_up2date(host)
