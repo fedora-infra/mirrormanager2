@@ -213,6 +213,19 @@ class Host(SQLObject):
             else:
                 return []
 
+        def compare_dir(hcdir, files):
+            if hcdir.directory is None or hcdir.directory.files is None:
+                raise SQLObjectNotFound
+            dfiles = hcdir.directory.files
+            if len(dfiles) == 0 and len(files) == 0:
+                return True
+            for fname, fdata in dfiles.iteritems():
+                if fname not in files:
+                    return False
+                if fdata['size'] != files[fname]:
+                    return False
+            return True
+
 
         # handle the optional arguments
         if config['host'].has_key('user_active'):
@@ -240,16 +253,20 @@ class Host(SQLObject):
             added = 0
             # and now one HostCategoryDir for each dir in the dirtree
             if config[c].has_key('dirtree'):
-                for k,v in config[c]['dirtree'].iteritems():
-                    d = strip(k, '/')
+                for dirname,files in config[c]['dirtree'].iteritems():
+                    d = strip(dirname, '/')
                     hcdir = HostCategoryDir.selectBy(host_category = hc, path=d)
                     if hcdir.count() > 0:
                         hcdir = hcdir[0]
                         # don't store files, we don't need it right now
                         # hcdir.files = None
-                        is_up2date=False
-                        if len(v) > 0:
-                            is_up2date=True
+                        try:
+                            is_up2date = compare_dir(hcdir, files)
+                        except SQLObjectNotFound:
+                            # database foulup
+                            print "ERROR: hcdir %s has no directory entry"
+                            continue
+                        if is_up2date:
                             marked_up2date += 1
                         if hcdir.up2date != is_up2date:
                             hcdir.up2date = is_up2date
