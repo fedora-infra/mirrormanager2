@@ -8,8 +8,7 @@ Summary:        Fedora mirror management system
 Group:          Applications/Internet
 License:        MIT and GPLv2
 URL:            http://fedorahosted.org/mirrormanager
-#fixme URL location of tarballs
-Source0:        %{name}-%{version}.tar.bz2
+Source0:        https://fedorahosted.org/releases/m/i/%{name}/%{name}-%{version}.tar.bz2
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  python
