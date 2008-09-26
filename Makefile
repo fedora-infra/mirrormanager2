@@ -20,7 +20,7 @@ tarball: $(TARBALL)
 $(TARBALL):
 	mkdir -p dist
 	tmp_dir=`mktemp -d /tmp/mirrormanager.XXXXXXXX` ; \
-	cp -a ../$(RELEASE_NAME) $${tmp_dir}/$(RELEASE_STRING) ; \
+	cp -ar ../$(RELEASE_NAME) $${tmp_dir}/$(RELEASE_STRING) ; \
 	find $${tmp_dir}/$(RELEASE_STRING) -depth -name .git -type d -exec rm -rf \{\} \; ; \
 	find $${tmp_dir}/$(RELEASE_STRING) -depth -name dist -type d -exec rm -rf \{\} \; ; \
 	find $${tmp_dir}/$(RELEASE_STRING) -depth -name fedora-test-data -type d -exec rm -rf \{\} \; ; \
@@ -30,6 +30,8 @@ $(TARBALL):
 	sync ; sync ; sync ; \
 	tar cvzf $(TARBALL) -C $${tmp_dir} $(RELEASE_STRING) ; \
 	rm -rf $${tmp_dir} ;
+
+install: install-server install-client
 
 install-server:
 	mkdir -p -m 0755 $(DESTDIR)/var/lib/mirrormanager
