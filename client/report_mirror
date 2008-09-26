@@ -216,7 +216,7 @@ def main():
     parser = OptionParser(usage= sys.argv[0] + " [options]")
     parser.add_option("-c", "--config",
                       dest="config",
-                      default='/etc/mirrormanager/report_mirror.conf',
+                      default='/etc/mirrormanager-client/report_mirror.conf',
                       help='Configuration filename (required)')
     parser.add_option("-s", "--stats",
                       action="store_true",
