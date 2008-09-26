@@ -41,7 +41,7 @@ install-server:
 	mkdir -p -m 0755 $(DESTDIR)/usr/share/mirrormanager
 	cp -ra mirrors/	 $(DESTDIR)/usr/share/mirrormanager
 	rm mirrors/logrotate.conf
-	install -m 0644 mirrors/logroate.conf $(DESTDIR)/etc/logrotate.d/
+	install -m 0644 mirrors/logrotate.conf $(DESTDIR)/etc/logrotate.d/mirrormanager
 
 install-client:
 	mkdir -p -m 0755 $(DESTDIR)/etc/mirrormanager $(DESTDIR)/usr/bin
