@@ -13,7 +13,7 @@ all:
 clean:
 	-rm -f *.tar.gz *.rpm * *~ dist/
 
-TARBALL=dist/$(RELEASE_STRING).tar.gz
+TARBALL=dist/$(RELEASE_STRING).tar.bz2
 
 tarball: $(TARBALL)
 
@@ -28,7 +28,7 @@ $(TARBALL):
 	find $${tmp_dir}/$(RELEASE_STRING) -depth -name \*.rpm -type f -exec rm -f \{\} \; ; \
 	find $${tmp_dir}/$(RELEASE_STRING) -depth -name \*.tar.gz -type f -exec rm -f \{\} \; ; \
 	sync ; sync ; sync ; \
-	tar cvzf $(TARBALL) -C $${tmp_dir} $(RELEASE_STRING) ; \
+	tar cvjf $(TARBALL) -C $${tmp_dir} $(RELEASE_STRING) ; \
 	rm -rf $${tmp_dir} ;
 
 install: install-server install-client
@@ -40,8 +40,10 @@ install-server:
 	mkdir -p -m 0755 $(DESTDIR)/var/lock/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/usr/share/mirrormanager
 	cp -ra mirrors/	 $(DESTDIR)/usr/share/mirrormanager
+	rm mirrors/logrotate.conf
+	install -m 0644 mirrors/logroate.conf $(DESTDIR)/etc/logrotate.d/
 
 install-client:
-	mkdir -p -m 0755 $(DESTDIR)/etc/mirrormanager
+	mkdir -p -m 0755 $(DESTDIR)/etc/mirrormanager $(DESTDIR)/usr/bin
 	install -m 0644 client/report_mirror.conf $(DESTDIR)/etc/mirrormanager/
 	install -m 0755 client/report_mirror $(DESTDIR)/usr/bin/
