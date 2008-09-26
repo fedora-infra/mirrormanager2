@@ -1,7 +1,7 @@
-RELEASE_DATE := "20-Jun-2008"
+RELEASE_DATE := "26-Sep-2008"
 RELEASE_MAJOR := 1
 RELEASE_MINOR := 2
-RELEASE_EXTRALEVEL := .1
+RELEASE_EXTRALEVEL := .2
 RELEASE_NAME := mirrormanager
 RELEASE_VERSION := $(RELEASE_MAJOR).$(RELEASE_MINOR)$(RELEASE_EXTRALEVEL)
 RELEASE_STRING := $(RELEASE_NAME)-$(RELEASE_VERSION)
@@ -42,7 +42,8 @@ install-server:
 	cp -ra mirrors/	 $(DESTDIR)/usr/share/mirrormanager
 	rm $(DESTDIR)/usr/share/mirrormanager/mirrors/logrotate.conf
 	mkdir -p -m 0755 $(DESTDIR)/etc/logrotate.d
-	install -m 0644 mirrors/logrotate.conf $(DESTDIR)/etc/logrotate.d/mirrormanager-server
+	install -m 0644 mirrors/logrotate.conf $(DESTDIR)/etc/logrotate.d/mirrormanager
+	mkdir -p -m 0755 $(DESTDIR)/etc/mirrormanager
 
 install-client:
 	mkdir -p -m 0755 $(DESTDIR)/etc/mirrormanager-client $(DESTDIR)/usr/bin
