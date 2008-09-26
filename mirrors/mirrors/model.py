@@ -607,11 +607,6 @@ class DirectoryExclusiveHost(SQLObject):
     host = ForeignKey('Host')
     idx = DatabaseIndex('directory', 'host', unique=True)
 
-class DirectoryExclusiveHost(SQLObject):
-    directory = ForeignKey('Directory')
-    host = ForeignKey('Host')
-    idx = DatabaseIndex('directory', 'host', unique=True)
-
 ###############################################################
 # These classes are only used if you're not using the
 # Fedora Account System or some other backend that provides
