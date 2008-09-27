@@ -9,7 +9,9 @@ RELEASE_STRING := $(RELEASE_NAME)-$(RELEASE_VERSION)
 SPEC=mirrormanager.spec
 RELEASE_PY=mirrors/mirrors/release.py
 TARBALL=dist/$(RELEASE_STRING).tar.bz2
-
+STARTSCRIPT=mirrors/start-mirrors
+PROGRAMDIR=/usr/share/mirrormanager
+SBINDIR=/usr/sbin
 .PHONY = all tarball prep
 
 all:
@@ -25,11 +27,13 @@ $(RELEASE_PY):
 
 prep: $(SPEC) $(RELEASE_PY)
 	pushd mirrors; \
-	python setup.py egg_info ;
+	python setup.py egg_info ;\
+	sync ; sync ; sync
 
 tarball: clean prep $(TARBALL)
 
 $(TARBALL):
+	sync ; sync ; sync
 	mkdir -p dist
 	tmp_dir=`mktemp -d /tmp/mirrormanager.XXXXXXXX` ; \
 	cp -ar ../$(RELEASE_NAME) $${tmp_dir}/$(RELEASE_STRING) ; \
@@ -56,6 +60,8 @@ rpm: $(TARBALL) $(SPEC)
 
 install: install-server install-client
 
+
+
 install-server:
 	mkdir -p -m 0755 $(DESTDIR)/var/lib/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/var/run/mirrormanager
@@ -64,9 +70,14 @@ install-server:
 	mkdir -p -m 0755 $(DESTDIR)/usr/share/mirrormanager
 	cp -ra mirrors/	 $(DESTDIR)/usr/share/mirrormanager
 	rm $(DESTDIR)/usr/share/mirrormanager/mirrors/logrotate.conf
+	rm $(DESTDIR)/usr/share/mirrormanager/mirrors/*.cfg
+	rm $(DESTDIR)/usr/share/mirrormanager/mirrors/*.in
 	mkdir -p -m 0755 $(DESTDIR)/etc/logrotate.d
 	install -m 0644 mirrors/logrotate.conf $(DESTDIR)/etc/logrotate.d/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/etc/mirrormanager
+	mkdir -p -m 0755 $(DESTDIR)/$(SBINDIR)
+	sed -e 's:##CONFFILE##:$(CONFFILE):' -e 's:##PROGRAMDIR##:$(PROGRAMDIR):' $(STARTSCRIPT).in > $(DESTDIR)/$(SBINDIR)/start-mirrormanager
+	chmod 0755 $(DESTDIR)/$(SBINDIR)/start-mirrormanager
 
 install-client:
 	mkdir -p -m 0755 $(DESTDIR)/etc/mirrormanager-client $(DESTDIR)/usr/bin
