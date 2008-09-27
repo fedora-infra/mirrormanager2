@@ -1,20 +1,21 @@
 RELEASE_DATE := "26-Sep-2008"
 RELEASE_MAJOR := 1
 RELEASE_MINOR := 2
-RELEASE_EXTRALEVEL := .2
+RELEASE_EXTRALEVEL := .3
 RELEASE_NAME := mirrormanager
 RELEASE_VERSION := $(RELEASE_MAJOR).$(RELEASE_MINOR)$(RELEASE_EXTRALEVEL)
 RELEASE_STRING := $(RELEASE_NAME)-$(RELEASE_VERSION)
 
 SPEC=mirrormanager.spec
 RELEASE_PY=mirrors/mirrors/release.py
+TARBALL=dist/$(RELEASE_STRING).tar.bz2
 
-.PHONY = all tarball
+.PHONY = all tarball prep
 
 all:
 
 clean:
-	-rm -rf *.tar.gz *.rpm *~ dist/ $(SPEC) $(RELEASE_PY)
+	-rm -rf *.tar.gz *.rpm *~ dist/ $(SPEC) $(RELEASE_PY) mirrors/mirrormanager.egg-info
 
 $(SPEC):
 	sed -e 's/##VERSION##/$(RELEASE_VERSION)/' $(SPEC).in > $(SPEC)
@@ -22,10 +23,11 @@ $(SPEC):
 $(RELEASE_PY):
 	sed -e 's/##VERSION##/$(RELEASE_VERSION)/' $(RELEASE_PY).in > $(RELEASE_PY)
 
+prep: $(SPEC) $(RELEASE_PY)
+	pushd mirrors; \
+	python setup.py egg_info ;
 
-TARBALL=dist/$(RELEASE_STRING).tar.bz2
-
-tarball: $(SPEC) $(RELEASE_PY) $(TARBALL)
+tarball: clean prep $(TARBALL)
 
 $(TARBALL):
 	mkdir -p dist

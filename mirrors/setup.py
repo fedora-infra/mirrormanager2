@@ -9,12 +9,12 @@ setup(
     version=version,
     
     # uncomment the following lines if you fill them out in release.py
-    #description=description,
-    #author=author,
-    #author_email=email,
-    #url=url,
-    #download_url=download_url,
-    #license=license,
+    description=description,
+    author=author,
+    author_email=email,
+    url=url,
+    download_url=download_url,
+    license=license,
 
     entry_points = """
                    [console_scripts]

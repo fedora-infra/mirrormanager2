@@ -1,3 +1,0 @@
-TurboGears >= 1.0b1
-IPy
-GeoIP
