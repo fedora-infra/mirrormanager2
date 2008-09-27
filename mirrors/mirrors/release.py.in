@@ -1,6 +1,6 @@
 # Release information about mirrors
 
-version = "1.0"
+version = "##VERSION##"
 
 description = "MirrorManager"
 long_description = "Fedora Content Mirror Tracker"

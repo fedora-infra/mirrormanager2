@@ -6,16 +6,26 @@ RELEASE_NAME := mirrormanager
 RELEASE_VERSION := $(RELEASE_MAJOR).$(RELEASE_MINOR)$(RELEASE_EXTRALEVEL)
 RELEASE_STRING := $(RELEASE_NAME)-$(RELEASE_VERSION)
 
+SPEC=mirrormanager.spec
+RELEASE_PY=mirrors/mirrors/release.py
+
 .PHONY = all tarball
 
 all:
 
 clean:
-	-rm -f *.tar.gz *.rpm * *~ dist/
+	-rm -rf *.tar.gz *.rpm *~ dist/ $(SPEC) $(RELEASE_PY)
+
+$(SPEC):
+	sed -e 's/##VERSION##/$(RELEASE_VERSION)/' $(SPEC).in > $(SPEC)
+
+$(RELEASE_PY):
+	sed -e 's/##VERSION##/$(RELEASE_VERSION)/' $(RELEASE_PY).in > $(RELEASE_PY)
+
 
 TARBALL=dist/$(RELEASE_STRING).tar.bz2
 
-tarball: $(TARBALL)
+tarball: $(SPEC) $(RELEASE_PY) $(TARBALL)
 
 $(TARBALL):
 	mkdir -p dist

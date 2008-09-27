@@ -2,7 +2,7 @@
 %define debug_package %{nil}
 
 Name:           mirrormanager
-Version:        1.2.2
+Version:        ##VERSION##
 Release:        1%{?dist}
 Summary:        Fedora mirror management system
 BuildArch:      noarch
