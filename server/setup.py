@@ -25,7 +25,7 @@ setup(
         "IPy",
         "GeoIP",
     ],
-    scripts = ["start-mirrormanager"],
+    scripts = ["start-mirrormanager.py"],
     zip_safe=False,
     packages=find_packages(),
     package_data = find_package_data(where='mirrormanager',
