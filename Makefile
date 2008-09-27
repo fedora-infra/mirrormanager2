@@ -41,6 +41,17 @@ $(TARBALL):
 	tar cvjf $(TARBALL) -C $${tmp_dir} $(RELEASE_STRING) ; \
 	rm -rf $${tmp_dir} ;
 
+rpm: $(TARBALL) $(SPEC)
+	tmp_dir=`mktemp -d` ; \
+	mkdir -p $${tmp_dir}/{BUILD,RPMS,SRPMS,SPECS,SOURCES} ; \
+	cp $(TARBALL) $${tmp_dir}/SOURCES ; \
+	cp $(SPEC) $${tmp_dir}/SPECS ; \
+	pushd $${tmp_dir} > /dev/null 2>&1; \
+	rpmbuild -ba --define "_topdir $${tmp_dir}" SPECS/mirrormanager.spec ; \
+	popd > /dev/null 2>&1; \
+	cp $${tmp_dir}/RPMS/noarch/* $${tmp_dir}/SRPMS/* . ; \
+	rm -rf $${tmp_dir}
+
 install: install-server install-client
 
 install-server:
