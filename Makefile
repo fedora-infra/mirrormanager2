@@ -7,17 +7,17 @@ RELEASE_VERSION := $(RELEASE_MAJOR).$(RELEASE_MINOR)$(RELEASE_EXTRALEVEL)
 RELEASE_STRING := $(RELEASE_NAME)-$(RELEASE_VERSION)
 
 SPEC=mirrormanager.spec
-RELEASE_PY=mirrors/mirrormanager/release.py
+RELEASE_PY=server/mirrormanager/release.py
 TARBALL=dist/$(RELEASE_STRING).tar.bz2
-STARTSCRIPT=mirrors/start-mirrormanager
-PROGRAMDIR=/usr/share/mirrormanager/mirrors
+STARTSCRIPT=server/start-mirrormanager
+PROGRAMDIR=/usr/share/mirrormanager/server
 SBINDIR=/usr/sbin
 .PHONY = all tarball prep
 
 all:
 
 clean:
-	-rm -rf *.tar.gz *.rpm *~ dist/ $(SPEC) $(RELEASE_PY) mirrors/mirrormanager.egg-info mirrors/build
+	-rm -rf *.tar.gz *.rpm *~ dist/ $(SPEC) $(RELEASE_PY) server/mirrormanager.egg-info server/build
 
 $(SPEC):
 	sed -e 's/##VERSION##/$(RELEASE_VERSION)/' $(SPEC).in > $(SPEC)
@@ -26,7 +26,7 @@ $(RELEASE_PY):
 	sed -e 's/##VERSION##/$(RELEASE_VERSION)/' $(RELEASE_PY).in > $(RELEASE_PY)
 
 prep: $(SPEC) $(RELEASE_PY)
-	pushd mirrors; \
+	pushd server; \
 	python setup.py egg_info ;\
 	sync ; sync ; sync
 
@@ -69,12 +69,12 @@ install-server:
 	mkdir -p -m 0755 $(DESTDIR)/var/log/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/var/lock/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/usr/share/mirrormanager
-	cp -ra mirrors/	 $(DESTDIR)/usr/share/mirrormanager
-	rm $(DESTDIR)/usr/share/mirrormanager/mirrors/logrotate.conf
-	rm $(DESTDIR)/usr/share/mirrormanager/mirrors/*.cfg
-	rm $(DESTDIR)/usr/share/mirrormanager/mirrors/*.in
+	cp -ra server/	 $(DESTDIR)/usr/share/mirrormanager
+	rm $(DESTDIR)/usr/share/mirrormanager/server/logrotate.conf
+	rm $(DESTDIR)/usr/share/mirrormanager/server/*.cfg
+	rm $(DESTDIR)/usr/share/mirrormanager/server/*.in
 	mkdir -p -m 0755 $(DESTDIR)/etc/logrotate.d
-	install -m 0644 mirrors/logrotate.conf $(DESTDIR)/etc/logrotate.d/mirrormanager
+	install -m 0644 server/logrotate.conf $(DESTDIR)/etc/logrotate.d/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/etc/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/$(SBINDIR)
 	sed -e 's:##CONFFILE##:$(CONFFILE):' -e 's:##PROGRAMDIR##:$(PROGRAMDIR):' $(STARTSCRIPT).in > $(DESTDIR)/$(SBINDIR)/start-mirrormanager

@@ -1,9 +1,9 @@
 Most of MirrorManager is licensed under the MIT/X11 license, unless
 otherwise noted.
 
-mirrors/generate_worldmap is licensed under the GNU General Public License
+server/generate_worldmap is licensed under the GNU General Public License
 version 2, because it loads data files which are distributed under
 this license.
 
-Files in the mirrors/internet2/zebra_dump_parser/ directory are
+Files in the server/internet2/zebra_dump_parser/ directory are
 licensed under the GNU General Public License version 2.

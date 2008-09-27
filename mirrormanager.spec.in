@@ -39,7 +39,7 @@ mirror.
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make install DESTDIR=$RPM_BUILD_ROOT CONFFILE="%{_sysconfdir}/%{name}/prod.cfg" PROGRAMDIR="%{_datadir}/%{name}/mirrors" SBINDIR="%{_sbindir}"
+make install DESTDIR=$RPM_BUILD_ROOT CONFFILE="%{_sysconfdir}/%{name}/prod.cfg" PROGRAMDIR="%{_datadir}/%{name}/server" SBINDIR="%{_sbindir}"
 
 
 %clean
@@ -57,7 +57,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_sbindir}/start-mirrormanager
 %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %doc LICENSE LICENSES LICENSE_generate-worldmap
-%doc mirrors/*.cfg
+%doc server/*.cfg
 
 %files client
 %defattr(-,root,root,-)
