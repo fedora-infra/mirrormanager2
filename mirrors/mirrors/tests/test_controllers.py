@@ -1,5 +1,5 @@
 from turbogears import testutil
-from mirrors.controllers import Root
+from mirrormanager.controllers import Root
 import cherrypy
 
 cherrypy.root = Root()

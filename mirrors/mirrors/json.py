@@ -11,7 +11,7 @@
 from turbojson.jsonify import jsonify
 
 from turbojson.jsonify import jsonify_sqlobject
-from mirrors.model import User, Group, Permission
+from mirrormanager.model import User, Group, Permission
 
 @jsonify.when('isinstance(obj, Group)')
 def jsonify_group(obj):

@@ -8,13 +8,13 @@ import time
 from string import rstrip, strip
 import re
 import IPy
-from mirrors.lib import uniqueify
+from mirrormanager.lib import uniqueify
 IPy.check_addr_prefixlen = 0
 
 from turbogears.database import PackageHub
 
 
-hub = PackageHub("mirrors")
+hub = PackageHub("mirrormanager")
 __connection__ = hub
 
             

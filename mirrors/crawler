@@ -5,7 +5,7 @@ pkg_resources.require("TurboGears")
 from sqlobject import *
 import sys, os, string
 import turbogears
-from mirrors.model import *
+from mirrormanager.model import *
 from urlparse import urlsplit
 from optparse import OptionParser
 from subprocess import Popen
@@ -85,10 +85,10 @@ def main():
     (options, args) = parser.parse_args()
 
     turbogears.update_config(configfile=options.config,
-                             modulename="mirrors.config")
+                             modulename="mirrormanager.config")
     global hub
     global __connection__
-    hub = PackageHub("mirrors")
+    hub = PackageHub("mirrormanager")
     __connection__ = hub
     
     doit(include_private=options.include_private, threads=options.threads, config=options.config)

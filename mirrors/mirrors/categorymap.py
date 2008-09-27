@@ -2,7 +2,7 @@
 # e.g. Fedora Extras doesn't exist for Fedora <= 3.
 # and Fedora Core and Fedora Extras don't exist for Fedora >= 7.
 
-from mirrors.model import *
+from mirrormanager.model import *
 from math import ceil
 from IN import INT_MAX
 

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 from turbogears.finddata import find_package_data
 
 import os
-execfile(os.path.join("mirrors", "release.py"))
+execfile(os.path.join("mirrormanager", "release.py"))
 
 setup(
     name="mirrormanager",
@@ -18,18 +18,18 @@ setup(
 
     entry_points = """
                    [console_scripts]
-                   mirrors-start = mirrors.commands:start
+                   mirrormanager-start = mirrors.commands:start
     """,
     install_requires = [
         "TurboGears >= 1.0b1",
         "IPy",
         "GeoIP",
     ],
-    scripts = ["start-mirrors.py"],
+    scripts = ["start-mirrormanager.py"],
     zip_safe=False,
     packages=find_packages(),
-    package_data = find_package_data(where='mirrors',
-                                     package='mirrors'),
+    package_data = find_package_data(where='mirrormanager',
+                                     package='mirrormanager'),
     keywords = [
         # Use keywords if you'll be adding your package to the
         # Python Cheeseshop

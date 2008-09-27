@@ -3,7 +3,7 @@ import turbogears
 from turbogears import controllers, expose, validate, redirect, widgets, validators, error_handler, exception_handler
 from sqlobject import *
 from sqlobject.sqlbuilder import *
-from mirrors.model import *
+from mirrormanager.model import *
 from IPy import IP
 import sha
 import pprint

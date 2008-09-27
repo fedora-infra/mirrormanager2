@@ -11,15 +11,15 @@ import sqlobject
 from sqlobject.sqlbuilder import *
 from string import strip
 
-from mirrors import my_validators
-from mirrors.model import *
-from mirrors.lib import createErrorString
+from mirrormanager import my_validators
+from mirrormanager.model import *
+from mirrormanager.lib import createErrorString
 import IPy
 IPy.check_addr_prefixlen = 0
-from mirrors.categorymap import categorymap
+from mirrormanager.categorymap import categorymap
 
 
-log = logging.getLogger("mirrors.controllers")
+log = logging.getLogger("mirrormanager.controllers")
 
 def siteadmin_check(site, identity):
     if not site.is_siteadmin(identity):
@@ -102,18 +102,18 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
         site.sqlmeta.cacheValues = False
         return dict(values=site, disabled_fields=self.disabled_fields(site=site))
 
-    @expose(template="mirrors.templates.site")
+    @expose(template="mirrormanager.templates.site")
     def read(self, site):
         downstream_siteadmin_check(site, identity)
         submit_action = turbogears.url("/site/%s/update" % site.id)
         return dict(form=site_form, values=site, action=submit_action, disabled_fields=self.disabled_fields(site=site))
 
-    @expose(template="mirrors.templates.site")
+    @expose(template="mirrormanager.templates.site")
     def new(self, **kwargs):
         submit_action = turbogears.url("/site/0/create")
         return dict(form=site_form, values=None, action=submit_action, disabled_fields=self.disabled_fields())
     
-    @expose(template="mirrors.templates.site")
+    @expose(template="mirrormanager.templates.site")
     @validate(form=site_form)
     @error_handler(new)
     def create(self, **kwargs):
@@ -130,7 +130,7 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
             turbogears.flash("Site created.")
             raise turbogears.redirect("/site/%s" % site.id)
 
-    @expose(template="mirrors.templates.site")
+    @expose(template="mirrormanager.templates.site")
     @validate(form=site_form)
     @error_handler()
     def update(self, site, tg_errors=None, **kwargs):
@@ -151,13 +151,13 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
         turbogears.flash("Site Updated")
         raise turbogears.redirect("/site/%s" % site.id)
 
-    @expose(template="mirrors.templates.site")
+    @expose(template="mirrormanager.templates.site")
     def delete(self, site, **kwargs):
         siteadmin_check(site, identity)
         site.destroySelf()
         raise turbogears.redirect("/")
 
-    @expose(template="mirrors.templates.site")
+    @expose(template="mirrormanager.templates.site")
     def s2s_delete(self, site, **kwargs):
         siteadmin_check(site, identity)
         dsite = Site.get(kwargs['dsite'])
@@ -182,7 +182,7 @@ class SiteAdminController(controllers.Controller, identity.SecureResource, conte
         v.sqlmeta.cacheValues = False
         return dict(values=v, site=v.site, title="Site Admin")
     
-    @expose(template="mirrors.templates.boringsiteform")
+    @expose(template="mirrormanager.templates.boringsiteform")
     def new(self, **kwargs):
         siteid=kwargs['siteid']
         try:
@@ -194,7 +194,7 @@ class SiteAdminController(controllers.Controller, identity.SecureResource, conte
         submit_action = turbogears.url("/siteadmin/0/create?siteid=%s" % siteid)
         return dict(form=siteadmin_form, values=None, action=submit_action, title="New Site Admin", site=site)
     
-    @expose(template="mirrors.templates.boringsiteform")
+    @expose(template="mirrormanager.templates.boringsiteform")
     @error_handler(new)
     @validate(form=siteadmin_form)
     def create(self, **kwargs):
@@ -218,7 +218,7 @@ class SiteAdminController(controllers.Controller, identity.SecureResource, conte
         turbogears.flash("SiteAdmin created.")
         raise turbogears.redirect("/site/%s" % siteid)
 
-    @expose(template="mirrors.templates.boringsiteform")
+    @expose(template="mirrormanager.templates.boringsiteform")
     def delete(self, siteadmin, **kwargs):
         site = siteadmin.my_site()
         siteadmin_check(site, identity)
@@ -247,7 +247,7 @@ class SiteToSiteController(controllers.Controller, identity.SecureResource, cont
         v.sqlmeta.cacheValues = False
         return dict(values=v, site=v.upstream_site)
     
-    @expose(template="mirrors.templates.boringsiteform")
+    @expose(template="mirrormanager.templates.boringsiteform")
     def new(self, **kwargs):
         siteid=kwargs['siteid']
         try:
@@ -334,7 +334,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
         host.sqlmeta.cacheValues = False
         return dict(values=host)
 
-    @expose(template="mirrors.templates.host")
+    @expose(template="mirrormanager.templates.host")
     def new(self, **kwargs):
         try:
             siteid=kwargs['siteid']
@@ -345,7 +345,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
         return dict(form=host_form, values=None, action=submit_action, disabled_fields=self.disabled_fields(),
                     title="Create Host", site=Site.get(siteid))
 
-    @expose(template="mirrors.templates.host")
+    @expose(template="mirrormanager.templates.host")
     @validate(form=host_form)
     @error_handler()
     def create(self, **kwargs):
@@ -366,14 +366,14 @@ class HostController(controllers.Controller, identity.SecureResource, content):
         raise turbogears.redirect("/host/%s" % host.id)
 
 
-    @expose(template="mirrors.templates.host")
+    @expose(template="mirrormanager.templates.host")
     def read(self, host):
         downstream_siteadmin_check(host.my_site(), identity)
         submit_action = turbogears.url("/host/%s/update" % host.id)
         return dict(form=host_form, values=host, action=submit_action,
                     disabled_fields=self.disabled_fields(host=host), title="Host", site=host.site)
 
-    @expose(template="mirrors.templates.host")
+    @expose(template="mirrormanager.templates.host")
     @validate(form=host_form)
     @error_handler()
     def update(self, host, tg_errors=None, **kwargs):
@@ -460,7 +460,7 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
         hc.sqlmeta.cacheValues = False
         return dict(values=hc)
 
-    @expose(template="mirrors.templates.hostcategory")
+    @expose(template="mirrormanager.templates.hostcategory")
     def new(self, **kwargs):
 
         try:
@@ -473,14 +473,14 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
         return dict(form=host_category_form_new, values=None, action=submit_action, disabled_fields=self.disabled_fields(), host=host)
     
     
-    @expose(template="mirrors.templates.hostcategory")
+    @expose(template="mirrormanager.templates.hostcategory")
     def read(self, hostcategory):
         downstream_siteadmin_check(hostcategory.my_site(), identity)
         submit_action = turbogears.url("/host_category/%s/update" % hostcategory.id)
         disabled_fields=self.disabled_fields()
         return dict(form=host_category_form_read, values=hostcategory, action=submit_action, disabled_fields=self.disabled_fields(), host=hostcategory.host)
 
-    @expose(template="mirrors.templates.hostcategory")
+    @expose(template="mirrormanager.templates.hostcategory")
     @validate(form=host_category_form_new)
     @error_handler(new)
     def create(self, **kwargs):
@@ -513,7 +513,7 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
         raise turbogears.redirect("/host_category/%s" % hostcategory.id)
 
 
-    @expose(template="mirrors.templates.hostcategory")
+    @expose(template="mirrormanager.templates.hostcategory")
     @validate(form=host_category_form_read)
     @error_handler()
     def update(self, hostcategory, tg_errors=None, **kwargs):
@@ -534,7 +534,7 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
         turbogears.flash("HostCategory Updated")
         raise turbogears.redirect("/")
 
-    @expose(template="mirrors.templates.hostcategory")
+    @expose(template="mirrormanager.templates.hostcategory")
     def delete(self, hostcategory, **kwargs):
         siteadmin_check(hostcategory.my_site(), identity)
         hostid = hostcategory.host.id
@@ -550,7 +550,7 @@ class HostListitemController(controllers.Controller, identity.SecureResource, co
     def get(self, id):
         return self.do_get(id)
     
-    @expose(template="mirrors.templates.boringhostform")
+    @expose(template="mirrormanager.templates.boringhostform")
     def new(self, **kwargs):
         try:
             hostid=kwargs['hostid']
@@ -562,7 +562,7 @@ class HostListitemController(controllers.Controller, identity.SecureResource, co
         submit_action = turbogears.url("%s/0/create?hostid=%s" % (self.submit_action_prefix, hostid))
         return dict(form=self.form, values=None, action=submit_action, title=self.title, host=host)
     
-    @expose(template="mirrors.templates.boringhostform")
+    @expose(template="mirrormanager.templates.boringhostform")
     @validate(form=form)
     @error_handler(new)
     def create(self, **kwargs):
@@ -588,7 +588,7 @@ class HostListitemController(controllers.Controller, identity.SecureResource, co
             turbogears.flash("Error: entity already exists")
         raise turbogears.redirect("/host/%s" % host.id)
 
-    @expose(template="mirrors.templates.boringhostform")
+    @expose(template="mirrormanager.templates.boringhostform")
     def delete(self, thing, **kwargs):
         host = thing.host
         siteadmin_check(host.my_site(), identity)
@@ -687,7 +687,7 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
         v.sqlmeta.cacheValues = False
         return dict(values=v, host_category=v.host_category)
     
-    @expose(template="mirrors.templates.hostcategoryurl")
+    @expose(template="mirrormanager.templates.hostcategoryurl")
     def new(self, **kwargs):
         try:
             hcid=kwargs['hcid']
@@ -701,7 +701,7 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
         submit_action = turbogears.url("/host_category_url/0/create?hcid=%s" % hcid)
         return dict(form=self.form, values=None, action=submit_action, title=self.title, host_category=host_category)
 
-    @expose(template="mirrors.templates.hostcategoryurl")
+    @expose(template="mirrormanager.templates.hostcategoryurl")
     @validate(form=form)
     @error_handler(new)
     def create(self, **kwargs):
@@ -747,13 +747,13 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
         turbogears.flash("Success: HostCategoryURL created.")
         raise turbogears.redirect("/host_category/%s" % hcid)
 
-    @expose(template="mirrors.templates.hostcategoryurl")
+    @expose(template="mirrormanager.templates.hostcategoryurl")
     def read(self, hcurl):
         downstream_siteadmin_check(hcurl.my_site(), identity)
         submit_action = turbogears.url("/host_category_url/%s/update" % hcurl.id)
         return dict(form=self.form, values=hcurl, action=submit_action, title=self.title, host_category=hcurl.host_category)
         
-    @expose(template="mirrors.templates.hostcategoryurl")
+    @expose(template="mirrormanager.templates.hostcategoryurl")
     def update(self, hcurl, **kwargs):
         siteadmin_check(hcurl.my_site(), identity)
         if kwargs['url'].endswith('/'):
@@ -766,7 +766,7 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
             
     
 
-    @expose(template="mirrors.templates.hostcategoryurl")
+    @expose(template="mirrormanager.templates.hostcategoryurl")
     def delete(self, hcurl, **kwargs):
         hc = hcurl.host_category
         siteadmin_check(hcurl.my_site(), identity)
@@ -789,7 +789,7 @@ class SimpleDbObjectController(controllers.Controller, identity.SecureResource, 
         v.sqlmeta.cacheValues = False
         return dict(values=v)
     
-    @expose(template="mirrors.templates.boringform")
+    @expose(template="mirrormanager.templates.boringform")
     def new(self, **kwargs):
             
         submit_action = turbogears.url("/%s/0/create" % self.url_prefix)
@@ -804,7 +804,7 @@ class SimpleDbObjectController(controllers.Controller, identity.SecureResource, 
         turbogears.flash("Success: Object created.")
         raise turbogears.redirect("/")
 
-    @expose(template="mirrors.templates.boringform")
+    @expose(template="mirrormanager.templates.boringform")
     def read(self, obj):
         submit_action = turbogears.url("/%s/%s/update" % (self.url_prefix, obj.id))
         return dict(form=self.form, values=obj, action=submit_action, title=self.title)
@@ -815,7 +815,7 @@ class SimpleDbObjectController(controllers.Controller, identity.SecureResource, 
         submit_action = turbogears.url("/%s/%s/update" % (self.url_prefix, obj.id))
         return dict(form=self.form, values=obj, action=submit_action, title=self.title)
 
-    @expose(template="mirrors.templates.boringform")
+    @expose(template="mirrormanager.templates.boringform")
     def delete(self, obj, **kwargs):
         obj.destroySelf()
         raise turbogears.redirect("/")
@@ -835,7 +835,7 @@ class ArchController(SimpleDbObjectController):
     url_prefix="arch"
     form = arch_form
     
-    @expose(template="mirrors.templates.boringform")
+    @expose(template="mirrormanager.templates.boringform")
     @validate(form=arch_form)
     @error_handler(SimpleDbObjectController.new)
     def create(self, **kwargs):
@@ -857,7 +857,7 @@ class EmbargoedCountryController(SimpleDbObjectController):
     url_prefix="embargoed_country"
     form = embargoed_country_form
     
-    @expose(template="mirrors.templates.boringform")
+    @expose(template="mirrormanager.templates.boringform")
     @validate(form=embargoed_country_form)
     @error_handler(SimpleDbObjectController.new)
     def create(self, **kwargs):
@@ -879,7 +879,7 @@ class ProductController(SimpleDbObjectController):
     myClass = Product
     url_prefix="product"
 
-    @expose(template="mirrors.templates.boringform")
+    @expose(template="mirrormanager.templates.boringform")
     @validate(form=product_form)
     @error_handler(SimpleDbObjectController.new)
     def create(self, **kwargs):
@@ -905,14 +905,14 @@ class RepositoryController(SimpleDbObjectController):
     myClass = Repository
     url_prefix="repository"
 
-    @expose(template="mirrors.templates.boringform")
+    @expose(template="mirrormanager.templates.boringform")
     @validate(form=repository_form)
     @error_handler(SimpleDbObjectController.new)
     def create(self, **kwargs):
         return SimpleDbObjectController.create(self, **kwargs)
     
 
-    @expose(template="mirrors.templates.boringform")
+    @expose(template="mirrormanager.templates.boringform")
     @validate(form=repository_form)
     @error_handler(SimpleDbObjectController.new)
     def update(self, obj, **kwargs):
@@ -943,7 +943,7 @@ class VersionController(SimpleDbObjectController):
     url_prefix="version"
     form = version_form
 
-    @expose(template="mirrors.templates.boringform")
+    @expose(template="mirrormanager.templates.boringform")
     @validate(form=form)
     @error_handler(SimpleDbObjectController.new)
     def create(self, **kwargs):
@@ -957,7 +957,7 @@ class VersionController(SimpleDbObjectController):
 
         SimpleDbObjectController.create(self, product=product, **kwargs)
 
-    @expose(template="mirrors.templates.boringform")
+    @expose(template="mirrormanager.templates.boringform")
     @validate(form=form)
     @error_handler()
     def update(self, obj, **kwargs):
@@ -978,13 +978,13 @@ class RepositoryRedirectController(SimpleDbObjectController):
     url_prefix="repository_redirect"
     form = repository_redirect_form
 
-    @expose(template="mirrors.templates.boringform")
+    @expose(template="mirrormanager.templates.boringform")
     @validate(form=form)
     @error_handler(SimpleDbObjectController.new)
     def create(self, **kwargs):
         SimpleDbObjectController.create(self, **kwargs)
 
-    @expose(template="mirrors.templates.boringform")
+    @expose(template="mirrormanager.templates.boringform")
     @validate(form=form)
     @error_handler()
     def update(self, obj, **kwargs):
@@ -1005,13 +1005,13 @@ class CountryContinentRedirectController(SimpleDbObjectController):
     url_prefix="country_continent_redirect"
     form = country_continent_redirect_form
 
-    @expose(template="mirrors.templates.boringform")
+    @expose(template="mirrormanager.templates.boringform")
     @validate(form=form)
     @error_handler(SimpleDbObjectController.new)
     def create(self, **kwargs):
         SimpleDbObjectController.create(self, **kwargs)
 
-    @expose(template="mirrors.templates.boringform")
+    @expose(template="mirrormanager.templates.boringform")
     @validate(form=form)
     @error_handler()
     def update(self, obj, **kwargs):
@@ -1019,14 +1019,14 @@ class CountryContinentRedirectController(SimpleDbObjectController):
 
 
 class PublicListController(controllers.Controller):
-    @expose(template="mirrors.templates.publiclist")
+    @expose(template="mirrormanager.templates.publiclist")
     def index(self, *vpath, **params):
         hosts = hosts=[h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active()]
         
         return dict(hosts=hosts, numhosts=len(hosts),
                     products=list(Product.select(orderBy='name')), title='', arches=display_publiclist_arches, product=None, ver=None, arch=None, valid_categories=None)
 
-    @expose(template="mirrors.templates.publiclist")
+    @expose(template="mirrormanager.templates.publiclist")
     def default(self, *vpath, **params):
         product = ver = arch = None
         if len(vpath) == 1:
@@ -1073,11 +1073,11 @@ class Root(controllers.RootController):
     arch = ArchController()
     embargoed_country = EmbargoedCountryController()
     repository = RepositoryController()
-    from mirrors.xmlrpc import XmlrpcController
+    from mirrormanager.xmlrpc import XmlrpcController
     xmlrpc = XmlrpcController()
     publiclist = PublicListController()
     
-    @expose(template="mirrors.templates.welcome")
+    @expose(template="mirrormanager.templates.welcome")
     @identity.require(identity.not_anonymous())
     def index(self):
         if "sysadmin" in identity.current.groups:
@@ -1086,7 +1086,7 @@ class Root(controllers.RootController):
             sites = user_sites(identity)
         return {"sites":sites}
 
-    @expose(template="mirrors.templates.adminview")
+    @expose(template="mirrormanager.templates.adminview")
     @identity.require(identity.in_group('sysadmin'))
     def adminview(self):
         return {"sites":Site.select(orderBy='name'),
@@ -1102,7 +1102,7 @@ class Root(controllers.RootController):
                 "country_continent_redirects":CountryContinentRedirect.select(orderBy='country'),
                 }
 
-    @expose(template="mirrors.templates.rsync_acl", format="plain", content_type="text/plain")
+    @expose(template="mirrormanager.templates.rsync_acl", format="plain", content_type="text/plain")
     def rsync_acl(self, **kwargs):
         internet2_only=False
         public_only=False
@@ -1114,7 +1114,7 @@ class Root(controllers.RootController):
         result = rsync_acl_list(internet2_only=internet2_only, public_only=public_only)
         return dict(values=result)
 
-    @expose(template="mirrors.templates.login")
+    @expose(template="mirrormanager.templates.login")
     def login(self, forward_url=None, previous_url=None, *args, **kw):
 
         if not identity.current.anonymous \
@@ -1144,7 +1144,7 @@ class Root(controllers.RootController):
         identity.current.logout()
         raise redirect("/")
     
-    @expose(template="mirrors.templates.register")
+    @expose(template="mirrormanager.templates.register")
     def register(self, username="", display_name="", email_address="", tg_errors=None):
         if tg_errors:
             turbogears.flash(createErrorString(tg_errors))

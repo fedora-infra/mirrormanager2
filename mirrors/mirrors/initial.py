@@ -1,4 +1,4 @@
-from mirrors.model import *
+from mirrorsmanager.model import *
 import socket
 import re
 import pickle

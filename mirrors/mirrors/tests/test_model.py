@@ -5,7 +5,7 @@
 # which is very fast.
 
 from turbogears import testutil, database
-# from mirrors.model import YourDataClass, User
+# from mirrormanager.model import YourDataClass, User
 
 # database.set_db_uri("sqlite:///:memory:")
 

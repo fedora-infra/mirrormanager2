@@ -48,7 +48,7 @@ def repo_prefix(path, category, ver):
 
     prefix = None
     # we don't set prefix on repos that happen to be under 'test'
-    # as we don't provide repo files for them on the mirrors.
+    # as we don't provide repo files for them on the mirrormanager.
     isTest = u'test/' in path
     if isTest:
         return None

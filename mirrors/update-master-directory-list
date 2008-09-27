@@ -5,8 +5,8 @@ pkg_resources.require("TurboGears")
 from sqlobject import *
 import sys, os, string
 import turbogears
-from mirrors.model import *
-from mirrors.repomap import *
+from mirrormanager.model import *
+from mirrormanager.repomap import *
 import re
 import glob
 import sha as shamod
@@ -21,13 +21,13 @@ if len(sys.argv) < 2:
     print "usage: update-master-directory-list dev.cfg [rootdir]"
     sys.exit(1)
 if len(sys.argv) >= 2:
-    turbogears.update_config(configfile=sys.argv[1], modulename="mirrors.config")
+    turbogears.update_config(configfile=sys.argv[1], modulename="mirrormanager.config")
 if len(sys.argv) >= 3:
     rootdir=sys.argv[2]
     
 
 from turbogears.database import PackageHub
-hub = PackageHub("mirrors")
+hub = PackageHub("mirrormanager")
 __connection__ = hub
 
 def trim_os_from_dirname(dirname):

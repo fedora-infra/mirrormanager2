@@ -19,15 +19,15 @@ def start():
     # probably installed
     if len(sys.argv) > 1:
         turbogears.update_config(configfile=sys.argv[1], 
-            modulename="mirrors.config")
+            modulename="mirrormanager.config")
     elif exists(join(os.getcwd(), "setup.py")):
         turbogears.update_config(configfile="dev.cfg",
-            modulename="mirrors.config")
+            modulename="mirrormanager.config")
     else:
         turbogears.update_config(configfile="/etc/mirrormanager/prod.cfg",
-            modulename="mirrors.config")
+            modulename="mirrormanager.config")
 
-    from mirrors.controllers import Root
-    import mirrors.mirrorlist
+    from mirrormanager.controllers import Root
+    import mirrormanager.mirrorlist
 
     turbogears.start_server(Root())

@@ -5,7 +5,7 @@ pkg_resources.require("TurboGears")
 from sqlobject import *
 import sys, os, string, signal, socket
 import turbogears
-from mirrors.model import *
+from mirrormanager.model import *
 from datetime import datetime
 import ftplib
 from ftplib import FTP
@@ -541,11 +541,11 @@ def main():
     (options, args) = parser.parse_args()
 
     turbogears.update_config(configfile=options.config,
-                             modulename="mirrors.config")
+                             modulename="mirrormanager.config")
     global hub
     global __connection__
     global hostid
-    hub = PackageHub("mirrors")
+    hub = PackageHub("mirrormanager")
     __connection__ = hub
     
     os.chdir('/tmp')

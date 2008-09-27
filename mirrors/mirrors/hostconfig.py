@@ -1,4 +1,4 @@
-from mirrors.model import *
+from mirrormanager.model import *
 import sys
 import pickle
 import pprint

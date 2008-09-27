@@ -11,7 +11,7 @@ pkg_resources.require("TurboGears")
 from sqlobject import *
 import sys, os, string
 import turbogears
-from mirrors.model import *
+from mirrormanager.model import *
 from optparse import OptionParser
 
 from turbogears.database import PackageHub
@@ -66,10 +66,10 @@ def main():
     (options, args) = parser.parse_args()
 
     turbogears.update_config(configfile=options.config,
-                             modulename="mirrors.config")
+                             modulename="mirrormanager.config")
     global hub
     global __connection__
-    hub = PackageHub("mirrors")
+    hub = PackageHub("mirrormanager")
     __connection__ = hub
     
     if options.add and options.version is None:

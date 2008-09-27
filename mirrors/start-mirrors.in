@@ -13,14 +13,14 @@ import sys
 
 if len(sys.argv) > 1:
     update_config(configfile=sys.argv[1] ,
-                  modulename="mirrors.config")
+                  modulename="mirrormanager.config")
 elif exists(join(dirname(__file__), "setup.py")):
-    update_config(configfile="dev.cfg",modulename="mirrors.config")
+    update_config(configfile="dev.cfg",modulename="mirrormanager.config")
 else:
-    update_config(configfile=CONFFILE, modulename="mirrors.config")
+    update_config(configfile=CONFFILE, modulename="mirrormanager.config")
 
 sys.path.append(PROGRAMDIR)
 
-from mirrors.controllers import Root
+from mirrormanager.controllers import Root
 
 start_server(Root())
