@@ -1,12 +1,13 @@
 Metadata-Version: 1.0
-Name: mirrors
-Version: 1.0
+Name: mirrormanager
+Version: 1.2.2
 Summary: UNKNOWN
 Home-page: UNKNOWN
 Author: UNKNOWN
 Author-email: UNKNOWN
 License: UNKNOWN
 Description: UNKNOWN
+Keywords: turbogears.app
 Platform: UNKNOWN
 Classifier: Development Status :: 3 - Alpha
 Classifier: Operating System :: OS Independent

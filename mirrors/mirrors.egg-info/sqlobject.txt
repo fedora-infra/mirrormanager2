@@ -1,2 +1,0 @@
-db_module=mirrors.model
-history_dir=$base/mirrors/sqlobject-history
