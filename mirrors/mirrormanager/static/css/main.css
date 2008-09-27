@@ -1,0 +1,308 @@
+
+/* Overriding default fedora.css values */
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+img {
+  border: 0px;
+  vertical-align: middle;
+}
+
+div.multicolumn3 {
+	-moz-column-count: 3;
+	-moz-column-gap: 3em;
+	column-count: 3;
+	column-gap: 3em;
+	column-break-inside: avoid;
+}
+
+div.multicolumn2,
+ul.multicolumn2 {
+	-moz-column-count: 2;
+	-moz-column-gap: 3em;
+	column-count: 2;
+	column-gap: 3em;
+  column-break-inside: avoid;
+}
+
+table.twocolumns {
+  width: 100%;
+}
+
+table.twocolumns td.left {
+  vertical-align: top;
+  width: 50%;
+  padding-right: 2ex;
+}
+
+table.twocolumns td.left p {
+  padding: 0 1ex;
+}
+
+.indented {
+  margin-left: 1ex;
+}
+
+table.twocolumns td.right {
+  vertical-align: top;
+  width: 50%;
+}
+
+table.twocolumns td p,
+table.twocolumns td dl {
+  padding: 0 1ex;
+}
+
+.note {
+  color: #999;
+  font-size: 90%;
+}
+
+p.messagebox {
+  max-width: 80ex;
+}
+
+p.bigdescription {
+  font-size: 120%;
+}
+
+/* Icons */
+
+.icon16 {
+  padding-left: 24px;
+  background-image: url(/mirrormanager/static/images/fedora/icons/applications-system16.png);
+  background-repeat: no-repeat;
+  background-position: 0 50%;
+}
+
+.icon24 {
+  padding-left: 34px;
+  background-image: url(/mirrormanager/static/images/fedora/icons/emblem-system24.png);
+  background-repeat: no-repeat;
+  background-position: 0 50%;
+}
+
+.icon48 {
+  padding-left: 60px; /* keep the same as text48 */
+  line-height: 48px;
+  min-height: 48px;
+  background-image: url(/mirrormanager/static/images/fedora/icons/emblem-systemL.png);
+  background-repeat: no-repeat;
+  background-position: 0 50%;
+}
+
+.text48 {
+  padding-left: 60px;
+}
+
+
+h1.password {
+  background-image: url(/mirrormanager/static/images/fedora/icons/dialog-passwordL.png);
+}
+
+h2.password {
+  background-image: url(/mirrormanager/static/images/fedora/icons/dialog-password24.png);
+}
+
+h1.download {
+  background-image: url(/mirrormanager/static/images/fedora/icons/emblem-downloadsL.png);
+}
+
+h2.download {
+  background-image: url(/mirrormanager/static/images/fedora/icons/emblem-downloads24.png);
+}
+
+#content {
+  margin-left: 14.5em; 
+}
+
+.keepleft {
+  margin-left: 0;
+  clear: left;
+  margin-left: -14em;
+}
+
+.justify {
+  text-align: justify;
+}
+
+.alcenter {
+  text-align: center;
+}
+
+.footnote {
+  border-top: 2px dotted #ddd;
+  margin-top: 6em !important;
+  padding: 1ex 1ex;
+  text-align: left;
+}
+
+ul.nobullet {
+  list-style: none;
+}
+
+ul.nobullet li {
+  background-image: none !important;
+  padding-left: 1ex !important; 
+}
+
+dl.centered dt {
+	float: left;
+	margin: 0 1em 0 0;
+	white-space: nowrap;
+}
+
+dl.centered dd {
+	margin: 0 0 0 9em;
+	padding: 0;
+	vertical-align: top;
+}
+
+div.floatright {
+    float: right;
+    margin-left: 1.5em;
+}
+
+input, textarea, select {
+	border: #AAA 1px solid;
+}
+
+input, textarea, option {
+	padding: 2px 5px 2px 5px;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    background-color: #f5faff;
+}
+
+.bigtext {
+  color: #337acc;
+  font-size: 120%;
+  font-weight: bold;
+}
+
+.bigtext input {
+  font-size: inherit;
+  color: #337acc;
+  font-weight: bold;
+}
+
+
+.navlinks {
+  margin: 4em 0 0 0;
+}
+
+p.bullet {
+  background: url(/mirrormanager/static/images/fedora/images/arrowS.png) 1.3em 0.5em no-repeat;
+  padding-left: 2.7em !important;
+}
+
+span[title],
+code[title] {
+	border-bottom: 1px dashed #CCC;
+ 	cursor: help;
+}
+
+code {
+    font-family: monospace;
+    font-size: 1em;
+}
+
+pre {
+	background-color: #f0f0f0;
+	border-top: 1px solid #ccc;
+	border-bottom: 1px solid #ccc;
+	padding: 1em;
+	font-size: 1em;
+}
+
+fieldset {
+  padding: 1em;
+  border: 2px dotted #ddd;
+  margin-bottom: 1em;
+}
+
+fieldset.HEAD,
+fieldset.trunk,
+fieldset.tip,
+fieldset.master {
+  border: 2px dotted #ccc;
+  color: inherit;
+}
+
+fieldset legend {
+  padding: 0 0.5em;
+}
+
+fieldset.repeatingfieldsetplus table th {
+  text-align: left;
+  font-weight: normal;
+  padding-right: 1em;
+  line-height: 200%;
+}
+
+p.bigsubmit {
+  text-align: right;
+  padding-top: 1em;
+}
+
+input.submitbutton.bigsubmit {
+  color: #333;
+  font-size: 120%;
+  font-weight: bold;
+}
+
+input.submitbutton.bigsubmit.next {
+  background-image: url(/mirrormanager/static/images/fedora/icons/go-right16.png);
+  background-position: 95% 50%;
+  background-repeat: no-repeat;
+  padding-right: 30px;
+} 
+
+input.submitbutton.bigsubmit.search {
+  background-image: url(/mirrormanager/static/images/fedora/icons/system-search16.png);
+  background-position: 95% 50%;
+  background-repeat: no-repeat;
+  padding-right: 30px;
+} 
+
+input.submitbutton.bigsubmit.ok {
+  background-image: url(/mirrormanager/static/images/fedora/icons/dialog-ok16.png);
+  background-position: 95% 50%;
+  background-repeat: no-repeat;
+  padding-right: 30px;
+} 
+
+input.submitbutton.bigsubmit.login {
+  background-image: url(/mirrormanager/static/images/fedora/icons/emblem-readonly16.png);
+  background-position: 95% 50%;
+  background-repeat: no-repeat;
+  padding-right: 30px;
+} 
+
+span.highlight {
+  background-color: #fcffc1;
+}
+
+table.altrows tr th {
+  background-color: #ddd;
+  border-bottom: #bbb 1px solid;
+}
+table.altrows tr.even td {
+  background-color:#fff;
+}
+
+table.altrows tr.odd td {
+  border-bottom: 1px solid #ddd;
+  border-top: 1px solid #ddd;
+  background-color: #f0f0f0;
+/*  background-color:#edf3fe; */
+}

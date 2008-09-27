@@ -1,0 +1,61 @@
+
+#content table.myclass
+{
+  border-collapse: collapse;
+}
+
+#content table.myclass th
+{
+  background: #DDDDDD;
+}
+
+#content table.myclass th, #content table.myclass td
+{
+  border: 1px solid #000000;
+  padding: 0.6ex;
+}
+
+table.mirrors
+{
+  margin: 1ex 0;
+  width: 98%
+}
+
+table.mirrors tr td,
+table.mirrors tr th {
+  padding: 0.2em 0.2em;
+}
+
+table.mirrors tr th {
+  text-align: left;
+}  
+
+
+.products th, .products td
+{
+  width: 10ex; 
+}
+
+table.compact tr td,
+table.compact tr th {
+    font-size: 90%;
+    padding: 0.2em 0.2em;
+}
+
+table.minilist tr.separator th {
+  text-align: left;
+  border-bottom: #bbb 1px solid;
+  border-top: 1px solid white;
+  background-color: inherit;
+}
+
+table.minilist caption {
+  background-color:#2963A6;
+  color: white;
+}
+
+table.altrows table tr th,
+table.altrows table tr td {
+  border: inherit !important;
+  background: inherit !important;
+}
