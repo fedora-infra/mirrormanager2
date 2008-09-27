@@ -18,14 +18,14 @@ setup(
 
     entry_points = """
                    [console_scripts]
-                   mirrormanager-start = mirrors.commands:start
+                   mirrormanager-start = mirrormanager.commands:start
     """,
     install_requires = [
         "TurboGears >= 1.0b1",
         "IPy",
         "GeoIP",
     ],
-    scripts = ["start-mirrormanager.py"],
+    scripts = ["start-mirrormanager"],
     zip_safe=False,
     packages=find_packages(),
     package_data = find_package_data(where='mirrormanager',

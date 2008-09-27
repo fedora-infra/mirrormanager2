@@ -7,17 +7,17 @@ RELEASE_VERSION := $(RELEASE_MAJOR).$(RELEASE_MINOR)$(RELEASE_EXTRALEVEL)
 RELEASE_STRING := $(RELEASE_NAME)-$(RELEASE_VERSION)
 
 SPEC=mirrormanager.spec
-RELEASE_PY=mirrors/mirrors/release.py
+RELEASE_PY=mirrors/mirrormanager/release.py
 TARBALL=dist/$(RELEASE_STRING).tar.bz2
-STARTSCRIPT=mirrors/start-mirrors
-PROGRAMDIR=/usr/share/mirrormanager
+STARTSCRIPT=mirrors/start-mirrormanager
+PROGRAMDIR=/usr/share/mirrormanager/mirrors
 SBINDIR=/usr/sbin
 .PHONY = all tarball prep
 
 all:
 
 clean:
-	-rm -rf *.tar.gz *.rpm *~ dist/ $(SPEC) $(RELEASE_PY) mirrors/mirrormanager.egg-info
+	-rm -rf *.tar.gz *.rpm *~ dist/ $(SPEC) $(RELEASE_PY) mirrors/mirrormanager.egg-info mirrors/build
 
 $(SPEC):
 	sed -e 's/##VERSION##/$(RELEASE_VERSION)/' $(SPEC).in > $(SPEC)
@@ -47,7 +47,7 @@ $(TARBALL):
 	tar cvjf $(TARBALL) -C $${tmp_dir} $(RELEASE_STRING) ; \
 	rm -rf $${tmp_dir} ;
 
-rpm: $(TARBALL) $(SPEC)
+rpm: tarball $(SPEC)
 	tmp_dir=`mktemp -d` ; \
 	mkdir -p $${tmp_dir}/{BUILD,RPMS,SRPMS,SPECS,SOURCES} ; \
 	cp $(TARBALL) $${tmp_dir}/SOURCES ; \
@@ -56,7 +56,8 @@ rpm: $(TARBALL) $(SPEC)
 	rpmbuild -ba --define "_topdir $${tmp_dir}" SPECS/mirrormanager.spec ; \
 	popd > /dev/null 2>&1; \
 	cp $${tmp_dir}/RPMS/noarch/* $${tmp_dir}/SRPMS/* . ; \
-	rm -rf $${tmp_dir}
+	rm -rf $${tmp_dir} ; \
+	rpmlint *.rpm
 
 install: install-server install-client
 

@@ -10,7 +10,7 @@ You must:
 
 $ tg-admin -c dev.cfg sql create
 $ tg-admin -c dev.cfg shell
->>> import mirrorsmanager.initial
+>>> import mirrormanager.initial
  to exit
 
 $ ./start-mirrormanager dev.cfg
