@@ -2,8 +2,7 @@
 
 MM_DIR=/usr/share/mirrormanager/server
 MIRRORLIST_DIR=/var/lib/mirrormanager/mirrorlists
-LOCKFILE=/var/lock/mirrormanager/database/update-all.lock
-RSYNC_LISTING_DIR=/var/lib/mirrormanager/database
+LOCKFILE=/var/lock/mirrormanager/update-database.lock
 
 [ -e ${LOCKFILE} ] && kill -0 $(cat ${LOCKFILE}) && exit 2
 echo $$ > ${LOCKFILE}
