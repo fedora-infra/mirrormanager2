@@ -62,23 +62,31 @@ rpm: tarball $(SPEC)
 install: install-server install-client
 
 
-
 install-server:
 	mkdir -p -m 0755 $(DESTDIR)/var/lib/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/var/run/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/var/log/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/var/lock/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/usr/share/mirrormanager
+# server/
 	cp -ra server/	 $(DESTDIR)/usr/share/mirrormanager
 	rm $(DESTDIR)/usr/share/mirrormanager/server/logrotate.conf
 	rm $(DESTDIR)/usr/share/mirrormanager/server/*.cfg
 	rm $(DESTDIR)/usr/share/mirrormanager/server/*.in
+# mirrorlist-server/
+	mkdir -p -m 0755 $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server
+	install -m 0755	mirrorlist-server/mirrorlist_client.wsgi $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server
+	install -m 0644	mirrorlist-server/weighted_shuffle.py $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server
+	install -m 0755	mirrorlist-server/mirrorlist_server.py $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server
+	mkdir -p -m 0755 $(DESTDIR)/etc/httpd/conf.d
+	install -m 0644 mirrorlist-server/apache/mirrorlist-server.conf $(DESTDIR)/etc/httpd/conf.d
+# other junk
 	mkdir -p -m 0755 $(DESTDIR)/etc/logrotate.d
 	install -m 0644 server/logrotate.conf $(DESTDIR)/etc/logrotate.d/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/etc/mirrormanager
-	mkdir -p -m 0755 $(DESTDIR)/$(SBINDIR)
-	sed -e 's:##CONFFILE##:$(CONFFILE):' -e 's:##PROGRAMDIR##:$(PROGRAMDIR):' $(STARTSCRIPT).in > $(DESTDIR)/$(SBINDIR)/start-mirrormanager
-	chmod 0755 $(DESTDIR)/$(SBINDIR)/start-mirrormanager
+#	mkdir -p -m 0755 $(DESTDIR)/$(SBINDIR)
+#	sed -e 's:##CONFFILE##:$(CONFFILE):' -e 's:##PROGRAMDIR##:$(PROGRAMDIR):' $(STARTSCRIPT).in > $(DESTDIR)/$(SBINDIR)/start-mirrormanager
+#	chmod 0755 $(DESTDIR)/$(SBINDIR)/start-mirrormanager
 
 install-client:
 	mkdir -p -m 0755 $(DESTDIR)/etc/mirrormanager-client $(DESTDIR)/usr/bin
