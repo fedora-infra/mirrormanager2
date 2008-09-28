@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MM_DIR=/usr/share/mirrormanager
+MM_DIR=/usr/share/mirrormanager/server
 MIRRORLIST_DIR=/var/lib/mirrormanager/mirrorlists
 LOCKFILE=/var/lock/mirrormanager/update-mirrorlist-server.lock
 CACHEDIR=/var/lib/mirrormanager
