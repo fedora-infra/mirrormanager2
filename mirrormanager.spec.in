@@ -14,7 +14,7 @@ Source0:        https://fedorahosted.org/releases/m/i/%{name}/%{name}-%{version}
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  python
-Requires:       TurboGears, python-IPy, python-GeoIP
+Requires:       TurboGears, python-IPy, python-GeoIP, wget
 
 %description
 MirrorManager tracks all the content provided on a master mirror
@@ -54,8 +54,8 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_localstatedir}/lock/%{name}/
 %dir %{_sysconfdir}/%{name}/
 %{_datadir}/%{name}
-%{_sbindir}/start-mirrormanager
 %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
+%config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrorlist-server.conf
 %doc LICENSE LICENSES LICENSE_generate-worldmap
 %doc server/*.cfg
 
