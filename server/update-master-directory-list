@@ -79,7 +79,8 @@ def guess_ver_arch_from_path(category, path):
 
     ver = None
     # newest versions/IDs first, also handles stupid Fedora 9.newkey hack.
-    for v in Version.selectBy(product=category.product,orderBy='-id'):
+    for v in Version.select(orderBy='-id'):
+        if v.product != category.product: continue
         s = '.*(^|/)%s(/|$).*' % (v.name)
         if re.compile(s).match(path):
             ver = v
