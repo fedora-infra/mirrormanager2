@@ -74,8 +74,13 @@ def request_setup(request):
     d['client_ip'] = client_ip
 
     d['metalink'] = False
-    fname = request.environ['PATH_INFO']
-    if fname == '/metalink':
+    scriptname = ''
+    pathinfo = ''
+    if 'SCRIPT_NAME' in request.environ:
+        scriptname = request.environ['SCRIPT_NAME']
+    if 'PATH_INFO' in request.environ:
+        pathinfo = request.environ['PATH_INFO']
+    if scriptname ==  '/metalink' or pathinfo == '/metalink':
         d['metalink'] = True
     return d
 
@@ -95,7 +100,6 @@ def application(environ, start_response):
     except: # most likely socket.error, but we'll catch everything
         response.status_code=503
         return response(environ, start_response)
-
 
     if resulttype == 'mirrorlist':
         # results look like [(hostid, url), ...]
@@ -121,6 +125,7 @@ def application(environ, start_response):
     else:
         response.headers['Content-Type'] = "text/html"
 
+    results = results.encode('utf-8')
     response.write(results)
     return response(environ, start_response)
 
