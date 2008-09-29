@@ -236,36 +236,12 @@ def make_repomd_file_details(dir):
     except IndexError:
         fd = FileDetail(directory=dir, filename='repomd.xml', sha1=sha1, md5=md5, timestamp=timestamp, size=size)
 
-def make_repomd_file_details(dir):
-    repodataDir = dir.name + '/repodata'
-    repomd_fname = os.path.join(rootdir, dir.name, 'repodata', 'repomd.xml')
-    if not os.path.exists(repomd_fname):
-        return
-    try:
-        f = open(repomd_fname, 'r')
-        repomd = f.read()
-        f.close()
-    except:
-        return
-    size = len(repomd)
-    sha1 = shamod.new(repomd).hexdigest()
-    md5 = md5mod.new(repomd).hexdigest()
-
-    yumrepo = yum.repoMDObject.RepoMD('repoid', repomd_fname)
-    if 'timestamp' not in yumrepo.__dict__:
-        set_repomd_timestamp(yumrepo)
-    timestamp = yumrepo.timestamp
-    dir = Directory.byName(repodataDir)
-    try:
-        fd = FileDetail.selectBy(directory=dir, filename='repomd.xml', sha1=sha1, md5=md5, timestamp=timestamp, size=size)[0]
-    except IndexError:
-        fd = FileDetail(directory=dir, filename='repomd.xml', sha1=sha1, md5=md5, timestamp=timestamp, size=size)
-
-
 def make_repository(dir, category):
     repo = None
     path = dir.name[len(category.topdir.name)+1:]
     (ver, arch) = guess_ver_arch_from_path(category, path)
+    if ver is None or arch is None:
+        return None
     path = trim_os_from_dirname(path)
     name=path.split('/')
     name = rename_SRPMS_source(name)
