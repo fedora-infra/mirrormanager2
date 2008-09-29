@@ -119,7 +119,7 @@ def populate_directory_cache():
             directory = Directory.byName(directoryname)
             repo = directory.repository
             # if a directory is in more than one category, problem...
-            if repo is not None:
+            if repo is not None and repo.arch is not None:
                 repo_arch_to_directoryname[(repo.prefix, repo.arch.name)] = directory.name
                 category = repo.category
                 cache[directoryname]['ordered_mirrorlist'] = repo.version.ordered_mirrorlist
