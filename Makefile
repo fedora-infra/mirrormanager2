@@ -92,3 +92,10 @@ install-client:
 	mkdir -p -m 0755 $(DESTDIR)/etc/mirrormanager-client $(DESTDIR)/usr/bin
 	install -m 0644 client/report_mirror.conf $(DESTDIR)/etc/mirrormanager-client/
 	install -m 0755 client/report_mirror $(DESTDIR)/usr/bin/
+
+sign: $(TARBALL)
+	gpg --armor --detach-sign $(TARBALL)
+	mv "$(TARBALL).asc" "`dirname $(TARBALL)`/`basename $(TARBALL) .asc`.sign"
+
+publish: sign
+	scp dist/* fedorahosted.org:/srv/web/releases/m/i/mirrormanager/
