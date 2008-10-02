@@ -156,60 +156,6 @@ def make_file_details_from_checksums(dir):
         except IndexError:
             fd = FileDetail(directory=dir, filename=f, sha1=sha1, md5=md5, timestamp=mtime, size=size)
     
-def make_file_details_from_checksums(dir):
-    def _parse_checksum_file(path):
-        r = {}
-        try:
-            f = open(path, 'r')
-            for line in f.readlines():
-                line = line.strip()
-                s = line.split()
-                if len(s) < 2:
-                    continue
-
-                # parse for only md5 and sha1 values
-                s0len = len(s[0])
-                if s0len != 32 and s0len != 40:
-                    continue
-                # strip off extraneous starting '*' char from name
-                s[1] = s[1].strip('*')
-                r[s[1]] = s[0]
-            f.close()
-        except:
-            pass
-        return r
-
-    def _checksums_from_globs(dirname, globs):
-        d = {}
-        checksum_files = []
-        for g in globs:
-            checksum_files.extend(glob.glob(os.path.join(rootdir, dirname, g)))
-        for f in checksum_files:
-            d.update(_parse_checksum_file(f))
-        return d
-
-    sha1_globs = ['*.sha1sum', 'SHA1SUM']
-    md5_globs = ['*.md5sum', 'MD5SUM']
-    md5dict = _checksums_from_globs(dir.name, md5_globs)
-    sha1dict = _checksums_from_globs(dir.name, sha1_globs)
-
-    files = set()
-    for k in md5dict.keys():
-        files.add(k)
-    for k in sha1dict.keys():
-        files.add(k)
-
-    for f in files:
-        sha1 = sha1dict.get(f)
-        md5  = md5dict.get(f)
-        s = os.stat(os.path.join(rootdir, dir.name, f))
-        size = s.st_size
-        mtime = s.st_mtime
-        try:
-            fd = FileDetail.selectBy(directory=dir, filename=f, sha1=sha1, md5=md5, size=size, timestamp=mtime)[0]
-        except IndexError:
-            fd = FileDetail(directory=dir, filename=f, sha1=sha1, md5=md5, timestamp=mtime, size=size)
-    
 
 def make_repomd_file_details(dir):
     repodataDir = dir.name + '/repodata'
@@ -400,6 +346,11 @@ def sync_directories_from_file(filename, cname):
 # fixme this is quick and dirty
 #sync_directories_from_file('/tmp/fedora-linux-core.txt', 'Fedora Core')
 #sync_directories_from_file('/tmp/fedora-linux-extras.txt', 'Fedora Extras')
+#sync_directories_from_file('/tmp/rpmfusion.free', 'RPMFUSION free EL');
+#sync_directories_using_rsync('rsync://download1.rpmfusion.org/rpmfusion/free/el/', 'RPMFUSION free EL')
+#sync_directories_using_rsync('rsync://download1.rpmfusion.org/rpmfusion/nonfree/el/', 'RPMFUSION nonfree EL')
+#sync_directories_using_rsync('rsync://download1.rpmfusion.org/rpmfusion/nonfree/fedora/', 'RPMFUSION nonfree Fedora')
+#sync_directories_using_rsync('rsync://download1.rpmfusion.org/rpmfusion/free/fedora/', 'RPMFUSION free Fedora')
 sync_directories_using_rsync('/pub/epel', 'Fedora EPEL')
 sync_directories_using_rsync('/pub/fedora/web', 'Fedora Web')
 sync_directories_using_rsync('/pub/fedora/linux', 'Fedora Linux', extra_rsync_args='--exclude=\*\*/core/ --exclude=\*\*/extras/')
