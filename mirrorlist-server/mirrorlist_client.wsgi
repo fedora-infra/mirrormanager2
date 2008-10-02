@@ -118,12 +118,12 @@ def application(environ, start_response):
         for (hostid, url) in results:
             text += url + '\n'
         results = text
-        response.headers['Content-Type'] = "text/html"
+        response.headers['Content-Type'] = "text/plain"
     elif resulttype == 'metalink':
         # results are an XML document
         response.headers['Content-Type'] = "application/metalink+xml"
     else:
-        response.headers['Content-Type'] = "text/html"
+        response.headers['Content-Type'] = "text/plain"
 
     results = results.encode('utf-8')
     response.write(results)
