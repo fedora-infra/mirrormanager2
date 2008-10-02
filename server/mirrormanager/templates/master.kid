@@ -33,7 +33,7 @@
         <div id="nav">
           <h2>Navigation</h2>
           <ul>
-            <li><a href="/" py:attrs="title=_('Mirror Manager main page')">Main</a></li>
+            <li><a href="${tg.url('/')}" py:attrs="title=_('Mirror Manager main page')">Main</a></li>
           </ul>
           <h2>${tg.config('mirrormanager.projectname','Fedora')} websites</h2>
           <ul>
