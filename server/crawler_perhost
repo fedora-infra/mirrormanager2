@@ -384,6 +384,8 @@ def try_perfile(d, hoststate, url):
 
 
 def try_perdir(d, hoststate, url):
+    if d.files is None:
+        return None
     if not url.startswith('ftp'):
         return None
     results = {}
