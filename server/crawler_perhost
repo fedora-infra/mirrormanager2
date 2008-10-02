@@ -358,6 +358,8 @@ def add_parents(host_category_dirs, hc, d):
 
 
 def try_perfile(d, hoststate, url):
+    if d.files is None:
+        return None
     exists = None
     for file in d.files.keys():
         exists = None
