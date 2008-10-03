@@ -345,16 +345,7 @@ def sync_directories_from_file(filename, cname):
 
 
 for list in config.get('umdl.master_directories'):
-    print list
     if list[0] == 'rsync':
-        print list[0]
-        print list[1]
-        print list[2]
-        print list[3]
         sync_directories_using_rsync(list[1], list[2], list[3]);
     if list[0] == 'file':
-        print list[0]
-        print list[1]
-        print list[2]
-        print list[3]
         sync_directories_from_file(list[1], list[2], list[3]);
