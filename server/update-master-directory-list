@@ -13,6 +13,7 @@ import sha as shamod
 import md5 as md5mod
 import yum.repoMDObject
 import datetime
+from turbogears import config
 
 rootdir='/'
 
@@ -343,16 +344,17 @@ def sync_directories_from_file(filename, cname):
     f.close()
 
 
-# fixme this is quick and dirty
-#sync_directories_from_file('/tmp/fedora-linux-core.txt', 'Fedora Core')
-#sync_directories_from_file('/tmp/fedora-linux-extras.txt', 'Fedora Extras')
-#sync_directories_from_file('/tmp/rpmfusion.free', 'RPMFUSION free EL');
-#sync_directories_using_rsync('rsync://download1.rpmfusion.org/rpmfusion/free/el/', 'RPMFUSION free EL')
-#sync_directories_using_rsync('rsync://download1.rpmfusion.org/rpmfusion/nonfree/el/', 'RPMFUSION nonfree EL')
-#sync_directories_using_rsync('rsync://download1.rpmfusion.org/rpmfusion/nonfree/fedora/', 'RPMFUSION nonfree Fedora')
-#sync_directories_using_rsync('rsync://download1.rpmfusion.org/rpmfusion/free/fedora/', 'RPMFUSION free Fedora')
-sync_directories_using_rsync('/pub/epel', 'Fedora EPEL')
-sync_directories_using_rsync('/pub/fedora/web', 'Fedora Web')
-sync_directories_using_rsync('/pub/fedora/linux', 'Fedora Linux', extra_rsync_args='--exclude=\*\*/core/ --exclude=\*\*/extras/')
-sync_directories_using_rsync('rsync://secondary1.fedora.phx.redhat.com/fedora-secondary/', 'Fedora Secondary Arches')
-sync_directories_using_rsync('rsync://secondary1.fedora.phx.redhat.com/alt/', 'Fedora Other')
+for list in config.get('umdl.master_directories'):
+    print list
+    if list[0] == 'rsync':
+        print list[0]
+        print list[1]
+        print list[2]
+        print list[3]
+        sync_directories_using_rsync(list[1], list[2], list[3]);
+    if list[0] == 'file':
+        print list[0]
+        print list[1]
+        print list[2]
+        print list[3]
+        sync_directories_from_file(list[1], list[2], list[3]);
