@@ -281,11 +281,11 @@ def do_country(kwargs, cache, clientCountry, requested_countries, header):
 
 def do_netblocks(kwargs, cache, header):
     hostresults = set()
-    client_ip = kwargs['client_ip']    
+    client_ip = kwargs['client_ip']
     if not kwargs.has_key('netblock') or kwargs['netblock'] == "1":
         hosts = client_netblocks(client_ip)
-        if len(hosts) > 0:
-            for hostid in hosts:
+        for hostid in hosts:
+            if hostid in cache['byHostId']:
                 hostresults.add(hostid)
                 header += 'Using preferred netblock '
     return (header, hostresults)
