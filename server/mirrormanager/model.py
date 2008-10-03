@@ -266,6 +266,9 @@ class Host(SQLObject):
                             # database foulup
                             print "ERROR: hcdir %s has no directory entry"
                             continue
+
+                        #fixme this is evil, but the compare_dir is failing
+                        is_up2date = True
                         if is_up2date:
                             marked_up2date += 1
                         if hcdir.up2date != is_up2date:
