@@ -6,9 +6,12 @@ from sqlobject import *
 import sys, os, string
 import turbogears
 from mirrormanager.model import *
+from mirrormanager.lib import manage_pidfile, remove_pidfile
 from urlparse import urlsplit
 from optparse import OptionParser
 from subprocess import Popen
+
+pidfile='/var/run/mirrormanager/crawler.pid'
 
 from turbogears.database import PackageHub
 hub = __connection__ = None
@@ -69,6 +72,10 @@ def doit(include_private=False, threads=10, config=None):
 
 
 def main():
+    if manage_pidfile(pidfile):
+        print "another instance is running, try again later."
+        sys.exit(1)
+
     parser = OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option("-c", "--config",
                       dest="config", default='dev.cfg',
@@ -92,9 +99,7 @@ def main():
     __connection__ = hub
     
     doit(include_private=options.include_private, threads=options.threads, config=options.config)
-
-
+    remove_pidfile(pidfile)
 
 if __name__ == "__main__":
     sys.exit(main())
-        

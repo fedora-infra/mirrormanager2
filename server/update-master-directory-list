@@ -7,6 +7,7 @@ import sys, os, string
 import turbogears
 from mirrormanager.model import *
 from mirrormanager.repomap import *
+from mirrormanager.lib import manage_pidfile, remove_pidfile
 import re
 import glob
 import sha as shamod
@@ -15,6 +16,7 @@ import yum.repoMDObject
 import datetime
 
 rootdir='/'
+pidfile='/var/run/mirrormanager/umdl.pid'
 
 # look on the command line for a desired config file
 if len(sys.argv) < 2:
@@ -24,7 +26,10 @@ if len(sys.argv) >= 2:
     turbogears.update_config(configfile=sys.argv[1], modulename="mirrormanager.config")
 if len(sys.argv) >= 3:
     rootdir=sys.argv[2]
-    
+
+if manage_pidfile(pidfile):
+    print "another instance is running, try again later."
+    sys.exit(1)
 
 from turbogears.database import PackageHub
 hub = PackageHub("mirrormanager")
@@ -405,3 +410,4 @@ sync_directories_using_rsync('/pub/fedora/web/', 'Fedora Web')
 sync_directories_using_rsync('/pub/fedora/linux/', 'Fedora Linux', extra_rsync_args='--exclude=\*\*/core/ --exclude=\*\*/extras/')
 sync_directories_using_rsync('rsync://secondary1.fedora.phx.redhat.com/fedora-secondary/', 'Fedora Secondary Arches')
 sync_directories_using_rsync('rsync://secondary1.fedora.phx.redhat.com/alt/', 'Fedora Other')
+remove_pidfile(pidfile)
