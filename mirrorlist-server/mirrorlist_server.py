@@ -399,7 +399,13 @@ def do_mirrorlist(kwargs):
                 file = 'repomd.xml'
             cache = mirrorlist_cache[dir]
         except KeyError:
-            return dict(resulttype='mirrorlist', returncode=200, results=[], message=header + 'error: invalid repo or arch')
+            repos = repo_arch_to_directoryname.keys()
+            repos.sort()
+            repo_information = header + "error: invalid repo or arch <br/>\n"
+            repo_information += "# following repositories are available:<br/>\n"
+            for i in repos:
+                repo_information += "# " + i[0] + "<br/>\n"
+            return dict(resulttype='mirrorlist', returncode=200, results=[], message=repo_information)
 
 
     ordered_mirrorlist = cache.get('ordered_mirrorlist', default_ordered_mirrorlist)
