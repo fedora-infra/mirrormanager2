@@ -110,7 +110,6 @@ def populate_directory_cache():
 
     cache = {}
     for (directoryname, hostid, country, hcurl, siteprivate, hostprivate, i2, i2_clients) in result:
-        if hcurl is None or len(hcurl) == 0: continue
         if directoryname in directory_exclusive_hosts and \
                 hostid not in directory_exclusive_hosts[directoryname]:
             continue
