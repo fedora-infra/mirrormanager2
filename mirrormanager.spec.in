@@ -68,6 +68,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Sat Oct  4 2008 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.5-1
+- more bugfixes
+
 * Fri Oct  3 2008 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.4-1
 - more bugfixes
 
