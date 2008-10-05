@@ -1,9 +1,10 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<?python from turbogears import config ?>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:py="http://purl.org/kid/ns#"
     py:extends="'static.kid'">
 <head>
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
-<title>Fedora Public Active Mirrors</title>
+<title>${tg.config('mirrormanager.projectname','Fedora')} Public Active Mirrors</title>
 
 </head>
 <body>
@@ -36,10 +37,10 @@ if v.display_name is not None and v.display_name != '':
 </table>
 </div>
 
-<h1 class="icon48 download">Fedora Public Active Mirrors</h1>
+<h1 class="icon48 download">${tg.config('mirrormanager.projectname','Fedora')} Public Active Mirrors</h1>
 
 <p>
-Fedora is distributed to millions of systems globally.  This would not
+${tg.config('mirrormanager.projectname','Fedora')} is distributed to millions of systems globally.  This would not
 be possible without the donations of time, disk space, and bandwidth
 by hundreds of volunteer system administrators and their companies or
 institutions.  Your fast download experience is made possible by these
@@ -47,7 +48,7 @@ donations.
 This list is dynamically generated every hour, listing only up-to-date mirrors.
 </p>
 <p>
-To become a public Fedora mirror, please see <a
+To become a public ${tg.config('mirrormanager.projectname','Fedora')} mirror, please see <a
 href="http://fedoraproject.org/wiki/Infrastructure/Mirroring">our wiki page on Mirroring</a>.
 </p>
 

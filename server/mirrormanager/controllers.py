@@ -1,6 +1,8 @@
 from turbogears.identity.exceptions import IdentityFailure
 import logging
 import cherrypy
+from turbogears import config
+
 
 
 import turbogears
@@ -413,7 +415,9 @@ class HostCategoryFieldsNew(widgets.WidgetsList):
                                          validator=validators.NotEmpty())
     admin_active = widgets.CheckBox(default=True, help_text="unused")
     user_active = widgets.CheckBox(default=True, help_text="Clear to temporarily disable this category")
-    upstream = widgets.TextField(validator=validators.Any(validators.UnicodeString,validators.Empty), attrs=dict(size='30'), help_text='e.g. rsync://download.fedora.redhat.com/fedora-linux-core')
+    help_text = 'e.g. '
+    help_text += config.get('mirrormanager.upstream', 'rsync://download.fedora.redhat.com/fedora-linux-core')
+    upstream = widgets.TextField(validator=validators.Any(validators.UnicodeString,validators.Empty), attrs=dict(size='30'), help_text=help_text)
     always_up2date = widgets.CheckBox(default=False, help_text="Set to force belief that the whole category is always in sync.")
 
 class LabelObjName(widgets.Label):
@@ -433,8 +437,10 @@ class HostCategoryFieldsRead(widgets.WidgetsList):
     category = LabelObjName()
     admin_active = widgets.CheckBox(default=True)
     user_active = widgets.CheckBox(default=True)
+    help_text = 'e.g. '
+    help_text += config.get('mirrormanager.upstream', 'rsync://download.fedora.redhat.com/fedora-linux-core')
     upstream = widgets.TextField(attrs=dict(size='30'), validator=validators.Any(validators.UnicodeString,validators.Empty),
-                                 help_text='e.g. rsync://download.fedora.redhat.com/fedora-linux-core')
+                                 help_text=help_text)
     always_up2date = widgets.CheckBox(default=False, help_text="Set to force belief that the whole category is always in sync.  Be careful with this.")
 
 host_category_form_new = widgets.TableForm(fields=HostCategoryFieldsNew(),

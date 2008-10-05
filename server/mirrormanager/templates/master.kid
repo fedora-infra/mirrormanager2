@@ -1,12 +1,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <?python import sitetemplate ?>
+<?python from turbogears import config ?>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:py="http://purl.org/kid/ns#" py:extends="sitetemplate">
   <head py:match="item.tag=='{http://www.w3.org/1999/xhtml}head'" py:attrs="item.items()">
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
     <title py:replace="''">Your title goes here</title>
-    <link rel="stylesheet" type="text/css" media="all" href="/mirrormanager/static/css/fedora.css" />
-    <link rel="stylesheet" type="text/css" media="all" href="/mirrormanager/static/css/main.css" />
-    <link rel="stylesheet" type="text/css" media="all" href="/mirrormanager/static/css/style.css" />
+    <link rel="stylesheet" type="text/css" media="all"
+       py:attrs="href=config.get('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'fedora.css'"/>
+    <link rel="stylesheet" type="text/css" media="all"
+       py:attrs="href=config.get('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'main.css'"/>
+    <link rel="stylesheet" type="text/css" media="all"
+       py:attrs="href=config.get('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'style.css'"/>
     <!--[if lt IE 7]>
     <style type="text/css">
       #wrapper
@@ -19,16 +23,19 @@
   <body py:match="item.tag=='{http://www.w3.org/1999/xhtml}body'" py:attrs="item.items()">
   <div id="wrapper">
     <div id="head">
-      <h1><a href="http://fedoraproject.org/" py:attrs="title=_('Fedora Project homepage')">Fedora</a></h1>
+      <h1><a py:attrs="{'title' : config.get('mirrormanager.projectname', 'Fedora') + _(' Project homepage'),
+                        'href' : config.get('mirrormanager.projectweb', 'http://fedoraproject.org')}">
+           ${tg.config('mirrormanager.projectname','Fedora')}</a>
+      </h1>
     </div>
     <div id="wrapper2">
       <div id="sidebar">
         <div id="nav">
           <h2>Navigation</h2>
           <ul>
-            <li><a href="/" py:attrs="title=_('Mirror Manager main page')">Main</a></li>
+            <li><a href="${tg.url('/')}" py:attrs="title=_('Mirror Manager main page')">Main</a></li>
           </ul>
-          <h2>Fedora websites</h2>
+          <h2>${tg.config('mirrormanager.projectname','Fedora')} websites</h2>
           <ul>
             <li><a href="http://fedoraproject.org/" py:attrs="title=_('Fedora Project homepage')">Fedora Home</a></li>
             <li><a href="http://docs.fedoraproject.org/" py:attrs="title=_('Fedora documentation')">Docs</a>
@@ -47,7 +54,7 @@
             </span>
             <span py:if="not tg.identity.anonymous">
               <h2>Logged in</h2>
-              Welcome ${tg.identity.display_name}.
+              Welcome ${tg.identity.user_name}.
               <ul><li><a href="${tg.url('/logout')}">Logout</a></li></ul>
             </span>
           </div>
@@ -62,7 +69,7 @@
       </div>
     </div>
     <div id="bottom">
-      <div id="footer">
+      <div py:if="config.get('mirrormanager.copyright', 'fedora') == 'fedora'" id="footer">
         <p class="copy">Copyright &copy; 2007 Red Hat, Inc. and others.  All Rights Reserved.
         Please send any comments or corrections to the <a href="mailto:webmaster@fedoraproject.org">websites team</a>.
         </p>
@@ -73,6 +80,9 @@
           <li class="first"><a href="http://fedoraproject.org/wiki/Legal">Legal</a></li>
           <li><a href="http://fedoraproject.org/wiki/Legal/TrademarkGuidelines">Trademark Guidelines</a></li>
         </ul>
+      </div>
+      <div py:else="" id="footer">
+        Some other copyright???
       </div>
     </div>
   </div>

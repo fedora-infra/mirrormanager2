@@ -3,11 +3,11 @@
     py:extends="'master.kid'">
 <head>
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
-<title>Welcome to Fedora Mirror Manager</title>
+<title>Welcome to ${tg.config('mirrormanager.projectname','Fedora')} Mirror Manager</title>
 </head>
 <body>
 
-<h1 class="icon48 download">Welcome to Fedora Mirror Manager</h1>
+<h1 class="icon48 download">Welcome to ${tg.config('mirrormanager.projectname','Fedora')} Mirror Manager</h1>
 
 <h2 class="icon16">Workflow</h2>
 
