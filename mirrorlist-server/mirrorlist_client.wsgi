@@ -8,7 +8,8 @@ import socket
 import cPickle as pickle
 from string import zfill, atoi, strip, replace
 from paste.wsgiwrappers import *
-
+import gzip
+import cStringIO
 
 socketfile = '/var/run/mirrormanager/mirrorlist_server.sock'
 
@@ -84,6 +85,25 @@ def request_setup(request):
         d['metalink'] = True
     return d
 
+def accept_encoding_gzip(request):
+    for h in request.headers:
+        if h.lower() == 'accept-encoding':
+            if 'gzip' in request.headers[h]:
+                return True
+    return False
+
+def gzipBuf(buf):
+    zbuf = cStringIO.StringIO()
+    zfile = gzip.GzipFile(fileobj = zbuf, compresslevel = 9, mode='wb')
+    zfile.write(buf)
+    zfile.close()
+    return zbuf.getvalue()
+
+def manage_compression(request, response, buf):
+    if accept_encoding_gzip(request):
+        buf = gzipBuf(buf)
+        response.headers['Content-Encoding'] = 'gzip'
+    return buf
 
 def application(environ, start_response):
     request = WSGIRequest(environ)
@@ -126,6 +146,8 @@ def application(environ, start_response):
         response.headers['Content-Type'] = "text/plain"
 
     results = results.encode('utf-8')
+    results = manage_compression(request, response, results)
+    response.headers['Content-Length'] = str(len(results))
     response.write(results)
     return response(environ, start_response)
 
