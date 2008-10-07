@@ -358,10 +358,19 @@ def sync_directories_from_file(filename, cname):
 #sync_directories_using_rsync('rsync://secondary1.fedora.phx.redhat.com/fedora-secondary/', 'Fedora Secondary Arches')
 #sync_directories_using_rsync('rsync://secondary1.fedora.phx.redhat.com/alt/', 'Fedora Other')
 
-for list in config.get('umdl.master_directories'):
-    if list[0] == 'rsync':
-        sync_directories_using_rsync(list[1], list[2], list[3]);
-    if list[0] == 'file':
-        sync_directories_from_file(list[1], list[2], list[3]);
+for i in config.get('umdl.master_directories'):
+    try:
+        options = i['options']
+    except KeyError:
+        options = None
+
+    print i['url']
+    print i['category']
+    print options
+    if i['type'] == 'rsync':
+        sync_directories_using_rsync(i['url'], i['category'], options);
+
+    if i['type'] == 'file':
+        sync_directories_from_file(i['url'], i['category'], options);
 
 remove_pidfile(pidfile)
