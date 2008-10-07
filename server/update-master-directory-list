@@ -364,9 +364,6 @@ for i in config.get('umdl.master_directories'):
     except KeyError:
         options = None
 
-    print i['url']
-    print i['category']
-    print options
     if i['type'] == 'rsync':
         sync_directories_using_rsync(i['url'], i['category'], options);
 
