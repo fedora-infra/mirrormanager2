@@ -30,7 +30,7 @@
         <div id="nav">
           <h2>Navigation</h2>
           <ul>
-            <li><a href="/publiclist/" py:attrs="title=_('Public mirror list')">Public list</a></li>
+            <li><a href="${tg.url('/publiclist')}" py:attrs="title=_('Public mirror list')">Public list</a></li>
           </ul>
           <h2>Fedora websites</h2>
           <ul>
