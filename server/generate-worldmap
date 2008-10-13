@@ -24,11 +24,9 @@ from pylab import *
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.toolkits.basemap import Basemap
 
-gi = GeoIP.open("/usr/share/GeoIP/GeoLiteCity.dat", GeoIP.GEOIP_STANDARD)
-
-
 from turbogears.database import PackageHub
 hub = __connection__ = None
+gi = None
 
 def lookup_host_locations():
     results = []
@@ -48,7 +46,7 @@ def lookup_host_locations():
 
     return results
 
-def doit():
+def doit(options):
 
     m = Basemap(llcrnrlon=-180.,llcrnrlat=-90,urcrnrlon=180.,urcrnrlat=90.,\
                 resolution='c',projection='cyl')
@@ -74,7 +72,7 @@ def doit():
     m.drawcoastlines(linewidth=0.5)
     m.drawcountries(linewidth=0.5)
     m.fillcontinents(color='green')
-    canvas.print_figure('/tmp/map.png', dpi=100)
+    canvas.print_figure(options.output, dpi=100)
 
 
 def main():
@@ -82,17 +80,29 @@ def main():
     parser.add_option("-c", "--config",
                       dest="config", default='dev.cfg',
                       help="TurboGears config file to use")
+    parser.add_option("-o", "--output",
+                      metavar="FILE", dest="output", action="store", type="string", help="write output to FILE")
 
     (options, args) = parser.parse_args()
 
+    if options.output is None:
+        parser.print_help()
+        sys.exit(1)
+
     turbogears.update_config(configfile=options.config,
-                             modulename="mirrors.config")
+                             modulename="mirrormanager.config")
+
+
+    global gi
+    gi = GeoIP.open("/usr/share/GeoIP/GeoLiteCity.dat", GeoIP.GEOIP_STANDARD)
+
     global hub
     global __connection__
     hub = PackageHub("mirrors")
     __connection__ = hub
+
     
-    doit()
+    doit(options)
 
 
 
