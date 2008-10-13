@@ -51,6 +51,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_localstatedir}/lib/%{name}/
 %dir %{_localstatedir}/run/%{name}/
 %dir %{_localstatedir}/log/%{name}/
+%dir %{_localstatedir}/log/%{name}/crawler/
 %dir %{_localstatedir}/lock/%{name}/
 %dir %{_sysconfdir}/%{name}/
 %{_datadir}/%{name}

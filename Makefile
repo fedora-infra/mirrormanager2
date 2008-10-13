@@ -66,6 +66,7 @@ install-server:
 	mkdir -p -m 0755 $(DESTDIR)/var/lib/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/var/run/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/var/log/mirrormanager
+	mkdir -p -m 0755 $(DESTDIR)/var/log/mirrormanager/crawler
 	mkdir -p -m 0755 $(DESTDIR)/var/lock/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/usr/share/mirrormanager
 # server/
