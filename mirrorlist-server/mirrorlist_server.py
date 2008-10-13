@@ -401,10 +401,10 @@ def do_mirrorlist(kwargs):
         except KeyError:
             repos = repo_arch_to_directoryname.keys()
             repos.sort()
-            repo_information = header + "error: invalid repo or arch <br/>\n"
-            repo_information += "# following repositories are available:<br/>\n"
+            repo_information = header + "error: invalid repo or arch\n"
+            repo_information += "# following repositories are available:\n"
             for i in repos:
-                repo_information += "# " + i[0] + "<br/>\n"
+                repo_information += "# " + i[0] + "\n"
             return dict(resulttype='mirrorlist', returncode=200, results=[], message=repo_information)
 
 
