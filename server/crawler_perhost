@@ -561,7 +561,9 @@ def main():
         sys.exit(1)
 
     hostid = host.id
+    print "Starting crawl %s" % (datetime.utcnow().isoformat())
     per_host(host.id, options=options)
+    print "Ending crawl %s" % (datetime.utcnow().isoformat())
 
 
 
