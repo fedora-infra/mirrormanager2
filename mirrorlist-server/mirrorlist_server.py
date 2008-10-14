@@ -19,6 +19,7 @@ from weighted_shuffle import weighted_shuffle
 socketfile = '/var/run/mirrormanager/mirrorlist_server.sock'
 cachefile = '/var/lib/mirrormanager/mirrorlist_cache.pkl'
 internet2_netblocks_file = '/var/lib/mirrormanager/i2_netblocks.txt'
+debug = False
 # at a point in time when we're no longer serving content for versions
 # that don't use yum prioritymethod=fallback
 # (e.g. after Fedora 7 is past end-of-life)
@@ -361,8 +362,19 @@ def trim_to_preferred_protocols(hosts_and_urls):
 
 
 def do_mirrorlist(kwargs):
+    global debug
     if not (kwargs.has_key('repo') and kwargs.has_key('arch')) and not kwargs.has_key('path'):
         return dict(resulttype='mirrorlist', returncode=200, results=[], message='# either path=, or repo= and arch= must be specified')
+    
+    if debug:
+        sys.stdout.write("Connection from: %s;" % kwargs['client_ip'])
+        if kwargs.has_key('repo'):
+            sys.stdout.write("repo=%s;" % kwargs['repo'])
+        if kwargs.has_key('arch'):
+            sys.stdout.write("arch=%s;" % kwargs['arch'])
+        if kwargs.has_key('path'):
+            sys.stdout.write("path=%s;" % kwargs['path'])
+        sys.stdout.write("\n")
 
     file = None
     cache = None
@@ -618,7 +630,9 @@ def parse_args():
     global cachefile
     global socketfile
     global internet2_netblocks_file
-    opts, args = getopt.getopt(sys.argv[1:], "c:i:s:", ["cache", "internet2_netblocks", "socket"])
+    global debug
+    opts, args = getopt.getopt(sys.argv[1:], "c:i:s:d",
+                               ["cache", "internet2_netblocks", "socket", "debug"])
     for option, argument in opts:
         if option in ("-c", "--cache"):
             cachefile = argument
@@ -626,6 +640,9 @@ def parse_args():
             internet2_netblocks_file = argument
         if option in ("-s", "--socket"):
             socketfile = argument
+        if option in ("-d", "--debug"):
+            print sys.argv[0] + ": debug output enabled."
+            debug = True
 
 def main():
     parse_args()
