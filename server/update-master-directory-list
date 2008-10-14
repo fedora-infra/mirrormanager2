@@ -349,24 +349,12 @@ def sync_directories_from_file(filename, cname):
     f.close()
 
 
-# fixme this is quick and dirty
-#sync_directories_from_file('/tmp/fedora-linux-core.txt', 'Fedora Core')
-#sync_directories_from_file('/tmp/fedora-linux-extras.txt', 'Fedora Extras')
-#sync_directories_using_rsync('/pub/epel/', 'Fedora EPEL')
-#sync_directories_using_rsync('/pub/fedora/web/', 'Fedora Web')
-#sync_directories_using_rsync('/pub/fedora/linux/', 'Fedora Linux', extra_rsync_args='--exclude=\*\*/core/ --exclude=\*\*/extras/')
-#sync_directories_using_rsync('rsync://secondary1.fedora.phx.redhat.com/fedora-secondary/', 'Fedora Secondary Arches')
-#sync_directories_using_rsync('rsync://secondary1.fedora.phx.redhat.com/alt/', 'Fedora Other')
-
 for i in config.get('umdl.master_directories'):
     try:
         options = i['options']
     except KeyError:
         options = None
 
-    print i['url']
-    print i['category']
-    print options
     if i['type'] == 'rsync':
         sync_directories_using_rsync(i['url'], i['category'], options);
 
