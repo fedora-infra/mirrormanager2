@@ -1,6 +1,3 @@
-# no debuginfo package needed, it's only platform-independent python or shell scripts.
-%define debug_package %{nil}
-
 Name:           mirrormanager
 Version:        ##VERSION##
 Release:        1%{?dist}
