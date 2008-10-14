@@ -9,7 +9,7 @@ from mirrormanager.model import *
 from mirrormanager.lib import manage_pidfile, remove_pidfile
 from urlparse import urlsplit
 from optparse import OptionParser
-from subprocess import Popen
+from subprocess import Popen, STDOUT
 
 pidfile='/var/run/mirrormanager/crawler.pid'
 
@@ -39,14 +39,14 @@ class ForkingMaster:
                 pid = None
             if not pid: break
             self.active_children.remove(pid)
-            close(self.child_logfiles[pid])
+            self.child_logfiles[pid].close()
             del self.child_logfiles[pid]
 
     def process_request(self, command, args, logfile=None):
         """Fork a new subprocess to process the request."""
         self.collect_children()
         print "Starting crawler %s" % args
-        p = Popen(args, executable=command, stderr=subprocess.STDOUT, stdout=logfile)
+        p = Popen(args, executable=command, stderr=STDOUT, stdout=logfile)
         # Parent process
         if self.active_children is None:
             self.active_children = []
