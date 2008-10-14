@@ -245,7 +245,6 @@ def populate_all_caches():
     populate_host_country_allowed_cache()
     populate_netblock_cache()
     populate_directory_cache()
-    #print "mirrorlist caches populated"
 
 
 import cPickle as pickle
