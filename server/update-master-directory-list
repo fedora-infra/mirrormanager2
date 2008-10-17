@@ -359,6 +359,6 @@ for i in config.get('umdl.master_directories'):
         sync_directories_using_rsync(i['url'], i['category'], options);
 
     if i['type'] == 'file':
-        sync_directories_from_file(i['url'], i['category'], options);
+        sync_directories_from_file(i['url'], i['category']);
 
 remove_pidfile(pidfile)
