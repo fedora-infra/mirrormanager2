@@ -1027,8 +1027,18 @@ class CountryContinentRedirectController(SimpleDbObjectController):
 class PublicListController(controllers.Controller):
     @expose(template="mirrormanager.templates.publiclist")
     def index(self, *vpath, **params):
-        hosts = hosts=[h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active()]
-        
+        hosts = hosts=[h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active() and len(h.categories) > 0]
+
+        # hide hosts who have no hcurls
+        orig_hosts = hosts
+        for h in orig_hosts:
+            found=False
+            for c in h.categories:
+                if len(h.category_urls(c)) > 0:
+                    found=True
+            if not found:
+                hosts.remove(h)
+
         return dict(hosts=hosts, numhosts=len(hosts),
                     products=list(Product.select(orderBy='name')), title='', arches=display_publiclist_arches, product=None, ver=None, arch=None, valid_categories=None)
 
