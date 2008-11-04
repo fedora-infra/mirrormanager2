@@ -152,9 +152,13 @@ def make_file_details_from_checksums(dir):
         files.add(k)
 
     for f in files:
+        try:
+            s = os.stat(os.path.join(rootdir, dir.name, f))
+        except OSError:
+            # bail if the file doesn't actually exist
+            continue
         sha1 = sha1dict.get(f)
         md5  = md5dict.get(f)
-        s = os.stat(os.path.join(rootdir, dir.name, f))
         size = s.st_size
         mtime = s.st_mtime
         try:
