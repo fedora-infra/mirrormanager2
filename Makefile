@@ -1,7 +1,7 @@
-RELEASE_DATE := "04-Oct-2008"
+RELEASE_DATE := "13-Oct-2008"
 RELEASE_MAJOR := 1
 RELEASE_MINOR := 2
-RELEASE_EXTRALEVEL := .5
+RELEASE_EXTRALEVEL := .6
 RELEASE_NAME := mirrormanager
 RELEASE_VERSION := $(RELEASE_MAJOR).$(RELEASE_MINOR)$(RELEASE_EXTRALEVEL)
 RELEASE_STRING := $(RELEASE_NAME)-$(RELEASE_VERSION)
@@ -66,6 +66,7 @@ install-server:
 	mkdir -p -m 0755 $(DESTDIR)/var/lib/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/var/run/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/var/log/mirrormanager
+	mkdir -p -m 0755 $(DESTDIR)/var/log/mirrormanager/crawler
 	mkdir -p -m 0755 $(DESTDIR)/var/lock/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/usr/share/mirrormanager
 # server/

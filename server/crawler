@@ -9,7 +9,7 @@ from mirrormanager.model import *
 from mirrormanager.lib import manage_pidfile, remove_pidfile
 from urlparse import urlsplit
 from optparse import OptionParser
-from subprocess import Popen
+from subprocess import Popen, STDOUT
 
 pidfile='/var/run/mirrormanager/crawler.pid'
 
@@ -19,6 +19,7 @@ hub = __connection__ = None
 class ForkingMaster:
     active_children = None
     max_children = 10
+    child_logfiles = {}
 
     def __init__(self, max_children=10):
         self.max_children = max_children
@@ -38,23 +39,26 @@ class ForkingMaster:
                 pid = None
             if not pid: break
             self.active_children.remove(pid)
+            self.child_logfiles[pid].close()
+            del self.child_logfiles[pid]
 
-    def process_request(self, command, args):
+    def process_request(self, command, args, logfile=None):
         """Fork a new subprocess to process the request."""
         self.collect_children()
         print "Starting crawler %s" % args
-        p = Popen(args, executable=command)
+        p = Popen(args, executable=command, stderr=STDOUT, stdout=logfile)
         # Parent process
         if self.active_children is None:
             self.active_children = []
         self.active_children.append(p.pid)
+        self.child_logfiles[p.pid] = logfile
 
     def wait_for_completion(self):
         self.max_children = 0
         self.collect_children()
 
 
-def doit(include_private=False, threads=10, config=None):
+def doit(include_private=False, threads=10, config=None, logdir=None):
     master = ForkingMaster(max_children=threads)
     command = './crawler_perhost'
     commonargs = [ command, '-c', config]
@@ -66,7 +70,12 @@ def doit(include_private=False, threads=10, config=None):
             continue
     
         args = commonargs + ['--hostid=%s' % h.id]
-        master.process_request(command, args)
+        logfile = None
+        if logdir is not None:
+            logfilename = os.path.join(logdir, str(h.id) + '.log')
+            logfile = open(logfilename, 'a+b')
+
+        master.process_request(command, args, logfile=logfile)
         
     master.wait_for_completion()
 
@@ -88,6 +97,9 @@ def main():
     parser.add_option("-t", "--threads", type="int",
                       dest="threads", default=10,
                       help="max threads to start in parallel")
+    parser.add_option("-l", "--logdir", type="string", metavar="DIR",
+                      dest="logdir", default='/var/log/mirrormanager/crawler',
+                      help="write logfiles to DIR")
 
     (options, args) = parser.parse_args()
 
@@ -98,7 +110,7 @@ def main():
     hub = PackageHub("mirrormanager")
     __connection__ = hub
     
-    doit(include_private=options.include_private, threads=options.threads, config=options.config)
+    doit(include_private=options.include_private, threads=options.threads, config=options.config, logdir=options.logdir)
     remove_pidfile(pidfile)
 
 if __name__ == "__main__":

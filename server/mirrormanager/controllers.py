@@ -12,6 +12,7 @@ from tgfastdata import DataController
 import sqlobject
 from sqlobject.sqlbuilder import *
 from string import strip
+from copy import copy
 
 from mirrormanager import my_validators
 from mirrormanager.model import *
@@ -1025,10 +1026,42 @@ class CountryContinentRedirectController(SimpleDbObjectController):
 
 
 class PublicListController(controllers.Controller):
+
+    def _has_up2date_dirs(host, category):
+        try:
+            hc = HostCategory.selectBy(host=host, category=category)[0]
+        except:
+            return False
+        found=False
+        for d in hc.dirs:
+            if d.up2date or d.always_up2date:
+                found=True
+                break
+        return found
+
+    def _trim_hosts(hosts):
+        '''remove hosts who have no public categories or hcurls'''
+        orig_hosts = copy(hosts)
+        i=0
+        for h in orig_hosts:
+            i=i+1
+            found=False
+            for c in h.categories:
+                if not c.publiclist:
+                    continue
+                if len(h.category_urls(c)) > 0:
+                    if _has_up2date_dirs(h, c):
+                        found=True
+                        break
+            if not found:
+                del hosts[i-1]
+        return hosts
+
     @expose(template="mirrormanager.templates.publiclist")
     def index(self, *vpath, **params):
         hosts = hosts=[h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active()]
-        
+        hosts = _trim_hosts(hosts)
+
         return dict(hosts=hosts, numhosts=len(hosts),
                     products=list(Product.select(orderBy='name')), title='', arches=display_publiclist_arches, product=None, ver=None, arch=None, valid_categories=None)
 
@@ -1053,6 +1086,7 @@ class PublicListController(controllers.Controller):
         hosts = []
         try:
             hosts = [Host.get(hostId[0]) for hostId in publiclist_hosts(product, ver, arch)]
+            hosts = _trim_hosts(hosts)
         except:
             pass
 

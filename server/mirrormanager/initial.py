@@ -166,7 +166,7 @@ def make_embargoed_countries():
 #check if a configuration already exists. Create one if it doesn't
 if not Arch.select().count():
     print "Creating Arches"
-    for a in ['source', 'i386', 'x86_64', 'ppc', 'ppc64', 'sparc', 'ia64']:
+    for a in ['source', 'i386', 'x86_64', 'ppc', 'ppc64', 'sparc', 'ia64', 's390x']:
         Arch(name=a)
 
 

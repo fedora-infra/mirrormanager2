@@ -152,9 +152,13 @@ def make_file_details_from_checksums(dir):
         files.add(k)
 
     for f in files:
+        try:
+            s = os.stat(os.path.join(rootdir, dir.name, f))
+        except OSError:
+            # bail if the file doesn't actually exist
+            continue
         sha1 = sha1dict.get(f)
         md5  = md5dict.get(f)
-        s = os.stat(os.path.join(rootdir, dir.name, f))
         size = s.st_size
         mtime = s.st_mtime
         try:
@@ -349,15 +353,6 @@ def sync_directories_from_file(filename, cname):
     f.close()
 
 
-# fixme this is quick and dirty
-#sync_directories_from_file('/tmp/fedora-linux-core.txt', 'Fedora Core')
-#sync_directories_from_file('/tmp/fedora-linux-extras.txt', 'Fedora Extras')
-#sync_directories_using_rsync('/pub/epel/', 'Fedora EPEL')
-#sync_directories_using_rsync('/pub/fedora/web/', 'Fedora Web')
-#sync_directories_using_rsync('/pub/fedora/linux/', 'Fedora Linux', extra_rsync_args='--exclude=\*\*/core/ --exclude=\*\*/extras/')
-#sync_directories_using_rsync('rsync://secondary1.fedora.phx.redhat.com/fedora-secondary/', 'Fedora Secondary Arches')
-#sync_directories_using_rsync('rsync://secondary1.fedora.phx.redhat.com/alt/', 'Fedora Other')
-
 for i in config.get('umdl.master_directories'):
     try:
         options = i['options']
@@ -368,6 +363,6 @@ for i in config.get('umdl.master_directories'):
         sync_directories_using_rsync(i['url'], i['category'], options);
 
     if i['type'] == 'file':
-        sync_directories_from_file(i['url'], i['category'], options);
+        sync_directories_from_file(i['url'], i['category']);
 
 remove_pidfile(pidfile)

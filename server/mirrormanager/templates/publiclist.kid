@@ -78,7 +78,7 @@ and development networks globally.
 
 <td>
 <table>
-<tr py:for="hc in host.categories" py:if="hc.category.publiclist and (valid_categories is None or hc.category.name in valid_categories)">
+<tr py:for="hc in host.categories" py:if="hc.category.publiclist and (valid_categories is None or hc.category.name in valid_categories) and len(hc.urls) > 0">
 <td><span py:replace="hc.category.name">Category name</span></td>
 <?python
 http=None
