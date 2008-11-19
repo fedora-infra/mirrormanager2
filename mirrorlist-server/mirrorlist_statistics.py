@@ -16,8 +16,46 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys, pylab, time
+import sys, pylab, time, getopt
 
+start = time.clock()
+
+logfile = None
+dest = None
+
+def usage():
+	print "mirrorlist_statistics.py analyzes mirrorlist_server.py logfiles"
+	print "and draws piecharts"
+	print
+	print "Usage:"
+	print "  mirrorlist_statistics.py [OPTION]..."
+	print
+	print "Options:"
+	print "  -l, --log=LOGFILE     logfile which should be used as input"
+	print "  -d, --dest=DIRECTORY  output directory"
+	print "  -h, --help            show this help; then exit"
+	print
+
+def parse_args():
+	global logfile
+	global dest
+	opts, args = getopt.getopt(sys.argv[1:], "l:d:h",
+				["log=", "dest=", "help"])
+	for option, argument in opts:
+		if option in ("-l", "--log"):
+			logfile = argument
+		if option in ("-d", "--dest"):
+			dest = argument
+		if option in ("-h", "--help"):
+			usage()
+			sys.exit(0)
+
+parse_args()
+
+if logfile is None or dest is None:
+	usage()
+	sys.exit(-1)
+	
 def sort_dict(dict):
     """ Sort dictionary by values and reverse. """
     items=dict.items()
@@ -26,7 +64,6 @@ def sort_dict(dict):
     sorteditems.reverse()
     return sorteditems
 
-start = time.clock()
 
 y1, m1, d1, x1, x2, x3, x4, x5, x6 = time.localtime()
 
@@ -36,10 +73,8 @@ repositories = {}
 archs = {}
 i = 0
 
-dest = sys.argv[2]
-
 # HTTP
-for line in open(sys.argv[1]):
+for line in open(logfile):
 	arguments = line.split()
 	y, m, d = arguments[3][:10].split('-')
         if not ((int(y) == y1) and (int(m) == m1) and (int(d) == d1)):
@@ -58,11 +93,6 @@ for line in open(sys.argv[1]):
 		repositories[arguments[7][:len(arguments[7])-1]] = 1
 	accesses += 1
 	continue
-
-print sort_dict(countries)
-print sort_dict(archs)
-print sort_dict(repositories)
-
 
 def do_pie(prefix, dict, accesses):
 	pylab.figure(1, figsize=(8,8))
