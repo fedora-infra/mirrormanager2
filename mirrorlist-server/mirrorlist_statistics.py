@@ -36,8 +36,7 @@ repositories = {}
 archs = {}
 i = 0
 
-dest = '/ftp/info/breakdown/'
-dest = './'
+dest = sys.argv[2]
 
 # HTTP
 for line in open(sys.argv[1]):
@@ -123,7 +122,7 @@ def do_html(prefix, dict, accesses):
 	html = open('%s%s-%d-%02d-%02d.txt' % (dest, prefix, y1, m1, d1), 'w')
 	html.write('<img src="%s-%d-%02d-%02d.png" border="0" alt="alt"/>\n' % (prefix, y1, m1, d1))
 	html.write('<h2>Details</h2>\n')
-	html.write('<table align="center" width="80%">\n')
+	html.write('<table class="altrows" align="center">\n')
 	html.write('<tr><th class="statusth">Mirror Name</th><th class="statusth">%</th>')
 	html.write('<th class="statusth">#Requests</th></tr>\n')
 
@@ -131,7 +130,7 @@ def do_html(prefix, dict, accesses):
 
 	for item in sort_dict(dict):
 		size = item[0]
-		toggle = background(html, 'grey', toggle)
+		toggle = background(html, 'odd', toggle)
 		html.write('<td>%s</td>\n' % (item[1]))
 		html.write('\t<td align="right">%05.4lf %%</td>\n' % ((float(size)/float(accesses))*100))
 		html.write('<td align="right">')
@@ -140,9 +139,9 @@ def do_html(prefix, dict, accesses):
 
 	# print the overall information
 	background(html, 'total', True)
-	html.write('<td>Total</td><td></td><td>\n');
-	html.write('</td><td align="right">%d' % (accesses))
-	html.write('</td></tr>\n');
+	html.write('<th>Total</th><th>\n');
+	html.write('</th><th align="right">%d' % (accesses))
+	html.write('</th></tr>\n');
 
 	html.write('</table>\n')
 	end = time.clock()
