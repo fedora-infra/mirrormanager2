@@ -370,16 +370,6 @@ def do_mirrorlist(kwargs):
     if not (kwargs.has_key('repo') and kwargs.has_key('arch')) and not kwargs.has_key('path'):
         return dict(resulttype='mirrorlist', returncode=200, results=[], message='# either path=, or repo= and arch= must be specified')
     
-    if debug:
-        sys.stdout.write("Connection from: %s;" % kwargs['client_ip'])
-        if kwargs.has_key('repo'):
-            sys.stdout.write("repo=%s;" % kwargs['repo'])
-        if kwargs.has_key('arch'):
-            sys.stdout.write("arch=%s;" % kwargs['arch'])
-        if kwargs.has_key('path'):
-            sys.stdout.write("path=%s;" % kwargs['path'])
-        sys.stdout.write("\n")
-
     file = None
     cache = None
     if kwargs.has_key('path'):
