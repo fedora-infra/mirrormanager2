@@ -1027,30 +1027,30 @@ class CountryContinentRedirectController(SimpleDbObjectController):
 
 class PublicListController(controllers.Controller):
 
-    def _has_up2date_dirs(host, category):
+    def _has_up2date_dirs(self, host, category):
         try:
             hc = HostCategory.selectBy(host=host, category=category)[0]
         except:
             return False
         found=False
         for d in hc.dirs:
-            if d.up2date or d.always_up2date:
+            if d.up2date or hc.always_up2date:
                 found=True
                 break
         return found
 
-    def _trim_hosts(hosts):
+    def _trim_hosts(self, hosts):
         '''remove hosts who have no public categories or hcurls'''
         orig_hosts = copy(hosts)
         i=0
         for h in orig_hosts:
             i=i+1
             found=False
-            for c in h.categories:
-                if not c.publiclist:
+            for hc in h.categories:
+                if not hc.category.publiclist:
                     continue
-                if len(h.category_urls(c)) > 0:
-                    if _has_up2date_dirs(h, c):
+                if len(h.category_urls(hc.category.name)) > 0:
+                    if self._has_up2date_dirs(h, hc.category):
                         found=True
                         break
             if not found:
