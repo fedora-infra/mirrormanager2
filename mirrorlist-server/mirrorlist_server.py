@@ -9,6 +9,7 @@ import cPickle as pickle
 import os, sys, signal, random, socket, getopt
 from string import zfill, atoi
 import datetime
+import time
 
 from IPy import IP
 import GeoIP
@@ -19,6 +20,7 @@ from weighted_shuffle import weighted_shuffle
 socketfile = '/var/run/mirrormanager/mirrorlist_server.sock'
 cachefile = '/var/lib/mirrormanager/mirrorlist_cache.pkl'
 internet2_netblocks_file = '/var/lib/mirrormanager/i2_netblocks.txt'
+logfile = None
 # at a point in time when we're no longer serving content for versions
 # that don't use yum prioritymethod=fallback
 # (e.g. after Fedora 7 is past end-of-life)
@@ -29,6 +31,8 @@ internet2_netblocks_file = '/var/lib/mirrormanager/i2_netblocks.txt'
 default_ordered_mirrorlist = False
 
 gi = None
+
+debug = False
 
 # key is strings in tuple (repo.prefix, arch)
 mirrorlist_cache = {}
@@ -361,6 +365,9 @@ def trim_to_preferred_protocols(hosts_and_urls):
 
 
 def do_mirrorlist(kwargs):
+    global debug
+    global logfile
+
     if not (kwargs.has_key('repo') and kwargs.has_key('arch')) and not kwargs.has_key('path'):
         return dict(resulttype='mirrorlist', returncode=200, results=[], message='# either path=, or repo= and arch= must be specified')
 
@@ -431,7 +438,22 @@ def do_mirrorlist(kwargs):
 
     client_ip = kwargs['client_ip']
     clientCountry = gi.country_code_by_addr(client_ip)
-    
+
+    if debug:
+        print ("IP: " + client_ip +
+               "; DATE: " + time.strftime("%Y-%m-%d") +
+               "; COUNTRY: " + clientCountry + 
+               "; REPO: " + kwargs['repo'] + 
+               "; ARCH: " + kwargs['arch'])
+
+    if logfile is not None:
+        logfile.write("IP: " + client_ip +
+                      "; DATE: " + time.strftime("%Y-%m-%d") +
+                      "; COUNTRY: " + clientCountry +
+                      "; REPO: " + kwargs['repo'] +
+                      "; ARCH: " + kwargs['arch'] + "\n")
+        logfile.flush()
+
     if not done:
         header, internet2_results = do_internet2(kwargs, cache, clientCountry, header)
         if len(internet2_results) + len(netblock_results) >= 3:
@@ -605,9 +627,16 @@ class MirrorlistHandler(StreamRequestHandler):
         
 
 def sighup_handler(signum, frame):
+    global logfile
     signal.signal(signal.SIGHUP, signal.SIG_IGN)
     if signum == signal.SIGHUP:
+        if debug:
+            print "Got SIGHUP; reloading data"
         read_caches()
+        if logfile is not None:
+            name = logfile.name
+            logfile.close()
+            logfile = open(name, 'a')
     signal.signal(signal.SIGHUP, sighup_handler)
 
 class ForkingUnixStreamServer(ForkingMixIn, UnixStreamServer):
@@ -619,7 +648,10 @@ def parse_args():
     global cachefile
     global socketfile
     global internet2_netblocks_file
-    opts, args = getopt.getopt(sys.argv[1:], "c:i:s:", ["cache", "internet2_netblocks", "socket"])
+    global debug
+    global logfile
+    opts, args = getopt.getopt(sys.argv[1:], "c:i:s:dl:",
+                               ["cache", "internet2_netblocks", "socket", "debug", "log"])
     for option, argument in opts:
         if option in ("-c", "--cache"):
             cachefile = argument
@@ -627,8 +659,17 @@ def parse_args():
             internet2_netblocks_file = argument
         if option in ("-s", "--socket"):
             socketfile = argument
+        if option in ("-l", "--log"):
+            try:
+                logfile = open(argument, 'a')
+            except:
+                logfile = None
+        if option in ("-d", "--debug"):
+            debug = True
+            print "debug output enabled"
 
 def main():
+    global logfile
     parse_args()
     oldumask = os.umask(0)
     try:
@@ -648,6 +689,12 @@ def main():
         os.unlink(socketfile)
     except:
         pass
+
+    if logfile is not None:
+        try:
+            logfile.close()
+        except:
+            pass
 
     return 0
 
