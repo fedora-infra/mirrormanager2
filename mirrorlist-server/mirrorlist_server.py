@@ -449,19 +449,21 @@ def do_mirrorlist(kwargs):
     clientCountry = gi.country_code_by_addr(client_ip)
 
     if debug:
-        print ("IP: " + client_ip +
-               "; DATE: " + time.strftime("%Y-%m-%d") +
-               "; COUNTRY: " + clientCountry + 
-               "; REPO: " + kwargs['repo'] + 
-               "; ARCH: " + kwargs['arch'])
+        if kwargs.has_key('repo') and kwargs.has_key('arch'):
+            print ("IP: " + client_ip +
+                   "; DATE: " + time.strftime("%Y-%m-%d") +
+                   "; COUNTRY: " + clientCountry + 
+                   "; REPO: " + kwargs['repo'] + 
+                   "; ARCH: " + kwargs['arch'])
 
     if logfile is not None:
-        logfile.write("IP: " + client_ip +
-                      "; DATE: " + time.strftime("%Y-%m-%d") +
-                      "; COUNTRY: " + clientCountry +
-                      "; REPO: " + kwargs['repo'] +
-                      "; ARCH: " + kwargs['arch'] + "\n")
-        logfile.flush()
+        if kwargs.has_key('repo') and kwargs.has_key('arch'):
+            logfile.write("IP: " + client_ip +
+                          "; DATE: " + time.strftime("%Y-%m-%d") +
+                          "; COUNTRY: " + clientCountry +
+                          "; REPO: " + kwargs['repo'] +
+                          "; ARCH: " + kwargs['arch'] + "\n")
+            logfile.flush()
 
     if not done:
         header, internet2_results = do_internet2(kwargs, cache, clientCountry, header)
