@@ -81,7 +81,7 @@
           <li><a href="http://fedoraproject.org/wiki/Legal/TrademarkGuidelines">Trademark Guidelines</a></li>
         </ul>
       </div>
-      <div py:else="" id="footer">
+      <div py:if="config.get('mirrormanager.copyright', 'fedora') != 'fedora'" id="footer">
         Some other copyright???
       </div>
     </div>

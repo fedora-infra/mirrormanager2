@@ -49,7 +49,8 @@ This list is dynamically generated every hour, listing only up-to-date mirrors.
 </p>
 <p>
 To become a public ${tg.config('mirrormanager.projectname','Fedora')} mirror, please see <a
-href="http://fedoraproject.org/wiki/Infrastructure/Mirroring">our wiki page on Mirroring</a>.
+py:attrs="href=config.get('mirrormanager.mirrorwiki', 'http://fedoraproject.org/wiki/Infrastructure/Mirroring')">
+our wiki page on Mirroring</a>.
 </p>
 
 <p>
@@ -77,7 +78,7 @@ and development networks globally.
 
 <td>
 <table>
-<tr py:for="hc in host.categories" py:if="hc.category.publiclist and (valid_categories is None or hc.category.name in valid_categories)">
+<tr py:for="hc in host.categories" py:if="hc.category.publiclist and (valid_categories is None or hc.category.name in valid_categories) and len(hc.urls) > 0">
 <td><span py:replace="hc.category.name">Category name</span></td>
 <?python
 http=None

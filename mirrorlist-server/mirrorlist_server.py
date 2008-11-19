@@ -21,6 +21,7 @@ socketfile = '/var/run/mirrormanager/mirrorlist_server.sock'
 cachefile = '/var/lib/mirrormanager/mirrorlist_cache.pkl'
 internet2_netblocks_file = '/var/lib/mirrormanager/i2_netblocks.txt'
 logfile = None
+debug = False
 # at a point in time when we're no longer serving content for versions
 # that don't use yum prioritymethod=fallback
 # (e.g. after Fedora 7 is past end-of-life)
@@ -31,8 +32,6 @@ logfile = None
 default_ordered_mirrorlist = False
 
 gi = None
-
-debug = False
 
 # key is strings in tuple (repo.prefix, arch)
 mirrorlist_cache = {}
@@ -370,6 +369,16 @@ def do_mirrorlist(kwargs):
 
     if not (kwargs.has_key('repo') and kwargs.has_key('arch')) and not kwargs.has_key('path'):
         return dict(resulttype='mirrorlist', returncode=200, results=[], message='# either path=, or repo= and arch= must be specified')
+    
+    if debug:
+        sys.stdout.write("Connection from: %s;" % kwargs['client_ip'])
+        if kwargs.has_key('repo'):
+            sys.stdout.write("repo=%s;" % kwargs['repo'])
+        if kwargs.has_key('arch'):
+            sys.stdout.write("arch=%s;" % kwargs['arch'])
+        if kwargs.has_key('path'):
+            sys.stdout.write("path=%s;" % kwargs['path'])
+        sys.stdout.write("\n")
 
     file = None
     cache = None
@@ -651,7 +660,7 @@ def parse_args():
     global debug
     global logfile
     opts, args = getopt.getopt(sys.argv[1:], "c:i:s:dl:",
-                               ["cache", "internet2_netblocks", "socket", "debug", "log"])
+                               ["cache", "internet2_netblocks", "socket", "debug", "log="])
     for option, argument in opts:
         if option in ("-c", "--cache"):
             cachefile = argument

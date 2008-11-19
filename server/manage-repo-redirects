@@ -17,9 +17,30 @@ from optparse import OptionParser
 from turbogears.database import PackageHub
 hub = __connection__ = None
 
-repos = {'fedora-%s':'rawhide', 'fedora-debug-%s':'rawhide-debug', 'fedora-source-%s':'rawhide-source', 
-         'updates-released-f%s':'rawhide', 'updates-released-debug-f%s':'rawhide-debug', 'updates-released-source-f%s':'rawhide-source',
-         'updates-testing-f%s':'rawhide', 'updates-testing-debug-f%s':'rawhide-debug', 'updates-testing-source-f%s':'rawhide-source' }
+#repos = {'fedora-%s':'rawhide', 'fedora-debug-%s':'rawhide-debug', 'fedora-source-%s':'rawhide-source', 
+#         'updates-released-f%s':'rawhide', 'updates-released-debug-f%s':'rawhide-debug', 'updates-released-source-f%s':'rawhide-source',
+#         'updates-testing-f%s':'rawhide', 'updates-testing-debug-f%s':'rawhide-debug', 'updates-testing-source-f%s':'rawhide-source' }
+
+repos = {
+         'free-fedora-%s':'free-fedora-rawhide',
+         'free-fedora-debug-%s':'free-fedora-rawhide-debug',
+         'free-fedora-source-%s':'free-fedora-rawhide-source',
+         'free-fedora-updates-released-%s':'free-fedora-rawhide',
+         'free-fedora-updates-testing-%s':'free-fedora-rawhide',
+         'free-fedora-updates-released-debug-%s':'free-fedora-rawhide-debug',
+         'free-fedora-updates-testing-debug-%s':'free-fedora-rawhide-debug',
+         'free-fedora-updates-released-source-%s':'free-fedora-rawhide-source',
+         'free-fedora-updates-testing-source-%s':'free-fedora-rawhide-source',
+         'nonfree-fedora-%s':'nonfree-fedora-rawhide',
+         'nonfree-fedora-debug-%s':'nonfree-fedora-rawhide-debug',
+         'nonfree-fedora-source-%s':'nonfree-fedora-rawhide-source',
+         'nonfree-fedora-updates-released-%s':'nonfree-fedora-rawhide',
+         'nonfree-fedora-updates-testing-%s':'nonfree-fedora-rawhide',
+         'nonfree-fedora-updates-released-debug-%s':'nonfree-fedora-rawhide-debug',
+         'nonfree-fedora-updates-testing-debug-%s':'nonfree-fedora-rawhide-debug',
+         'nonfree-fedora-updates-released-source-%s':'nonfree-fedora-rawhide-source',
+         'nonfree-fedora-updates-testing-source-%s':'nonfree-fedora-rawhide-source'
+        }
 
 
 def add_version_redirect_to_rawhide(version):
