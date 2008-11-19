@@ -41,6 +41,9 @@ dest = sys.argv[2]
 # HTTP
 for line in open(sys.argv[1]):
 	arguments = line.split()
+	y, m, d = arguments[3][:10].split('-')
+        if not ((int(y) == y1) and (int(m) == m1) and (int(d) == d1)):
+		continue
 	try:
 		countries[arguments[5][:2]] += 1
 	except:
