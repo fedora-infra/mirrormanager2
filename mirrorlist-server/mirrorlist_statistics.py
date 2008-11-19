@@ -22,6 +22,7 @@ start = time.clock()
 
 logfile = None
 dest = None
+offset = 0
 
 def usage():
 	print "mirrorlist_statistics.py analyzes mirrorlist_server.py logfiles"
@@ -33,19 +34,24 @@ def usage():
 	print "Options:"
 	print "  -l, --log=LOGFILE     logfile which should be used as input"
 	print "  -d, --dest=DIRECTORY  output directory"
+	print "  -o, --offset=DAYS     number of days which should be subtracted"
+	print "                        from today's date and be used as basis for log analysis"
 	print "  -h, --help            show this help; then exit"
 	print
 
 def parse_args():
 	global logfile
 	global dest
-	opts, args = getopt.getopt(sys.argv[1:], "l:d:h",
-				["log=", "dest=", "help"])
+	global offset
+	opts, args = getopt.getopt(sys.argv[1:], "l:d:ho:",
+				["log=", "dest=", "help", "offset"])
 	for option, argument in opts:
 		if option in ("-l", "--log"):
 			logfile = argument
 		if option in ("-d", "--dest"):
 			dest = argument
+		if option in ("-o", "--offset"):
+			offset = int(argument)
 		if option in ("-h", "--help"):
 			usage()
 			sys.exit(0)
@@ -67,13 +73,16 @@ def sort_dict(dict):
 
 y1, m1, d1, x1, x2, x3, x4, x5, x6 = time.localtime()
 
+# this works only if offset < d1
+if d1 > offset:
+	d1 = d1 - offset
+
 countries = {}
 accesses = 0
 repositories = {}
 archs = {}
 i = 0
 
-# HTTP
 for line in open(logfile):
 	arguments = line.split()
 	y, m, d = arguments[3][:10].split('-')
