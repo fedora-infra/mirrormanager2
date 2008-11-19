@@ -32,78 +32,70 @@ y1, m1, d1, x1, x2, x3, x4, x5, x6 = time.localtime()
 
 countries = {}
 accesses = 0
-mirrors = {}
-real_mirrors = {}
-requests = {}
+repositories = {}
+archs = {}
 i = 0
-http_sum = 0
-http_real_sum = 0
-http_all_requests = 0
-ftp_sum = 0
-ftp_real_sum = 0
-ftp_all_requests = 0
-rsync_real_sum = 0
-rsync_all_requests = 0
 
 dest = '/ftp/info/breakdown/'
 dest = './'
 
 # HTTP
-for line in open('2'):
+for line in open(sys.argv[1]):
 	arguments = line.split()
 	try:
 		countries[arguments[5][:2]] += 1
 	except:
 		countries[arguments[5][:2]] = 1
+	try:
+		archs[arguments[9]] += 1
+	except:
+		archs[arguments[9]] = 1
+	try:
+		repositories[arguments[7][:len(arguments[7])-1]] += 1
+	except:
+		repositories[arguments[7][:len(arguments[7])-1]] = 1
 	accesses += 1
 	continue
 
 print sort_dict(countries)
+print sort_dict(archs)
+print sort_dict(repositories)
 
 
-pylab.figure(1, figsize=(8,8))
-ax =  pylab.axes([0.1, 0.1, 0.8, 0.8])
+def do_pie(prefix, dict, accesses):
+	pylab.figure(1, figsize=(8,8))
+	ax =  pylab.axes([0.1, 0.1, 0.8, 0.8])
 
-labels = []
-fracs = []
-rest = 0
+	labels = []
+	fracs = []
+	rest = 0
 
-for country in countries.keys():
-	frac = countries[country]
+	for item in dict.keys():
+		frac = dict[item]
 
-	if (float(frac)/float(accesses) > 0.01):
-		labels.append(country)
-		fracs.append(frac)
-	else:
-		rest += frac
+		if (float(frac)/float(accesses) > 0.01):
+			labels.append(item)
+			fracs.append(frac)
+		else:
+			rest += frac
 
-i = 0
-changed = False
-for x in labels:
-	if x == 'undef':
-		fracs[i] += rest
-		labels[i] = 'other'
-		changed = True
-	i += 1
+	i = 0
+	changed = False
+	for x in labels:
+		if x == 'undef':
+			fracs[i] += rest
+			labels[i] = 'other'
+			changed = True
+		i += 1
 
-if changed == False:
-	labels.append('other')
-	fracs.append(rest)
+	if changed == False:
+		labels.append('other')
+		fracs.append(rest)
 
-pylab.pie(fracs, labels=labels, autopct='%1.1f%%', pctdistance=0.75, shadow=True)
-#title = 'ftp-stud.hs-esslingen.de - mirror traffic (%d-%02d-%02d)' % (y1, m1, d1)
-#pylab.title(title, bbox={'facecolor':'0.8', 'pad':5})
-pylab.savefig('%s%d-%02d-%02d.png' % (dest, y1, m1, d1))
+	pylab.pie(fracs, labels=labels, autopct='%1.1f%%', pctdistance=0.75, shadow=True)
+	pylab.savefig('%s%s-%d-%02d-%02d.png' % (dest, prefix, y1, m1, d1))
+	pylab.close(1)
 
-sys.exit(0)
-
-html = open('%s%d-%02d-%02d.txt' % (dest, y1, m1, d1), 'w')
-html.write('<img src="/info/breakdown/%d-%02d-%02d.png" border="0" alt="alt"/>\n' % (y1, m1, d1))
-html.write('<h2>Details</h2>\n')
-html.write('<table align="center" width="80%">\n')
-html.write('<tr><th class="statusth">Mirror Name</th><th class="statusth">%</th>')
-html.write('<th class="statusth">Data Transmitted</th><th class="statusth">Data Requested</th>\n')
-html.write('<th class="statusth">#Requests</th></tr>\n')
 
 def write_size(html, size):
 	if size/1024 <= 0:
@@ -127,58 +119,40 @@ def background(html, css_class, toggle):
 	html.write('>\n\t')
 	return toggle
 
-toggle = False
+def do_html(prefix, dict, accesses):
+	html = open('%s%s-%d-%02d-%02d.txt' % (dest, prefix, y1, m1, d1), 'w')
+	html.write('<img src="%s-%d-%02d-%02d.png" border="0" alt="alt"/>\n' % (prefix, y1, m1, d1))
+	html.write('<h2>Details</h2>\n')
+	html.write('<table align="center" width="80%">\n')
+	html.write('<tr><th class="statusth">Mirror Name</th><th class="statusth">%</th>')
+	html.write('<th class="statusth">#Requests</th></tr>\n')
 
-for item in sort_dict(real_mirrors):
-	size = item[0]
-	toggle = background(html, 'grey', toggle)
-	html.write('<td>%s</td>\n' % (item[1]))
-	html.write('\t<td align="right">%05.4lf %%</td>\n' % ((float(size)/float(real_sum))*100))
-	html.write('\t<td align="right">\n')
-	write_size(html, size)
-	html.write('</td><td align="right">\n')
-	write_size(html, mirrors[item[1]])
-	html.write('</td><td align="right">')
-	html.write('%d' % (requests[item[1]]))
-	html.write('</td></tr>\n')
+	toggle = False
 
-# RSYNC only
-background(html, 'rsync', True)
-html.write('<td>RSYNC</td><td></td><td align="right">\n');
-write_size(html, rsync_real_sum)
-html.write('</td><td align="right">\n');
-write_size(html, rsync_real_sum)
-html.write('</td><td align="right">%d' % (rsync_all_requests))
-html.write('</td></tr>\n');
+	for item in sort_dict(dict):
+		size = item[0]
+		toggle = background(html, 'grey', toggle)
+		html.write('<td>%s</td>\n' % (item[1]))
+		html.write('\t<td align="right">%05.4lf %%</td>\n' % ((float(size)/float(accesses))*100))
+		html.write('<td align="right">')
+		html.write('%d' % (size))
+		html.write('</td></tr>\n')
 
-# FTP only
-background(html, 'ftp', True)
-html.write('<td>FTP</td><td></td><td align="right">\n');
-write_size(html, ftp_real_sum)
-html.write('</td><td align="right">\n');
-write_size(html, ftp_sum)
-html.write('</td><td align="right">%d' % (ftp_all_requests))
-html.write('</td></tr>\n');
+	# print the overall information
+	background(html, 'total', True)
+	html.write('<td>Total</td><td></td><td>\n');
+	html.write('</td><td align="right">%d' % (accesses))
+	html.write('</td></tr>\n');
 
-# HTTP only
-background(html, 'http', True)
-html.write('<td>HTTP</td><td></td><td align="right">\n');
-write_size(html, http_real_sum)
-html.write('</td><td align="right">\n');
-write_size(html, http_sum)
-html.write('</td><td align="right">%d' % (http_all_requests))
-html.write('</td></tr>\n');
+	html.write('</table>\n')
+	end = time.clock()
+	html.write('<p>Last updated: %s GMT' % time.strftime("%a, %d %b %Y %H:%M:%S",time.gmtime()))
+	html.write(' (runtime %ss)</p>\n' % (end-start))
 
-# print the overall information
-background(html, 'total', True)
-html.write('<td>Total</td><td></td><td align="right">\n');
-write_size(html, real_sum)
-html.write('</td><td align="right">\n');
-write_size(html, sum)
-html.write('</td><td align="right">%d' % (all_requests))
-html.write('</td></tr>\n');
+do_pie('countries', countries, accesses)
+do_pie('archs', archs, accesses)
+do_pie('repositories', repositories, accesses)
 
-html.write('</table>\n')
-end = time.clock()
-html.write('<p>Last updated: %s GMT' % time.strftime("%a, %d %b %Y %H:%M:%S",time.gmtime()))
-html.write(' (runtime %ss)</p>\n' % (end-start))
+do_html('countries', countries, accesses)
+do_html('archs', archs, accesses)
+do_html('repositories', repositories, accesses)
