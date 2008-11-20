@@ -162,7 +162,7 @@ def background(html, css_class, toggle):
 
 def do_html(prefix, dict, accesses):
 	html = open('%s%s-%d-%02d-%02d.txt' % (dest, prefix, y1, m1, d1), 'w')
-	html.write('<img src="%s-%d-%02d-%02d.png" border="0" alt="alt"/>\n' % (prefix, y1, m1, d1))
+	html.write('<img src="data/%s-%d-%02d-%02d.png" border="0" alt="alt"/>\n' % (prefix, y1, m1, d1))
 	html.write('<h2>Details</h2>\n')
 	html.write('<table class="altrows" align="center">\n')
 	html.write('<tr><th class="statusth">Mirror Name</th><th class="statusth">%</th>')
