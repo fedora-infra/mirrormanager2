@@ -164,7 +164,7 @@ def metalink(directory, file, hosts_and_urls):
     for (hostid, hcurls) in hosts_and_urls:
         for url in hcurls:
             protocol = url.split(':')[0]
-            doc += indent(4) + '<url protocol="%s" location="%s" preference="%s">' % (protocol, host_country_cache[hostid].upper(), preference)
+            doc += indent(4) + '<url type="%s" location="%s" preference="%s">' % (protocol, host_country_cache[hostid].upper(), preference)
             doc += url
             doc += '</url>\n'
         preference = max(preference-1, 1)
