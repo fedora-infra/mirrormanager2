@@ -7,3 +7,6 @@ this license.
 
 Files in the server/internet2/zebra_dump_parser/ directory are
 licensed under the GNU General Public License version 2.
+
+mirrorlist-server/mirrorlist_statistics.py is licensed under the GNU
+General Public License version 3.
