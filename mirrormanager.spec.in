@@ -62,7 +62,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/report_mirror
 %dir %{_sysconfdir}/%{name}-client
 %config(noreplace) %{_sysconfdir}/%{name}-client/report_mirror.conf
-%doc LICENSE
+%doc LICENSE-MIT-X11
 
 
 %changelog
