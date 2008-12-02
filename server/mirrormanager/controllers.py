@@ -1027,40 +1027,9 @@ class CountryContinentRedirectController(SimpleDbObjectController):
 
 class PublicListController(controllers.Controller):
 
-    def _has_up2date_dirs(self, host, category):
-        try:
-            hc = HostCategory.selectBy(host=host, category=category)[0]
-        except:
-            return False
-        found=False
-        for d in hc.dirs:
-            if d.up2date or hc.always_up2date:
-                found=True
-                break
-        return found
-
-    def _trim_hosts(self, hosts):
-        '''remove hosts who have no public categories or hcurls'''
-        orig_hosts = copy(hosts)
-        i=0
-        for h in orig_hosts:
-            i=i+1
-            found=False
-            for hc in h.categories:
-                if not hc.category.publiclist:
-                    continue
-                if len(h.category_urls(hc.category.name)) > 0:
-                    if self._has_up2date_dirs(h, hc.category):
-                        found=True
-                        break
-            if not found:
-                del hosts[i-1]
-        return hosts
-
     @expose(template="mirrormanager.templates.publiclist")
     def index(self, *vpath, **params):
-        hosts = hosts=[h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active()]
-        hosts = self._trim_hosts(hosts)
+        hosts = [Host.get(hostId[0]) for hostId in publiclist_hosts()]
 
         return dict(hosts=hosts, numhosts=len(hosts),
                     products=list(Product.select(orderBy='name')), title='', arches=display_publiclist_arches, product=None, ver=None, arch=None, valid_categories=None)
@@ -1085,8 +1054,7 @@ class PublicListController(controllers.Controller):
 
         hosts = []
         try:
-            hosts = [Host.get(hostId[0]) for hostId in publiclist_hosts(product, ver, arch)]
-            hosts = self._trim_hosts(hosts)
+            hosts = [Host.get(hostId[0]) for hostId in publiclist_hosts(productname=product, vername=ver, archname=arch)]
         except:
             pass
 
