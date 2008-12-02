@@ -66,6 +66,13 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon Dec  1 2008 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.7-1
+- Adrian Reber
+  add mirrorlist_statistics.py
+- Matt Domsch
+  fix metalinks, cleanup publiclist a bit, add s390x
+  cleanup license files
+
 * Mon Oct 13 2008 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.6-1
 - even more bugfixes
 
