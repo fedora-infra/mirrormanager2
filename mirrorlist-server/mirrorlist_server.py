@@ -133,7 +133,7 @@ def metalink(directory, file, hosts_and_urls):
     doc += ' xmlns:mm0="http://fedorahosted.org/mirrormanager"'
     doc += '>\n'
     doc += indent(1) + '<files>\n'
-    doc += indent(2) + '<file name="%s/%s">\n' % (directory, file)
+    doc += indent(2) + '<file name="%s">\n' % (file)
     y = detailslist[0]
 
     def details(y, indentlevel=2):
