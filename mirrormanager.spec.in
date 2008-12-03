@@ -66,6 +66,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Dec  2 2008 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.8-1
+- don't place metalink-downloaded files deep in a directory tree
+
 * Mon Dec  1 2008 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.7-1
 - Adrian Reber
   add mirrorlist_statistics.py
