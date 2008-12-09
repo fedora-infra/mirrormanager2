@@ -23,7 +23,10 @@
   <body py:match="item.tag=='{http://www.w3.org/1999/xhtml}body'" py:attrs="item.items()">
     <div id="wrapper">
     <div id="head">
-      <h1><a href="http://fedoraproject.org/" py:attrs="title=_('Fedora Project homepage')">Fedora</a></h1>
+      <h1><a py:attrs="{'title' : config.get('mirrormanager.projectname', 'Fedora') + _(' Project homepage'),
+                        'href' : config.get('mirrormanager.projectweb', 'http://fedoraproject.org')}">
+           ${tg.config('mirrormanager.projectname','Fedora')}</a>
+      </h1>
     </div>
     <div id="wrapper2">
       <div id="sidebar">
