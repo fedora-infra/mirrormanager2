@@ -443,11 +443,16 @@ def do_mirrorlist(kwargs):
     client_ip = kwargs['client_ip']
     clientCountry = gi.country_code_by_addr(client_ip)
 
+    if clientCountry is None:
+        print_client_country = "N/A"
+    else:
+        print_client_country = clientCountry
+
     if debug:
         if kwargs.has_key('repo') and kwargs.has_key('arch'):
             print ("IP: " + client_ip +
                    "; DATE: " + time.strftime("%Y-%m-%d") +
-                   "; COUNTRY: " + clientCountry + 
+                   "; COUNTRY: " + print_client_country + 
                    "; REPO: " + kwargs['repo'] + 
                    "; ARCH: " + kwargs['arch'])
 
@@ -455,7 +460,7 @@ def do_mirrorlist(kwargs):
         if kwargs.has_key('repo') and kwargs.has_key('arch'):
             logfile.write("IP: " + client_ip +
                           "; DATE: " + time.strftime("%Y-%m-%d") +
-                          "; COUNTRY: " + clientCountry +
+                          "; COUNTRY: " + print_client_country +
                           "; REPO: " + kwargs['repo'] +
                           "; ARCH: " + kwargs['arch'] + "\n")
             logfile.flush()
