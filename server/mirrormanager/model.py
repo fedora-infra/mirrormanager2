@@ -363,58 +363,48 @@ class Host(SQLObject):
                 hcd.up2date=False
                 hcd.sync()
 
-def _publiclist_hosts(product=None, re=None):
+def _publiclist_hosts(product, re=None):
+    productId = product.id
     sql = "SELECT DISTINCT host.id, host.country "
-    sql += "FROM category, host_category, host_category_dir, host_category_url, host, site "
+    sql += "FROM category, host_category, host_category_dir, host, site "
     # join conditions
     sql += "WHERE "
-    sql += "host_category.category_id = category.id "
-    sql += "AND host_category.host_id = host.id "
-    sql += "AND host_category_dir.host_category_id = host_category.id "
-    sql += "AND host_category_url.host_category_id = host_category.id "
-    sql += "AND host.site_id = site.id  "
-    if product is not None:
-        sql += "AND category.product_id = %s " % product.id
+    sql += "host_category.category_id = category.id AND "
+    sql += "host_category.host_id = host.id AND "
+    sql += "host_category_dir.host_category_id = host_category.id AND "
+    sql += "category.product_id = %s AND " % productId
+    sql += "host.site_id = site.id "
     # select conditions
     # up2date, active, not private
+    sql += 'AND (host_category_dir.up2date OR host_category.always_up2date) '
     sql += 'AND host.user_active AND site.user_active '
     sql += 'AND host.admin_active AND site.admin_active '
     sql += 'AND NOT host.private '
     sql += 'AND NOT site.private '
-    sql += 'AND host_category_dir.host_category_id IN '
-    sql += "( "
-    sql += " SELECT DISTINCT host_category_dir.host_category_id "
-    sql += " FROM host_category_dir, host_category "
-    sql += " WHERE (host_category.always_up2date OR host_category_dir.up2date) "
+
     if re is not None:
         sql += "AND host_category_dir.path ~ '%s' " % re
-    sql += ") "
     sql += "ORDER BY host.country "
 
-    dbobject = Directory.select()[0]
-    result = dbobject._connection.queryAll(sql)
+    result = product._connection.queryAll(sql)
     return result
 
 
 def publiclist_hosts(productname=None, vername=None, archname=None):
-    """ has a category of product, and an hcd that matches version """
-    product = None
-    if productname is not None:
+        """ has a category of product, and an hcd that matches version """
         try:
             product = Product.byName(productname)
         except SQLObjectNotFound:
             return []
+        if vername is not None and archname is not None:
+            desiredPath = '(^|/)%s/.*%s/' % (vername, archname)
+        elif vername is not None:
+            desiredPath = '(^|/)%s/' % vername
+        else:
+            desiredPath = None
 
-    if vername is not None and archname is not None:
-        desiredPath = '(^|/)%s/.*%s/' % (vername, archname)
-    elif vername is not None:
-        desiredPath = '(^|/)%s/' % vername
-    else:
-        desiredPath = None
-        
-    sqlresult = _publiclist_hosts(product=product, re=desiredPath)
-    print "publiclist_hosts(%s, %s %s), len(sqlresult) = %s" % (productname, vername, archname, len(sqlresult))
-    return sqlresult
+        sqlresult = _publiclist_hosts(product, desiredPath)
+        return sqlresult
 
 
 class HostAclIp(SQLObject):
