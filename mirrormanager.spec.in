@@ -5,7 +5,7 @@ Summary:        Fedora mirror management system
 BuildArch:      noarch
 
 Group:          Applications/Internet
-License:        MIT and GPLv2
+License:        MIT and GPLv2 and GPLv3
 URL:            http://fedorahosted.org/mirrormanager
 Source0:        https://fedorahosted.org/releases/m/i/%{name}/%{name}-%{version}.tar.bz2
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
@@ -54,7 +54,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}
 %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrorlist-server.conf
-%doc LICENSE LICENSES LICENSE_generate-worldmap
+%doc LICENSES LICENSE-MIT-X11 LICENSE-GPLv2 LICENSE-GPLv3
 %doc server/*.cfg
 
 %files client
@@ -62,10 +62,20 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/report_mirror
 %dir %{_sysconfdir}/%{name}-client
 %config(noreplace) %{_sysconfdir}/%{name}-client/report_mirror.conf
-%doc LICENSE
+%doc LICENSE-MIT-X11
 
 
 %changelog
+* Tue Dec  2 2008 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.8-1
+- don't place metalink-downloaded files deep in a directory tree
+
+* Mon Dec  1 2008 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.7-1
+- Adrian Reber
+  add mirrorlist_statistics.py
+- Matt Domsch
+  fix metalinks, cleanup publiclist a bit, add s390x
+  cleanup license files
+
 * Mon Oct 13 2008 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.6-1
 - even more bugfixes
 

@@ -133,7 +133,7 @@ def metalink(directory, file, hosts_and_urls):
     doc += ' xmlns:mm0="http://fedorahosted.org/mirrormanager"'
     doc += '>\n'
     doc += indent(1) + '<files>\n'
-    doc += indent(2) + '<file name="%s/%s">\n' % (directory, file)
+    doc += indent(2) + '<file name="%s">\n' % (file)
     y = detailslist[0]
 
     def details(y, indentlevel=2):
@@ -164,7 +164,12 @@ def metalink(directory, file, hosts_and_urls):
     for (hostid, hcurls) in hosts_and_urls:
         for url in hcurls:
             protocol = url.split(':')[0]
-            doc += indent(4) + '<url protocol="%s" location="%s" preference="%s">' % (protocol, host_country_cache[hostid].upper(), preference)
+            # FIXME January 2010
+            # adding protocol= here is not part of the Metalink 3.0 spec,
+            # but MirrorManager 1.2.6 used it accidentally, as did yum 3.2.20-3 as released
+            # in Fedora 8, 9, and 10.  After those three are EOL (~January 2010), the
+            # extra protocol= can be removed.
+            doc += indent(4) + '<url protocol="%s" type="%s" location="%s" preference="%s">' % (protocol, protocol, host_country_cache[hostid].upper(), preference)
             doc += url
             doc += '</url>\n'
         preference = max(preference-1, 1)

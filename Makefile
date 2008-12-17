@@ -1,7 +1,7 @@
-RELEASE_DATE := "13-Oct-2008"
+RELEASE_DATE := "2-Dec-2008"
 RELEASE_MAJOR := 1
 RELEASE_MINOR := 2
-RELEASE_EXTRALEVEL := .6
+RELEASE_EXTRALEVEL := .8
 RELEASE_NAME := mirrormanager
 RELEASE_VERSION := $(RELEASE_MAJOR).$(RELEASE_MINOR)$(RELEASE_EXTRALEVEL)
 RELEASE_STRING := $(RELEASE_NAME)-$(RELEASE_VERSION)
@@ -79,6 +79,7 @@ install-server:
 	install -m 0755	mirrorlist-server/mirrorlist_client.wsgi $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server
 	install -m 0644	mirrorlist-server/weighted_shuffle.py $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server
 	install -m 0755	mirrorlist-server/mirrorlist_server.py $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server
+	install -m 0755	mirrorlist-server/mirrorlist_statistics.py $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server
 	mkdir -p -m 0755 $(DESTDIR)/etc/httpd/conf.d
 	install -m 0644 mirrorlist-server/apache/mirrorlist-server.conf $(DESTDIR)/etc/httpd/conf.d
 # other junk
