@@ -692,6 +692,7 @@ def main():
     gi = GeoIP.new(GeoIP.GEOIP_STANDARD)
     read_caches()
     signal.signal(signal.SIGHUP, sighup_handler)
+    signal.signal(signal.SIGCHLD, signal.SIG_IGN)
     ss = ForkingUnixStreamServer(socketfile, MirrorlistHandler)
     ss.request_queue_size = 100
     ss.serve_forever()
