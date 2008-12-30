@@ -379,6 +379,10 @@ def do_mirrorlist(kwargs):
     cache = None
     if kwargs.has_key('path'):
         path = kwargs['path'].strip('/')
+
+	# Strip duplicate "//" from the path
+        path = path.replace('//', '/')
+
         header = "# path = %s " % (path)
 
         sdir = path.split('/')
