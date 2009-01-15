@@ -324,7 +324,7 @@ def add_host_to_cache(cache, hostid, hcurl):
         cache[hostid].append(hcurl)
     return cache
 
-def append_path(hosts, cache, file):
+def append_path(hosts, cache, file, pathIsDirectory=False):
     """ given a list of hosts, return a list of objects:
     [(hostid, [hcurls]), ... ]
     in the same order, appending file if it's not None"""
@@ -338,6 +338,8 @@ def append_path(hosts, cache, file):
             s = hcurl_cache[hcurl_id]
             if subpath is not None:
                 s += "/" + subpath
+            if file is None and pathIsDirectory:
+                s += "/"
             if file is not None:
                 s += "/" + file
             hcurls.append(s)
@@ -377,6 +379,7 @@ def do_mirrorlist(kwargs):
     
     file = None
     cache = None
+    pathIsDirectory = False
     if kwargs.has_key('path'):
         path = kwargs['path'].strip('/')
 
@@ -389,6 +392,7 @@ def do_mirrorlist(kwargs):
         try:
             # path was to a directory
             cache = mirrorlist_cache['/'.join(sdir)]
+            pathIsDirectory=True
         except KeyError:
             # path was to a file, try its directory
             file = sdir[-1]
@@ -412,6 +416,8 @@ def do_mirrorlist(kwargs):
             if 'metalink' in kwargs and kwargs['metalink']:
                 dir += '/repodata'
                 file = 'repomd.xml'
+            else:
+                pathIsDirectory=True
             cache = mirrorlist_cache[dir]
         except KeyError:
             repos = repo_arch_to_directoryname.keys()
@@ -508,7 +514,7 @@ def do_mirrorlist(kwargs):
     global_hosts      = shuffle(global_results)
 
     allhosts = uniqueify(netblock_hosts + internet2_hosts + country_hosts + geoip_hosts + continent_hosts + global_hosts)
-    hosts_and_urls = append_path(allhosts, cache, file)
+    hosts_and_urls = append_path(allhosts, cache, file, pathIsDirectory=pathIsDirectory)
 
     if 'metalink' in kwargs and kwargs['metalink']:
         (resulttype, returncode, results)=metalink(dir, file, hosts_and_urls)
