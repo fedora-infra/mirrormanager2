@@ -1,4 +1,5 @@
 #!/usr/bin/python
+__requires__ = 'TurboGears[future]'
 import pkg_resources
 pkg_resources.require("TurboGears")
 
