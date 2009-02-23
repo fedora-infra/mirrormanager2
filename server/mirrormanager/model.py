@@ -264,7 +264,7 @@ class Host(SQLObject):
                             is_up2date = compare_dir(hcdir, files)
                         except SQLObjectNotFound:
                             # database foulup
-                            print "ERROR: hcdir %s has no directory entry"
+                            #print "ERROR: hcdir %s has no directory entry"
                             continue
 
                         #fixme this is evil, but the compare_dir is failing
@@ -413,7 +413,6 @@ def publiclist_hosts(productname=None, vername=None, archname=None):
         desiredPath = None
         
     sqlresult = _publiclist_hosts(product=product, re=desiredPath)
-    print "publiclist_hosts(%s, %s %s), len(sqlresult) = %s" % (productname, vername, archname, len(sqlresult))
     return sqlresult
 
 
