@@ -66,6 +66,23 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon Feb 23 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.9-1
+- Adrian Reber:
+      mirrorlist-server: check values returned by geoip before printing
+      mirrorlist-server: ignore SIGCHLD to not have zombie processes
+      server: also use project name and URL from config file for publiclist
+      server: removed debug messages to decrease MM's verbosity
+      server: make it work with Fedora's 10 python version
+- Jeroen van Meeuwen:
+      Strip duplicate // from the path requested
+- Matt Domsch:
+      revert publiclist_host() changes from 6a056929007b9b6bdf35367818e1212895c5bdec
+         which weren't any faster and yet generated incorrect results.
+      add item to TODO
+      add push-mirroring doc
+      mirrorlist: add trailing / to returned URLs to directories.
+      Better handle Host creation form validation failure error case.
+
 * Tue Dec  2 2008 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.8-1
 - don't place metalink-downloaded files deep in a directory tree
 
