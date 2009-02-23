@@ -93,6 +93,9 @@ rm -rf $RPM_BUILD_ROOT
   fix metalinks, cleanup publiclist a bit, add s390x
   cleanup license files
 
+* Mon Dec 01 2008 Ignacio Vazquez-Abrams <ivazqueznet+rpm@gmail.com> - 1.2.6-2
+- Rebuild for Python 2.6
+
 * Mon Oct 13 2008 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.6-1
 - even more bugfixes
 
