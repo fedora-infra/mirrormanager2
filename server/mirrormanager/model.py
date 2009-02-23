@@ -403,15 +403,8 @@ def publiclist_hosts(productname=None, vername=None, archname=None):
         else:
             desiredPath = None
 
-    if vername is not None and archname is not None:
-        desiredPath = '(^|/)%s/.*%s/' % (vername, archname)
-    elif vername is not None:
-        desiredPath = '(^|/)%s/' % vername
-    else:
-        desiredPath = None
-        
-    sqlresult = _publiclist_hosts(product=product, re=desiredPath)
-    return sqlresult
+        sqlresult = _publiclist_hosts(product=product, re=desiredPath)
+        return sqlresult
 
 class HostAclIp(SQLObject):
     #class sqlmeta:
