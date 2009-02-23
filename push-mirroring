@@ -1,0 +1,78 @@
+There are 2 basic problems we have.
+
+1) when a bitflip happens, it can take a whole day before most mirrors
+   have picked up the bitflip, even if they have all the content.
+
+2) a "null rsync" - e.g. resyncing when you're already in sync, takes
+   15-20 minutes.  This is mostly due to the directory walk + stat()s
+   happening on the "upstream" mirrors, for each client connection.
+
+I'd like to solve both.
+
+Lots of ideas were thrown around, both on this list, and at FUDCon.
+They boil down to:
+
+Triggering has both "Push" and "Polling" as methods to know "hey, now
+would be a good time to run rsync".  I suspect we'll wind up
+implementing several.
+
+
+Triggers:
+* outbound SSH
+* outbound email
+* pushing a message via AMQP to a listener
+* IRC bot
+
+Polling:
+* full rsync (the default), which is bad to our servers, and is slow.
+* timestamp files?
+* rss feed?
+* clamav uses a DNS serial number mechanism the client polls
+
+
+What files changed?
+* store list of changed files on rsync servers itself.  This can be used by clients to request a subset of the tree.
+** how often to generate this file?  Generate multiple files?  Something with timestamps?
+
+Once you've figured out that "now is a good time to run rsync", what
+more can we do to speed things up?
+
+a) various kernel tunables to keep more NFS inodes and directory trees
+   in cache on the server.
+
+b) hack rsyncd to do the directory tree walk + stat()s, and cache it,
+   and then use the cache for each client rsync connect.  Refresh the
+   cache on occasion.  This avoids the full tree walk on each client connect.
+
+c) have a list of "files changed since
+   $(insert-some-time-interval-here)", and use rsync --files-from to
+   sync only those files that have changed.
+
+Jesse eluded to the "fullfilelist" file (part of c) above) he's
+working on, as that is really really simple to implement.  It's not a
+full solution, but it's a start.  He needs scripts on his side to
+update those files whenever content is changed on the master servers,
+and we want to distribute useful example scripts for mirror admins to
+run on their side to check that file, compare against the last time
+they downloaded it, to know if anything changed, and if so, rsync
+(either full or a subset).
+
+If done right, the fullfilelist can be used to know that nothing has
+changed, and using rsync to get that single file means it can be done
+very fast (thus more frequently), and we can avoid most of the "null
+rsyncs" completely.
+
+The "handle the bitflip" problem can also be solved using the rsync
+--files-from mechanism, only the looked-for file would list only the
+dir where the bitflip happens.  This could then be scheduled to run
+frequently on release day.
+
+If done well, then standard rsync polling will be just fine again.  If
+that doesn't prove viable, then we'll still wind up implementing some
+of the trigger methods.
+
+
+
+TBD:
+* Increase size of nfs_inode_cache? SteveD.
+* fscache?  dhowells.

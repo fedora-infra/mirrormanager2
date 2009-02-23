@@ -15,3 +15,8 @@
 * push mirroring.  Shell out to remote servers when content is changed on the master, to trigger them into syncing.
 
 * only repositories are using the ordered_mirrorlist field, not say iso/ directories.  Do we care?
+
+* repository redirects currently only match repo= for all arches.
+  dgilmore and the secondary arches could use the test to extend to
+  include arches too, so repo=fedora-9&arch=sparc would get directed
+  to repo=rawhide&arch=sparc, but other arches wouldn't.

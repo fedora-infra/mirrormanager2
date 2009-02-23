@@ -351,18 +351,26 @@ class HostController(controllers.Controller, identity.SecureResource, content):
     @expose(template="mirrormanager.templates.host")
     @validate(form=host_form)
     @error_handler()
-    def create(self, **kwargs):
+    def create(self, siteid=None, tg_errors=None, **kwargs):
         if not identity.in_group("sysadmin") and kwargs.has_key('admin_active'):
             del kwargs['admin_active']
-        site = Site.get(kwargs['siteid'])
-        del kwargs['siteid']
+        site = Site.get(siteid)
+        submit_action = turbogears.url("/host/0/create?siteid=%s" % site.id)
+        errordict = dict(form=host_form, values=None, action=submit_action, disabled_fields=self.disabled_fields(),
+                         title="Create Host", site=site)
+
+        # handle the validation error
+        if tg_errors:
+            errors = [(param,inv.msg,inv.value) for param, inv in
+                      tg_errors.items()]
+            turbogears.flash("Error: Failed to create Host: %s " % (errors))
+            return errordict
+
         try:
             host = Host(site=site, **kwargs)
         except: # probably sqlite IntegrityError but we can't catch that for some reason... 
             turbogears.flash("Error:Host %s already exists" % kwargs['name'])
-            submit_action = turbogears.url("/host/0/create?siteid=%s" % site.id)
-            return dict(form=host_form, values=None, action=submit_action, disabled_fields=self.disabled_fields(),
-                        title="Create Host", site=site)
+            return errordict
         
         
         turbogears.flash("Host created.")
