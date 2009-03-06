@@ -1,3 +1,8 @@
+* WSGIify start-mirrormanager.  Pretty simple, see
+  http://mmcgrath.fedorapeople.org/wsgi/ for examples.  Essentially,
+    application = cherrypy._cpwsgi.wsgiApp
+  and an apache config snippit to start it.
+
 * Let report_mirror work from behind an http proxy.  It presently
   doesn't try to connect to the proxy server.
   - httplib + libcurl please
