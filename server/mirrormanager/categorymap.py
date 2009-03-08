@@ -8,6 +8,7 @@ from IN import INT_MAX
 
 def categorymap(productname, vername):
     categories = []
+    categoriesToDrop = set()
     vernum = INT_MAX
     try:
         if u'development' in vername:
@@ -18,18 +19,25 @@ def categorymap(productname, vername):
             vernum = int(vername)
     except:
         pass
+
+    try:
+        product = Product.byName(productname)
+        categories = [c.name for c in product.categories]
+    except:
+        return []
+
     if productname == u'Fedora':
-        if vernum <= 6:
-            categories.append(u'Fedora Core')
-        if vernum >= 3 and vernum <= 6:
-            categories.append(u'Fedora Extras')
-        if vernum >= 7:
-            categories.append(u'Fedora Linux')
-    else:
+        if vernum < 3:
+            categoriesToDrop.add(u'Fedora Extras')
+        if vernum > 6:
+            c = (u'Fedora Core', u'Fedora Extras')
+            for e in c:
+                categoriesToDrop.add(e)
+                
+    for c in categoriesToDrop:
         try:
-            product = Product.byName(productname)
-            categories = [c.name for c in product.categories]
-        except:
-            return []
+            categories.remove(c)
+        except KeyError:
+            pass
 
     return categories
