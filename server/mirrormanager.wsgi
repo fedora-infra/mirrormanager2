@@ -5,6 +5,8 @@ pkg_resources.require("TurboGears")
 pkg_resources.require("CherryPy<3.0")
 
 import sys
+sys.stdout = sys.stderr
+sys.path.append('/usr/share/mirrormanager/server/')                 
 import turbogears
 import cherrypy
 import cherrypy._cpwsgi
@@ -22,7 +24,6 @@ for c in conffiles:
         turbogears.update_config(configfile=c, modulename="mirrormanager.config")
         break
 
-sys.path.append('/usr/share/mirrormanager/server/')                 
 import mirrormanager.controllers
 cherrypy.root = mirrormanager.controllers.Root()
 
