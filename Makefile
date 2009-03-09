@@ -69,8 +69,10 @@ install-server:
 	mkdir -p -m 0755 $(DESTDIR)/var/log/mirrormanager/crawler
 	mkdir -p -m 0755 $(DESTDIR)/var/lock/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/usr/share/mirrormanager
+	mkdir -p -m 0755 $(DESTDIR)/etc/httpd/conf.d
 # server/
 	cp -ra server/	 $(DESTDIR)/usr/share/mirrormanager
+	install -m 0644 server/apache/mirrormanager.conf $(DESTDIR)/etc/httpd/conf.d
 	rm $(DESTDIR)/usr/share/mirrormanager/server/logrotate.conf
 	rm $(DESTDIR)/usr/share/mirrormanager/server/*.cfg
 	rm $(DESTDIR)/usr/share/mirrormanager/server/*.in
@@ -80,7 +82,6 @@ install-server:
 	install -m 0644	mirrorlist-server/weighted_shuffle.py $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server
 	install -m 0755	mirrorlist-server/mirrorlist_server.py $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server
 	install -m 0755	mirrorlist-server/mirrorlist_statistics.py $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server
-	mkdir -p -m 0755 $(DESTDIR)/etc/httpd/conf.d
 	install -m 0644 mirrorlist-server/apache/mirrorlist-server.conf $(DESTDIR)/etc/httpd/conf.d
 # other junk
 	mkdir -p -m 0755 $(DESTDIR)/etc/logrotate.d
