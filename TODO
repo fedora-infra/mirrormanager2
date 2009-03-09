@@ -1,8 +1,3 @@
-* WSGIify start-mirrormanager.  Pretty simple, see
-  http://mmcgrath.fedorapeople.org/wsgi/ for examples.  Essentially,
-    application = cherrypy._cpwsgi.wsgiApp
-  and an apache config snippit to start it.
-
 * Let report_mirror work from behind an http proxy.  It presently
   doesn't try to connect to the proxy server.
   - httplib + libcurl please
@@ -14,8 +9,6 @@
   - done via separate directory trees (e.g. pub/fedora and pub/secondary) right now
 
 * per-repository source dir repositories, as secondary arches don't all use the main SRPMS dir :-(
-
-* primary/secondary arch distinction
 
 * push mirroring.  Shell out to remote servers when content is changed on the master, to trigger them into syncing.
 
