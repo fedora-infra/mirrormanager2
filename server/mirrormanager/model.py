@@ -258,19 +258,9 @@ class Host(SQLObject):
                     hcdir = HostCategoryDir.selectBy(host_category = hc, path=d)
                     if hcdir.count() > 0:
                         hcdir = hcdir[0]
-                        # don't store files, we don't need it right now
-                        # hcdir.files = None
-                        try:
-                            is_up2date = compare_dir(hcdir, files)
-                        except SQLObjectNotFound:
-                            # database foulup
-                            #print "ERROR: hcdir %s has no directory entry"
-                            continue
-
-                        #fixme this is evil, but the compare_dir is failing
+                        # this is evil, but it avoids stat()s on the client side and a lot of data uploading
                         is_up2date = True
-                        if is_up2date:
-                            marked_up2date += 1
+                        marked_up2date += 1
                         if hcdir.up2date != is_up2date:
                             hcdir.up2date = is_up2date
                             hcdir.sync()

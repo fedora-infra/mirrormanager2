@@ -50,35 +50,11 @@ def gen_dirtree(path):
     #   ...
     # }
     # 
+    # 2009-03-09: MM's web app ignores the statfiles dict.  So don't bother generating it.
 
     dirtree = {}
     for dirpath, dirnames, filenames in os.walk(path):
-
-        # trim filenames list
-        date_file_list = []
-        count=0
-        for name in filenames:
-            f = os.path.join(dirpath, name)
-            try:
-                s = os.stat(f)
-            except OSError:
-                continue
-            lastmod_date = time.localtime(s.st_mtime)
-            date_file_tuple = (lastmod_date, name, s.st_size)
-            date_file_list.append(date_file_tuple)
-            if name.endswith('.rpm') or name.endswith('.html') or name.endswith('.hdr'):
-                count=count+1
-            # we only want to remember the most recent 10 if they're
-            # directories full of .rpm or .html (repoview) files
-        if count > 10:
-            date_file_list.sort()
-            date_file_list.reverse()
-            date_file_list = date_file_list[:10]
-            
         statfiles = {}
-        for mtime, name, size in date_file_list:
-            statfiles[name] = size
-
         if path.endswith('/'):
             short_path = dirpath[len(path):]
         else:
