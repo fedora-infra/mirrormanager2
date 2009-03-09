@@ -22,6 +22,7 @@ for c in conffiles:
         turbogears.update_config(configfile=c, modulename="mirrormanager.config")
         break
 
+sys.path.append('/usr/share/mirrormanager/server/')                 
 import mirrormanager.controllers
 cherrypy.root = mirrormanager.controllers.Root()
 
