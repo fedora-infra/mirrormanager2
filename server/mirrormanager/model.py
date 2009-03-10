@@ -418,7 +418,7 @@ def _publiclist_sql_to_list(sqlresult):
         return l
 
 def _publiclist_hosts(directory, product=None, re=None):
-    sql = "SELECT DISTINCT host.id, host.country, host.name, host.bandwidth_int, host.comment, host.internet2, site.org_url, site.name, category.name, host_category_url.url "
+    sql = "SELECT host.id, host.country, host.name, host.bandwidth_int, host.comment, host.internet2, site.org_url, site.name, category.name, host_category_url.url "
     sql += "FROM category, host_category, host_category_dir, host, site, host_category_url "
     # join conditions
     sql += "WHERE "
