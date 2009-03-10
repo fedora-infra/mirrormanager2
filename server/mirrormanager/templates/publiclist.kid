@@ -31,7 +31,8 @@ if v.display_name is not None and v.display_name != '':
     <td></td><td><a href="${tg.url('/publiclist/' + p.name + '/' + v.name + '/')}">
       <strong py:content="display_name" /></a></td>
 	<td py:for="a in arches"><a href="${tg.url('/publiclist/' +
-	p.name + '/' + v.name + '/' + a + '/')}" py:content="a" /></td>
+	p.name + '/' + v.name + '/' + a + '/')}"
+	py:if="len(pvaMatrix.get_pva(p.name, v.name, a)) > 0" py:content="a" /></td>
   </tr>
   </span>
 </table>

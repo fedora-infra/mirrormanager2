@@ -17,7 +17,42 @@ from turbogears.database import PackageHub
 hub = PackageHub("mirrormanager")
 __connection__ = hub
 
-            
+class ProductVersionArchMatrix:
+    """ {product: {version: {arch: numhosts }}} """
+
+    def __init__(self):
+        self.data = {}
+
+    def set_pva(self, product, version, arch, value):
+        if product is None or version is None or arch is None:
+            return
+        if product not in self.data:
+            self.data[product] = {}
+        if version not in self.data[product]:
+            self.data[product][version] = {}
+        self.data[product][version][arch] = value
+
+
+    def get_pva(self, product, version, arch):
+        if product is None or version is None or arch is None:
+            return []
+        try:
+            result = self.data[product][version][arch]
+        except KeyError:
+            result = []
+        return result
+
+    def fill(self):
+        self.data = {}
+        for p in Product.select():
+            for v in p.versions:
+                for a in display_publiclist_arches:
+                    hosts = publiclist_hosts(productname=p.name, vername=v.name, archname=a)
+                    self.set_pva(p.name, v.name, a, hosts)
+
+
+pvaMatrix = ProductVersionArchMatrix()
+
 class SiteToSite(SQLObject):
     #class sqlmeta:
     #    cacheValues = False

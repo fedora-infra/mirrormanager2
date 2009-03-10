@@ -1038,7 +1038,9 @@ class PublicListController(controllers.Controller):
     @expose(template="mirrormanager.templates.publiclist")
     def index(self, *vpath, **params):
         hosts = publiclist_hosts()
-        return dict(hosts=hosts, numhosts=len(hosts),
+        pvaMatrix = ProductVersionArchMatrix()
+        pvaMatrix.fill()
+        return dict(hosts=hosts, numhosts=len(hosts), pvaMatrix=pvaMatrix,
                     products=list(Product.select(orderBy='name')), title='', arches=display_publiclist_arches, product=None, ver=None, arch=None, valid_categories=None)
 
     @expose(template="mirrormanager.templates.publiclist")
@@ -1059,14 +1061,11 @@ class PublicListController(controllers.Controller):
         else:
             raise redirect('/publiclist')
 
-        try:
-            hosts = publiclist_hosts(productname=product, vername=ver, archname=arch)
-        except:
-            hosts = {}
+        hosts = pvaMatrix.get_pva(product, ver, arch)
 
         valid_categories = categorymap(product, ver)
 
-        return dict(hosts=hosts, numhosts=len(hosts),
+        return dict(hosts=hosts, numhosts=len(hosts), pvaMatrix=pvaMatrix,
                     products=list(Product.select(orderBy='name')),
                     arches=display_publiclist_arches, title=title, product=product, ver=ver, arch=arch, valid_categories=valid_categories)
 
