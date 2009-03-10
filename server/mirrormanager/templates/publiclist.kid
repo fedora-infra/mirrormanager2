@@ -73,29 +73,20 @@ and development networks globally.
 <tr py:for="i,host in enumerate(hosts)"
     py:attrs="{'class': i%2 and 'odd' or 'even'}">
 <td><span py:if="host.country is not None" py:replace="host.country.upper()">Country</span></td>
-<td><a href="${host.site.orgUrl}"><span py:replace="host.site.name">Site Name</span></a></td>
+<td><a href="${host.site_url}"><span py:replace="host.site_name">Site Name</span></a></td>
 <td><span py:replace="host.name">Host Name</span></td>
 
 <td>
 <table>
-<tr py:for="hc in host.categories" py:if="hc.category.publiclist and (valid_categories is None or hc.category.name in valid_categories) and len(hc.urls) > 0">
-<td><span py:replace="hc.category.name">Category name</span></td>
 <?python
-http=None
-ftp=None
-rsync=None
-for u in hc.urls:
-    if not u.private:
-        if u.url.startswith('http:'):
-	    http=u.url
-        elif u.url.startswith('ftp:'):
-	    ftp=u.url
-        elif u.url.startswith('rsync:'):
-	    rsync=u.url
+   categories = host.categories.keys()
+   categories.sort()
 ?>
-<td><span py:if="http is not None"><a href="${http}">http</a></span></td>
-<td><span py:if="ftp is not None"><a href="${ftp}">ftp</a></span></td>
-<td><span py:if="rsync is not None"><a href="${rsync}">rsync</a></span></td>
+<tr py:for="hc in categories" py:if="(valid_categories is None or hc in valid_categories) and host.categories[hc].numurls > 0">
+<td><span py:replace="host.categories[hc].name">Category name</span></td>
+<td><span py:if="host.categories[hc].http_url is not None"><a href="${host.categories[hc].http_url}">http</a></span></td>
+<td><span py:if="host.categories[hc].ftp_url is not None"><a href="${host.categories[hc].ftp_url}">ftp</a></span></td>
+<td><span py:if="host.categories[hc].rsync_url is not None"><a href="${host.categories[hc].rsync_url}">rsync</a></span></td>
 </tr>
 </table>
 </td>

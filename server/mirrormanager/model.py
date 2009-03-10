@@ -353,16 +353,81 @@ class Host(SQLObject):
                 hcd.up2date=False
                 hcd.sync()
 
-def _publiclist_hosts(product, re=None):
-    productId = product.id
-    sql = "SELECT DISTINCT host.id, host.country "
-    sql += "FROM category, host_category, host_category_dir, host, site "
+
+class PubliclistHostCategory:
+    def __init__(self, name):
+        self.name          = name
+        self.http_url      = None
+        self.ftp_url       = None
+        self.rsync_url     = None
+
+
+    def numurls(self):
+        i=0
+        if self.http_url  is not None: i=i+1
+        if self.ftp_url   is not None: i=i+1
+        if self.rsync_url is not None: i=i+1
+        return i
+
+    def add_url(self, url):
+        if url.startswith('http:'):
+	    self.http_url = url
+        elif url.startswith('ftp:'):
+	    self.ftp_url = url
+        elif url.startswith('rsync:'):
+	    self.rsync_url = url
+
+class PubliclistHost:
+    def __init__(self, hostinfo):
+        self.id      = hostinfo[0]
+        self.country = hostinfo[1]
+        self.name    = hostinfo[2]
+        self.bandwidth_int = hostinfo[3]
+        self.comment = hostinfo[4]
+        self.internet2 = hostinfo[5]
+        self.site_url     = hostinfo[6]
+        self.site_name    = hostinfo[7]
+        self.categories   = {}
+
+    def __cmp__(self, other):
+        """comparison based on country, so we can sort()"""
+        return cmp(self.country, other)
+
+    def add_category(self, name, url):
+        if name in self.categories:
+            c = self.categories[name]
+        else:
+            c = PubliclistHostCategory(name)
+            self.categories[name] = c
+        c.add_url(url)
+
+
+def _publiclist_sql_to_list(sqlresult):
+        r = {}
+        for hostinfo in sqlresult:
+            if hostinfo[0] not in r:
+                r[hostinfo[0]] = PubliclistHost(hostinfo)
+            r[hostinfo[0]].add_category(hostinfo[8], hostinfo[9])
+
+        # turn the dict into a list
+        l = []
+        for k, v in r.iteritems():
+            l.append(v)
+        l.sort()
+        
+        return l
+
+def _publiclist_hosts(directory, product=None, re=None):
+    sql = "SELECT DISTINCT host.id, host.country, host.name, host.bandwidth_int, host.comment, host.internet2, site.org_url, site.name, category.name, host_category_url.url "
+    sql += "FROM category, host_category, host_category_dir, host, site, host_category_url "
     # join conditions
     sql += "WHERE "
     sql += "host_category.category_id = category.id AND "
     sql += "host_category.host_id = host.id AND "
     sql += "host_category_dir.host_category_id = host_category.id AND "
-    sql += "category.product_id = %s AND " % productId
+    sql += "host_category_url.host_category_id = host_category.id AND "
+    if product is not None:
+        sql += "category.product_id = %s AND " % product.id
     sql += "host.site_id = site.id "
     # select conditions
     # up2date, active, not private
@@ -371,21 +436,24 @@ def _publiclist_hosts(product, re=None):
     sql += 'AND host.admin_active AND site.admin_active '
     sql += 'AND NOT host.private '
     sql += 'AND NOT site.private '
+    sql += 'AND NOT host_category_url.private '
+    sql += 'AND category.publiclist '
 
     if re is not None:
         sql += "AND host_category_dir.path ~ '%s' " % re
-    sql += "ORDER BY host.country "
 
-    result = product._connection.queryAll(sql)
+    result = directory._connection.queryAll(sql)
     return result
-
 
 def publiclist_hosts(productname=None, vername=None, archname=None):
         """ has a category of product, and an hcd that matches version """
-        try:
-            product = Product.byName(productname)
-        except SQLObjectNotFound:
-            return []
+        
+        product = None
+        if productname is not None:
+            try:
+                product = Product.byName(productname)
+            except SQLObjectNotFound:
+                return []
         if vername is not None and archname is not None:
             desiredPath = '(^|/)%s/.*%s/' % (vername, archname)
         elif vername is not None:
@@ -393,8 +461,8 @@ def publiclist_hosts(productname=None, vername=None, archname=None):
         else:
             desiredPath = None
 
-        sqlresult = _publiclist_hosts(product=product, re=desiredPath)
-        return sqlresult
+        sqlresult = _publiclist_hosts(Directory.select()[0], product=product, re=desiredPath)
+        return _publiclist_sql_to_list(sqlresult)
 
 class HostAclIp(SQLObject):
     #class sqlmeta:
@@ -461,7 +529,7 @@ class Arch(SQLObject):
     name = UnicodeCol(alternateID=True)
 
 primary_arches = ['i386','x86_64','ppc']
-display_publiclist_arches = primary_arches + ['ia64', 'sparc', 's390x']
+display_publiclist_arches = primary_arches + ['ia64', 'sparc', 's390x', 'arm']
 
 # e.g. 'fedora' and 'epel'
 class Product(SQLObject):

@@ -1037,8 +1037,7 @@ class PublicListController(controllers.Controller):
 
     @expose(template="mirrormanager.templates.publiclist")
     def index(self, *vpath, **params):
-        hosts = [h for h in Host.select(orderBy='country') if not h.is_private() and h.is_active()]
-
+        hosts = publiclist_hosts()
         return dict(hosts=hosts, numhosts=len(hosts),
                     products=list(Product.select(orderBy='name')), title='', arches=display_publiclist_arches, product=None, ver=None, arch=None, valid_categories=None)
 
@@ -1060,11 +1059,10 @@ class PublicListController(controllers.Controller):
         else:
             raise redirect('/publiclist')
 
-        hosts = []
         try:
-            hosts = [Host.get(hostId[0]) for hostId in publiclist_hosts(productname=product, vername=ver, archname=arch)]
+            hosts = publiclist_hosts(productname=product, vername=ver, archname=arch)
         except:
-            pass
+            hosts = {}
 
         valid_categories = categorymap(product, ver)
 
