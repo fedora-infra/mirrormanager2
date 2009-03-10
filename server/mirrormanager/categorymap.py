@@ -10,15 +10,16 @@ def categorymap(productname, vername):
     categories = []
     categoriesToDrop = set()
     vernum = INT_MAX
-    try:
-        if u'development' in vername:
-            vernum = INT_MAX
-        elif '.' in vername:
-            vernum = int(ceil(float(vername)))
-        else:
-            vernum = int(vername)
-    except:
-        pass
+    if vername is not None:
+        try:
+            if u'development' in vername:
+                vernum = INT_MAX
+            elif '.' in vername:
+                vernum = int(ceil(float(vername)))
+            else:
+                vernum = int(vername)
+        except:
+            pass
 
     try:
         product = Product.byName(productname)
@@ -26,7 +27,7 @@ def categorymap(productname, vername):
     except:
         return []
 
-    if productname == u'Fedora':
+    if productname == u'Fedora' and vername is not None:
         if vernum < 3:
             categoriesToDrop.add(u'Fedora Extras')
         if vernum > 6:
