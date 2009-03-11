@@ -1,0 +1,209 @@
+#!/usr/bin/python
+__requires__ = 'TurboGears[future]'
+import pkg_resources
+pkg_resources.require("TurboGears")
+
+from sqlobject import *
+import sys, os, string, errno
+import turbogears
+import turbogears.util as tg_util
+from turbogears import view, database, errorhandling, config
+from itertools import izip
+from inspect import isclass
+from turbogears.view import engines
+from optparse import OptionParser
+from mirrormanager.model import *
+from mirrormanager.categorymap import categorymap
+
+from turbogears.database import PackageHub
+hub = __connection__ = None
+
+def _process_output(output, template, format, engine):
+    """Produces final output form from the data returned from a
+    controller method.
+
+    @param format: format of desired output (html or json)
+    @param output: the output returned by the controller
+    @param template: HTML template to use
+    @param engine: output engine to use e.g. kid
+
+    Written for Smolt, used by permission.
+    """
+
+    if isinstance(output, dict):
+        from turbogears.widgets import js_location
+
+        css = tg_util.setlike()
+        js = dict(izip(js_location, iter(tg_util.setlike, None)))
+        include_widgets = {}
+        include_widgets_lst = config.get("tg.include_widgets", [])
+
+        for i in include_widgets_lst:
+            widget = tg_util.load_class(i)
+            if isclass(widget):
+                widget = widget()
+            include_widgets["tg_%s" % i.split(".")[-1]] = widget
+            for script in widget.retrieve_javascript():
+                if hasattr(script, "location"):
+                    js[script.location].add(script)
+                else:
+                    js[js_location.head].add(script)
+            css.add_all(widget.retrieve_css())
+
+        for value in output.itervalues():
+            if hasattr(value, "retrieve_css"):
+                retrieve = getattr(value, "retrieve_css")
+                if callable(retrieve):
+                    css.add_all(value.retrieve_css())
+            if hasattr(value, "retrieve_javascript"):
+                retrieve = getattr(value, "retrieve_javascript")
+                if callable(retrieve):
+                    for script in value.retrieve_javascript():
+                        if hasattr(script, "location"):
+                            js[script.location].add(script)
+                        else:
+                            js[js_location.head].add(script)
+        output.update(include_widgets)
+        output["tg_css"] = css
+
+        for l in iter(js_location):
+            output["tg_js_%s" % str(l)] = js[l]
+
+        output["tg_flash"] = output.get("tg_flash")
+
+        return engine.render(output, format=format, template=template)
+
+class ProductVersionArchMatrix:
+    """ {product: {version: {arch: [hosts] }}} """
+
+    def __init__(self):
+        self.data = {}
+
+    def set_pva(self, product, version, arch, value):
+        if product is None or version is None or arch is None:
+            return
+        if product not in self.data:
+            self.data[product] = {}
+        if version not in self.data[product]:
+            self.data[product][version] = {}
+        self.data[product][version][arch] = value
+
+
+    def get_pva(self, product, version, arch):
+        if product is None or version is None or arch is None:
+            raise KeyError
+        try:
+            result = self.data[product][version][arch]
+        except KeyError:
+            result = []
+        return result
+
+    def fill(self):
+        self.data = {}
+        for p in Product.select():
+            for v in p.versions:
+                if not v.display:
+                    continue
+                for a in display_publiclist_arches:
+                    hosts = publiclist_hosts(productname=p.name, vername=v.name, archname=a)
+                    self.set_pva(p.name, v.name, a, hosts)
+                    print "filled %s/%s/%s with %s hosts" % (p.name, v.name, a, len(hosts))
+
+
+
+def make_pva(productname=None, vername=None, archname=None):
+    if productname is None and vername is None and archname is None:
+        return ''
+    elif vername is None and archname is None:
+        return productname
+    elif archname is None:
+        return "%s/%s" % (productname, vername)
+    return "%s/%s/%s" % (productname, vername, archname)
+
+def generate_all():
+    turbogears.view.load_engines()
+    engine = engines.get('kid', None)
+    pvaMatrix = ProductVersionArchMatrix()
+    pvaMatrix.fill()
+
+    generate_one_html(engine, pvaMatrix)
+    for p in Product.select():
+        generate_one_html(engine, pvaMatrix, productname=p.name)
+        
+        for v in p.versions:
+            if not v.display:
+                continue
+            generate_one_html(engine, pvaMatrix, productname=p.name, vername=v.name)
+
+            for a in display_publiclist_arches:
+                generate_one_html(engine, pvaMatrix, productname=p.name, vername=v.name, archname=a)
+
+
+def generate_one_html(engine, pvaMatrix, productname=None, vername=None, archname=None):
+
+    valid_categories = categorymap(productname, vername)
+    pva = make_pva(productname, vername, archname)
+    print "making %s" % pva
+    title = "%s %s Public Active Mirrors" % (config.get('mirrormanager.projectname','Fedora'),
+                                             pva)
+
+    output_dir = os.path.join(options.output, pva)
+    try:
+        os.makedirs(output_dir)
+    except OSError, e:
+        if e.errno != errno.EEXIST:
+            raise
+
+    try:
+        hosts = pvaMatrix.get_pva(productname, vername, archname)
+    except KeyError:
+        hosts = publiclist_hosts(productname=productname, vername=vername, archname=archname)
+
+    
+    template_data = dict(title=title, hosts=hosts, numhosts=len(hosts), pvaMatrix=pvaMatrix,
+                         pva=pva,
+                         products=list(Product.select(orderBy='name')),
+                         arches=display_publiclist_arches,
+                         valid_categories=valid_categories)
+
+    t=engine.load_template('mirrormanager.templates.publiclist')
+    out_html = _process_output(template_data, template=t, format='html', engine=engine)
+
+    fname = "index.html"
+    f = open(os.path.join(output_dir, fname), "w")
+    f.write(out_html)
+    f.close()
+
+
+
+
+options=None
+
+def main():
+    global options
+    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option("-c", "--config",
+                      dest="config", default='dev.cfg',
+                      help="TurboGears config file to use")
+
+    parser.add_option("-o", "--output",
+                      metavar="FILE", dest="output", action="store", type="string", help="write output to FILE")
+
+    (options, args) = parser.parse_args()
+    if options.output is None:
+        parser.print_help()
+        sys.exit(1)
+
+    turbogears.update_config(configfile=options.config,
+                             modulename="mirrormanager.config")
+    global hub
+    global __connection__
+    hub = PackageHub("mirrormanager")
+    __connection__ = hub
+    
+    generate_all()
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+        

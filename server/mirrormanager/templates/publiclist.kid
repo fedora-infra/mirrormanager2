@@ -4,7 +4,7 @@
     py:extends="'static.kid'">
 <head>
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
-<title>${tg.config('mirrormanager.projectname','Fedora')} Public Active Mirrors</title>
+<title>${title}</title>
 
 </head>
 <body>
@@ -38,7 +38,7 @@ if v.display_name is not None and v.display_name != '':
 </table>
 </div>
 
-<h1 class="icon48 download">${tg.config('mirrormanager.projectname','Fedora')} Public Active Mirrors</h1>
+<h1 class="icon48 download">${title}</h1>
 
 <p>
 ${tg.config('mirrormanager.projectname','Fedora')} is distributed to millions of systems globally.  This would not
@@ -65,7 +65,7 @@ and development networks globally.
 
 <div class="keepleft">
 
-<h2 class="icon24 download" style="clear: both;">${title} Public Active Mirrors (${numhosts})</h2>
+<h2 class="icon24 download" style="clear: both;">${pva} Public Active Mirrors (${numhosts})</h2>
 
 <p py:if="len(hosts) == 0">There are no mirrors matching your your search criteria.</p>
 

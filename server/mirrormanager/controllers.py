@@ -1033,42 +1033,6 @@ class CountryContinentRedirectController(SimpleDbObjectController):
         return SimpleDbObjectController.update(self, obj, **kwargs)
 
 
-class PublicListController(controllers.Controller):
-
-    @expose(template="mirrormanager.templates.publiclist")
-    def index(self, *vpath, **params):
-        hosts = publiclist_hosts()
-        pvaMatrix = ProductVersionArchMatrix()
-        pvaMatrix.fill()
-        return dict(hosts=hosts, numhosts=len(hosts), pvaMatrix=pvaMatrix,
-                    products=list(Product.select(orderBy='name')), title='', arches=display_publiclist_arches, product=None, ver=None, arch=None, valid_categories=None)
-
-    @expose(template="mirrormanager.templates.publiclist")
-    def default(self, *vpath, **params):
-        product = ver = arch = None
-        if len(vpath) == 1:
-            product = vpath[0]
-            title=product
-        elif len(vpath) == 2:
-            product = vpath[0]
-            ver = vpath[1]
-            title = '%s/%s' % (product, ver)
-        elif len(vpath) == 3:
-            product = vpath[0]
-            ver = vpath[1]
-            arch = vpath[2]
-            title = '%s/%s/%s' % (product, ver, arch)
-        else:
-            raise redirect('/publiclist')
-
-        hosts = pvaMatrix.get_pva(product, ver, arch)
-
-        valid_categories = categorymap(product, ver)
-
-        return dict(hosts=hosts, numhosts=len(hosts), pvaMatrix=pvaMatrix,
-                    products=list(Product.select(orderBy='name')),
-                    arches=display_publiclist_arches, title=title, product=product, ver=ver, arch=arch, valid_categories=valid_categories)
-
 
 
 class Root(controllers.RootController):
@@ -1088,7 +1052,6 @@ class Root(controllers.RootController):
     repository = RepositoryController()
     from mirrormanager.xmlrpc import XmlrpcController
     xmlrpc = XmlrpcController()
-    publiclist = PublicListController()
     
     @expose(template="mirrormanager.templates.welcome")
     @identity.require(identity.not_anonymous())

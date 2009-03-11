@@ -8,10 +8,7 @@ temp_dir_name=`mktemp -d /tmp/mirrorlists.XXXXXX`
 trap "rm -rf $temp_dir_name" QUIT TERM INT HUP EXIT
 
 pushd $temp_dir_name > /dev/null 2>&1
-# don't use --mirror because it turns on timestamping, which causes
-# an extra HEAD request for each page, which to cherrypy just causes
-# twice as many database lookups.
-wget -nH --cut-dirs=1 -r -l inf --no-remove-listing http://localhost/mirrormanager/publiclist
+/usr/share/mirrormanager/server/generate-publiclist -c /etc/mirrormanager/prod.cfg -o ${temp_dir_name}/publiclist
 
 if [ $(find . -type f -name \*.html | wc -l) -lt 5 ]; then
     # touch the existing files so our proxy caches refresh
