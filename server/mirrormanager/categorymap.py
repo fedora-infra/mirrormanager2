@@ -9,6 +9,10 @@ from IN import INT_MAX
 def categorymap(productname, vername):
     categories = []
     categoriesToDrop = set()
+
+    if productname is None: # want all categories
+        return [c.name for c in Category.select()]
+
     vernum = INT_MAX
     if vername is not None:
         try:
@@ -25,6 +29,7 @@ def categorymap(productname, vername):
         product = Product.byName(productname)
         categories = [c.name for c in product.categories]
     except:
+        # given an unknown product name, therefore no categories
         return []
 
     if productname == u'Fedora' and vername is not None:
