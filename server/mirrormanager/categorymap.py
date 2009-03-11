@@ -2,7 +2,7 @@
 # e.g. Fedora Extras doesn't exist for Fedora <= 3.
 # and Fedora Core and Fedora Extras don't exist for Fedora >= 7.
 
-from mirrormanager.model import *
+import mirrormanager.model
 from math import ceil
 from IN import INT_MAX
 
@@ -11,7 +11,7 @@ def categorymap(productname, vername):
     categoriesToDrop = set()
 
     if productname is None: # want all categories
-        return [c.name for c in Category.select()]
+        return [c.name for c in mirrormanager.model.Category.select()]
 
     vernum = INT_MAX
     if vername is not None:
@@ -26,7 +26,7 @@ def categorymap(productname, vername):
             pass
 
     try:
-        product = Product.byName(productname)
+        product = mirrormanager.model.Product.byName(productname)
         categories = [c.name for c in product.categories]
     except:
         # given an unknown product name, therefore no categories

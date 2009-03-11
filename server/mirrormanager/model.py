@@ -9,6 +9,7 @@ from string import rstrip, strip
 import re
 import IPy
 from mirrormanager.lib import uniqueify
+from mirrormanager.categorymap import categorymap
 IPy.check_addr_prefixlen = 0
 
 from turbogears.database import PackageHub
@@ -408,21 +409,28 @@ class PubliclistHost:
 
 
 def _publiclist_sql_to_list(sqlresult, valid_categories):
-        r = {}
-        for hostinfo in sqlresult:
-            if hostinfo[0] not in r:
-                r[hostinfo[0]] = PubliclistHost(hostinfo)
-            r[hostinfo[0]].add_category(hostinfo[8], hostinfo[9])
+        hosts = {}
+        for info in sqlresult:
+            if info[0] not in hosts:
+                hosts[info[0]] = PubliclistHost(info)
+            hosts[info[0]].add_category(info[8], info[9])
+
+        hkeys = hosts.keys()
+        for h in hkeys:
+            hosts[h].trim_categories(valid_categories)
+            ckeys = hosts[h].categories.keys()
+            for c in ckeys:
+                if hosts[h].categories[c].numurls() == 0:
+                    del hosts[h].categories[c]
+
+            if len(hosts[h].categories) == 0:
+                del hosts[h]
 
         # turn the dict into a list
         l = []
-        for k, v in r.iteritems():
+        for k, v in hosts.iteritems():
             l.append(v)
         l.sort()
-
-        for h in l:
-            h.trim_categories(valid_categories)
-        
         return l
 
 def _publiclist_hosts(directory, product=None, re=None):
@@ -453,7 +461,7 @@ def _publiclist_hosts(directory, product=None, re=None):
     result = directory._connection.queryAll(sql)
     return result
 
-def publiclist_hosts(productname=None, vername=None, archname=None, valid_categories=None):
+def publiclist_hosts(productname=None, vername=None, archname=None):
         """ has a category of product, and an hcd that matches version """
         
         product = None
@@ -470,6 +478,7 @@ def publiclist_hosts(productname=None, vername=None, archname=None, valid_catego
             desiredPath = None
 
         sqlresult = _publiclist_hosts(Directory.select()[0], product=product, re=desiredPath)
+        valid_categories = categorymap(productname, vername)
         return _publiclist_sql_to_list(sqlresult, valid_categories)
 
 class HostAclIp(SQLObject):

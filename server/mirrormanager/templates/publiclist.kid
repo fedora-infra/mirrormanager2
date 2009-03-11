@@ -83,7 +83,7 @@ and development networks globally.
    categories = host.categories.keys()
    categories.sort()
 ?>
-<tr py:for="hc in categories" py:if="(valid_categories is None or hc in valid_categories) and host.categories[hc].numurls > 0">
+<tr py:for="hc in categories">
 <td><span py:replace="host.categories[hc].name">Category name</span></td>
 <td><span py:if="host.categories[hc].http_url is not None"><a href="${host.categories[hc].http_url}">http</a></span></td>
 <td><span py:if="host.categories[hc].ftp_url is not None"><a href="${host.categories[hc].ftp_url}">ftp</a></span></td>

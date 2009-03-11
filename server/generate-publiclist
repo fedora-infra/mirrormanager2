@@ -106,7 +106,7 @@ class ProductVersionArchMatrix:
                     continue
                 for a in display_publiclist_arches:
                     valid_categories = categorymap(p.name, v.name)
-                    hosts = publiclist_hosts(productname=p.name, vername=v.name, archname=a, valid_categories=valid_categories)
+                    hosts = publiclist_hosts(productname=p.name, vername=v.name, archname=a)
                     self.set_pva(p.name, v.name, a, hosts)
                     print "filled %s/%s/%s with %s hosts" % (p.name, v.name, a, len(hosts))
 
@@ -142,7 +142,6 @@ def generate_all():
 
 def generate_one_html(engine, pvaMatrix, productname=None, vername=None, archname=None):
 
-    valid_categories = categorymap(productname, vername)
     pva = make_pva(productname, vername, archname)
     print "making %s" % pva
     title = "%s %s Public Active Mirrors" % (config.get('mirrormanager.projectname','Fedora'),
@@ -158,7 +157,7 @@ def generate_one_html(engine, pvaMatrix, productname=None, vername=None, archnam
     try:
         hosts = pvaMatrix.get_pva(productname, vername, archname)
     except KeyError:
-        hosts = publiclist_hosts(productname=productname, vername=vername, archname=archname, valid_categories=valid_categories)
+        hosts = publiclist_hosts(productname=productname, vername=vername, archname=archname)
 
     template_data = dict(title=title, hosts=hosts, numhosts=len(hosts), pvaMatrix=pvaMatrix,
                          pva=pva,

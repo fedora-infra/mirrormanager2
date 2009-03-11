@@ -19,8 +19,6 @@ from mirrormanager.model import *
 from mirrormanager.lib import createErrorString
 import IPy
 IPy.check_addr_prefixlen = 0
-from mirrormanager.categorymap import categorymap
-
 
 log = logging.getLogger("mirrormanager.controllers")
 
