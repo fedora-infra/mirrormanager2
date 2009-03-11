@@ -400,8 +400,14 @@ class PubliclistHost:
             self.categories[name] = c
         c.add_url(url)
 
+    def trim_categories(self, keepcategories):
+        k = self.categories.keys()
+        for c in k:
+            if c not in keepcategories:
+                del self.categories[c]
 
-def _publiclist_sql_to_list(sqlresult):
+
+def _publiclist_sql_to_list(sqlresult, valid_categories):
         r = {}
         for hostinfo in sqlresult:
             if hostinfo[0] not in r:
@@ -413,6 +419,9 @@ def _publiclist_sql_to_list(sqlresult):
         for k, v in r.iteritems():
             l.append(v)
         l.sort()
+
+        for h in l:
+            h.trim_categories(valid_categories)
         
         return l
 
@@ -444,7 +453,7 @@ def _publiclist_hosts(directory, product=None, re=None):
     result = directory._connection.queryAll(sql)
     return result
 
-def publiclist_hosts(productname=None, vername=None, archname=None):
+def publiclist_hosts(productname=None, vername=None, archname=None, valid_categories=None):
         """ has a category of product, and an hcd that matches version """
         
         product = None
@@ -461,7 +470,7 @@ def publiclist_hosts(productname=None, vername=None, archname=None):
             desiredPath = None
 
         sqlresult = _publiclist_hosts(Directory.select()[0], product=product, re=desiredPath)
-        return _publiclist_sql_to_list(sqlresult)
+        return _publiclist_sql_to_list(sqlresult, valid_categories)
 
 class HostAclIp(SQLObject):
     #class sqlmeta:

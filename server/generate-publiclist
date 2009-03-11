@@ -105,7 +105,8 @@ class ProductVersionArchMatrix:
                 if not v.display:
                     continue
                 for a in display_publiclist_arches:
-                    hosts = publiclist_hosts(productname=p.name, vername=v.name, archname=a)
+                    valid_categories = categorymap(p.name, v.name)
+                    hosts = publiclist_hosts(productname=p.name, vername=v.name, archname=a, valid_categories=valid_categories)
                     self.set_pva(p.name, v.name, a, hosts)
                     print "filled %s/%s/%s with %s hosts" % (p.name, v.name, a, len(hosts))
 
@@ -157,9 +158,8 @@ def generate_one_html(engine, pvaMatrix, productname=None, vername=None, archnam
     try:
         hosts = pvaMatrix.get_pva(productname, vername, archname)
     except KeyError:
-        hosts = publiclist_hosts(productname=productname, vername=vername, archname=archname)
+        hosts = publiclist_hosts(productname=productname, vername=vername, archname=archname, valid_categories=valid_categories)
 
-    
     template_data = dict(title=title, hosts=hosts, numhosts=len(hosts), pvaMatrix=pvaMatrix,
                          pva=pva,
                          products=list(Product.select(orderBy='name')),
