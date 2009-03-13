@@ -256,7 +256,7 @@ def make_one_directory(line, category, path, category_directories):
             
     return dname, category_directories
 
-def add_file_to_directory(line, dname, path, category_directories):
+def add_file_to_directory(line, path, category_directories):
     perm, size, date, time, filepath = line.split()
     year, month, day = date.split('/')
     hour, minute, second = time.split(':')
@@ -330,7 +330,7 @@ def parse_rsync_listing(cname, f):
             else:
                 dname, category_directories = make_one_directory(line, category, category.topdir.name, category_directories)
         else:
-            add_file_to_directory(line, dname, category.topdir.name, category_directories)
+            add_file_to_directory(line, category.topdir.name, category_directories)
     sync_category_directories(category, category_directories)
 
 
