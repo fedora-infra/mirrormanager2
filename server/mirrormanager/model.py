@@ -544,9 +544,11 @@ class HostStats(SQLObject):
 
 class Arch(SQLObject):
     name = UnicodeCol(alternateID=True)
+    publiclist = BoolCol(default=True)
+    primary = BoolCol(default=True)
 
-primary_arches = ['i386','x86_64','ppc']
-display_publiclist_arches = primary_arches + ['ia64', 'sparc', 's390x', 'arm']
+def publiclist_arches():
+    return [a for a in Arch.select() if a.publiclist]
 
 # e.g. 'fedora' and 'epel'
 class Product(SQLObject):
