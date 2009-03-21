@@ -5,9 +5,10 @@ from mirrormanager.model import *
 def update():
     Arch.sqlmeta.addColumn(BoolCol('publiclist', default=True), updateSchema=True)
     Arch.sqlmeta.addColumn(BoolCol('primary', default=True), updateSchema=True)
+    primary = ('i386', 'x86_64', 'ppc')
     for a in Arch.select():
-        a.publiclist = True
-        a.primary = True
+        a.publiclist = (a.name != 'source')
+        a.primary = (a.name in primary)
         a.sync()
     Arch.sqlmeta.delColumn('idx')
     Arch.sqlmeta.addColumn(DatabaseIndex('fromRepo', 'toRepo', 'fromArch', 'toArch', dbName='idx', unique=True)
