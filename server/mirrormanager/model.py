@@ -666,9 +666,7 @@ class RepositoryRedirect(SQLObject):
     """ Uses strings to allow for effective named aliases, and for repos that may not exist yet """
     fromRepo = UnicodeCol(alternateID=True)
     toRepo = UnicodeCol(default=None)
-    fromArch = ForeignKey('Arch', default=None)
-    toArch = ForeignKey('Arch', default=None)
-    idx = DatabaseIndex('fromRepo', 'toRepo', 'fromArch', 'toArch', unique=True)
+    idx = DatabaseIndex('fromRepo', 'toRepo', unique=True)
 
 class CountryContinentRedirect(SQLObject):
     country = UnicodeCol(alternateID=True, notNone=True)
