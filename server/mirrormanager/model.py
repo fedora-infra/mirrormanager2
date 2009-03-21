@@ -659,6 +659,8 @@ class FileDetail(SQLObject):
     size = BigIntCol(default=None)
     sha1 = UnicodeCol(default=None)
     md5 = UnicodeCol(default=None)
+    sha256 = UnicodeCol(default=None)
+    sha512 = UnicodeCol(default=None)
 
 class RepositoryRedirect(SQLObject):
     """ Uses strings to allow for effective named aliases, and for repos that may not exist yet """

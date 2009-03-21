@@ -11,10 +11,9 @@ from mirrormanager.repomap import *
 from mirrormanager.lib import manage_pidfile, remove_pidfile
 import re
 import glob
-import sha as shamod
-import md5 as md5mod
 import yum.repoMDObject
 import datetime
+import hashlib
 from turbogears import config
 
 rootdir='/'
@@ -143,13 +142,21 @@ def make_file_details_from_checksums(dir):
 
     sha1_globs = ['*.sha1sum', 'SHA1SUM']
     md5_globs = ['*.md5sum', 'MD5SUM']
+    sha256_globs = ['*.sha256sum', 'SHA256SUM']
+    sha512_globs = ['*.sha512sum', 'SHA512SUM']
     md5dict = _checksums_from_globs(dir.name, md5_globs)
     sha1dict = _checksums_from_globs(dir.name, sha1_globs)
+    sha256dict = _checksums_from_globs(dir.name, sha256_globs)
+    sha512dict = _checksums_from_globs(dir.name, sha512_globs)
 
     files = set()
     for k in md5dict.keys():
         files.add(k)
     for k in sha1dict.keys():
+        files.add(k)
+    for k in sha256dict.keys():
+        files.add(k)
+    for k in sha512dict.keys():
         files.add(k)
 
     for f in files:
@@ -160,12 +167,16 @@ def make_file_details_from_checksums(dir):
             continue
         sha1 = sha1dict.get(f)
         md5  = md5dict.get(f)
+        sha256  = sha256dict.get(f)
+        sha512  = sha512dict.get(f)
         size = s.st_size
         mtime = s.st_mtime
         try:
-            fd = FileDetail.selectBy(directory=dir, filename=f, sha1=sha1, md5=md5, size=size, timestamp=mtime)[0]
+            fd = FileDetail.selectBy(directory=dir, filename=f, sha1=sha1, md5=md5, sha256=sha256, sha512=sha512,
+                                     size=size, timestamp=mtime)[0]
         except IndexError:
-            fd = FileDetail(directory=dir, filename=f, sha1=sha1, md5=md5, timestamp=mtime, size=size)
+            fd = FileDetail(directory=dir, filename=f, sha1=sha1, md5=md5, sha256=sha256, sha512=sha512,
+                            timestamp=mtime, size=size)
     
 
 def make_repomd_file_details(dir):
@@ -180,8 +191,10 @@ def make_repomd_file_details(dir):
     except:
         return
     size = len(repomd)
-    sha1 = shamod.new(repomd).hexdigest()
-    md5 = md5mod.new(repomd).hexdigest()
+    md5 = hashlib.md5(repomd).hexdigest()
+    sha1 = hashlib.sha1(repomd).hexdigest()
+    sha256 = hashlib.sha256(repomd).hexdigest()
+    sha512 = hashlib.sha512(repomd).hexdigest()
 
     yumrepo = yum.repoMDObject.RepoMD('repoid', repomd_fname)
     if 'timestamp' not in yumrepo.__dict__:
@@ -189,9 +202,11 @@ def make_repomd_file_details(dir):
     timestamp = yumrepo.timestamp
     dir = Directory.byName(repodataDir)
     try:
-        fd = FileDetail.selectBy(directory=dir, filename='repomd.xml', sha1=sha1, md5=md5, timestamp=timestamp, size=size)[0]
+        fd = FileDetail.selectBy(directory=dir, filename='repomd.xml', sha1=sha1, md5=md5, sha256=sha256, sha512=sha512,
+                                 timestamp=timestamp, size=size)[0]
     except IndexError:
-        fd = FileDetail(directory=dir, filename='repomd.xml', sha1=sha1, md5=md5, timestamp=timestamp, size=size)
+        fd = FileDetail(directory=dir, filename='repomd.xml', sha1=sha1, md5=md5, sha256=sha256, sha512=sha512,
+                        timestamp=timestamp, size=size)
 
 def make_repository(dir, category):
     repo = None

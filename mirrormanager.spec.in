@@ -9,9 +9,14 @@ License:        MIT and GPLv2 and GPLv3
 URL:            http://fedorahosted.org/mirrormanager
 Source0:        https://fedorahosted.org/releases/m/i/%{name}/%{name}-%{version}.tar.bz2
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-
 BuildRequires:  python
 Requires:       TurboGears, python-IPy, python-GeoIP, wget, yum
+
+%define pythonver %(%{__python} -c "import sys ; print sys.version[[3]] ")
+%if %{pythonver} < 2.5
+# for md5, sha1, sha256, which are native to python 2.5 and higher
+Requires: python-hashlib
+%endif
 
 %description
 MirrorManager tracks all the content provided on a master mirror
