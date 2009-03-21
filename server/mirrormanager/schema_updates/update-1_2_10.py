@@ -9,6 +9,8 @@ def update():
         a.publiclist = True
         a.primary = True
         a.sync()
+    Arch.sqlmeta.delColumn('idx')
+    Arch.sqlmeta.addColumn(DatabaseIndex('fromRepo', 'toRepo', 'fromArch', 'toArch', dbName='idx', unique=True)
 
     FileDetail.sqlmeta.addColumn(UnicodeCol('sha256', default=None), updateSchema=True)
     FileDetail.sqlmeta.addColumn(UnicodeCol('sha512', default=None), updateSchema=True)
