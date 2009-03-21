@@ -142,7 +142,7 @@ def make_file_details_from_checksums(dir):
 
     sha1_globs = ['*.sha1sum', 'SHA1SUM']
     md5_globs = ['*.md5sum', 'MD5SUM']
-    sha256_globs = ['*.sha256sum', 'SHA256SUM']
+    sha256_globs = ['*-CHECKSUM']
     sha512_globs = ['*.sha512sum', 'SHA512SUM']
     md5dict = _checksums_from_globs(dir.name, md5_globs)
     sha1dict = _checksums_from_globs(dir.name, sha1_globs)
