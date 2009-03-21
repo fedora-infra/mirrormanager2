@@ -143,10 +143,10 @@ def metalink(directory, file, hosts_and_urls):
         if y['size'] is not None:
             doc += indent(indentlevel+1) + '<size>%s</size>\n' % y['size']
         doc += indent(indentlevel+1) + '<verification>\n'
-        if y['md5'] is not None:
-            doc += indent(indentlevel+2) + '<hash type="md5">%s</hash>\n' % y['md5']
-        if y['sha1'] is not None:
-            doc += indent(indentlevel+2) + '<hash type="sha1">%s</hash>\n' % y['sha1']
+        hashes = ('md5', 'sha1', 'sha256', 'sha512')
+        for h in hashes:
+            if y[h] is not None:
+                doc += indent(indentlevel+2) + '<hash type="%s">%s</hash>\n' % (h, y[h])
         doc += indent(indentlevel+1) + '</verification>\n'
         return doc
 

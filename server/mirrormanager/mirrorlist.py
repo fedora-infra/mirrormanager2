@@ -228,7 +228,7 @@ def file_details_cache():
         if len(d.fileDetails) > 0:
             cache[d.name] = {}
             for fd in d.fileDetails:
-                details = dict(timestamp=fd.timestamp, sha1=fd.sha1, md5=fd.md5, size=fd.size)
+                details = dict(timestamp=fd.timestamp, sha1=fd.sha1, md5=fd.md5, sha256=fd.sha256, sha512=fd.sha512, size=fd.size)
                 if fd.filename not in cache[d.name]:
                     cache[d.name][fd.filename] = [details]
                 else:
