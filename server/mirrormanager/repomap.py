@@ -70,6 +70,7 @@ def repo_prefix(path, category, ver):
     isEpel = (category.name == u'Fedora EPEL')
     isFedoraLinux = (category.name == u'Fedora Linux')
     isFedoraSecondary = (category.name == u'Fedora Secondary Arches')
+    isFedoraArchive = (category.name == u'Fedora Archive')
 
     isRrpmfusionFreeEl = (category.name == u'RPMFUSION free EL')
     isRrpmfusionFreeFedora = (category.name == u'RPMFUSION free Fedora')
@@ -142,7 +143,7 @@ def repo_prefix(path, category, ver):
             else:
                 prefix = u'epel-%s' % version
 
-    elif isFedoraLinux or isFedoraSecondary:
+    elif isFedoraLinux or isFedoraSecondary or isFedoraArchive:
         if isReleases:
             if not isEverything:
                 prefix = None
