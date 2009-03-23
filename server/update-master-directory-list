@@ -272,7 +272,11 @@ def make_one_directory(line, category, path, category_directories):
     return dname, category_directories
 
 def add_file_to_directory(line, path, category_directories):
-    perm, size, date, time, filepath = line.split()
+    try:
+        perm, size, date, time, filepath = line.split()
+    except ValueError:
+        # ignore unparsable lines
+        return
     year, month, day = date.split('/')
     hour, minute, second = time.split(':')
     dt = datetime.datetime(int(year), int(month), int(day), int(hour), int(minute), int(second))
@@ -338,9 +342,11 @@ def parse_rsync_listing(cname, f):
     category_directories = {}
     for line in f.readlines():
         line.strip()
-        if line.startswith('d'):
+        l = line.split()
+        if line.startswith('d') and len(l) == 5 and len(l[0]) == 10: # good guess it's a directory line
             if re.compile('^\.$').match(line):
                 # we know the top-level category directory already exists, don't try to re-make it
+                # fixme I don't think this ever hits
                 pass
             else:
                 dname, category_directories = make_one_directory(line, category, category.topdir.name, category_directories)
