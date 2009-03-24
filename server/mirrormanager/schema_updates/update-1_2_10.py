@@ -37,14 +37,29 @@ def fill_arch():
         a.publiclist = (a.name != 'source')
         a.primary = (a.name in primary)
 
-def update_schema():
-    Arch.sqlmeta.addColumn(BoolCol('publiclist', default=True), updateSchema=True)
-    Arch.sqlmeta.addColumn(BoolCol('primary', default=True), updateSchema=True)
-    FileDetail.sqlmeta.addColumn(UnicodeCol('sha256', default=None), updateSchema=True)
-    FileDetail.sqlmeta.addColumn(UnicodeCol('sha512', default=None), updateSchema=True)
+def update_schema_arch():
+    rc = False
+    c = Arch.sqlmeta.columns
+    if 'publiclist' not in c and 'primary' not in c:
+        Arch.sqlmeta.addColumn(BoolCol('publiclist', default=True), updateSchema=True)
+        Arch.sqlmeta.addColumn(BoolCol('primary', default=True), updateSchema=True)
+        rc = True
+    return rc
+
+def update_schema_filedetail():
+    rc = False
+    c = FileDetail.sqlmeta.columns
+    if 'sha256' not in c and 'sha512' not in c:
+        FileDetail.sqlmeta.addColumn(UnicodeCol('sha256', default=None), updateSchema=True)
+        FileDetail.sqlmeta.addColumn(UnicodeCol('sha512', default=None), updateSchema=True)
+        rc = True
+    return rc
 
 def update():
-    update_schema()
-    fill_arch()
-    initialize_filedetail()
-    fill_filedetail()
+    rc = update_schema_arch()
+    if rc:
+        fill_arch()
+    rc = update_schema_filedetail()
+    if rc:
+        initialize_filedetail()
+        fill_filedetail()
