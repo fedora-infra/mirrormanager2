@@ -3,11 +3,6 @@ from sqlobject import *
 from mirrormanager.model import *
 import hashlib
 
-del Arch.primaryArch
-del Arch.publiclist
-del FileDetail.sha256
-del FileDetail.sha512
-
 def initialize_filedetail():
     for fd in FileDetail.select():
         fd.sha256 = None
@@ -44,20 +39,30 @@ def fill_arch():
 
 def update_schema_arch():
     rc = False
-    c = Arch.sqlmeta.columns
-    if 'publiclist' not in c and 'primaryArch' not in c:
-        Arch.publiclist = Arch.sqlmeta.addColumn(BoolCol(name='publiclist', default=True), changeSchema=True)
-        Arch.primaryArch = Arch.sqlmeta.addColumn(BoolCol(name='primary_arch', default=False), changeSchema=True)
+    try:
+        Arch.sqlmeta.delColumn('publiclist', changeSchema=False)
+        c = Arch.sqlmeta.addColumn(BoolCol(name='publiclist', default=True), changeSchema=True)
+        Arch.publiclist = c
+        Arch.sqlmeta.delColumn('primaryArch', changeSchema=False)
+        c = Arch.sqlmeta.addColumn(BoolCol(name='primaryArch', default=False), changeSchema=True)
+        Arch.primaryArch = c
         rc = True
+    except:
+        raise
     return rc
 
 def update_schema_filedetail():
     rc = False
-    c = FileDetail.sqlmeta.columns
-    if 'sha256' not in c and 'sha512' not in c:
-        FileDetail.sha256 = FileDetail.sqlmeta.addColumn(UnicodeCol(name='sha256', default=None), changeSchema=True)
-        FileDetail.sha512 = FileDetail.sqlmeta.addColumn(UnicodeCol(name='sha512', default=None), changeSchema=True)
+    try:
+        FileDetail.sqlmeta.delColumn('sha256', changeSchema=False)
+        c = FileDetail.sqlmeta.addColumn(UnicodeCol(name='sha256', default=None), changeSchema=True)
+        FileDetail.sha256 = c
+        FileDetail.sqlmeta.delColumn('sha512', changeSchema=False)
+        c = FileDetail.sqlmeta.addColumn(UnicodeCol(name='sha512', default=None), changeSchema=True)
+        FileDetail.sha512 = c
         rc = True
+    except:
+        raise
     return rc
 
 def update():
