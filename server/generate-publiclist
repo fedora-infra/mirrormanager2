@@ -190,7 +190,7 @@ def main():
                       help="TurboGears config file to use")
 
     parser.add_option("-o", "--output",
-                      metavar="FILE", dest="output", action="store", type="string", help="write output to FILE")
+                      metavar="DIR", dest="output", action="store", type="string", help="write output to DIR")
 
     (options, args) = parser.parse_args()
     if options.output is None:
