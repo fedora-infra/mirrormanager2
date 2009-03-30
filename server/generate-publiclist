@@ -157,7 +157,14 @@ def generate_one_html(engine, pvaMatrix, productname=None, vername=None, archnam
     except KeyError:
         hosts = publiclist_hosts(productname=productname, vername=vername, archname=archname)
 
-    template_data = dict(title=title, hosts=hosts, numhosts=len(hosts), pvaMatrix=pvaMatrix,
+
+    bandwidth = 0
+    for h in hosts:
+        bandwidth = bandwidth + h.bandwidth_int
+    bandwidth = bandwidth / 10 # convert to Gb
+        
+    template_data = dict(title=title, hosts=hosts, numhosts=len(hosts), bandwidth=bandwidth,
+                         pvaMatrix=pvaMatrix,
                          pva=pva,
                          products=list(Product.select(orderBy='name')),
                          arches=publiclist_arches())

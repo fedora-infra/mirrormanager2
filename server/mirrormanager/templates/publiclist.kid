@@ -65,7 +65,7 @@ and development networks globally.
 
 <div class="keepleft">
 
-<h2 class="icon24 download" style="clear: both;">${pva} Public Active Mirrors (${numhosts})</h2>
+<h2 class="icon24 download" style="clear: both;">${pva} Public Active Mirrors (${numhosts} with aggregate ${bandwidth} Gbits/sec)</h2>
 
 <p py:if="len(hosts) == 0">There are no mirrors matching your your search criteria.</p>
 
