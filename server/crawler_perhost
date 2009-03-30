@@ -291,11 +291,11 @@ def check_head(hoststate, url, filedata, recursion, retry=0):
 def sync_hcds(host, host_category_dirs):
     current_hcds = {}
     now = datetime.utcnow()
+    host.lastCrawled = now
     for (hc, d), up2date in host_category_dirs.iteritems():
         if up2date is None:
             continue
 
-        hc.host.lastCrawled = now
         topname = hc.category.topdir.name
         path = d.name[len(topname)+1:]
 
@@ -498,9 +498,8 @@ def per_host(host, options=None):
             if must_dienow:
                 sys.exit(1)
 
-            # go ahead and scan "unreadable" directories so we can
-            # find leaks, and speed up release day showing who has
-            # this content immediately after the bitflip.
+            if not d.readable:
+                continue
 
             dirname = d.name[categoryPrefixLen:]
             url = '%s/%s' % (categoryUrl, dirname)
@@ -519,7 +518,7 @@ def per_host(host, options=None):
                     # make sure our parent dirs appear on the list too
                     host_category_dirs = add_parents(host_category_dirs, hc, d)
                 else:
-                    # could be a dir with no files.
+                    # could be a dir with no files, or an unreadable dir.
                     # defer decision on this dir, let a child decide.
                     pass
             except:
