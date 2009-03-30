@@ -545,7 +545,7 @@ class HostStats(SQLObject):
 class Arch(SQLObject):
     name = UnicodeCol(alternateID=True)
     publiclist = BoolCol(default=True)
-    primary = BoolCol(default=True)
+    primaryArch = BoolCol(default=True)
 
 def publiclist_arches():
     return [a for a in Arch.select() if a.publiclist]
