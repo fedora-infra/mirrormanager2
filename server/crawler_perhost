@@ -462,7 +462,7 @@ def sigusr1_handler(signum, frame):
             pass
     os._exit(1)
 
-global reopenLogs = False
+reopenLogs = False
 def reopen_logs():
     global logfile
     if logfile is not None:

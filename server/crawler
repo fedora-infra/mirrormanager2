@@ -67,10 +67,10 @@ def doit(options, include_private=False, threads=10, config=None, logdir=None):
         if not h.is_active() or (not include_private and h.is_private()):
             continue
     
-        args = commonargs.append('--hostid=%s' % h.id)
+        args = commonargs + ['--hostid=%s' % h.id]
         if logdir is not None:
             logfilename = os.path.join(logdir, str(h.id) + '.log')
-            commonargs.append('--logfile=%s' % logfilename)
+            args.append('--logfile=%s' % logfilename)
 
         master.process_request(command, args)
         
