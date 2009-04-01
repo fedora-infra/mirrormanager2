@@ -19,15 +19,17 @@ def fill_filedetail():
         for fd in d.fileDetails:
             if fd.filename == 'repomd.xml':
                 try:
-                    fname = "%s/repomd.xml" % (fd.directory.name)
+                    fname = "/%s/repomd.xml" % (d.name)
                     f = open(fname, 'rb')
                     s = f.read()
                     f.close()
-                    fd.sha256 = hashlib.sha256(s).hexdigest()
+                    h  = hashlib.sha256(s).hexdigest()
+                    print "sha256=%s" % h
+                    fd.sha256 =h
                     fd.sha512 = hashlib.sha512(s).hexdigest()
                     del s
                 except:
-                    print "warning: couldn't update sha checksums for %s" % d.name
+                    print "warning: couldn't update sha checksums for %s" % fname
                 # only add to the most recent one
                 break
 
