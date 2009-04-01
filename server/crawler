@@ -10,7 +10,7 @@ from mirrormanager.model import *
 from mirrormanager.lib import manage_pidfile, remove_pidfile
 from urlparse import urlsplit
 from optparse import OptionParser
-from subprocess import Popen, STDOUT
+from subprocess import Popen
 
 pidfile='/var/run/mirrormanager/crawler.pid'
 
@@ -18,12 +18,10 @@ from turbogears.database import PackageHub
 hub = __connection__ = None
 
 class ForkingMaster:
-    active_children = None
-    max_children = 10
-    child_logfiles = {}
-
     def __init__(self, max_children=10):
+        self.active_children = None
         self.max_children = max_children
+        self.devnull = open('/dev/null', 'rw')
 
     def collect_children(self):
         """Internal routine to wait for died children."""
@@ -40,19 +38,16 @@ class ForkingMaster:
                 pid = None
             if not pid: break
             self.active_children.remove(pid)
-            self.child_logfiles[pid].close()
-            del self.child_logfiles[pid]
 
-    def process_request(self, command, args, logfile=None):
+    def process_request(self, command, args):
         """Fork a new subprocess to process the request."""
         self.collect_children()
         print "Starting crawler %s" % args
-        p = Popen(args, executable=command, stderr=STDOUT, stdout=logfile)
+        p = Popen(args, executable=command, stdin=self.devnull, stdout=self.devnull, stderr=self.devnull, close_fds=True)
         # Parent process
         if self.active_children is None:
             self.active_children = []
         self.active_children.append(p.pid)
-        self.child_logfiles[p.pid] = logfile
 
     def wait_for_completion(self):
         self.max_children = 0
@@ -70,13 +65,12 @@ def doit(include_private=False, threads=10, config=None, logdir=None):
         if not h.is_active() or (not include_private and h.is_private()):
             continue
     
-        args = commonargs + ['--hostid=%s' % h.id]
-        logfile = None
+        args = commonargs.append('--hostid=%s' % h.id)
         if logdir is not None:
             logfilename = os.path.join(logdir, str(h.id) + '.log')
-            logfile = open(logfilename, 'a+b')
+            commonargs.append('--logfile=%s' % logfilename)
 
-        master.process_request(command, args, logfile=logfile)
+        master.process_request(command, args)
         
     master.wait_for_completion()
 

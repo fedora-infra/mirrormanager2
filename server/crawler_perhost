@@ -19,7 +19,7 @@ import hashlib
 
 from turbogears.database import PackageHub
 hostid = None
-
+logfile = None
 
 ################################################
 # overrides for httplib because we're
@@ -110,7 +110,7 @@ class hostState:
 
     def check_ftp_dir_callback(self, line):
         if self.ftp_debuglevel > 0:
-            print line
+            print >>logfile, line
         self.ftp_dir_results.append(line)
 
     def ftp_dir(self, url):
@@ -168,7 +168,7 @@ def get_ftp_dir(hoststate, url, i=0):
         if str(e).startswith('500'): # Oops
             raise TryLater()
         else:
-            print "unknown permanent error %s on %s" % (e, url)
+            print >>logfile, "unknown permanent error %s on %s" % (e, url)
             raise
     except ftplib.error_temp, e:
         # Returned by Boston University when directory does not exist
@@ -176,13 +176,13 @@ def get_ftp_dir(hoststate, url, i=0):
             return []
         # Returned by Princeton University when cannot log in due to connection restrictions
         if str(e).startswith('421'):
-            print "Connections Exceeded %s" % url
+            print >>logfile, "Connections Exceeded %s" % url
             raise TryLater()
         if str(e).startswith('425'):
-            print "Failed to establish connection on %s" % url
+            print >>logfile, "Failed to establish connection on %s" % url
             raise TryLater()
         else:
-            print "unknown error %s on %s" % (e, url)
+            print >>logfile, "unknown error %s on %s" % (e, url)
             raise 
     except (EOFError, socket.error):
         hoststate.close_ftp(url)
@@ -285,7 +285,7 @@ def check_head(hoststate, url, filedata, recursion, retry=0):
     elif status >= 500:
         raise HTTP500()
 
-    print "status = %s" % status
+    print >>logfile, "status = %s" % status
     raise HTTPUnknown()
 
 def sync_hcds(host, host_category_dirs):
@@ -381,7 +381,7 @@ def try_perfile(d, hoststate, url):
         graburl = "%s/%s" % (url, file)
         try:
             exists = check_url(hoststate, graburl, d.files[file], 0)
-            #print "%s %s" % (exists, graburl)
+            #print >>logfile, "%s %s" % (exists, graburl)
             if exists == False:
                 return False
         except TryLater:
@@ -419,7 +419,7 @@ def try_perdir(d, hoststate, url):
         return None
 
     if len(listing) == 0:
-        #print 'FALSE %s' % url
+        #print >>logfile, 'FALSE %s' % url
         return False
     
     for line in listing:
@@ -444,7 +444,7 @@ mypid = None
 def dienow():
     global must_dienow
     must_dienow = True
-    print "Host %d timeout expired, killing this process.  Better luck next time." % hostid
+    print >>logfile, "Host %d timeout expired, killing this process.  Better luck next time." % hostid
     os.kill(mypid, signal.SIGUSR1)
     os._exit(0)
 
@@ -461,7 +461,20 @@ def sigusr1_handler(signum, frame):
         except:
             pass
     os._exit(1)
-    
+
+global reopenLogs = False
+def reopen_logs():
+    global logfile
+    if logfile is not None:
+        fname = logfile.name
+        logfile.close()
+        logfile = open(fname, 'a+b')
+
+def sighup_handler(signum, frame):
+    if signum == signal.SIGHUP:
+        reopenLogs = True
+    signal.signal(signal.SIGHUP, sighup_handler)
+
 
 def per_host(host, options=None):
     global must_dienow
@@ -482,6 +495,7 @@ def per_host(host, options=None):
         timer.start()
 
     signal.signal(signal.SIGUSR1, sigusr1_handler)
+    signal.signal(signal.SIGHUP, sighup_handler)
 
     hoststate = hostState(http_debuglevel=http_debuglevel, ftp_debuglevel=ftp_debuglevel)
     for hc in host.categories:
@@ -497,6 +511,10 @@ def per_host(host, options=None):
         for d in trydirs:
             if must_dienow:
                 sys.exit(1)
+                
+            global reopenLogs
+            if reopenLogs:
+                reopenLogs = False
 
             if not d.readable:
                 continue
@@ -514,7 +532,7 @@ def per_host(host, options=None):
                     host_category_dirs[(hc, d)] = False
                 elif has_all_files == True:                
                     host_category_dirs[(hc, d)] = True
-                    print url
+                    print >>logfile, url
                     # make sure our parent dirs appear on the list too
                     host_category_dirs = add_parents(host_category_dirs, hc, d)
                 else:
@@ -534,7 +552,6 @@ def per_host(host, options=None):
         sync_hcds(host, host_category_dirs)
     else:
         mark_not_up2date(host)
-
 
 def main():
     global mypid
@@ -563,6 +580,9 @@ def main():
     parser.add_option("--timeout-minutes", type="int",
                       dest="timeout_minutes", default=60,
                       help="Minutes to let the crawler run before killed (default=60)")
+    parser.add_option("--logfile", type="string", metavar="FILE",
+                      dest="logfile", default=None,
+                      help="write logs to FILE")
 
     (options, args) = parser.parse_args()
 
@@ -571,21 +591,27 @@ def main():
     global hub
     global __connection__
     global hostid
+    global logfile
     hub = PackageHub("mirrormanager")
     __connection__ = hub
     
     os.chdir('/tmp')
-
+    
+    if options.logfile is not None:
+        logfile = open(options.logfile, "a+b")
+    else:
+        logfile = sys.stdout
+        
     try:
         host = Host.get(options.hostid)
     except:
-        print "Host %s not found." % options.hostid
+        print >>logfile, "Host %s not found." % options.hostid
         sys.exit(1)
 
     hostid = host.id
-    print "Starting crawl %s" % (datetime.utcnow().isoformat())
+    print >>logfile, "Starting crawl %s" % (datetime.utcnow().isoformat())
     per_host(host.id, options=options)
-    print "Ending crawl %s" % (datetime.utcnow().isoformat())
+    print >>logfile, "Ending crawl %s" % (datetime.utcnow().isoformat())
 
 
 
