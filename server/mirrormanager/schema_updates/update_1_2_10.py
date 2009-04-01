@@ -48,7 +48,7 @@ def update_schema_arch():
         Arch.primaryArch = c
         rc = True
     except:
-        raise
+        pass
     return rc
 
 def update_schema_filedetail():
@@ -62,7 +62,7 @@ def update_schema_filedetail():
         FileDetail.sha512 = c
         rc = True
     except:
-        raise
+        pass
     return rc
 
 def update():
