@@ -583,6 +583,9 @@ def main():
     parser.add_option("--logfile", type="string", metavar="FILE",
                       dest="logfile", default=None,
                       help="write logs to FILE")
+    parser.add_option("--canary", 
+                      dest="canary", action="store_true", default=False,
+                      help="fast crawl by only scanning for canary files")
 
     (options, args) = parser.parse_args()
 

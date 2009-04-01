@@ -54,12 +54,14 @@ class ForkingMaster:
         self.collect_children()
 
 
-def doit(include_private=False, threads=10, config=None, logdir=None):
+def doit(options, include_private=False, threads=10, config=None, logdir=None):
     master = ForkingMaster(max_children=threads)
     command = './crawler_perhost'
     commonargs = [ command, '-c', config]
     if include_private:
         commonargs.append('--include-private')
+    if options.canary:
+        commonargs.append('--canary')
 
     for h in Host.select():
         if not h.is_active() or (not include_private and h.is_private()):
@@ -96,6 +98,10 @@ def main():
                       dest="logdir", default='/var/log/mirrormanager/crawler',
                       help="write logfiles to DIR")
 
+    parser.add_option("--canary", 
+                      dest="canary", action="store_true", default=False,
+                      help="fast crawl by only scanning for canary files")
+
     (options, args) = parser.parse_args()
 
     turbogears.update_config(configfile=options.config,
@@ -105,7 +111,7 @@ def main():
     hub = PackageHub("mirrormanager")
     __connection__ = hub
     
-    doit(include_private=options.include_private, threads=options.threads, config=options.config, logdir=options.logdir)
+    doit(options, include_private=options.include_private, threads=options.threads, config=options.config, logdir=options.logdir)
     remove_pidfile(pidfile)
 
 if __name__ == "__main__":
