@@ -468,7 +468,7 @@ def reopen_logs():
     if logfile is not None:
         fname = logfile.name
         logfile.flush()
-        os.fsync(logfile.fileno())        
+        # it's a logfile, don't care if it's fsynced to disk or not...
         logfile.close()
         logfile = open(fname, 'a+b')
 
@@ -620,6 +620,8 @@ def main():
     per_host(host.id, options=options)
     print >>logfile, "Ending crawl %s" % (datetime.utcnow().isoformat())
 
+    logfile.flush()
+    logfile.close()
 
 
 if __name__ == "__main__":
