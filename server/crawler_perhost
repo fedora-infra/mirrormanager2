@@ -467,11 +467,14 @@ def reopen_logs():
     global logfile
     if logfile is not None:
         fname = logfile.name
+        logfile.flush()
+        os.fsync(logfile.fileno())        
         logfile.close()
         logfile = open(fname, 'a+b')
 
 def sighup_handler(signum, frame):
     if signum == signal.SIGHUP:
+        global reopenLogs
         reopenLogs = True
     signal.signal(signal.SIGHUP, sighup_handler)
 
@@ -515,6 +518,7 @@ def per_host(host, options=None):
             global reopenLogs
             if reopenLogs:
                 reopenLogs = False
+                reopen_logs()
 
             if not d.readable:
                 continue
