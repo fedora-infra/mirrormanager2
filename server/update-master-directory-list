@@ -15,7 +15,7 @@ import yum.repoMDObject
 import datetime
 import hashlib
 from turbogears import config
-from subprocess import Popen, STDOUT
+from subprocess import Popen, PIPE
 
 rootdir='/'
 pidfile='/var/run/mirrormanager/umdl.pid'
@@ -358,7 +358,7 @@ def parse_rsync_listing(cname, f):
 
 
 def sync_directories_using_rsync(rsyncpath, cname, extra_rsync_args=None):
-    cmd = "rsync -r --exclude=.snapshot --exclude='*.~tmp~'"
+    cmd = "rsync --temp-dir=/tmp -r --exclude=.snapshot --exclude='*.~tmp~'"
     if extra_rsync_args is not None:
         cmd += ' ' + extra_rsync_args
     cmd += ' ' + rsyncpath
@@ -366,7 +366,8 @@ def sync_directories_using_rsync(rsyncpath, cname, extra_rsync_args=None):
         devnull = open('/dev/null', 'r')
         p = Popen(cmd, shell=True, stdin=devnull, stdout=PIPE, bufsize=1, close_fds=True)
     except:
-        print "Unable to parse category %s rsyncpath %s" % (cname, rsyncpath)
+        print "Category %s: Unable to run %s" % (cname, args)
+        devnull.close()
         return
     parse_rsync_listing(cname, p.stdout)
     devnull.close()
@@ -375,7 +376,6 @@ def sync_directories_from_file(filename, cname):
     f = open(filename, 'r')
     parse_rsync_listing(cname, f)
     f.close()
-
 
 for i in config.get('umdl.master_directories'):
     try:
