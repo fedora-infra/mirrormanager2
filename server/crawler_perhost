@@ -364,7 +364,7 @@ def compare_sha256(d, filename, graburl):
     """ looks for a FileDetails object that matches the given URL """
     found = False
     s = urlgrabber.urlread(graburl)
-    sha256 = hashlib.sha256(s)
+    sha256 = hashlib.sha256(s).hexdigest()
     for fd in d.fileDetails:
         if fd.filename == filename and fd.sha256 is not None:
             if fd.sha256 == sha256:
