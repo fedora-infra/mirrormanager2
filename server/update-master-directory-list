@@ -4,7 +4,7 @@ import pkg_resources
 pkg_resources.require("TurboGears")
 
 from sqlobject import *
-import sys, os, string
+import sys, os, string, stat
 import turbogears
 from mirrormanager.model import *
 from mirrormanager.repomap import *
@@ -12,26 +12,13 @@ from mirrormanager.lib import manage_pidfile, remove_pidfile
 import re
 import glob
 import yum.repoMDObject
-import datetime
+import datetime, time
 import hashlib
 from turbogears import config
 from subprocess import Popen, PIPE
 
 rootdir='/'
 pidfile='/var/run/mirrormanager/umdl.pid'
-
-# look on the command line for a desired config file
-if len(sys.argv) < 2:
-    print "usage: update-master-directory-list dev.cfg [rootdir]"
-    sys.exit(1)
-if len(sys.argv) >= 2:
-    turbogears.update_config(configfile=sys.argv[1], modulename="mirrormanager.config")
-if len(sys.argv) >= 3:
-    rootdir=sys.argv[2]
-
-if manage_pidfile(pidfile):
-    print "another instance is running, try again later."
-    sys.exit(1)
 
 from turbogears.database import PackageHub
 hub = PackageHub("mirrormanager")
@@ -171,13 +158,13 @@ def make_file_details_from_checksums(dir):
         sha256  = sha256dict.get(f)
         sha512  = sha512dict.get(f)
         size = s.st_size
-        mtime = s.st_mtime
+        ctime = s[stat.ST_CTIME]
         try:
             fd = FileDetail.selectBy(directory=dir, filename=f, sha1=sha1, md5=md5, sha256=sha256, sha512=sha512,
-                                     size=size, timestamp=mtime)[0]
+                                     size=size, timestamp=ctime)[0]
         except IndexError:
             fd = FileDetail(directory=dir, filename=f, sha1=sha1, md5=md5, sha256=sha256, sha512=sha512,
-                            timestamp=mtime, size=size)
+                            timestamp=ctime, size=size)
     
 
 def make_repomd_file_details(dir):
@@ -248,6 +235,18 @@ def parent_dir(path):
     sdir = path.split('/')[:-1]
     return '/'.join(sdir)
 
+
+def ctime_from_rsync(line):
+    try:
+        perm, size, date, time, filepath = line.split()
+    except ValueError:
+        raise
+    year, month, day = date.split('/')
+    hour, minute, second = time.split(':')
+    t = datetime.datetime(int(year), int(month), int(day), int(hour), int(minute), int(second), 0, None)
+    return time.mktime(t.timetuple())
+
+
 def make_one_directory(line, category, path, category_directories):
     global unreadble_dirs
     readable=True
@@ -261,26 +260,23 @@ def make_one_directory(line, category, path, category_directories):
         readable=False
         unreadable_dirs[dname] = True
 
-    category_directories[dname] = {'files':{}, 'isRepository':False, 'readable':readable}
+    ctime = ctime_from_rsync(line)
+    category_directories[dname] = {'files':{}, 'isRepository':False, 'readable':readable, 'ctime':ctime}
     if d.endswith('repodata'):
         parent_dname = dname[:-len('/repodata')]
         try:
             category_directories[parent_dname]['isRepository'] = True
         except KeyError:
             category_directories[parent_dname] = {'files':{}, 'isRepository':True, 'readable':readable}
-        
             
     return dname, category_directories
 
 def add_file_to_directory(line, path, category_directories):
     try:
-        perm, size, date, time, filepath = line.split()
+        dt = ctime_from_rsync(line)
     except ValueError:
-        # ignore unparsable lines
         return
-    year, month, day = date.split('/')
-    hour, minute, second = time.split(':')
-    dt = datetime.datetime(int(year), int(month), int(day), int(hour), int(minute), int(second))
+
     l = filepath.split('/')
     filename = l[-1]
     subpath = l[:-1]
@@ -323,8 +319,10 @@ def sync_category_directories(category, category_directories):
             dir = Directory.byName(dirpath)
             if dir.readable != value['readable']:
                 dir.readable = value['readable']
+            if dir.ctime != value['ctime']:
+                dir.ctime = value['ctime']
         except SQLObjectNotFound:
-            dir = Directory(name=dirpath,readable=value['readable'])
+            dir = Directory(name=dirpath,readable=value['readable'], ctime=value['ctime'])
             dir.addCategory(category)
         if dir.files != short_filelist(value['files']):
             dir.files = short_filelist(value['files'])
@@ -377,16 +375,100 @@ def sync_directories_from_file(filename, cname):
     parse_rsync_listing(cname, f)
     f.close()
 
-for i in config.get('umdl.master_directories'):
-    try:
-        options = i['options']
-    except KeyError:
-        options = None
 
-    if i['type'] == 'rsync':
-        sync_directories_using_rsync(i['url'], i['category'], options);
+def sync_directories_from_directory(directory, cname, excludes=[]):
+    global unreadable_dirs
+    # drop trailing slashes from path
+    directory = directory.rstrip('/')
+    category = Category.byName(cname)
+    category_directories = {}
+    topdir = category.topdir
+    topdirName = topdir.name
+    # fixme
+    # if directory looks like /path/to/something/pub/fedora/linux
+    # and topdir.name is pub/fedora/linux
+    # which means we keep only [:-len(topdir.name)]
+    # we want to os.walk(directory)
+    # and the resulting dirpaths look like /path/to/something/pub/fedora/linux
+    # and the matching directory is pub/fedora/linux.
+    # paths below this then have directories of $path/dirname[len(topdir)+1:]
+    stdexcludes=['.*\.snapshot', '.*/\.~tmp~']
+    for dirpath, dirnames, filenames in os.walk(directory, topdown=True):
+        next=False
+        for e in stdexcludes + excludes:
+            if re.compile(e).match(dirpath):
+                next=True
+                break
+        if next:
+            print "excluding %s" % (dirpath)
+            # exclude all its subdirs too
+            dirnames[:] = []
+            continue
 
-    if i['type'] == 'file':
-        sync_directories_from_file(i['url'], i['category']);
+        s = os.stat(dirpath)
+        ctime = s[stat.ST_CTIME]
 
-remove_pidfile(pidfile)
+        i = string.index(dirpath, topdirName)
+        dname = dirpath[i:]
+        dname = dname.rstrip('/')
+        try:
+            d = Directory.byName(dname)
+            if d.ctime == ctime:
+                # break out here because nothing has changed
+                continue
+        except SQLObjectNotFound:
+            # we'll need to create it
+            pass
+
+        print "%s has changed" % dname
+        mode = s.st_mode
+        readable = (mode & stat.S_IRWXO & (stat.S_IROTH|stat.S_IXOTH))
+        if not readable:
+            unreadable_dirs[dname] = True
+        isRepo = 'repodata' in dirnames
+        category_directories[dname] = {'files':{}, 'isRepository':isRepo, 'readable':readable, 'ctime':ctime}
+        for f in filenames:
+            try:
+                s = os.stat(os.path.join(dirpath, f))
+            except OSError:
+                continue
+            category_directories[dname]['files'][f] = {'size':s.st_size,
+                                                       'stat':s[stat.ST_CTIME]}
+
+    sync_category_directories(category, category_directories)
+
+def main():
+    # look on the command line for a desired config file
+    if len(sys.argv) < 2:
+        print "usage: update-master-directory-list dev.cfg [rootdir]"
+        sys.exit(1)
+    if len(sys.argv) >= 2:
+        turbogears.update_config(configfile=sys.argv[1], modulename="mirrormanager.config")
+    if len(sys.argv) >= 3:
+        rootdir=sys.argv[2]
+
+    if manage_pidfile(pidfile):
+        print "another instance is running, try again later."
+        sys.exit(1)
+
+    for i in config.get('umdl.master_directories'):
+        try:
+            options = i['options']
+        except KeyError:
+            options = None
+
+        if i['type'] == 'rsync':
+            sync_directories_using_rsync(i['url'], i['category'], options)
+
+        if i['type'] == 'file':
+            sync_directories_from_file(i['url'], i['category'])
+
+        if i['type'] == 'directory':
+            excludes = i.get('excludes')
+            sync_directories_from_directory(i['path'], i['category'], excludes)
+
+    remove_pidfile(pidfile)
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
