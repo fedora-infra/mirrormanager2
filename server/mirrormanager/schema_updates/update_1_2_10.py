@@ -67,6 +67,21 @@ def update_schema_filedetail():
         pass
     return rc
 
+def update_directory():
+    rc = False
+    try:
+        Directory.sqlmeta.delColumn('ctime', changeSchema=False)
+        c = Directory.sqlmeta.addColumn(BigIntCol(name='ctime', default=0), changeSchema=True)
+        Directory.ctime = c
+        rc = True
+    except:
+        pass
+    return rc
+
+def fill_directory():
+    for d in Directory.select():
+        d.ctime = 0
+
 def update():
     rc = update_schema_arch()
     if rc:
@@ -75,3 +90,7 @@ def update():
     if rc:
         initialize_filedetail()
         fill_filedetail()
+
+    rc = update_directory()
+    if rc:
+        fill_directory()

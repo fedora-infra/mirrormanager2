@@ -582,6 +582,7 @@ class Directory(SQLObject):
     name = UnicodeCol(alternateID=True)
     files = PickleCol(default={})
     readable = BoolCol(default=True)
+    ctime = BigIntCol(default=0)
     categories = RelatedJoin('Category')
     repository = SingleJoin('Repository') # zero or one repository, set if this dir contains a yum repo
     host_category_dirs = MultipleJoin('HostCategoryDir')
