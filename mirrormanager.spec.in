@@ -12,8 +12,8 @@ BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildRequires:  python
 Requires:       TurboGears, python-IPy, python-GeoIP, wget, yum
 
-%define pythonver %(%{__python} -c "import sys ; print sys.version[[3]] ")
-%if %{pythonver} < 2.5
+%include /usr/lib/rpm/macros.python
+%if "%{py_ver}" < "2.5"
 # for md5, sha1, sha256, which are native to python 2.5 and higher
 Requires: python-hashlib
 %endif
@@ -68,10 +68,19 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/report_mirror
 %dir %{_sysconfdir}/%{name}-client
 %config(noreplace) %{_sysconfdir}/%{name}-client/report_mirror.conf
-%doc LICENSE-MIT-X11
+%doc LICENSE-MIT-X11 client/README
 
 
 %changelog
+* Mon Apr  6 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.10-1
+- improved crawler repomd.xml verification
+- improved publiclist generation
+- fix categorymap logic
+- WSGI-ify web application
+- vastly speed up report_mirror (no more stat()s on every file)
+- vastly speed up umdl
+- add rsyncFilter
+
 * Mon Feb 23 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.9-1
 - Adrian Reber:
       mirrorlist-server: check values returned by geoip before printing
