@@ -135,7 +135,7 @@ def generate_all():
             generate_one_html(engine, pvaMatrix, productname=p.name, vername=v.name)
 
             for a in publiclist_arches():
-                generate_one_html(engine, pvaMatrix, productname=p.name, vername=v.name, archname=a)
+                generate_one_html(engine, pvaMatrix, productname=p.name, vername=v.name, archname=a.name)
 
 
 def generate_one_html(engine, pvaMatrix, productname=None, vername=None, archname=None):
