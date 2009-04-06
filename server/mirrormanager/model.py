@@ -639,6 +639,21 @@ class Category(SQLObject):
             hc.destroySelf()
         SQLObject.destroySelf(self)
 
+    def directories_newer_than(self, since):
+        result = []
+        for d in self.directories:
+            if d.ctime > since:
+                result.append(d.name)
+        return result
+
+def lookupCategory(s):
+    s = s.lower()
+    for c in Category.select():
+        cname = c.name.lower()
+        if cname == s:
+            return c
+    return None
+
 class Repository(SQLObject):
     name = UnicodeCol(alternateID=True)
     prefix = UnicodeCol(default=None)

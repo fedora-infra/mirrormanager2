@@ -1088,6 +1088,45 @@ class Root(controllers.RootController):
         result = rsync_acl_list(internet2_only=internet2_only, public_only=public_only)
         return dict(values=result)
 
+    @expose(template="mirrormanager.templates.rsyncFilter", format="plain", content_type="text/plain")
+    def rsyncFilter(self, **kwargs):
+
+        def parents(dir):
+            p = []
+            splitpath = dir.split('/')
+            for i in xrange(1, len(splitpath)):
+                p.append('/'.join(splitpath[:i]))
+            return p
+
+        try:
+            c = kwargs['categories']
+            since = kwargs['since']
+        except KeyError:
+            return dict(includes=[], excludes=[])
+        
+        try:
+            since = int(since)
+        except:
+            return dict(includes=[], excludes=[])
+
+        categories_requested = c.split(',')
+        includes = set()
+        for c in categories_requested:
+            category = lookupCategory(c)
+            if category is None:
+                continue
+            newer_dirs = category.directories_newer_than(since)
+            includes.update(newer_dirs)
+            for n in newer_dirs:
+                includes.update(parents(n))
+        includes = list(includes)
+        includes.sort()
+        # add trailing slash as rsync wants it
+        for i in xrange(len(includes)):
+            includes[i] += u'/'
+        excludes=[u'*']
+        return dict(includes=includes, excludes=excludes)
+        
     @expose(template="mirrormanager.templates.login")
     def login(self, forward_url=None, previous_url=None, *args, **kw):
 
