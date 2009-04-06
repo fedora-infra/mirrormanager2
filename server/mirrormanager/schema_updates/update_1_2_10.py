@@ -27,6 +27,7 @@ def fill_filedetail():
                     print "sha256=%s" % h
                     fd.sha256 =h
                     fd.sha512 = hashlib.sha512(s).hexdigest()
+                    fd.sync()
                     del s
                 except:
                     print "warning: couldn't update sha checksums for %s" % fname
@@ -38,6 +39,7 @@ def fill_arch():
     for a in Arch.select():
         a.publiclist = (a.name != 'source')
         a.primaryArch = (a.name in primary)
+        a.sync()
 
 def update_schema_arch():
     rc = False
@@ -81,13 +83,14 @@ def update_directory():
 def fill_directory():
     for d in Directory.select():
         d.ctime = 0
+        d.sync()
 
 def update():
     rc = update_schema_arch()
     if rc:
         fill_arch()
 
-# the ordering matters here, as fill_filedetail will reference Directory objects
+    # the ordering matters here, as fill_filedetail will reference Directory objects
     rc = update_directory()
     if rc:
         fill_directory()
