@@ -12,7 +12,7 @@ BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildRequires:  python
 Requires:       TurboGears, python-IPy, python-GeoIP, wget, yum
 
-%include /usr/lib/rpm/macros.python
+%define py_ver         %(echo `python -c "import sys; print sys.version[:3]"`)
 %if "%{py_ver}" < "2.5"
 # for md5, sha1, sha256, which are native to python 2.5 and higher
 Requires: python-hashlib
@@ -72,6 +72,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon Apr  6 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.11-1
+- fix trivial bugs from previous version
+
 * Mon Apr  6 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.10-1
 - improved crawler repomd.xml verification
 - improved publiclist generation
