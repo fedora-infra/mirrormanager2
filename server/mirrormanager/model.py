@@ -655,10 +655,10 @@ def lookupCategory(s):
     return None
 
 def rsyncFilter(categories_requested, since):
-"""
-@categories_requested: a list of category names
-@since: timestamp
-"""
+    """
+    @categories_requested: a list of category names
+    @since: timestamp
+    """
     def _rsyncFilter(categorySearch, since):
         sql = ''
         sql += "SELECT directory.name "
