@@ -654,6 +654,56 @@ def lookupCategory(s):
             return c
     return None
 
+def rsyncFilter(categories_requested, since):
+"""
+@categories_requested: a list of category names
+@since: timestamp
+"""
+    def _rsyncFilter(categorySearch, since):
+        sql = ''
+        sql += "SELECT directory.name "
+        sql += "FROM category, directory, category_directory "
+        sql += "WHERE "
+        # join conditions
+        sql += "category_directory.category_id = category.id AND "
+        sql += "category_directory.directory_id = directory.id AND "
+        # select conditions
+        sql += "category.id IN %s AND " % categorySearch
+        sql += "directory.ctime > %d " % (since)
+
+        dbobject = Directory.select()[0]
+        result = dbobject._connection.queryAll(sql)
+        return result
+
+    def _list_to_inclause(categoryList):
+        s = '( '
+        for i in xrange(len(categoryList)):
+            s += '%d' % (categoryList[i])
+            if i < len(categoryList)-1:
+                s += ', '
+        s += ' )'
+        return s
+        
+    try:
+        since = int(since)
+    except:
+        return []
+    categoryList = []
+    for i in xrange(len(categories_requested)):
+        c = lookupCategory(categories_requested[i])
+        if c is None:
+            continue
+        categoryList.append(c.id)
+    if len(categoryList) == 0:
+        return []
+
+    categorySearch = _list_to_inclause(categoryList)
+    sqlresult = _rsyncFilter(categorySearch, since)
+    # un-tuplelize it
+    result = [d[0] for d in sqlresult]
+    return result
+    
+
 class Repository(SQLObject):
     name = UnicodeCol(alternateID=True)
     prefix = UnicodeCol(default=None)

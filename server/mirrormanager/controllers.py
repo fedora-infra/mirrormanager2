@@ -14,6 +14,7 @@ from sqlobject.sqlbuilder import *
 from string import strip
 from copy import copy
 
+import mirrormanager.model
 from mirrormanager import my_validators
 from mirrormanager.model import *
 from mirrormanager.lib import createErrorString
@@ -1121,19 +1122,15 @@ class Root(controllers.RootController):
         except:
             return dict(includes=[], excludes=[])
 
-        categories_requested = c.split(',')
         includes = set()
-        for c in categories_requested:
-            category = lookupCategory(c)
-            if category is None:
-                continue
-            newer_dirs = category.directories_newer_than(since)
-            for i in xrange(len(newer_dirs)):
-                newer_dirs[i] = strip_prefix(num_prefix, newer_dirs[i])
+        categories_requested = c.split(',')
+        newer_dirs = mirrormanager.model.rsyncFilter(categories_requested, since)
+        for i in xrange(len(newer_dirs)):
+            newer_dirs[i] = strip_prefix(num_prefix, newer_dirs[i])
 
-            includes.update(newer_dirs)
-            for n in newer_dirs:
-                includes.update(parents(n))
+        includes.update(newer_dirs)
+        for n in newer_dirs:
+            includes.update(parents(n))
         includes = list(includes)
         includes.sort()
         # add trailing slash as rsync wants it
