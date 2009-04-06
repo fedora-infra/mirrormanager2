@@ -1098,9 +1098,21 @@ class Root(controllers.RootController):
                 p.append('/'.join(splitpath[:i]))
             return p
 
+        def strip_prefix(to_strip, dir):
+            splitdir = dir.split('/')
+            splitdir = splitdir[to_strip:]
+            dir = '/'.join(splitdir)
+            return dir
+
+        def num_prefix_components(prefix):
+            splitprefix = prefix.split('/')
+            return len(splitprefix)
+
         try:
             c = kwargs['categories']
             since = kwargs['since']
+            stripprefix = kwargs['stripprefix']
+            num_prefix = num_prefix_components(stripprefix)
         except KeyError:
             return dict(includes=[], excludes=[])
         
@@ -1116,6 +1128,9 @@ class Root(controllers.RootController):
             if category is None:
                 continue
             newer_dirs = category.directories_newer_than(since)
+            for i in xrange(len(newer_dirs)):
+                newer_dirs[i] = strip_prefix(num_prefix, newer_dirs[i])
+
             includes.update(newer_dirs)
             for n in newer_dirs:
                 includes.update(parents(n))
