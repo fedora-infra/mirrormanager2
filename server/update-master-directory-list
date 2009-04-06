@@ -464,7 +464,7 @@ def main():
             sync_directories_from_file(i['url'], i['category'])
 
         if i['type'] == 'directory':
-            excludes = i.get('excludes')
+            excludes = i.get('excludes', [])
             sync_directories_from_directory(i['path'], i['category'], excludes)
 
     remove_pidfile(pidfile)
