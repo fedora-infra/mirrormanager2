@@ -65,8 +65,8 @@ def repo_prefix(path, category, ver):
     isEverything = u'Everything' in path
     
 
-    isCore = (category.name == u'Fedora Core')
-    isExtras = (category.name == u'Fedora Extras')
+    isCore = u'core/' in path
+    isExtras = u'extras/' in path
     isEpel = (category.name == u'Fedora EPEL')
     isFedoraLinux = (category.name == u'Fedora Linux')
     isFedoraSecondary = (category.name == u'Fedora Secondary Arches')
