@@ -1109,18 +1109,22 @@ class Root(controllers.RootController):
             splitprefix = prefix.split('/')
             return len(splitprefix)
 
+        # by setting excludes here, we cause the filter rules to
+        # not transfer anything if there is no new content or if
+        # a mistake was made in the URL.
+        excludes=[u'*']
         try:
             c = kwargs['categories']
             since = kwargs['since']
             stripprefix = kwargs['stripprefix']
             num_prefix = num_prefix_components(stripprefix)
         except KeyError:
-            return dict(includes=[], excludes=[])
+            return dict(includes=[], excludes=excludes)
         
         try:
             since = int(since)
         except:
-            return dict(includes=[], excludes=[])
+            return dict(includes=[], excludes=excludes)
 
         includes = set()
         categories_requested = c.split(',')
@@ -1136,7 +1140,6 @@ class Root(controllers.RootController):
         # add trailing slash as rsync wants it
         for i in xrange(len(includes)):
             includes[i] += u'/'
-        excludes=[u'*']
         return dict(includes=includes, excludes=excludes)
         
     @expose(template="mirrormanager.templates.login")
