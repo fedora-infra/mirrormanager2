@@ -86,11 +86,14 @@ def update():
     rc = update_schema_arch()
     if rc:
         fill_arch()
+
+# the ordering matters here, as fill_filedetail will reference Directory objects
+    rc = update_directory()
+    if rc:
+        fill_directory()
+
     rc = update_schema_filedetail()
     if rc:
         initialize_filedetail()
         fill_filedetail()
 
-    rc = update_directory()
-    if rc:
-        fill_directory()
