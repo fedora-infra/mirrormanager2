@@ -391,7 +391,7 @@ class PubliclistHost:
 
     def __cmp__(self, other):
         """comparison based on country, so we can sort()"""
-        return cmp(self.country, other)
+        return cmp(self.country, other.country)
 
     def add_category(self, name, url):
         if name in self.categories:
