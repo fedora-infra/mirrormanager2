@@ -394,7 +394,13 @@ class PubliclistHost:
         First sort on country, ascending order.
         Second sort on bandwidth_int, decending order.
         """
-        rc = cmp(self.country, other.country)
+        a = self.country
+        b = other.country
+        if a is None:
+            a = 'ZZ'
+        if b is None:
+            b = 'ZZ'
+        rc = cmp(a.upper(), b.upper())
         if rc == 0:
             rc = -cmp(self.bandwidth_int, other.bandwidth_int)
         return rc
