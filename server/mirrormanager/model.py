@@ -440,29 +440,38 @@ def _publiclist_sql_to_list(sqlresult, valid_categories):
         return l
 
 def _publiclist_hosts(directory, product=None, re=None):
-    sql = "SELECT host.id, host.country, host.name, host.bandwidth_int, host.comment, host.internet2, site.org_url, site.name, category.name, host_category_url.url "
-    sql += "FROM category, host_category, host_category_dir, host, site, host_category_url "
+
+    sql1_filter = ''
+    sql_common_select = "SELECT host.id, host.country, host.name, host.bandwidth_int, host.comment, host.internet2, site.org_url, site.name, category.name, host_category_url.url "
+    sql1_from = "FROM category, host_category, host, site, host_category_url, host_category_dir "
+    sql2_from = "FROM category, host_category, host, site, host_category_url "
     # join conditions
-    sql += "WHERE "
-    sql += "host_category.category_id = category.id AND "
-    sql += "host_category.host_id = host.id AND "
-    sql += "host_category_dir.host_category_id = host_category.id AND "
-    sql += "host_category_url.host_category_id = host_category.id AND "
+    sql_common  = "WHERE "
+    sql_common += "host_category.category_id = category.id AND "
+    sql_common += "host_category.host_id = host.id AND "
+    sql_common += "host_category_url.host_category_id = host_category.id AND "
     if product is not None:
-        sql += "category.product_id = %s AND " % product.id
-    sql += "host.site_id = site.id "
+        sql_common += "category.product_id = %s AND " % product.id
+    sql_common += "host.site_id = site.id "
     # select conditions
     # up2date, active, not private
-    sql += 'AND (host_category_dir.up2date OR host_category.always_up2date) '
-    sql += 'AND host.user_active AND site.user_active '
-    sql += 'AND host.admin_active AND site.admin_active '
-    sql += 'AND NOT host.private '
-    sql += 'AND NOT site.private '
-    sql += 'AND NOT host_category_url.private '
-    sql += 'AND category.publiclist '
-
+    sql_common += 'AND host.user_active AND site.user_active '
+    sql_common += 'AND host.admin_active AND site.admin_active '
+    sql_common += 'AND NOT host.private '
+    sql_common += 'AND NOT site.private '
+    sql_common += 'AND NOT host_category_url.private '
+    sql_common += 'AND category.publiclist '
     if re is not None:
-        sql += "AND host_category_dir.path ~ '%s' " % re
+        sql1_filter = "AND host_category_dir.path ~ '%s' " % re
+
+    sql1_join    = 'AND host_category_dir.host_category_id = host_category.id '
+    sql1_up2date = 'AND host_category_dir.up2date '
+    sql2_up2date = 'AND host_category.always_up2date '
+
+    sql1 = sql_common_select + sql1_from + sql_common + sql1_filter + sql1_join + sql1_up2date
+    sql2 = sql_common_select + sql2_from + sql_common + sql2_up2date
+
+    sql = "SELECT * FROM ( %s UNION %s ) AS subquery" % (sql1, sql2)
 
     result = directory._connection.queryAll(sql)
     return result
