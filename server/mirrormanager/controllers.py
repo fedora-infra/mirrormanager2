@@ -1112,6 +1112,7 @@ class Root(controllers.RootController):
         # by setting excludes here, we cause the filter rules to
         # not transfer anything if there is no new content or if
         # a mistake was made in the URL.
+        message=None
         excludes=[u'*']
         try:
             c = kwargs['categories']
@@ -1119,12 +1120,14 @@ class Root(controllers.RootController):
             stripprefix = kwargs['stripprefix']
             num_prefix = num_prefix_components(stripprefix)
         except KeyError:
-            return dict(includes=[], excludes=excludes)
+            message=u'Missing categories, since, or stripprefix arguments'
+            return dict(includes=[], excludes=excludes, message=message)
         
         try:
             since = int(since)
         except:
-            return dict(includes=[], excludes=excludes)
+            message=u'value of argument since is not an integer'
+            return dict(includes=[], excludes=excludes, message=message)
 
         includes = set()
         categories_requested = c.split(',')
@@ -1140,7 +1143,7 @@ class Root(controllers.RootController):
         # add trailing slash as rsync wants it
         for i in xrange(len(includes)):
             includes[i] += u'/'
-        return dict(includes=includes, excludes=excludes)
+        return dict(includes=includes, excludes=excludes, message=message)
         
     @expose(template="mirrormanager.templates.login")
     def login(self, forward_url=None, previous_url=None, *args, **kw):

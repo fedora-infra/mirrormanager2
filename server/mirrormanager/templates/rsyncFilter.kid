@@ -2,6 +2,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:py="http://purl.org/kid/ns#">
 <body>
 # rsync --exclude-from=(this file)
+<div py:if="message is not None"># <span py:replace="message">message</span>
+</div>
 # includes
 <div py:for="i in includes">+ <span py:replace="i">pattern</span>
 + <span py:replace="i">pattern</span>*
