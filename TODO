@@ -13,3 +13,5 @@
   - done via separate directory trees (e.g. pub/fedora and pub/secondary) right now
 
 * sort publiclist chooser versions
+* fix the publiclist chooser again.  The UNION SQL call is causing it
+  to show all arches everywhere, incorrectly.
