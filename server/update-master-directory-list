@@ -432,7 +432,7 @@ def sync_directories_from_directory(directory, cname, excludes=[]):
                 s = os.stat(os.path.join(dirpath, f))
             except OSError:
                 continue
-            category_directories[dname]['files'][f] = {'size':s.st_size,
+            category_directories[dname]['files'][f] = {'size':str(s.st_size),
                                                        'stat':s[stat.ST_CTIME]}
 
     sync_category_directories(category, category_directories)
