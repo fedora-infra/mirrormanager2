@@ -73,7 +73,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Mon Apr  6 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.11-1
-- fix trivial bugs from previous version
+- fix quite a few trivial bugs from previous version
 
 * Mon Apr  6 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.10-1
 - improved crawler repomd.xml verification
