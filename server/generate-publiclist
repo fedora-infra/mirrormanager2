@@ -105,8 +105,8 @@ class ProductVersionArchMatrix:
                     continue
                 for a in publiclist_arches():
                     hosts = publiclist_hosts(productname=p.name, vername=v.name, archname=a.name)
-                    self.set_pva(p.name, v.name, a, hosts)
-                    print "filled %s/%s/%s with %s hosts" % (p.name, v.name, a, len(hosts))
+                    self.set_pva(p.name, v.name, a.name, hosts)
+                    print "filled %s/%s/%s with %s hosts" % (p.name, v.name, a.name, len(hosts))
 
 
 
