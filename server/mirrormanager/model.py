@@ -390,10 +390,13 @@ class PubliclistHost:
         self.categories   = {}
 
     def __cmp__(self, other):
-        """comparison based on country, so we can sort()"""
+        """comparison based on country, so we can sort().
+        First sort on country, ascending order.
+        Second sort on bandwidth_int, decending order.
+        """
         rc = cmp(self.country, other.country)
         if rc == 0:
-            rc = cmp(self.bandwidth_int, other.bandwidth_int)
+            rc = -cmp(self.bandwidth_int, other.bandwidth_int)
         return rc
 
     def add_category(self, name, url):
