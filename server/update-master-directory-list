@@ -236,11 +236,7 @@ def parent_dir(path):
     return '/'.join(sdir)
 
 
-def ctime_from_rsync(line):
-    try:
-        perm, size, date, time, filepath = line.split()
-    except ValueError:
-        raise
+def ctime_from_rsync(date, time):
     year, month, day = date.split('/')
     hour, minute, second = time.split(':')
     t = datetime.datetime(int(year), int(month), int(day), int(hour), int(minute), int(second), 0, None)
@@ -260,7 +256,11 @@ def make_one_directory(line, category, path, category_directories):
         readable=False
         unreadable_dirs[dname] = True
 
-    ctime = ctime_from_rsync(line)
+    try:
+        perm, size, date, time, filepath = line.split()
+    except ValueError:
+        raise
+    ctime = ctime_from_rsync(date, time)
     category_directories[dname] = {'files':{}, 'isRepository':False, 'readable':readable, 'ctime':ctime}
     if d.endswith('repodata'):
         parent_dname = dname[:-len('/repodata')]
@@ -273,7 +273,11 @@ def make_one_directory(line, category, path, category_directories):
 
 def add_file_to_directory(line, path, category_directories):
     try:
-        dt = ctime_from_rsync(line)
+        perm, size, date, time, filepath = line.split()
+    except ValueError:
+        return
+    try:
+        dt = ctime_from_rsync(date, time)
     except ValueError:
         return
 
