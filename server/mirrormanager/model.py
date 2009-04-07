@@ -548,7 +548,25 @@ class Arch(SQLObject):
     primaryArch = BoolCol(default=True)
 
 def publiclist_arches():
-    return [a for a in Arch.select() if a.publiclist]
+    def compare(a, b):
+        rc = 0
+        if a.publiclist and not b.publiclist:
+            rc = -1
+        elif not a.publiclist and b.publiclist:
+            rc = 1
+        if a.primaryArch and not b.primaryArch:
+            rc = -1
+        if not a.primaryArch and b.primaryArch:
+            rc = 1
+        if not rc:
+            rc = cmp(a.name, b.name)
+        if a.name == u'source' or b.name == u'source':
+            rc = 1
+        return rc
+
+    result = [a for a in Arch.selectBy(publiclist=True)]
+    result.sort(compare)
+    return result
 
 # e.g. 'fedora' and 'epel'
 class Product(SQLObject):
