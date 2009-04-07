@@ -1,0 +1,68 @@
+#!/usr/bin/python
+#
+# Copyright 2007 Dell, Inc.
+#   by Matt Domsch <Matt_Domsch@dell.com>
+# MIT/X11 license
+
+RELEASE_VERSION='10'
+
+import pkg_resources
+pkg_resources.require("TurboGears")
+
+from sqlobject import *
+import sys, os, string
+import turbogears
+from mirrormanager.model import *
+from optparse import OptionParser
+
+from turbogears.database import PackageHub
+hub = __connection__ = None
+
+repos = {'fedora-%s':'rawhide', 'fedora-debug-%s':'rawhide-debug', 'fedora-source-%s':'rawhide-source', 
+         'updates-released-f%s':'rawhide', 'updates-released-debug-f%s':'rawhide-debug', 'updates-released-source-f%s':'rawhide-source',
+         'updates-testing-f%s':'rawhide', 'updates-testing-debug-f%s':'rawhide-debug', 'updates-testing-source-f%s':'rawhide-source' }
+
+
+def remove_version_redirect_to_rawhide(version):
+    for fromRepo,toRepo in repos.iteritems():
+        try:
+            r = RepositoryRedirect.selectBy(fromRepo=fromRepo % (version), toRepo=toRepo)[0]
+            r.destroySelf()
+        except:
+            pass
+
+def hide_unhide_versions():
+    v = Version.get(33) # Fedora 10
+    v.display=True
+    v.sync()
+    v = Version.get(32) # F10 Preview
+    v.display = False
+    v.sync()
+
+def doit(options, args):
+    remove_version_redirect_to_rawhide(RELEASE_VERSION)
+    hide_unhide_versions()
+    
+
+def main():
+    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option("-c", "--config",
+                      dest="config", default='dev.cfg',
+                      help="TurboGears config file to use")
+
+    (options, args) = parser.parse_args()
+
+    turbogears.update_config(configfile=options.config,
+                             modulename="mirrormanager.config")
+    global hub
+    global __connection__
+    hub = PackageHub("mirrormanager")
+    __connection__ = hub
+    
+    doit(options, args)
+
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+        
