@@ -448,9 +448,10 @@ def _publiclist_sql_to_list(sqlresult, valid_categories):
 def _publiclist_hosts(directory, product=None, re=None):
 
     sql1_filter = ''
-    sql_common_select = "SELECT host.id, host.country, host.name, host.bandwidth_int, host.comment, host.internet2, site.org_url, site.name, category.name, host_category_url.url "
+    sql2_filter = ''
+    sql_common_select = "SELECT DISTINCT host.id, host.country, host.name, host.bandwidth_int, host.comment, host.internet2, site.org_url, site.name, category.name, host_category_url.url "
     sql1_from = "FROM category, host_category, host, site, host_category_url, host_category_dir "
-    sql2_from = "FROM category, host_category, host, site, host_category_url "
+    sql2_from = "FROM category, host_category, host, site, host_category_url, directory, category_directory "
     # join conditions
     sql_common  = "WHERE "
     sql_common += "host_category.category_id = category.id AND "
@@ -467,15 +468,20 @@ def _publiclist_hosts(directory, product=None, re=None):
     sql_common += 'AND NOT site.private '
     sql_common += 'AND NOT host_category_url.private '
     sql_common += 'AND category.publiclist '
+
+    sql1_join   = 'AND host_category_dir.host_category_id = host_category.id '
+    sql2_join   = 'AND category_directory.directory_id = directory.id '
+    sql2_join  += 'AND category_directory.category_id = category.id '
+
     if re is not None:
         sql1_filter = "AND host_category_dir.path ~ '%s' " % re
+        sql2_filter = "AND directory.name ~ '%s' " % re
 
-    sql1_join    = 'AND host_category_dir.host_category_id = host_category.id '
     sql1_up2date = 'AND host_category_dir.up2date '
     sql2_up2date = 'AND host_category.always_up2date '
 
     sql1 = sql_common_select + sql1_from + sql_common + sql1_filter + sql1_join + sql1_up2date
-    sql2 = sql_common_select + sql2_from + sql_common + sql2_up2date
+    sql2 = sql_common_select + sql2_from + sql_common + sql2_filter + sql2_join + sql2_up2date
 
     sql = "SELECT * FROM ( %s UNION %s ) AS subquery" % (sql1, sql2)
 
