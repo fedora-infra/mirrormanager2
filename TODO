@@ -13,5 +13,11 @@
   - done via separate directory trees (e.g. pub/fedora and pub/secondary) right now
 
 * sort publiclist chooser versions
-* fix the publiclist chooser again.  The UNION SQL call is causing it
-  to show all arches everywhere, incorrectly.
+
+* cronjob to mark private mirrors as not-up2date, some amount of time
+  after the content has changed but they haven't run report_mirror.
+
+* can the crawler check private, but serving I2 clients, mirrors?
+
+* make the 7-day stale  repomd.xml file timeout be configurable in
+  prod.cfg.
