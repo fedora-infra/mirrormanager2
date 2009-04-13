@@ -14,3 +14,5 @@ ${MM_DIR}/update-static-content ${MIRRORLIST_DIR}
 ${MM_DIR}/refresh_mirrorlist_cache -c /etc/mirrormanager/prod.cfg
 ${MM_DIR}/get_internet2_netblocks ${CACHEDIR}/i2_netblocks.txt
 killall -HUP mirrorlist_server.py
+
+exit 0
