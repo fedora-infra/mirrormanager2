@@ -1,6 +1,6 @@
 Name:           mirrormanager
 Version:        ##VERSION##
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Fedora mirror management system
 BuildArch:      noarch
 
@@ -10,7 +10,7 @@ URL:            http://fedorahosted.org/mirrormanager
 Source0:        https://fedorahosted.org/releases/m/i/%{name}/%{name}-%{version}.tar.bz2
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildRequires:  python
-Requires:       TurboGears, python-IPy, python-GeoIP, wget, yum
+Requires:       TurboGears, python-IPy, python-GeoIP, wget, yum, psmisc
 
 %define py_ver         %(echo `python -c "import sys; print sys.version[:3]"`)
 %if "%{py_ver}" < "2.5"
@@ -72,6 +72,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Mon Apr 20 2009 Mike McGrath <mmcgrath@fedoraproject.org> 1.2.11-2
+- Added psmisc Requires
+
 * Tue Apr  7 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.11-1
 - fix quite a few bugs from previous version
 
