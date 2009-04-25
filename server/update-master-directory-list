@@ -168,8 +168,9 @@ def make_file_details_from_checksums(dir):
     
 
 def make_repomd_file_details(dir):
-    repodataDir = dir.name + '/repodata'
-    repomd_fname = os.path.join(rootdir, dir.name, 'repodata', 'repomd.xml')
+    if not dir.name.endswith('/repodata'):
+        return
+    repomd_fname = os.path.join(rootdir, dir.name, 'repomd.xml')
     if not os.path.exists(repomd_fname):
         return
     try:
@@ -188,7 +189,6 @@ def make_repomd_file_details(dir):
     if 'timestamp' not in yumrepo.__dict__:
         set_repomd_timestamp(yumrepo)
     timestamp = yumrepo.timestamp
-    dir = Directory.byName(repodataDir)
     try:
         fd = FileDetail.selectBy(directory=dir, filename='repomd.xml', sha1=sha1, md5=md5, sha256=sha256, sha512=sha512,
                                  timestamp=timestamp, size=size)[0]
@@ -267,7 +267,7 @@ def make_one_directory(line, category, path, category_directories):
         try:
             category_directories[parent_dname]['isRepository'] = True
         except KeyError:
-            category_directories[parent_dname] = {'files':{}, 'isRepository':True, 'readable':readable}
+            category_directories[parent_dname] = {'files':{}, 'isRepository':True, 'readable':readable, 'ctime':ctime}
             
     return dname, category_directories
 
@@ -328,16 +328,17 @@ def sync_category_directories(category, category_directories):
         except SQLObjectNotFound:
             dir = Directory(name=dirpath,readable=value['readable'], ctime=value['ctime'])
             dir.addCategory(category)
-        if dir.files != short_filelist(value['files']):
-            dir.files = short_filelist(value['files'])
+        if value['changed']:
+            if dir.files != short_filelist(value['files']):
+                dir.files = short_filelist(value['files'])
         make_file_details_from_checksums(dir)
 
     # this has to be a second pass to be sure the child repodata/ dir is created in the db first
     for dirpath, value in category_directories.iteritems():
+        dir = Directory.byName(dirpath)
         if value['isRepository']:
-            dir = Directory.byName(dirpath)
             make_repository(dir, category)
-            make_repomd_file_details(dir)
+        make_repomd_file_details(dir)
     ageFileDetails()
 
 def parse_rsync_listing(cname, f):
@@ -417,27 +418,31 @@ def sync_directories_from_directory(directory, cname, excludes=[]):
         dname = dname.rstrip('/')
         try:
             d = Directory.byName(dname)
-            if d.ctime == ctime:
-                # break out here because nothing has changed
-                continue
+            d_ctime = d.ctime
         except SQLObjectNotFound:
             # we'll need to create it
-            pass
+            d_ctime = 0
 
-        print "%s has changed" % dname
         mode = s.st_mode
         readable = (mode & stat.S_IRWXO & (stat.S_IROTH|stat.S_IXOTH))
         if not readable:
             unreadable_dirs[dname] = True
         isRepo = 'repodata' in dirnames
-        category_directories[dname] = {'files':{}, 'isRepository':isRepo, 'readable':readable, 'ctime':ctime}
-        for f in filenames:
-            try:
-                s = os.stat(os.path.join(dirpath, f))
-            except OSError:
-                continue
-            category_directories[dname]['files'][f] = {'size':str(s.st_size),
-                                                       'stat':s[stat.ST_CTIME]}
+
+        changed = (d_ctime != ctime)
+        if changed:
+            print "%s has changed" % dname
+        category_directories[dname] = {'files':{}, 'isRepository':isRepo, 'readable':readable, 'ctime':ctime, 'changed':changed}
+
+        # skip per-file stat()s if the directory hasn't changed
+        if changed:
+            for f in filenames:
+                try:
+                    s = os.stat(os.path.join(dirpath, f))
+                except OSError:
+                    continue
+                category_directories[dname]['files'][f] = {'size':str(s.st_size),
+                                                           'stat':s[stat.ST_CTIME]}
 
     sync_category_directories(category, category_directories)
 
@@ -455,6 +460,7 @@ def main():
         print "another instance is running, try again later."
         sys.exit(1)
 
+    print "Starting umdl %s" % (datetime.datetime.utcnow().isoformat())
     for i in config.get('umdl.master_directories'):
         try:
             options = i['options']
@@ -472,6 +478,8 @@ def main():
             sync_directories_from_directory(i['path'], i['category'], excludes)
 
     remove_pidfile(pidfile)
+    print "Ending umdl %s" % (datetime.datetime.utcnow().isoformat())
+
     return 0
 
 if __name__ == "__main__":
