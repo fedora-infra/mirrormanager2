@@ -295,11 +295,13 @@ def short_filelist(files):
     html=0
     rpms=0
     hdrs=0
+    drpms=0
     for f in files.keys():
         if f.endswith('.html'): html=html+1
         if f.endswith('.rpm'):  rpms=rpms+1
         if f.endswith('.hdr'):  hdrs=hdrs+1
-    if html>10 or rpms > 10 or hdrs > 10:
+        if f.endswith('.drpm'):  drpms=drpms+1
+    if html>10 or rpms > 10 or hdrs > 10 or drpms > 10:
         date_file_list = []
         rc = {}
         for k in files.keys():
