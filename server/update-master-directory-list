@@ -97,7 +97,7 @@ def set_repomd_timestamp(yumrepo):
     return timestamp
 
 def make_file_details_from_checksums(dir):
-    def _parse_checksum_file(path):
+    def _parse_checksum_file(path, checksumlen):
         r = {}
         try:
             f = open(path, 'r')
@@ -106,10 +106,7 @@ def make_file_details_from_checksums(dir):
                 s = line.split()
                 if len(s) < 2:
                     continue
-
-                # parse for only md5, sha1, and sha256 values
-                s0len = len(s[0])
-                if s0len != 32 and s0len != 40 and s0len != 64:
+                if len(s[0]) != checksumlen):
                     continue
                 # strip off extraneous starting '*' char from name
                 s[1] = s[1].strip('*')
@@ -119,23 +116,23 @@ def make_file_details_from_checksums(dir):
             pass
         return r
 
-    def _checksums_from_globs(dirname, globs):
+    def _checksums_from_globs(dirname, globs, checksumlen):
         d = {}
         checksum_files = []
         for g in globs:
             checksum_files.extend(glob.glob(os.path.join(rootdir, dirname, g)))
         for f in checksum_files:
-            d.update(_parse_checksum_file(f))
+            d.update(_parse_checksum_file(f, checksumlen))
         return d
 
     sha1_globs = ['*.sha1sum', 'SHA1SUM']
     md5_globs = ['*.md5sum', 'MD5SUM']
     sha256_globs = ['*-CHECKSUM']
     sha512_globs = ['*.sha512sum', 'SHA512SUM']
-    md5dict = _checksums_from_globs(dir.name, md5_globs)
-    sha1dict = _checksums_from_globs(dir.name, sha1_globs)
-    sha256dict = _checksums_from_globs(dir.name, sha256_globs)
-    sha512dict = _checksums_from_globs(dir.name, sha512_globs)
+    md5dict = _checksums_from_globs(dir.name, md5_globs, 32)
+    sha1dict = _checksums_from_globs(dir.name, sha1_globs, 40)
+    sha256dict = _checksums_from_globs(dir.name, sha256_globs, 64)
+    sha512dict = _checksums_from_globs(dir.name, sha512_globs, 128)
 
     files = set()
     for k in md5dict.keys():
