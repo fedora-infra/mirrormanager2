@@ -106,7 +106,7 @@ def make_file_details_from_checksums(dir):
                 s = line.split()
                 if len(s) < 2:
                     continue
-                if len(s[0]) != checksumlen):
+                if len(s[0]) != checksumlen:
                     continue
                 # strip off extraneous starting '*' char from name
                 s[1] = s[1].strip('*')
