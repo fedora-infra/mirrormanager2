@@ -310,6 +310,9 @@ def sync_hcds(host, host_category_dirs):
         if hcd.up2date != up2date:
             hcd.up2date=up2date
             hcd.sync()
+            if up2date == False:
+                print >>logfile, "Directory %s is not up-to-date on this host." % d
+                
         current_hcds[hcd] = True
 
 
@@ -448,16 +451,17 @@ def dienow():
     os.kill(mypid, signal.SIGUSR1)
     os._exit(0)
 
-def mark_not_up2date(host):
+def mark_not_up2date(host, reason="Unknown"):
     host.set_not_up2date()
     host.lastCrawled = datetime.utcnow()
+    print >> logfile, "Host marked not up2date: %s" % reason
     
 
 def sigusr1_handler(signum, frame):
     if signum == signal.SIGUSR1:
         signal.signal(signal.SIGUSR1, signal.SIG_IGN)
         try:
-            mark_not_up2date(Host.get(hostid))
+            mark_not_up2date(Host.get(hostid), "Crawler timed out before completing.  Host is likely overloaded.")
         except:
             pass
     os._exit(1)
@@ -545,7 +549,7 @@ def per_host(host, options=None):
                     pass
             except:
                 timer.cancel()
-                mark_not_up2date(host)
+                mark_not_up2date(host, "Unknown exception raised.  This is a bug in the MM crawler.")
                 sys.exit(1)
 
     hoststate.close()
@@ -555,7 +559,7 @@ def per_host(host, options=None):
     if len(host_category_dirs) > 0:
         sync_hcds(host, host_category_dirs)
     else:
-        mark_not_up2date(host)
+        mark_not_up2date(host, "No host category directories found.  Check that your Host Category URLs are correct.")
 
 def main():
     global mypid
