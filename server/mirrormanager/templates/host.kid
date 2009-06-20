@@ -46,8 +46,8 @@ Last Crawled: ${values.lastCrawled}<br></br>
 		  might list their netblocks, and the mirrorlist CGI
 		  would return the university-local mirror rather than
 		  a country-local mirror.
-		  Format is one of 18.0.0.0/255.0.0.0, 18.0.0.0/8, or
-		  an IPv6 prefix/length.<br/>
+		  Format is one of 18.0.0.0/255.0.0.0, 18.0.0.0/8, 
+		  an IPv6 prefix/length, or a DNS hostname.<br/>
 <a href="${tg.url('/host_netblock/0/new?hostid=' + str(values.id))}">[Add]</a><br/>
 	<ul>
 	<li py:for="a in values.netblocks">
