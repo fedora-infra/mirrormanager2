@@ -118,10 +118,15 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
     @expose(template="mirrormanager.templates.site")
     @validate(form=site_form)
     @error_handler(new)
-    def create(self, **kwargs):
+    def create(self, tg_errors=None, **kwargs):
         if not identity.in_group("sysadmin") and kwargs.has_key('admin_active'):
             del kwargs['admin_active']
         kwargs['createdBy'] = identity.current.user_name
+
+        if tg_errors is not None:
+            turbogears.flash("Error creating Site: %s" % createErrorString(tg_errors))
+            raise turbogears.redirect("/site/0/create")
+
         try:
             site = Site(**kwargs)
             SiteAdmin(site=site, username=identity.current.user_name)
@@ -139,10 +144,7 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
         siteadmin_check(site, identity)
 
         if tg_errors is not None:
-            errstr = ""
-            for k, v in tg_errors.iteritems():
-                errstr += "%s: %s\n" % (k, v)
-            turbogears.flash("Error: %s" % errstr)
+            turbogears.flash("Error updating Site: %s" % createErrorString(tg_errors))
             return dict(form=site_form, values=site, action = turbogears.url("/site/%s/update" % site.id),
                         disabled_fields=self.disabled_fields())
 
@@ -305,7 +307,7 @@ class HostFields(widgets.WidgetsList):
     user_active = widgets.CheckBox("site active", default=True, help_text="Uncheck this box to temporarily disable this host, it will be removed from public listings.")
     country = widgets.TextField(validator=validators.All(validators.Regex(r'^[a-zA-Z][a-zA-Z]$'),validators.NotEmpty),
                                 help_text="2-letter ISO country code" )
-    bandwidth_int = widgets.TextField(validator=validators.All(validators.Int, validators.NotEmpty), help_text="* integer megabits/sec, how much bandwidth you offer to a public end user")
+    bandwidth_int = widgets.TextField(validator=validators.All(validators.Int, validators.NotEmpty), help_text="* integer megabits/sec, how much bandwidth this host can serve")
     private = widgets.CheckBox(help_text="e.g. not available to the public, an internal private mirror")
     internet2 = widgets.CheckBox(help_text="on Internet2")
     internet2_clients = widgets.CheckBox(help_text="serves Internet2 clients, even if private")
@@ -349,7 +351,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
 
     @expose(template="mirrormanager.templates.host")
     @validate(form=host_form)
-    @error_handler()
+    @error_handler(new)
     def create(self, siteid=None, tg_errors=None, **kwargs):
         if not identity.in_group("sysadmin") and kwargs.has_key('admin_active'):
             del kwargs['admin_active']
@@ -360,9 +362,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
 
         # handle the validation error
         if tg_errors:
-            errors = [(param,inv.msg,inv.value) for param, inv in
-                      tg_errors.items()]
-            turbogears.flash("Error: Failed to create Host: %s " % (errors))
+            turbogears.flash("Error creating Host: %s" % (createErrorString(tg_errors)))
             return errordict
 
         try:
@@ -390,10 +390,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
         siteadmin_check(host.my_site(), identity)
 
         if tg_errors is not None:
-            errstr = ""
-            for k, v in tg_errors.iteritems():
-                errstr += "%s: %s\n" % (k, v)
-            turbogears.flash("Error: %s" % errstr)
+            turbogears.flash("Error updating Host: %s" % createErrorString(tg_errors))
             return dict(form=host_form, values=host, action = turbogears.url("/host/%s/update" % host.id),
                         disabled_fields=self.disabled_fields(host=host), title="Host", site=host.site)
 
@@ -535,10 +532,7 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
         del kwargs['category']
 
         if tg_errors is not None:
-            errstr = ""
-            for k, v in tg_errors.iteritems():
-                errstr += "%s: %s\n" % (k, v)
-            turbogears.flash("Error: %s" % errstr)
+            turbogears.flash("Error updating HostCategory: %s" % createErrorString(tg_errors))
             return dict(form=host_category_form_read, values=hostcategory, action = turbogears.url("/host_category/%s/update" % hostcategory.id),
                         disabled_fields=self.disabled_fields(), host=hostcategory.host)
         
