@@ -301,6 +301,8 @@ def do_netblocks(kwargs, cache, header):
 def do_internet2(kwargs, cache, clientCountry, header):
     hostresults = set()
     client_ip = kwargs['client_ip']
+    if client_ip == 'unknown':
+        return (header, hostresults)
     if OrderedIP(client_ip) in internet2_netblocks:
         header += 'Using Internet2 '
         if clientCountry is not None and clientCountry in cache['byCountryInternet2']:
