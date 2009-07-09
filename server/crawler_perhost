@@ -311,7 +311,7 @@ def sync_hcds(host, host_category_dirs):
             hcd.up2date=up2date
             hcd.sync()
             if up2date == False:
-                print >>logfile, "Directory %s is not up-to-date on this host." % d
+                print >>logfile, "Directory %s is not up-to-date on this host." % d.name
                 
         current_hcds[hcd] = True
 
