@@ -47,13 +47,20 @@ $(TARBALL):
 	tar cvjf $(TARBALL) -C $${tmp_dir} $(RELEASE_STRING) ; \
 	rm -rf $${tmp_dir} ;
 
+# Use older digest algorithms for local rpmbuilds, as EPEL5 and
+# earlier releases need this.  When building using mock for a
+# particular target, it will use the proper (newer) digests if that
+# target supports it.
 rpm: tarball $(SPEC)
 	tmp_dir=`mktemp -d` ; \
 	mkdir -p $${tmp_dir}/{BUILD,RPMS,SRPMS,SPECS,SOURCES} ; \
 	cp $(TARBALL) $${tmp_dir}/SOURCES ; \
 	cp $(SPEC) $${tmp_dir}/SPECS ; \
 	pushd $${tmp_dir} > /dev/null 2>&1; \
-	rpmbuild -ba --define "_topdir $${tmp_dir}" SPECS/mirrormanager.spec ; \
+	rpmbuild -ba --define "_topdir $${tmp_dir}" \
+	  --define "_source_filedigest_algorithm 0" \
+	  --define "_binary_filedigest_algorithm 0" \
+          SPECS/mirrormanager.spec ; \
 	popd > /dev/null 2>&1; \
 	cp $${tmp_dir}/RPMS/noarch/* $${tmp_dir}/SRPMS/* . ; \
 	rm -rf $${tmp_dir} ; \
