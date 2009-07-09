@@ -1,11 +1,11 @@
 Name:           mirrormanager
 Version:        ##VERSION##
-Release:        2%{?dist}
+Release:        1%{?dist}
 Summary:        Fedora mirror management system
 BuildArch:      noarch
 
 Group:          Applications/Internet
-License:        MIT and GPLv2 and GPLv3
+License:        MIT and GPLv2
 URL:            http://fedorahosted.org/mirrormanager
 Source0:        https://fedorahosted.org/releases/m/i/%{name}/%{name}-%{version}.tar.bz2
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
@@ -60,7 +60,7 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrormanager.conf
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrorlist-server.conf
-%doc LICENSES LICENSE-MIT-X11 LICENSE-GPLv2 LICENSE-GPLv3
+%doc LICENSES LICENSE-MIT-X11 LICENSE-GPLv2
 %doc server/*.cfg
 
 %files client
@@ -72,6 +72,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Wed Jul  8 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.12-1
+- bug fixes post F11 release
+
 * Mon Apr 20 2009 Mike McGrath <mmcgrath@fedoraproject.org> 1.2.11-2
 - Added psmisc Requires
 
