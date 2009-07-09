@@ -37,6 +37,7 @@ $(TARBALL):
 	mkdir -p dist
 	tmp_dir=`mktemp -d /tmp/mirrormanager.XXXXXXXX` ; \
 	cp -ar ../$(RELEASE_NAME) $${tmp_dir}/$(RELEASE_STRING) ; \
+	rm $${tmp_dir}/$(RELEASE_STRING)/.gitignore ; \
 	find $${tmp_dir}/$(RELEASE_STRING) -depth -name .git -type d -exec rm -rf \{\} \; ; \
 	find $${tmp_dir}/$(RELEASE_STRING) -depth -name dist -type d -exec rm -rf \{\} \; ; \
 	find $${tmp_dir}/$(RELEASE_STRING) -depth -name fedora-test-data -type d -exec rm -rf \{\} \; ; \
