@@ -72,7 +72,7 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Wed Jul  8 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.12-1
+* Thu Jul  9 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.2.12-1
 - bug fixes post F11 release
 
 * Mon Apr 20 2009 Mike McGrath <mmcgrath@fedoraproject.org> 1.2.11-2
