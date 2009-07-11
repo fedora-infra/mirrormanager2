@@ -646,11 +646,15 @@ class HostNetblockController(HostListitemController):
 
         ipv4_16 = IPy.IP('10.0.0.0/16')
         ipv6_32 = IPy.IP('fec0::/32')
-        ip = IPy.IP(kwargs['netblock'])
-        if ((ip.version() == 4 and ip.len() > ipv4_16.len()) or \
-            (ip.version() == 6 and ip.len() > ipv6_32.len())) and \
-            not identity.in_group("sysadmin"):
+        try:
+            ip = IPy.IP(kwargs['netblock'])
+            if ((ip.version() == 4 and ip.len() > ipv4_16.len()) or \
+                    (ip.version() == 6 and ip.len() > ipv6_32.len())) and \
+                    not identity.in_group("sysadmin"):
                 raise InvalidData, emsg
+        except ValueError:
+            # also accept DNS hostnames
+            pass
         
         HostNetblock(host=host, netblock=kwargs['netblock'])
 
