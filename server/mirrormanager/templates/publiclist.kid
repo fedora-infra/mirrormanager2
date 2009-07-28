@@ -1,5 +1,4 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<?python from turbogears import config ?>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:py="http://purl.org/kid/ns#"
     py:extends="'static.kid'">
 <head>
@@ -50,7 +49,7 @@ This list is dynamically generated every hour, listing only up-to-date mirrors.
 </p>
 <p>
 To become a public ${tg.config('mirrormanager.projectname','Fedora')} mirror, please see <a
-py:attrs="href=config.get('mirrormanager.mirrorwiki', 'http://fedoraproject.org/wiki/Infrastructure/Mirroring')">
+py:attrs="href=tg.config('mirrormanager.mirrorwiki', 'http://fedoraproject.org/wiki/Infrastructure/Mirroring')">
 our wiki page on Mirroring</a>.
 </p>
 

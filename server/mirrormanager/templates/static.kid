@@ -1,16 +1,15 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <?python import sitetemplate ?>
-<?python from turbogears import config ?>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:py="http://purl.org/kid/ns#" py:extends="sitetemplate">
   <head py:match="item.tag=='{http://www.w3.org/1999/xhtml}head'" py:attrs="item.items()">
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
     <title py:replace="''">Your title goes here</title>
     <link rel="stylesheet" type="text/css" media="all"
-       py:attrs="href=config.get('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'fedora.css'"/>
+       py:attrs="href=tg.config('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'fedora.css'"/>
     <link rel="stylesheet" type="text/css" media="all"
-       py:attrs="href=config.get('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'main.css'"/>
+       py:attrs="href=tg.config('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'main.css'"/>
     <link rel="stylesheet" type="text/css" media="all"
-       py:attrs="href=config.get('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'style.css'"/>
+       py:attrs="href=tg.config('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'style.css'"/>
     <!--[if lt IE 7]>
     <style type="text/css">
       #wrapper
@@ -23,8 +22,8 @@
   <body py:match="item.tag=='{http://www.w3.org/1999/xhtml}body'" py:attrs="item.items()">
     <div id="wrapper">
     <div id="head">
-      <h1><a py:attrs="{'title' : config.get('mirrormanager.projectname', 'Fedora') + ' Project homepage',
-                        'href' : config.get('mirrormanager.projectweb', 'http://fedoraproject.org')}">
+      <h1><a py:attrs="{'title' : tg.config('mirrormanager.projectname', 'Fedora') + ' Project homepage',
+                        'href' : tg.config('mirrormanager.projectweb', 'http://fedoraproject.org')}">
            ${tg.config('mirrormanager.projectname','Fedora')}</a>
       </h1>
     </div>
