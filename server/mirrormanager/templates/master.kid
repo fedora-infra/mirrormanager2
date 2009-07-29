@@ -5,11 +5,11 @@
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
     <title py:replace="''">Your title goes here</title>
     <link rel="stylesheet" type="text/css" media="all"
-       py:attrs="href=tg.config('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'fedora.css'"/>
+    py:attrs="{'href': tg.config('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'fedora.css'}"/>
     <link rel="stylesheet" type="text/css" media="all"
-       py:attrs="href=tg.config('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'main.css'"/>
+    py:attrs="{'href': tg.config('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'main.css'}"/>
     <link rel="stylesheet" type="text/css" media="all"
-       py:attrs="href=tg.config('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'style.css'"/>
+    py:attrs="{'href': tg.config('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'style.css'}"/>
     <!--[if lt IE 7]>
     <style type="text/css">
       #wrapper
@@ -32,18 +32,18 @@
         <div id="nav">
           <h2>Navigation</h2>
           <ul>
-            <li><a href="${tg.url('/')}" py:attrs="title=_('Mirror Manager main page')">Main</a></li>
+            <li><a href="${tg.url('/')}" py:attrs="{'title': _('Mirror Manager main page')}">Main</a></li>
           </ul>
           <h2>${tg.config('mirrormanager.projectname','Fedora')} websites</h2>
           <ul>
-            <li><a href="http://fedoraproject.org/" py:attrs="title=_('Fedora Project homepage')">Fedora Home</a></li>
-            <li><a href="http://docs.fedoraproject.org/" py:attrs="title=_('Fedora documentation')">Docs</a>
+            <li><a href="http://fedoraproject.org/" py:attrs="{'title': _('Fedora Project homepage')}">Fedora Home</a></li>
+            <li><a href="http://docs.fedoraproject.org/" py:attrs="{'title': _('Fedora documentation')}">Docs</a>
               <span class="navnote">Fedora documentation</span></li>
-            <li><a href="http://fedoraproject.org/wiki/" py:attrs="title=_('Collaborative knowledge')">Wiki</a>
+              <li><a href="http://fedoraproject.org/wiki/" py:attrs="{'title': _('Collaborative knowledge')}">Wiki</a>
               <span class="navnote">Collaborative knowledge</span></li>
-            <li><a href="http://planet.fedoraproject.org/" py:attrs="title=_('The voices of the community')">Planet</a>
+              <li><a href="http://planet.fedoraproject.org/" py:attrs="{'title': _('The voices of the community')}">Planet</a>
               <span class="navnote">The voices of the community</span></li>
-            <li><a href="http://fedorapeople.org/" py:attrs="title=_('Community webpages')">People</a>
+              <li><a href="http://fedorapeople.org/" py:attrs="{'title': _('Community webpages')}">People</a>
               <span class="navnote">Community webpages</span></li>
           </ul>
           <div py:if="tg.config('identity.on')" id="pageLogin">

@@ -5,11 +5,11 @@
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
     <title py:replace="''">Your title goes here</title>
     <link rel="stylesheet" type="text/css" media="all"
-       py:attrs="href=tg.config('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'fedora.css'"/>
+    py:attrs="{'href': tg.config('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'fedora.css'}"/>
     <link rel="stylesheet" type="text/css" media="all"
-       py:attrs="href=tg.config('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'main.css'"/>
+    py:attrs="{'href': tg.config('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'main.css'}"/>
     <link rel="stylesheet" type="text/css" media="all"
-       py:attrs="href=tg.config('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'style.css'"/>
+    py:attrs="{'href': tg.config('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'style.css'}"/>
     <!--[if lt IE 7]>
     <style type="text/css">
       #wrapper
@@ -32,16 +32,16 @@
         <div id="nav">
           <h2>Navigation</h2>
           <ul>
-            <li><a href="${tg.url('/publiclist')}" py:attrs="title='Public mirror list'">Public list</a></li>
+            <li><a href="${tg.url('/publiclist')}" py:attrs="{'title': 'Public mirror list'}">Public list</a></li>
           </ul>
           <h2>Fedora websites</h2>
           <ul>
-            <li><a href="http://fedoraproject.org/" py:attrs="title='Fedora Project homepage'">Fedora Home</a></li>
-            <li><a href="http://docs.fedoraproject.org/" py:attrs="title='Fedora documentation'">Docs</a>
+            <li><a href="http://fedoraproject.org/" py:attrs="{'title': 'Fedora Project homepage'}">Fedora Home</a></li>
+            <li><a href="http://docs.fedoraproject.org/" py:attrs="{'title': 'Fedora documentation'}">Docs</a>
               <span class="navnote">Fedora documentation</span></li>
-            <li><a href="http://fedoraproject.org/wiki/" py:attrs="title='Collaborative knowledge'">Wiki</a>
+              <li><a href="http://fedoraproject.org/wiki/" py:attrs="{'title': 'Collaborative knowledge'}">Wiki</a>
               <span class="navnote">Collaborative knowledge</span></li>
-            <li><a href="http://planet.fedoraproject.org/" py:attrs="title='The voices of the community'">Planet</a>
+              <li><a href="http://planet.fedoraproject.org/" py:attrs="{'title': 'The voices of the community'}">Planet</a>
               <span class="navnote">The voices of the community</span></li>
             <li><a href="http://fedorapeople.org/" title="'Community webpages'">People</a>
               <span class="navnote">Community webpages</span></li>

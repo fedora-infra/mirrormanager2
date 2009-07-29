@@ -49,7 +49,7 @@ This list is dynamically generated every hour, listing only up-to-date mirrors.
 </p>
 <p>
 To become a public ${tg.config('mirrormanager.projectname','Fedora')} mirror, please see <a
-py:attrs="href=tg.config('mirrormanager.mirrorwiki', 'http://fedoraproject.org/wiki/Infrastructure/Mirroring')">
+  py:attrs="{'href': tg.config('mirrormanager.mirrorwiki', 'http://fedoraproject.org/wiki/Infrastructure/Mirroring')}">
 our wiki page on Mirroring</a>.
 </p>
 
