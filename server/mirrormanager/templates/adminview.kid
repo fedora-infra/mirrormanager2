@@ -4,14 +4,17 @@
 <head>
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
 <title>Fedora Mirror Manager Admin View</title>
+<?python
+admin_group = config.get('mirrormanager.admin_group', 'sysadmin')
+?>
 </head>
 <body>
 
-<div py:if="'sysadmin' not in tg.identity.groups">
+<div py:if="admin_group not in tg.identity.groups">
 Nothing to see here, move along.
 </div>
 
-<div id="adminview" py:if="'sysadmin' in tg.identity.groups">
+<div id="adminview" py:if="admin_group in tg.identity.groups">
 
 <div id="categories">
 <h3>Categories</h3>

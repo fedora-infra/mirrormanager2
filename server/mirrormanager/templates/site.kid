@@ -7,14 +7,15 @@
 <body>
 <?python
 is_siteadmin = False
-if 'sysadmin' in tg.identity.groups:
+admin_group = config.get('mirrormanager.admin_group', 'sysadmin')
+if admin_group in tg.identity.groups:
    is_siteadmin = True
 else:	
    if values is not None and not action.endswith('create'):
       is_siteadmin = values.is_siteadmin_byname(tg.identity.user_name)
 
 
-if 'sysadmin' not in tg.identity.groups:
+if admin_group not in tg.identity.groups:
    disabled_fields.append('admin_active')
 ?> 
 

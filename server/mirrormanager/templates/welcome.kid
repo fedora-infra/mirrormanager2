@@ -4,6 +4,9 @@
 <head>
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
 <title>Welcome to ${tg.config('mirrormanager.projectname','Fedora')} Mirror Manager</title>
+<?python
+admin_group = config.get('mirrormanager.admin_group', 'sysadmin')
+/?>
 </head>
 <body>
 
@@ -75,8 +78,7 @@ User-Agent as mirrormanager-crawler.
 <h3><a href="${tg.url('/rsync_acl')}">rsync acl</a></h3>
 </div>
 
-
-<div id="adminstuff" py:if="'sysadmin' in tg.identity.groups">
+<div id="adminstuff" py:if="admin_group in tg.identity.groups">
 <h3><a href="${tg.url('/adminview')}">Admin view</a></h3>
 </div>
 </body>
