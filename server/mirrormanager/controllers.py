@@ -641,15 +641,17 @@ class HostNetblockController(HostListitemController):
         return dict(values=v, host=v.host)
 
     def do_create(self, host, kwargs):
+        max_ipv4_netblock_size = config.get('mirrormanager.max_ipv4_netblock_size', '/16')
+        max_ipv6_netblock_size = config.get('mirrormanager.max_ipv6_netblock_size', '/32')
 
-        emsg = "Error: IPv4 netblocks larger than /16, and IPv6 netblocks larger than /32 can only be created by mirrormanager administrators.  Please ask mirror-admin@fedoraproject.org for assistance."
+        emsg = "Error: IPv4 netblocks larger than %s, and IPv6 netblocks larger than %s can only be created by mirrormanager administrators.  Please ask the mirrormanager administrators for assistance." % (max_ipv4_netblock_size, max_ipv6_netblock_size)
 
-        ipv4_16 = IPy.IP('10.0.0.0/16')
-        ipv6_32 = IPy.IP('fec0::/32')
+        ipv4_block = IPy.IP('10.0.0.0' % max_ipv4_netblock_size)
+        ipv6_block = IPy.IP('fec0::'   % max_ipv6_netblock_size)
         try:
             ip = IPy.IP(kwargs['netblock'])
-            if ((ip.version() == 4 and ip.len() > ipv4_16.len()) or \
-                    (ip.version() == 6 and ip.len() > ipv6_32.len())) and \
+            if ((ip.version() == 4 and ip.len() > ipv4_block.len()) or \
+                    (ip.version() == 6 and ip.len() > ipv6_block.len())) and \
                     not identity.in_group("sysadmin"):
                 raise InvalidData, emsg
         except ValueError:

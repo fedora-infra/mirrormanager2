@@ -43,7 +43,5 @@ updates-testing-frawhide => updates-testing-f11
 updates-released-source-frawhide => updates-released-source-f11
 updates-released-debug-frawhide => updates-released-debug-f11
 
-- make size of netblocks limit (currently /16 for ipv4 and /32 for
-  ipv6) configurable.
 - make group sysadmin checks be configurable.  Should be group
   sysadmin-main for Fedora's use.
