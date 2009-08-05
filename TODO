@@ -42,3 +42,12 @@ updates-released-frawhide => updates-released-f11
 updates-testing-frawhide => updates-testing-f11
 updates-released-source-frawhide => updates-released-source-f11
 updates-released-debug-frawhide => updates-released-debug-f11
+
+* metalinks for multiple CDs/files
+- Just like torrents, we should have a single metalink that downloads
+all the CDs in a set via one URL.
+
+* Torrents
+In Fedora 12 or 13, the master directory layout may change such that it
+matches the torrent layouts.  When this happens, the .torrent files
+will be in the tree.  Include them in the proper metalinks.
