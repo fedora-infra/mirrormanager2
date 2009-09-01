@@ -31,7 +31,8 @@ debug = False
 # because we don't know the Version associated with that dir here.
 default_ordered_mirrorlist = False
 
-gi = None
+gipv4 = None
+gipv6 = None
 
 # key is strings in tuple (repo.prefix, arch)
 mirrorlist_cache = {}
@@ -465,7 +466,15 @@ def do_mirrorlist(kwargs):
                 done=1
 
     client_ip = kwargs['client_ip']
-    clientCountry = gi.country_code_by_addr(client_ip)
+    clientCountry = None
+    try:
+        ip = IP(client_ip)
+        if ip.version() == 4:
+            clientCountry = gipv4.country_code_by_addr(ip.strNormal())
+        elif ip.version() == 6:
+            clientCountry = gipv6.country_code_by_addr_v6(ip.strNormal())
+    except:
+        continue
 
     if clientCountry is None:
         print_client_country = "N/A"
@@ -712,8 +721,10 @@ def main():
     except:
         pass
 
-    global gi
-    gi = GeoIP.new(GeoIP.GEOIP_STANDARD)
+    global gipv4
+    global gipv6
+    gipv4 = GeoIP.open("/usr/share/GeoIP/GeoIP.dat", GeoIP.GEOIP_STANDARD)
+    gipv6 = GeoIP.open("/usr/share/GeoIP/GeoIPv6.dat", GeoIP.GEOIP_STANDARD)
     read_caches()
     signal.signal(signal.SIGHUP, sighup_handler)
     signal.signal(signal.SIGCHLD, signal.SIG_IGN)
