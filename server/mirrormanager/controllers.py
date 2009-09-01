@@ -14,6 +14,9 @@ from sqlobject.sqlbuilder import *
 from string import strip
 from copy import copy
 
+from fedora.tg.controllers import login as fc_login
+from fedora.tg.controllers import logout as fc_logout
+
 import mirrormanager.model
 from mirrormanager import my_validators
 from mirrormanager.model import *
@@ -1144,36 +1147,15 @@ class Root(controllers.RootController):
         for i in xrange(len(includes)):
             includes[i] += u'/'
         return dict(includes=includes, excludes=excludes, message=message)
-        
-    @expose(template="mirrormanager.templates.login")
+
+    @expose(template="genshi:mirrormanager.templates.login", allow_json=True)
     def login(self, forward_url=None, previous_url=None, *args, **kw):
+        login_dict = fc_login(forward_url, previous_url, args, kw)
+        return login_dict
 
-        if not identity.current.anonymous \
-            and identity.was_login_attempted() \
-            and not identity.get_identity_errors():
-            raise redirect(forward_url)
-
-        forward_url=None
-        previous_url= cherrypy.request.path
-
-        if identity.was_login_attempted():
-            msg=_("The credentials you supplied were not correct or "
-                   "did not grant access to this resource.")
-        elif identity.get_identity_errors():
-            msg=_("You must provide your Fedora Account System credentials before accessing "
-                   "this resource.")
-        else:
-            msg=_("Please log in.")
-            forward_url= cherrypy.request.headers.get("Referer", "/")
-        cherrypy.response.status=403
-        return dict(message=msg, previous_url=previous_url, logging_in=True,
-                    original_parameters=cherrypy.request.params,
-                    forward_url=forward_url)
-
-    @expose()
+    @expose(allow_json=True)
     def logout(self):
-        identity.current.logout()
-        raise redirect("/")
+        return fc_logout()
     
     @expose(template="mirrormanager.templates.register")
     def register(self, username="", display_name="", email_address="", tg_errors=None):

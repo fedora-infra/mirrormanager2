@@ -24,6 +24,7 @@ setup(
         "TurboGears >= 1.0b1",
         "IPy",
         "GeoIP",
+        "python_fedora >= 0.3.14",
     ],
     scripts = ["start-mirrormanager.py"],
     zip_safe=False,
