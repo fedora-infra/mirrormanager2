@@ -31,7 +31,8 @@ debug = False
 # because we don't know the Version associated with that dir here.
 default_ordered_mirrorlist = False
 
-gi = None
+gipv4 = None
+gipv6 = None
 
 # key is strings in tuple (repo.prefix, arch)
 mirrorlist_cache = {}
@@ -103,13 +104,18 @@ def uniqueify(seq, idfun=None):
 
 
 ##### Metalink Support #####
-def metalink_failuredoc(directory, file):
+def metalink_failuredoc(message=None):
     doc = ''
     doc += '<?xml version="1.0" encoding="utf-8"?>\n'
-    doc += '<!--\n'
-    doc += '%s/%s not found or has no metalink\n' % (directory, file)
-    doc += '-->\n'
+    if message is not None:
+        doc += '<!--\n'
+        doc += message + '\n'
+        doc += '-->\n'
     return doc
+
+def metalink_file_not_found(directory, file):
+    message = '%s/%s not found or has no metalink' % (directory, file)
+    return metalink_failuredoc(message)
 
 def metalink(directory, file, hosts_and_urls):
     preference = 100
@@ -119,7 +125,7 @@ def metalink(directory, file, hosts_and_urls):
         fdc = file_details_cache[directory]
         detailslist = fdc[file]
     except KeyError:
-        return ('metalink', 404, metalink_failuredoc(directory, file))
+        return ('metalink', 404, metalink_file_not_found(directory, file))
 
     def indent(n):
         return ' ' * n * 2
@@ -376,9 +382,16 @@ def do_mirrorlist(kwargs):
     global debug
     global logfile
 
+    def return_error(kwargs, message='', returncode=200):
+        d = dict(returncode=returncode, message=message, resulttype='mirrorlist', results=[])
+        if 'metalink' in kwargs and kwargs['metalink']:
+            d['resulttype'] = 'metalink'
+            d['message'] = metalink_failuredoc(message)
+        return d
+
     if not (kwargs.has_key('repo') and kwargs.has_key('arch')) and not kwargs.has_key('path'):
-        return dict(resulttype='mirrorlist', returncode=200, results=[], message='# either path=, or repo= and arch= must be specified')
-    
+        return return_error(kwargs, message='# either path=, or repo= and arch= must be specified')
+
     file = None
     cache = None
     pathIsDirectory = False
@@ -402,7 +415,7 @@ def do_mirrorlist(kwargs):
             try:
                 cache = mirrorlist_cache['/'.join(sdir)]
             except KeyError:
-                return dict(resulttype='mirrorlist', returncode=200, results=[], message=header + 'error: invalid path')
+                return return_error(kwargs, message=header + 'error: invalid path')
         dir = '/'.join(sdir)
     else:
         if u'source' in kwargs['repo']:
@@ -412,7 +425,7 @@ def do_mirrorlist(kwargs):
         header = "# repo = %s arch = %s " % (repo, arch)
 
         if repo in disabled_repositories:
-            return dict(resulttype='mirrorlist', returncode=200, results=[], message=header + 'repo disabled')
+            return return_error(kwargs, message=header + 'repo disabled')
         try:
             dir = repo_arch_to_directoryname[(repo, arch)]
             if 'metalink' in kwargs and kwargs['metalink']:
@@ -429,7 +442,7 @@ def do_mirrorlist(kwargs):
             for i in repos:
                 if i[0] is not None and i[1] is not None:
                     repo_information += "# repo=%s, arch=%s\n" % i
-            return dict(resulttype='mirrorlist', returncode=200, results=[], message=repo_information)
+            return return_error(kwargs, message=repo_information)
 
 
     ordered_mirrorlist = cache.get('ordered_mirrorlist', default_ordered_mirrorlist)
@@ -453,7 +466,15 @@ def do_mirrorlist(kwargs):
                 done=1
 
     client_ip = kwargs['client_ip']
-    clientCountry = gi.country_code_by_addr(client_ip)
+    clientCountry = None
+    try:
+        ip = IP(client_ip)
+        if ip.version() == 4:
+            clientCountry = gipv4.country_code_by_addr(ip.strNormal())
+        elif ip.version() == 6:
+            clientCountry = gipv6.country_code_by_addr_v6(ip.strNormal())
+    except:
+        continue
 
     if clientCountry is None:
         print_client_country = "N/A"
@@ -700,8 +721,10 @@ def main():
     except:
         pass
 
-    global gi
-    gi = GeoIP.new(GeoIP.GEOIP_STANDARD)
+    global gipv4
+    global gipv6
+    gipv4 = GeoIP.open("/usr/share/GeoIP/GeoIP.dat", GeoIP.GEOIP_STANDARD)
+    gipv6 = GeoIP.open("/usr/share/GeoIP/GeoIPv6.dat", GeoIP.GEOIP_STANDARD)
     read_caches()
     signal.signal(signal.SIGHUP, sighup_handler)
     signal.signal(signal.SIGCHLD, signal.SIG_IGN)

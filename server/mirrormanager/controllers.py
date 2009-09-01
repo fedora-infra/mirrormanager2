@@ -3,7 +3,7 @@ import logging
 import cherrypy
 from turbogears import config
 
-
+admin_group = config.get('mirrormanager.admin_group', 'sysadmin')
 
 import turbogears
 from turbogears import controllers, expose, validate, redirect, widgets, validators, error_handler, exception_handler
@@ -90,7 +90,7 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
 
     def disabled_fields(self, site=None):
         disabled_fields = []
-        if not identity.in_group("sysadmin"):
+        if not identity.in_group(admin_group):
             disabled_fields.append('admin_active')
         if site is not None:
             if not site.is_siteadmin(identity):
@@ -119,7 +119,7 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
     @validate(form=site_form)
     @error_handler(new)
     def create(self, tg_errors=None, **kwargs):
-        if not identity.in_group("sysadmin") and kwargs.has_key('admin_active'):
+        if not identity.in_group(admin_group) and kwargs.has_key('admin_active'):
             del kwargs['admin_active']
         kwargs['createdBy'] = identity.current.user_name
 
@@ -148,7 +148,7 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
             return dict(form=site_form, values=site, action = turbogears.url("/site/%s/update" % site.id),
                         disabled_fields=self.disabled_fields())
 
-        if not identity.in_group("sysadmin") and kwargs.has_key('admin_active'):
+        if not identity.in_group(admin_group) and kwargs.has_key('admin_active'):
             del kwargs['admin_active']
         site.set(**kwargs)
         site.sync()
@@ -322,7 +322,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
 
     def disabled_fields(self, host=None):
         disabled_fields = []
-        if not identity.in_group("sysadmin"):
+        if not identity.in_group(admin_group):
             disabled_fields.append('admin_active')
 
         if host is not None:
@@ -353,7 +353,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
     @validate(form=host_form)
     @error_handler(new)
     def create(self, siteid=None, tg_errors=None, **kwargs):
-        if not identity.in_group("sysadmin") and kwargs.has_key('admin_active'):
+        if not identity.in_group(admin_group) and kwargs.has_key('admin_active'):
             del kwargs['admin_active']
         site = Site.get(siteid)
         submit_action = turbogears.url("/host/0/create?siteid=%s" % site.id)
@@ -395,7 +395,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
                         disabled_fields=self.disabled_fields(host=host), title="Host", site=host.site)
 
 
-        if not identity.in_group("sysadmin") and kwargs.has_key('admin_active'):
+        if not identity.in_group(admin_group) and kwargs.has_key('admin_active'):
             del kwargs['admin_active']
         host.set(**kwargs)
         host.sync()
@@ -461,7 +461,7 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
 
     def disabled_fields(self, host=None):
         disabled_fields = []
-        if not identity.in_group("sysadmin"):
+        if not identity.in_group(admin_group):
             disabled_fields.append('admin_active')
             disabled_fields.append('always_up2date')
         return disabled_fields
@@ -641,16 +641,18 @@ class HostNetblockController(HostListitemController):
         return dict(values=v, host=v.host)
 
     def do_create(self, host, kwargs):
+        max_ipv4_netblock_size = config.get('mirrormanager.max_ipv4_netblock_size', '/16')
+        max_ipv6_netblock_size = config.get('mirrormanager.max_ipv6_netblock_size', '/32')
 
-        emsg = "Error: IPv4 netblocks larger than /16, and IPv6 netblocks larger than /32 can only be created by mirrormanager administrators.  Please ask mirror-admin@fedoraproject.org for assistance."
+        emsg = "Error: IPv4 netblocks larger than %s, and IPv6 netblocks larger than %s can only be created by mirrormanager administrators.  Please ask the mirrormanager administrators for assistance." % (max_ipv4_netblock_size, max_ipv6_netblock_size)
 
-        ipv4_16 = IPy.IP('10.0.0.0/16')
-        ipv6_32 = IPy.IP('fec0::/32')
+        ipv4_block = IPy.IP('10.0.0.0' % max_ipv4_netblock_size)
+        ipv6_block = IPy.IP('fec0::'   % max_ipv6_netblock_size)
         try:
             ip = IPy.IP(kwargs['netblock'])
-            if ((ip.version() == 4 and ip.len() > ipv4_16.len()) or \
-                    (ip.version() == 6 and ip.len() > ipv6_32.len())) and \
-                    not identity.in_group("sysadmin"):
+            if ((ip.version() == 4 and ip.len() > ipv4_block.len()) or \
+                    (ip.version() == 6 and ip.len() > ipv6_block.len())) and \
+                    not identity.in_group(admin_group):
                 raise InvalidData, emsg
         except ValueError:
             # also accept DNS hostnames
@@ -790,7 +792,7 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
 # SimpleDbObject
 #########################################################3
 class SimpleDbObjectController(controllers.Controller, identity.SecureResource, content):
-    require = identity.in_group("sysadmin")
+    require = identity.in_group(admin_group)
     title = "My Title"
     form = None
     myClass = None
@@ -1053,14 +1055,14 @@ class Root(controllers.RootController):
     @expose(template="mirrormanager.templates.welcome")
     @identity.require(identity.not_anonymous())
     def index(self):
-        if "sysadmin" in identity.current.groups:
+        if admin_group in identity.current.groups:
             sites = Site.select(orderBy='name')
         else:
             sites = user_sites(identity)
         return {"sites":sites}
 
     @expose(template="mirrormanager.templates.adminview")
-    @identity.require(identity.in_group('sysadmin'))
+    @identity.require(identity.in_group(admin_group))
     def adminview(self):
         return {"sites":Site.select(orderBy='name'),
                 "arches":Arch.select(),

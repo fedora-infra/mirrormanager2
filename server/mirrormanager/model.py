@@ -1,6 +1,6 @@
 from sqlobject import *
 from sqlobject.sqlbuilder import *
-from turbogears import identity
+from turbogears import identity, config
 import pickle
 import sys
 from datetime import datetime
@@ -84,7 +84,8 @@ class Site(SQLObject):
         return False
 
     def is_siteadmin(self, identity):
-        if identity.in_group("sysadmin"):
+        admin_group = config.get('mirrormanager.admin_group', 'sysadmin')
+        if identity.in_group(admin_group):
             return True
         return self.is_siteadmin_byname(identity.current.user_name)
 

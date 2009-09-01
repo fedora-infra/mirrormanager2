@@ -5,7 +5,8 @@
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
 <?python
 is_siteadmin = False
-if 'sysadmin' in tg.identity.groups:
+admin_group = config.get('mirrormanager.admin_group', 'sysadmin')
+if admin_group in tg.identity.groups:
    is_siteadmin = True
 else:	
    if values is not None and not action.endswith('create'):

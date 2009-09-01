@@ -7,9 +7,7 @@ from mirrormanager.model import *
 from IPy import IP
 import sha
 import pprint
-import DNS
-
-DNS.DiscoverNameServers()
+import dns.resolver
 
 # key is directoryname
 mirrorlist_cache = {}
@@ -168,19 +166,18 @@ def populate_directory_cache():
     global mirrorlist_cache
     mirrorlist_cache = shrink(cache)
 
-# FIXME add IPv6 lookups after python-pydns adds such
 def name_to_ips(name):
     result=[]
-    try:
-        reqobj=DNS.Request(name=name, typename="A")
-        answers = reqobj.req().answers
-    except:
-        return result
-
-    for a in answers:
+    recordtypes=('A', 'AAAA')
+    for r in recordtypes:
         try:
-            ip = IP(a['data'])
-            result.append(ip)
+            records = dns.resolver.query(name, r)
+            for rdata in records:
+                try:
+                    ip = IP(rdata)
+                    result.append(ip)
+                except:
+                    continue
         except:
             continue
     return result
