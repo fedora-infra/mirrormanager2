@@ -469,12 +469,12 @@ def do_mirrorlist(kwargs):
     clientCountry = None
     try:
         ip = IP(client_ip)
-        if ip.version() == 4:
+        if ip.version() == 4 and gipv4 is not None:
             clientCountry = gipv4.country_code_by_addr(ip.strNormal())
-        elif ip.version() == 6:
+        elif ip.version() == 6 and gipv6 is not None:
             clientCountry = gipv6.country_code_by_addr_v6(ip.strNormal())
     except:
-        continue
+        pass
 
     if clientCountry is None:
         print_client_country = "N/A"
@@ -676,6 +676,7 @@ def sighup_handler(signum, frame):
     if signum == signal.SIGHUP:
         if debug:
             print "Got SIGHUP; reloading data"
+        open_geoip_databases()
         read_caches()
         if logfile is not None:
             name = logfile.name
@@ -712,6 +713,18 @@ def parse_args():
             debug = True
             print "debug output enabled"
 
+def open_geoip_databases():
+    global gipv4
+    global gipv6
+    try:
+        gipv4 = GeoIP.open("/usr/share/GeoIP/GeoIP.dat", GeoIP.GEOIP_STANDARD)
+    except:
+        gipv4=None
+    try:
+        gipv6 = GeoIP.open("/usr/share/GeoIP/GeoIPv6.dat", GeoIP.GEOIP_STANDARD)
+    except:
+        gipv6=None
+
 def main():
     global logfile
     parse_args()
@@ -721,10 +734,7 @@ def main():
     except:
         pass
 
-    global gipv4
-    global gipv6
-    gipv4 = GeoIP.open("/usr/share/GeoIP/GeoIP.dat", GeoIP.GEOIP_STANDARD)
-    gipv6 = GeoIP.open("/usr/share/GeoIP/GeoIPv6.dat", GeoIP.GEOIP_STANDARD)
+    open_geoip_databases()
     read_caches()
     signal.signal(signal.SIGHUP, sighup_handler)
     signal.signal(signal.SIGCHLD, signal.SIG_IGN)
