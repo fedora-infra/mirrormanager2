@@ -147,8 +147,9 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
         siteadmin_check(site, identity)
 
         if tg_errors is not None:
+            submit_action = "/site/%s/update" % site.id
             turbogears.flash("Error updating Site: %s" % createErrorString(tg_errors))
-            return dict(form=site_form, values=site, action = turbogears.url("/site/%s/update" % site.id),
+            return dict(form=site_form, values=site, action=submit_action,
                         disabled_fields=self.disabled_fields())
 
         if not identity.in_group(admin_group) and kwargs.has_key('admin_active'):
@@ -393,8 +394,9 @@ class HostController(controllers.Controller, identity.SecureResource, content):
         siteadmin_check(host.my_site(), identity)
 
         if tg_errors is not None:
+            submit_action = "/host/%s/update" % host.id
             turbogears.flash("Error updating Host: %s" % createErrorString(tg_errors))
-            return dict(form=host_form, values=host, action = turbogears.url("/host/%s/update" % host.id),
+            return dict(form=host_form, values=host, action=submit_action,
                         disabled_fields=self.disabled_fields(host=host), title="Host", site=host.site)
 
 
@@ -536,7 +538,8 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
 
         if tg_errors is not None:
             turbogears.flash("Error updating HostCategory: %s" % createErrorString(tg_errors))
-            return dict(form=host_category_form_read, values=hostcategory, action = turbogears.url("/host_category/%s/update" % hostcategory.id),
+            submit_action = "/host_category/%s/update" % hostcategory.id
+            return dict(form=host_category_form_read, values=hostcategory, action=submit_action,
                         disabled_fields=self.disabled_fields(), host=hostcategory.host)
         
         
