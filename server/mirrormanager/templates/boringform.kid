@@ -6,6 +6,6 @@
 <title>${title}</title>
 </head>
 <body>
-${form(value=values, action=action)}
+${form(value=values, action=tg.url(action))}
 </body>
 </html>

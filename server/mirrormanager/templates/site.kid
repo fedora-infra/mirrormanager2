@@ -50,7 +50,7 @@ responsible for compliance with foreign law requirements applicable to
 the import and use of Fedora software and technical information.
 </p>
 
-${form(value=values, action=action, disabled_fields=disabled_fields)}
+${form(value=values, action=tg.url(action), disabled_fields=disabled_fields)}
 
 <div py:if="values is not None">
 <div py:if="action.endswith('update')">

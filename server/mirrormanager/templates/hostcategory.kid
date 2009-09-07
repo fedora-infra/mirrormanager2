@@ -17,7 +17,7 @@ py:replace="host.site.name">Site Name</span></a> /
 py:replace="host.name">Host Name</span></a>
 </p>
 
-${form(value=values, action=action, disabled_fields=disabled_fields)}
+${form(value=values, action=tg.url(action), disabled_fields=disabled_fields)}
 <div py:if="values is not None">
 <h3>URLs serving this content</h3>
 <p>

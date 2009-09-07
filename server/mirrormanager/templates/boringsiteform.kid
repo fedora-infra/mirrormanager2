@@ -11,6 +11,6 @@ Back to <a href="${tg.url('/site/' + str(site.id))}"><span
 py:replace="site.name">Site Name</span></a>
 </p>
 
-${form(value=values, action=action)}
+${form(value=values, action=tg.url(action))}
 </body>
 </html>

@@ -18,6 +18,6 @@ py:replace="host.name">Host Name</span></a> /
 <a href="${tg.url('/host_category/' + str(host_category.id))}"><span
 py:replace="host_category.category.name">Host Category Name</span></a> /
 </p>
-${form(value=values, action=action)}
+${form(value=values, action=tg.url(action))}
 </body>
 </html>

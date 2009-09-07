@@ -13,6 +13,6 @@ py:replace="host.site.name">Site Name</span></a> /
 py:replace="host.name">Host Name</span></a>
 </p>
 
-${form(value=values, action=action)}
+${form(value=values, action=tg.url(action))}
 </body>
 </html>
