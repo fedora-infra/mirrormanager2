@@ -7,7 +7,7 @@
 <body>
 <?python
 is_siteadmin = False
-admin_group = config.get('mirrormanager.admin_group', 'sysadmin')
+admin_group = tg.config('mirrormanager.admin_group', 'sysadmin')
 if admin_group in tg.identity.groups:
    is_siteadmin = True
 else:	

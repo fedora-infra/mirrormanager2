@@ -5,8 +5,8 @@
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
 <title>Welcome to ${tg.config('mirrormanager.projectname','Fedora')} Mirror Manager</title>
 <?python
-admin_group = config.get('mirrormanager.admin_group', 'sysadmin')
-/?>
+admin_group = tg.config('mirrormanager.admin_group', 'sysadmin')
+?>
 </head>
 <body>
 

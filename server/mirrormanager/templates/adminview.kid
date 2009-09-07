@@ -5,7 +5,7 @@
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
 <title>Fedora Mirror Manager Admin View</title>
 <?python
-admin_group = config.get('mirrormanager.admin_group', 'sysadmin')
+admin_group = tg.config('mirrormanager.admin_group', 'sysadmin')
 ?>
 </head>
 <body>
