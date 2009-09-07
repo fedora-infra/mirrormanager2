@@ -61,6 +61,7 @@ rpm: tarball $(SPEC)
 	rpmbuild -ba --define "_topdir $${tmp_dir}" \
 	  --define "_source_filedigest_algorithm 0" \
 	  --define "_binary_filedigest_algorithm 0" \
+	  --define "dist %{nil}" \
           SPECS/mirrormanager.spec ; \
 	popd > /dev/null 2>&1; \
 	cp $${tmp_dir}/RPMS/noarch/* $${tmp_dir}/SRPMS/* . ; \
