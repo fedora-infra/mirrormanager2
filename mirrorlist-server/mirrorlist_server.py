@@ -467,12 +467,18 @@ def do_mirrorlist(kwargs):
 
     client_ip = kwargs['client_ip']
     clientCountry = None
+    # attempt IPv6, then IPv6 6to4 as IPv4, then IPv4
     try:
         ip = IP(client_ip)
+        if ip.version() == 6:
+            if gipv6 is not None:
+                clientCountry = gipv6.country_code_by_addr_v6(ip.strNormal())
+            if clientCountry is None:
+                try_6to4 = convert_6to4_v4(ip)
+                if try_6to4 is not None:
+                    ip = try_6to4
         if ip.version() == 4 and gipv4 is not None:
             clientCountry = gipv4.country_code_by_addr(ip.strNormal())
-        elif ip.version() == 6 and gipv6 is not None:
-            clientCountry = gipv6.country_code_by_addr_v6(ip.strNormal())
     except:
         pass
 
@@ -724,6 +730,22 @@ def open_geoip_databases():
         gipv6 = GeoIP.open("/usr/share/GeoIP/GeoIPv6.dat", GeoIP.GEOIP_STANDARD)
     except:
         gipv6=None
+
+def convert_6to4_v4(ip):
+    all_6to4 = IP('2002::/16')
+    if ip.version() != 6 or ip not in all_6to4:
+        return None
+    parts=ip.strNormal().split(':')
+
+    ab = int(parts[1],16)
+    a = (ab >> 8) & 0xFF
+    b = ab & 0xFF
+    cd = int(parts[2],16)
+    c = (cd >> 8) & 0xFF
+    d = cd & 0xFF
+
+    v4addr = '%d.%d.%d.%d' % (a,b,c,d)
+    return IP(v4addr)
 
 def main():
     global logfile
