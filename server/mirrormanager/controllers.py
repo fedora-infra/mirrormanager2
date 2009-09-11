@@ -311,7 +311,7 @@ class HostFields(widgets.WidgetsList):
     user_active = widgets.CheckBox("user_active", default=True, help_text="Uncheck this box to temporarily disable this host, it will be removed from public listings.")
     country = widgets.TextField(validator=validators.All(validators.Regex(r'^[a-zA-Z][a-zA-Z]$'),validators.NotEmpty),
                                 help_text="2-letter ISO country code" )
-    bandwidth_int = widgets.TextField(validator=validators.All(validators.Int, validators.NotEmpty), help_text="* integer megabits/sec, how much bandwidth this host can serve")
+    bandwidth_int = widgets.TextField(validator=validators.Any(validators.Int, validators.Empty), help_text="* integer megabits/sec, how much bandwidth this host can serve")
     private = widgets.CheckBox(help_text="e.g. not available to the public, an internal private mirror")
     internet2 = widgets.CheckBox(help_text="on Internet2")
     internet2_clients = widgets.CheckBox(help_text="serves Internet2 clients, even if private")
@@ -369,6 +369,11 @@ class HostController(controllers.Controller, identity.SecureResource, content):
             turbogears.flash("Error creating Host: %s" % (createErrorString(tg_errors)))
             return errordict
 
+        if 'bandwidth_int' in kwargs:
+            try:
+                bw = int(kwargs['bandwidth_int'])
+            except ValueError:
+                del kwargs['bandwidth_int']
         try:
             host = Host(site=site, **kwargs)
         except: # probably sqlite IntegrityError but we can't catch that for some reason... 
@@ -402,6 +407,13 @@ class HostController(controllers.Controller, identity.SecureResource, content):
 
         if not identity.in_group(admin_group) and kwargs.has_key('admin_active'):
             del kwargs['admin_active']
+
+        if 'bandwidth_int' in kwargs:
+            try:
+                bw = int(kwargs['bandwidth_int'])
+            except ValueError:
+                del kwargs['bandwidth_int']
+
         host.set(**kwargs)
         host.sync()
         turbogears.flash("Host Updated")
