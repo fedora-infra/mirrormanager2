@@ -10,13 +10,13 @@
 <div class="floatright">
 <table cellspacing="0" class="compact altrows minilist">
   <caption><strong>Mirror list filter</strong></caption>
-  <tr><th colspan="2">Version</th><th colspan='0'>Architecture</th></tr>
-  <span py:for="p in products">
+  <tr><th>Project</th><th>Version</th><th colspan='0'>Architecture</th></tr>
+  <div py:for="p in products">
   <?python
 displayversions = [v for v in p.versions if v.display]
 ?>
-  <tr class="separator" py:attrs="{'rowspan': len(displayversions)}">
-    <th colspan="0">
+  <tr class="separator">
+    <th py:attrs="{'rowspan': len(displayversions)+1}">
       <a href="${tg.url('/publiclist/' + p.name + '/')}" py:content="p.name" />
     </th>
   </tr>
@@ -33,7 +33,7 @@ if v.display_name is not None and v.display_name != '':
 	p.name + '/' + v.name + '/' + a.name + '/')}"
 	py:if="len(pvaMatrix.get_pva(p.name, v.name, a.name)) > 0" py:content="a.name" /></td>
   </tr>
-  </span>
+  </div>
 </table>
 </div>
 
