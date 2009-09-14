@@ -564,7 +564,7 @@ def do_mirrorlist(kwargs):
 
     if not done:
         header, internet2_results = do_internet2(kwargs, cache, clientCountry, header)
-        if len(internet2_results) + len(netblock_results) >= 3:
+        if len(internet2_results) + len(netblock_results) + len(asn_results) >= 3:
             if not ordered_mirrorlist:
                 done = 1
 
@@ -595,12 +595,13 @@ def do_mirrorlist(kwargs):
     
     netblock_hosts    = _random_shuffle(netblock_results)
     internet2_hosts   = _random_shuffle(internet2_results)
+    asn_hosts         = shuffle(asn_results)
     country_hosts     = shuffle(country_results)
     geoip_hosts       = shuffle(geoip_results)
     continent_hosts   = shuffle(continent_results)
     global_hosts      = shuffle(global_results)
 
-    allhosts = uniqueify(netblock_hosts + internet2_hosts + country_hosts + geoip_hosts + continent_hosts + global_hosts)
+    allhosts = uniqueify(netblock_hosts + asn_hosts + internet2_hosts + country_hosts + geoip_hosts + continent_hosts + global_hosts)
     hosts_and_urls = append_path(allhosts, cache, file, pathIsDirectory=pathIsDirectory)
 
     if 'metalink' in kwargs and kwargs['metalink']:
