@@ -624,8 +624,10 @@ def setup_netblocks(netblocks_file):
             for l in f.readlines():
                 s = l.split()
                 start, mask = s[0].split('/')
-                asn = s[1]
-                n.append((int(mask), start), int(asn))
+                mask = int(mask)
+                if mask == 0: continue
+                asn = int(s[1])
+                n.append((mask, start, asn))
             f.close()
         except:
             pass
