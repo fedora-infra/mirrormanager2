@@ -664,8 +664,8 @@ class HostNetblockController(HostListitemController):
 
         emsg = "Error: IPv4 netblocks larger than %s, and IPv6 netblocks larger than %s can only be created by mirrormanager administrators.  Please ask the mirrormanager administrators for assistance." % (max_ipv4_netblock_size, max_ipv6_netblock_size)
 
-        ipv4_block = IPy.IP('10.0.0.0' % max_ipv4_netblock_size)
-        ipv6_block = IPy.IP('fec0::'   % max_ipv6_netblock_size)
+        ipv4_block = IPy.IP('10.0.0.0%s' % max_ipv4_netblock_size)
+        ipv6_block = IPy.IP('fec0::%s'   % max_ipv6_netblock_size)
         try:
             ip = IPy.IP(kwargs['netblock'])
             if ((ip.version() == 4 and ip.len() > ipv4_block.len()) or \
