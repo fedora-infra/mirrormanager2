@@ -27,7 +27,7 @@ display_name = v.name
 if v.display_name is not None and v.display_name != '':
    display_name = v.display_name
 ?>
-    <td></td><td><a href="${tg.url('/publiclist/' + p.name + '/' + v.name + '/')}">
+    <td><a href="${tg.url('/publiclist/' + p.name + '/' + v.name + '/')}">
       <strong py:content="display_name" /></a></td>
 	<td py:for="a in arches"><a href="${tg.url('/publiclist/' +
 	p.name + '/' + v.name + '/' + a.name + '/')}"
