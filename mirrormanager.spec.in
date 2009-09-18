@@ -72,6 +72,10 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Fri Sep 18 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.1-1
+- fix publiclist html
+- fix Host netblock creation via web UI
+
 * Mon Sep  7 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.0-1
 - add CSRF protection, add Requires: python-fedora
 - add IPv6 capability
