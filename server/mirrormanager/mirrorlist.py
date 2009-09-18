@@ -223,6 +223,18 @@ def host_country_cache():
         cache[host.id] = host.country
     return cache
 
+def asn_host_cache():
+    cache = {}
+    for host in Host.selectBy(asn_clients=True):
+        if host.asn is None:
+            continue
+        if host.asn not in cache:
+            cache[host.asn] = [host.id]
+        else:
+            cache[host.asn].append(host.id)
+
+    return cache
+
 def repository_redirect_cache():
     cache = {}
     for r in RepositoryRedirect.select():
@@ -280,7 +292,8 @@ def dump_caches():
             'host_bandwidth_cache':host_bandwidth_cache(),
             'host_country_cache':host_country_cache(),
             'file_details_cache':file_details_cache(),
-            'hcurl_cache':hcurl_cache()}
+            'hcurl_cache':hcurl_cache(),
+            'asn_host_cache':asn_host_cache()}
     
     try:
         f = open('/var/lib/mirrormanager/mirrorlist_cache.pkl', 'w')

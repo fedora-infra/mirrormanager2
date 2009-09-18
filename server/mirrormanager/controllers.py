@@ -1,4 +1,5 @@
 from turbogears.identity.exceptions import IdentityFailure
+import sys
 import logging
 import cherrypy
 from turbogears import config
@@ -315,6 +316,8 @@ class HostFields(widgets.WidgetsList):
     private = widgets.CheckBox(help_text="e.g. not available to the public, an internal private mirror")
     internet2 = widgets.CheckBox(help_text="on Internet2")
     internet2_clients = widgets.CheckBox(help_text="serves Internet2 clients, even if private")
+    asn = widgets.TextField("ASN", default='', validator=validators.Any(validators.Int, validators.Empty), help_text="Autonomous System Number, used in BGP routing tables.")
+    asn_clients = widgets.CheckBox(default=True, help_text="Serve all clients from the same ASN.  Used for ISPs, companies, or schools, not personal networks.")
     robot_email = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.Email), help_text="email address, will receive notice of upstream content updates")
     comment = widgets.TextField(validator=validators.Any(validators.UnicodeString, validators.Empty), help_text="text, anything else you'd like a public end user to know about your mirror")
 
@@ -600,7 +603,9 @@ class HostListitemController(controllers.Controller, identity.SecureResource, co
             turbogears.flash(msg)
             raise turbogears.redirect("/host/%s" % host.id)
         except: # probably sqlite IntegrityError but we can't catch that for some reason... 
-            turbogears.flash("Error: entity already exists")
+            errmsg = sys.exc_info()
+            turbogears.flash("Unexpected Error:", errmsg)
+
         raise turbogears.redirect("/host/%s" % host.id)
 
     @expose(template="mirrormanager.templates.boringhostform")

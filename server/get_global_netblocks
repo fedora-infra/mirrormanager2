@@ -1,0 +1,26 @@
+#!/bin/bash
+if [ $# -eq 0 ]; then
+    echo "usage: get_global_netblocks <output_filename>" >&2
+    exit 1
+fi
+
+outfile="$1"
+tmpdir=$(mktemp -d /tmp/get_global_netblocks.XXXXXXXX) || exit 1
+trap "rm -rf ${tmpdir}" EXIT QUIT HUP KILL TERM
+listfile=$tmpdir/list
+
+function get_global_netblocks()
+{
+    URL='http://ftp.routeviews.org/dnszones/rib.bz2'
+    wget -O ${tmpdir}/rib.bz2 -q "${URL}"
+    bzcat ${tmpdir}/rib.bz2 | perl internet2/zebra-dump-parser/zebra-dump-parser.pl | uniq > ${listfile}
+}
+
+get_global_netblocks
+if [ -s ${listfile} ]; then
+    cp -f ${listfile} "${outfile}"
+else
+    echo "unable to retrieve netblock list." >&2
+    exit 1
+fi
+exit 0
