@@ -174,7 +174,7 @@ def name_to_ips(name):
             records = dns.resolver.query(name, r)
             for rdata in records:
                 try:
-                    ip = IP(rdata)
+                    ip = IP(str(rdata))
                     result.append(ip)
                 except:
                     continue
