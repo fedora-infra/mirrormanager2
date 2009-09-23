@@ -2,7 +2,16 @@ This is the top level of the Fedora Mirror Management system.
 
 Directories include:
 
-mirrors/  - the TurboGears web site and database schema
-client/   - code and sample configuration files that is run on mirror hosts
-fedora-test-data/ - something to get started
+server/ 
+    - The TurboGears web site and database schema
+
+mirrorlist-server/ 
+    - The daemon process that has the cached data, and fork()s for every 
+      request
+
+client/ 
+    - Code and sample configuration files that are run on mirror hosts
+
+fedora-test-data/ 
+    - Something to get started
 

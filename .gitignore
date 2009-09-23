@@ -1,7 +1,0 @@
-mirrormanager.spec
-server/mirrormanager/release.py
-server/mirrormanager.egg-info/
-dist/
-*.rpm
-*.pyc
-*.pyo

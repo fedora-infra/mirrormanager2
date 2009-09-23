@@ -2,7 +2,13 @@ from setuptools import setup, find_packages
 from turbogears.finddata import find_package_data
 
 import os
-execfile(os.path.join("mirrormanager", "release.py"))
+
+release_file = os.path.join("./", "mirrormanager", "release.py")
+if os.path.exists(release_file):
+    execfile(release_file)
+else:
+    raise RuntimeError, \
+        "%s missing, did you run 'make prep' first?" % (release_file, release_file) 
 
 setup(
     name="mirrormanager",
@@ -23,7 +29,8 @@ setup(
     install_requires = [
         "TurboGears >= 1.0b1",
         "IPy",
-        "GeoIP",
+        "pygeoip",
+        "SQLObject",
         "python_fedora >= 0.3.14",
     ],
     scripts = ["start-mirrormanager.py"],
