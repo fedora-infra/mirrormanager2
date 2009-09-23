@@ -9,7 +9,7 @@ def user_group_setup():
         display_name='Admin', 
         password='admin'
         )
-     a.addGroup(Group.by_group_name('user'))
-     a.addGroup(Group.by_group_name('sysadmin'))
+    a.addGroup(Group.by_group_name('user'))
+    a.addGroup(Group.by_group_name('sysadmin'))
 
 user_group_setup()
