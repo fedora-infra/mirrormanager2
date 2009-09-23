@@ -4,7 +4,7 @@
 
 import mirrormanager.model
 from math import ceil
-from IN import INT_MAX
+import sys
 
 def categorymap(productname, vername):
     categories = []
@@ -13,11 +13,11 @@ def categorymap(productname, vername):
     if productname is None: # want all categories
         return [c.name for c in mirrormanager.model.Category.select()]
 
-    vernum = INT_MAX
+    vernum = sys.maxint
     if vername is not None:
         try:
             if u'development' in vername:
-                vernum = INT_MAX
+                vernum = sys.maxint
             elif '.' in vername:
                 vernum = int(ceil(float(vername)))
             else:
