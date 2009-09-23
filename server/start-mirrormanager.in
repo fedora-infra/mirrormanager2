@@ -1,0 +1,31 @@
+#!/usr/bin/python
+__requires__ =  'TurboGears[future]'
+import pkg_resources
+
+CONFFILE='##CONFFILE##'
+PROGRAMDIR='##PROGRAMDIR##'
+
+from turbogears import config, update_config, start_server
+from turbogears import startup
+
+import cherrypy
+cherrypy.lowercase_api = True
+from os.path import *
+import sys
+from fedora.tg.util import enable_csrf
+
+if len(sys.argv) > 1:
+    update_config(configfile=sys.argv[1] ,
+                  modulename="mirrormanager.config")
+elif exists(join(dirname(__file__), "setup.py")):
+    update_config(configfile="dev.cfg",modulename="mirrormanager.config")
+else:
+    update_config(configfile=CONFFILE, modulename="mirrormanager.config")
+
+sys.path.append(PROGRAMDIR)
+
+startup.call_on_startup.append(enable_csrf)
+
+from mirrormanager.controllers import Root
+
+start_server(Root())

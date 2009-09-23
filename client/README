@@ -1,0 +1,39 @@
+New in v1.2.10: rsyncFilter
+
+The rsyncFilter web interface takes a comma-separated list of
+Categories to request, a timestamp (seconds since the epoch) of your
+previous rsync run, and the leading directories to remove from the
+answer.  It returns an rsync filter rule, which includes only the
+directories which have changed since the timestamp.
+
+Categories should be listed with their full name, and spaces URL-escaped.
+
+Mirrors should use this interface to determine which files and
+directories have changed recently, and to then only download those
+which have changed.
+
+In this example, we check for directories which have changed in the
+last 24 hours, and sync only those.  The rsync command line options
+are not complete in this example, you must adjust them for your own
+incantation.
+
+BEGIN_SCRIPT
+#!/bin/sh
+timestampNow=$(date --utc +%s)
+yesterday=$((timestampNow - (60 * 60 * 24)))
+tmpfile=$(mktemp rsync.XXXXXXXX)
+curl \
+"https://admin.fedoraproject.org/mirrormanager/rsyncFilter?categories=Fedora%20Linux&since=${yesterday}&stripprefix=pub/fedora" \
+> ${tmpfile}
+
+rsync -vvaHP --numeric-ids --exclude-from=${tmpfile} \
+    --delay-updates --delete --delete-after --ignore-errors \
+    ${RSYNC_SERVER}::fedora-enchilada/ ${DESTDIR}
+
+[ $? -eq 0 -o $? -eq 23 -o $? -eq 24 ] && report_mirror
+rm ${tmpfile}
+
+END_SCRIPT
+
+
+report_mirror should be run after each successful rsync completes.

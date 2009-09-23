@@ -1,0 +1,73 @@
+#!/usr/bin/python
+__requires__ = 'TurboGears[future]'
+import pkg_resources
+pkg_resources.require("TurboGears")
+
+from sqlobject import *
+import turbogears
+from mirrormanager.model import *
+from optparse import OptionParser
+import re
+
+from turbogears.database import PackageHub
+hub = __connection__ = None
+
+options = None
+
+archiveCategory = 'Fedora Archive'
+originalCategory = 'Fedora Linux'
+
+
+def doit():
+    global options
+    c = Category.selectBy(name=options.originalCategory)[0]
+    a = Category.selectBy(name=options.archiveCategory)[0]
+    originalTopdir = c.topdir.name
+    archiveTopdir = a.topdir.name
+    dirRe = re.compile(options.directoryRe)
+    for d in c.directories:
+        if dirRe.search(d.name):
+            r = d.repository
+            if r is not None:
+                t = archiveTopdir + d.name[len(originalTopdir):]
+                try:
+                    new_d = Directory.byName(t)
+                    r.directory = new_d
+                    r.category = a
+                    r.sync()
+                    print "%s => %s" % (d.name, t)
+                except:
+                    print "Unable to find a directory in [%s] for %s" % (options.archiveCategory, d.name)
+
+def main():
+    global options
+    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option("-c", "--config",
+                      dest="config", default='/etc/mirrormanager/prod.cfg',
+                      help="TurboGears config file to use (default=/etc/mirrormanager/prod.cfg)")
+
+    parser.add_option("--originalCategory",
+                      metavar="CATEGORY", dest="originalCategory", action="store", type="string", help="original Category (default=%s)" % originalCategory, default=originalCategory)
+    parser.add_option("--archiveCategory",
+                      metavar="CATEGORY", dest="archiveCategory", action="store", type="string", help="archive Category (default=%s)" % archiveCategory, default=archiveCategory)
+    parser.add_option("--directoryRe",
+                      metavar="RE", dest="directoryRe", action="store", type="string", help="subdirectory regular expression to move (e.g. '/7/') [required]", default=None)
+
+    (options, args) = parser.parse_args()
+    if options.directoryRe is None:
+        parser.print_help()
+        sys.exit(1)
+
+    turbogears.update_config(configfile=options.config,
+                             modulename="mirrormanager.config")
+    global hub
+    global __connection__
+    hub = PackageHub("mirrormanager")
+    __connection__ = hub
+    
+    doit()
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
+        

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+MM_DIR=/usr/share/mirrormanager/server
+MIRRORLIST_DIR=/var/lib/mirrormanager/mirrorlists
+LOCKFILE=/var/lock/mirrormanager/update-database.lock
+
+[ -e ${LOCKFILE} ] && kill -0 $(cat ${LOCKFILE}) && exit 2
+echo $$ > ${LOCKFILE}
+trap "rm -f ${LOCKFILE}" QUIT TERM INT HUP EXIT
+
+echo "=============================================================="
+echo -n "Starting at "
+date
+
+cd ${MM_DIR}
+
+${MM_DIR}/update-master-directory-list /etc/mirrormanager/prod.cfg
+${MM_DIR}/crawler -c /etc/mirrormanager/prod.cfg --threads 15
+
+echo -n "Ending at "
+date

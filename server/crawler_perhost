@@ -1,0 +1,633 @@
+#!/usr/bin/python
+__requires__ = 'TurboGears[future]'
+import pkg_resources
+pkg_resources.require("TurboGears")
+
+from sqlobject import *
+import sys, os, string, signal, socket
+import turbogears
+from mirrormanager.model import *
+from datetime import datetime
+import ftplib
+from ftplib import FTP
+import httplib
+from urlparse import urlsplit
+from optparse import OptionParser
+import threading
+import urlgrabber
+import hashlib
+
+from turbogears.database import PackageHub
+hostid = None
+logfile = None
+
+################################################
+# overrides for httplib because we're
+# handling keepalives ourself
+################################################
+class myHTTPResponse(httplib.HTTPResponse):
+    def begin(self):
+        httplib.HTTPResponse.begin(self)
+        self.will_close=False
+
+    def isclosed(self):
+        """This is a hack, because otherwise httplib will fail getresponse()"""
+        return True
+
+    def keepalive_ok(self):
+        # HTTP/1.1 connections stay open until closed
+        if self.version == 11:
+            ka = self.msg.getheader('connection')
+            if ka and "close" in ka.lower():
+                return False
+            else:
+                return True
+
+        # other HTTP connections may have a connection: keep-alive header
+        ka = self.msg.getheader('connection')
+        if ka and "keep-alive" in ka.lower():
+            return True
+
+        try:
+            ka = self.msg.getheader('keep-alive')
+            if ka is not None:
+                maxidx = ka.index('max=')
+                max = ka[maxidx+4:]
+                if max == '1':
+                    return False
+                return True
+            else:
+                ka = self.msg.getheader('connection')
+                if ka and "keep-alive" in ka.lower():
+                    return True
+                return False
+        except:
+            return False
+        return False
+
+class myHTTPConnection(httplib.HTTPConnection):
+    response_class=myHTTPResponse
+    
+    def end_request(self):
+        self.__response = None
+
+
+################################################
+# the magic begins
+
+class hostState:
+    def __init__(self, http_debuglevel=0, ftp_debuglevel=0):
+        self.httpconn = {}
+        self.ftpconn = {}
+        self.http_debuglevel = http_debuglevel
+        self.ftp_debuglevel = ftp_debuglevel
+        self.ftp_dir_results = None
+
+
+    def get_connection(self, url):
+        scheme, netloc, path, query, fragment = urlsplit(url)
+        if scheme == 'ftp':
+            if self.ftpconn.has_key(netloc):
+                return self.ftpconn[netloc]
+        elif scheme == 'http':
+            if self.httpconn.has_key(netloc):
+                return self.httpconn[netloc]
+        return None
+
+
+    def open_http(self, url):
+        scheme, netloc, path, query, fragment = urlsplit(url)
+        if not self.httpconn.has_key(netloc):
+            self.httpconn[netloc] = myHTTPConnection(netloc)
+            self.httpconn[netloc].set_debuglevel(self.http_debuglevel)
+        return self.httpconn[netloc]
+
+    def _open_ftp(self, netloc):
+        if not self.ftpconn.has_key(netloc):
+            self.ftpconn[netloc] = FTP(netloc)
+            self.ftpconn[netloc].set_debuglevel(self.ftp_debuglevel)
+            self.ftpconn[netloc].login()
+
+    def check_ftp_dir_callback(self, line):
+        if self.ftp_debuglevel > 0:
+            print >>logfile, line
+        self.ftp_dir_results.append(line)
+
+    def ftp_dir(self, url):
+        scheme, netloc, path, query, fragment = urlsplit(url)
+        self._open_ftp(netloc)
+        c = self.ftpconn[netloc]
+        self.ftp_dir_results = []
+        c.dir(path, self.check_ftp_dir_callback)
+
+
+    def close_http(self, url):
+        scheme, netloc, path, query, fragment = urlsplit(url)
+        if self.httpconn.has_key(netloc):
+            self.httpconn[netloc].close()
+            del self.httpconn[netloc]
+
+    def close_ftp(self, url):
+        scheme, netloc, path, query, fragment = urlsplit(url)
+        if self.ftpconn.has_key(netloc):
+            try:
+                self.ftpconn[netloc].quit()
+            except:
+                pass
+            del self.ftpconn[netloc]
+
+    def close(self):
+        for c in self.httpconn.keys():
+            self.close_http(c)
+
+        for c in self.ftpconn.keys():
+            self.close_ftp(c)
+
+
+class TryLater(Exception):
+    pass
+
+
+def get_ftp_dir(hoststate, url, i=0):
+    if i > 1:
+        raise TryLater()
+
+    try:
+        hoststate.ftp_dir(url)
+    except ftplib.error_perm, e:
+        # Returned by Princeton University when directory does not exist
+        if str(e).startswith('550'):
+            return []
+        # Returned by Princeton University when directory isn't readable (pre-bitflip)
+        if str(e).startswith('553'):
+            return None
+        # Returned by ftp2.surplux.net when cannot log in due to connection restrictions
+        if str(e).startswith('530'):
+            hoststate.close_ftp(url)
+            return get_ftp_dir(hoststate, url, i+1)
+        if str(e).startswith('500'): # Oops
+            raise TryLater()
+        else:
+            print >>logfile, "unknown permanent error %s on %s" % (e, url)
+            raise
+    except ftplib.error_temp, e:
+        # Returned by Boston University when directory does not exist
+        if str(e).startswith('450'):
+            return []
+        # Returned by Princeton University when cannot log in due to connection restrictions
+        if str(e).startswith('421'):
+            print >>logfile, "Connections Exceeded %s" % url
+            raise TryLater()
+        if str(e).startswith('425'):
+            print >>logfile, "Failed to establish connection on %s" % url
+            raise TryLater()
+        else:
+            print >>logfile, "unknown error %s on %s" % (e, url)
+            raise 
+    except (EOFError, socket.error):
+        hoststate.close_ftp(url)
+        return get_ftp_dir(hoststate, url, i+1)
+        
+    return hoststate.ftp_dir_results
+
+def check_ftp_file(hoststate, url, filedata):
+    if url.endswith('/'):
+        url = url[:-1]
+    try:
+        results = get_ftp_dir(hoststate, url)
+    except TryLater:
+        raise
+    if results is None:
+        return None
+    if len(results) == 1:
+        line = results[0].split()
+        if line[4] == filedata['size']:
+            return True
+    return False
+
+def check_url(hoststate, url, filedata, recursion):
+    if url.startswith('http:'):
+        return check_head(hoststate, url, filedata, recursion)
+    elif url.startswith('ftp:'):
+        return check_ftp_file(hoststate, url, filedata)
+
+
+class HTTPUnknown(Exception): pass
+class HTTP500(Exception): pass
+
+def handle_redirect(hoststate, url, location, filedata, recursion):
+    if recursion > 10:
+        raise HTTPUnknown()
+    if location.startswith('/'):
+        scheme, netloc, path, query, fragment = urlsplit(url)
+        location = '%s:%s%s' % (scheme, netloc, location)
+    return check_url(hoststate, location, filedata, recursion+1)
+
+
+def check_head(hoststate, url, filedata, recursion, retry=0):
+    """ Returns tuple:
+    True - URL exists
+    False - URL doesn't exist
+    None - we don't know
+    """
+    
+    try:
+        conn = hoststate.open_http(url)
+    except:
+        return None
+    
+    scheme, netloc, path, query, fragment = urlsplit(url)
+    reqpath = path
+    if len(query) > 0:
+        reqpath += "?%s" % query
+    if len(fragment) > 0:
+        reqpath += "#%s" % fragment
+    conn.request('HEAD', reqpath,
+                 headers={'Connection':'Keep-Alive',
+                          'Pragma':'no-cache',
+                          'User-Agent':'mirrormanager-crawler/0.1 (+http://fedorahosted.org/mirrormanager)'})
+    
+    r = None
+    try:
+        r = conn.getresponse()
+        status = r.status
+    except:
+        if retry == 0:
+            # retry once
+            hoststate.close_http(url)
+            return check_head(hoststate, url, filedata, recursion, retry=1)
+        else:
+            raise HTTPUnknown()
+
+    conn.end_request()
+    if not r.keepalive_ok():
+        hoststate.close_http(url)
+
+    content_length = r.getheader('Content-Length')
+    #last_modified  = r.getheader('Last-Modified')
+
+    if status >= 200 and status < 300:
+        # fixme should check last_modified too
+        if filedata['size'] == content_length:
+            return True
+        else:
+            return False
+    if status >= 300 and status < 400:
+        return handle_redirect(hoststate, url, r.getheader('Location'), filedata, recursion)
+    elif status >= 400 and status < 500:
+        if status == 403: # forbidden
+            # may be a hidden dir still
+            return None
+        elif status == 404 or status == 410: # not found / gone
+            return False
+        # we don't know
+        return None
+    elif status >= 500:
+        raise HTTP500()
+
+    print >>logfile, "status = %s" % status
+    raise HTTPUnknown()
+
+def sync_hcds(host, host_category_dirs):
+    current_hcds = {}
+    now = datetime.utcnow()
+    host.lastCrawled = now
+    for (hc, d), up2date in host_category_dirs.iteritems():
+        if up2date is None:
+            continue
+
+        topname = hc.category.topdir.name
+        path = d.name[len(topname)+1:]
+
+        hcd = HostCategoryDir.selectBy(host_category=hc, path=path)
+        if hcd.count() > 0:
+            hcd = hcd[0]
+        else:
+            hcd = HostCategoryDir(host_category=hc, path=path, directory=d)
+
+        if hcd.directory is None:
+            hcd.directory = d
+        if hcd.up2date != up2date:
+            hcd.up2date=up2date
+            hcd.sync()
+            if up2date == False:
+                print >>logfile, "Directory %s is not up-to-date on this host." % d.name
+                
+        current_hcds[hcd] = True
+
+
+    # now-historical HostCategoryDirs are not up2date
+    # we wait for a cascading Directory delete to delete this
+    for hc in host.categories:
+        for hcd in hc.dirs:
+            if hcd.directory is not None and not hcd.directory.readable:
+                continue
+            try:
+                thcd = current_hcds[hcd]
+            except KeyError:
+                if hcd.up2date != False:
+                    hcd.up2date=False
+                    hcd.sync()
+    
+
+def method_pref(urls):
+    pref = None
+    for u in urls:
+        if u.startswith('http:'):
+            pref = u
+            break
+    if pref is None:
+        for u in urls:
+            if u.startswith('ftp:'):
+                pref = u
+                break
+    return pref
+        
+
+def add_parents(host_category_dirs, hc, d):
+    splitpath = d.name.split('/')
+    if len(splitpath[:-1]) > 0:
+        parent = '/'.join(splitpath[:-1])
+        try:
+            hcd = host_category_dirs[(hc, parent)]
+        except KeyError:
+            try:
+                parentDir = Directory.byName(parent)
+                host_category_dirs[(hc, parentDir)] = True
+            except SQLObjectNotFound: # recursed out of the directory structure
+                parentDir = None
+                
+        if parentDir and parentDir != hc.category.topdir: # stop at top of the category
+            return add_parents(host_category_dirs, hc, parentDir)
+    
+    return host_category_dirs
+
+
+def compare_sha256(d, filename, graburl):
+    """ looks for a FileDetails object that matches the given URL """
+    found = False
+    s = urlgrabber.urlread(graburl)
+    sha256 = hashlib.sha256(s).hexdigest()
+    for fd in d.fileDetails:
+        if fd.filename == filename and fd.sha256 is not None:
+            if fd.sha256 == sha256:
+                found = True
+                break
+    return found
+
+def try_perfile(d, hoststate, url):
+    if d.files is None:
+        return None
+    exists = None
+    for file in d.files.keys():
+        exists = None
+        graburl = "%s/%s" % (url, file)
+        try:
+            exists = check_url(hoststate, graburl, d.files[file], 0)
+            #print >>logfile, "%s %s" % (exists, graburl)
+            if exists == False:
+                return False
+        except TryLater:
+            raise
+        except ftplib.all_errors:
+            hoststate.close_ftp(url)
+            return None
+        except:
+            return None
+
+        if file == 'repomd.xml':
+            try:
+                exists = compare_sha256(d, file, graburl)
+            except:
+                pass
+            if exists == False:
+                return False
+
+    if exists is None:
+        return None
+
+    return True
+
+
+def try_perdir(d, hoststate, url):
+    if d.files is None:
+        return None
+    if not url.startswith('ftp'):
+        return None
+    results = {}
+    if not url.endswith('/'):
+        url += '/'
+    listing = get_ftp_dir(hoststate, url)
+    if listing is None:
+        return None
+
+    if len(listing) == 0:
+        #print >>logfile, 'FALSE %s' % url
+        return False
+    
+    for line in listing:
+        if line.startswith('total'): # some servers first include a line starting with the word 'total' that we can ignore
+            continue
+        fields = line.split()
+        try:
+            results[fields[8]] = {'size': fields[4]}
+        except IndexError: # line doesn't have 8 fields, it's not a dir line
+            pass
+
+    for file in d.files.keys():
+        try:
+            if results[file]['size'] != d.files[file]['size']:
+                return False
+        except:
+            return False
+    return True
+        
+must_dienow = False
+mypid = None
+def dienow():
+    global must_dienow
+    must_dienow = True
+    print >>logfile, "Host %d timeout expired, killing this process.  Better luck next time." % hostid
+    os.kill(mypid, signal.SIGUSR1)
+    os._exit(0)
+
+def mark_not_up2date(host, reason="Unknown"):
+    host.set_not_up2date()
+    host.lastCrawled = datetime.utcnow()
+    print >> logfile, "Host marked not up2date: %s" % reason
+    
+
+def sigusr1_handler(signum, frame):
+    if signum == signal.SIGUSR1:
+        signal.signal(signal.SIGUSR1, signal.SIG_IGN)
+        try:
+            mark_not_up2date(Host.get(hostid), "Crawler timed out before completing.  Host is likely overloaded.")
+        except:
+            pass
+    os._exit(1)
+
+reopenLogs = False
+def reopen_logs():
+    global logfile
+    if logfile is not None:
+        fname = logfile.name
+        logfile.flush()
+        # it's a logfile, don't care if it's fsynced to disk or not...
+        logfile.close()
+        logfile = open(fname, 'a+b')
+
+def sighup_handler(signum, frame):
+    if signum == signal.SIGHUP:
+        global reopenLogs
+        reopenLogs = True
+    signal.signal(signal.SIGHUP, sighup_handler)
+
+
+def per_host(host, options=None):
+    global must_dienow
+    host = Host.get(host)
+    done_host=False
+    host_category_dirs = {}
+    if host.private and not options.include_private:
+        return
+    http_debuglevel = 0
+    ftp_debuglevel = 0
+    if options.debug_http:
+        http_debuglevel = 2
+    if options.debug_ftp:
+        ftp_debuglevel = 2
+
+    if options.timeout_minutes > 0:
+        timer = threading.Timer(options.timeout_minutes * 60.0, dienow)
+        timer.start()
+
+    signal.signal(signal.SIGUSR1, sigusr1_handler)
+    signal.signal(signal.SIGHUP, sighup_handler)
+
+    hoststate = hostState(http_debuglevel=http_debuglevel, ftp_debuglevel=ftp_debuglevel)
+    for hc in host.categories:
+        if hc.always_up2date:
+            continue
+        category = hc.category
+        trydirs = category.directories
+        categoryUrl = method_pref(host.category_urls(category.name))
+        if categoryUrl is None:
+            continue
+        categoryPrefixLen = len(category.topdir.name)+1
+        
+        for d in trydirs:
+            if must_dienow:
+                sys.exit(1)
+                
+            global reopenLogs
+            if reopenLogs:
+                reopenLogs = False
+                reopen_logs()
+
+            if not d.readable:
+                continue
+
+            dirname = d.name[categoryPrefixLen:]
+            url = '%s/%s' % (categoryUrl, dirname)
+
+            try:
+                has_all_files = try_perdir(d, hoststate, url)
+                if has_all_files is None:
+                    has_all_files = try_perfile(d, hoststate, url)
+
+
+                if has_all_files == False:
+                    host_category_dirs[(hc, d)] = False
+                elif has_all_files == True:                
+                    host_category_dirs[(hc, d)] = True
+                    print >>logfile, url
+                    # make sure our parent dirs appear on the list too
+                    host_category_dirs = add_parents(host_category_dirs, hc, d)
+                else:
+                    # could be a dir with no files, or an unreadable dir.
+                    # defer decision on this dir, let a child decide.
+                    pass
+            except:
+                timer.cancel()
+                mark_not_up2date(host, "Unknown exception raised.  This is a bug in the MM crawler.")
+                sys.exit(1)
+
+    hoststate.close()
+    if options.timeout_minutes > 0:
+        timer.cancel()
+
+    if len(host_category_dirs) > 0:
+        sync_hcds(host, host_category_dirs)
+    else:
+        mark_not_up2date(host, "No host category directories found.  Check that your Host Category URLs are correct.")
+
+def main():
+    global mypid
+    mypid = os.getpid()
+    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option("-c", "--config",
+                      dest="config", default='dev.cfg',
+                      help="TurboGears config file to use")
+
+    parser.add_option("--hostid",
+                      dest="hostid", type='int', default=None,
+                      help="Crawl a single host at site")
+
+    parser.add_option("--debug-http",
+                      action="store_true", dest="debug_http", default=False,
+                      help="Dump HTTP headers for each transaction")
+
+    parser.add_option("--debug-ftp",
+                      action="store_true", dest="debug_ftp", default=False,
+                      help="Dump FTP headers for each transaction")
+
+    parser.add_option("--include-private",
+                      action="store_true", dest="include_private", default=False,
+                      help="Include hosts marked 'private' in the crawl")
+
+    parser.add_option("--timeout-minutes", type="int",
+                      dest="timeout_minutes", default=60,
+                      help="Minutes to let the crawler run before killed (default=60)")
+    parser.add_option("--logfile", type="string", metavar="FILE",
+                      dest="logfile", default=None,
+                      help="write logs to FILE")
+    parser.add_option("--canary", 
+                      dest="canary", action="store_true", default=False,
+                      help="fast crawl by only scanning for canary files")
+
+    (options, args) = parser.parse_args()
+
+    turbogears.update_config(configfile=options.config,
+                             modulename="mirrormanager.config")
+    global hub
+    global __connection__
+    global hostid
+    global logfile
+    hub = PackageHub("mirrormanager")
+    __connection__ = hub
+    
+    os.chdir('/tmp')
+    
+    if options.logfile is not None:
+        logfile = open(options.logfile, "a+b")
+    else:
+        logfile = sys.stdout
+        
+    try:
+        host = Host.get(options.hostid)
+    except:
+        print >>logfile, "Host %s not found." % options.hostid
+        sys.exit(1)
+
+    hostid = host.id
+    print >>logfile, "Starting crawl %s" % (datetime.utcnow().isoformat())
+    per_host(host.id, options=options)
+    print >>logfile, "Ending crawl %s" % (datetime.utcnow().isoformat())
+
+    logfile.flush()
+    logfile.close()
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+        

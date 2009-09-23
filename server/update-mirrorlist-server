@@ -1,0 +1,18 @@
+#!/bin/bash
+
+MM_DIR=/usr/share/mirrormanager/server
+MIRRORLIST_DIR=/var/lib/mirrormanager/mirrorlists
+LOCKFILE=/var/lock/mirrormanager/update-mirrorlist-server.lock
+CACHEDIR=/var/lib/mirrormanager
+
+[ -e ${LOCKFILE} ] && kill -0 $(cat ${LOCKFILE}) && exit 2
+echo $$ > ${LOCKFILE}
+trap "rm -f ${LOCKFILE}" QUIT TERM INT HUP EXIT
+
+cd ${MM_DIR}
+${MM_DIR}/update-static-content ${MIRRORLIST_DIR}
+${MM_DIR}/refresh_mirrorlist_cache -c /etc/mirrormanager/prod.cfg
+${MM_DIR}/get_internet2_netblocks ${CACHEDIR}/i2_netblocks.txt
+killall -HUP mirrorlist_server.py
+
+exit 0

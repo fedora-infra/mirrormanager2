@@ -1,0 +1,118 @@
+#!/usr/bin/python
+__requires__ = 'TurboGears[future]'
+import pkg_resources
+pkg_resources.require("TurboGears")
+
+from sqlobject import *
+import sys, os, string
+import turbogears
+from mirrormanager.model import *
+from mirrormanager.lib import manage_pidfile, remove_pidfile
+from urlparse import urlsplit
+from optparse import OptionParser
+from subprocess import Popen
+
+pidfile='/var/run/mirrormanager/crawler.pid'
+
+from turbogears.database import PackageHub
+hub = __connection__ = None
+
+class ForkingMaster:
+    def __init__(self, max_children=10):
+        self.active_children = None
+        self.max_children = max_children
+        self.devnull = open('/dev/null', 'rw')
+
+    def collect_children(self):
+        """Internal routine to wait for died children."""
+        while self.active_children:
+            if len(self.active_children) < self.max_children:
+                options = os.WNOHANG
+            else:
+                # If the maximum number of children are already
+                # running, block while waiting for a child to exit
+                options = 0
+            try:
+                pid, status = os.waitpid(0, options)
+            except os.error:
+                pid = None
+            if not pid: break
+            self.active_children.remove(pid)
+
+    def process_request(self, command, args):
+        """Fork a new subprocess to process the request."""
+        self.collect_children()
+        print "Starting crawler %s" % args
+        p = Popen(args, executable=command, stdin=self.devnull, stdout=self.devnull, stderr=self.devnull, close_fds=True)
+        # Parent process
+        if self.active_children is None:
+            self.active_children = []
+        self.active_children.append(p.pid)
+
+    def wait_for_completion(self):
+        self.max_children = 0
+        self.collect_children()
+
+
+def doit(options, include_private=False, threads=10, config=None, logdir=None):
+    master = ForkingMaster(max_children=threads)
+    command = './crawler_perhost'
+    commonargs = [ command, '-c', config]
+    if include_private:
+        commonargs.append('--include-private')
+    if options.canary:
+        commonargs.append('--canary')
+
+    for h in Host.select():
+        if not h.is_active() or (not include_private and h.is_private()):
+            continue
+    
+        args = commonargs + ['--hostid=%s' % h.id]
+        if logdir is not None:
+            logfilename = os.path.join(logdir, str(h.id) + '.log')
+            args.append('--logfile=%s' % logfilename)
+
+        master.process_request(command, args)
+        
+    master.wait_for_completion()
+
+
+def main():
+    if manage_pidfile(pidfile):
+        print "another instance is running, try again later."
+        sys.exit(1)
+
+    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option("-c", "--config",
+                      dest="config", default='dev.cfg',
+                      help="TurboGears config file to use")
+
+    parser.add_option("--include-private",
+                      action="store_true", dest="include_private", default=False,
+                      help="Include hosts marked 'private' in the crawl")
+
+    parser.add_option("-t", "--threads", type="int",
+                      dest="threads", default=10,
+                      help="max threads to start in parallel")
+    parser.add_option("-l", "--logdir", type="string", metavar="DIR",
+                      dest="logdir", default='/var/log/mirrormanager/crawler',
+                      help="write logfiles to DIR")
+
+    parser.add_option("--canary", 
+                      dest="canary", action="store_true", default=False,
+                      help="fast crawl by only scanning for canary files")
+
+    (options, args) = parser.parse_args()
+
+    turbogears.update_config(configfile=options.config,
+                             modulename="mirrormanager.config")
+    global hub
+    global __connection__
+    hub = PackageHub("mirrormanager")
+    __connection__ = hub
+    
+    doit(options, include_private=options.include_private, threads=options.threads, config=options.config, logdir=options.logdir)
+    remove_pidfile(pidfile)
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,2 @@
+#!/bin/sh
+vacuumdb -d mirrormanager -h db1 -U mirroradmin -f -v

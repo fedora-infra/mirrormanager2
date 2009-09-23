@@ -1,0 +1,53 @@
+* Let report_mirror work from behind an http proxy.  It presently
+  doesn't try to connect to the proxy server.
+  - httplib + libcurl please
+
+* send emails to mirror admins when their servers drop out of the
+  mirrorlists, with why.
+
+* push mirroring.  Shell out to remote servers when content is changed on the master, to trigger them into syncing.
+
+* only repositories are using the ordered_mirrorlist field, not say iso/ directories.  Do we care?
+
+* Track multiple master mirrors (e.g. secondary arches)
+  - done via separate directory trees (e.g. pub/fedora and pub/secondary) right now
+
+* sort publiclist chooser versions
+
+* cronjob to mark private mirrors as not-up2date, some amount of time
+  after the content has changed but they haven't run report_mirror.
+
+* can the crawler check private, but serving I2 clients, mirrors?
+
+* make the 7-day stale  repomd.xml file timeout be configurable in
+  prod.cfg.
+
+
+* RepositoryRedirects
+- at the end of the release cycle, the fedora-release package may have
+  a version name like 10.93, but updates are available under version
+  named 11.  The redirects which manage-repo-redirects puts into place
+  will make redirects from f10.93 -> rawhide, which are in place early
+  in the process, now need to change to be f10.93 -> f11.
+
+- at the end of the release cycle, fedora-release may have a version
+  name of 'rawhide'.  Need to put these redirects into place then:
+
+fedora-source-rawhide => rawhide-source
+fedora-debug-rawhide => rawhide-debug
+fedora-rawhide => rawhide
+updates-testing-debug-frawhide => updates-testing-debug-f11
+updates-testing-source-frawhide => updates-testing-source-f11
+updates-released-frawhide => updates-released-f11
+updates-testing-frawhide => updates-testing-f11
+updates-released-source-frawhide => updates-released-source-f11
+updates-released-debug-frawhide => updates-released-debug-f11
+
+* metalinks for multiple CDs/files
+- Just like torrents, we should have a single metalink that downloads
+all the CDs in a set via one URL.
+
+* Torrents
+In Fedora 12 or 13, the master directory layout may change such that it
+matches the torrent layouts.  When this happens, the .torrent files
+will be in the tree.  Include them in the proper metalinks.

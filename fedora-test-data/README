@@ -1,0 +1,17 @@
+This is test data captured from download1.fedora.redhat.com
+on 2007-01-10 at ~9:45pm CST
+
+$ wc -l *dirsonly*
+  570 fedora-linux-core-dirsonly.txt
+  110 fedora-linux-extras-dirsonly.txt
+  680 total
+
+This is an example of the number of directories we'll want to track.
+
+
+To get the rsync files, be on a machine in Red Hat's rsync ACLs and do:
+rsync -r download2.fedora.redhat.com::fedora-linux-core
+rsync -r download2.fedora.redhat.com::fedora-linux-extras
+
+mirror-hosts.txt is copied straight from
+/cvs/fedora/web/html/Download/mirrors/fedora-core-6

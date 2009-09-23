@@ -1,0 +1,30 @@
+#!/bin/bash
+
+PUBLICLIST_DIR="$1"
+[ -z "${PUBLICLIST_DIR}" ] && exit 1
+mkdir -p "${PUBLICLIST_DIR}"
+
+temp_dir_name=`mktemp -d /tmp/mirrorlists.XXXXXX`
+trap "rm -rf $temp_dir_name" QUIT TERM INT HUP EXIT
+
+pushd $temp_dir_name > /dev/null 2>&1
+/usr/share/mirrormanager/server/generate-publiclist -c /etc/mirrormanager/prod.cfg -o ${temp_dir_name}/publiclist
+
+if [ $(find . -type f -name \*.html | wc -l) -lt 5 ]; then
+    # touch the existing files so our proxy caches refresh
+    find "${PUBLICLIST_DIR}" -type f -exec touch \{\} \;
+    exit 1
+fi
+
+rsync -a /usr/share/mirrormanager/server/mirrormanager/static .
+ln static/images/favicon.ico
+touch robots.txt
+# remove /mirrormanager in the URLs
+find . -name index.html -type f | xargs -n 20 sed -i -e 's:href=\"/mirrormanager/:href=\"/:g'
+find . -name \*.css -type f | xargs -n 20 sed -i -e 's:/mirrormanager/:/:g'
+popd > /dev/null 2>&1
+mkdir -m 0775 -p "${PUBLICLIST_DIR}"
+# because the arg list is too long for cp
+find $temp_dir_name -type d -exec chmod 0755 \{\} \;
+find $temp_dir_name -type f -exec chmod 0644 \{\} \;
+rsync -a --delete --delete-after --delay-updates $temp_dir_name/ "${PUBLICLIST_DIR}"/
