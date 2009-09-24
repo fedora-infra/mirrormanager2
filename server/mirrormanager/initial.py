@@ -14,4 +14,12 @@ def user_group_setup():
     a.addGroup(Group.by_group_name('user'))
     a.addGroup(Group.by_group_name('sysadmin'))
 
+    b = User(
+        user_name='test', 
+        email_address='test@example.com', 
+        display_name='Test', 
+        password='test'
+        )
+    b.addGroup(Group.by_group_name('user'))
+
 user_group_setup()

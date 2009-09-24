@@ -32,7 +32,7 @@ setup(
         "dnspython",
         "pygeoip",
         "SQLObject",
-        "python_fedora >= 0.3.12",
+        "python_fedora >= 0.3.14",
     ],
     scripts = ["start-mirrormanager.py"],
     zip_safe=False,
