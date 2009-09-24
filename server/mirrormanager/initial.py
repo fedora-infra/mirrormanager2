@@ -1,3 +1,5 @@
+import turbogears
+import turbogears.identity
 from mirrormanager.model import User, Group
 
 def user_group_setup():
