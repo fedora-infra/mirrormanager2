@@ -13,7 +13,6 @@ import time
 
 from IPy import IP
 import GeoIP
-import bisect
 from weighted_shuffle import weighted_shuffle
 
 # can be overridden on the command line
@@ -64,6 +63,18 @@ hcurl_cache = {}
 asn_host_cache = {}
 
 class OrderedNetblocks(list):
+    def insort(self, x, lo=0, hi=None):
+        """from Python bisect module, modified to look at self"""
+        if lo < 0:
+            raise ValueError('lo must be non-negative')
+        if hi is None:
+            hi = len(self)
+        while lo < hi:
+            mid = (lo+hi)//2
+            if x < self[mid]: hi = mid
+            else: lo = mid+1
+            self.insert(lo, x)
+
     def bisect(self, x, lo=0, hi=None):
         """from Python bisect module, modified to use list.__getitem__ directly."""
         if lo < 0:
@@ -112,12 +123,7 @@ class OrderedIP(IP):
         return IP.__contains__(self, other)
 
     def __cmp__(self, other):
-        if self.ip < other.ip:
-            return -1
-        elif self.ip > other.ip:
-            return 1
-        else:
-            return 0
+        return cmp(self.ip, other.ip)
 
 internet2_netblocks = OrderedNetblocks([])
 global_netblocks = OrderedNetblocks([])
@@ -640,7 +646,7 @@ def setup_netblocks(netblocks_file):
         for l in n:
             ip = OrderedIP("%s/%s" % (l[1], l[0]), asn=l[2])
             if ip not in netblocks:
-                bisect.insort(netblocks, ip)
+                netblocks.insort(ip)
     return netblocks
 
 def read_caches():
