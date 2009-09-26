@@ -125,8 +125,10 @@ class OrderedIP(IP):
     def __cmp__(self, other):
         return cmp(self.ip, other.ip)
 
-internet2_netblocks = OrderedNetblocks([])
-global_netblocks = OrderedNetblocks([])
+internet2_netblocks_v4 = OrderedNetblocks([])
+internet2_netblocks_v6 = OrderedNetblocks([])
+global_netblocks_v4 = OrderedNetblocks([])
+global_netblocks_v6 = OrderedNetblocks([])
 
 def uniqueify(seq, idfun=None):
     # order preserving
@@ -351,7 +353,15 @@ def do_internet2(kwargs, cache, clientCountry, header):
     client_ip = kwargs['client_ip']
     if client_ip == 'unknown':
         return (header, hostresults)
-    if OrderedIP(client_ip) in internet2_netblocks:
+    ip = OrderedIP(client_ip)
+    if ip.version() == 4:
+        netblock = internet2_netblocks_v4
+    elif ip.version() == 6:
+        netblock = internet2_netblocks_v6
+    else:
+        return (header, hostresults)
+        
+    if ip in netblock:
         header += 'Using Internet2 '
         if clientCountry is not None and clientCountry in cache['byCountryInternet2']:
             hostresults = cache['byCountryInternet2'][clientCountry]
@@ -364,8 +374,15 @@ def do_asn(kwargs, cache, header):
     if client_ip == 'unknown':
         return (header, hostresults)
     ip = OrderedIP(client_ip)
+    if ip.version() == 4:
+        g = global_netblocks_v4
+    elif ip.version() == 6:
+        g = global_netblocks_v6
+    else:
+        return (header, hostresults)
+
     try:
-        asn = global_netblocks[ip].asn
+        asn = g[ip].asn
     except:
         return (header, hostresults)
     if asn is not None:
@@ -622,7 +639,9 @@ def do_mirrorlist(kwargs):
 
 
 def setup_netblocks(netblocks_file):
-    netblocks = OrderedNetblocks([])
+    """returns 2 lists, with IPv4 and IPv6 entries respectively"""
+    netblocks_v4 = OrderedNetblocks([])
+    netblocks_v6 = OrderedNetblocks([])
     n = []
     if netblocks_file is not None:
         try:
@@ -637,17 +656,18 @@ def setup_netblocks(netblocks_file):
             f.close()
         except:
             pass
-        # This ensures we fill in the biggest netblocks first, and
-        # don't include smaller netblocks that are fully contained in
-        # an existing netblock, as long as the ASNs are the same.
-        # Different ASNs mean part of the range was sub-delegated, so
-        # we need that entry on the list.
-        n.sort()
+
         for l in n:
             ip = OrderedIP("%s/%s" % (l[1], l[0]), asn=l[2])
-            if ip not in netblocks:
-                netblocks.insort(ip)
-    return netblocks
+            if ip.version() == 4:
+                netblock = netblocks_v4
+            elif ip.version() == 6:
+                netblock = netblocks_v6
+            else:
+                return (netblocks_v4, netblocks_v6)
+            if ip not in netblock:
+                netblock.insort(ip)
+    return (netblocks_v4, netblocks_v6)
 
 def read_caches():
     global mirrorlist_cache
@@ -698,10 +718,12 @@ def read_caches():
 
     del data
     setup_continents()
-    global internet2_netblocks
-    global global_netblocks
-    internet2_netblocks = setup_netblocks(internet2_netblocks_file)
-    global_netblocks    = setup_netblocks(global_netblocks_file)
+    global internet2_netblocks_v4
+    global internet2_netblocks_v6
+    global global_netblocks_v4
+    global global_netblocks_v6
+    internet2_netblocks_v4, internet2_netblocks_v6 = setup_netblocks(internet2_netblocks_file)
+    global_netblocks_v4, global_netblocks_v6       = setup_netblocks(global_netblocks_file)
 
 class MirrorlistHandler(StreamRequestHandler):
     def handle(self):
