@@ -18,11 +18,9 @@ from turbogears.database import PackageHub
 hub = PackageHub("mirrormanager")
 __connection__ = hub
 
-class MMSQLObject(SQLObject):
+class SiteToSite(SQLObject):
     class sqlmeta:
         cacheValues = False
-
-class SiteToSite(MMSQLObject):
     upstream_site = ForeignKey('Site')
     downstream_site = ForeignKey('Site')
     idx = DatabaseIndex('upstream_site', 'downstream_site', unique=True)
@@ -30,7 +28,9 @@ class SiteToSite(MMSQLObject):
     def my_site(self):
         return self.upstream_site
 
-class Site(MMSQLObject):
+class Site(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     name = UnicodeCol(alternateID=True)
     password = UnicodeCol(default=None)
     orgUrl = UnicodeCol(default=None)
@@ -104,7 +104,9 @@ class Site(MMSQLObject):
         return self.is_downstream_siteadmin_byname(identity.current.user_name)
         
 
-class SiteAdmin(MMSQLObject):
+class SiteAdmin(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     username = UnicodeCol()
     site = ForeignKey('Site')
 
@@ -116,7 +118,9 @@ def user_sites(identity):
                                                              SiteAdmin.q.username == identity.current.user_name)))
 
 
-class HostCategory(MMSQLObject):
+class HostCategory(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     host = ForeignKey('Host')
     category = ForeignKey('Category')
     hcindex = DatabaseIndex('host', 'category', unique=True)
@@ -139,7 +143,9 @@ class HostCategory(MMSQLObject):
         return self.host.my_site()
 
 
-class HostCategoryDir(MMSQLObject):
+class HostCategoryDir(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     host_category = ForeignKey('HostCategory')
     # subset of the path starting below HostCategory.path
     path = UnicodeCol()
@@ -150,7 +156,9 @@ class HostCategoryDir(MMSQLObject):
     lastCrawled = DateTimeCol(default=None)
     
 
-class HostCategoryUrl(MMSQLObject):
+class HostCategoryUrl(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     host_category = ForeignKey('HostCategory')
     url = UnicodeCol(alternateID=True)
     private = BoolCol(default=False)
@@ -158,7 +166,9 @@ class HostCategoryUrl(MMSQLObject):
     def my_site(self):
         return self.host_category.my_site()
     
-class Host(MMSQLObject):
+class Host(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     name = UnicodeCol()
     site = ForeignKey('Site')
     idx = DatabaseIndex('site', 'name', unique=True)
@@ -350,6 +360,8 @@ class Host(MMSQLObject):
 
 
 class PubliclistHostCategory:
+    class sqlmeta:
+        cacheValues = False
     def __init__(self, name):
         self.name          = name
         self.http_url      = None
@@ -373,6 +385,8 @@ class PubliclistHostCategory:
 	    self.rsync_url = url
 
 class PubliclistHost:
+    class sqlmeta:
+        cacheValues = False
     def __init__(self, hostinfo):
         self.id      = hostinfo[0]
         self.country = hostinfo[1]
@@ -503,7 +517,9 @@ def publiclist_hosts(productname=None, vername=None, archname=None):
         valid_categories = categorymap(productname, vername)
         return _publiclist_sql_to_list(sqlresult, valid_categories)
 
-class HostAclIp(MMSQLObject):
+class HostAclIp(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     host = ForeignKey('Host')
     ip = UnicodeCol()
 
@@ -534,14 +550,18 @@ def rsync_acl_list(internet2_only=False,public_only=False):
     result = _rsync_acl_list(d, internet2_only, public_only)
     return [t[0] for t in result]
 
-class HostCountryAllowed(MMSQLObject):
+class HostCountryAllowed(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     host = ForeignKey('Host')
     country = StringCol(notNone=True)
 
     def my_site(self):
         return self.host.my_site()
 
-class HostNetblock(MMSQLObject):
+class HostNetblock(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     host = ForeignKey('Host')
     netblock = StringCol()
 
@@ -549,14 +569,18 @@ class HostNetblock(MMSQLObject):
         return self.host.my_site()
 
 
-class HostStats(MMSQLObject):
+class HostStats(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     host = ForeignKey('Host')
     _timestamp = DateTimeCol(default=datetime.utcnow())
     type = UnicodeCol(default=None)
     data = PickleCol(default=None)
 
 
-class Arch(MMSQLObject):
+class Arch(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     name = UnicodeCol(alternateID=True)
     publiclist = BoolCol(default=True)
     primaryArch = BoolCol(default=True)
@@ -583,7 +607,9 @@ def publiclist_arches():
     return result
 
 # e.g. 'fedora' and 'epel'
-class Product(MMSQLObject):
+class Product(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     name = UnicodeCol(alternateID=True)
     versions = MultipleJoin('Version', orderBy='name')
     categories = MultipleJoin('Category')
@@ -596,7 +622,9 @@ class Product(MMSQLObject):
         SQLObject.destroySelf(self)
         
 
-class Version(MMSQLObject):
+class Version(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     name = UnicodeCol()
     product = ForeignKey('Product')
     isTest = BoolCol(default=False)
@@ -605,7 +633,9 @@ class Version(MMSQLObject):
     ordered_mirrorlist = BoolCol(default=True)
 
 
-class Directory(MMSQLObject):
+class Directory(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     # Full path
     # e.g. pub/fedora/linux/core/6/i386/os
     # e.g. pub/fedora/linux/extras
@@ -653,7 +683,9 @@ class Directory(MMSQLObject):
                     if f.timestamp < weekago:
                         f.destroySelf()
 
-class Category(MMSQLObject):
+class Category(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     # Top-level mirroring
     # e.g. core, extras, release, epel
     name = UnicodeCol(alternateID=True)
@@ -734,7 +766,9 @@ def rsyncFilter(categories_requested, since):
     return result
     
 
-class Repository(MMSQLObject):
+class Repository(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     name = UnicodeCol(alternateID=True)
     prefix = UnicodeCol(default=None)
     category = ForeignKey('Category')
@@ -748,7 +782,9 @@ def ageFileDetails():
     for d in Directory.select():
         d.age_file_details()
 
-class FileDetail(MMSQLObject):
+class FileDetail(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     directory = ForeignKey('Directory', notNone=True)
     filename = UnicodeCol(notNone=True)
     timestamp = BigIntCol(default=None)
@@ -758,13 +794,17 @@ class FileDetail(MMSQLObject):
     sha256 = UnicodeCol(default=None)
     sha512 = UnicodeCol(default=None)
 
-class RepositoryRedirect(MMSQLObject):
+class RepositoryRedirect(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     """ Uses strings to allow for effective named aliases, and for repos that may not exist yet """
     fromRepo = UnicodeCol(alternateID=True)
     toRepo = UnicodeCol(default=None)
     idx = DatabaseIndex('fromRepo', 'toRepo', unique=True)
 
-class CountryContinentRedirect(MMSQLObject):
+class CountryContinentRedirect(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     country = UnicodeCol(alternateID=True, notNone=True)
     continent = UnicodeCol(notNone=True)
 
@@ -775,10 +815,14 @@ class CountryContinentRedirect(MMSQLObject):
         self._SO_set_continent(continent.upper())
 
 
-class EmbargoedCountry(MMSQLObject):
+class EmbargoedCountry(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     country_code = StringCol(notNone=True)
 
-class DirectoryExclusiveHost(MMSQLObject):
+class DirectoryExclusiveHost(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     directory = ForeignKey('Directory')
     host = ForeignKey('Host')
     idx = DatabaseIndex('directory', 'host', unique=True)
