@@ -72,6 +72,9 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Sep 28 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.2-1
+- add BGP ASN lookups
+
 * Fri Sep 18 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.1-1
 - fix publiclist html
 - fix Host netblock creation via web UI
