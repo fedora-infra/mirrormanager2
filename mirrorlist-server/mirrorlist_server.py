@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2007 Dell, Inc.
+# Copyright (c) 2007,2008,2009 Dell, Inc.
 #  by Matt Domsch <Matt_Domsch@dell.com>
 # Licensed under the MIT/X11 license
 
@@ -617,8 +617,8 @@ def do_mirrorlist(kwargs):
         return l
     
     netblock_hosts    = _random_shuffle(netblock_results)
+    asn_hosts         = _random_shuffle(asn_results)
     internet2_hosts   = _random_shuffle(internet2_results)
-    asn_hosts         = shuffle(asn_results)
     country_hosts     = shuffle(country_results)
     geoip_hosts       = shuffle(geoip_results)
     continent_hosts   = shuffle(continent_results)
