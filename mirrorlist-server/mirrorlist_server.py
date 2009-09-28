@@ -62,50 +62,47 @@ file_details_cache = {}
 hcurl_cache = {}
 asn_host_cache = {}
 
-class OrderedNetblocks(list):
+import bisect
+class OrderedNetblocks:
+    def __init__(self, l=[]):
+        self.list = l
+
+    def __len__(self):
+        return len(self.list)
+        
     def insort(self, x, lo=0, hi=None):
-        """from Python bisect module, modified to look at self"""
-        if lo < 0:
-            raise ValueError('lo must be non-negative')
         if hi is None:
-            hi = len(self)
-        while lo < hi:
-            mid = (lo+hi)//2
-            if x < self[mid]: hi = mid
-            else: lo = mid+1
-            self.insert(lo, x)
+            hi = len(self.list)
+        return bisect.insort(self.list, x, lo=lo, hi=hi)
 
     def bisect(self, x, lo=0, hi=None):
-        """from Python bisect module, modified to use list.__getitem__ directly."""
-        if lo < 0:
-            raise ValueError('lo must be non-negative')
-        if hi is None:
-            hi = len(self)
-        while lo < hi:
-            mid = (lo+hi)//2
-            if x < list.__getitem__(self, mid): hi = mid
-            else: lo = mid+1
-        return lo
+        return bisect.bisect(self.list, x, lo=lo, hi=hi)
 
     def __contains__(self, item):
-        if self.__len__() == 0:
+        if len(self.list) == 0:
             return False
-        index = self.bisect(self, item)
+        index = bisect.bisect(self.list, item)
         if index == 0:
             return False
-        if item in self.__getitem__(index-1):
+        if item in self.list[index-1]:
             return True
         return False
 
-    def __getitem__(self, item):
-        if self.__len__() == 0:
-            raise KeyError
-        index = self.bisect(self, item)
+    def __getitem__(self, index):
+        return self.list[index]
+
+    def lookup(self, item):
+        if len(self.list) == 0:
+            return False
+        index = bisect.bisect(self.list, item)
         if index == 0:
             raise KeyError
-        if item in list.__getitem__(self, index-1):
-            return list.__getitem__(self, index-1)
+        if item in self.list[index-1]:
+            return self.list[index-1]
         raise KeyError
+
+    def append(self, item):
+        self.list.append(item)
 
 class OrderedIP(IP):
     """Override comparison function so that a list of our objects is
@@ -370,6 +367,7 @@ def do_internet2(kwargs, cache, clientCountry, header):
 
 def do_asn(kwargs, cache, header):
     hostresults = set()
+    asn = None
     client_ip = kwargs['client_ip']
     if client_ip == 'unknown':
         return (header, hostresults)
@@ -382,9 +380,10 @@ def do_asn(kwargs, cache, header):
         return (header, hostresults)
 
     try:
-        asn = g[ip].asn
-    except:
-        return (header, hostresults)
+        asn = g.lookup(ip).asn
+    except KeyError:
+        pass
+        
     if asn is not None:
         for hostid in asn_host_cache[asn]:
             if hostid in cache['byHostId']:
@@ -523,6 +522,7 @@ def do_mirrorlist(kwargs):
     ordered_mirrorlist = cache.get('ordered_mirrorlist', default_ordered_mirrorlist)
     done = 0
     netblock_results = set()
+    asn_results = set()
     internet2_results = set()
     country_results = set()
     geoip_results = set()
@@ -660,13 +660,11 @@ def setup_netblocks(netblocks_file):
         for l in n:
             ip = OrderedIP("%s/%s" % (l[1], l[0]), asn=l[2])
             if ip.version() == 4:
-                netblock = netblocks_v4
+                netblocks_v4.append(ip)
             elif ip.version() == 6:
-                netblock = netblocks_v6
+                netblocks_v6.append(ip)
             else:
                 return (netblocks_v4, netblocks_v6)
-            if ip not in netblock:
-                netblock.insort(ip)
     return (netblocks_v4, netblocks_v6)
 
 def read_caches():
