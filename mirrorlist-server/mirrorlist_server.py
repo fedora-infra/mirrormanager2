@@ -384,7 +384,7 @@ def do_asn(kwargs, cache, header):
     except KeyError:
         pass
         
-    if asn is not None:
+    if asn is not None and asn in asn_host_cache:
         for hostid in asn_host_cache[asn]:
             if hostid in cache['byHostId']:
                 hostresults.add(hostid)
