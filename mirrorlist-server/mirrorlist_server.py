@@ -93,7 +93,7 @@ class OrderedNetblocks:
 
     def lookup(self, item):
         if len(self.list) == 0:
-            return False
+            raise KeyError
         index = bisect.bisect(self.list, item)
         if index == 0:
             raise KeyError
