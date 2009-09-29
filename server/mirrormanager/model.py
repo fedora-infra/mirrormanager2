@@ -454,7 +454,7 @@ def _publiclist_sql_to_list(sqlresult, valid_categories):
         l.sort()
         return l
 
-def _publiclist_hosts(directory, product=None, re=None):
+def _publiclist_hosts(product=None, re=None):
 
     sql1_filter = ''
     sql2_filter = ''
@@ -494,7 +494,7 @@ def _publiclist_hosts(directory, product=None, re=None):
 
     sql = "SELECT * FROM ( %s UNION %s ) AS subquery" % (sql1, sql2)
 
-    result = directory._connection.queryAll(sql)
+    result = Directory._connection.queryAll(sql)
     return result
 
 def publiclist_hosts(productname=None, vername=None, archname=None):
@@ -513,7 +513,7 @@ def publiclist_hosts(productname=None, vername=None, archname=None):
         else:
             desiredPath = None
 
-        sqlresult = _publiclist_hosts(Directory.select()[0], product=product, re=desiredPath)
+        sqlresult = _publiclist_hosts(product=product, re=desiredPath)
         valid_categories = categorymap(productname, vername)
         return _publiclist_sql_to_list(sqlresult, valid_categories)
 
@@ -526,7 +526,7 @@ class HostAclIp(SQLObject):
     def my_site(self):
         return self.host.my_site()
 
-def _rsync_acl_list(dbobject, internet2_only, public_only):
+def _rsync_acl_list(internet2_only, public_only):
     sql = "SELECT host_acl_ip.ip "
     sql += "FROM host, site, host_acl_ip "
     # join conditions
@@ -542,12 +542,11 @@ def _rsync_acl_list(dbobject, internet2_only, public_only):
         sql += 'AND NOT host.private '
         sql += 'AND NOT site.private '
 
-    result = dbobject._connection.queryAll(sql)
+    result = Directory._connection.queryAll(sql)
     return result
 
 def rsync_acl_list(internet2_only=False,public_only=False):
-    d = Directory.select()[0]
-    result = _rsync_acl_list(d, internet2_only, public_only)
+    result = _rsync_acl_list(internet2_only, public_only)
     return [t[0] for t in result]
 
 class HostCountryAllowed(SQLObject):
@@ -733,8 +732,7 @@ def rsyncFilter(categories_requested, since):
         sql += "category.id IN %s AND " % categorySearch
         sql += "directory.ctime > %d " % (since)
 
-        dbobject = Directory.select()[0]
-        result = dbobject._connection.queryAll(sql)
+        result = Directory._connection.queryAll(sql)
         return result
 
     def _list_to_inclause(categoryList):

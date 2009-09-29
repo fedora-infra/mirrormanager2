@@ -52,8 +52,7 @@ def _do_query_directories():
     sql += 'AS subquery '
     sql += 'ORDER BY dname, hostid '
 
-    directory = Directory.select()[0]
-    result = directory._connection.queryAll(sql)
+    result = Directory._connection.queryAll(sql)
     return result
 
 def add_host_to_cache(cache, hostid, hcurl):
@@ -87,8 +86,7 @@ def _do_query_directory_exclusive_host():
     sql += 'WHERE directory.id = directory_exclusive_host.directory_id '
     sql += 'ORDER BY dname'
 
-    directory = Directory.select()[0]
-    result = directory._connection.queryAll(sql)
+    result = Directory._connection.queryAll(sql)
     return result
 
 def query_directory_exclusive_host():
