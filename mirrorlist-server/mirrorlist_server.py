@@ -646,7 +646,7 @@ def setup_netblocks(netblocks_file):
     if netblocks_file is not None:
         try:
             f = open(netblocks_file, 'r')
-            for l in f.readlines():
+            for l in f.readline():
                 s = l.split()
                 start, mask = s[0].split('/')
                 mask = int(mask)
