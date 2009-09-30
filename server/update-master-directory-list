@@ -101,7 +101,7 @@ def make_file_details_from_checksums(dir):
         r = {}
         try:
             f = open(path, 'r')
-            for line in f.readlines():
+            for line in f.readline():
                 line = line.strip()
                 s = line.split()
                 if len(s) < 2:
@@ -343,7 +343,7 @@ def sync_category_directories(category, category_directories):
 def parse_rsync_listing(cname, f):
     category = Category.byName(cname)
     category_directories = {}
-    for line in f.readlines():
+    for line in f.readline():
         line.strip()
         l = line.split()
         if line.startswith('d') and len(l) == 5 and len(l[0]) == 10: # good guess it's a directory line
