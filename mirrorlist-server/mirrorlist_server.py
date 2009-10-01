@@ -70,7 +70,7 @@ def lookup_ip(l, ip):
     if len(l) == 0:
         raise KeyError
     
-    item = (ip.int(), ip.netmask(), ip.version(), 0)
+    item = (ip.int(), ip._prefixlen, ip.version(), 0)
     index = bisect.bisect(l, item)
     if index == 0:
         raise KeyError
