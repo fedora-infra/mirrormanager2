@@ -10,7 +10,7 @@ import os, sys, signal, random, socket, getopt
 from string import zfill, atoi
 import datetime
 import time
-import bisect
+import radix
 
 from IPy import IP, intToIp
 import GeoIP
@@ -62,32 +62,18 @@ host_country_cache = {}
 file_details_cache = {}
 hcurl_cache = {}
 asn_host_cache = {}
+internet2_tree = radix.Radix()
+global_tree = radix.Radix()
 
-def lookup_ip(l, ip):
-    """ @l is a list
+def lookup_ip_asn(tree, ip):
+    """ @t is a radix tree
         @ip is an IPy.IP object which may be contained in an entry in l
         """
-    if len(l) == 0:
-        raise KeyError
-    
-    item = (ip.int(), ip._prefixlen, ip.version(), 0)
-    index = bisect.bisect(l, item)
-    if index == 0:
-        raise KeyError
+    node = tree.search_best(str(ip))
+    if node is None:
+        return None
+    return node.data['asn']
 
-    (candidate_ipint, candidate_mask, candidate_version, candidate_asn) = l[index-1]
-    candidate = IP("%s/%s" % (intToIp("%s" % candidate_ipint, candidate_version), candidate_mask))
-    candidate.asn = candidate_asn
-    if ip in candidate:
-        return candidate
-    raise KeyError
-
-
-
-internet2_netblocks_v4 = []
-internet2_netblocks_v6 = []
-global_netblocks_v4 = []
-global_netblocks_v6 = []
 
 def uniqueify(seq, idfun=None):
     # order preserving
@@ -313,42 +299,21 @@ def do_internet2(kwargs, cache, clientCountry, header):
     if client_ip == 'unknown':
         return (header, hostresults)
     ip = IP(client_ip)
-    if ip.version() == 4:
-        netblock = internet2_netblocks_v4
-    elif ip.version() == 6:
-        netblock = internet2_netblocks_v6
-    else:
-        return (header, hostresults)
-        
-    try:
-        lookup_ip(netblock, ip)
+    asn = lookup_ip_asn(internet2_tree, ip)
+    if asn is not None:
         header += 'Using Internet2 '
         if clientCountry is not None and clientCountry in cache['byCountryInternet2']:
             hostresults = cache['byCountryInternet2'][clientCountry]
             hostresults = trim_by_client_country(hostresults, clientCountry)
-    except KeyError:
-        pass
     return (header, hostresults)
 
 def do_asn(kwargs, cache, header):
     hostresults = set()
-    asn = None
     client_ip = kwargs['client_ip']
     if client_ip == 'unknown':
         return (header, hostresults)
     ip = IP(client_ip)
-    if ip.version() == 4:
-        g = global_netblocks_v4
-    elif ip.version() == 6:
-        g = global_netblocks_v6
-    else:
-        return (header, hostresults)
-
-    try:
-        asn = lookup_ip(g, ip).asn
-    except KeyError:
-        pass
-        
+    asn = lookup_ip_asn(global_tree, ip)
     if asn is not None and asn in asn_host_cache:
         for hostid in asn_host_cache[asn]:
             if hostid in cache['byHostId']:
@@ -604,16 +569,13 @@ def do_mirrorlist(kwargs):
 
 
 def setup_netblocks(netblocks_file):
-    """returns 2 lists, with IPv4 and IPv6 entries respectively"""
-    netblocks_v4 = []
-    netblocks_v6 = []
 
+    tree = radix.Radix()
     if netblocks_file is not None:
         try:
             f = open(netblocks_file, 'r')
         except:
-            return (netblocks_v4, netblocks_v6)
-
+            return tree
         for l in f:
             try:
                 s = l.split()
@@ -621,22 +583,13 @@ def setup_netblocks(netblocks_file):
                 mask = int(mask)
                 if mask == 0: continue
                 asn = int(s[1])
-                ip = IP(s[0])
-                if ip.version() == 4:
-                    netblocks_v4.append((ip.int(), mask, 4, asn))
-                elif ip.version() == 6:
-                    netblocks_v6.append((ip.int(), mask, 6, asn))
+                node = tree.add(s[0])
+                node.data['asn'] = asn
             except:
                 pass
         f.close()
 
-    print "Found %d IPv4 netblocks, %d IPv6 netblocks in %s" % (len(netblocks_v4),
-                                                                len(netblocks_v6),
-                                                                netblocks_file)
-    
-    netblocks_v4.sort()
-    netblocks_v6.sort()
-    return (netblocks_v4, netblocks_v6)
+    return tree
 
 def read_caches():
     global mirrorlist_cache
@@ -687,18 +640,14 @@ def read_caches():
 
     del data
     setup_continents()
-    global internet2_netblocks_v4
-    global internet2_netblocks_v6
-    global global_netblocks_v4
-    global global_netblocks_v6
+    global internet2_tree
+    global global_tree
 
-    del internet2_netblocks_v4
-    del internet2_netblocks_v6
-    del global_netblocks_v4
-    del global_netblocks_v6
+    del internet2_tree
+    del global_tree
 
-    internet2_netblocks_v4, internet2_netblocks_v6 = setup_netblocks(internet2_netblocks_file)
-    global_netblocks_v4, global_netblocks_v6       = setup_netblocks(global_netblocks_file)
+    internet2_tree = setup_netblocks(internet2_netblocks_file)
+    global_tree    = setup_netblocks(global_netblocks_file)
 
 class MirrorlistHandler(StreamRequestHandler):
     def handle(self):
