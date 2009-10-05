@@ -51,10 +51,11 @@ mrr.repos = ''' {
 # DATABASE
 #
 # pick the form for your database
-# sqlobject.dburi="postgres://username@hostname/databasename"
+# sqlobject.dburi="notrans_postgres://username@hostname/databasename"
 # sqlobject.dburi="notrans_postgres://mirrormanager@127.0.0.1/mirrormanager"
 # sqlobject.dburi="notrans_mysql://username:password@hostname:port/databasename"
-sqlobject.dburi="sqlite:///var/lib/mirrormanager/sqlite.db"
+# Note: MirrorManager doesn't use Transactions, so preceed with 'notrans_' as shown.
+sqlobject.dburi="notrans_sqlite:///var/lib/mirrormanager/sqlite.db"
 
 
 # SERVER
