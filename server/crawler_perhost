@@ -303,6 +303,9 @@ def sync_hcds(host, host_category_dirs):
         if hcd.count() > 0:
             hcd = hcd[0]
         else:
+            # don't create HCDs for directories which aren't up2date on the mirror
+            # chances are the mirror is excluding that directory
+            if not up2date: continue
             hcd = HostCategoryDir(host_category=hc, path=path, directory=d)
 
         if hcd.directory is None:
