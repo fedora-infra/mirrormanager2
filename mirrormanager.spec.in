@@ -69,6 +69,8 @@ exit 0
 %attr(-,mirrormanager,mirrormanager) %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %attr(-,mirrormanager,mirrormanager) %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrormanager.conf
 %attr(-,mirrormanager,mirrormanager) %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrorlist-server.conf
+%dir /etc/rpmlint/
+%config(noreplace) /etc/rpmlint/%{name}.config
 %doc LICENSES LICENSE-MIT-X11 LICENSE-GPLv2
 %doc server/*.cfg server/prod.cfg.example README.rpm_setup
 

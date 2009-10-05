@@ -68,7 +68,7 @@ rpm: tarball $(SPEC)
 	popd > /dev/null 2>&1; \
 	cp $${tmp_dir}/RPMS/noarch/* $${tmp_dir}/SRPMS/* . ; \
 	rm -rf $${tmp_dir} ; \
-	rpmlint *.rpm
+	rpmlint *.rpm *.spec
 
 install: install-server install-client
 
@@ -82,10 +82,12 @@ install-server:
 	mkdir -p -m 0755 $(DESTDIR)/usr/share/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/etc/httpd/conf.d
 	mkdir -p -m 0755 $(DESTDIR)/etc/mirrormanager
+	mkdir -p -m 0755 $(DESTDIR)/etc/rpmlint
 # server/
 	cp -ra server/	 $(DESTDIR)/usr/share/mirrormanager
 	install -m 0644 server/apache/mirrormanager.conf $(DESTDIR)/etc/httpd/conf.d
 	install -m 0600 server/prod.cfg.example  $(DESTDIR)/etc/mirrormanager/prod.cfg
+	install -m 0644 rpmlint-mirrormanager.config  $(DESTDIR)/etc/rpmlint/mirrormanager.config
 	rm $(DESTDIR)/usr/share/mirrormanager/server/prod.cfg.example
 	rm $(DESTDIR)/usr/share/mirrormanager/server/logrotate.conf
 	rm $(DESTDIR)/usr/share/mirrormanager/server/*.cfg
