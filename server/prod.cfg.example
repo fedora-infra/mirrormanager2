@@ -6,8 +6,8 @@
 # commented version.
 # 
 mirrormanager.projectname = "Example Mirror Manager Project"
-mirrormanager.projectweb = "http://www.example.com"
-mirrormanager.cssroot = "http://www.example.com/mirrormanager/static/css/"
+mirrormanager.projectweb = "http://localhost"
+mirrormanager.cssroot = "http://localhost/mirrormanager/static/css/"
 mirrormanager.copyright = "example"
 mirrormanager.upstream = "rsync://example.com/pub/"
 
@@ -78,7 +78,7 @@ tg.strict_parameters = True
 
 ##########################################33
 # for non-Fedora Account System
-identity.provider = 'sqlobject'
+identity.provider = 'sqlobjectcsrf'
 identity.soprovider.model.user="mirrormanager.model.User"
 identity.soprovider.model.group="mirrormanager.model.Group"
 identity.soprovider.model.permission="mirrormanager.model.Permission"
