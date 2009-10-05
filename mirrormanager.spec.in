@@ -10,7 +10,8 @@ URL:            http://fedorahosted.org/mirrormanager
 Source0:        https://fedorahosted.org/releases/m/i/%{name}/%{name}-%{version}.tar.bz2
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildRequires:  python
-Requires:       TurboGears, python-IPy, python-GeoIP, wget, yum, psmisc, python-dns, python-fedora >= 0.3.14
+Requires:       TurboGears, python-IPy, python-GeoIP, wget, yum, psmisc, python-dns, python-fedora >= 0.3.14, mod_wsgi
+Requires(pre):  shadow-utils
 
 %define py_ver         %(echo `python -c "import sys; print sys.version[:3]"`)
 %if "%{py_ver}" < "2.5"
@@ -48,20 +49,28 @@ make install DESTDIR=$RPM_BUILD_ROOT CONFFILE="%{_sysconfdir}/%{name}/prod.cfg" 
 rm -rf $RPM_BUILD_ROOT
 
 
+%pre
+getent group mirrormanager >/dev/null || groupadd -r mirrormanager
+getent passwd mirrormanager >/dev/null || \
+  useradd -r -g mirrormanager -d /var/lib/mirrormanager -s /sbin/nologin \
+  -c "MirrorManager" mirrormanager
+exit 0
+
 %files
 %defattr(-,root,root,-)
-%dir %{_localstatedir}/lib/%{name}/
-%dir %{_localstatedir}/run/%{name}/
-%dir %{_localstatedir}/log/%{name}/
-%dir %{_localstatedir}/log/%{name}/crawler/
-%dir %{_localstatedir}/lock/%{name}/
-%dir %{_sysconfdir}/%{name}/
 %{_datadir}/%{name}
-%config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
-%config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrormanager.conf
-%config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrorlist-server.conf
+%attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/%{name}/
+%attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/run/%{name}/
+%attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/log/%{name}/
+%attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/log/%{name}/crawler/
+%attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/lock/%{name}/
+%attr(-,mirrormanager,mirrormanager) %dir %{_sysconfdir}/%{name}/
+%attr(-,mirrormanager,mirrormanager) %config(noreplace) /etc/mirrormanager/prod.cfg
+%attr(-,mirrormanager,mirrormanager) %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
+%attr(-,mirrormanager,mirrormanager) %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrormanager.conf
+%attr(-,mirrormanager,mirrormanager) %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrorlist-server.conf
 %doc LICENSES LICENSE-MIT-X11 LICENSE-GPLv2
-%doc server/*.cfg
+%doc server/*.cfg server/prod.cfg.example README.rpm_setup
 
 %files client
 %defattr(-,root,root,-)
@@ -72,6 +81,11 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Sep 28 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.3-1
+- initial setup patches from BJ Dierkes
+  - simpler mirrormanager.initial, README.rpm_setup, prod.cfg
+  - add user mirrormanager and group mirrormanager, content permissions
+
 * Thu Sep 28 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.2-1
 - add BGP ASN lookups
 

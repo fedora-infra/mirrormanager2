@@ -1,7 +1,7 @@
-RELEASE_DATE := "28-Sep-2009"
+RELEASE_DATE := "04-Oct-2009"
 RELEASE_MAJOR := 1
 RELEASE_MINOR := 3
-RELEASE_EXTRALEVEL := .2
+RELEASE_EXTRALEVEL := .3
 RELEASE_NAME := mirrormanager
 RELEASE_VERSION := $(RELEASE_MAJOR).$(RELEASE_MINOR)$(RELEASE_EXTRALEVEL)
 RELEASE_STRING := $(RELEASE_NAME)-$(RELEASE_VERSION)
@@ -79,9 +79,12 @@ install-server:
 	mkdir -p -m 0755 $(DESTDIR)/var/lock/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/usr/share/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/etc/httpd/conf.d
+	mkdir -p -m 0755 $(DESTDIR)/etc/mirrormanager
 # server/
 	cp -ra server/	 $(DESTDIR)/usr/share/mirrormanager
 	install -m 0644 server/apache/mirrormanager.conf $(DESTDIR)/etc/httpd/conf.d
+	install -m 0600 server/prod.cfg.example  $(DESTDIR)/etc/mirrormanager/prod.cfg
+	rm $(DESTDIR)/usr/share/mirrormanager/server/prod.cfg.example
 	rm $(DESTDIR)/usr/share/mirrormanager/server/logrotate.conf
 	rm $(DESTDIR)/usr/share/mirrormanager/server/*.cfg
 	rm $(DESTDIR)/usr/share/mirrormanager/server/*.in
