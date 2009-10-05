@@ -86,7 +86,7 @@ install-server:
 # server/
 	cp -ra server/	 $(DESTDIR)/usr/share/mirrormanager
 	install -m 0644 server/apache/mirrormanager.conf $(DESTDIR)/etc/httpd/conf.d
-	install -m 0600 server/prod.cfg.example  $(DESTDIR)/etc/mirrormanager/prod.cfg
+	install -m 0644 server/prod.cfg.example  $(DESTDIR)/etc/mirrormanager/prod.cfg
 	install -m 0644 rpmlint-mirrormanager.config  $(DESTDIR)/etc/rpmlint/mirrormanager.config
 	rm $(DESTDIR)/usr/share/mirrormanager/server/prod.cfg.example
 	rm $(DESTDIR)/usr/share/mirrormanager/server/logrotate.conf
