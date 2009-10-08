@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2007 Dell, Inc.
+# Copyright (c) 2007,2008,2009 Dell, Inc.
 #  by Matt Domsch <Matt_Domsch@dell.com>
 # Licensed under the MIT/X11 license
 
@@ -10,10 +10,10 @@ import os, sys, signal, random, socket, getopt
 from string import zfill, atoi
 import datetime
 import time
-
-from IPy import IP
-import GeoIP
 import bisect
+
+from IPy import IP, intToIp
+import GeoIP
 from weighted_shuffle import weighted_shuffle
 
 # can be overridden on the command line
@@ -63,64 +63,31 @@ file_details_cache = {}
 hcurl_cache = {}
 asn_host_cache = {}
 
-class OrderedNetblocks(list):
-    def bisect(self, x, lo=0, hi=None):
-        """from Python bisect module, modified to use list.__getitem__ directly."""
-        if lo < 0:
-            raise ValueError('lo must be non-negative')
-        if hi is None:
-            hi = len(self)
-        while lo < hi:
-            mid = (lo+hi)//2
-            if x < list.__getitem__(self, mid): hi = mid
-            else: lo = mid+1
-        return lo
-
-    def __contains__(self, item):
-        if self.__len__() == 0:
-            return False
-        index = self.bisect(self, item)
-        if index == 0:
-            return False
-        if item in self.__getitem__(index-1):
-            return True
-        return False
-
-    def __getitem__(self, item):
-        if self.__len__() == 0:
-            raise KeyError
-        index = self.bisect(self, item)
-        if index == 0:
-            raise KeyError
-        if item in list.__getitem__(self, index-1):
-            return list.__getitem__(self, index-1)
+def lookup_ip(l, ip):
+    """ @l is a list
+        @ip is an IPy.IP object which may be contained in an entry in l
+        """
+    if len(l) == 0:
+        raise KeyError
+    
+    item = (ip.int(), ip._prefixlen, ip.version(), 0)
+    index = bisect.bisect(l, item)
+    if index == 0:
         raise KeyError
 
-class OrderedIP(IP):
-    """Override comparison function so that a list of our objects is
-    in ascending order based on their starting IP, without regard to
-    netblock size."""
+    (candidate_ipint, candidate_mask, candidate_version, candidate_asn) = l[index-1]
+    candidate = IP("%s/%s" % (intToIp("%s" % candidate_ipint, candidate_version), candidate_mask))
+    candidate.asn = candidate_asn
+    if ip in candidate:
+        return candidate
+    raise KeyError
 
-    def __init__(self, data, asn=None, *args, **kwargs):
-        self.asn = asn
-        IP.__init__(self, data, *args, **kwargs)
 
-    def __contains__(self, other):
-        if self.asn is not None and other.asn is not None:
-            if self.asn != other.asn:
-                return False
-        return IP.__contains__(self, other)
 
-    def __cmp__(self, other):
-        if self.ip < other.ip:
-            return -1
-        elif self.ip > other.ip:
-            return 1
-        else:
-            return 0
-
-internet2_netblocks = OrderedNetblocks([])
-global_netblocks = OrderedNetblocks([])
+internet2_netblocks_v4 = []
+internet2_netblocks_v6 = []
+global_netblocks_v4 = []
+global_netblocks_v6 = []
 
 def uniqueify(seq, idfun=None):
     # order preserving
@@ -345,24 +312,44 @@ def do_internet2(kwargs, cache, clientCountry, header):
     client_ip = kwargs['client_ip']
     if client_ip == 'unknown':
         return (header, hostresults)
-    if OrderedIP(client_ip) in internet2_netblocks:
+    ip = IP(client_ip)
+    if ip.version() == 4:
+        netblock = internet2_netblocks_v4
+    elif ip.version() == 6:
+        netblock = internet2_netblocks_v6
+    else:
+        return (header, hostresults)
+        
+    try:
+        lookup_ip(netblock, ip)
         header += 'Using Internet2 '
         if clientCountry is not None and clientCountry in cache['byCountryInternet2']:
             hostresults = cache['byCountryInternet2'][clientCountry]
             hostresults = trim_by_client_country(hostresults, clientCountry)
+    except KeyError:
+        pass
     return (header, hostresults)
 
 def do_asn(kwargs, cache, header):
     hostresults = set()
+    asn = None
     client_ip = kwargs['client_ip']
     if client_ip == 'unknown':
         return (header, hostresults)
-    ip = OrderedIP(client_ip)
-    try:
-        asn = global_netblocks[ip].asn
-    except:
+    ip = IP(client_ip)
+    if ip.version() == 4:
+        g = global_netblocks_v4
+    elif ip.version() == 6:
+        g = global_netblocks_v6
+    else:
         return (header, hostresults)
-    if asn is not None:
+
+    try:
+        asn = lookup_ip(g, ip).asn
+    except KeyError:
+        pass
+        
+    if asn is not None and asn in asn_host_cache:
         for hostid in asn_host_cache[asn]:
             if hostid in cache['byHostId']:
                 hostresults.add(hostid)
@@ -500,6 +487,7 @@ def do_mirrorlist(kwargs):
     ordered_mirrorlist = cache.get('ordered_mirrorlist', default_ordered_mirrorlist)
     done = 0
     netblock_results = set()
+    asn_results = set()
     internet2_results = set()
     country_results = set()
     geoip_results = set()
@@ -594,8 +582,8 @@ def do_mirrorlist(kwargs):
         return l
     
     netblock_hosts    = _random_shuffle(netblock_results)
+    asn_hosts         = _random_shuffle(asn_results)
     internet2_hosts   = _random_shuffle(internet2_results)
-    asn_hosts         = shuffle(asn_results)
     country_hosts     = shuffle(country_results)
     geoip_hosts       = shuffle(geoip_results)
     continent_hosts   = shuffle(continent_results)
@@ -616,32 +604,39 @@ def do_mirrorlist(kwargs):
 
 
 def setup_netblocks(netblocks_file):
-    netblocks = OrderedNetblocks([])
-    n = []
+    """returns 2 lists, with IPv4 and IPv6 entries respectively"""
+    netblocks_v4 = []
+    netblocks_v6 = []
+
     if netblocks_file is not None:
         try:
             f = open(netblocks_file, 'r')
-            for l in f.readlines():
+        except:
+            return (netblocks_v4, netblocks_v6)
+
+        for l in f:
+            try:
                 s = l.split()
                 start, mask = s[0].split('/')
                 mask = int(mask)
                 if mask == 0: continue
                 asn = int(s[1])
-                n.append((mask, start, asn))
-            f.close()
-        except:
-            pass
-        # This ensures we fill in the biggest netblocks first, and
-        # don't include smaller netblocks that are fully contained in
-        # an existing netblock, as long as the ASNs are the same.
-        # Different ASNs mean part of the range was sub-delegated, so
-        # we need that entry on the list.
-        n.sort()
-        for l in n:
-            ip = OrderedIP("%s/%s" % (l[1], l[0]), asn=l[2])
-            if ip not in netblocks:
-                bisect.insort(netblocks, ip)
-    return netblocks
+                ip = IP(s[0])
+                if ip.version() == 4:
+                    netblocks_v4.append((ip.int(), mask, 4, asn))
+                elif ip.version() == 6:
+                    netblocks_v6.append((ip.int(), mask, 6, asn))
+            except:
+                pass
+        f.close()
+
+    print "Found %d IPv4 netblocks, %d IPv6 netblocks in %s" % (len(netblocks_v4),
+                                                                len(netblocks_v6),
+                                                                netblocks_file)
+    
+    netblocks_v4.sort()
+    netblocks_v6.sort()
+    return (netblocks_v4, netblocks_v6)
 
 def read_caches():
     global mirrorlist_cache
@@ -692,10 +687,18 @@ def read_caches():
 
     del data
     setup_continents()
-    global internet2_netblocks
-    global global_netblocks
-    internet2_netblocks = setup_netblocks(internet2_netblocks_file)
-    global_netblocks    = setup_netblocks(global_netblocks_file)
+    global internet2_netblocks_v4
+    global internet2_netblocks_v6
+    global global_netblocks_v4
+    global global_netblocks_v6
+
+    del internet2_netblocks_v4
+    del internet2_netblocks_v6
+    del global_netblocks_v4
+    del global_netblocks_v6
+
+    internet2_netblocks_v4, internet2_netblocks_v6 = setup_netblocks(internet2_netblocks_file)
+    global_netblocks_v4, global_netblocks_v6       = setup_netblocks(global_netblocks_file)
 
 class MirrorlistHandler(StreamRequestHandler):
     def handle(self):
@@ -769,15 +772,18 @@ def parse_args():
     global cachefile
     global socketfile
     global internet2_netblocks_file
+    global global_netblocks_file
     global debug
     global logfile
-    opts, args = getopt.getopt(sys.argv[1:], "c:i:s:dl:",
-                               ["cache", "internet2_netblocks", "socket", "debug", "log="])
+    opts, args = getopt.getopt(sys.argv[1:], "c:i:g:s:dl:",
+                               ["cache", "internet2_netblocks", "global_netblocks", "socket", "debug", "log="])
     for option, argument in opts:
         if option in ("-c", "--cache"):
             cachefile = argument
         if option in ("-i", "--internet2_netblocks"):
             internet2_netblocks_file = argument
+        if option in ("-g", "--global_netblocks"):
+            global_netblocks_file = argument
         if option in ("-s", "--socket"):
             socketfile = argument
         if option in ("-l", "--log"):

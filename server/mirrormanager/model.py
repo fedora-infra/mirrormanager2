@@ -19,8 +19,8 @@ hub = PackageHub("mirrormanager")
 __connection__ = hub
 
 class SiteToSite(SQLObject):
-    #class sqlmeta:
-    #    cacheValues = False
+    class sqlmeta:
+        cacheValues = False
     upstream_site = ForeignKey('Site')
     downstream_site = ForeignKey('Site')
     idx = DatabaseIndex('upstream_site', 'downstream_site', unique=True)
@@ -29,8 +29,8 @@ class SiteToSite(SQLObject):
         return self.upstream_site
 
 class Site(SQLObject):
-    #class sqlmeta:
-    #    cacheValues = False
+    class sqlmeta:
+        cacheValues = False
     name = UnicodeCol(alternateID=True)
     password = UnicodeCol(default=None)
     orgUrl = UnicodeCol(default=None)
@@ -105,8 +105,8 @@ class Site(SQLObject):
         
 
 class SiteAdmin(SQLObject):
-    #class sqlmeta:
-    #    cacheValues = False
+    class sqlmeta:
+        cacheValues = False
     username = UnicodeCol()
     site = ForeignKey('Site')
 
@@ -119,8 +119,8 @@ def user_sites(identity):
 
 
 class HostCategory(SQLObject):
-    #class sqlmeta:
-    #    cacheValues = False
+    class sqlmeta:
+        cacheValues = False
     host = ForeignKey('Host')
     category = ForeignKey('Category')
     hcindex = DatabaseIndex('host', 'category', unique=True)
@@ -144,6 +144,8 @@ class HostCategory(SQLObject):
 
 
 class HostCategoryDir(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     host_category = ForeignKey('HostCategory')
     # subset of the path starting below HostCategory.path
     path = UnicodeCol()
@@ -155,8 +157,8 @@ class HostCategoryDir(SQLObject):
     
 
 class HostCategoryUrl(SQLObject):
-    #class sqlmeta:
-    #    cacheValues = False
+    class sqlmeta:
+        cacheValues = False
     host_category = ForeignKey('HostCategory')
     url = UnicodeCol(alternateID=True)
     private = BoolCol(default=False)
@@ -165,8 +167,8 @@ class HostCategoryUrl(SQLObject):
         return self.host_category.my_site()
     
 class Host(SQLObject):
-    #class sqlmeta:
-    #cacheValues = False
+    class sqlmeta:
+        cacheValues = False
     name = UnicodeCol()
     site = ForeignKey('Site')
     idx = DatabaseIndex('site', 'name', unique=True)
@@ -358,6 +360,8 @@ class Host(SQLObject):
 
 
 class PubliclistHostCategory:
+    class sqlmeta:
+        cacheValues = False
     def __init__(self, name):
         self.name          = name
         self.http_url      = None
@@ -381,6 +385,8 @@ class PubliclistHostCategory:
 	    self.rsync_url = url
 
 class PubliclistHost:
+    class sqlmeta:
+        cacheValues = False
     def __init__(self, hostinfo):
         self.id      = hostinfo[0]
         self.country = hostinfo[1]
@@ -448,7 +454,7 @@ def _publiclist_sql_to_list(sqlresult, valid_categories):
         l.sort()
         return l
 
-def _publiclist_hosts(directory, product=None, re=None):
+def _publiclist_hosts(product=None, re=None):
 
     sql1_filter = ''
     sql2_filter = ''
@@ -488,7 +494,7 @@ def _publiclist_hosts(directory, product=None, re=None):
 
     sql = "SELECT * FROM ( %s UNION %s ) AS subquery" % (sql1, sql2)
 
-    result = directory._connection.queryAll(sql)
+    result = Directory._connection.queryAll(sql)
     return result
 
 def publiclist_hosts(productname=None, vername=None, archname=None):
@@ -507,20 +513,20 @@ def publiclist_hosts(productname=None, vername=None, archname=None):
         else:
             desiredPath = None
 
-        sqlresult = _publiclist_hosts(Directory.select()[0], product=product, re=desiredPath)
+        sqlresult = _publiclist_hosts(product=product, re=desiredPath)
         valid_categories = categorymap(productname, vername)
         return _publiclist_sql_to_list(sqlresult, valid_categories)
 
 class HostAclIp(SQLObject):
-    #class sqlmeta:
-    #    cacheValues = False
+    class sqlmeta:
+        cacheValues = False
     host = ForeignKey('Host')
     ip = UnicodeCol()
 
     def my_site(self):
         return self.host.my_site()
 
-def _rsync_acl_list(dbobject, internet2_only, public_only):
+def _rsync_acl_list(internet2_only, public_only):
     sql = "SELECT host_acl_ip.ip "
     sql += "FROM host, site, host_acl_ip "
     # join conditions
@@ -536,17 +542,16 @@ def _rsync_acl_list(dbobject, internet2_only, public_only):
         sql += 'AND NOT host.private '
         sql += 'AND NOT site.private '
 
-    result = dbobject._connection.queryAll(sql)
+    result = Directory._connection.queryAll(sql)
     return result
 
 def rsync_acl_list(internet2_only=False,public_only=False):
-    d = Directory.select()[0]
-    result = _rsync_acl_list(d, internet2_only, public_only)
+    result = _rsync_acl_list(internet2_only, public_only)
     return [t[0] for t in result]
 
 class HostCountryAllowed(SQLObject):
-    #class sqlmeta:
-    #    cacheValues = False
+    class sqlmeta:
+        cacheValues = False
     host = ForeignKey('Host')
     country = StringCol(notNone=True)
 
@@ -554,8 +559,8 @@ class HostCountryAllowed(SQLObject):
         return self.host.my_site()
 
 class HostNetblock(SQLObject):
-    #class sqlmeta:
-    #    cacheValues = False
+    class sqlmeta:
+        cacheValues = False
     host = ForeignKey('Host')
     netblock = StringCol()
 
@@ -564,8 +569,8 @@ class HostNetblock(SQLObject):
 
 
 class HostStats(SQLObject):
-    #class sqlmeta:
-    #    cacheValues = False
+    class sqlmeta:
+        cacheValues = False
     host = ForeignKey('Host')
     _timestamp = DateTimeCol(default=datetime.utcnow())
     type = UnicodeCol(default=None)
@@ -573,6 +578,8 @@ class HostStats(SQLObject):
 
 
 class Arch(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     name = UnicodeCol(alternateID=True)
     publiclist = BoolCol(default=True)
     primaryArch = BoolCol(default=True)
@@ -600,6 +607,8 @@ def publiclist_arches():
 
 # e.g. 'fedora' and 'epel'
 class Product(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     name = UnicodeCol(alternateID=True)
     versions = MultipleJoin('Version', orderBy='name')
     categories = MultipleJoin('Category')
@@ -613,6 +622,8 @@ class Product(SQLObject):
         
 
 class Version(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     name = UnicodeCol()
     product = ForeignKey('Product')
     isTest = BoolCol(default=False)
@@ -622,6 +633,8 @@ class Version(SQLObject):
 
 
 class Directory(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     # Full path
     # e.g. pub/fedora/linux/core/6/i386/os
     # e.g. pub/fedora/linux/extras
@@ -670,8 +683,8 @@ class Directory(SQLObject):
                         f.destroySelf()
 
 class Category(SQLObject):
-    #class sqlmeta:
-    #    cacheValues = False
+    class sqlmeta:
+        cacheValues = False
     # Top-level mirroring
     # e.g. core, extras, release, epel
     name = UnicodeCol(alternateID=True)
@@ -719,8 +732,7 @@ def rsyncFilter(categories_requested, since):
         sql += "category.id IN %s AND " % categorySearch
         sql += "directory.ctime > %d " % (since)
 
-        dbobject = Directory.select()[0]
-        result = dbobject._connection.queryAll(sql)
+        result = Directory._connection.queryAll(sql)
         return result
 
     def _list_to_inclause(categoryList):
@@ -753,6 +765,8 @@ def rsyncFilter(categories_requested, since):
     
 
 class Repository(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     name = UnicodeCol(alternateID=True)
     prefix = UnicodeCol(default=None)
     category = ForeignKey('Category')
@@ -767,6 +781,8 @@ def ageFileDetails():
         d.age_file_details()
 
 class FileDetail(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     directory = ForeignKey('Directory', notNone=True)
     filename = UnicodeCol(notNone=True)
     timestamp = BigIntCol(default=None)
@@ -777,12 +793,16 @@ class FileDetail(SQLObject):
     sha512 = UnicodeCol(default=None)
 
 class RepositoryRedirect(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     """ Uses strings to allow for effective named aliases, and for repos that may not exist yet """
     fromRepo = UnicodeCol(alternateID=True)
     toRepo = UnicodeCol(default=None)
     idx = DatabaseIndex('fromRepo', 'toRepo', unique=True)
 
 class CountryContinentRedirect(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     country = UnicodeCol(alternateID=True, notNone=True)
     continent = UnicodeCol(notNone=True)
 
@@ -794,9 +814,13 @@ class CountryContinentRedirect(SQLObject):
 
 
 class EmbargoedCountry(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     country_code = StringCol(notNone=True)
 
 class DirectoryExclusiveHost(SQLObject):
+    class sqlmeta:
+        cacheValues = False
     directory = ForeignKey('Directory')
     host = ForeignKey('Host')
     idx = DatabaseIndex('directory', 'host', unique=True)

@@ -316,8 +316,8 @@ class HostFields(widgets.WidgetsList):
     private = widgets.CheckBox(help_text="e.g. not available to the public, an internal private mirror")
     internet2 = widgets.CheckBox(help_text="on Internet2")
     internet2_clients = widgets.CheckBox(help_text="serves Internet2 clients, even if private")
-    asn = widgets.TextField("ASN", default='', validator=validators.Any(validators.Int, validators.Empty), help_text="Autonomous System Number, used in BGP routing tables.")
-    asn_clients = widgets.CheckBox(default=True, help_text="Serve all clients from the same ASN.  Used for ISPs, companies, or schools, not personal networks.")
+    asn = widgets.TextField("asn", label="ASN", default='', validator=validators.Int, help_text="Autonomous System Number, used in BGP routing tables.")
+    asn_clients = widgets.CheckBox('asn_clients', label="ASN Clients?", default=True, help_text="Serve all clients from the same ASN.  Used for ISPs, companies, or schools, not personal networks.")
     robot_email = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.Email), help_text="email address, will receive notice of upstream content updates")
     comment = widgets.TextField(validator=validators.Any(validators.UnicodeString, validators.Empty), help_text="text, anything else you'd like a public end user to know about your mirror")
 
