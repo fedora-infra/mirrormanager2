@@ -6,4 +6,3 @@ Developer: BJ Dierkes
  -  Cleaned up ./server/setup.py a bit.  GeoIP is now pygeoip
     per, and also require SQLObject since TurboGears doesn't 
     explicitly require it via RPM.
- -  Also add the test user in ./server/mirrormanager/initial.py
