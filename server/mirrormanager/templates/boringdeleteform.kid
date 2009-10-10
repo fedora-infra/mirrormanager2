@@ -6,6 +6,7 @@
 <title>${title}</title>
 </head>
 <body>
+This action is permanent!  Item "${values.name}" and all associated data will be erased forever!
 ${form(value=values, action=tg.url(action))}
 </body>
 </html>

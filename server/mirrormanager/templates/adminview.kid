@@ -58,23 +58,23 @@ Nothing to see here, move along.
 </ul>
 </div>
 <div id="Repositories">
-<h3>Repositories</h3>
-<ul>
-	  <li py:for="r in repositories">
-	  <a href="${tg.url('/repository/'+str(r.id)+'/')}">
-     	  <span py:replace="r.directory.name">Repository Name
-	   </span></a>	
-	   <a href="${tg.url('/repository/'+str(r.id)+'/delete')}">[Delete]</a>	
-	  </li>
-</ul>
+    <h3>Repositories</h3>
+    <ul>
+    	  <li py:for="r in repositories">
+    	  <a href="${tg.url('/repository/'+str(r.id)+'/')}">
+         	  <span py:replace="r.directory.name">Repository Name
+    	   </span></a>	
+    	   <a href="${tg.url('/repository/'+str(r.id)+'/delete')}">[Delete]</a>	
+    	  </li>
+    </ul>
 </div>
 <div id="Directories">
-<h3>Directories</h3>
-<ul>
-	  <li py:for="d in directories">
-	  <span py:replace="d.name">Directory Name</span>	
-	  </li>
-</ul>
+    <h3>Directories</h3>
+    <ul>
+    	  <li py:for="d in directories">
+    	  <span py:replace="d.name">Directory Name</span>	
+    	  </li>
+    </ul>
 </div>
 <div id="Embargoed Countries">
 <h3>Embargoed Counries</h3>

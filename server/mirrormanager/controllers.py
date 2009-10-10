@@ -7,8 +7,10 @@ from turbogears import config
 admin_group = config.get('mirrormanager.admin_group', 'sysadmin')
 
 import turbogears
-from turbogears import controllers, expose, validate, redirect, widgets, validators, error_handler, exception_handler
+from turbogears import controllers, expose, validate, redirect, widgets
+from turbogears import validators, error_handler, exception_handler
 from turbogears import identity
+from cherrypy import request
 from tgfastdata import DataController
 import sqlobject
 from sqlobject.sqlbuilder import *
@@ -803,6 +805,9 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
 #########################################################3
 # SimpleDbObject
 #########################################################3
+class ConfirmDeleteFields(widgets.WidgetsList):    
+    pass
+
 class SimpleDbObjectController(controllers.Controller, identity.SecureResource, content):
     require = identity.in_group(admin_group)
     title = "My Title"
@@ -828,7 +833,7 @@ class SimpleDbObjectController(controllers.Controller, identity.SecureResource, 
             turbogears.flash("Error: Object already exists")
             raise redirect("/%s/0/new" % self.url_prefix)
         turbogears.flash("Success: Object created.")
-        raise turbogears.redirect("/")
+        turbogears.redirect("/adminview")
 
     @expose(template="mirrormanager.templates.boringform")
     def read(self, obj):
@@ -840,11 +845,21 @@ class SimpleDbObjectController(controllers.Controller, identity.SecureResource, 
         obj.sync()
         submit_action = "/%s/%s/update" % (self.url_prefix, obj.id)
         return dict(form=self.form, values=obj, action=submit_action, title=self.title)
-
-    @expose(template="mirrormanager.templates.boringform")
+        
+    @expose(template="mirrormanager.templates.boringdeleteform")
     def delete(self, obj, **kwargs):
-        obj.destroySelf()
-        raise turbogears.redirect("/")
+        confirmed = kwargs.get('confirmed', None)
+        confirm_delete_form = widgets.TableForm(fields=ConfirmDeleteFields(), submit_text="Yes, really delete it!")
+        if confirmed:
+            turbogears.flash("%s has been deleted." % obj.name)
+            obj.destroySelf()
+            turbogears.redirect("/adminview")
+        else:
+            self.form = confirm_delete_form
+            self.title = "Item Deletion"
+            submit_action = "/%s/%s/delete?confirmed=1" % (self.url_prefix, obj.id)
+            return dict(form=self.form, values=obj, action=submit_action, title=self.title)
+
 
 #########################################################3
 # Arch
@@ -908,7 +923,7 @@ class ProductController(SimpleDbObjectController):
     @expose(template="mirrormanager.templates.boringform")
     @validate(form=product_form)
     @error_handler(SimpleDbObjectController.new)
-    def create(self, **kwargs):
+    def create(self, came_from='/', **kwargs):
         SimpleDbObjectController.create(self, **kwargs)
 
 
@@ -1073,6 +1088,15 @@ class Root(controllers.RootController):
             sites = user_sites(identity)
         return {"sites":sites}
 
+    @expose(template="mirrormanager.templates.help")
+    @identity.require(identity.not_anonymous())
+    def help(self):
+        if admin_group in identity.current.groups:
+            sites = Site.select(orderBy='name')
+        else:
+            sites = user_sites(identity)
+        return {}
+        
     @expose(template="mirrormanager.templates.adminview")
     @identity.require(identity.in_group(admin_group))
     def adminview(self):

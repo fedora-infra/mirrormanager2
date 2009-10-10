@@ -1,8 +1,13 @@
-unreleased - 1.3.2
+unreleased - 1.x-dev (branched by BJ Dierkes with intension to merge)
 ----------------------------------------------------------------------
 
 Developer: BJ Dierkes     
 
  -  Cleaned up ./server/setup.py a bit.  GeoIP is now pygeoip
-    per, and also require SQLObject since TurboGears doesn't 
-    explicitly require it via RPM.
+    in the cheezeshop, and also require SQLObject since TurboGears 
+    doesn't explicitly require it via RPM.
+ -  Added a "confirm deletion" wrapper around the 
+    SimpleDbObjectController.delete() function.
+ -  Moved Admin View to navigation pane.
+ -  Moved 'help related' text from main welcome page to a help page
+    for cleaner look.

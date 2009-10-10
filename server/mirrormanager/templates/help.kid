@@ -58,28 +58,5 @@ to update its database of who has what.  That crawler reports its
 User-Agent as mirrormanager-crawler.
 </p>
 
-<div id="Sites">
-<h3>My Sites and Hosts</h3>
-<a href="${tg.url('/site/0/new/')}">[Add Site]</a>
-<ul>
-	  <li py:for="site in sites">
-	  <a href="${tg.url('/site/'+str(site.id))}"><span py:replace="site.name">Site Name</span></a>
-	  
-	  <ul>
-	  <li py:for="h in site.hosts">
-	  <a href="${tg.url('/host/'+str(h.id))}"><span
-	  py:replace="h.name">Host Name</span></a>
-	  </li>
-	  </ul>
-	  </li>
-</ul>
-</div>
-<div id="RSYNC ACL">
-<h3><a href="${tg.url('/rsync_acl')}">rsync acl</a></h3>
-</div>
-
-<div id="adminstuff" py:if="admin_group in tg.identity.groups">
-<h3><a href="${tg.url('/adminview')}">Admin view</a></h3>
-</div>
 </body>
 </html>
