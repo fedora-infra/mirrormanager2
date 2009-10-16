@@ -1,0 +1,29 @@
+
+After installation of the mirrormanager rpm, you must perform the 
+following actions.
+
+    - Modify /etc/mirrormanager/prod.cfg per your needs.
+
+    - Setup the database:
+
+        ]# cd /usr/share/mirrormanager/server
+        ]# tg-admin -c /etc/mirrormanager/prod.cfg sql create
+        ]# chown 640 /var/lib/mirrormanager/sqlite.db
+
+
+    - Setup the initial data:
+
+        ]# tg-admin -c /etc/mirrormanager/prod.cfg shell
+        
+        python> import mirrormanager.initial
+        python> ^D #exit
+    
+
+    - Restart Apache:
+
+        ]# /etc/init.d/httpd restart
+
+
+    - Visit your Mirror Manager app:
+
+        http://www.example.com/mirrormanager

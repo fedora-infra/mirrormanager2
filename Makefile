@@ -1,7 +1,7 @@
-RELEASE_DATE := "28-Sep-2009"
+RELEASE_DATE := "04-Oct-2009"
 RELEASE_MAJOR := 1
 RELEASE_MINOR := 3
-RELEASE_EXTRALEVEL := .2
+RELEASE_EXTRALEVEL := .3
 RELEASE_NAME := mirrormanager
 RELEASE_VERSION := $(RELEASE_MAJOR).$(RELEASE_MINOR)$(RELEASE_EXTRALEVEL)
 RELEASE_STRING := $(RELEASE_NAME)-$(RELEASE_VERSION)
@@ -26,8 +26,10 @@ $(RELEASE_PY):
 	sed -e 's/##VERSION##/$(RELEASE_VERSION)/' $(RELEASE_PY).in > $(RELEASE_PY)
 
 prep: $(SPEC) $(RELEASE_PY)
-	pushd server; \
-	python setup.py egg_info ;\
+	pushd server ;\
+	python setup.py egg_info
+	echo 'db_module=mirrormanager.model' > server/mirrormanager.egg-info/sqlobject.txt
+	echo 'history_dir=$$base/mirrormanager/sqlobject-history' >> server/mirrormanager.egg-info/sqlobject.txt
 	sync ; sync ; sync
 
 tarball: clean prep $(TARBALL)
@@ -66,7 +68,7 @@ rpm: tarball $(SPEC)
 	popd > /dev/null 2>&1; \
 	cp $${tmp_dir}/RPMS/noarch/* $${tmp_dir}/SRPMS/* . ; \
 	rm -rf $${tmp_dir} ; \
-	rpmlint *.rpm
+	rpmlint *.rpm *.spec
 
 install: install-server install-client
 
@@ -79,9 +81,14 @@ install-server:
 	mkdir -p -m 0755 $(DESTDIR)/var/lock/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/usr/share/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/etc/httpd/conf.d
+	mkdir -p -m 0755 $(DESTDIR)/etc/mirrormanager
+	mkdir -p -m 0755 $(DESTDIR)/etc/rpmlint
 # server/
 	cp -ra server/	 $(DESTDIR)/usr/share/mirrormanager
 	install -m 0644 server/apache/mirrormanager.conf $(DESTDIR)/etc/httpd/conf.d
+	install -m 0644 server/prod.cfg.example  $(DESTDIR)/etc/mirrormanager/prod.cfg
+	install -m 0644 rpmlint-mirrormanager.config  $(DESTDIR)/etc/rpmlint/mirrormanager.config
+	rm $(DESTDIR)/usr/share/mirrormanager/server/prod.cfg.example
 	rm $(DESTDIR)/usr/share/mirrormanager/server/logrotate.conf
 	rm $(DESTDIR)/usr/share/mirrormanager/server/*.cfg
 	rm $(DESTDIR)/usr/share/mirrormanager/server/*.in
