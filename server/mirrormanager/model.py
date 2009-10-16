@@ -1,12 +1,9 @@
 from sqlobject import *
 from sqlobject.sqlbuilder import *
 from turbogears import identity, config
-import pickle
-import sys
 from datetime import datetime
 import time
-from string import rstrip, strip
-import re
+from string import strip
 import IPy
 from mirrormanager.lib import uniqueify
 from mirrormanager.categorymap import categorymap

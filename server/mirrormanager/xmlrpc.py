@@ -1,7 +1,6 @@
 import cherrypy
-import turbogears
-from turbogears import controllers, expose, validate, redirect, widgets, validators, error_handler, exception_handler
-from mirrormanager.hostconfig import *
+from turbogears import controllers, expose
+from mirrormanager.hostconfig import read_host_config
 import bz2
 import base64
 import pickle

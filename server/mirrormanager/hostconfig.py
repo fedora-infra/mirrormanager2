@@ -1,8 +1,5 @@
-from mirrormanager.model import *
-import sys
-import pickle
-import pprint
-
+from sqlobject import SQLObjectNotFound
+from mirrormanager.model import Site, Host
 
 def validate_config(config):
     message = ''

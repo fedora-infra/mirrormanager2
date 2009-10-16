@@ -1,9 +1,4 @@
-import cherrypy
-import turbogears
-from turbogears import controllers, expose, validate, redirect, widgets, validators, error_handler, exception_handler
-from sqlobject import *
-from sqlobject.sqlbuilder import *
-from mirrormanager.model import *
+from mirrormanager.model import Directory, Host, RepositoryRedirect, CountryContinentRedirect, Repository, HostCategoryUrl
 from IPy import IP
 import sha
 import pprint

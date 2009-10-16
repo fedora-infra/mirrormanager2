@@ -1,4 +1,3 @@
-from turbogears.identity.exceptions import IdentityFailure
 import sys
 import logging
 import cherrypy
@@ -8,14 +7,11 @@ admin_group = config.get('mirrormanager.admin_group', 'sysadmin')
 
 import turbogears
 from turbogears import controllers, expose, validate, redirect, widgets
-from turbogears import validators, error_handler, exception_handler
+from turbogears import validators, error_handler
 from turbogears import identity
-from cherrypy import request
-from tgfastdata import DataController
 import sqlobject
 from sqlobject.sqlbuilder import *
 from string import strip
-from copy import copy
 
 from fedora.tg.controllers import login as fc_login
 from fedora.tg.controllers import logout as fc_logout
