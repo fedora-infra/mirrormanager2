@@ -18,6 +18,10 @@ from turbogears.database import PackageHub
 hub = PackageHub("mirrormanager")
 __connection__ = hub
 
+UnicodeColKeyLength=None
+if hub.uri and hub.uri.startswith('mysql'):
+    UnicodeColKeyLength=255
+
 class SiteToSite(SQLObject):
     class sqlmeta:
         cacheValues = False
@@ -31,17 +35,17 @@ class SiteToSite(SQLObject):
 class Site(SQLObject):
     class sqlmeta:
         cacheValues = False
-    name = UnicodeCol(alternateID=True, length=32)
-    password = UnicodeCol(default=None, length=32)
-    orgUrl = UnicodeCol(default=None, length=255)
+    name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
+    password = UnicodeCol(default=None)
+    orgUrl = UnicodeCol(default=None)
     private = BoolCol(default=False)
     admin_active = BoolCol(default=True)
     user_active  = BoolCol(default=True)
     createdAt = DateTimeCol(default=datetime.utcnow())
-    createdBy = UnicodeCol(default=None, length=32)
+    createdBy = UnicodeCol(default=None)
     # allow all sites to pull from me
     allSitesCanPullFromMe = BoolCol(default=False)
-    downstreamComments = StringCol(default=None)
+    downstreamComments = UnicodeCol(default=None)
     
     admins = MultipleJoin('SiteAdmin')
     hosts  = MultipleJoin('Host')
@@ -107,7 +111,7 @@ class Site(SQLObject):
 class SiteAdmin(SQLObject):
     class sqlmeta:
         cacheValues = False
-    username = UnicodeCol(length=32)
+    username = UnicodeCol()
     site = ForeignKey('Site')
 
     def my_site(self):
@@ -126,7 +130,7 @@ class HostCategory(SQLObject):
     hcindex = DatabaseIndex('host', 'category', unique=True)
     admin_active = BoolCol(default=True)
     user_active = BoolCol(default=True)
-    upstream = UnicodeCol(default=None, length=255)
+    upstream = UnicodeCol(default=None)
     always_up2date = BoolCol(default=False)
     dirs = MultipleJoin('HostCategoryDir', orderBy='path')
     urls = MultipleJoin('HostCategoryUrl')
@@ -148,7 +152,7 @@ class HostCategoryDir(SQLObject):
         cacheValues = False
     host_category = ForeignKey('HostCategory')
     # subset of the path starting below HostCategory.path
-    path = UnicodeCol(length=255)
+    path = UnicodeCol()
     directory = ForeignKey('Directory')
     hcdindex = DatabaseIndex('host_category', 'path', unique=True)
     up2date = BoolCol(default=True)
@@ -160,7 +164,7 @@ class HostCategoryUrl(SQLObject):
     class sqlmeta:
         cacheValues = False
     host_category = ForeignKey('HostCategory')
-    url = UnicodeCol(alternateID=True, length=255)
+    url = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
     private = BoolCol(default=False)
 
     def my_site(self):
@@ -169,16 +173,16 @@ class HostCategoryUrl(SQLObject):
 class Host(SQLObject):
     class sqlmeta:
         cacheValues = False
-    name = UnicodeCol(length=255)
+    name = UnicodeCol()
     site = ForeignKey('Site')
     idx = DatabaseIndex('site', 'name', unique=True)
-    robot_email = UnicodeCol(default=None, length=255)
+    robot_email = UnicodeCol(default=None)
     admin_active = BoolCol(default=True)
     user_active = BoolCol(default=True)
     country = StringCol(default=None)
-    bandwidth = UnicodeCol(default=None, length=255)
+    bandwidth = UnicodeCol(default=None)
     bandwidth_int = IntCol(default=100)
-    comment = StringCol(default=None)
+    comment = UnicodeCol(default=None)
     _config = PickleCol(default=None)
     lastCheckedIn = DateTimeCol(default=None)
     lastCrawled = DateTimeCol(default=None)
@@ -521,7 +525,7 @@ class HostAclIp(SQLObject):
     class sqlmeta:
         cacheValues = False
     host = ForeignKey('Host')
-    ip = UnicodeCol(length=16)
+    ip = UnicodeCol()
 
     def my_site(self):
         return self.host.my_site()
@@ -573,14 +577,14 @@ class HostStats(SQLObject):
         cacheValues = False
     host = ForeignKey('Host')
     _timestamp = DateTimeCol(default=datetime.utcnow())
-    type = UnicodeCol(default=None, length=32)
+    type = UnicodeCol(default=None)
     data = PickleCol(default=None)
 
 
 class Arch(SQLObject):
     class sqlmeta:
         cacheValues = False
-    name = UnicodeCol(alternateID=True, length=8)
+    name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
     publiclist = BoolCol(default=True)
     primaryArch = BoolCol(default=True)
 
@@ -609,7 +613,7 @@ def publiclist_arches():
 class Product(SQLObject):
     class sqlmeta:
         cacheValues = False
-    name = UnicodeCol(alternateID=True, length=32)
+    name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
     versions = MultipleJoin('Version', orderBy='name')
     categories = MultipleJoin('Category')
 
@@ -624,11 +628,11 @@ class Product(SQLObject):
 class Version(SQLObject):
     class sqlmeta:
         cacheValues = False
-    name = UnicodeCol(length=32)
+    name = UnicodeCol()
     product = ForeignKey('Product')
     isTest = BoolCol(default=False)
     display = BoolCol(default=True)
-    display_name = UnicodeCol(default=None, length=255)
+    display_name = UnicodeCol(default=None)
     ordered_mirrorlist = BoolCol(default=True)
 
 
@@ -640,7 +644,7 @@ class Directory(SQLObject):
     # e.g. pub/fedora/linux/extras
     # e.g. pub/epel
     # e.g. pub/fedora/linux
-    name = UnicodeCol(alternateID=True, length=255)
+    name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
     files = PickleCol(default={})
     readable = BoolCol(default=True)
     ctime = BigIntCol(default=0)
@@ -687,9 +691,9 @@ class Category(SQLObject):
         cacheValues = False
     # Top-level mirroring
     # e.g. core, extras, release, epel
-    name = UnicodeCol(alternateID=True, length=32)
+    name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
     product = ForeignKey('Product')
-    canonicalhost = UnicodeCol(default='http://download.fedora.redhat.com', length=255)
+    canonicalhost = UnicodeCol(default='http://download.fedora.redhat.com')
     topdir = ForeignKey('Directory', default=None)
     publiclist = BoolCol(default=True)
     directories = RelatedJoin('Directory', orderBy='name') # all the directories that are part of this category
@@ -767,8 +771,8 @@ def rsyncFilter(categories_requested, since):
 class Repository(SQLObject):
     class sqlmeta:
         cacheValues = False
-    name = UnicodeCol(alternateID=True, length=32)
-    prefix = UnicodeCol(default=None, length=32)
+    name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
+    prefix = UnicodeCol(default=None)
     category = ForeignKey('Category')
     version = ForeignKey('Version')
     arch = ForeignKey('Arch')
@@ -784,27 +788,27 @@ class FileDetail(SQLObject):
     class sqlmeta:
         cacheValues = False
     directory = ForeignKey('Directory', notNone=True)
-    filename = UnicodeCol(notNone=True, length=255)
+    filename = UnicodeCol(notNone=True)
     timestamp = BigIntCol(default=None)
     size = BigIntCol(default=None)
-    sha1 = UnicodeCol(default=None, length=256)
-    md5 = UnicodeCol(default=None, length=32)
-    sha256 = UnicodeCol(default=None, length=256)
-    sha512 = UnicodeCol(default=None, length=512)
+    sha1 = UnicodeCol(default=None)
+    md5 = UnicodeCol(default=None)
+    sha256 = UnicodeCol(default=None)
+    sha512 = UnicodeCol(default=None)
 
 class RepositoryRedirect(SQLObject):
     class sqlmeta:
         cacheValues = False
     """ Uses strings to allow for effective named aliases, and for repos that may not exist yet """
-    fromRepo = UnicodeCol(alternateID=True, length=32)
-    toRepo = UnicodeCol(default=None, length=32)
+    fromRepo = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
+    toRepo = UnicodeCol(default=None)
     idx = DatabaseIndex('fromRepo', 'toRepo', unique=True)
 
 class CountryContinentRedirect(SQLObject):
     class sqlmeta:
         cacheValues = False
-    country = UnicodeCol(alternateID=True, notNone=True, length=32)
-    continent = UnicodeCol(notNone=True, length=32)
+    country = UnicodeCol(alternateID=True, notNone=True, length=UnicodeColKeyLength)
+    continent = UnicodeCol(notNone=True)
 
     def _set_country(self, country):
         self._SO_set_country(country.upper())
