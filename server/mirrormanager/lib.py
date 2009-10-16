@@ -1,4 +1,4 @@
-import types, os, sys
+import types, os
 
 def createErrorString(tg_errors):
     """
