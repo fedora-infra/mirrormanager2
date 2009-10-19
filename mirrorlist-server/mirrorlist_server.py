@@ -478,20 +478,19 @@ def do_mirrorlist(kwargs):
 
     client_ip = kwargs['client_ip']
     clientCountry = None
-    # attempt IPv6, then IPv6 6to4 as IPv4, then IPv4
+    # attempt IPv6, then IPv6 6to4 as IPv4, then Teredo, then IPv4
     try:
         ip = IP(client_ip)
         if ip.version() == 6:
             if gipv6 is not None:
                 clientCountry = gipv6.country_code_by_addr_v6(ip.strNormal())
             if clientCountry is None:
-                try_6to4 = convert_6to4_v4(ip)
-                if try_6to4 is not None:
-                    ip = try_6to4
-                else:
-                    try_teredo = convert_teredo_v4(ip)
-                    if try_teredo is not None:
-                        ip = try_teredo
+                # Try the IPv6-to-IPv4 translation schemes
+                for scheme in (convert_6to4_v4, convert_teredo_v4):
+                    result = scheme(ip)
+                    if result is not None:
+                        ip = result
+                        break
         if ip.version() == 4 and gipv4 is not None:
             clientCountry = gipv4.country_code_by_addr(ip.strNormal())
     except:
@@ -783,10 +782,10 @@ def convert_teredo_v4(ip):
         return None
     parts=ip.strNormal().split(':')
 
-    ab = int(parts[7],16)
+    ab = int(parts[6],16)
     a = ((ab >> 8) & 0xFF) ^ 0xFF
     b = (ab & 0xFF) ^ 0xFF
-    cd = int(parts[8],16)
+    cd = int(parts[7],16)
     c = ((cd >> 8) & 0xFF) ^ 0xFF
     d = (cd & 0xFF) ^ 0xFF
 
