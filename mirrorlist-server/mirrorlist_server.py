@@ -488,6 +488,10 @@ def do_mirrorlist(kwargs):
                 try_6to4 = convert_6to4_v4(ip)
                 if try_6to4 is not None:
                     ip = try_6to4
+                else:
+                    try_teredo = convert_teredo_v4(ip)
+                    if try_teredo is not None:
+                        ip = try_teredo
         if ip.version() == 4 and gipv4 is not None:
             clientCountry = gipv4.country_code_by_addr(ip.strNormal())
     except:
@@ -768,6 +772,23 @@ def convert_6to4_v4(ip):
     cd = int(parts[2],16)
     c = (cd >> 8) & 0xFF
     d = cd & 0xFF
+
+    v4addr = '%d.%d.%d.%d' % (a,b,c,d)
+    return IP(v4addr)
+
+def convert_teredo_v4(ip):
+    teredo_std = IP('2001::/32')
+    teredo_xp  = IP('3FFE:831F::/32')
+    if ip.version() != 6 or (ip not in teredo_std and ip not in teredo_xp):
+        return None
+    parts=ip.strNormal().split(':')
+
+    ab = int(parts[7],16)
+    a = ((ab >> 8) & 0xFF) ^ 0xFF
+    b = (ab & 0xFF) ^ 0xFF
+    cd = int(parts[8],16)
+    c = ((cd >> 8) & 0xFF) ^ 0xFF
+    d = (cd & 0xFF) ^ 0xFF
 
     v4addr = '%d.%d.%d.%d' % (a,b,c,d)
     return IP(v4addr)
