@@ -103,7 +103,6 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
 
     def get(self, id, tg_errors=None, tg_source=None, **kwargs):
         site = Site.get(id)
-        site.sqlmeta.cacheValues = False
         return dict(values=site, disabled_fields=self.disabled_fields(site=site))
 
     @expose(template="mirrormanager.templates.site")
@@ -186,7 +185,6 @@ class SiteAdminController(controllers.Controller, identity.SecureResource, conte
 
     def get(self, id):
         v = SiteAdmin.get(id)
-        v.sqlmeta.cacheValues = False
         return dict(values=v, site=v.site, title="Site Admin")
     
     @expose(template="mirrormanager.templates.boringsiteform")
@@ -251,7 +249,6 @@ class SiteToSiteController(controllers.Controller, identity.SecureResource, cont
 
     def get(self, id):
         v = SiteToSite.get(id)
-        v.sqlmeta.cacheValues = False
         return dict(values=v, site=v.upstream_site)
     
     @expose(template="mirrormanager.templates.boringsiteform")
@@ -340,7 +337,6 @@ class HostController(controllers.Controller, identity.SecureResource, content):
 
     def get(self, id):
         host = Host.get(id)
-        host.sqlmeta.cacheValues = False
         return dict(values=host)
 
     @expose(template="mirrormanager.templates.host")
@@ -475,7 +471,6 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
 
     def get(self, id):
         hc = HostCategory.get(id)
-        hc.sqlmeta.cacheValues = False
         return dict(values=hc)
 
     @expose(template="mirrormanager.templates.hostcategory")
@@ -708,7 +703,6 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
 
     def get(self, id):
         v = HostCategoryUrl.get(id)
-        v.sqlmeta.cacheValues = False
         return dict(values=v, host_category=v.host_category)
     
     @expose(template="mirrormanager.templates.hostcategoryurl")
@@ -813,7 +807,6 @@ class SimpleDbObjectController(controllers.Controller, identity.SecureResource, 
 
     def get(self, id):
         v = self.myClass.get(id)
-        v.sqlmeta.cacheValues = False
         return dict(values=v)
     
     @expose(template="mirrormanager.templates.boringform")
