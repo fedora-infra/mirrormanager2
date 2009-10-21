@@ -16,7 +16,8 @@ hub = PackageHub("mirrormanager")
 __connection__ = hub
 
 UnicodeColKeyLength=None
-if hub.uri and hub.uri.startswith('mysql'):
+_dburi = config.get('sqlobject.dburi', '')
+if 'mysql://' in _dburi:
     UnicodeColKeyLength=255
 
 class SiteToSite(SQLObject):
