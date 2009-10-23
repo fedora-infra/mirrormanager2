@@ -73,6 +73,7 @@ exit 0
 %config(noreplace) /etc/rpmlint/%{name}.config
 %doc LICENSES LICENSE-MIT-X11 LICENSE-GPLv2
 %doc server/*.cfg server/prod.cfg.example README.rpm_setup
+%doc server/UPGRADING.txt server/sqlobject-patches/
 
 %files client
 %defattr(-,root,root,-)
