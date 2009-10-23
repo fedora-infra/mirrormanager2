@@ -150,7 +150,7 @@ class HostCategoryDir(SQLObject):
         cacheValues = False
     host_category = ForeignKey('HostCategory')
     # subset of the path starting below HostCategory.path
-    path = UnicodeCol()
+    path = UnicodeCol(length=UnicodeColKeyLength)
     directory = ForeignKey('Directory')
     hcdindex = DatabaseIndex('host_category', 'path', unique=True)
     up2date = BoolCol(default=True)
@@ -171,7 +171,7 @@ class HostCategoryUrl(SQLObject):
 class Host(SQLObject):
     class sqlmeta:
         cacheValues = False
-    name = UnicodeCol()
+    name = UnicodeCol(length=UnicodeColKeyLength)
     site = ForeignKey('Site')
     idx = DatabaseIndex('site', 'name', unique=True)
     robot_email = UnicodeCol(default=None)
@@ -770,7 +770,7 @@ class Repository(SQLObject):
     class sqlmeta:
         cacheValues = False
     name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
-    prefix = UnicodeCol(default=None)
+    prefix = UnicodeCol(default=None, length=UnicodeColKeyLength)
     category = ForeignKey('Category')
     version = ForeignKey('Version')
     arch = ForeignKey('Arch')
@@ -799,7 +799,7 @@ class RepositoryRedirect(SQLObject):
         cacheValues = False
     """ Uses strings to allow for effective named aliases, and for repos that may not exist yet """
     fromRepo = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
-    toRepo = UnicodeCol(default=None)
+    toRepo = UnicodeCol(default=None, length=UnicodeColKeyLength)
     idx = DatabaseIndex('fromRepo', 'toRepo', unique=True)
 
 class CountryContinentRedirect(SQLObject):
