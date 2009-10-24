@@ -27,6 +27,11 @@ for c in conffiles:
         turbogears.update_config(configfile=c, modulename="mirrormanager.config")
         break
 
+# as a WSGI, we need to force these settings
+turbogears.config.update({'global': {'server.environment': 'production'}})
+turbogears.config.update({'global': {'autoreload.on': False}})
+turbogears.config.update({'global': {'server.log_to_screen': False}})
+
 startup.call_on_startup.append(enable_csrf)
 
 import mirrormanager.controllers
