@@ -652,6 +652,13 @@ def read_caches():
     internet2_tree = setup_netblocks(internet2_netblocks_file)
     global_tree    = setup_netblocks(global_netblocks_file)
 
+def errordoc(kwargs, message):
+    if 'metalink' in kwargs and kwargs['metalink']:
+        doc = metalink_failuredoc(message)
+    else:
+        doc = message
+    return doc
+
 class MirrorlistHandler(StreamRequestHandler):
     def handle(self):
         random.seed()
@@ -682,9 +689,9 @@ class MirrorlistHandler(StreamRequestHandler):
             returncode = r['returncode']
             resulttype = r['resulttype']
         except:
-            message='# Server Error'
+            message=errordoc(d, '# Server Error')
             results = []
-            resulttype = 'mirrorlist'
+            resulttype = d['resulttype']
             returncode = 500
         del d
         del p
