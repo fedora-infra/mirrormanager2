@@ -33,6 +33,7 @@ setup(
         "pygeoip",
         "SQLObject",
         "python_fedora >= 0.3.14",
+        "radix",
     ],
     scripts = ["start-mirrormanager.py"],
     zip_safe=False,
