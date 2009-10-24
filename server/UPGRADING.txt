@@ -43,3 +43,7 @@ $ tg-admin sql upgrade --upgrade-to=2009-04-06
 $ tg-admin sql upgrade --upgrade-to=2009-10-21
 
 No, SQLObject doesn't make this easier. SQLAlchemy may.
+
+N.B. python-sqlobject-0.10.2 has a bug that is triggered on upgrade if
+you are using a sqlite database.  See the sqlobject-patches/ directory
+for a patch to fix this.
