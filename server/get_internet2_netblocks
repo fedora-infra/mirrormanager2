@@ -23,7 +23,7 @@ function get_i2_netblocks()
     wget -q -O ${tmpdir}/index.html "${URL}/"
     last=$(last_rib)
     wget -O ${tmpdir}/rib.gz -q "${URL}/$last"
-    zcat ${tmpdir}/rib.gz | perl internet2/zebra-dump-parser/zebra-dump-parser.pl > ${listfile}
+    zcat ${tmpdir}/rib.gz | perl zebra-dump-parser/zebra-dump-parser.pl > ${listfile}
 }
 
 get_i2_netblocks
