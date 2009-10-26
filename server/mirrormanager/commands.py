@@ -1,17 +1,16 @@
 #!/usr/bin/python
 import pkg_resources
+import cherrypy
 pkg_resources.require("TurboGears")
 
 import turbogears
 cherrypy.lowercase_api = True
 
-from os.path import *
+from os.path import exists, join
 import os
 import sys
 
 def start():
-    from turbogears import update_config, start_server
-    import cherrypy
     cherrypy.lowercase_api = True
     # first look on the command line for a desired config file,
     # if it's not on the command line, then
@@ -28,6 +27,5 @@ def start():
             modulename="mirrormanager.config")
 
     from mirrormanager.controllers import Root
-    import mirrormanager.mirrorlist
 
     turbogears.start_server(Root())
