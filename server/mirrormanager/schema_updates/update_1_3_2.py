@@ -1,9 +1,7 @@
 from mirrormanager.model import Host
-from sqlobject import IntCol, BoolCol
 from mirrormanager.mirrorlist import name_to_ips
 import copy
 
-from IPy import IP
 import string
 import dns.resolver
 from urlparse import urlsplit
@@ -19,21 +17,6 @@ def setup_asn_resolver():
     global asnresolver
     asnresolver = copy.copy(dns.resolver.get_default_resolver())
     asnresolver.nameserver = result
-
-def update_host_table():
-    rc = False
-    try:
-        Host.sqlmeta.delColumn('asn', changeSchema=True)
-        Host.sqlmeta.delColumn('asn_clients', changeSchema=True)
-    except:
-        return True
-    try:
-        Host.asn = Host.sqlmeta.addColumn(IntCol(name='asn', default=None), changeSchema=True)
-        Host.asn_clients = Host.sqlmeta.addColumn(BoolCol(name='asn_clients', default=True), changeSchema=True)
-        rc = True
-    except:
-        raise
-    return rc
 
 def txtrecords(name):
     records=[]
@@ -88,16 +71,10 @@ def set_host_asn(h):
 def initialize_host_table():
     setup_asn_resolver()
     for h in Host.select():
-        h.asn = None
-        h.asn_clients = False
-        h.sync()
-    for h in Host.select():
         if h.is_active() and not h.is_private():
             set_host_asn(h)
 
 def update():
     default_resolver = dns.resolver.get_default_resolver()
     default_resolver.lifetime=default_resolver.timeout
-    rc = update_host_table()
-    if rc:
-        initialize_host_table()
+    initialize_host_table()

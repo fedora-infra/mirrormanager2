@@ -1,12 +1,5 @@
-import turbogears
-from sqlobject import *
-from mirrormanager.model import *
+from mirrormanager.model import Repository, Directory, Arch
 import hashlib
-
-def initialize_filedetail():
-    for fd in FileDetail.select():
-        fd.sha256 = None
-        fd.sha512 = None
 
 def fill_filedetail():    
     for r in Repository.select():
@@ -39,64 +32,7 @@ def fill_arch():
     for a in Arch.select():
         a.publiclist = (a.name != 'source')
         a.primaryArch = (a.name in primary)
-        a.sync()
-
-def update_schema_arch():
-    rc = False
-    try:
-        Arch.sqlmeta.delColumn('publiclist', changeSchema=False)
-        c = Arch.sqlmeta.addColumn(BoolCol(name='publiclist', default=True), changeSchema=True)
-        Arch.publiclist = c
-        Arch.sqlmeta.delColumn('primaryArch', changeSchema=False)
-        c = Arch.sqlmeta.addColumn(BoolCol(name='primaryArch', default=False), changeSchema=True)
-        Arch.primaryArch = c
-        rc = True
-    except:
-        pass
-    return rc
-
-def update_schema_filedetail():
-    rc = False
-    try:
-        FileDetail.sqlmeta.delColumn('sha256', changeSchema=False)
-        c = FileDetail.sqlmeta.addColumn(UnicodeCol(name='sha256', default=None), changeSchema=True)
-        FileDetail.sha256 = c
-        FileDetail.sqlmeta.delColumn('sha512', changeSchema=False)
-        c = FileDetail.sqlmeta.addColumn(UnicodeCol(name='sha512', default=None), changeSchema=True)
-        FileDetail.sha512 = c
-        rc = True
-    except:
-        pass
-    return rc
-
-def update_directory():
-    rc = False
-    try:
-        Directory.sqlmeta.delColumn('ctime', changeSchema=False)
-        c = Directory.sqlmeta.addColumn(BigIntCol(name='ctime', default=0), changeSchema=True)
-        Directory.ctime = c
-        rc = True
-    except:
-        pass
-    return rc
-
-def fill_directory():
-    for d in Directory.select():
-        d.ctime = 0
-        d.sync()
 
 def update():
-    rc = update_schema_arch()
-    if rc:
-        fill_arch()
-
-    # the ordering matters here, as fill_filedetail will reference Directory objects
-    rc = update_directory()
-    if rc:
-        fill_directory()
-
-    rc = update_schema_filedetail()
-    if rc:
-        initialize_filedetail()
-        fill_filedetail()
-
+    fill_filedetail()
+    fill_arch()
