@@ -19,10 +19,6 @@
 
 * can the crawler check private, but serving I2 clients, mirrors?
 
-* make the 7-day stale  repomd.xml file timeout be configurable in
-  prod.cfg.
-
-
 * RepositoryRedirects
 - at the end of the release cycle, the fedora-release package may have
   a version name like 10.93, but updates are available under version

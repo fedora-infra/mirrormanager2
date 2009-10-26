@@ -669,8 +669,9 @@ class Directory(SQLObject):
     def age_file_details(self):
         """For each file, keep at least 1 FileDetail entry, removing
         any others that are more than 7 days old."""
+        max_stale = config.get('mirrormanager.max_stale_days', 7)
         fd = {}
-        weekago = int(time.time()) - (60*60*24*7)
+        weekago = int(time.time()) - (60*60*24*max_stale)
 
         for f in self.fileDetails:
             if f.filename not in fd:
