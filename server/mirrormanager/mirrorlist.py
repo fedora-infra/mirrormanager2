@@ -17,33 +17,26 @@ host_netblock_cache = {}
 host_country_allowed_cache = {}
 
 def _do_query_directories():
-    sql =  'SELECT * FROM '
-    sql += '(SELECT directory.name AS dname, host.id AS hostid, host.country, host_category_url.id, site.private, host.private, host.internet2, host.internet2_clients '
-    sql += 'FROM directory, host_category_dir, host_category, host_category_url, host, site, category_directory '
-    sql += 'WHERE host_category_dir.host_category_id = host_category.id ' # join criteria
-    sql += 'AND   host_category_url.host_category_id = host_category.id ' # join criteria
-    sql += 'AND   host_category.host_id = host.id '                       # join criteria
-    sql += 'AND   host.site_id = site.id '                                # join criteria
-    sql += 'AND   host_category_dir.directory_id = directory.id '         # join criteria
-    sql += 'AND   category_directory.directory_id = directory.id '         # join criteria (dir for this category)
-    sql += 'AND   category_directory.category_id = host_category.category_id ' # join criteria
-    sql += 'AND   host_category_dir.up2date '
-    sql += 'AND NOT host_category_url.private '
-    sql += 'AND host.user_active AND site.user_active '
-    sql += 'AND host.admin_active AND site.admin_active '
-    # now add the always_up2date host_categories
-    sql += 'UNION '
-    sql += 'SELECT directory.name AS dname, host.id, host.country, host_category_url.id, site.private, host.private, host.internet2, host.internet2_clients '
-    sql += 'FROM directory, host_category, host_category_url, host, site, category_directory '
-    sql += 'WHERE host_category_url.host_category_id = host_category.id ' # join criteria
-    sql += 'AND   host_category.host_id = host.id '                       # join criteria
-    sql += 'AND   host.site_id = site.id '                                # join criteria
-    sql += 'AND   category_directory.directory_id = directory.id '         # join criteria (dir for this category)
-    sql += 'AND   category_directory.category_id = host_category.category_id ' # join criteria
-    sql += 'AND   host_category.always_up2date '
-    sql += 'AND NOT host_category_url.private '
-    sql += 'AND host.user_active AND site.user_active '
-    sql += 'AND host.admin_active AND site.admin_active) '
+    common_select = 'SELECT directory.name AS dname, host.id AS hostid, host.country, host_category_url.id, site.private, host.private, host.internet2, host.internet2_clients '
+    sql1_from = 'FROM directory, host_category_dir, host_category, host_category_url, host, site, category_directory '
+    sql2_from = 'FROM directory,                    host_category, host_category_url, host, site, category_directory '
+    common_where  = ' WHERE '
+    common_where += 'host.site_id = site.id '                                # join criteria
+    common_where += 'AND   host_category_url.host_category_id = host_category.id ' # join criteria
+    common_where += 'AND   host_category.host_id = host.id '                       # join criteria
+    common_where += 'AND   category_directory.directory_id = directory.id '         # join criteria (dir for this category)
+    common_where += 'AND   category_directory.category_id = host_category.category_id ' # join criteria
+    common_where += 'AND NOT host_category_url.private '
+    common_where += 'AND host.user_active AND site.user_active '
+    common_where += 'AND host.admin_active AND site.admin_active '
+    sql1_clause   = 'AND   host_category_dir.host_category_id = host_category.id ' # join criteria
+    sql1_clause  += 'AND   host_category_dir.directory_id = directory.id '       # join criteria
+    sql1_clause  += 'AND   host_category_dir.up2date '
+    sql2_clause   = 'AND   host_category.always_up2date '
+
+    sql1 = common_select + sql1_from + common_where + sql1_clause
+    sql2 = common_select + sql2_from + common_where + sql2_clause
+    sql  = 'SELECT * FROM (' + sql1 + ' UNION ' + sql2 + ' ) '
     sql += 'AS subquery '
     sql += 'ORDER BY dname, hostid '
 
