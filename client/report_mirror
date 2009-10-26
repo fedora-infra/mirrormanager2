@@ -1,12 +1,9 @@
 #!/usr/bin/python
 
 import os, sys
-from os.path import join
 import pickle
-import re
 import ConfigParser
 import pprint
-import time
 import xmlrpclib
 import base64
 import bz2
@@ -194,11 +191,11 @@ def main():
                       dest="config",
                       default='/etc/mirrormanager-client/report_mirror.conf',
                       help='Configuration filename (required)')
-    parser.add_option("-s", "--stats",
-                      action="store_true",
-                      dest="stats",
-                      default=False,
-                      help='Send stats')
+#    parser.add_option("-s", "--stats",
+#                      action="store_true",
+#                      dest="stats",
+#                      default=False,
+#                      help='Send stats')
     parser.add_option("-i", "--input",
                       dest="input",
                       default=None,
@@ -242,8 +239,8 @@ def main():
         outfile.write(p)
         outfile.close()
 
-    if options.stats:
-        statdata = get_stats(conf, 'stats')
+#    if options.stats:
+#        statdata = get_stats(conf, 'stats')
 
     # upload p and statsdata here
     if not item.config.has_key('global') or not item.config['global'].has_key('enabled') or item.config['global']['enabled'] != '1':
