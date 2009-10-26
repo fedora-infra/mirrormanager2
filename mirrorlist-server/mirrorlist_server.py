@@ -390,7 +390,7 @@ def do_mirrorlist(kwargs):
         d = dict(returncode=returncode, message=message, resulttype='mirrorlist', results=[])
         if 'metalink' in kwargs and kwargs['metalink']:
             d['resulttype'] = 'metalink'
-            d['message'] = metalink_failuredoc(message)
+            d['results'] = metalink_failuredoc(message)
         return d
 
     if not (kwargs.has_key('repo') and kwargs.has_key('arch')) and not kwargs.has_key('path'):
