@@ -579,7 +579,7 @@ def setup_netblocks(netblocks_file):
             f = open(netblocks_file, 'r')
         except:
             return tree
-        for l in f.readline():
+        for l in f:
             try:
                 s = l.split()
                 start, mask = s[0].split('/')
