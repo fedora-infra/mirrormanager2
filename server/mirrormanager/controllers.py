@@ -1065,6 +1065,8 @@ class Root(controllers.RootController):
     arch = ArchController()
     embargoed_country = EmbargoedCountryController()
     repository = RepositoryController()
+    repository_redirect = RepositoryRedirectController()
+    country_continent_redirect = CountryContinentRedirectController()
     from mirrormanager.xmlrpc import XmlrpcController
     xmlrpc = XmlrpcController()
     
