@@ -12,7 +12,7 @@ import datetime
 import time
 import radix
 
-from IPy import IP, intToIp
+from IPy import IP
 import GeoIP
 from weighted_shuffle import weighted_shuffle
 
