@@ -844,10 +844,10 @@ class SimpleDbObjectController(controllers.Controller, identity.SecureResource, 
             obj.destroySelf()
             turbogears.redirect("/adminview")
         else:
-            self.form = confirm_delete_form
-            self.title = "Item Deletion"
+            form = confirm_delete_form
+            title = "Item Deletion"
             submit_action = "/%s/%s/delete?confirmed=1" % (self.url_prefix, obj.id)
-            return dict(form=self.form, values=obj, action=submit_action, title=self.title)
+            return dict(form=form, values=obj, action=submit_action, title=title)
 
 
 #########################################################3
