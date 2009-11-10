@@ -21,12 +21,16 @@ hub = __connection__ = None
 
 repos = None
 
-def add_version_redirect_to_rawhide(version):
+def add_version_redirect_to_rawhide(options):
+    version = options.version
     for fromRepo,toRepo in repos.iteritems():
-        RepositoryRedirect(fromRepo=fromRepo % (version), toRepo=toRepo)
+          if options.updatesOnly and 'updates' not in fromRepo: continue
+          RepositoryRedirect(fromRepo=fromRepo % (version), toRepo=toRepo)
 
-def remove_version_redirect_to_rawhide(version):
+def remove_version_redirect_to_rawhide(options):
+    version = options.version
     for fromRepo,toRepo in repos.iteritems():
+        if options.updatesOnly and 'updates' not in fromRepo: continue
         try:
             r = RepositoryRedirect.selectBy(fromRepo=fromRepo % (version), toRepo=toRepo)[0]
             r.destroySelf()
@@ -40,9 +44,9 @@ def list_redirects():
 
 def doit(options, args):
     if options.add:
-        add_version_redirect_to_rawhide(options.version)
+        add_version_redirect_to_rawhide(options)
     elif options.remove:
-        remove_version_redirect_to_rawhide(options.version)
+        remove_version_redirect_to_rawhide(options)
     list_redirects()
     return 0
 
@@ -61,6 +65,9 @@ def main():
     parser.add_option("-v", "--version",
                       dest="version", default=None,
                       help="Specify version for add/remove redirects")
+    parser.add_option("-u", "--updates-only",
+                      dest="updatesOnly", action="store_true", default=False,
+                      help="Only add/remove redirects to updates and updates-testing repos")
 
     (options, args) = parser.parse_args()
 
