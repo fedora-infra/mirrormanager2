@@ -258,13 +258,13 @@ def make_one_directory(line, category, path, category_directories):
     except ValueError:
         raise
     ctime = ctime_from_rsync(date, hms)
-    category_directories[dname] = {'files':{}, 'isRepository':False, 'readable':readable, 'ctime':ctime}
+    category_directories[dname] = {'files':{}, 'isRepository':False, 'readable':readable, 'ctime':ctime, 'changed':True}
     if d.endswith('repodata'):
         parent_dname = dname[:-len('/repodata')]
         try:
             category_directories[parent_dname]['isRepository'] = True
         except KeyError:
-            category_directories[parent_dname] = {'files':{}, 'isRepository':True, 'readable':readable, 'ctime':ctime}
+            category_directories[parent_dname] = {'files':{}, 'isRepository':True, 'readable':readable, 'ctime':ctime, 'changed':True}
             
     return dname, category_directories
 
