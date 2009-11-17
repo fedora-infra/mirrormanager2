@@ -1116,6 +1116,13 @@ class Root(controllers.RootController):
         result = rsync_acl_list(internet2_only=internet2_only, public_only=public_only)
         return dict(values=result)
 
+    @expose(template="mirrormanager.templates.rsync_acl", format="plain", content_type="text/plain", allow_json=True)
+    def mirroradmins(self, **kwargs):
+        if 'host' not in kwargs:
+            return dict()
+        host = kwargs['host']
+        return dict(values=host_siteadmins(host))
+
     @expose(template="mirrormanager.templates.rsyncFilter", format="plain", content_type="text/plain")
     def rsyncFilter(self, **kwargs):
 

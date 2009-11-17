@@ -828,6 +828,32 @@ class DirectoryExclusiveHost(SQLObject):
     host = ForeignKey('Host')
     idx = DatabaseIndex('directory', 'host', unique=True)
 
+def _host_siteadmins(url):
+    sql = 'SELECT DISTINCT site_admin.username FROM '
+    sql += 'host_category_url, host_category, host, site, site_admin WHERE '
+    # join conditions
+    sql += 'host_category_url.host_category_id = host_category.id AND '
+    sql += 'host_category.host_id = host.id AND '
+    sql += 'host.site_id = site.id AND '
+    sql += 'site_admin.site_id = site.id AND '
+    # query conditions
+    sql += "host_category_url.url = '" + url + "'"
+    qresult = Directory._connection.queryAll(sql)
+    result = [x[0] for x in qresult]
+    return result
+
+from urlparse import urlsplit
+def host_siteadmins(host):
+    found = False
+    for hcurl in HostCategoryUrl.select():
+        scheme, netloc, path, query, fragment = urlsplit(hcurl.url)
+        if host == netloc:
+            found=True
+            break
+    if not found:
+        return []
+    return _host_siteadmins(hcurl.url)
+
 ###############################################################
 # These classes are only used if you're not using the
 # Fedora Account System or some other backend that provides
