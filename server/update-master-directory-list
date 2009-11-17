@@ -46,7 +46,9 @@ def rename_SRPMS_source(l):
 def _get_version_from_path(path):
     s = r'/(([\.\d]+)(\-\w+)?)/'
     m = re.search(re.compile(s), path)
-    return m.group(1)
+    if m is not None:
+        return m.group(1)
+    return None
 
 def create_version_from_path(category, path):
     ver = None
