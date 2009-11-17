@@ -1119,7 +1119,7 @@ class Root(controllers.RootController):
     @expose(template="mirrormanager.templates.rsync_acl", format="plain", content_type="text/plain", allow_json=True)
     def mirroradmins(self, **kwargs):
         if 'host' not in kwargs:
-            return dict()
+            return dict(values=[])
         host = kwargs['host']
         return dict(values=host_siteadmins(host))
 
