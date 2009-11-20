@@ -239,7 +239,7 @@ def ctime_from_rsync(date, hms):
     year, month, day = date.split('/')
     hour, minute, second = hms.split(':')
     t = datetime.datetime(int(year), int(month), int(day), int(hour), int(minute), int(second), 0, None)
-    return time.mktime(t.timetuple())
+    return int(time.mktime(t.timetuple()))
 
 
 def make_one_directory(line, category, path, category_directories):
