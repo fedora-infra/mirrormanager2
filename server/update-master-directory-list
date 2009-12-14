@@ -411,8 +411,12 @@ def sync_directories_from_directory(directory, cname, excludes=[]):
             dirnames[:] = []
             continue
 
-        s = os.stat(dirpath)
-        ctime = s[stat.ST_CTIME]
+        # avoid disappearing files
+        try:
+            s = os.stat(dirpath)
+            ctime = s[stat.ST_CTIME]
+        except OSError:
+            continue
 
         i = string.index(dirpath, topdirName)
         dname = dirpath[i:]
