@@ -260,6 +260,9 @@ def main():
                 print server.checkin(data)
             except socket.error, m:
                 print "Error checking in: %s.  Please try again later." % (m[1])
+            except ProtocolError:
+                print "Error checking in: Service Temporarily Unavailable.  Please try again later."
+                sys.exit(1)                
             except xmlrpclib.Fault:
                 print "Error checking in.  Connection closed before checkin complete.  Please try again later."
                 sys.exit(1)                
