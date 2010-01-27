@@ -18,7 +18,7 @@ from mirrors.model import *
 from optparse import OptionParser
 import GeoIP
 import matplotlib
-matplotlib.use('Agg2')
+matplotlib.use('Agg')
 from pylab import *
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
