@@ -44,6 +44,15 @@ repomap = {
     u'epel-source-' : (u'EPEL', u'Fedora EPEL'),
     }
 
+import re
+
+def is_development(path):
+    development_re = r'\/development\/((\d+))/'
+    m = re.search(re.compile(development_re), path)
+    if m is not None:
+        return m.group(1)
+    return None
+
 def repo_prefix(path, category, ver):
 
     prefix = None
@@ -54,7 +63,8 @@ def repo_prefix(path, category, ver):
         return None
     # assign shortnames to repositories like yum default mirrorlists expects
     isDebug = u'debug' in path
-    isRawhide = u'development' in path
+    isRawhide = u'rawhide' in path
+    isDevelopment = is_development(path) is not None
     isSource = u'source' in path or u'SRPMS' in path
     isUpdatesTesting = u'updates/testing' in path
     isTesting = u'testing' in path
@@ -144,7 +154,7 @@ def repo_prefix(path, category, ver):
                 prefix = u'epel-%s' % version
 
     elif isFedoraLinux or isFedoraSecondary or isFedoraArchive:
-        if isReleases:
+        if isReleases or isDevelopment:
             if not isEverything:
                 prefix = None
             # fedora-
