@@ -21,19 +21,24 @@ hub = __connection__ = None
 
 repos = None
 
-def add_version_redirect_to_rawhide(options):
-    version = options.version
-    for fromRepo,toRepo in repos.iteritems():
-          if options.updatesOnly and 'updates' not in fromRepo: continue
-          RepositoryRedirect(fromRepo=fromRepo % (version), toRepo=toRepo)
-
-def remove_version_redirect_to_rawhide(options):
-    version = options.version
-    for fromRepo,toRepo in repos.iteritems():
-        if options.updatesOnly and 'updates' not in fromRepo: continue
+def add_version_redirect(options):
+    for k,v in repos.iteritems():
+        if options.updatesOnly and 'updates' not in k: continue
+        if options.torepomap: toversion = v
+        else:                 toversion = options.toversion
         try:
-            r = RepositoryRedirect.selectBy(fromRepo=fromRepo % (version), toRepo=toRepo)[0]
-            r.destroySelf()
+            RepositoryRedirect(fromRepo=k % (options.fromversion),
+                               toRepo = k % (toversion))
+        except:
+            print "unable to create redirect %s => %s" % (k % options.fromversion, k % options.toversion)
+
+def remove_version_redirect(options):
+    for k,v in repos.iteritems():
+        if options.updatesOnly and 'updates' not in k: continue
+        try:
+            rr = RepositoryRedirect.selectBy(fromRepo=k % (options.fromversion))[0]
+            print "removing redirect %s => %s" % (rr.fromRepo, rr.toRepo)
+            rr.destroySelf()
         except:
             pass
 
@@ -44,10 +49,11 @@ def list_redirects():
 
 def doit(options, args):
     if options.add:
-        add_version_redirect_to_rawhide(options)
+        add_version_redirect(options)
     elif options.remove:
-        remove_version_redirect_to_rawhide(options)
-    list_redirects()
+        remove_version_redirect(options)
+    else:
+        list_redirects()
     return 0
 
 
@@ -58,13 +64,19 @@ def main():
                       help="TurboGears config file to use")
     parser.add_option("-a", "--add",
                       dest="add", action="store_true", default=False,
-                      help="Add version redirects to rawhide")
+                      help="Add version redirects")
     parser.add_option("-r", "--remove",
                       dest="remove", action="store_true", default=False,
-                      help="Remove version redirects to rawhide")
-    parser.add_option("-v", "--version",
-                      dest="version", default=None,
-                      help="Specify version for add/remove redirects")
+                      help="Remove version redirects")
+    parser.add_option("-f", "--from",
+                      dest="fromversion", default=None,
+                      help="Specify from \"from\" version for add/remove redirects")
+    parser.add_option("-t", "--to",
+                      dest="toversion", default=None,
+                      help="Specify to \"to\" version for add/remove redirects")
+    parser.add_option("--torepomap",
+                      dest="torepomap", action="store_true", default=False,
+                      help="add/remove redirects based on 'to' value in config mrr.repos")
     parser.add_option("-u", "--updates-only",
                       dest="updatesOnly", action="store_true", default=False,
                       help="Only add/remove redirects to updates and updates-testing repos")
@@ -79,11 +91,11 @@ def main():
     hub = PackageHub("mirrormanager")
     __connection__ = hub
     
-    if options.add and options.version is None:
+    if options.add and (options.fromversion is None or (options.toversion is None and not options.torepomap) ):
         parser.print_help()
         sys.exit(1)
 
-    if options.remove and options.version is None:
+    if options.remove and options.fromversion is None:
         parser.print_help()
         sys.exit(1)
 
