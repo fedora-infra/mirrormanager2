@@ -19,10 +19,14 @@ function last_rib()
 
 function get_i2_netblocks()
 {
-    URL='http://zebra.net.internet2.edu/bgp/CHIC/RIBS'
+    local YEAR=$(date +%Y)
+    local MONTH=$(date +%m)
+    local DAY=$(date +%d)
+
+    local URL="http://zebra.net.internet2.edu/bgp/RIBS/CHIC/${YEAR}/${MONTH}/${DAY}"
     wget -q -O ${tmpdir}/index.html "${URL}/"
-    last=$(last_rib)
-    wget -O ${tmpdir}/rib.gz -q "${URL}/$last"
+    local last=$(last_rib)
+    wget -O ${tmpdir}/rib.gz -q "${URL}/${last}"
     zcat ${tmpdir}/rib.gz | perl zebra-dump-parser/zebra-dump-parser.pl > ${listfile}
 }
 
