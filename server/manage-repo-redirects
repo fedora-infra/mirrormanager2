@@ -25,7 +25,7 @@ def add_version_redirect(options):
     for k,v in repos.iteritems():
         if options.updatesOnly and 'updates' not in k: continue
         if options.torepomap: toversion = v
-        else:                 toversion = options.toversion % (options.fromversion)
+        else:                 toversion = k % (options.toversion)
         try:
             RepositoryRedirect(fromRepo=k % (options.fromversion),
                                toRepo = toversion)
