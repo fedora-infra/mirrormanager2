@@ -1,11 +1,6 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:py="http://purl.org/kid/ns#"
     py:extends="'static.kid'">
-<head>
-<meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
-<title>${title}</title>
-
-</head>
+<head/>
 <body>
 <div class="floatright">
 <table cellspacing="0" class="compact altrows minilist">
@@ -37,7 +32,7 @@ if v.display_name is not None and v.display_name != '':
 </table>
 </div>
 
-<h1 class="icon48 download">${title}</h1>
+<h1 class="icon48 download">${page_title}</h1>
 
 <p>
 ${tg.config('mirrormanager.projectname','Fedora')} is distributed to millions of systems globally.  This would not
