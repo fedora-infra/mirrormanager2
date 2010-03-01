@@ -163,7 +163,7 @@ def generate_one_html(engine, pvaMatrix, productname=None, vername=None, archnam
         bandwidth = bandwidth + h.bandwidth_int
     bandwidth = bandwidth / 1024 # convert to Gb
         
-    template_data = dict(title=title, hosts=hosts, numhosts=len(hosts), bandwidth=bandwidth,
+    template_data = dict(page_title=title, hosts=hosts, numhosts=len(hosts), bandwidth=bandwidth,
                          pvaMatrix=pvaMatrix,
                          pva=pva,
                          products=list(Product.select(orderBy='name')),
