@@ -1051,6 +1051,10 @@ class CountryContinentRedirectController(SimpleDbObjectController):
 
 
 class Root(controllers.RootController):
+    # reserved for other uses outside TG
+    static = None
+    crawler = None
+    
     site = SiteController()
     siteadmin = SiteAdminController()
     host = HostController()
