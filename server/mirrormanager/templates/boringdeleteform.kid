@@ -3,7 +3,7 @@
     py:extends="'master.kid'">
 <head>
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
-<title>${title}</title>
+<title>${page_title}</title>
 </head>
 <body>
 This action is permanent!  Item "${values.name}" and all associated data will be erased forever!

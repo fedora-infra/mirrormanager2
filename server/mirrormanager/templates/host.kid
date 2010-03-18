@@ -18,7 +18,7 @@ else:
 Back to <a href="${tg.url('/site/' + str(site.id))}"><span
 py:replace="site.name">Site Name</span></a>
 </p>
-<h2>${title}</h2>
+<h2>${page_title}</h2>
 
 ${form(value=values, action=tg.url(action), disabled_fields=disabled_fields)}
 <p>* = Required</p>

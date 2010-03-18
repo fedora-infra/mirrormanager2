@@ -185,7 +185,7 @@ class SiteAdminController(controllers.Controller, identity.SecureResource, conte
 
     def get(self, id):
         v = SiteAdmin.get(id)
-        return dict(values=v, site=v.site, title="Site Admin")
+        return dict(values=v, site=v.site, page_title="Site Admin")
     
     @expose(template="mirrormanager.templates.boringsiteform")
     def new(self, **kwargs):
@@ -197,7 +197,7 @@ class SiteAdminController(controllers.Controller, identity.SecureResource, conte
 
         siteadmin_check(site, identity)
         submit_action = "/siteadmin/0/create?siteid=%s" % siteid
-        return dict(form=siteadmin_form, values=None, action=submit_action, title="New Site Admin", site=site)
+        return dict(form=siteadmin_form, values=None, action=submit_action, page_title="New Site Admin", site=site)
     
     @expose(template="mirrormanager.templates.boringsiteform")
     @error_handler(new)
@@ -261,7 +261,7 @@ class SiteToSiteController(controllers.Controller, identity.SecureResource, cont
 
         siteadmin_check(site, identity)
         submit_action = "/site2site/0/create?siteid=%s" % siteid
-        return dict(form=site_to_site_form, values=None, action=submit_action, title="Add Downstream Site", site=site)
+        return dict(form=site_to_site_form, values=None, action=submit_action, page_title="Add Downstream Site", site=site)
     
     @expose()
     @validate(form=site_to_site_form)
@@ -348,7 +348,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
             raise redirect("/")
         submit_action = "/host/0/create?siteid=%s" % siteid
         return dict(form=host_form, values=None, action=submit_action, disabled_fields=self.disabled_fields(),
-                    title="Create Host", site=Site.get(siteid))
+                    page_title="Create Host", site=Site.get(siteid))
 
     @expose(template="mirrormanager.templates.host")
     @validate(form=host_form)
@@ -359,7 +359,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
         site = Site.get(siteid)
         submit_action = "/host/0/create?siteid=%s" % site.id
         errordict = dict(form=host_form, values=None, action=submit_action, disabled_fields=self.disabled_fields(),
-                         title="Create Host", site=site)
+                         page_title="Create Host", site=site)
 
         # handle the validation error
         if tg_errors:
@@ -382,7 +382,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
         downstream_siteadmin_check(host.my_site(), identity)
         submit_action = "/host/%s/update" % host.id
         return dict(form=host_form, values=host, action=submit_action,
-                    disabled_fields=self.disabled_fields(host=host), title="Host", site=host.site)
+                    disabled_fields=self.disabled_fields(host=host), page_title="Host", site=host.site)
 
     @expose(template="mirrormanager.templates.host")
     @validate(form=host_form)
@@ -394,7 +394,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
             submit_action = "/host/%s/update" % host.id
             turbogears.flash("Error updating Host: %s" % createErrorString(tg_errors))
             return dict(form=host_form, values=host, action=submit_action,
-                        disabled_fields=self.disabled_fields(host=host), title="Host", site=host.site)
+                        disabled_fields=self.disabled_fields(host=host), page_title="Host", site=host.site)
 
 
         if not identity.in_group(admin_group) and kwargs.has_key('admin_active'):
@@ -555,7 +555,7 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
 
 class HostListitemController(controllers.Controller, identity.SecureResource, content):
     require = identity.not_anonymous()
-    title = ""
+    page_title = ""
     form = None
 
     def get(self, id):
@@ -571,7 +571,7 @@ class HostListitemController(controllers.Controller, identity.SecureResource, co
 
         siteadmin_check(host.my_site(), identity)
         submit_action = "%s/0/create?hostid=%s" % (self.submit_action_prefix, hostid)
-        return dict(form=self.form, values=None, action=submit_action, title=self.title, host=host)
+        return dict(form=self.form, values=None, action=submit_action, page_title=self.page_title, host=host)
     
     @expose(template="mirrormanager.templates.boringhostform")
     @validate(form=form)
@@ -618,7 +618,7 @@ host_acl_ip_form = widgets.TableForm(fields=HostAclIPFields(),
 
 class HostAclIPController(HostListitemController):
     submit_action_prefix = "/host_acl_ip"
-    title = "New Host ACL IP"
+    page_title = "New Host ACL IP"
     form = host_acl_ip_form
 
     def do_get(self, id):
@@ -638,7 +638,7 @@ host_netblock_form = widgets.TableForm(fields=HostNetblockFields(),
 
 class HostNetblockController(HostListitemController):
     submit_action_prefix="/host_netblock"
-    title = "New Host Netblock"
+    page_title = "New Host Netblock"
     form = host_netblock_form
 
     def do_get(self, id):
@@ -674,7 +674,7 @@ host_country_allowed_form = widgets.TableForm(fields=HostCountryAllowedFields(),
 
 class HostCountryAllowedController(HostListitemController):
     submit_action_prefix="/host_country_allowed"
-    title = "New Host Country Allowed"
+    page_title = "New Host Country Allowed"
     form = host_country_allowed_form
 
     def do_get(self, id):
@@ -698,7 +698,7 @@ host_category_url_form = widgets.TableForm(fields=HostCategoryUrlFields(),
 
 class HostCategoryUrlController(controllers.Controller, identity.SecureResource, content):
     require = identity.not_anonymous()
-    title = "Host Category URL"
+    page_title = "Host Category URL"
     form = host_category_url_form
 
     def get(self, id):
@@ -717,7 +717,7 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
         siteadmin_check(host.my_site(), identity)
             
         submit_action = "/host_category_url/0/create?hcid=%s" % hcid
-        return dict(form=self.form, values=None, action=submit_action, title=self.title, host_category=host_category)
+        return dict(form=self.form, values=None, action=submit_action, page_title=self.page_title, host_category=host_category)
 
     @expose(template="mirrormanager.templates.hostcategoryurl")
     @validate(form=form)
@@ -769,7 +769,7 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
     def read(self, hcurl):
         downstream_siteadmin_check(hcurl.my_site(), identity)
         submit_action = "/host_category_url/%s/update" % hcurl.id
-        return dict(form=self.form, values=hcurl, action=submit_action, title=self.title, host_category=hcurl.host_category)
+        return dict(form=self.form, values=hcurl, action=submit_action, page_title=self.page_title, host_category=hcurl.host_category)
         
     @expose(template="mirrormanager.templates.hostcategoryurl")
     def update(self, hcurl, **kwargs):
@@ -779,7 +779,7 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
         hcurl.set(**kwargs)
         hcurl.sync()
         submit_action = "/host_category_url/%s/update" % hcurl.id
-        return dict(form=self.form, values=hcurl, action=submit_action, title=self.title, host_category=hcurl.host_category)
+        return dict(form=self.form, values=hcurl, action=submit_action, page_title=self.page_title, host_category=hcurl.host_category)
         
             
     
@@ -800,7 +800,7 @@ class ConfirmDeleteFields(widgets.WidgetsList):
 
 class SimpleDbObjectController(controllers.Controller, identity.SecureResource, content):
     require = identity.in_group(admin_group)
-    title = "My Title"
+    page_title = "My Title"
     form = None
     myClass = None
     url_prefix=None
@@ -813,7 +813,7 @@ class SimpleDbObjectController(controllers.Controller, identity.SecureResource, 
     def new(self, **kwargs):
             
         submit_action = "/%s/0/create" % self.url_prefix
-        return dict(form=self.form, values=None, action=submit_action, title=self.title)
+        return dict(form=self.form, values=None, action=submit_action, page_title=self.page_title)
 
     def create(self, **kwargs):
         try:
@@ -827,13 +827,13 @@ class SimpleDbObjectController(controllers.Controller, identity.SecureResource, 
     @expose(template="mirrormanager.templates.boringform")
     def read(self, obj):
         submit_action = "/%s/%s/update" % (self.url_prefix, obj.id)
-        return dict(form=self.form, values=obj, action=submit_action, title=self.title)
+        return dict(form=self.form, values=obj, action=submit_action, page_title=self.page_title)
         
     def update(self, obj, **kwargs):
         obj.set(**kwargs)
         obj.sync()
         submit_action = "/%s/%s/update" % (self.url_prefix, obj.id)
-        return dict(form=self.form, values=obj, action=submit_action, title=self.title)
+        return dict(form=self.form, values=obj, action=submit_action, page_title=self.page_title)
         
     @expose(template="mirrormanager.templates.boringdeleteform")
     def delete(self, obj, **kwargs):
@@ -845,9 +845,9 @@ class SimpleDbObjectController(controllers.Controller, identity.SecureResource, 
             turbogears.redirect("/adminview")
         else:
             form = confirm_delete_form
-            title = "Item Deletion"
+            page_title = "Item Deletion"
             submit_action = "/%s/%s/delete?confirmed=1" % (self.url_prefix, obj.id)
-            return dict(form=form, values=obj, action=submit_action, title=title)
+            return dict(form=form, values=obj, action=submit_action, page_title=page_title)
 
 
 #########################################################3
@@ -860,7 +860,7 @@ class ArchFields(widgets.WidgetsList):
 arch_form = widgets.TableForm(fields=ArchFields(), submit_text="Create Arch")
 
 class ArchController(SimpleDbObjectController):
-    title="Arch"
+    page_title="Arch"
     myClass = Arch
     url_prefix="arch"
     form = arch_form
@@ -882,7 +882,7 @@ class EmbargoedCountryFields(widgets.WidgetsList):
 embargoed_country_form = widgets.TableForm(fields=EmbargoedCountryFields(), submit_text="Create Embargoed Country")
 
 class EmbargoedCountryController(SimpleDbObjectController):
-    title="Embargoed Country"
+    page_title="Embargoed Country"
     myClass = EmbargoedCountry
     url_prefix="embargoed_country"
     form = embargoed_country_form
@@ -904,7 +904,7 @@ class ProductFields(widgets.WidgetsList):
 product_form = widgets.TableForm(fields=ProductFields(), submit_text="Create Product")
 
 class ProductController(SimpleDbObjectController):
-    title = "Product"
+    page_title = "Product"
     form = product_form
     myClass = Product
     url_prefix="product"
@@ -930,7 +930,7 @@ class RepositoryFields(widgets.WidgetsList):
 repository_form = widgets.TableForm(fields=RepositoryFields(), submit_text="Edit Repository")
 
 class RepositoryController(SimpleDbObjectController):
-    title = "Repository"
+    page_title = "Repository"
     form = repository_form
     myClass = Repository
     url_prefix="repository"
@@ -968,7 +968,7 @@ version_form = widgets.TableForm(fields=VersionFields(), submit_text="Create Ver
 
 
 class VersionController(SimpleDbObjectController):
-    title = "Version"
+    page_title = "Version"
     myClass = Version
     url_prefix="version"
     form = version_form
@@ -1003,7 +1003,7 @@ class RepositoryRedirectFields(widgets.WidgetsList):
 repository_redirect_form = widgets.TableForm(fields=RepositoryRedirectFields(), submit_text="Create Repository Redirect")
 
 class RepositoryRedirectController(SimpleDbObjectController):
-    title = "RepositoryRedirect"
+    page_title = "RepositoryRedirect"
     myClass = RepositoryRedirect
     url_prefix="repository_redirect"
     form = repository_redirect_form
@@ -1030,7 +1030,7 @@ class CountryContinentRedirectFields(widgets.WidgetsList):
 country_continent_redirect_form = widgets.TableForm(fields=CountryContinentRedirectFields(), submit_text="Create Country->Continent Redirect")
 
 class CountryContinentRedirectController(SimpleDbObjectController):
-    title = "CountryContinentRedirect"
+    page_title = "CountryContinentRedirect"
     myClass = CountryContinentRedirect
     url_prefix="country_continent_redirect"
     form = country_continent_redirect_form

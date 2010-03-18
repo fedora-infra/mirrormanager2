@@ -3,7 +3,7 @@
     py:extends="'master.kid'">
 <head>
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
-<title>${title}</title>
+<title>${page_title}</title>
 </head>
 <body>
 ${form(value=values, action=tg.url(action))}
