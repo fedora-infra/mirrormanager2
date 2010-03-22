@@ -162,12 +162,13 @@ def generate_one_html(engine, pvaMatrix, productname=None, vername=None, archnam
     for h in hosts:
         bandwidth = bandwidth + h.bandwidth_int
     bandwidth = bandwidth / 1024 # convert to Gb
-        
+
     template_data = dict(page_title=title, hosts=hosts, numhosts=len(hosts), bandwidth=bandwidth,
                          pvaMatrix=pvaMatrix,
                          pva=pva,
                          products=list(Product.select(orderBy='name')),
-                         arches=publiclist_arches())
+                         arches=publiclist_arches(),
+                         report_problems_to_email = config.get('mirrormanager.report_problems_to_email', 'webmaster'))
 
     t=engine.load_template('mirrormanager.templates.publiclist')
     out_html = _process_output(template_data, template=t, format='html', engine=engine)

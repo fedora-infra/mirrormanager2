@@ -97,5 +97,16 @@ and development networks globally.
 </tr>
 </table>
 </div>
+
+<div id="bottom">
+  <div id="footer">
+    <p class="disclaimer">
+      Listing generated
+      by <a href="http://mirrormanager.org/">MirrorManager</a>.
+      Please direct questions or problems with this list to ${report_problems_to_email}.
+    </p>
+  </div>
+</div>
+
 </body>
 </html>
