@@ -22,7 +22,15 @@ matplotlib.use('Agg')
 from pylab import *
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.toolkits.basemap import Basemap
+
+# ABI breakage
+try:
+    # this export sucks - basemap should do this automatically
+    os.environ['BASEMAPDATA'] = '/usr/share/basemap'
+    from mpl_toolkits.basemap import Basemap
+except:
+    # python-basemap-0.9.5
+    from matplotlib.toolkits.basemap import Basemap
 
 from turbogears.database import PackageHub
 hub = __connection__ = None
