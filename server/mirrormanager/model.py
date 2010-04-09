@@ -667,11 +667,18 @@ class Directory(SQLObject):
         SQLObject.destroySelf(self)
 
     def age_file_details(self):
-        """For each file, keep at least 1 FileDetail entry, removing
-        any others that are more than 7 days old."""
-        max_stale = config.get('mirrormanager.max_stale_days', 7)
+        """For each file, keep at least 1 FileDetail entry.
+        Remove the second-most recent entry if the most recent entry is older than
+        max_propogation_days.  This gives mirrors time to pick up the
+        most recent change.
+        Remove any others that are more than max_stale_days old."""
+        
+        max_stale = config.get('mirrormanager.max_stale_days', 3)
+        max_propogation = config.get('mirrormanager.max_propogation_days', 2)
         fd = {}
-        weekago = int(time.time()) - (60*60*24*max_stale)
+        t = int(time.time())
+        stale = t - (60*60*24*max_stale)
+        propogation = t - (60*60*24*max_propogation)
 
         for f in self.fileDetails:
             if f.filename not in fd:
@@ -681,8 +688,13 @@ class Directory(SQLObject):
             
         for filename, fds in fd.iteritems():
             if len(fds) > 1:
-                for f in fds[1:]:
-                    if f.timestamp < weekago:
+                start=2
+                # second-most recent only if most recent has had time to propogate
+                if fds[0].timestamp < propogation:
+                    start=1
+                # all others
+                for f in fds[start:]:
+                    if f.timestamp < stale:
                         f.destroySelf()
 
 class Category(SQLObject):
