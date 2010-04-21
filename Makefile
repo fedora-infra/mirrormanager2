@@ -18,6 +18,8 @@ all:
 
 clean:
 	-rm -rf *.tar.gz *.rpm *~ dist/ $(SPEC) $(RELEASE_PY) server/mirrormanager.egg-info server/build
+	-find . -name \*.pyc -exec rm \{\} \;
+	-find . -name \*.pyo -exec rm \{\} \;
 
 $(SPEC):
 	sed -e 's/##VERSION##/$(RELEASE_VERSION)/' $(SPEC).in > $(SPEC)
