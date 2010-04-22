@@ -27,3 +27,7 @@ all the CDs in a set via one URL.
 In Fedora 12 or 13, the master directory layout may change such that it
 matches the torrent layouts.  When this happens, the .torrent files
 will be in the tree.  Include them in the proper metalinks.
+
+* replace kid templates with genshi
+http://genshi.edgewall.org/wiki/GenshiVsKid
+http://genshi.edgewall.org/wiki/GenshiTutorial
