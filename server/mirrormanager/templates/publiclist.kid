@@ -1,5 +1,4 @@
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:py="http://purl.org/kid/ns#"
-    py:extends="'static.kid'">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:py="http://purl.org/kid/ns#" py:extends="'static.kid'">
 <head/>
 <body>
 <div class="floatright">
@@ -7,7 +6,7 @@
   <caption><strong>Mirror list filter</strong></caption>
   <tr><th>Project</th><th>Version</th><th colspan='0'>Architecture</th></tr>
   <div py:for="p in products">
-  <?python
+<?python
 displayversions = [v for v in p.versions if v.display]
 ?>
   <tr class="separator">

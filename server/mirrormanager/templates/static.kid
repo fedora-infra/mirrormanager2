@@ -1,16 +1,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<?python import sitetemplate
-try:
-    page_title = page_title
-except NameError:
-    projectname = tg.config('mirrormanager.projectname', 'Fedora')
-    page_title = '%s Mirror Manager' % projectname
-?>
-
+<?python import sitetemplate ?>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:py="http://purl.org/kid/ns#" py:extends="sitetemplate">
   <head py:match="item.tag=='{http://www.w3.org/1999/xhtml}head'" py:attrs="item.items()">
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
-    <title py:replace="page_title" />
+    <title>MirrorManager</title>
     <link rel="stylesheet" type="text/css" media="all"
     py:attrs="{'href': tg.config('mirrormanager.cssroot', '/mirrormanager/static/css/') + 'fedora.css'}"/>
     <link rel="stylesheet" type="text/css" media="all"
