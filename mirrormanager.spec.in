@@ -85,6 +85,35 @@ exit 0
 
 
 %changelog
+* Mon Apr 26 2010 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.4-1
+- Adrian Reber (2):
+      umdl: fix failure when updating from rsync listings.
+      umdl: time.mktime() might return floats
+- BJ Dierkes (1):
+      Fix confirm delete method in webui.
+- Matt Domsch (34):
+      mrr: add --updates-only option
+      controllers: add mirroradmins query
+      umdl: fix crash in _get_version_from_path()
+      umdl: avoid disappering files
+      report_mirror: handle server HTTP 503 errors
+      generate-worldmap: update for newer python-basemap
+      autodetect development/13/ style directories and create appropriate Repositories
+      umdl: recognize moving Repository objects from development/13 to releases/13/
+      mrr: genericize --from and --to version values
+      get_internet2_netblocks: fix URL due to upstream directory change
+      Put titles on publiclist pages
+      expose crawler logs via apache directory listing
+      add crawler log link on host page
+      apache: ensure aliases to special areas come before the WSGI alias
+      remove python-fedora deprecation warning
+      add config option report_problems_to_email, display on publiclist footer.
+      ageFileDetails(): account for propogation delays
+      add max_propogation_days config option
+      spec: require python-basemap > 0.99.4 so generate-worldmap works
+      mirrorlist-server: use WSGIDaemonProcess for mirrorlist_client.wsgi
+      mirrormanager.wsgi run 4 instances per app server (up from 2)
+
 * Thu Sep 28 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.3-1
 - initial setup patches from BJ Dierkes
   - simpler mirrormanager.initial, README.rpm_setup, prod.cfg
