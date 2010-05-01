@@ -63,9 +63,12 @@ def doit(options, include_private=False, threads=10, config=None, logdir=None):
         commonargs.append('--canary')
 
     for h in Host.select():
-        if not h.is_active() or (not include_private and h.is_private()):
+        if not h.is_active():
             continue
-    
+        if not include_private and h.is_private():
+            if not (h.internet2 and h.internet2_clients):
+                continue
+
         args = commonargs + ['--hostid=%s' % h.id]
         if logdir is not None:
             logfilename = os.path.join(logdir, str(h.id) + '.log')
