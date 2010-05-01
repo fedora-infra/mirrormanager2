@@ -6,6 +6,7 @@ pkg_resources.require("TurboGears")
 from sqlobject import *
 import sys, os, signal, socket
 import turbogears
+from turbogears import config
 from mirrormanager.model import *
 from datetime import datetime
 import ftplib
@@ -16,6 +17,7 @@ from optparse import OptionParser
 import threading
 import urlgrabber
 import hashlib
+from smtplib import SMTP
 
 from turbogears.database import PackageHub
 hostid = None
@@ -454,17 +456,62 @@ def dienow():
     os.kill(mypid, signal.SIGUSR1)
     os._exit(0)
 
-def mark_not_up2date(host, reason="Unknown"):
+def send_email(host, report_str, exc):
+    SMTP_DATE_FORMAT = "%a, %d %b %Y %H:%M:%S %z"
+    msg = """From: %s
+To: %s
+Subject: %s MirrorManager crawler report 
+Date: %s
+
+""" % (config.get('crawler.mail_from'),
+       config.get('crawler.admin_mail_to'),
+       host.name,
+       time.strftime(SMTP_DATE_FORMAT))
+
+    msg += report_str + '\n'
+    msg += 'Log can be found at %s/%s.log\n' % (config.get('crawler.logdir'), str(host.id))
+    if exc is not None:
+        msg += "Exception info: type %s; value %s\n" % (exc[0], exc[1])
+        msg += str(exc[2])
+    try:
+        smtp = SMTP(config.get('crawler.smtp_host'),
+                    config.get('crawler.smtp_port'))
+
+        username = config.get('crawler.smtp_username')
+        password = config.get('crawler.smtp_password')
+
+        if username and password:
+            smtp.login(username, password)
+    
+        smtp.sendmail(config.get('crawler.smtp_from'),
+                      config.get('crawler.admin_mail_to'),
+                      msg)
+    except Exception, e:
+        print "Error sending email"
+        print e
+        print "Email message follows:"
+        print msg
+
+    try:
+        smtp.quit()
+    except:
+        pass
+
+def mark_not_up2date(exc, host, reason="Unknown", mail=True):
     host.set_not_up2date()
     host.lastCrawled = datetime.utcnow()
-    print >> logfile, "Host marked not up2date: %s" % reason
-    
+    msg = "Host marked not up2date: %s" % reason
+    print >> logfile, msg
+    if exc is not None:
+        print >> logfile, exc[0], exc[1], exc[2]
+    if mail:
+        send_email(host, msg, exc)
 
 def sigusr1_handler(signum, frame):
     if signum == signal.SIGUSR1:
         signal.signal(signal.SIGUSR1, signal.SIG_IGN)
         try:
-            mark_not_up2date(Host.get(hostid), "Crawler timed out before completing.  Host is likely overloaded.")
+            mark_not_up2date(None, Host.get(hostid), "Crawler timed out before completing.  Host is likely overloaded.")
         except:
             pass
     os._exit(1)
@@ -561,7 +608,7 @@ def per_host(host, options=None):
                     pass
             except:
                 timer.cancel()
-                mark_not_up2date(host, "Unknown exception raised.  This is a bug in the MM crawler.")
+                mark_not_up2date(sys.exc_info(), host, "Unknown exception raised.  This is a bug in the MM crawler.")
                 sys.exit(1)
 
     hoststate.close()
@@ -571,7 +618,7 @@ def per_host(host, options=None):
     if len(host_category_dirs) > 0:
         sync_hcds(host, host_category_dirs)
     else:
-        mark_not_up2date(host, "No host category directories found.  Check that your Host Category URLs are correct.")
+        mark_not_up2date(None, host, "No host category directories found.  Check that your Host Category URLs are correct.")
 
 def main():
     global mypid
