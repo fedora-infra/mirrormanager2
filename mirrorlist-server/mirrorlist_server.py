@@ -815,7 +815,7 @@ def main():
     signal.signal(signal.SIGHUP, sighup_handler)
     signal.signal(signal.SIGCHLD, signal.SIG_IGN)
     ss = ForkingUnixStreamServer(socketfile, MirrorlistHandler)
-    ss.request_queue_size = 100
+    ss.request_queue_size = 300
     ss.serve_forever()
 
     try:
