@@ -661,6 +661,7 @@ def errordoc(metalink, message):
 
 class MirrorlistHandler(StreamRequestHandler):
     def handle(self):
+        signal.signal(signal.SIGHUP, signal.SIG_IGN)
         random.seed()
         try:
             # read size of incoming pickle
