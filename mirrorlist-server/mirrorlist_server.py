@@ -814,7 +814,6 @@ def main():
     open_geoip_databases()
     read_caches()
     signal.signal(signal.SIGHUP, sighup_handler)
-    signal.signal(signal.SIGCHLD, signal.SIG_IGN)
     ss = ForkingUnixStreamServer(socketfile, MirrorlistHandler)
     ss.serve_forever()
 
