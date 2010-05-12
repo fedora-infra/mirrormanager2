@@ -4,7 +4,7 @@
 #  by Matt Domsch <Matt_Domsch@dell.com>
 # Licensed under the MIT/X11 license
 
-import socket
+import socket, select
 import cPickle as pickle
 from string import zfill, atoi, strip, replace
 from paste.wsgiwrappers import *
@@ -32,24 +32,29 @@ def get_mirrorlist(d):
     s.shutdown(socket.SHUT_WR)
     del p
 
+    # wait for other end to start writing
+    expiry = datetime.utcnow() + timedelta(seconds=request_timeout)
+    rlist, wlist, xlist = select.select([s],[],[],request_timeout)
+    if len(rlist) == 0:
+        s.shutdown(socket.SHUT_RD)
+        raise socket.timeout
+    
     readlen = 0
     resultsize = ''
     while readlen < 10:
         resultsize += s.recv(10 - readlen)
         readlen = len(resultsize)
     resultsize = atoi(resultsize)
-    
-    expiry = datetime.utcnow() + timedelta(seconds=request_timeout)
+
     readlen = 0
     p = ''
     while readlen < resultsize and datetime.utcnow() < expiry:
         p += s.recv(resultsize - readlen)
         readlen = len(p)
-        
-    s.shutdown(socket.SHUT_RD)
     results = pickle.loads(p)
     del p
 
+    s.shutdown(socket.SHUT_RD)
     return results
 
 def real_client_ip(xforwardedfor):
