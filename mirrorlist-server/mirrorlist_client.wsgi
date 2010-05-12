@@ -13,14 +13,14 @@ import cStringIO
 from datetime import datetime, timedelta
 
 socketfile = '/var/run/mirrormanager/mirrorlist_server.sock'
-request_timeout = 60 # seconds
+select_timeout = 60 # seconds
+timeout = 5 # seconds
 
 def get_mirrorlist(d):
-    try:
-        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.connect(socketfile)
-    except:
-        raise
+    # any exceptions or timeouts raised here get handled by the caller
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    s.settimeout(timeout)
+    s.connect(socketfile)
 
     p = pickle.dumps(d)
     del d
@@ -33,8 +33,7 @@ def get_mirrorlist(d):
     del p
 
     # wait for other end to start writing
-    expiry = datetime.utcnow() + timedelta(seconds=request_timeout)
-    rlist, wlist, xlist = select.select([s],[],[],request_timeout)
+    rlist, wlist, xlist = select.select([s],[],[],select_timeout)
     if len(rlist) == 0:
         s.shutdown(socket.SHUT_RD)
         raise socket.timeout
@@ -48,7 +47,7 @@ def get_mirrorlist(d):
 
     readlen = 0
     p = ''
-    while readlen < resultsize and datetime.utcnow() < expiry:
+    while readlen < resultsize:
         p += s.recv(resultsize - readlen)
         readlen = len(p)
     results = pickle.loads(p)
