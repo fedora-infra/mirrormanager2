@@ -83,6 +83,12 @@ def request_setup(request):
         pathinfo = request.environ['PATH_INFO']
     if scriptname ==  '/metalink' or pathinfo == '/metalink':
         d['metalink'] = True
+
+    for k, v in d.iteritems():
+        try:
+            d[k] = unicode(v, 'utf8', 'ignore').encode('utf8')
+        except:
+            pass
     return d
 
 def accept_encoding_gzip(request):
