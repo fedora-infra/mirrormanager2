@@ -10,8 +10,10 @@ from string import zfill, atoi, strip, replace
 from paste.wsgiwrappers import *
 import gzip
 import cStringIO
+from datetime import datetime, timedelta
 
 socketfile = '/var/run/mirrormanager/mirrorlist_server.sock'
+request_timeout = 60 # seconds
 
 def get_mirrorlist(d):
     try:
@@ -37,9 +39,10 @@ def get_mirrorlist(d):
         readlen = len(resultsize)
     resultsize = atoi(resultsize)
     
+    expiry = datetime.utcnow() + timedelta(seconds=request_timeout)
     readlen = 0
     p = ''
-    while readlen < resultsize:
+    while readlen < resultsize and datetime.utcnow() < expiry:
         p += s.recv(resultsize - readlen)
         readlen = len(p)
         
