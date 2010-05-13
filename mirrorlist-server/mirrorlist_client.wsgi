@@ -93,7 +93,7 @@ def request_setup(request):
 
     for k, v in d.iteritems():
         try:
-            d[k] = unicode(v, 'utf8', 'ignore').encode('utf8')
+            d[k] = unicode(v, 'utf8', 'replace')
         except:
             pass
     return d
