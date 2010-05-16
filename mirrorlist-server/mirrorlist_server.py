@@ -298,7 +298,10 @@ def do_internet2(kwargs, cache, clientCountry, header):
     client_ip = kwargs['client_ip']
     if client_ip == 'unknown':
         return (header, hostresults)
-    ip = IP(client_ip)
+    try:
+        ip = IP(client_ip)
+    except:
+        return (header, hostresults)
     asn = lookup_ip_asn(internet2_tree, ip)
     if asn is not None:
         header += 'Using Internet2 '
@@ -312,7 +315,10 @@ def do_asn(kwargs, cache, header):
     client_ip = kwargs['client_ip']
     if client_ip == 'unknown':
         return (header, hostresults)
-    ip = IP(client_ip)
+    try:
+        ip = IP(client_ip)
+    except:
+        return (header, hostresults)
     asn = lookup_ip_asn(global_tree, ip)
     if asn is not None and asn in asn_host_cache:
         for hostid in asn_host_cache[asn]:
