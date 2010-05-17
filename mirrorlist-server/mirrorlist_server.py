@@ -262,7 +262,7 @@ def do_countrylist(kwargs, cache, clientCountry, requested_countries, header):
 def get_same_continent_countries(clientCountry, requested_countries):
     result = []
     for r in requested_countries:
-        if r is not None:
+        if r in country_continents:
             requestedCountries = [c.upper() for c in continents[country_continents[r]] \
                                       if c != clientCountry ]
             result.extend(requestedCountries)
@@ -690,17 +690,22 @@ class MirrorlistHandler(StreamRequestHandler):
             pass
 
         try:
-            r = do_mirrorlist(d)
+            try:
+                r = do_mirrorlist(d)
+            except:
+                raise
             message = r['message']
             results = r['results']
             resulttype = r['resulttype']
             returncode = r['returncode']
         except:
-            message='# Server Error'
+            message=u'# Bad Request'
+            returncode = 400
+            results = []
+            resulttype = 'mirrorlist'
             if d['metalink']:
                 resulttype = 'metalink'
-            results = errordoc(d['metalink'], message)
-            returncode = 500
+                results = errordoc(d['metalink'], message)
         del d
         del p
 
