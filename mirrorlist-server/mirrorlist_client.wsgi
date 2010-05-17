@@ -4,6 +4,13 @@
 #  by Matt Domsch <Matt_Domsch@dell.com>
 # Licensed under the MIT/X11 license
 
+# Environment Variables setable via Apache SetEnv directive:
+# mirrorlist_client.noreverseproxy
+#  if set (to anything), do not look at X-Forwarded-For headers.  This
+#  is used in environments that do not have a Reverse Proxy (HTTP
+#  accelerator) in front of the application server running this WSGI,
+#  to avoid looking "behind" the real client's own forward HTTP proxy.
+
 import socket, select
 import cPickle as pickle
 from string import zfill, atoi, strip, replace
@@ -62,7 +69,7 @@ def real_client_ip(xforwardedfor):
     any way."""
     return xforwardedfor.split(',')[-1].strip()
 
-def request_setup(request):
+def request_setup(environ, request):
     fields = ['repo', 'arch', 'country', 'path', 'netblock']
     d = {}
     request_data = request.GET
@@ -75,7 +82,7 @@ def request_setup(request):
 
     if 'ip' in request_data:
         client_ip = strip(request_data['ip'])
-    elif 'X-Forwarded-For' in request.headers:
+    elif 'X-Forwarded-For' in request.headers and 'mirrorlist_client.noreverseproxy' not in environ:
         client_ip = real_client_ip(strip(request.headers['X-Forwarded-For']))
     else:
         client_ip = request.environ['REMOTE_ADDR']
@@ -122,7 +129,7 @@ def application(environ, start_response):
     request = WSGIRequest(environ)
     response = WSGIResponse()
 
-    d = request_setup(request)
+    d = request_setup(environ, request)
 
     try:
         r = get_mirrorlist(d)
