@@ -122,6 +122,6 @@ publish: sign
 	scp dist/* fedorahosted.org:/srv/web/releases/m/i/mirrormanager/
 
 git-sign-push:
-	git tag -s v$(RELEASE_VERSION) $(RELEASE_VERSION)
+	git tag -s -m v$(RELEASE_VERSION) $(RELEASE_VERSION)
 	git push
 	git push --tags
