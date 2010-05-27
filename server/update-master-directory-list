@@ -195,18 +195,6 @@ def make_repomd_file_details(dir):
         fd = FileDetail(directory=dir, filename='repomd.xml', sha1=sha1, md5=md5, sha256=sha256, sha512=sha512,
                         timestamp=timestamp, size=size)
 
-
-def move_repository_from_development(prefix, arch, newdir):
-    try:
-        repo = Repository.selectBy(prefix=prefix, arch=arch)[0]
-    except:
-        return None
-
-    if repo.directory is not None and newdir.name is not None:
-        if '/development' in repo.directory.name and '/releases' in newdir.name:
-            repo.directory = newdir
-    return repo
-
 def make_repository(dir, category):
     repo = None
     path = dir.name[len(category.topdir.name)+1:]
@@ -223,16 +211,9 @@ def make_repository(dir, category):
     try:
         repo = Repository(name=name, category=category, version=ver, arch=arch, directory=dir, prefix=prefix)
     except:
-        # repo exists, but it may be one we want to move
-        try:
-            repo = move_repository_from_development(prefix, arch, dir)
-        except:
-            pass
+        pass
 
     return repo
-
-    
-
 
 def nuke_gone_directories(category, category_directories):
     """ deleting a Directory has a ripple effect through the whole
