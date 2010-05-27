@@ -85,6 +85,29 @@ exit 0
 
 
 %changelog
+* Wed May 26 2010 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.5-1
+- Adrian Reber (1):
+      mirrorlist_server: handle bad client IP address input
+- Matt Domsch (18):
+      spec: require python-basemap-data too
+      makefile: add git-sign-push target to remind me
+      crawler: implement canary mode
+      crawler: crawl private i2 hosts that also say i2_clients are ok
+      crawler: send email when marking a whole host not up2date
+      mirrorlist_server: ignore SIGHUP in child - it'll exit soon enough
+      mirrorlist_server: increase socket request queue length to 300 (still limited by kernel options to 128)
+      mirrorlist_server: set request_queue_size earlier
+      mirrorlist_server: don't ignore SIGCHLD
+      mirrorlist tester: more printing, run forever
+      mirrorlist_client: sanitize input into UTF-8
+      mirrorlist_client: add 60sec timeout to reading from the server
+      mirrorlist_client: use select() waiting on the response from mirrorlist_server
+      mirrorlist_client: a better way to handle socket timeouts
+      mirrorlist_client: leave query params as utf8
+      mirrorlist_server: handle more failures gracefully
+      mirrorlist_client: add mirrorlist_client.noreverseproxy config parameter
+      umdl: don't use move_repository_from_development()
+
 * Mon Apr 26 2010 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.4-1
 - Adrian Reber (2):
       umdl: fix failure when updating from rsync listings.
