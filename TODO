@@ -29,3 +29,5 @@ will be in the tree.  Include them in the proper metalinks.
 * replace kid templates with genshi
 http://genshi.edgewall.org/wiki/GenshiVsKid
 http://genshi.edgewall.org/wiki/GenshiTutorial
+
+* add a 'create Category' button/page in the admin view
