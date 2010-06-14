@@ -106,7 +106,7 @@ def metalink_file_not_found(directory, file):
     message = '%s/%s not found or has no metalink' % (directory, file)
     return metalink_failuredoc(message)
 
-def metalink(directory, file, hosts_and_urls):
+def metalink(cache, directory, file, hosts_and_urls):
     preference = 100
     # fixme add alternate format pubdate when specified
     pubdate = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
@@ -157,6 +157,9 @@ def metalink(directory, file, hosts_and_urls):
 
     doc += indent(3) + '<resources maxconnections="1">\n'
     for (hostid, hcurls) in hosts_and_urls:
+        private = ''
+        if hostid not in cache['global']:
+            private = 'mm0:private="True"'
         for url in hcurls:
             protocol = url.split(':')[0]
             # FIXME January 2010
@@ -164,7 +167,7 @@ def metalink(directory, file, hosts_and_urls):
             # but MirrorManager 1.2.6 used it accidentally, as did yum 3.2.20-3 as released
             # in Fedora 8, 9, and 10.  After those three are EOL (~January 2010), the
             # extra protocol= can be removed.
-            doc += indent(4) + '<url protocol="%s" type="%s" location="%s" preference="%s">' % (protocol, protocol, host_country_cache[hostid].upper(), preference)
+            doc += indent(4) + '<url protocol="%s" type="%s" location="%s" preference="%s" %s>' % (protocol, protocol, host_country_cache[hostid].upper(), preference, private)
             doc += url
             doc += '</url>\n'
         preference = max(preference-1, 1)
@@ -567,7 +570,7 @@ def do_mirrorlist(kwargs):
     hosts_and_urls = append_path(allhosts, cache, file, pathIsDirectory=pathIsDirectory)
 
     if 'metalink' in kwargs and kwargs['metalink']:
-        (resulttype, returncode, results)=metalink(dir, file, hosts_and_urls)
+        (resulttype, returncode, results)=metalink(cache, dir, file, hosts_and_urls)
         d = dict(message=None, resulttype=resulttype, returncode=returncode, results=results)
         return d
 
