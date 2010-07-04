@@ -42,6 +42,11 @@ repomap = {
     u'epel-' : (u'EPEL', u'Fedora EPEL'),
     u'epel-debug-' : (u'EPEL', u'Fedora EPEL'),
     u'epel-source-' : (u'EPEL', u'Fedora EPEL'),
+
+    u'rhel-' : (u'RHEL', u'Red Hat Enterprise Linux'),
+    u'rhel-debug-' : (u'RHEL', u'Red Hat Enterprise Linux'),
+    u'rhel-source-' : (u'RHEL', u'Red Hat Enterprise Linux'),
+    u'rhel-optional-' : (u'RHEL', u'Red Hat Enterprise Linux'),
     }
 
 import re
@@ -86,6 +91,8 @@ def repo_prefix(path, category, ver):
     isRrpmfusionFreeFedora = (category.name == u'RPMFUSION free Fedora')
     isRrpmfusionNonfreeEl = (category.name == u'RPMFUSION nonfree EL')
     isRrpmfusionNonfreeFedora = (category.name == u'RPMFUSION nonfree Fedora')
+
+    isRhel = (category.name == u'Red Hat Enterprise Linux')
 
     version = u'unknown'
     if not isRawhide and ver is not None:
@@ -325,5 +332,39 @@ def repo_prefix(path, category, ver):
                 prefix = u'nonfree-fedora-rawhide-source'
             else:
                 prefix = u'nonfree-fedora-rawhide'
+
+    elif isRhel:
+        isBeta = u'beta' in path
+        isOptional= u'optional' in path
+        isCS = u'ClusteredStorage' in path
+        isHA = u'HighAvailability' in path
+        isLFS = u'LargeFileSystem' in path
+        isLB = u'LoadBalance' in path
         
+        if isCS:
+            prefix = u'rhel-%s-clusteredstorage' % version
+        elif isHA:
+            prefix = u'rhel-%s-highavailability' % version
+        elif isLFS:
+            prefix = u'rhel-%s-largefilesystem' % version
+        elif isLB:
+            prefix = u'rhel-%s-loadbalance' % version
+        elif isOptional:
+            if isSource:
+                prefix = u'rhel-optional-source-%s' % version
+            elif isDebug:
+                prefix = u'rhel-optional-debug-%s' % version
+            else:
+                prefix = u'rhel-optional-%s' % version
+        else:
+            if isDebug:
+                prefix = u'rhel-debug-%s' % version
+            elif isSource:
+                prefix = u'rhel-source-%s' % version
+            else:
+                prefix = u'rhel-%s-beta' % version
+
+        if prefix and isBeta:
+            prefix = u'%s-beta' % prefix
+
     return prefix
