@@ -43,10 +43,10 @@ repomap = {
     u'epel-debug-' : (u'EPEL', u'Fedora EPEL'),
     u'epel-source-' : (u'EPEL', u'Fedora EPEL'),
 
-    u'rhel-' : (u'RHEL', u'Red Hat Enterprise Linux'),
-    u'rhel-debug-' : (u'RHEL', u'Red Hat Enterprise Linux'),
-    u'rhel-source-' : (u'RHEL', u'Red Hat Enterprise Linux'),
-    u'rhel-optional-' : (u'RHEL', u'Red Hat Enterprise Linux'),
+    u'rhel-' : (u'RHEL', u'RHEL'),
+    u'rhel-debug-' : (u'RHEL', u'RHEL'),
+    u'rhel-source-' : (u'RHEL', u'RHEL'),
+    u'rhel-optional-' : (u'RHEL', u'RHEL'),
     }
 
 import re
@@ -92,7 +92,7 @@ def repo_prefix(path, category, ver):
     isRrpmfusionNonfreeEl = (category.name == u'RPMFUSION nonfree EL')
     isRrpmfusionNonfreeFedora = (category.name == u'RPMFUSION nonfree Fedora')
 
-    isRhel = (category.name == u'Red Hat Enterprise Linux')
+    isRhel = (category.name == u'RHEL')
 
     version = u'unknown'
     if not isRawhide and ver is not None:
