@@ -362,7 +362,7 @@ def repo_prefix(path, category, ver):
             elif isSource:
                 prefix = u'rhel-source-%s' % version
             else:
-                prefix = u'rhel-%s-beta' % version
+                prefix = u'rhel-%s' % version
 
         if prefix and isBeta:
             prefix = u'%s-beta' % prefix
