@@ -195,25 +195,46 @@ def make_repomd_file_details(dir):
         fd = FileDetail(directory=dir, filename='repomd.xml', sha1=sha1, md5=md5, sha256=sha256, sha512=sha512,
                         timestamp=timestamp, size=size)
 
+
+def move_repository_from_development(prefix, arch, newdir):
+    try:
+        repo = Repository.selectBy(prefix=prefix, arch=arch)[0]
+    except:
+        return None
+
+    if repo.directory is not None and newdir.name is not None:
+        if '/development' in repo.directory.name and '/releases' in newdir.name:
+            repo.directory = newdir
+    return repo
+
 def make_repository(dir, category):
     repo = None
     path = dir.name[len(category.topdir.name)+1:]
     (ver, arch) = guess_ver_arch_from_path(category, path)
     if ver is None or arch is None:
         return None
-    path = trim_os_from_dirname(path)
-    name=path.split('/')
-    name = rename_SRPMS_source(name)
-    name='-'.join(name)
-    name='%s-%s-%s' % (category.product.name, category.name, name)
 
     prefix = repo_prefix(path, category, ver)
     try:
-        repo = Repository(name=name, category=category, version=ver, arch=arch, directory=dir, prefix=prefix)
+	# historically, Repository.name was a longer string with
+	# product and category deliniations.  But we were getting
+	# unique constraint conflicts once we started introducing
+	# repositories under repositories.  And .name isn't used for
+	# anything meaningful.  So simply have it match dir.name,
+	# which can't conflict.
+        repo = Repository(name=dir.name, category=category, version=ver, arch=arch, directory=dir, prefix=prefix)
     except:
+        # repo exists, but it may be one we want to move
+        #try:
+        #repo = move_repository_from_development(prefix, arch, dir)
+        #except:
+        #pass
         pass
 
     return repo
+
+    
+
 
 def nuke_gone_directories(category, category_directories):
     """ deleting a Directory has a ripple effect through the whole
