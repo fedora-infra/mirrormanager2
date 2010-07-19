@@ -519,7 +519,7 @@ def sigusr1_handler(signum, frame):
 reopenLogs = False
 def reopen_logs():
     global logfile
-    if logfile is not None:
+    if logfile is not None and logfile != sys.stdout:
         fname = logfile.name
         logfile.flush()
         # it's a logfile, don't care if it's fsynced to disk or not...
@@ -684,7 +684,7 @@ def main():
     print >>logfile, "Ending crawl %s" % (datetime.utcnow().isoformat())
 
     logfile.flush()
-    logfile.close()
+    if logfile != sys.stdout: logfile.close()
 
 
 if __name__ == "__main__":
