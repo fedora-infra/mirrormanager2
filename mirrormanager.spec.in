@@ -85,6 +85,16 @@ exit 0
 
 
 %changelog
+* Sat Jul 31 2010 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.6-1
+Matt Domsch (8):
+      mirrorlist_server: add mm0:private attribute to <url> in metalinks
+      add repomaps for RHEL
+      category named "RHEL", not "Red Hat Enterprise Linux".  Fix references.
+      repomap: remove extra -beta on prefixes
+      umdl: set Repository.name = directory.name to be guaranteed unique
+      remove robots.txt and favicon.ico.  These should come from the hosting organization, not MM.
+      crawler: don't close sys.stdout as logfile, leave that for sys.exit()
+
 * Wed May 26 2010 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.5-1
 - Adrian Reber (1):
       mirrorlist_server: handle bad client IP address input

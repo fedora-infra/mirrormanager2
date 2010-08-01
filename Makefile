@@ -1,7 +1,7 @@
-RELEASE_DATE := "26-May-2010"
+RELEASE_DATE := "31-Jul-2010"
 RELEASE_MAJOR := 1
 RELEASE_MINOR := 3
-RELEASE_EXTRALEVEL := .5
+RELEASE_EXTRALEVEL := .6
 RELEASE_NAME := mirrormanager
 RELEASE_VERSION := $(RELEASE_MAJOR).$(RELEASE_MINOR)$(RELEASE_EXTRALEVEL)
 RELEASE_STRING := $(RELEASE_NAME)-$(RELEASE_VERSION)
@@ -122,6 +122,6 @@ publish: sign
 	scp dist/* fedorahosted.org:/srv/web/releases/m/i/mirrormanager/
 
 git-sign-push:
-	git tag -s -m v$(RELEASE_VERSION) $(RELEASE_VERSION)
+	git tag -s -m v$(RELEASE_VERSION) v$(RELEASE_VERSION)
 	git push
 	git push --tags
