@@ -91,15 +91,27 @@ def uniqueify(seq, idfun=None):
         result.append(item)
     return result
 
-
 ##### Metalink Support #####
-def metalink_failuredoc(message=None):
+
+def metalink_header():
+    # fixme add alternate format pubdate when specified
+    pubdate = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
     doc = ''
-    doc += '<?xml version="1.0" encoding="utf-8"?>\n'
+    doc += '<metalink version="3.0" xmlns="http://www.metalinker.org/"'
+    doc += ' type="dynamic"'
+    doc += ' pubdate="%s"' % pubdate
+    doc += ' generator="mirrormanager"'
+    doc += ' xmlns:mm0="http://fedorahosted.org/mirrormanager"'
+    doc += '>\n'
+    return doc
+
+def metalink_failuredoc(message=None):
+    doc = metalink_header()
     if message is not None:
         doc += '<!--\n'
         doc += message + '\n'
         doc += '-->\n'
+    doc += '</metalink>\n'
     return doc
 
 def metalink_file_not_found(directory, file):
@@ -108,8 +120,6 @@ def metalink_file_not_found(directory, file):
 
 def metalink(cache, directory, file, hosts_and_urls):
     preference = 100
-    # fixme add alternate format pubdate when specified
-    pubdate = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
     try:
         fdc = file_details_cache[directory]
         detailslist = fdc[file]
@@ -119,14 +129,7 @@ def metalink(cache, directory, file, hosts_and_urls):
     def indent(n):
         return ' ' * n * 2
 
-    doc = ''
-    doc += '<?xml version="1.0" encoding="utf-8"?>\n'
-    doc += '<metalink version="3.0" xmlns="http://www.metalinker.org/"'
-    doc += ' type="dynamic"'
-    doc += ' pubdate="%s"' % pubdate
-    doc += ' generator="mirrormanager"'
-    doc += ' xmlns:mm0="http://fedorahosted.org/mirrormanager"'
-    doc += '>\n'
+    doc = metalink_header()
     doc += indent(1) + '<files>\n'
     doc += indent(2) + '<file name="%s">\n' % (file)
     y = detailslist[0]
