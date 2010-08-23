@@ -97,6 +97,7 @@ def metalink_header():
     # fixme add alternate format pubdate when specified
     pubdate = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
     doc = ''
+    doc += '<?xml version="1.0" encoding="utf-8"?>\n'
     doc += '<metalink version="3.0" xmlns="http://www.metalinker.org/"'
     doc += ' type="dynamic"'
     doc += ' pubdate="%s"' % pubdate
