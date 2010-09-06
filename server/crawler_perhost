@@ -534,11 +534,11 @@ def sighup_handler(signum, frame):
 
 
 def per_host(host, options=None):
-   """Canary mode looks for 2 things:
-   directory.path ends in 'iso' or directory.path ends in 'repodata'.  In
-   this case it checks for availability of each of the files in those
-   directories.
-   """
+    """Canary mode looks for 2 things:
+    directory.path ends in 'iso' or directory.path ends in 'repodata'.  In
+    this case it checks for availability of each of the files in those
+    directories.
+    """
     global must_dienow
     host = Host.get(host)
     done_host=False
