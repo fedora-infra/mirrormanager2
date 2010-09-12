@@ -85,6 +85,11 @@ exit 0
 
 
 %changelog
+* Sat Sep 11 2010 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.7-1
+Matt Domsch:
+      mirrorlist_server: always output a metalink header
+      crawler: fix indentation, causing crawler to fail
+
 * Sat Jul 31 2010 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.6-1
 Matt Domsch (8):
       mirrorlist_server: add mm0:private attribute to <url> in metalinks
