@@ -1,4 +1,4 @@
-from mirrormanager.model import Directory, Host, RepositoryRedirect, CountryContinentRedirect, Repository, HostCategoryUrl
+from mirrormanager.model import Directory, Host, RepositoryRedirect, CountryContinentRedirect, Repository, HostCategoryUrl, Zone
 from IPy import IP
 import sha
 import pprint
@@ -260,11 +260,16 @@ def hcurl_cache():
         cache[hcurl.id] = hcurl.url
     return cache
 
+def zone_cache():
+    cache = {}
+    for zone in Zone.select():
+        cache[zone.name] = [host.id for host in zone.hosts]
+    return cache
+
 def populate_all_caches():
     populate_host_country_allowed_cache()
     populate_netblock_cache()
     populate_directory_cache()
-
 
 import cPickle as pickle
 def dump_caches():
@@ -279,7 +284,8 @@ def dump_caches():
             'host_country_cache':host_country_cache(),
             'file_details_cache':file_details_cache(),
             'hcurl_cache':hcurl_cache(),
-            'asn_host_cache':asn_host_cache()}
+            'asn_host_cache':asn_host_cache(),
+            'zone_cache':zone_cache()}
     
     try:
         f = open('/var/lib/mirrormanager/mirrorlist_cache.pkl', 'w')
