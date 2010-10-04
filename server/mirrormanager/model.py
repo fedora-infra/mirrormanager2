@@ -194,6 +194,7 @@ class Host(SQLObject):
     acl_ips = MultipleJoin('HostAclIp', orderBy='ip')
     categories = MultipleJoin('HostCategory')
     exclusive_dirs = MultipleJoin('DirectoryExclusiveHost')
+    zones = SQLRelatedJoin('Zone')
 
     def destroySelf(self):
         """Cascade the delete operation"""
@@ -206,6 +207,8 @@ class Host(SQLObject):
                 b.destroySelf()
         for ed in self.exclusive_dirs:
             ed.destroySelf()
+        for z in self.zones:
+            self.removeZone(z)
         SQLObject.destroySelf(self)
 
 
@@ -865,6 +868,17 @@ def host_siteadmins(host):
     if not found:
         return []
     return _host_siteadmins(hcurl.url)
+
+class Zone(SQLObject):
+    """For grouping hosts, perhaps across Site boundaries.  User queries may request
+    hosts from a particular Zone (such as an Amazon availability zone), which will be returned
+    first in the mirror list. """
+    class sqlmeta:
+        cacheValues = False
+    name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
+    hosts = SQLRelatedJoin('Host')
+
+
 
 ###############################################################
 # These classes are only used if you're not using the
