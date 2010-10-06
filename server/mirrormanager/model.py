@@ -878,6 +878,10 @@ class Zone(SQLObject):
     name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
     hosts = SQLRelatedJoin('Host')
 
+class Schema(SQLObject):
+    class sqlmeta:
+        cacheValues = False
+    version = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
 
 
 ###############################################################
