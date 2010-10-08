@@ -64,7 +64,7 @@ hcurl_cache = {}
 asn_host_cache = {}
 internet2_tree = radix.Radix()
 global_tree = radix.Radix()
-zone_cache = {}
+location_cache = {}
 
 def lookup_ip_asn(tree, ip):
     """ @t is a radix tree
@@ -343,11 +343,11 @@ def do_geoip(kwargs, cache, clientCountry, header):
         hostresults = trim_by_client_country(hostresults, clientCountry)
     return (header, hostresults)
 
-def do_zone(kwargs, header):
+def do_location(kwargs, header):
     hostresults = set()
-    if 'zone' in kwargs and kwargs['zone'] in zone_cache:
-        hostresults = set(zone_cache[kwargs['zone']])
-        header += "Using zone %s " % kwargs['zone']
+    if 'location' in kwargs and kwargs['location'] in location_cache:
+        hostresults = set(location_cache[kwargs['location']])
+        header += "Using location %s " % kwargs['location']
     return (header, hostresults)
 
 def add_host_to_cache(cache, hostid, hcurl):
@@ -472,7 +472,7 @@ def do_mirrorlist(kwargs):
 
     ordered_mirrorlist = cache.get('ordered_mirrorlist', default_ordered_mirrorlist)
     done = 0
-    zone_results = set()
+    location_results = set()
     netblock_results = set()
     asn_results = set()
     internet2_results = set()
@@ -481,7 +481,7 @@ def do_mirrorlist(kwargs):
     continent_results = set()
     global_results = set()
 
-    header, zone_results = do_zone(kwargs, header)
+    header, location_results = do_location(kwargs, header)
 
     requested_countries = []
     if kwargs.has_key('country'):
@@ -573,7 +573,7 @@ def do_mirrorlist(kwargs):
         random.shuffle(l)
         return l
     
-    zone_hosts        = _random_shuffle(zone_results)
+    location_hosts        = _random_shuffle(location_results)
     netblock_hosts    = _random_shuffle(netblock_results)
     asn_hosts         = _random_shuffle(asn_results)
     internet2_hosts   = _random_shuffle(internet2_results)
@@ -582,7 +582,7 @@ def do_mirrorlist(kwargs):
     continent_hosts   = shuffle(continent_results)
     global_hosts      = shuffle(global_results)
 
-    allhosts = uniqueify(zone_hosts + netblock_hosts + asn_hosts + internet2_hosts + country_hosts + geoip_hosts + continent_hosts + global_hosts)
+    allhosts = uniqueify(location_hosts + netblock_hosts + asn_hosts + internet2_hosts + country_hosts + geoip_hosts + continent_hosts + global_hosts)
     hosts_and_urls = append_path(allhosts, cache, file, pathIsDirectory=pathIsDirectory)
 
     if 'metalink' in kwargs and kwargs['metalink']:
@@ -632,7 +632,7 @@ def read_caches():
     global file_details_cache
     global hcurl_cache
     global asn_host_cache
-    global zone_cache
+    global location_cache
 
     data = {}
     try:
@@ -666,8 +666,8 @@ def read_caches():
         hcurl_cache = data['hcurl_cache']
     if 'asn_host_cache' in data:
         asn_host_cache = data['asn_host_cache']
-    if 'zone_cache' in data:
-        zone_cache = data['zone_cache']
+    if 'location_cache' in data:
+        location_cache = data['location_cache']
 
     del data
     setup_continents()
