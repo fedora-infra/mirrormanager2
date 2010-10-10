@@ -809,6 +809,7 @@ class FileDetail(SQLObject):
     md5 = UnicodeCol(default=None)
     sha256 = UnicodeCol(default=None)
     sha512 = UnicodeCol(default=None)
+    fileGroups = SQLRelatedJoin('FileGroup')
 
 class RepositoryRedirect(SQLObject):
     class sqlmeta:
@@ -878,6 +879,12 @@ class Location(SQLObject):
     name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
     hosts = SQLRelatedJoin('Host')
 
+class FileGroup(SQLObject):
+    class sqlmeta:
+        cacheValues = False
+    name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
+    files = SQLRelatedJoin('FileDetail')
+    
 class Schema(SQLObject):
     class sqlmeta:
         cacheValues = False
