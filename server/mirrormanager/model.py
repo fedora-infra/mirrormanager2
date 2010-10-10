@@ -44,6 +44,8 @@ class Site(SQLObject):
     # allow all sites to pull from me
     allSitesCanPullFromMe = BoolCol(default=False)
     downstreamComments = UnicodeCol(default=None)
+    emailOnDrop = BoolCol(default=False)
+    emailOnAdd  = BoolCol(default=False)
     
     admins = MultipleJoin('SiteAdmin')
     hosts  = MultipleJoin('Host')
@@ -884,12 +886,6 @@ class FileGroup(SQLObject):
         cacheValues = False
     name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
     files = SQLRelatedJoin('FileDetail')
-    
-class Schema(SQLObject):
-    class sqlmeta:
-        cacheValues = False
-    version = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
-
 
 ###############################################################
 # These classes are only used if you're not using the
