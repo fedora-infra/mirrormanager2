@@ -214,16 +214,6 @@ def shuffle(s):
         results.append(hostid)
     return results
 
-def append_filename_to_results(file, hosts_and_urls):
-    if file is None:
-        return hosts_and_urls
-    results = {}
-    for hostid in host_and_urls.keys():
-        
-        hcurl = hcurl + '/%s' % (file)
-        newresults.append((hostid, hcurl))
-    return newresults
-
 continents = {}
 
 def handle_country_continent_redirect():
