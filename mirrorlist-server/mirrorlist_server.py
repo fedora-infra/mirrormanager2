@@ -572,9 +572,26 @@ def do_mirrorlist(kwargs):
         l = list(s)
         random.shuffle(l)
         return l
+
+    def _ordered_netblocks(s):
+        def ipy_len(ip):
+            return ip.len()
+        v4_netblocks = []
+        v6_netblocks = []
+        for n in s:
+            if n.version() == 4:
+                v4_netblocks.append(n)
+            elif n.version() == 6:
+                v6_netblocks.append(n)
+        # mix up the order, as sort will preserve same-key ordering
+        random.shuffle(v4_netblocks)
+        v4_netblocks.sort(key=ipy_len)
+        random.shuffle(v6_netblocks)
+        v6_netblocks.sort(key=ipy_len)
+        return v6_netblocks + v4_netblocks
     
-    location_hosts        = _random_shuffle(location_results)
-    netblock_hosts    = _random_shuffle(netblock_results)
+    location_hosts    = _random_shuffle(location_results)
+    netblock_hosts    = _ordered_netblocks(netblock_results)
     asn_hosts         = _random_shuffle(asn_results)
     internet2_hosts   = _random_shuffle(internet2_results)
     country_hosts     = shuffle(country_results)
