@@ -28,8 +28,7 @@ $(RELEASE_PY):
 	sed -e 's/##VERSION##/$(RELEASE_VERSION)/' $(RELEASE_PY).in > $(RELEASE_PY)
 
 prep: $(SPEC) $(RELEASE_PY)
-	pushd server ;\
-	python setup.py egg_info
+	chdir server ; python setup.py egg_info
 	echo 'db_module=mirrormanager.model' > server/mirrormanager.egg-info/sqlobject.txt
 	echo 'history_dir=$$base/mirrormanager/sqlobject-history' >> server/mirrormanager.egg-info/sqlobject.txt
 	sync ; sync ; sync
