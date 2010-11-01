@@ -191,6 +191,7 @@ class Host(SQLObject):
     internet2_clients = BoolCol(default=False)
     asn = IntCol(default=None)
     asn_clients = BoolCol(default=True)
+    dnsCountryHost = BoolCol(default=False)
     countries_allowed = MultipleJoin('HostCountryAllowed')
     netblocks = MultipleJoin('HostNetblock', orderBy='netblock')
     acl_ips = MultipleJoin('HostAclIp', orderBy='ip')
@@ -637,6 +638,7 @@ class Version(SQLObject):
     display = BoolCol(default=True)
     display_name = UnicodeCol(default=None)
     ordered_mirrorlist = BoolCol(default=True)
+    sortorder = IntCol()
 
 
 class Directory(SQLObject):
