@@ -170,6 +170,13 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
         site.del_downstream_site(dsite)
         raise turbogears.redirect("/site/%s" % site.id)
 
+    @expose(format='json')
+    def search(self, name):
+        """Called by the LocationHost controller AutoCompleteWidget."""
+        if not name: return dict()
+        results = Site.select(LIKE(Site.q.name, "%"+name+"%"))
+        sites = [ s.name for s in results ]
+        return dict(sites=sites)
 
 ##############################################
 class SiteAdminFields(widgets.WidgetsList):
@@ -314,6 +321,7 @@ class HostFields(widgets.WidgetsList):
     asn = widgets.TextField("asn", label="ASN", default='', validator=validators.Int, help_text="Autonomous System Number, used in BGP routing tables.")
     asn_clients = widgets.CheckBox('asn_clients', label="ASN Clients?", default=True, help_text="Serve all clients from the same ASN.  Used for ISPs, companies, or schools, not personal networks.")
     robot_email = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.Email), help_text="email address, will receive notice of upstream content updates")
+    dnsCountryHost = widgets.CheckBox(help_text="use host in <country-code>.<domain> DNS entries")
     comment = widgets.TextField(validator=validators.Any(validators.UnicodeString, validators.Empty), help_text="text, anything else you'd like a public end user to know about your mirror")
 
 host_form = widgets.TableForm(fields=HostFields(),
@@ -326,6 +334,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
         disabled_fields = []
         if not identity.in_group(admin_group):
             disabled_fields.append('admin_active')
+            disabled_fields.append('dnsCountryHost')
 
         if host is not None:
             site = host.my_site()
@@ -805,22 +814,24 @@ class SimpleDbObjectController(controllers.Controller, identity.SecureResource, 
     myClass = None
     url_prefix=None
 
-    def get(self, id):
+    def get(self, id, tg_errors=None):
         v = self.myClass.get(id)
         return dict(values=v)
     
     @expose(template="mirrormanager.templates.boringform")
-    def new(self, **kwargs):
+    def new(self, tg_errors=None, **kwargs):
             
-        submit_action = "/%s/0/create" % self.url_prefix
+        submit_action = "/%s/create" % self.url_prefix
         return dict(form=self.form, values=None, action=submit_action, page_title=self.page_title)
 
-    def create(self, **kwargs):
+
+    def create(self, tg_errors=None, **kwargs):
         try:
             obj = self.myClass(**kwargs)
-        except: # probably sqlite IntegrityError but we can't catch that for some reason... 
-            turbogears.flash("Error: Object already exists")
-            raise redirect("/%s/0/new" % self.url_prefix)
+        except:
+            if tg_errors is not None:
+                turbogears.flash("Error: %s" % createErrorString(tg_errors))
+                raise redirect("/%s/new" % self.url_prefix)
         turbogears.flash("Success: Object created.")
         turbogears.redirect("/adminview")
 
@@ -829,14 +840,17 @@ class SimpleDbObjectController(controllers.Controller, identity.SecureResource, 
         submit_action = "/%s/%s/update" % (self.url_prefix, obj.id)
         return dict(form=self.form, values=obj, action=submit_action, page_title=self.page_title)
         
-    def update(self, obj, **kwargs):
+    def update(self, obj, tg_errors=None, **kwargs):
+        if tg_errors is not None:
+            turbogears.flash("Error: %s" % createErrorString(tg_errors))
+            raise redirect("/adminview")
         obj.set(**kwargs)
         obj.sync()
         submit_action = "/%s/%s/update" % (self.url_prefix, obj.id)
         return dict(form=self.form, values=obj, action=submit_action, page_title=self.page_title)
         
     @expose(template="mirrormanager.templates.boringdeleteform")
-    def delete(self, obj, **kwargs):
+    def delete(self, obj, tg_errors=None, **kwargs):
         confirmed = kwargs.get('confirmed', None)
         confirm_delete_form = widgets.TableForm(fields=ConfirmDeleteFields(), submit_text="Yes, really delete it!")
         if confirmed:
@@ -1047,6 +1061,90 @@ class CountryContinentRedirectController(SimpleDbObjectController):
     def update(self, obj, **kwargs):
         return SimpleDbObjectController.update(self, obj, **kwargs)
 
+#########################################################
+# Location
+#########################################################
+class LocationFields(widgets.WidgetsList):
+    name = widgets.TextField(validator=validators.All(validators.NotEmpty, validators.UnicodeString), label="Location Name") 
+
+location_form = widgets.TableForm(fields=LocationFields(), submit_text="Create Location")
+
+class LocationController(SimpleDbObjectController):
+    page_title = "Location"
+    myClass = Location
+    url_prefix="location"
+    form = location_form
+
+    @expose(template="mirrormanager.templates.boringform")
+    @validate(form=form)
+    @error_handler(SimpleDbObjectController.new)
+    def create(self, tg_errors=None, **kwargs):
+        SimpleDbObjectController.create(self, tg_errors, **kwargs)
+
+    @expose(template="mirrormanager.templates.boringform")
+    @validate(form=form)
+    @error_handler()
+    def update(self, obj, tg_errors=None, **kwargs):
+        return SimpleDbObjectController.update(self, obj, tg_errors, **kwargs)
+
+    @expose(template="mirrormanager.templates.boringdeleteform")
+    def delete(self, obj, tg_errors=None, **kwargs):
+        confirmed = kwargs.get('confirmed', None)
+        confirm_delete_form = widgets.TableForm(fields=ConfirmDeleteFields(), submit_text="Yes, really delete it!")
+        if confirmed:
+            turbogears.flash("%s has been deleted." % obj.name)
+            obj.destroySelf()
+            turbogears.redirect("/adminview")
+        else:
+            form = confirm_delete_form
+            page_title = "Item Deletion"
+            submit_action = "/%s/%s/delete?confirmed=1" % (self.url_prefix, obj.id)
+            return dict(form=form, values=obj, action=submit_action, page_title=page_title)
+
+
+#########################################################
+# LocationHosts
+#########################################################
+class LocationHostFields(widgets.WidgetsList):
+    locationName = widgets.Label(label="Location Name")
+    siteName = widgets.AutoCompleteField(label="Site Name",
+                                         search_controller=tg.url('/site/search'),
+                                         search_param='name', result_name='sites',
+                                         validator=validators.AutoCompleteValidator())
+
+location_host_form = widgets.TableForm(fields=LocationHostFields(), submit_text="Create Location / Host Mapping")
+
+class LocationHostController(SimpleDbObjectController):
+    page_title = "Location / Host"
+    myClass = Location
+    url_prefix="locationhosts"
+    form = location_host_form
+
+    @expose(template="mirrormanager.templates.boringform")
+    @validate(form=form)
+    @error_handler(SimpleDbObjectController.new)
+    def create(self, tg_errors=None, **kwargs):
+        SimpleDbObjectController.create(self, tg_errors, **kwargs)
+
+    @expose(template="mirrormanager.templates.boringform")
+    @validate(form=form)
+    @error_handler()
+    def update(self, obj, tg_errors=None, **kwargs):
+        return SimpleDbObjectController.update(self, obj, tg_errors, **kwargs)
+
+    @expose(template="mirrormanager.templates.boringdeleteform")
+    def delete(self, obj, tg_errors=None, **kwargs):
+        confirmed = kwargs.get('confirmed', None)
+        confirm_delete_form = widgets.TableForm(fields=ConfirmDeleteFields(), submit_text="Yes, really delete it!")
+        if confirmed:
+            turbogears.flash("%s has been deleted." % obj.name)
+            obj.destroySelf()
+            turbogears.redirect("/adminview")
+        else:
+            form = confirm_delete_form
+            page_title = "Item Deletion"
+            submit_action = "/%s/%s/delete?confirmed=1" % (self.url_prefix, obj.id)
+            return dict(form=form, values=obj, action=submit_action, page_title=page_title)
 
 
 
@@ -1071,6 +1169,7 @@ class Root(controllers.RootController):
     repository = RepositoryController()
     repository_redirect = RepositoryRedirectController()
     country_continent_redirect = CountryContinentRedirectController()
+    location = LocationController()
     from mirrormanager.xmlrpc import XmlrpcController
     xmlrpc = XmlrpcController()
     
@@ -1106,6 +1205,7 @@ class Root(controllers.RootController):
                 "netblocks":HostNetblock.select(orderBy='host_id'),
                 "repository_redirects":RepositoryRedirect.select(orderBy='fromRepo'),
                 "country_continent_redirects":CountryContinentRedirect.select(orderBy='country'),
+                "locations":Location.select(orderBy='name'),
                 }
 
     @expose(template="mirrormanager.templates.rsync_acl", format="plain", content_type="text/plain")
