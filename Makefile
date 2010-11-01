@@ -1,7 +1,7 @@
-RELEASE_DATE := "11-Sep-2010"
+RELEASE_DATE := "31-Oct-2010"
 RELEASE_MAJOR := 1
-RELEASE_MINOR := 3
-RELEASE_EXTRALEVEL := .7
+RELEASE_MINOR := 4
+RELEASE_EXTRALEVEL := .0
 RELEASE_NAME := mirrormanager
 RELEASE_VERSION := $(RELEASE_MAJOR).$(RELEASE_MINOR)$(RELEASE_EXTRALEVEL)
 RELEASE_STRING := $(RELEASE_NAME)-$(RELEASE_VERSION)
@@ -28,7 +28,7 @@ $(RELEASE_PY):
 	sed -e 's/##VERSION##/$(RELEASE_VERSION)/' $(RELEASE_PY).in > $(RELEASE_PY)
 
 prep: $(SPEC) $(RELEASE_PY)
-	chdir server ; python setup.py egg_info
+	cd server ; python setup.py egg_info
 	echo 'db_module=mirrormanager.model' > server/mirrormanager.egg-info/sqlobject.txt
 	echo 'history_dir=$$base/mirrormanager/sqlobject-history' >> server/mirrormanager.egg-info/sqlobject.txt
 	sync ; sync ; sync
@@ -60,13 +60,13 @@ rpm: tarball $(SPEC)
 	mkdir -p $${tmp_dir}/{BUILD,RPMS,SRPMS,SPECS,SOURCES} ; \
 	cp $(TARBALL) $${tmp_dir}/SOURCES ; \
 	cp $(SPEC) $${tmp_dir}/SPECS ; \
-	pushd $${tmp_dir} > /dev/null 2>&1; \
+	cd $${tmp_dir} > /dev/null 2>&1; \
 	rpmbuild -ba --define "_topdir $${tmp_dir}" \
 	  --define "_source_filedigest_algorithm 0" \
 	  --define "_binary_filedigest_algorithm 0" \
 	  --define "dist %{nil}" \
           SPECS/mirrormanager.spec ; \
-	popd > /dev/null 2>&1; \
+	cd - > /dev/null 2>&1; \
 	cp $${tmp_dir}/RPMS/noarch/* $${tmp_dir}/SRPMS/* . ; \
 	rm -rf $${tmp_dir} ; \
 	rpmlint *.rpm *.spec
