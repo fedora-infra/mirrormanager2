@@ -26,8 +26,7 @@ Nothing to see here, move along.
 </ul>
 </div>
 <div id="Arches">
-<h3>Arches</h3>
-<a href="${tg.url('/arch/0/new')}">[Add]</a>
+<h3>Arches <a href="${tg.url('/arch/0/new')}">[Add]</a></h3>
 
 <ul>
 	  <li py:for="arch in arches">
@@ -36,8 +35,7 @@ Nothing to see here, move along.
 </ul>
 </div>
 <div id="Products">
-<h3>Products</h3>
-<a href="${tg.url('/product/0/new')}">[Add]</a>
+<h3>Products <a href="${tg.url('/product/0/new')}">[Add]</a></h3>
 <ul>
 	  <li py:for="p in products">
 	  <span py:replace="p.name">Product</span> <a href="${tg.url('/product/'+str(p.id)+'/delete')}">[Delete]</a>
@@ -45,8 +43,7 @@ Nothing to see here, move along.
 </ul>
 </div>
 <div id="Versions">
-<h3>Versions</h3>
-<a href="${tg.url('/version/0/new')}">[Add]</a>
+<h3>Versions <a href="${tg.url('/version/0/new')}">[Add]</a></h3>
 <ul>
 	  <li py:for="v in versions">
 	  <a href="${tg.url('/version/'+str(v.id)+'/')}">
@@ -77,8 +74,7 @@ Nothing to see here, move along.
     </ul>
 </div>
 <div id="Embargoed Countries">
-<h3>Embargoed Counries</h3>
-<a href="${tg.url('/embargoed_country/0/new')}">[Add]</a>
+<h3>Embargoed Counries <a href="${tg.url('/embargoed_country/0/new')}">[Add]</a></h3>
 <ul>
 	  <li py:for="cc in embargoed_countries">
   	  <span py:replace="cc.country_code">Country Code</span>	   <a href="${tg.url('/embargoed_country/'+str(cc.id)+'/delete')}">[Delete]</a>	
@@ -109,6 +105,21 @@ Nothing to see here, move along.
 <ul>
 	  <li py:for="c in country_continent_redirects">
 	  <a href="${tg.url('/country_continent_redirect/'+str(c.id)+'/')}"><span py:replace="c.country">Country</span></a> -&gt; <span py:replace="c.continent">Continent</span>
+	  </li>
+</ul>
+</div>
+<div id="Locations">
+<h3>Locations <a href="${tg.url('/location/new')}">[Add]</a></h3>
+<ul>
+	  <li py:for="l in locations"> <a href="${tg.url('/location/'+str(l.id)+'/')}"><span py:replace="l.name">Location</span></a>
+	    <a href="${tg.url('/location/%s/delete' % (l.id))}">[Delete]</a>
+
+	    <UL>
+	      <li py:for="h in l.hosts">
+	      	<a href="${tg.url('/host/' + str(h.id))}"><span py:replace="h.name">Host name</span></a>
+	      	<a href="${tg.url('/location/%s/%s/delete' % (l.id,h.id))}">[Delete]</a>
+	      </li>
+	    </UL>
 	  </li>
 </ul>
 </div>
