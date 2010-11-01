@@ -152,6 +152,9 @@ Matt Domsch (8):
       mirrorlist-server: use WSGIDaemonProcess for mirrorlist_client.wsgi
       mirrormanager.wsgi run 4 instances per app server (up from 2)
 
+* Mon Oct 26 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.3-2
+- add patch to fix confirm delete from webui
+
 * Thu Sep 28 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.3-1
 - initial setup patches from BJ Dierkes
   - simpler mirrormanager.initial, README.rpm_setup, prod.cfg
@@ -159,9 +162,6 @@ Matt Domsch (8):
 
 * Thu Sep 28 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.2-1
 - add BGP ASN lookups
-
-* Mon Oct 26 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.3-2
-- add patch to fix confirm delete from webui
 
 * Fri Sep 18 2009 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.1-1
 - fix publiclist html
