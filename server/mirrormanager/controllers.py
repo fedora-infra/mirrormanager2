@@ -887,6 +887,7 @@ class CategoryController(SimpleDbObjectController):
     @validate(form=category_form)
     @error_handler(SimpleDbObjectController.new)
     def create(self, **kwargs):
+        topdirPath.strip('/')
         try:
             d = Directory.byName(kwargs['topdirPath'])
         except SQLObjectNotFound:
@@ -1195,6 +1196,7 @@ class Root(controllers.RootController):
     product = ProductController()
     version = VersionController()
     arch = ArchController()
+    category = CategoryController()
     embargoed_country = EmbargoedCountryController()
     repository = RepositoryController()
     repository_redirect = RepositoryRedirectController()
