@@ -36,7 +36,10 @@ def update():
         for h in OldHost.select():
             h.dnsCountryHost = False
 
-    if 'sortorder' not in OldVersion.sqlmeta.columns:
-        OldVersion.addColumn(IntCol("sortorder"), changeSchema=True)
+    if 'sortorder' not in OldVersion.sqlmeta.columns and \
+            'codename' not in OldVersion.sqlmeta.columns:
+        OldVersion.addColumn(IntCol("sortorder", default=0, changeSchema=True)
+        OldVersion.addColumn(UnicodeCol("codename", default=None), changeSchema=True)
         for v in OldVersion.select():
-            v.sortorder = v.id
+            v.sortorder = 0
+            v.codename = None

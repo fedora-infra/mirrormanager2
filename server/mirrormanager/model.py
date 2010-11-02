@@ -618,7 +618,7 @@ class Product(SQLObject):
     class sqlmeta:
         cacheValues = False
     name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
-    versions = MultipleJoin('Version', orderBy='name')
+    versions = MultipleJoin('Version', orderBy=['-sortorder', '-id'])
     categories = MultipleJoin('Category')
 
     def destroySelf(self):
@@ -638,8 +638,8 @@ class Version(SQLObject):
     display = BoolCol(default=True)
     display_name = UnicodeCol(default=None)
     ordered_mirrorlist = BoolCol(default=True)
-    sortorder = IntCol()
-
+    sortorder = IntCol(default=0)
+    codename = UnicodeCol(default=None)
 
 class Directory(SQLObject):
     class sqlmeta:
