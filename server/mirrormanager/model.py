@@ -952,7 +952,7 @@ class User(SQLObject):
     class sqlmeta:
         table = "tg_user"
 
-    user_name = UnicodeCol(length=16, alternateID=True,
+    user_name = UnicodeCol(length=UnicodeColKeyLength, alternateID=True,
                            alternateMethodName="by_user_name")
     email_address = UnicodeCol(length=255, alternateID=True,
                                alternateMethodName="by_email_address")
