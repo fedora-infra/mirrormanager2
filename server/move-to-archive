@@ -7,7 +7,7 @@ from sqlobject import *
 import turbogears
 from mirrormanager.model import *
 from optparse import OptionParser
-import re
+import sys, re
 
 from turbogears.database import PackageHub
 hub = __connection__ = None
@@ -20,16 +20,17 @@ originalCategory = 'Fedora Linux'
 
 def doit():
     global options
-    c = Category.selectBy(name=options.originalCategory)[0]
-    a = Category.selectBy(name=options.archiveCategory)[0]
+    c = Category.byName(originalCategory)
+    a = Category.byName(archiveCategory)
     originalTopdir = c.topdir.name
-    archiveTopdir = a.topdir.name
+    archiveTopdir = a.topdir.name + '/fedora/linux'
     dirRe = re.compile(options.directoryRe)
     for d in c.directories:
         if dirRe.search(d.name):
             r = d.repository
             if r is not None:
                 t = archiveTopdir + d.name[len(originalTopdir):]
+                print "trying to find %s" % t
                 try:
                     new_d = Directory.byName(t)
                     r.directory = new_d
@@ -38,6 +39,7 @@ def doit():
                     print "%s => %s" % (d.name, t)
                 except:
                     print "Unable to find a directory in [%s] for %s" % (options.archiveCategory, d.name)
+                    raise
 
 def main():
     global options
