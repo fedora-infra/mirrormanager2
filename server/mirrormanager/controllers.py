@@ -865,6 +865,39 @@ class SimpleDbObjectController(controllers.Controller, identity.SecureResource, 
 
 
 #########################################################3
+# Category
+#########################################################3
+class CategoryFields(widgets.WidgetsList):
+    name = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
+    product = widgets.SingleSelectField(options=Product.selectFieldOptions,
+                                        validator=validators.NotEmpty)
+    canonicalhost = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
+    topdirPath = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
+    publiclist = widgets.CheckBox()
+
+category_form = Widgets.TableForm(fields=CategoryFields(), submit_text="Create Category")
+
+class CategoryController(SimpleDbObjectController):
+    page_title="Category"
+    myClass = Category
+    url_prefix="category"
+    form = category_form
+
+    @expose(template="mirrormanager.templates.boringform")
+    @validate(form=category_form)
+    @error_handler(SimpleDbObjectController.new)
+    def create(self, **kwargs):
+        try:
+            d = Directory.byName(kwargs['topdirPath'])
+        except SQLObjectNotFound:
+            d = Directory(kwargs['topdirPath'])
+        del kwargs['topdirPath']
+        kwargs['topdir'] = d
+            
+        SimpleDbObjectController.create(self, **kwargs)
+
+
+#########################################################3
 # Arch
 #########################################################3
 
@@ -967,10 +1000,7 @@ class RepositoryController(SimpleDbObjectController):
 # Version
 #########################################################3
 class VersionFields(widgets.WidgetsList):
-    def get_products_options():
-        return [(p.id, p.name) for p in Product.select(orderBy='name')]
-
-    product = widgets.SingleSelectField(options=get_products_options,
+    product = widgets.SingleSelectField(options=Product.selectFieldOptions,
                                         validator=validators.NotEmpty)
     name = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
     isTest = widgets.CheckBox(label="is a Test release")

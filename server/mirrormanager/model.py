@@ -627,6 +627,9 @@ class Product(SQLObject):
         for c in self.categories:
             c.destroySelf()
         SQLObject.destroySelf(self)
+
+    def selectFieldOptions():
+        return [(p.id, p.name) for p in Product.select(orderBy='name')]
         
 
 class Version(SQLObject):

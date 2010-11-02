@@ -17,7 +17,7 @@ Nothing to see here, move along.
 <div id="adminview" py:if="admin_group in tg.identity.groups">
 
 <div id="categories">
-<h3>Categories</h3>
+<h3>Categories <a href="${tg.url('/category/new')">[Add]</a></h3>
 <ul>
 	  <li py:for="c in categories">
 	  <span py:replace="c.name">Category Name</span>&nbsp;
