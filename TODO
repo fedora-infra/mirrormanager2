@@ -12,8 +12,6 @@
 * Track multiple master mirrors (e.g. secondary arches)
   - done via separate directory trees (e.g. pub/fedora and pub/secondary) right now
 
-* sort publiclist chooser versions
-
 * cronjob to mark private mirrors as not-up2date, some amount of time
   after the content has changed but they haven't run report_mirror.
 
