@@ -44,6 +44,12 @@ def rename_SRPMS_source(l):
 
 
 def _get_version_from_path(path):
+    # Debian/Ubuntu versioning
+    s = r'dists/(\w+)/' # this ignores 10.10 and maverick-{anything}, but picks up 'maverick'
+    m = re.search(re.compile(s), path)
+    if m is not None:
+        return m.group(1)
+    # Fedora versioning
     s = r'/(([\.\d]+)(\-\w+)?)/'
     m = re.search(re.compile(s), path)
     if m is not None:
