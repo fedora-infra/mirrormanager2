@@ -7,38 +7,39 @@ from sqlobject import *
 import turbogears
 from mirrormanager.model import *
 from optparse import OptionParser
-import sys, re
+import sys, re, os
 
 from turbogears.database import PackageHub
 hub = __connection__ = None
 
 options = None
 
-archiveCategory = 'Fedora Archive'
-originalCategory = 'Fedora Linux'
+category = 'Fedora Linux'
+
+# moving from pub/fedora/linux/development/14/x86_64/os to pub/fedora/linux/releases/14/Everything/x86_64/os
 
 
 def doit():
     global options
-    c = Category.byName(originalCategory)
-    a = Category.byName(archiveCategory)
-    originalTopdir = c.topdir.name
-    archiveTopdir = a.topdir.name + '/fedora/linux'
-    dirRe = re.compile(options.directoryRe)
+    c = Category.byName(category)
+    topdir = c.topdir.name
+    oldpattern = os.path.join('development', options.version)
+    newpattern = os.path.join('releases', options.version, 'Everything')
+    oldRe = re.compile(oldpattern)
     for d in c.directories:
-        if dirRe.search(d.name):
+        if oldRe.search(d.name):
             r = d.repository
             if r is not None:
-                t = archiveTopdir + d.name[len(originalTopdir):]
-                print "trying to find %s" % t
+                t = d.name.replace(oldpattern, newpattern)
+                #print "trying to find %s" % t
                 try:
                     new_d = Directory.byName(t)
                     r.directory = new_d
-                    r.category = a
+                    r.category = c
                     r.sync()
                     print "%s => %s" % (d.name, t)
                 except:
-                    print "Unable to find a directory in [%s] for %s" % (options.archiveCategory, d.name)
+                    #print "Unable to find a directory in [%s] for %s" % (options.archiveCategory, d.name)
                     raise
 
 def main():
@@ -47,16 +48,11 @@ def main():
     parser.add_option("-c", "--config",
                       dest="config", default='/etc/mirrormanager/prod.cfg',
                       help="TurboGears config file to use (default=/etc/mirrormanager/prod.cfg)")
-
-    parser.add_option("--originalCategory",
-                      metavar="CATEGORY", dest="originalCategory", action="store", type="string", help="original Category (default=%s)" % originalCategory, default=originalCategory)
-    parser.add_option("--archiveCategory",
-                      metavar="CATEGORY", dest="archiveCategory", action="store", type="string", help="archive Category (default=%s)" % archiveCategory, default=archiveCategory)
-    parser.add_option("--directoryRe",
-                      metavar="RE", dest="directoryRe", action="store", type="string", help="subdirectory regular expression to move (e.g. '/7/') [required]", default=None)
+    parser.add_option("--version",
+                      dest="version", action="store", type="string", help="OS version to move (e.g. '14') [required]", default=None)
 
     (options, args) = parser.parse_args()
-    if options.directoryRe is None:
+    if options.version is None:
         parser.print_help()
         sys.exit(1)
 
