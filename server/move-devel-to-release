@@ -35,11 +35,11 @@ def doit():
                 try:
                     new_d = Directory.byName(t)
                     r.directory = new_d
-                    r.category = a
+                    r.category = c
                     r.sync()
                     print "%s => %s" % (d.name, t)
                 except:
-                    print "Unable to find a directory in [%s] for %s" % (options.archiveCategory, d.name)
+                    #print "Unable to find a directory in [%s] for %s" % (options.archiveCategory, d.name)
                     raise
 
 def main():
