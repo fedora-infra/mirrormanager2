@@ -19,6 +19,11 @@ class OldVersion(SQLObject):
         fromDatabase = True
         table = 'version'
 
+class OldProduct(SQLObject):
+    class sqlmeta:
+        fromDatabase = True
+        table = 'product'
+
 def update():
     Location.createTable(ifNotExists=True)
     FileGroup.createTable(ifNotExists=True)
@@ -38,8 +43,14 @@ def update():
 
     if 'sortorder' not in OldVersion.sqlmeta.columns and \
             'codename' not in OldVersion.sqlmeta.columns:
-        OldVersion.addColumn(IntCol("sortorder", default=0, changeSchema=True)
+        OldVersion.addColumn(IntCol("sortorder", default=0, changeSchema=True))
         OldVersion.addColumn(UnicodeCol("codename", default=None), changeSchema=True)
         for v in OldVersion.select():
             v.sortorder = 0
             v.codename = None
+
+    if 'publiclist' not in OldProduct.sqlmeta.columns:
+        OldProduct.addColumn(BoolCol("publiclist", default=True), changeSchema=True)
+        for p in OldProduct.select():
+            p.publiclist = True
+

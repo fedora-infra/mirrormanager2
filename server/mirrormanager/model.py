@@ -618,6 +618,7 @@ class Product(SQLObject):
     class sqlmeta:
         cacheValues = False
     name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
+    publiclist = BoolCol(default=True)
     versions = MultipleJoin('Version', orderBy=['-sortorder', '-id'])
     categories = MultipleJoin('Category')
 
