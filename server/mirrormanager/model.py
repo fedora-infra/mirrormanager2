@@ -15,7 +15,7 @@ from turbogears.database import PackageHub
 hub = PackageHub("mirrormanager")
 __connection__ = hub
 
-UnicodeColKeyLength=None
+UnicodeColKeyLength = None
 _dburi = config.get('sqlobject.dburi', '')
 if 'mysql://' in _dburi:
     UnicodeColKeyLength=255
@@ -635,13 +635,19 @@ class Product(SQLObject):
 class Version(SQLObject):
     class sqlmeta:
         cacheValues = False
+
+    def _SO_finishCreate(self, id=None):
+        """ by default set sortorder = id, which is only known at this point. """
+        SQLObject._SO_finishCreate(self, id)
+        self.sortorder = self.id
+
     name = UnicodeCol()
     product = ForeignKey('Product')
     isTest = BoolCol(default=False)
     display = BoolCol(default=True)
     display_name = UnicodeCol(default=None)
     ordered_mirrorlist = BoolCol(default=True)
-    sortorder = IntCol(default=0)
+    sortorder = IntCol()
     codename = UnicodeCol(default=None)
 
 class Directory(SQLObject):
