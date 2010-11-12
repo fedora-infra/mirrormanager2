@@ -41,5 +41,5 @@ def update():
         OldVersion.addColumn(IntCol("sortorder", default=0, changeSchema=True)
         OldVersion.addColumn(UnicodeCol("codename", default=None), changeSchema=True)
         for v in OldVersion.select():
-            v.sortorder = v.id
+            v.sortorder = 0
             v.codename = None
