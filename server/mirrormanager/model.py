@@ -718,6 +718,7 @@ class Category(SQLObject):
     canonicalhost = UnicodeCol(default='http://download.fedora.redhat.com')
     topdir = ForeignKey('Directory', default=None)
     publiclist = BoolCol(default=True)
+    GeoDNSDomain = UnicodeCol(default=None)
     directories = RelatedJoin('Directory', orderBy='name') # all the directories that are part of this category
     hostCategories = MultipleJoin('HostCategory')
 

@@ -24,6 +24,11 @@ class OldProduct(SQLObject):
         fromDatabase = True
         table = 'product'
 
+class OldCategory(SQLObject):
+    class sqlmeta:
+        fromDatabase = True
+        table = 'category'
+
 def update():
     Location.createTable(ifNotExists=True)
     FileGroup.createTable(ifNotExists=True)
@@ -54,3 +59,7 @@ def update():
         for p in OldProduct.select():
             p.publiclist = True
 
+    if 'geo_dns_domain' not in OldCategory.sqlmeta.columns:
+        OldCategory.addColumn(UnicodeCol("GeoDNSDomain", default=None), changeSchema=True)
+        for c in OldCategory.select():
+            c.GeoDNSDomain = None
