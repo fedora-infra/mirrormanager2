@@ -25,6 +25,8 @@ hub = PackageHub("mirrormanager")
 __connection__ = hub
 
 def trim_os_from_dirname(dirname):
+    if config.get('mirrormanager.projectname') == 'CentOS':
+        return dirname
     # trim the /os off the name
     index = dirname.rfind('/os')
     if index > 0:
@@ -50,7 +52,7 @@ def _get_version_from_path(path):
     if m is not None:
         return m.group(1)
     # Fedora versioning
-    s = r'/(([\.\d]+)(\-\w+)?)/'
+    s = r'/?(([\.\d]+)(\-\w+)?)/'
     m = re.search(re.compile(s), path)
     if m is not None:
         return m.group(1)
@@ -91,7 +93,7 @@ def guess_ver_arch_from_path(category, path):
     # create Versions if we can figure it out...
     if ver is None:
         ver = create_version_from_path(category, path)
-        
+
     return (ver, arch)
 
 
