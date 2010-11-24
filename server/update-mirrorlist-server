@@ -6,6 +6,7 @@ LOCKFILE=/var/lock/mirrormanager/update-mirrorlist-server.lock
 CACHEDIR=/var/lib/mirrormanager
 
 [ -e ${LOCKFILE} ] && kill -0 $(cat ${LOCKFILE}) && exit 2
+mkdir -p $(dirname ${LOCKFILE})
 echo $$ > ${LOCKFILE}
 trap "rm -f ${LOCKFILE}" QUIT TERM INT HUP EXIT
 

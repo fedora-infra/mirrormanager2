@@ -5,6 +5,7 @@ MIRRORLIST_DIR=/var/lib/mirrormanager/mirrorlists
 LOCKFILE=/var/lock/mirrormanager/update-database.lock
 
 [ -e ${LOCKFILE} ] && kill -0 $(cat ${LOCKFILE}) && exit 2
+mkdir -p $(dirname ${LOCKFILE})
 echo $$ > ${LOCKFILE}
 trap "rm -f ${LOCKFILE}" QUIT TERM INT HUP EXIT
 

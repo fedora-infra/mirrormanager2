@@ -61,10 +61,10 @@ exit 0
 %defattr(-,root,root,-)
 %{_datadir}/%{name}
 %attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/%{name}/
-%attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/run/%{name}/
+%ghost %attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/run/%{name}/
 %attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/log/%{name}/
 %attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/log/%{name}/crawler/
-%attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/lock/%{name}/
+%ghost %attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/lock/%{name}/
 %attr(-,mirrormanager,mirrormanager) %dir %{_sysconfdir}/%{name}/
 %attr(-,mirrormanager,mirrormanager) %config(noreplace) /etc/mirrormanager/prod.cfg
 %attr(-,mirrormanager,mirrormanager) %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
@@ -85,6 +85,9 @@ exit 0
 
 
 %changelog
+* Wed Nov 24 2010 Matt Domsch <mdomsch@fedoraproject.org> 
+- add %%ghost to /var/{run,lock} (BZ656623)
+
 * Sat Sep 11 2010 Matt Domsch <mdomsch@fedoraproject.org> - 1.3.7-1
 Matt Domsch:
       mirrorlist_server: always output a metalink header

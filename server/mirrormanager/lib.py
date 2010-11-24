@@ -37,11 +37,21 @@ def uniqueify(seq, idfun=None):
 def remove_pidfile(pidfile):
     os.unlink(pidfile)
 
-def write_pidfile(pidfile, pid):
+def create_pidfile_dir(pidfile):
+    piddir = pidfile.split('/')[:-1]
     try:
-        f = open(pidfile, 'w')
+        os.makedirs(piddir, mode=0755)
+    except OSError, err:
+        if err.errno == 17: # File exists
+            pass
+        else:
+            raise
     except:
-        return 1
+        raise
+
+def write_pidfile(pidfile, pid):
+    create_pidfile_dir(pidfile)
+    f = open(pidfile, 'w')
     f.write(str(pid))
     f.close()
     return 0
