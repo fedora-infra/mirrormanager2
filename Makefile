@@ -107,6 +107,7 @@ install-server:
 #	mkdir -p -m 0755 $(DESTDIR)/$(SBINDIR)
 #	sed -e 's:##CONFFILE##:$(CONFFILE):' -e 's:##PROGRAMDIR##:$(PROGRAMDIR):' $(STARTSCRIPT).in > $(DESTDIR)/$(SBINDIR)/start-mirrormanager
 #	chmod 0755 $(DESTDIR)/$(SBINDIR)/start-mirrormanager
+	install -m 0644 mirrormanager.tmpfiles $(DESTDIR)/etc/tmpfiles.d/mirrormanager.conf
 
 install-client:
 	mkdir -p -m 0755 $(DESTDIR)/etc/mirrormanager-client $(DESTDIR)/usr/bin
