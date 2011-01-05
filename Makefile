@@ -84,6 +84,7 @@ install-server:
 	mkdir -p -m 0755 $(DESTDIR)/etc/httpd/conf.d
 	mkdir -p -m 0755 $(DESTDIR)/etc/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/etc/rpmlint
+	mkdir -p -m 0755 $(DESTDIR)/etc/tmpfiles.d
 # server/
 	cp -ra server/	 $(DESTDIR)/usr/share/mirrormanager
 	install -m 0644 server/apache/mirrormanager.conf $(DESTDIR)/etc/httpd/conf.d
