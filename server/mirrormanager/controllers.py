@@ -948,6 +948,7 @@ class EmbargoedCountryController(SimpleDbObjectController):
 class ProductFields(widgets.WidgetsList):
     name = widgets.TextField(validator=validators.All(validators.UnicodeString, validators.NotEmpty),
                              attrs=dict(size='30'))
+    publiclist = widgets.CheckBox(label="display in the publiclist chooser", default=True)
 
 product_form = widgets.TableForm(fields=ProductFields(), submit_text="Create Product")
 

@@ -5,7 +5,10 @@
 <table cellspacing="0" class="compact altrows minilist">
   <caption><strong>Mirror list filter</strong></caption>
   <tr><th>Project</th><th>Version</th><th colspan='0'>Architecture</th></tr>
-  <div py:for="p in products">
+<?python
+displayproducts = [p for p in products if p.publiclist]
+?>
+  <div py:for="p in displayproducts">
 <?python
 displayversions = [v for v in p.versions if v.display]
 ?>
