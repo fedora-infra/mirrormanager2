@@ -7,6 +7,7 @@ from dns.rdataclass import *
 from dns.rdatatype import *
 
 default_ttl = 3600
+default_output_dir = '/var/lib/mirrormanager/dns'
 
 def domainTemplateToName(domain, country):
     return re.sub(u'CC', country, domain)
@@ -36,7 +37,7 @@ def generateZoneFiles(directory):
         z['zone'].to_file(os.path.join(directory, u'zone-' + z['name']))
 
 def writeZoneFiles():
-    output_dir = '/var/lib/mirrormanager/dns'
+    output_dir = default_output_dir
     try:
         os.makedirs(output_dir)
     except OSError, e:
