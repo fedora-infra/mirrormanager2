@@ -874,6 +874,7 @@ class CategoryFields(widgets.WidgetsList):
     canonicalhost = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
     topdirPath = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
     publiclist = widgets.CheckBox()
+    GeoDNSDomain = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
 
 category_form = Widgets.TableForm(fields=CategoryFields(), submit_text="Create Category")
 
