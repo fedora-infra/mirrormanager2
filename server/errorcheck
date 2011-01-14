@@ -148,6 +148,12 @@ def open_geoip_databases():
 def check_host(sr, host):
     if host.is_private() and not options.private:
         return
+
+    if not host.is_active():
+        msg = u"Host %s is not active - ignoring." % (host.name)
+        sr.messages.append(msg)
+        return
+
     ips = name_to_ips(host.name)
     if len(ips) == 0:
         msg = u"Host name %s not found in DNS.  Please use a FQDN for your host name.  You will also need to make the corresponding change in your report_mirror.conf file." % (host.name)
@@ -195,16 +201,18 @@ def check_host(sr, host):
         msg = u"Host %s has no content Categories.  Please add Host Categories to the content your mirror carries." % (host.name)
         sr.messages.append(msg)
 
+    always_up2date = False
     for hc in host.categories:
         if len(hc.urls) == 0:
             msg = u"Host %s Category %s has no URLs.  Please add a URL to the content your mirror carries, or if not carried, delete the Category." % (host.name, hc.category.name)
             sr.messages.append(msg)            
 
-        if len(hc.dirs) == 0:
+        if hc.always_up2date: always_up2date = True
+        if len(hc.dirs) == 0 and not hc.always_up2date:
             msg = u"Host %s Category %s has no up-to-date directories.  Consult the crawler logs and check your report_mirror.conf." % (host.name, hc.category.name)
             sr.messages.append(msg)
 
-    if host.lastCheckedIn is None:
+    if host.lastCheckedIn is None and not always_up2date:
         msg = u"Host %s has never checked in with report_mirror." % (host.name)
         if host.is_private():
             msg += u"  Private mirrors must run report_mirror."
@@ -274,6 +282,9 @@ def setup_netblocks(netblocks_file):
 def check_site(site):
     if site.private and not options.private:
         return
+    if not site.admin_active or not site.user_active:
+        return
+
     sr = SiteResult(site)
     sr.admin_emails = users_to_emails(site_admins(site))
 
