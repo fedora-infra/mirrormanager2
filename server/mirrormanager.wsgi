@@ -1,11 +1,16 @@
 #!/usr/bin/python
-__requires__ = 'TurboGears[future]'
 import sys
 sys.stdout = sys.stderr
 sys.path.append('/usr/share/mirrormanager/server/')
 
+if __name__ != "__main__": # mod_wsgi case
+    import __main__
+    __main__.__requires__ = ['TurboGears[future]']
+else:
+   __requires__ = ['TurboGears[future]']
+
 import pkg_resources
-pkg_resources.require("TurboGears")
+pkg_resources.require("TurboGears<1.1")
 pkg_resources.require("CherryPy<3.0")
 
 import turbogears
