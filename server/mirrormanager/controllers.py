@@ -306,14 +306,14 @@ class HostFields(widgets.WidgetsList):
     user_active = widgets.CheckBox("user_active", default=True, help_text="Uncheck this box to temporarily disable this host, it will be removed from public listings.")
     country = widgets.TextField(validator=validators.All(validators.Regex(r'^[a-zA-Z][a-zA-Z]$'),validators.NotEmpty),
                                 help_text="2-letter ISO country code" )
-    bandwidth_int = widgets.TextField(validator=validators.Int, help_text="* integer megabits/sec, how much bandwidth this host can serve")
+    bandwidth_int = widgets.TextField(label="Bandwidth", validator=validators.Int, help_text="* integer megabits/sec, how much bandwidth this host can serve")
     private = widgets.CheckBox(help_text="e.g. not available to the public, an internal private mirror")
     internet2 = widgets.CheckBox(help_text="on Internet2")
     internet2_clients = widgets.CheckBox(help_text="serves Internet2 clients, even if private")
     asn = widgets.TextField("asn", label="ASN", default='', validator=validators.Int, help_text="Autonomous System Number, used in BGP routing tables.")
     asn_clients = widgets.CheckBox('asn_clients', label="ASN Clients?", default=True, help_text="Serve all clients from the same ASN.  Used for ISPs, companies, or schools, not personal networks.")
-    robot_email = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.Email), help_text="email address, will receive notice of upstream content updates")
-    dnsCountryHost = widgets.CheckBox(help_text="use host in <country-code>.<domain> DNS entries")
+    robot_email = widgets.TextField(label="Robot email", validator=validators.All(validators.UnicodeString,validators.Email), help_text="email address, will receive notice of upstream content updates")
+    dnsCountryHost = widgets.CheckBox(label="DNS Country Host", help_text="use host in <country-code>.<domain> DNS entries")
     comment = widgets.TextField(validator=validators.Any(validators.UnicodeString, validators.Empty), help_text="text, anything else you'd like a public end user to know about your mirror")
 
 host_form = widgets.TableForm(fields=HostFields(),

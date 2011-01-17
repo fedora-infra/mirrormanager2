@@ -59,6 +59,12 @@ Last Crawled: ${values.lastCrawled}  <a href="${tg.url('/crawler/'+str(values.id
 </div>
 
 <h3>Locations</h3>
+Locations are ways to group hosts when netblocks are unwieldy.
+Examples include Amazon EC2 availability zones.  Mirrorlist clients
+append location=string to their request URLs to specify a preferred
+location.  Setting up locations requires MirrorManager administrator
+privileges.
+
 <UL>
 <li py:for="l in values.locations">
   <span py:replace="l.name">Location Name</span>
