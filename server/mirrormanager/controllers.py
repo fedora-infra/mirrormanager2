@@ -170,14 +170,6 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
         site.del_downstream_site(dsite)
         raise turbogears.redirect("/site/%s" % site.id)
 
-    @expose(format='json')
-    def search(self, name):
-        """Called by the LocationHost controller AutoCompleteWidget."""
-        if not name: return dict()
-        results = Site.select(LIKE(Site.q.name, "%"+name+"%"))
-        sites = [ s.name for s in results ]
-        return dict(sites=sites)
-
 ##############################################
 class SiteAdminFields(widgets.WidgetsList):
     username = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty, help_text="FAS username you wish to have be an admin for this site"))
@@ -309,7 +301,7 @@ class SiteToSiteController(controllers.Controller, identity.SecureResource, cont
 ##############################################
 class HostFields(widgets.WidgetsList):
     name = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty), attrs=dict(size='30'), label="Host Name",
-                             help_text="* Name of server as seen by a public end user")
+                             help_text="* FQDN of server as seen by a public end user")
     admin_active = widgets.CheckBox("admin_active", default=True, help_text="Uncheck this box to temporarily disable this host, it will be removed from public listings.")
     user_active = widgets.CheckBox("user_active", default=True, help_text="Uncheck this box to temporarily disable this host, it will be removed from public listings.")
     country = widgets.TextField(validator=validators.All(validators.Regex(r'^[a-zA-Z][a-zA-Z]$'),validators.NotEmpty),
@@ -876,7 +868,7 @@ class CategoryFields(widgets.WidgetsList):
     publiclist = widgets.CheckBox()
     GeoDNSDomain = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
 
-category_form = Widgets.TableForm(fields=CategoryFields(), submit_text="Create Category")
+category_form = widgets.TableForm(fields=CategoryFields(), submit_text="Create Category")
 
 class CategoryController(SimpleDbObjectController):
     page_title="Category"
@@ -905,6 +897,7 @@ class CategoryController(SimpleDbObjectController):
 
 class ArchFields(widgets.WidgetsList):
     name = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
+    primaryArch = widgets.CheckBox(label="Primary Arch (not secondary)")
 
 arch_form = widgets.TableForm(fields=ArchFields(), submit_text="Create Arch")
 
@@ -1140,45 +1133,54 @@ class LocationController(SimpleDbObjectController):
 #########################################################
 class LocationHostFields(widgets.WidgetsList):
     locationName = widgets.Label(label="Location Name")
-    siteName = widgets.AutoCompleteField(label="Site Name",
-                                         search_controller=tg.url('/site/search'),
-                                         search_param='name', result_name='sites',
-                                         validator=validators.AutoCompleteValidator())
+    hostid = widgets.TextField(validator=validators.Int, label="Host ID")
 
 location_host_form = widgets.TableForm(fields=LocationHostFields(), submit_text="Create Location / Host Mapping")
 
-class LocationHostController(SimpleDbObjectController):
-    page_title = "Location / Host"
-    myClass = Location
-    url_prefix="locationhosts"
-    form = location_host_form
+class LocationHostController(controllers.Controller, identity.SecureResource, content):
+    require = identity.in_group(admin_group)
+    
+    @expose(template="mirrormanager.templates.boringlocationhostform")
+    def new(self, locationid, **kwargs):
+        try:
+            location = Location.get(locationid)
+        except sqlobject.SQLObjectNotFound:
+            raise redirect("/adminview")
 
-    @expose(template="mirrormanager.templates.boringform")
-    @validate(form=form)
-    @error_handler(SimpleDbObjectController.new)
-    def create(self, tg_errors=None, **kwargs):
-        SimpleDbObjectController.create(self, tg_errors, **kwargs)
+        submit_action = "/locationhost/create?locationid=%s" % locationid
+        return dict(form=location_host_form, values=None, action=submit_action, page_title="New Location / Host", location=location)
+    
+    @expose(template="mirrormanager.templates.boringlocationhostform")
+    @error_handler(new)
+    @validate(form=location_host_form)
+    def create(self, locationid, **kwargs):
+        try:
+            location = Location.get(locationid)
+        except sqlobject.SQLObjectNotFound:
+            turbogears.flash("Error: Location %s does not exist" % locationid)
+            raise redirect("/")
 
-    @expose(template="mirrormanager.templates.boringform")
-    @validate(form=form)
-    @error_handler()
-    def update(self, obj, tg_errors=None, **kwargs):
-        return SimpleDbObjectController.update(self, obj, tg_errors, **kwargs)
+        try:
+            hostid = kwargs['hostid']
+            location.addHost(hostid)
+        except: # probably sqlite IntegrityError but we can't catch that for some reason... 
+            turbogears.flash("Error:LocationHost already exists")
+        turbogears.flash("Location/Host created.")
+        raise turbogears.redirect("/location/%s" % location.id)
 
-    @expose(template="mirrormanager.templates.boringdeleteform")
-    def delete(self, obj, tg_errors=None, **kwargs):
-        confirmed = kwargs.get('confirmed', None)
-        confirm_delete_form = widgets.TableForm(fields=ConfirmDeleteFields(), submit_text="Yes, really delete it!")
-        if confirmed:
-            turbogears.flash("%s has been deleted." % obj.name)
-            obj.destroySelf()
-            turbogears.redirect("/adminview")
-        else:
-            form = confirm_delete_form
-            page_title = "Item Deletion"
-            submit_action = "/%s/%s/delete?confirmed=1" % (self.url_prefix, obj.id)
-            return dict(form=form, values=obj, action=submit_action, page_title=page_title)
-
+    @expose(template="mirrormanager.templates.boringlocationhostform")
+    def delete(self, locationid, hostid, **kwargs):
+        try:
+            location = Location.get(locationid)
+        except sqlobject.SQLObjectNotFound:
+            turbogears.flash("Error: Location %s does not exist" % locationid)
+            raise redirect("/")
+        try:
+            location.removeHost(hostid)
+        except:
+            turbogears.flash("Error: Location does not have Host %s" % hostid)
+            
+        raise turbogears.redirect("/location/%s" % location.id)
 
 
 class Root(controllers.RootController):
