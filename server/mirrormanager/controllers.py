@@ -866,7 +866,7 @@ class CategoryFields(widgets.WidgetsList):
     canonicalhost = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
     topdirPath = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
     publiclist = widgets.CheckBox()
-    GeoDNSDomain = widgets.TextField(validator=validators.UnicodeString, attrs=dict(size='30'))
+    GeoDNSDomain = widgets.TextField(label="GeoDNS Domain", validator=validators.UnicodeString, attrs=dict(size='30'))
 
 category_form = widgets.TableForm(fields=CategoryFields(), submit_text="Create Category")
 
@@ -1132,7 +1132,6 @@ class LocationController(SimpleDbObjectController):
 # LocationHosts
 #########################################################
 class LocationHostFields(widgets.WidgetsList):
-    locationName = widgets.Label(label="Location Name")
     hostid = widgets.TextField(validator=validators.Int, label="Host ID")
 
 location_host_form = widgets.TableForm(fields=LocationHostFields(), submit_text="Create Location / Host Mapping")
@@ -1149,7 +1148,7 @@ class LocationHostController(controllers.Controller, identity.SecureResource, co
             raise redirect("/adminview")
 
         submit_action = "/locationhost/create?locationid=%s" % locationid
-        return dict(form=location_host_form, values=None, action=submit_action, page_title="New Location / Host", location=location)
+        return dict(form=location_host_form, values=None, action=submit_action, page_title="New Location / Host", location=location, locationName=location.name)
     
     @expose(template="mirrormanager.templates.boringlocationhostform")
     @error_handler(new)
