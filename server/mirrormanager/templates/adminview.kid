@@ -117,7 +117,7 @@ Nothing to see here, move along.
 	    <UL>
 	      <li py:for="h in l.hosts">
 	      	<a href="${tg.url('/host/' + str(h.id))}"><span py:replace="h.name">Host name</span></a>
-	      	<a href="${tg.url('/location/%s/%s/delete' % (l.id,h.id))}">[Delete]</a>
+	      	<a href="${tg.url('/locationhost/%s/%s/delete' % (l.id,h.id))}">[Delete]</a>
 	      </li>
 	    </UL>
 	  </li>
