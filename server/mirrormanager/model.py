@@ -888,6 +888,12 @@ class Location(SQLObject):
     name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
     hosts = SQLRelatedJoin('Host')
 
+    def destroySelf(self):
+        """Cascade the delete operation"""
+        for h in self.hosts:
+            self.removeHost(h)
+        SQLObject.destroySelf(self)
+
 class FileGroup(SQLObject):
     class sqlmeta:
         cacheValues = False
