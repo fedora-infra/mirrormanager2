@@ -111,7 +111,7 @@ Nothing to see here, move along.
 <div id="Locations">
 <h3>Locations <a href="${tg.url('/location/new')}">[Add]</a></h3>
 <ul>
-	  <li py:for="l in locations"> <a href="${tg.url('/location/'+str(l.id)+'/')}"><span py:replace="l.name">Location</span></a>
+	  <li py:for="l in locations"><span py:replace="l.name">Location</span>
 	    <a href="${tg.url('/locationhost/new?locationid=' + str(l.id))}">[Add Host]</a>
 	    <a href="${tg.url('/location/' + str(l.id) + '/delete')}">[Delete]</a>
 
