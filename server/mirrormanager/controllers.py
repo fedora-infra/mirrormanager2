@@ -1141,8 +1141,9 @@ class LocationHostController(controllers.Controller, identity.SecureResource, co
     require = identity.in_group(admin_group)
     
     @expose(template="mirrormanager.templates.boringlocationhostform")
-    def new(self, locationid, **kwargs):
+    def new(self, **kwargs):
         try:
+            locationid = kwargs['locationid']
             location = Location.get(locationid)
         except sqlobject.SQLObjectNotFound:
             raise redirect("/adminview")
@@ -1153,23 +1154,36 @@ class LocationHostController(controllers.Controller, identity.SecureResource, co
     @expose(template="mirrormanager.templates.boringlocationhostform")
     @error_handler(new)
     @validate(form=location_host_form)
-    def create(self, locationid, **kwargs):
+    def create(self, **kwargs):
+        try:
+            locationid = kwargs['locationid']
+            hostid = kwargs['hostid']
+        except:
+            turbogears.flash("Error: Invalid arguments.")
+            raise redirect("/adminview")
+
         try:
             location = Location.get(locationid)
         except sqlobject.SQLObjectNotFound:
             turbogears.flash("Error: Location %s does not exist" % locationid)
-            raise redirect("/")
+            raise redirect("/adminview")
 
         try:
-            hostid = kwargs['hostid']
             location.addHost(hostid)
         except: # probably sqlite IntegrityError but we can't catch that for some reason... 
             turbogears.flash("Error:LocationHost already exists")
         turbogears.flash("Location/Host created.")
-        raise turbogears.redirect("/location/%s" % location.id)
+        raise redirect("/adminview")
 
     @expose(template="mirrormanager.templates.boringlocationhostform")
-    def delete(self, locationid, hostid, **kwargs):
+    def delete(self, **kwargs):
+        try:
+            locationid = kwargs['locationid']
+            hostid = kwargs['hostid']
+        except:
+            turbogears.flash("Error: Invalid arguments.")
+            raise redirect("/adminview")
+
         try:
             location = Location.get(locationid)
         except sqlobject.SQLObjectNotFound:
@@ -1180,7 +1194,7 @@ class LocationHostController(controllers.Controller, identity.SecureResource, co
         except:
             turbogears.flash("Error: Location does not have Host %s" % hostid)
             
-        raise turbogears.redirect("/location/%s" % location.id)
+        raise redirect("/adminview")
 
 
 class Root(controllers.RootController):
@@ -1206,6 +1220,7 @@ class Root(controllers.RootController):
     repository_redirect = RepositoryRedirectController()
     country_continent_redirect = CountryContinentRedirectController()
     location = LocationController()
+    locationhost = LocationHostController()
     from mirrormanager.xmlrpc import XmlrpcController
     xmlrpc = XmlrpcController()
     

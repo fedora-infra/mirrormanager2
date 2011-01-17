@@ -57,6 +57,14 @@ Last Crawled: ${values.lastCrawled}  <a href="${tg.url('/crawler/'+str(values.id
         </li>
         </ul>
 </div>
+
+<h3>Locations</h3>
+<UL>
+<li py:for="l in values.locations">
+  <span py:replace="l.name">Location Name</span>
+</li>
+</UL>
+
 <h3>Countries Allowed</h3>
 	Some mirrors need to restrict themselves to serving only end
 	users from their country.  If you're one of these, list the

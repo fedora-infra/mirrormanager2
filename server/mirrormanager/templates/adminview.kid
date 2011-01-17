@@ -112,12 +112,16 @@ Nothing to see here, move along.
 <h3>Locations <a href="${tg.url('/location/new')}">[Add]</a></h3>
 <ul>
 	  <li py:for="l in locations"> <a href="${tg.url('/location/'+str(l.id)+'/')}"><span py:replace="l.name">Location</span></a>
-	    <a href="${tg.url('/location/%s/delete' % (l.id))}">[Delete]</a>
+	    <a href="${tg.url('/locationhost/new?locationid=' + str(l.id))}">[Add Host]</a>
+	    <a href="${tg.url('/location/' + str(l.id) + '/delete')}">[Delete]</a>
 
 	    <UL>
 	      <li py:for="h in l.hosts">
 	      	<a href="${tg.url('/host/' + str(h.id))}"><span py:replace="h.name">Host name</span></a>
-	      	<a href="${tg.url('/locationhost/%s/%s/delete' % (l.id,h.id))}">[Delete]</a>
+<?python
+deleteurl = tg.url('/locationhost/delete?locationid=' + str(l.id) + '&hostid=' + str(h.id))
+?>
+                <a href="${deleteurl}">[Delete the mapping]</a>
 	      </li>
 	    </UL>
 	  </li>
