@@ -752,10 +752,13 @@ class CategoryDNS(SQLObject):
         cacheValues = False
     category = ForeignKey('Category')
     soa_master = UnicodeCol()
-    soa_hostmaster = UnicodeCol()
+    soa_responsible = UnicodeCol()
     soa_serial = BigIntCol()
-    cname_ttl = IntCol()
-    mxs = MultipleJoin('CategoryDnsMx')
+    soa_refresh = IntCol(default=(60*20))
+    soa_retry = IntCol(default=(60*10))
+    soa_expire = IntCol(default=864000)
+    soa_minimum = IntCol(default=600)
+    cname_ttl = IntCol(default=3600)
     nss = MultipleJoin('CategoryDnsNs')
 
 
@@ -766,13 +769,6 @@ class CategoryDNS(SQLObject):
         for ns in self.nss:
             ns.destroySelf()
 
-class CategoryDnsMx(SQLObject):
-    class sqlmeta:
-        cacheValues = False
-    category = ForeignKey('CategoryDNS')
-    mx = UnicodeCol()
-    priority = IntCol()
-    
 
 class CategoryDnsNS(SQLObject):
     class sqlmeta:
