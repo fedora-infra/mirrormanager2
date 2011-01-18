@@ -1,10 +1,11 @@
 import os
 import re
-from mirrormanager.model import Category, HostCategory
 import dns.zone
+import dns.rdtypes.ANY.CNAME
 from dns.exception import DNSException
 from dns.rdataclass import *
 from dns.rdatatype import *
+from mirrormanager.model import Category, HostCategory
 
 default_ttl = 3600
 default_output_dir = '/var/lib/mirrormanager/dns'
