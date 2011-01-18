@@ -9,7 +9,7 @@ import turbogears
 from mirrormanager.model import *
 from mirrormanager.mirrorlist import populate_all_caches, dump_caches
 from optparse import OptionParser
-import mirrormanager.dns
+import mirrormanager.zonecreator
 
 from turbogears.database import PackageHub
 hub = __connection__ = None
@@ -17,7 +17,7 @@ hub = __connection__ = None
 def doit():
     populate_all_caches()
     dump_caches()
-    mirrormanager.dns.writeZoneFiles()
+    mirrormanager.zonecreator.writeZoneFiles()
 
 def main():
     parser = OptionParser(usage=sys.argv[0] + " [options]")
