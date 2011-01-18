@@ -1,6 +1,8 @@
 import os
 import re
+import errno
 import dns.zone
+import dns.name
 import dns.rdtypes.ANY.CNAME
 from dns.exception import DNSException
 from dns.rdataclass import *
@@ -18,20 +20,21 @@ def generateZoneFiles(directory):
 
     for c in Category.select():
         if c.GeoDNSDomain is None: continue
-        hcs = HostCategory.selectBy(category=c)
-        hosts = [ hc.host for hc in hcs if hc.host.dnsCountryHost ]
+        hosts = [ hc.host for hc in c.hostCategories if hc.host.dnsCountryHost ]
         for h in hosts:
             if h.country in zones:
                 z = zones[h.country]['zone']
             else:
                 domainname = domainTemplateToName(c.GeoDNSDomain, h.country)
-                z = dns.zone.Zone(domainname)
+                n = dns.name.from_text(domainname)
+                z = dns.zone.Zone(n)
                 zones[h.country] = {}
                 zones[h.country]['zone'] = z
                 zones[h.country]['name'] = domainname
 
             rdataset = z.find_rdataset('@', rdtype=CNAME, create=True)
-            rdata = dns.rdtypes.ANY.CNAME.CNAME(IN, CNAME, h.name)
+            n = dns.name.from_text(h.name)
+            rdata = dns.rdtypes.ANY.CNAME.CNAME(IN, CNAME, n)
             rdataset.add(rdata, ttl=default_ttl)
 
     for country, z in zones.iteritems():
