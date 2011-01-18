@@ -629,6 +629,7 @@ class Product(SQLObject):
             c.destroySelf()
         SQLObject.destroySelf(self)
 
+    @staticmethod
     def selectFieldOptions():
         return [(p.id, p.name) for p in Product.select(orderBy='name')]
         
