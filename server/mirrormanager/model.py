@@ -735,13 +735,14 @@ class Category(SQLObject):
                 result.append(d.name)
         return result
 
-def lookupCategory(s):
-    s = s.lower()
-    for c in Category.select():
-        cname = c.name.lower()
-        if cname == s:
-            return c
-    return None
+    @staticmethod
+    def lookupCategory(s):
+        s = s.lower()
+        for c in Category.select():
+            cname = c.name.lower()
+            if cname == s:
+                return c
+        return None
 
 def rsyncFilter(categories_requested, since):
     """
@@ -778,7 +779,7 @@ def rsyncFilter(categories_requested, since):
         return []
     categoryList = []
     for i in xrange(len(categories_requested)):
-        c = lookupCategory(categories_requested[i])
+        c = Category.lookupCategory(categories_requested[i])
         if c is None:
             continue
         categoryList.append(c.id)
