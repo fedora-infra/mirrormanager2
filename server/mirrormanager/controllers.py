@@ -880,11 +880,12 @@ class CategoryController(SimpleDbObjectController):
     @validate(form=category_form)
     @error_handler(SimpleDbObjectController.new)
     def create(self, **kwargs):
-        topdirPath.strip('/')
+        topdir = kwargs['topdirPath']
+        topdir.strip('/')
         try:
-            d = Directory.byName(kwargs['topdirPath'])
+            d = Directory.byName(topdir)
         except SQLObjectNotFound:
-            d = Directory(kwargs['topdirPath'])
+            d = Directory(name=topdir)
         del kwargs['topdirPath']
         kwargs['topdir'] = d
             
