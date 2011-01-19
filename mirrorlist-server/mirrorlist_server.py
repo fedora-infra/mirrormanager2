@@ -64,6 +64,7 @@ hcurl_cache = {}
 asn_host_cache = {}
 internet2_tree = radix.Radix()
 global_tree = radix.Radix()
+netblocks_tree = radix.Radix()
 location_cache = {}
 
 def lookup_ip_asn(tree, ip):
@@ -188,9 +189,14 @@ def client_netblocks(ip):
         clientIP = IP(ip)
     except:
         return result
-    for k,v in host_netblock_cache.iteritems():
-        if clientIP in k:
-            result.extend(v)
+
+    # fast lookup in the tree; if present, find all the netblocks in the list
+    # rather than just the "best" one
+    node = host_netblock_tree.search_best(str(ip))
+    if node is not None:
+        for k,v in host_netblock_cache.iteritems():
+            if clientIP in k:
+                result.extend(v)
     return result
 
 def trim_by_client_country(s, clientCountry):
@@ -603,6 +609,12 @@ def do_mirrorlist(kwargs):
         return d
 
 
+def setup_netblocks_tree():
+    tree = radix.Radix()
+    for k, v in host_netblock_cache.iteritems():
+        tree.add(k.strNormal())
+    return tree
+
 def setup_netblocks(netblocks_file):
 
     tree = radix.Radix()
@@ -680,12 +692,15 @@ def read_caches():
     setup_continents()
     global internet2_tree
     global global_tree
+    global netblocks_tree
 
     del internet2_tree
     del global_tree
+    del netblocks_tree
 
     internet2_tree = setup_netblocks(internet2_netblocks_file)
     global_tree    = setup_netblocks(global_netblocks_file)
+    netblocks_tree = setup_netblocks_tree()
 
 def errordoc(metalink, message):
     if metalink:
