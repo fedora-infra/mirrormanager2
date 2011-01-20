@@ -722,13 +722,10 @@ class Category(SQLObject):
     GeoDNSDomain = UnicodeCol(default=None)
     directories = RelatedJoin('Directory', orderBy='name') # all the directories that are part of this category
     hostCategories = MultipleJoin('HostCategory')
-    categoryDNS = SingleJoin('CategoryDNS')
 
     def destroySelf(self):
         for hc in self.hostCategories:
             hc.destroySelf()
-        if self.categoryDNS is not None:
-            self.categoryDNS.destroySelf()
         SQLObject.destroySelf(self)
 
     def directories_newer_than(self, since):
@@ -747,34 +744,6 @@ class Category(SQLObject):
                 return c
         return None
 
-class CategoryDNS(SQLObject):
-    class sqlmeta:
-        cacheValues = False
-    category = ForeignKey('Category')
-    soa_master = UnicodeCol()
-    soa_responsible = UnicodeCol()
-    soa_serial = BigIntCol()
-    soa_refresh = IntCol(default=(60*20))
-    soa_retry = IntCol(default=(60*10))
-    soa_expire = IntCol(default=864000)
-    soa_minimum = IntCol(default=600)
-    cname_ttl = IntCol(default=3600)
-    nss = MultipleJoin('CategoryDnsNs')
-
-
-    def destroySelf(self):
-        """Cascade the delete operation"""
-        for mx in self.mxs:
-            mx.destroySelf()
-        for ns in self.nss:
-            ns.destroySelf()
-
-
-class CategoryDnsNS(SQLObject):
-    class sqlmeta:
-        cacheValues = False
-    category = ForeignKey('CategoryDNS')
-    ns = UnicodeCol()
 
 def rsyncFilter(categories_requested, since):
     """
