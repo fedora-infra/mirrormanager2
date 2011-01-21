@@ -16,6 +16,17 @@ Nothing to see here, move along.
 
 <div id="adminview" py:if="admin_group in tg.identity.groups">
 
+<h3>Statistics</h3>
+<UL>
+  <LI>Sites: <span py:replace="num_sites"/> total 
+  (<span py:replace="num_public_sites"/> public /
+   <span py:replace="num_private_sites"/> private) </LI>
+  <LI>Hosts: <span py:replace="num_hosts"/> total 
+  (<span py:replace="num_public_hosts"/> public /
+  <span py:replace="num_private_hosts"/> private) </LI>
+</UL>
+
+
 <div id="categories">
 <h3>Categories <a href="${tg.url('/category/new')}">[Add]</a></h3>
 <ul>

@@ -1245,6 +1245,15 @@ class Root(controllers.RootController):
     @expose(template="mirrormanager.templates.adminview")
     @identity.require(identity.in_group(admin_group))
     def adminview(self):
+        num_sites = Site.select().count()
+        num_private_sites = 0
+        for s in Site.select():
+            if site.private: num_private_sites = num_private_sites + 1
+        num_hosts = Host.select().count()
+        num_private_hosts = 0
+        for h in Host.select():
+            if h.is_private(): num_private_hosts = num_private_hosts + 1
+
         return {"sites":Site.select(orderBy='name'),
                 "arches":Arch.select(),
                 "products":Product.select(),
@@ -1257,6 +1266,12 @@ class Root(controllers.RootController):
                 "repository_redirects":RepositoryRedirect.select(orderBy='fromRepo'),
                 "country_continent_redirects":CountryContinentRedirect.select(orderBy='country'),
                 "locations":Location.select(orderBy='name'),
+                "num_sites": num_sites,
+                "num_private_sites":num_private_sites,
+                "num_public_sites":(num_sites-num_private_sites)
+                "num_hosts":num_hosts,
+                "num_private_hosts":num_private_hosts,
+                "num_public_hosts":(num_hosts - num_private_hosts)
                 }
 
     @expose(template="mirrormanager.templates.rsync_acl", format="plain", content_type="text/plain")

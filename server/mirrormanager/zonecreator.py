@@ -56,4 +56,9 @@ def writeZoneFiles(output_dir = default_output_dir):
     generateZoneFile(output_dir)
 
 
-__all__ = ['writeZoneFiles']
+def zoneFilesIdentical(file1, file2):
+    z1 = dns.zone.from_file(file1)
+    z2 = dns.zone.from_file(file2)
+    return z1 == z2
+
+__all__ = ['writeZoneFiles', 'zoneFilesIdentical']
