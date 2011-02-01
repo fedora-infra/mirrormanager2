@@ -21,7 +21,7 @@ from optparse import OptionParser
 import dns.resolver
 from IPy import IP
 from fedora.client.fas2 import AccountSystem
-
+import turbomail
 
 from turbogears.database import PackageHub
 from turbogears import config
@@ -41,6 +41,16 @@ class SiteResult(object):
         self.site = site
         self.messages = []
         self.admin_emails = []
+
+def send_mail(sender, to, subject, body):
+    message = turbomail.Message(sender, to, subject, plain=body)
+    try:
+        turbomail.send(message)
+    except turbomail.MailNotEnabledException, e:
+        print "Unable to send mail: %s" % (str(e))
+    except Exception, e:
+        print "Exception thrown when trying to send mail: %s" % (str(e))
+
 
 
 def name_to_ips(name):
@@ -228,12 +238,18 @@ def check_host(sr, host):
                 msg += u" Public mirrors are encouraged to run report_mirror."
             sr.messages.append(msg)
 
+
+    if host.is_private() and len(host.netblocks) == 0 and (host.asn is None or not host.asn_clients):
+        msg = u"Host %s is private has no netblocks or ASN set or asn_clients set.  Clients will not automatically be directed to your mirror." % (host.name)
+        sr.messages.append(msg)
+        
+
 AS = None
 
-def users_to_emails(userlist):
+def users_accountinfo(userlist):
     global options
     global AS
-    result = []
+    result = {}
     if AS is None:
         if turbogears.config.get('identity.provider') == 'jsonfas2':
             from fedora.client.fas2 import AccountSystem
@@ -241,7 +257,7 @@ def users_to_emails(userlist):
     for user in userlist:
         person = AS.person_by_username(user)
         if person:
-            result.append(person['email'])
+            result[user] = person
     return result
 
 def site_admins(site):
@@ -286,7 +302,12 @@ def check_site(site):
         return
 
     sr = SiteResult(site)
-    sr.admin_emails = users_to_emails(site_admins(site))
+    sr.admin_emails = []
+    for username, person in users_accountinfo(site_admins(site)).iteritems():
+        sr.admin_emails.append(person['email'])
+        if person['status'] == u'inactive':
+            msg = u'Site Admin Username %s is inactive in FAS' % (username)
+            sr.messages.append(msg)
 
 
     if len(site.hosts) == 0:
@@ -301,6 +322,27 @@ def check_site(site):
         for msg in sr.messages:
             outfile.write("\t%s\n" %  msg)
         outfile.write("\n")
+    return sr
+
+
+def send_site_emails(sr):
+    if len(sr.messages) == 0: return
+    if len(sr.admin_emails) == 0: return
+    projectname = config.get(mirrormanager.project.name)
+    sender = config.get(crawler.mail_from)
+    subject = projectname + u' MirrorManager report for ' + sr.site.name
+    body = u'''\
+This is an automated report from the %(project)s MirrorManager at %(url)s.
+Site: %(site)s
+
+    ''' % dict(project=projectname, url=turbogears.url('/'), site=sr.site.name)
+
+    for m in messages:
+        body = body + u'\n'
+
+    to = sr.admin_emails
+    send_mail(sender, to, subject, body)
+
 
 def doit():
     global internet2_tree
@@ -310,7 +352,9 @@ def doit():
     global_tree    = setup_netblocks(global_netblocks_file)
 
     for site in Site.select():
-        check_site(site)
+        sr = check_site(site)
+        if options.email: send_site_emails(sr)
+    
 
 options = None
 
@@ -327,12 +371,15 @@ def main():
                       dest="faspassword", default=None,
                       help="Fedora Account System password for queries")
     parser.add_option("--private",
-                      dest="private", default=None,
+                      dest="private", action="store_true", default=None,
                       help="include private mirrors")
     parser.add_option("-o", "--output",
                       dest="outfile", default=None,
                       help="FILE to write to")
-
+    parser.add_option("-e", "--email",
+                      dest="email", action="store_true", default=False,
+                      help="Send emails to Site admins")
+                      
 
     (options, args) = parser.parse_args()
 
@@ -347,6 +394,9 @@ def main():
         print "Must specify an output file.\n"
         sys.exit(1)
 
+
+    turbomail.interface.start(turbogears.config)
+        
     global outfile
     outfile = codecs.open(options.outfile, encoding='utf-8', mode='w')
 
@@ -355,8 +405,11 @@ def main():
     hub = PackageHub("mirrormanager")
     __connection__ = hub
     
-    doit()
+    doit(options)
     outfile.close()
+
+    turbomail.interface.stop()
+
     remove_pidfile(pidfile)
 
 
