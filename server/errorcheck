@@ -161,8 +161,6 @@ def check_host(sr, host):
         return
 
     if not host.is_active():
-        msg = u"Host %s is not active - ignoring." % (host.name)
-        sr.messages.append(msg)
         return
 
     ips = name_to_ips(host.name)
