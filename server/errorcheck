@@ -166,7 +166,7 @@ def check_host(sr, host):
         return
 
     ips = name_to_ips(host.name)
-    if len(ips) == 0:
+    if len(ips) == 0 && not host.is_private():
         msg = u"Host name %s not found in DNS.  Please use a FQDN for your host name.  You will also need to make the corresponding change in your report_mirror.conf file." % (host.name)
         sr.messages.append(msg)
     else:
