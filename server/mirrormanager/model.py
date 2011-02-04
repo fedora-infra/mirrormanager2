@@ -259,7 +259,9 @@ class Host(SQLObject):
             if hc.count() > 0:            
                 hc = hc[0]
             else:
-                hc = HostCategory(host=self, category=category)
+                # don't let report_mirror create HostCategories
+                # it must be done through the web UI
+                continue
 
             marked_up2date = 0
             deleted = 0
