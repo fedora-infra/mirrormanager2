@@ -22,6 +22,7 @@ import dns.resolver
 from IPy import IP
 from fedora.client.fas2 import AccountSystem
 import turbomail
+from turbomail.startup import start_extension, shutdown_extension
 
 from turbogears.database import PackageHub
 from turbogears import config
@@ -42,10 +43,10 @@ class SiteResult(object):
         self.messages = []
         self.admin_emails = []
 
-def send_mail(sender, to, subject, body):
-    message = turbomail.Message(sender, to, subject, plain=body)
+def send_mail(sender, to, subject, body, cc=[]):
+    message = turbomail.Message(sender, to, subject, plain=body, cc=cc)
     try:
-        turbomail.send(message)
+        turbomail.enqueue(message)
     except turbomail.MailNotEnabledException, e:
         print "Unable to send mail: %s" % (str(e))
     except Exception, e:
@@ -219,7 +220,11 @@ def check_host(sr, host):
 
         if hc.always_up2date: always_up2date = True
         if len(hc.dirs) == 0 and not hc.always_up2date:
-            msg = u"Host %s Category %s has no up-to-date directories.  Consult the crawler logs and check your report_mirror.conf." % (host.name, hc.category.name)
+            msg = u"Host %s Category %s has no up-to-date directories. "  % (host.name, hc.category.name)
+            if len(hc.urls) > 0:
+                msg = msg + u"Check that your Category URL points to %s. " % (hc.category.topdir.name)
+
+            msg = msg + u"Consult the crawler logs and check your report_mirror.conf."
             sr.messages.append(msg)
 
     if host.lastCheckedIn is None and not always_up2date:
@@ -229,7 +234,7 @@ def check_host(sr, host):
         else:
             msg += u"  Public mirrors are encouraged to run report_mirror."
         sr.messages.append(msg)
-    else:
+    elif host.lastCheckedIn is not None:
         if host.lastCheckedIn <  (dt.datetime.utcnow() - one_day):
             msg = u"Host %s has not checked in with report_mirror in 24 hours." % (host.name)
             if host.is_private():
@@ -297,9 +302,9 @@ def setup_netblocks(netblocks_file):
 
 def check_site(site):
     if site.private and not options.private:
-        return
+        return None
     if not site.admin_active or not site.user_active:
-        return
+        return None
 
     sr = SiteResult(site)
     sr.admin_emails = []
@@ -325,35 +330,40 @@ def check_site(site):
     return sr
 
 
-def send_site_emails(sr):
+def send_site_emails(sr, cc=[]):
     if len(sr.messages) == 0: return
     if len(sr.admin_emails) == 0: return
-    projectname = config.get(mirrormanager.project.name)
-    sender = config.get(crawler.mail_from)
+    projectname = config.get('mirrormanager.project.name', u'')
+    sender = config.get('mirrormanager.mail_from')
+    if sender is None:
+        print "unable to send mail: mirrormanager.mail_from is not set"
+        return
+    
     subject = projectname + u' MirrorManager report for ' + sr.site.name
+    url = config.get('base_url_filter.base_url') + turbogears.url('/')
+    siteurl = url + 'site/' + str(sr.site.id)
     body = u'''\
 This is an automated report from the %(project)s MirrorManager at %(url)s.
-Site: %(site)s
+Site: %(site)s    %(siteurl)s
+''' % dict(project=projectname, url=url, site=sr.site.name, siteurl=siteurl)
 
-    ''' % dict(project=projectname, url=turbogears.url('/'), site=sr.site.name)
-
-    for m in messages:
-        body = body + u'\n'
+    for m in sr.messages:
+        body = body + m + u'\n'
 
     to = sr.admin_emails
-    send_mail(sender, to, subject, body)
+    send_mail(sender, to, subject, body, cc=cc)
 
 
 def doit():
+    global options
     global internet2_tree
     global global_tree
-    global options
     internet2_tree = setup_netblocks(internet2_netblocks_file)
     global_tree    = setup_netblocks(global_netblocks_file)
 
     for site in Site.select():
         sr = check_site(site)
-        if options.email: send_site_emails(sr)
+        if sr is not None and options.email: send_site_emails(sr, options.cc)
     
 
 options = None
@@ -379,6 +389,9 @@ def main():
     parser.add_option("-e", "--email",
                       dest="email", action="store_true", default=False,
                       help="Send emails to Site admins")
+    parser.add_option("-cc", 
+                      dest="cc", default=[],
+                      help="Email address to include on cc:")
                       
 
     (options, args) = parser.parse_args()
@@ -395,8 +408,6 @@ def main():
         sys.exit(1)
 
 
-    turbomail.interface.start(turbogears.config)
-        
     global outfile
     outfile = codecs.open(options.outfile, encoding='utf-8', mode='w')
 
@@ -405,10 +416,15 @@ def main():
     hub = PackageHub("mirrormanager")
     __connection__ = hub
     
-    doit(options)
-    outfile.close()
+    if options.email:
+        start_extension()
 
-    turbomail.interface.stop()
+    doit()
+
+    if options.email:
+        shutdown_extension()
+
+    outfile.close()
 
     remove_pidfile(pidfile)
 
