@@ -213,19 +213,22 @@ def check_host(sr, host):
         sr.messages.append(msg)
 
     always_up2date = False
-    for hc in host.categories:
-        if len(hc.urls) == 0:
-            msg = u"Host %s Category %s has no URLs.  Please add a URL to the content your mirror carries, or if not carried, delete the Category." % (host.name, hc.category.name)
-            sr.messages.append(msg)            
 
-        if hc.always_up2date: always_up2date = True
-        if len(hc.dirs) == 0 and not hc.always_up2date:
-            msg = u"Host %s Category %s has no up-to-date directories. "  % (host.name, hc.category.name)
-            if len(hc.urls) > 0:
-                msg = msg + u"Check that your Category URL points to %s. " % (hc.category.topdir.name)
+    # hide this for now, until checkins are fixed
+    if 0:
+        for hc in host.categories:
+            if len(hc.urls) == 0:
+                msg = u"Host %s Category %s has no URLs.  Please add a URL to the content your mirror carries, or if not carried, delete the Category." % (host.name, hc.category.name)
+                sr.messages.append(msg)            
 
-            msg = msg + u"Consult the crawler logs and check your report_mirror.conf."
-            sr.messages.append(msg)
+            if hc.always_up2date: always_up2date = True
+            if len(hc.dirs) == 0 and not hc.always_up2date:
+                msg = u"Host %s Category %s has no up-to-date directories. "  % (host.name, hc.category.name)
+                if len(hc.urls) > 0:
+                    msg = msg + u"Check that your Category URL points to %s. " % (hc.category.topdir.name)
+
+                msg = msg + u"Consult the crawler logs and check your report_mirror.conf."
+                sr.messages.append(msg)
 
     if host.lastCheckedIn is None and not always_up2date:
         msg = u"Host %s has never checked in with report_mirror." % (host.name)
