@@ -190,13 +190,15 @@ def client_netblocks(ip):
     except:
         return result
 
-    # fast lookup in the tree; if present, find all the netblocks in the list
-    # rather than just the "best" one
-    node = host_netblock_tree.search_best(ip.strNormal()))
-    if node is not None:
-        for k,v in host_netblock_cache.iteritems():
-            if clientIP in k:
-                result.extend(v)
+    # fast lookup in the tree; if present, find all the netblocks by deleting the found one and searching again
+    # this is safe w/o copying the tree again only because this is the only place the tree is used, and
+    # we'll get a new copy of the tree from our parent the next time it fork()s.
+    node = host_netblocks_tree.search_best(ip.strNormal())
+    while node is not None:
+        result.extend(node.data['hosts'])
+        prefix = node.prefix
+        host_netblocks_tree.delete(prefix)
+        node = host_netblocks_tree.search_best(ip.strNormal()))
     return result
 
 def trim_by_client_country(s, clientCountry):
@@ -612,7 +614,8 @@ def do_mirrorlist(kwargs):
 def setup_host_netblocks_tree():
     tree = radix.Radix()
     for k, v in host_netblock_cache.iteritems():
-        tree.add(k.strNormal())
+        node = tree.add(k.strNormal())
+        node.data['hosts'] = v
     return tree
 
 def setup_netblocks(netblocks_file):
