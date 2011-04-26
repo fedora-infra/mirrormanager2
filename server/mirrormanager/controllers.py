@@ -1268,7 +1268,7 @@ class Root(controllers.RootController):
                 "locations":Location.select(orderBy='name'),
                 "num_sites": num_sites,
                 "num_private_sites":num_private_sites,
-                "num_public_sites":(num_sites-num_private_sites)
+                "num_public_sites":(num_sites-num_private_sites),
                 "num_hosts":num_hosts,
                 "num_private_hosts":num_private_hosts,
                 "num_public_hosts":(num_hosts - num_private_hosts)
