@@ -12,6 +12,8 @@ __connection__ = hub
 changes = {}
 
 def change_tables():
+    global changes
+
     Location.createTable(ifNotExists=True)
     FileGroup.createTable(ifNotExists=True)
 
@@ -40,7 +42,9 @@ def change_tables():
         OldCategory.sqlmeta.addColumn(UnicodeCol("GeoDNSDomain", default=None), changeSchema=True)
         changes['category.geo_dns_domain'] = True
 
-def fill_columns():
+def fill_new_columns():
+    global changes
+
     if changes.get('site.email_on_drop_add'):
         for s in Site.select():
             s.emailOnDrop=False
@@ -71,4 +75,4 @@ def update():
     Run this after using tg-admin sql upgrade.
     """
     change_tables()
-    fill_columns()
+    fill_new_columns()
