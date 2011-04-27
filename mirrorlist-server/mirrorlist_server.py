@@ -193,12 +193,12 @@ def client_netblocks(ip):
     # fast lookup in the tree; if present, find all the netblocks by deleting the found one and searching again
     # this is safe w/o copying the tree again only because this is the only place the tree is used, and
     # we'll get a new copy of the tree from our parent the next time it fork()s.
-    node = host_netblocks_tree.search_best(ip.strNormal())
+    node = host_netblocks_tree.search_best(clientIP.strNormal())
     while node is not None:
         result.extend(node.data['hosts'])
         prefix = node.prefix
         host_netblocks_tree.delete(prefix)
-        node = host_netblocks_tree.search_best(ip.strNormal())
+        node = host_netblocks_tree.search_best(clientIP.strNormal())
     return result
 
 def trim_by_client_country(s, clientCountry):
