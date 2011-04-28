@@ -65,40 +65,12 @@ Nothing to see here, move along.
 	  </li>
 </ul>
 </div>
-<div id="Repositories">
-    <h3>Repositories</h3>
-    <ul>
-    	  <li py:for="r in repositories">
-    	  <a href="${tg.url('/repository/'+str(r.id)+'/')}">
-         	  <span py:replace="r.directory.name">Repository Name
-    	   </span></a>	
-    	   <a href="${tg.url('/repository/'+str(r.id)+'/delete')}">[Delete]</a>	
-    	  </li>
-    </ul>
-</div>
-<div id="Directories">
-    <h3>Directories</h3>
-    <ul>
-    	  <li py:for="d in directories">
-    	  <span py:replace="d.name">Directory Name</span>	
-    	  </li>
-    </ul>
-</div>
 <div id="Embargoed Countries">
 <h3>Embargoed Counries <a href="${tg.url('/embargoed_country/0/new')}">[Add]</a></h3>
 <ul>
 	  <li py:for="cc in embargoed_countries">
   	  <span py:replace="cc.country_code">Country Code</span>	   <a href="${tg.url('/embargoed_country/'+str(cc.id)+'/delete')}">[Delete]</a>	
 	
-	  </li>
-</ul>
-</div>
-<div id="Netblocks">
-<h3>Netblocks</h3>
-<ul>
-	  <li py:for="n in netblocks">
-	  <a href="${tg.url('/host/'+str(n.host.id)+'/')}"><span py:replace="n.host.name">Host Name</span></a> 
- 	  <span py:replace="n.netblock">Netblock</span>
 	  </li>
 </ul>
 </div>
