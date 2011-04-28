@@ -1248,7 +1248,7 @@ class Root(controllers.RootController):
         num_sites = Site.select().count()
         num_private_sites = 0
         for s in Site.select():
-            if site.private: num_private_sites = num_private_sites + 1
+            if s.private: num_private_sites = num_private_sites + 1
         num_hosts = Host.select().count()
         num_private_hosts = 0
         for h in Host.select():
