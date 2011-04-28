@@ -198,7 +198,7 @@ def client_netblocks(ip):
         result.extend(node.data['hosts'])
         prefix = node.prefix
         host_netblocks_tree.delete(prefix)
-        node = host_netblocks_tree.search_best(ip.strNormal()))
+        node = host_netblocks_tree.search_best(ip.strNormal())
     return result
 
 def trim_by_client_country(s, clientCountry):
