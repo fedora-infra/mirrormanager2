@@ -17,6 +17,7 @@ class NewHostLocation(SQLObject):
         table = 'host_location'
     host = ForeignKey('Host')
     location = ForeignKey('Location')
+    index = DatabaseIndex('host', 'location', unique=True)
 
 
 def change_tables():
