@@ -498,15 +498,26 @@ def main():
         except KeyError:
             options = None
 
+        cname = i['category']
+        try:
+            category = Category.byName(cname)
+        except SQLObjectNotFound:
+            print 'Error: umdl.master_directories Category %s does not exist in the database, skipping' % (cname)
+            continue            
+
+        if category.product is None:
+            print 'Error: umdl.master_directories Category %s has null Product, skipping' % (cname)
+            continue            
+
         if i['type'] == 'rsync':
-            sync_directories_using_rsync(i['url'], i['category'], options)
+            sync_directories_using_rsync(i['url'], cname, options)
 
         if i['type'] == 'file':
-            sync_directories_from_file(i['url'], i['category'])
+            sync_directories_from_file(i['url'], cname)
 
         if i['type'] == 'directory':
             excludes = i.get('excludes', [])
-            sync_directories_from_directory(i['path'], i['category'], excludes)
+            sync_directories_from_directory(i['path'], cname, excludes)
 
     remove_pidfile(pidfile)
     print "Ending umdl %s" % (datetime.datetime.utcnow().isoformat())
