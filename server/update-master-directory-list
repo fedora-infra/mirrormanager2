@@ -368,8 +368,7 @@ def sync_category_directories(category, category_directories):
         make_repomd_file_details(dir)
     ageFileDetails()
 
-def parse_rsync_listing(cname, f):
-    category = Category.byName(cname)
+def parse_rsync_listing(category, f):
     category_directories = {}
     for line in f:
         line.strip()
@@ -387,7 +386,7 @@ def parse_rsync_listing(cname, f):
 
 
 
-def sync_directories_using_rsync(rsyncpath, cname, extra_rsync_args=None):
+def sync_directories_using_rsync(rsyncpath, category, extra_rsync_args=None):
     cmd = "rsync --temp-dir=/tmp -r --exclude=.snapshot --exclude='*.~tmp~'"
     if extra_rsync_args is not None:
         cmd += ' ' + extra_rsync_args
@@ -396,23 +395,22 @@ def sync_directories_using_rsync(rsyncpath, cname, extra_rsync_args=None):
         devnull = open('/dev/null', 'r')
         p = Popen(cmd, shell=True, stdin=devnull, stdout=PIPE, bufsize=1, close_fds=True)
     except:
-        print "Category %s: Unable to run %s" % (cname, args)
+        print "Category %s: Unable to run %s" % (category.name, args)
         devnull.close()
         return
-    parse_rsync_listing(cname, p.stdout)
+    parse_rsync_listing(category, p.stdout)
     devnull.close()
 
-def sync_directories_from_file(filename, cname):
+def sync_directories_from_file(filename, category):
     f = open(filename, 'r')
-    parse_rsync_listing(cname, f)
+    parse_rsync_listing(category, f)
     f.close()
 
 
-def sync_directories_from_directory(directory, cname, excludes=[]):
+def sync_directories_from_directory(directory, category, excludes=[]):
     global unreadable_dirs
     # drop trailing slashes from path
     directory = directory.rstrip('/')
-    category = Category.byName(cname)
     category_directories = {}
     topdir = category.topdir
     topdirName = topdir.name
@@ -510,14 +508,14 @@ def main():
             continue            
 
         if i['type'] == 'rsync':
-            sync_directories_using_rsync(i['url'], cname, options)
+            sync_directories_using_rsync(i['url'], category, options)
 
         if i['type'] == 'file':
-            sync_directories_from_file(i['url'], cname)
+            sync_directories_from_file(i['url'], category)
 
         if i['type'] == 'directory':
             excludes = i.get('excludes', [])
-            sync_directories_from_directory(i['path'], cname, excludes)
+            sync_directories_from_directory(i['path'], category, excludes)
 
     remove_pidfile(pidfile)
     print "Ending umdl %s" % (datetime.datetime.utcnow().isoformat())
