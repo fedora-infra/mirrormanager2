@@ -22,7 +22,12 @@ import dns.resolver
 from IPy import IP
 from fedora.client.fas2 import AccountSystem
 import turbomail
-from turbomail.startup import start_extension, shutdown_extension
+try:
+    from turbomail.adapters.tg1 import start_extension, shutdown_extension
+except ImportError:
+    # fall back to older method
+    from turbomail.startup import start_extension, shutdown_extension
+
 
 from turbogears.database import PackageHub
 from turbogears import config
@@ -164,7 +169,7 @@ def check_host(sr, host):
         return
 
     ips = name_to_ips(host.name)
-    if len(ips) == 0 && not host.is_private():
+    if len(ips) == 0 and not host.is_private():
         msg = u"Host name %s not found in DNS.  Please use a FQDN for your host name.  You will also need to make the corresponding change in your report_mirror.conf file." % (host.name)
         sr.messages.append(msg)
     else:
@@ -355,12 +360,48 @@ Site: %(site)s    %(siteurl)s
     send_mail(sender, to, subject, body, cc=cc)
 
 
+def check_objects():
+    for p in Product.select():
+        if not p.name:
+            print "Error: Product %s has no name" % p
+
+    for a in Arch.select():
+        if not a.name:
+            print "Error: Arch %s has no name" % a
+
+    for c in Category.select():
+        if not c.name:
+            print "Error: Category %s has no name" % c
+        if not c.product:
+            print "Error: Category %s has no product" % c
+        if not c.topdir:
+            print "Error: Category %s has no topdir" % c
+
+    for v in Version.select():
+        if not v.name:
+            print "Error: Version %s has no name" % v
+        if not v.product:
+            print "Error: Version %s has no product" % v
+            
+    for r in Repository.select():
+        if not r.category:
+            print "Error: Repository %s has no category" % r
+        if not r.version:
+            print "Error: Repository %s has no version" % r
+        if not r.arch:
+            print "Error: Repository %s has no arch" % r
+        if not r.directory:
+            print "Error: Repository %s has no directory" % r
+
+
 def doit():
     global options
     global internet2_tree
     global global_tree
     internet2_tree = setup_netblocks(internet2_netblocks_file)
     global_tree    = setup_netblocks(global_netblocks_file)
+
+    check_objects()
 
     for site in Site.select():
         sr = check_site(site)
@@ -390,7 +431,7 @@ def main():
     parser.add_option("-e", "--email",
                       dest="email", action="store_true", default=False,
                       help="Send emails to Site admins")
-    parser.add_option("-cc", 
+    parser.add_option("--cc", 
                       dest="cc", default=[],
                       help="Email address to include on cc:")
                       
