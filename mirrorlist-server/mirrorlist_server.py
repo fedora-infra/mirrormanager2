@@ -464,7 +464,7 @@ def do_mirrorlist(kwargs):
             repo_information += "# following repositories are available:\n"
             for i in repos:
                 if i[0] is not None and i[1] is not None:
-                    repo_information += "# repo=%s, arch=%s\n" % i
+                    repo_information += "# repo=%s&arch=%s\n" % i
             return return_error(kwargs, message=repo_information)
 
 
