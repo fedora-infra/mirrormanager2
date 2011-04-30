@@ -899,6 +899,15 @@ class Location(SQLObject):
             self.removeHost(h)
         SQLObject.destroySelf(self)
 
+# manual creation of the RelatedJoin table so we can guarantee uniqueness
+class HostLocation(SQLObject):
+    class sqlmeta:
+        table = 'host_location'
+    host = ForeignKey('Host')
+    location = ForeignKey('Location')
+    hlidx = DatabaseIndex('host', 'location', unique=True)
+
+
 class FileGroup(SQLObject):
     class sqlmeta:
         cacheValues = False

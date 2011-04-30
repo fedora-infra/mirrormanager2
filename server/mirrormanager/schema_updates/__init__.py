@@ -11,21 +11,12 @@ __connection__ = hub
 
 changes = {}
 
-# this class won't appear in the model, it's only used to create the table in the database
-class NewHostLocation(SQLObject):
-    class sqlmeta:
-        table = 'host_location'
-    host = ForeignKey('Host')
-    location = ForeignKey('Location')
-    index = DatabaseIndex('host', 'location', unique=True)
-
-
 def change_tables():
     global changes
 
     Location.createTable(ifNotExists=True)
     FileGroup.createTable(ifNotExists=True)
-    NewHostLocation.createTable(ifNotExists=True)
+    HostLocation.createTable(ifNotExists=True)
 
     if 'emailOnDrop' not in OldSite.sqlmeta.columns and \
             'emailOnAdd' not in OldSite.sqlmeta.columns:
