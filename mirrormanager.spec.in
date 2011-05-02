@@ -10,8 +10,9 @@ URL:            http://fedorahosted.org/mirrormanager
 Source0:        https://fedorahosted.org/releases/m/i/%{name}/%{name}-%{version}.tar.bz2
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildRequires:  python
-Requires:       TurboGears, python-IPy, python-GeoIP, wget, yum, psmisc, python-dns, python-fedora >= 0.3.14, py-radix, mod_wsgi
+Requires:       TurboGears, python-IPy, python-GeoIP, wget, yum, psmisc, python-dns, python-fedora >= 0.3.14, py-radix, mod_wsgi, python-TurboMail
 Requires:       python-basemap >= 0.99.4, python-basemap-data >= 0.99.4
+Requires:	supervisor
 Requires(pre):  shadow-utils
 
 %define py_ver         %(echo `python -c "import sys; print sys.version[:3]"`)
@@ -71,6 +72,7 @@ exit 0
 %attr(-,mirrormanager,mirrormanager) %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %attr(-,mirrormanager,mirrormanager) %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrormanager.conf
 %attr(-,mirrormanager,mirrormanager) %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrorlist-server.conf
+%attr(-,mirrormanager,mirrormanager) %config(noreplace) %{_sysconfdir}/supervisord.d/mirrorlist-server.conf
 %dir /etc/rpmlint/
 %config(noreplace) /etc/rpmlint/%{name}.config
 %doc LICENSES LICENSE-MIT-X11 LICENSE-GPLv2
