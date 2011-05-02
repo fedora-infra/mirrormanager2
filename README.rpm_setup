@@ -26,4 +26,19 @@ following actions.
 
     - Visit your Mirror Manager app:
 
-        http://www.example.com/mirrormanager
+        http://localhost/mirrormanager
+
+
+There are three continuously running processes.
+1) mirrormanager.wsgi, started by apache (or your http server).  This
+   is the administrative web user interface, written in TurboGears.
+2) mirrorlist-client.wsgi, started by apache (or your http server).
+   This is the web server -> mirrorlist_server.py connector, which takes
+   client (typically yum or another http client) requests, validates
+   them, forwards the request to mirrorlist_server.py, receives the
+   answer back, and replies to the client.
+3) mirrorlist_server.py, started by supervisor.  This is the heart of
+   the client responder, where the answer to any client query is
+   generated.
+
+You must ensure that apache and supervisor are configured to start.
