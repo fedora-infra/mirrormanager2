@@ -25,9 +25,9 @@ def change_tables():
         changes['site.email_on_drop_add'] = True
         
     # Host
-    if 'dnsCountryHost' not in OldHost.sqlmeta.columns:
-        OldHost.sqlmeta.addColumn(BoolCol("dnsCountryHost", default=False), changeSchema=True)
-        changes['host.dns_country_host'] = True
+    # ensure this isn't present anymore
+    if 'dnsCountryHost' in OldHost.sqlmeta.columns:
+        OldHost.sqlmeta.delColumn("dnsCountryHost"), changeSchema=True)
 
     if 'sortorder' not in OldVersion.sqlmeta.columns and \
             'codename' not in OldVersion.sqlmeta.columns:
@@ -50,10 +50,6 @@ def fill_new_columns():
         for s in Site.select():
             s.emailOnDrop=False
             s.emailOnAdd=False
-
-    if changes.get('host.dns_country_host'):
-        for h in Host.select():
-            h.dnsCountryHost = False
 
     if changes.get('version.sortorder_codename'):
         for v in Version.select():

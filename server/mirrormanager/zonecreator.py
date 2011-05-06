@@ -21,7 +21,7 @@ def generateZoneFile(directory):
     for c in Category.select():
         z = dns.zone.Zone(dns.name.from_text(''))
         if c.GeoDNSDomain is None: continue
-        hosts = [ hc.host for hc in c.hostCategories if hc.host.dnsCountryHost ]
+        hosts = [] # fixme with real lookup
         for h in hosts:
             domainname = domainTemplateToName(c.GeoDNSDomain, h.country)
             n = dns.name.from_text(domainname)

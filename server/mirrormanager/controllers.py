@@ -313,7 +313,6 @@ class HostFields(widgets.WidgetsList):
     asn = widgets.TextField("asn", label="ASN", default='', validator=validators.Int, help_text="Autonomous System Number, used in BGP routing tables.")
     asn_clients = widgets.CheckBox('asn_clients', label="ASN Clients?", default=True, help_text="Serve all clients from the same ASN.  Used for ISPs, companies, or schools, not personal networks.")
     robot_email = widgets.TextField(label="Robot email", validator=validators.All(validators.UnicodeString,validators.Email), help_text="email address, will receive notice of upstream content updates")
-    dnsCountryHost = widgets.CheckBox(label="DNS Country Host", help_text="use host in <country-code>.<domain> DNS entries")
     comment = widgets.TextField(validator=validators.Any(validators.UnicodeString, validators.Empty), help_text="text, anything else you'd like a public end user to know about your mirror")
 
 host_form = widgets.TableForm(fields=HostFields(),
@@ -326,7 +325,6 @@ class HostController(controllers.Controller, identity.SecureResource, content):
         disabled_fields = []
         if not identity.in_group(admin_group):
             disabled_fields.append('admin_active')
-            disabled_fields.append('dnsCountryHost')
 
         if host is not None:
             site = host.my_site()
