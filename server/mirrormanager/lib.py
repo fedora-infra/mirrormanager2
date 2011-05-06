@@ -38,7 +38,7 @@ def remove_pidfile(pidfile):
     os.unlink(pidfile)
 
 def create_pidfile_dir(pidfile):
-    piddir = pidfile.split('/')[:-1]
+    piddir = os.path.dirname(pidfile)
     try:
         os.makedirs(piddir, mode=0755)
     except OSError, err:
