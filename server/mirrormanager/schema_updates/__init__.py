@@ -17,6 +17,8 @@ def change_tables():
     Location.createTable(ifNotExists=True)
     FileGroup.createTable(ifNotExists=True)
     HostLocation.createTable(ifNotExists=True)
+    Country.createTable(ifNotExists=True)
+    HostCountry.createTable(ifNotExists=True)
 
     if 'emailOnDrop' not in OldSite.sqlmeta.columns and \
             'emailOnAdd' not in OldSite.sqlmeta.columns:

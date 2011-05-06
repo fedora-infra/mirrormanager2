@@ -197,6 +197,7 @@ class Host(SQLObject):
     categories = MultipleJoin('HostCategory')
     exclusive_dirs = MultipleJoin('DirectoryExclusiveHost')
     locations = SQLRelatedJoin('Location')
+    countries = SQLRelatedJoin('Country')
 
     def destroySelf(self):
         """Cascade the delete operation"""
@@ -912,6 +913,18 @@ class FileGroup(SQLObject):
         cacheValues = False
     name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
     files = SQLRelatedJoin('FileDetail')
+
+class Country(SQLObject):
+    code = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
+    hosts = SQLRelatedJoin('Host')
+
+class HostCountry(SQLObject):
+    class sqlmeta:
+        table = 'host_country'
+    host = ForeignKey('Host')
+    country = ForeignKey('Country')
+    hlidx = DatabaseIndex('host', 'country', unique=True)
+
 
 ###############################################################
 # These classes are only used if you're not using the

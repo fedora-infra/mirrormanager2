@@ -17,33 +17,38 @@ default_output_dir = '/var/lib/mirrormanager/dns'
 def domainTemplateToName(domain, country):
     return re.sub(u'CC', country, domain)
 
+def generateOneCountry(category, zone, hosts):
+    for h in hosts:
+        domainname = domainTemplateToName(category.GeoDNSDomain, h.country)
+        n = dns.name.from_text(domainname)
+
+        try:
+            ips = [IPy.IP(h.name)]
+        except ValueError:
+            ips = name_to_ips(h.name)
+        except:
+            continue
+
+        for ip in ips:
+            if ip.version() == 4:
+                rdatasetA    = zone.find_rdataset(n, rdtype=A, create=True)
+                rdata = dns.rdtypes.IN.A.A(IN, A, ip.strNormal())
+                rdatasetA.add(rdata, ttl=default_ttl)
+            elif ip.version() == 6:
+                rdatasetAAAA = zone.find_rdataset(n, rdtype=AAAA, create=True)
+                rdata = dns.rdtypes.IN.AAAA.AAAA(IN, AAAA, ip.strNormal())
+                rdatasetAAAA.add(rdata, ttl=default_ttl)
+            else:
+                continue
+
+
 def generateZoneFile(directory):
     for c in Category.select():
         z = dns.zone.Zone(dns.name.from_text(''))
         if c.GeoDNSDomain is None: continue
-        hosts = [] # fixme with real lookup
-        for h in hosts:
-            domainname = domainTemplateToName(c.GeoDNSDomain, h.country)
-            n = dns.name.from_text(domainname)
-
-            try:
-                ips = [IPy.IP(h.name)]
-            except ValueError:
-                ips = name_to_ips(h.name)
-            except:
-                continue
-          
-            for ip in ips:
-                if ip.version() == 4:
-                    rdatasetA    = z.find_rdataset(n, rdtype=A, create=True)
-                    rdata = dns.rdtypes.IN.A.A(IN, A, ip.strNormal())
-                    rdatasetA.add(rdata, ttl=default_ttl)
-                elif ip.version() == 6:
-                    rdatasetAAAA = z.find_rdataset(n, rdtype=AAAA, create=True)
-                    rdata = dns.rdtypes.IN.AAAA.AAAA(IN, AAAA, ip.strNormal())
-                    rdatasetAAAA.add(rdata, ttl=default_ttl)
-                else:
-                    continue
+        for cc in Country.select():
+            hosts = cc.hosts
+            generateOneCountry(c, z, hosts)
 
         z.to_file(os.path.join(directory, u'zone-' + c.GeoDNSDomain))
 
