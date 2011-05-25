@@ -254,7 +254,7 @@ def nuke_gone_directories(category, category_directories):
             if not category_directories.has_key(d.name):
                 d.destroySelf()
 
-unreadable_dirs = {}
+unreadable_dirs = set()
 
 def parent_dir(path):
     sdir = path.split('/')[:-1]
@@ -279,7 +279,7 @@ def make_one_directory(line, category, path, category_directories):
     perms = line.split()[0]
     if not re.compile('^d......r.x').match(perms) or parent_dir(dname) in unreadable_dirs:
         readable=False
-        unreadable_dirs[dname] = True
+        unreadable_dirs.add(dname)
 
     try:
         perm, size, date, hms, filepath = line.split()
@@ -455,7 +455,7 @@ def sync_directories_from_directory(directory, category, excludes=[]):
         mode = s.st_mode
         readable = (mode & stat.S_IRWXO & (stat.S_IROTH|stat.S_IXOTH))
         if not readable or parent_dir(dname) in unreadable_dirs:
-            unreadable_dirs[dname] = True
+            unreadable_dirs.add(dname)
         isRepo = 'repodata' in dirnames
 
         changed = (d_ctime != ctime)
