@@ -454,7 +454,7 @@ def sync_directories_from_directory(directory, category, excludes=[]):
 
         mode = s.st_mode
         readable = (mode & stat.S_IRWXO & (stat.S_IROTH|stat.S_IXOTH))
-        if not readable:
+        if not readable or parent_dir(dname) in unreadable_dirs:
             unreadable_dirs[dname] = True
         isRepo = 'repodata' in dirnames
 
