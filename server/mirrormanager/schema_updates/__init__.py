@@ -19,6 +19,7 @@ def change_tables():
     HostLocation.createTable(ifNotExists=True)
     Country.createTable(ifNotExists=True)
     HostCountry.createTable(ifNotExists=True)
+    NetblockCountry.createTable(ifNotExists=True)
 
     if 'emailOnDrop' not in OldSite.sqlmeta.columns and \
             'emailOnAdd' not in OldSite.sqlmeta.columns:

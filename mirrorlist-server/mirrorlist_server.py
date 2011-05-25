@@ -66,6 +66,7 @@ internet2_tree = radix.Radix()
 global_tree = radix.Radix()
 host_netblocks_tree = radix.Radix()
 location_cache = {}
+netblock_country_cache = {}
 
 def lookup_ip_asn(tree, ip):
     """ @t is a radix tree
@@ -500,6 +501,7 @@ def do_mirrorlist(kwargs):
 
     client_ip = kwargs['client_ip']
     clientCountry = None
+    # fixme!! lookup client in netblock_country_cache here first
     # attempt IPv6, then IPv6 6to4 as IPv4, then Teredo, then IPv4
     try:
         ip = IP(client_ip)
@@ -655,6 +657,7 @@ def read_caches():
     global hcurl_cache
     global asn_host_cache
     global location_cache
+    global netblock_country_cache
 
     data = {}
     try:
@@ -690,6 +693,8 @@ def read_caches():
         asn_host_cache = data['asn_host_cache']
     if 'location_cache' in data:
         location_cache = data['location_cache']
+    if 'netblock_country_cache' in data:
+        netblock_country_cache = data['netblock_country_cache']
 
     del data
     setup_continents()

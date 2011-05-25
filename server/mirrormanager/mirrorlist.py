@@ -266,6 +266,18 @@ def location_cache():
         cache[location.name] = [host.id for host in location.hosts]
     return cache
 
+def netblock_country_cache():
+    cache = {}
+    for n in NetblockCountry.select():
+        ip = None
+        try:
+            ip = IP(n.netblock)
+        except:
+            continue
+        cache[ip.strnormal()] = n.country
+    return cache
+
+
 def populate_all_caches():
     populate_host_country_allowed_cache()
     populate_netblock_cache()
@@ -285,7 +297,8 @@ def dump_caches():
             'file_details_cache':file_details_cache(),
             'hcurl_cache':hcurl_cache(),
             'asn_host_cache':asn_host_cache(),
-            'location_cache':location_cache()}
+            'location_cache':location_cache(),
+            'netblock_country_cache':netblock_country_cache()}
     
     try:
         f = open('/var/lib/mirrormanager/mirrorlist_cache.pkl', 'w')

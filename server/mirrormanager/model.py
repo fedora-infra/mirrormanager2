@@ -928,6 +928,19 @@ class HostCountry(SQLObject):
     country = ForeignKey('Country')
     hlidx = DatabaseIndex('host', 'country', unique=True)
 
+class NetblockCountry(SQLObject):
+    class sqlmeta:
+        cacheValues = False
+    netblock = UnicodeCol(alternateID=True, notNone=True, length=UnicodeColKeyLength)
+    country = UnicodeCol(notNone=True)
+
+    def _set_country(self, country):
+        self._SO_set_country(country.upper())
+
+    def _set_continent(self, continent):
+        self._SO_set_continent(continent.upper())
+
+
 
 ###############################################################
 # These classes are only used if you're not using the
