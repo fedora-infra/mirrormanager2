@@ -45,6 +45,14 @@ def change_tables():
         OldCategory.sqlmeta.addColumn(UnicodeCol("GeoDNSDomain", default=None), changeSchema=True)
         changes['category.geo_dns_domain'] = True
 
+    if 'username' not in OldSiteToSite.sqlmeta.columns and \
+            'password' not in OldSiteToSite.sqlmeta.columns:
+        OldSiteToSite.sqlmeta.addColumn(UnicodeCol("username", default=None), changeSchema=True)
+        OldSiteToSite.sqlmeta.addColumn(UnicodeCol("password", default=None), changeSchema=True)
+        OldSiteToSite.sqlmeta.addColumn(DatabaseIndex("username_idx", 'upstream_site', 'username', unique=True), changeSchema=True)
+        changes['sitetosite.username_password'] = True
+
+
 def fill_new_columns():
     global changes
 
@@ -66,7 +74,10 @@ def fill_new_columns():
         for c in Category.select():
             c.GeoDNSDomain = None
 
-
+    if changes.get('sitetosite.username_password'):
+        for s in SiteToSite.select():
+            s.username = None
+            s.password = None
 
 
 def update():

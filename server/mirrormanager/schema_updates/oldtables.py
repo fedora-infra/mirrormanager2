@@ -7,6 +7,11 @@ __connection__ = hub
 # upgrade methodology borrowed from
 # http://www.mail-archive.com/sqlobject-discuss@lists.sourceforge.net/msg04714.html
 
+class OldSiteToSite(SQLObject):
+    class sqlmeta:
+        fromDatabase = True
+        table = 'site_to_site'
+
 class OldSite(SQLObject):
     class sqlmeta:
         fromDatabase = True

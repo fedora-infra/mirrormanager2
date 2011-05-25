@@ -237,7 +237,8 @@ class SiteToSiteFields(widgets.WidgetsList):
 
     sites = widgets.MultipleSelectField(options=get_sites_options, size=15,
                                         validator=validators.NotEmpty())
-                                        
+    username = widgets.TextField(validator=validators.UnicodeString, help_text="per-upstream-mirror username to be given to downstream mirror admin")
+    password = widgets.TextField(validator=validators.UnicodeString, help_text="pser-upstream-mirror username password")
 
 site_to_site_form = widgets.TableForm(fields=SiteToSiteFields(),
                                       submit_text="Add Downstream Site")
@@ -265,7 +266,7 @@ class SiteToSiteController(controllers.Controller, identity.SecureResource, cont
     @expose()
     @validate(form=site_to_site_form)
     @error_handler(new)
-    def create(self, **kwargs):
+    def create(self, tg_errors=None, **kwargs):
         if not kwargs.has_key('siteid'):
             turbogears.flash("Error: form didn't provide siteid")
             raise redirect("/")
@@ -277,13 +278,23 @@ class SiteToSiteController(controllers.Controller, identity.SecureResource, cont
             turbogears.flash("Error: Site %s does not exist" % siteid)
             raise redirect("/")
 
+        errordict = dict(form=site_to_site_form, values=None, action=submit_action, page_title="Create Site to Site", site=site)
+
+        # handle the validation error
+        if tg_errors:
+            turbogears.flash("Error creating SiteToSite: %s" % (createErrorString(tg_errors)))
+            return errordict
+
+
         siteadmin_check(site, identity)
         sites = kwargs['sites']
+        username = kwargs.get('username')
+        password = kwargs.get('password')
         for dssite in sites:
             if dssite == site.id:
                 continue
             try:
-                site2site = SiteToSite(upstream_site=site, downstream_site=dssite)
+                site2site = SiteToSite(upstream_site=site, downstream_site=dssite, username=username, password=password)
             except: 
                 pass
         turbogears.flash("SiteToSite created.")
