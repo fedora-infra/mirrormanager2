@@ -146,11 +146,11 @@ class hostState:
             self.close_ftp(c)
 
 
-class TryLater(Exception):
-    pass
+class TryLater(Exception): pass
+class ForbiddenExpected(Exception): pass
 
 
-def get_ftp_dir(hoststate, url, i=0):
+def get_ftp_dir(hoststate, url, readable, i=0):
     if i > 1:
         raise TryLater()
 
@@ -162,11 +162,14 @@ def get_ftp_dir(hoststate, url, i=0):
             return []
         # Returned by Princeton University when directory isn't readable (pre-bitflip)
         if str(e).startswith('553'):
-            return None
+            if readable:
+                return []
+            else:
+                raise ForbiddenExpected()
         # Returned by ftp2.surplux.net when cannot log in due to connection restrictions
         if str(e).startswith('530'):
             hoststate.close_ftp(url)
-            return get_ftp_dir(hoststate, url, i+1)
+            return get_ftp_dir(hoststate, url, readable, i+1)
         if str(e).startswith('500'): # Oops
             raise TryLater()
         else:
@@ -188,17 +191,19 @@ def get_ftp_dir(hoststate, url, i=0):
             raise 
     except (EOFError, socket.error):
         hoststate.close_ftp(url)
-        return get_ftp_dir(hoststate, url, i+1)
+        return get_ftp_dir(hoststate, url, readable, i+1)
         
     return hoststate.ftp_dir_results
 
-def check_ftp_file(hoststate, url, filedata):
+def check_ftp_file(hoststate, url, filedata, readable):
     if url.endswith('/'):
         url = url[:-1]
     try:
-        results = get_ftp_dir(hoststate, url)
+        results = get_ftp_dir(hoststate, url, readable)
     except TryLater:
         raise
+    except ForbiddenExpected:
+        return None
     if results is None:
         return None
     if len(results) == 1:
@@ -207,26 +212,26 @@ def check_ftp_file(hoststate, url, filedata):
             return True
     return False
 
-def check_url(hoststate, url, filedata, recursion):
+def check_url(hoststate, url, filedata, recursion, readable):
     if url.startswith('http:'):
-        return check_head(hoststate, url, filedata, recursion)
+        return check_head(hoststate, url, filedata, recursion, readable)
     elif url.startswith('ftp:'):
-        return check_ftp_file(hoststate, url, filedata)
+        return check_ftp_file(hoststate, url, filedata, readable)
 
 
 class HTTPUnknown(Exception): pass
 class HTTP500(Exception): pass
 
-def handle_redirect(hoststate, url, location, filedata, recursion):
+def handle_redirect(hoststate, url, location, filedata, recursion, readable):
     if recursion > 10:
         raise HTTPUnknown()
     if location.startswith('/'):
         scheme, netloc, path, query, fragment = urlsplit(url)
         location = '%s:%s%s' % (scheme, netloc, location)
-    return check_url(hoststate, location, filedata, recursion+1)
+    return check_url(hoststate, location, filedata, recursion+1, readable)
 
 
-def check_head(hoststate, url, filedata, recursion, retry=0):
+def check_head(hoststate, url, filedata, recursion, readable, retry=0):
     """ Returns tuple:
     True - URL exists
     False - URL doesn't exist
@@ -275,11 +280,14 @@ def check_head(hoststate, url, filedata, recursion, retry=0):
         else:
             return False
     if status >= 300 and status < 400:
-        return handle_redirect(hoststate, url, r.getheader('Location'), filedata, recursion)
+        return handle_redirect(hoststate, url, r.getheader('Location'), filedata, recursion, readable)
     elif status >= 400 and status < 500:
         if status == 403: # forbidden
             # may be a hidden dir still
-            return None
+            if readable:
+                return False
+            else:
+                raise ForbiddenExpected()
         elif status == 404 or status == 410: # not found / gone
             return False
         # we don't know
@@ -388,12 +396,14 @@ def try_perfile(d, hoststate, url):
         exists = None
         graburl = "%s/%s" % (url, file)
         try:
-            exists = check_url(hoststate, graburl, d.files[file], 0)
+            exists = check_url(hoststate, graburl, d.files[file], 0, d.readable)
             #print >>logfile, "%s %s" % (exists, graburl)
             if exists == False:
                 return False
         except TryLater:
             raise
+        except ForbiddenExpected:
+            return None
         except ftplib.all_errors:
             hoststate.close_ftp(url)
             return None
@@ -422,7 +432,7 @@ def try_perdir(d, hoststate, url):
     results = {}
     if not url.endswith('/'):
         url += '/'
-    listing = get_ftp_dir(hoststate, url)
+    listing = get_ftp_dir(hoststate, url, d.readable)
     if listing is None:
         return None
 
@@ -606,6 +616,12 @@ def per_host(host, options=None):
                     # could be a dir with no files, or an unreadable dir.
                     # defer decision on this dir, let a child decide.
                     pass
+            except TryLater:
+                timer.cancel()
+                msg = "Server load exceeded - try later"
+                print >> logfile, msg
+                sys.exit(1)
+
             except:
                 timer.cancel()
                 mark_not_up2date(sys.exc_info(), host, "Unknown exception raised.  This is a bug in the MM crawler.")
