@@ -31,23 +31,26 @@ License Agreement</a>.
 </p>
 <h2>Export Compliance</h2>
 <p>
-Because Fedora software contains encryption technology, Fedora
-software and technical information is subject to the
-U.S. Export Administration Regulations and other U.S. and foreign law,
-and may not be exported or re-exported to certain countries (currently
-Cuba, Iran, Iraq, North Korea, Sudan and Syria) or to persons or
-entities prohibited from receiving U.S. exports (including those (a)
-on the Bureau of Industry and Security Denied Parties List or Entity
-List, (b) on the Office of Foreign Assets Control list of Specially
-Designated Nationals and Blocked Persons, and (c) involved with
-missile technology or nuclear, chemical or biological weapons).  You
-may not download Fedora software or technical information if you are
-located in one of these countries, or otherwise affected by these
-restrictions. You may not provide Fedora software or technical
+By downloading Fedora software, you acknowledge that you understand
+all of the following: Fedora software and technical information may be
+subject to the U.S. Export Administration Regulations (the “EAR”) and
+other U.S. and foreign laws and may not be exported, re-exported or
+transferred (a) to any country listed in Country Group E:1 in
+Supplement No. 1 to part 740 of the EAR (currently, Cuba, Iran, North
+Korea, Sudan and Syria); (b) to any prohibited destination or to any end
+user who has been prohibited from participating in U.S. export
+transactions by any federal agency of the U.S. government; or (c) for
+use in connection with the design, development or production of
+nuclear, chemical or biological weapons, or rocket systems, space
+launch vehicles, or sounding rockets, or unmanned air vehicle
+systems. You may not download Fedora software or technical information
+if you are located in one of these countries or otherwise subject to
+these restrictions. You may not provide Fedora software or technical
 information to individuals or entities located in one of these
-countries or otherwise affected by these restrictions.  You are also
+countries or otherwise subject to these restrictions. You are also
 responsible for compliance with foreign law requirements applicable to
-the import and use of Fedora software and technical information.
+the import, export and use of Fedora software and technical
+information.
 </p>
 
 ${form(value=values, action=tg.url(action), disabled_fields=disabled_fields)}
