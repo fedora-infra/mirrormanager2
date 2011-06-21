@@ -65,6 +65,7 @@ asn_host_cache = {}
 internet2_tree = radix.Radix()
 global_tree = radix.Radix()
 host_netblocks_tree = radix.Radix()
+netblock_country_tree = radix.Radix()
 location_cache = {}
 netblock_country_cache = {}
 
@@ -184,23 +185,25 @@ def metalink(cache, directory, file, hosts_and_urls):
     doc += '</metalink>\n'
     return ('metalink', 200, doc)
 
-def client_netblocks(ip):
-    result = []
-    try:
-        clientIP = IP(ip)
-    except:
-        return result
-
+def tree_lookup(tree, clientIP):
     # fast lookup in the tree; if present, find all the netblocks by deleting the found one and searching again
     # this is safe w/o copying the tree again only because this is the only place the tree is used, and
     # we'll get a new copy of the tree from our parent the next time it fork()s.
-    node = host_netblocks_tree.search_best(clientIP.strNormal())
+    result = []
+    node = tree.search_best(clientIP.strNormal())
     while node is not None:
         result.extend(node.data['hosts'])
         prefix = node.prefix
-        host_netblocks_tree.delete(prefix)
-        node = host_netblocks_tree.search_best(clientIP.strNormal())
+        tree.delete(prefix)
+        node = tree.search_best(clientIP.strNormal())
     return result
+
+def client_netblocks(ip):
+    try:
+        clientIP = IP(ip)
+    except:
+        return []
+    result = tree_lookup(host_netblocks_tree, clientIP)
 
 def trim_by_client_country(s, clientCountry):
     if clientCountry is None:
@@ -401,6 +404,36 @@ def trim_to_preferred_protocols(hosts_and_urls):
             results.append((hostid, url))
     return results
 
+def client_ip_to_country(client_ip):
+    clientCountry = None
+    try:
+        ip = IP(client_ip)
+    except:
+        return None
+
+    # lookup in the cache first
+    result = tree_lookup(netblock_country_tree, ip)
+    if len(result) > 0:
+        clientCountry = result[0]
+        return clientCountry
+    
+    # attempt IPv6, then IPv6 6to4 as IPv4, then Teredo, then IPv4
+    try:
+        if ip.version() == 6:
+            if gipv6 is not None:
+                clientCountry = gipv6.country_code_by_addr_v6(ip.strNormal())
+            if clientCountry is None:
+                # Try the IPv6-to-IPv4 translation schemes
+                for scheme in (convert_6to4_v4, convert_teredo_v4):
+                    result = scheme(ip)
+                    if result is not None:
+                        ip = result
+                        break
+        if ip.version() == 4 and gipv4 is not None:
+            clientCountry = gipv4.country_code_by_addr(ip.strNormal())
+    except:
+        pass
+    return clientCountry
 
 def do_mirrorlist(kwargs):
     global debug
@@ -500,25 +533,7 @@ def do_mirrorlist(kwargs):
                     done = 1
 
     client_ip = kwargs['client_ip']
-    clientCountry = None
-    # fixme!! lookup client in netblock_country_cache here first
-    # attempt IPv6, then IPv6 6to4 as IPv4, then Teredo, then IPv4
-    try:
-        ip = IP(client_ip)
-        if ip.version() == 6:
-            if gipv6 is not None:
-                clientCountry = gipv6.country_code_by_addr_v6(ip.strNormal())
-            if clientCountry is None:
-                # Try the IPv6-to-IPv4 translation schemes
-                for scheme in (convert_6to4_v4, convert_teredo_v4):
-                    result = scheme(ip)
-                    if result is not None:
-                        ip = result
-                        break
-        if ip.version() == 4 and gipv4 is not None:
-            clientCountry = gipv4.country_code_by_addr(ip.strNormal())
-    except:
-        pass
+    clientCountry = client_ip_to_country(client_ip)
 
     if clientCountry is None:
         print_client_country = "N/A"
@@ -612,16 +627,14 @@ def do_mirrorlist(kwargs):
         d = dict(message=header, resulttype='mirrorlist', returncode=200, results=host_url_list)
         return d
 
-
-def setup_host_netblocks_tree():
+def setup_cache_tree(cache):
     tree = radix.Radix()
-    for k, v in host_netblock_cache.iteritems():
+    for k, v in cache.iteritems():
         node = tree.add(k.strNormal())
         node.data['hosts'] = v
     return tree
 
 def setup_netblocks(netblocks_file):
-
     tree = radix.Radix()
     if netblocks_file is not None:
         try:
@@ -701,14 +714,17 @@ def read_caches():
     global internet2_tree
     global global_tree
     global host_netblocks_tree
+    global netblock_country_tree
 
     del internet2_tree
     del global_tree
     del host_netblocks_tree
+    del netblock_country_tree
 
     internet2_tree = setup_netblocks(internet2_netblocks_file)
     global_tree    = setup_netblocks(global_netblocks_file)
-    host_netblocks_tree = setup_host_netblocks_tree()
+    host_netblocks_tree = setup_cache_tree(host_netblock_cache)
+    netblock_country_tree = setup_cache_tree(netblock_country_cache)
 
 def errordoc(metalink, message):
     if metalink:
