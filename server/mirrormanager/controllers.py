@@ -1205,6 +1205,33 @@ class LocationHostController(controllers.Controller, identity.SecureResource, co
             
         raise redirect("/adminview")
 
+#########################################################3
+# NetblockCountry
+#########################################################3
+class NetblockCountryFields(widgets.WidgetsList):
+    netblock = widgets.TextField(validator=validators.All(validators.NotEmpty, validators.UnicodeString)) 
+    country = widgets.TextField(validator=validators.All(validators.NotEmpty, validators.UnicodeString)) 
+
+netblock_country_form = widgets.TableForm(fields=NetblockCountryFields(), submit_text="Create Netblock->Country mapping")
+
+class NetblockCountryController(SimpleDbObjectController):
+    page_title = "Netblock to Country mapping"
+    myClass = NetblockCountry
+    url_prefix="netblock_country"
+    form = netblock_country_form
+
+    @expose(template="mirrormanager.templates.boringform")
+    @validate(form=form)
+    @error_handler(SimpleDbObjectController.new)
+    def create(self, **kwargs):
+        SimpleDbObjectController.create(self, **kwargs)
+
+    @expose(template="mirrormanager.templates.boringform")
+    @validate(form=form)
+    @error_handler()
+    def update(self, obj, **kwargs):
+        return SimpleDbObjectController.update(self, obj, **kwargs)
+
 
 class Root(controllers.RootController):
     # reserved for other uses outside TG
