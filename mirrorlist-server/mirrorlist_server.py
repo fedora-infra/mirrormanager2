@@ -185,7 +185,7 @@ def metalink(cache, directory, file, hosts_and_urls):
     doc += '</metalink>\n'
     return ('metalink', 200, doc)
 
-def tree_lookup(tree, ip, maxResults=None):
+def tree_lookup(tree, key, field, maxResults=None):
     # fast lookup in the tree; if present, find all the matching values by deleting the found one and searching again
     # this is safe w/o copying the tree again only because this is the only place the tree is used, and
     # we'll get a new copy of the tree from our parent the next time it fork()s.
@@ -194,7 +194,7 @@ def tree_lookup(tree, ip, maxResults=None):
         return result
     node = tree.search_best(ip.strNormal())
     while node is not None:
-        result.extend(node.data['hosts'])
+        result.extend(node.data[field])
         prefix = node.prefix
         if maxResults is None or len(result) < maxResults:
             tree.delete(prefix)
@@ -293,7 +293,7 @@ def do_country(kwargs, cache, clientCountry, requested_countries, header):
 def do_netblocks(kwargs, cache, header):
     hostresults = set()
     if not kwargs.has_key('netblock') or kwargs['netblock'] == "1":
-        hosts = tree_lookup(host_netblocks_tree, kwargs['IP'])
+        hosts = tree_lookup(host_netblocks_tree, kwargs['IP'], 'hosts')
         for hostid in hosts:
             if hostid in cache['byHostId']:
                 hostresults.add(hostid)
@@ -399,7 +399,7 @@ def client_ip_to_country(ip):
         return None
 
     # lookup in the cache first
-    result = tree_lookup(netblock_country_tree, ip, maxResults=1)
+    result = tree_lookup(netblock_country_tree, ip, 'country', maxResults=1)
     if len(result) > 0:
         clientCountry = result[0]
         return clientCountry
@@ -618,11 +618,11 @@ def do_mirrorlist(kwargs):
         d = dict(message=header, resulttype='mirrorlist', returncode=200, results=host_url_list)
         return d
 
-def setup_cache_tree(cache):
+def setup_cache_tree(cache, field):
     tree = radix.Radix()
     for k, v in cache.iteritems():
         node = tree.add(k.strNormal())
-        node.data['hosts'] = v
+        node.data[field] = v
     return tree
 
 def setup_netblocks(netblocks_file):
@@ -714,8 +714,8 @@ def read_caches():
 
     internet2_tree = setup_netblocks(internet2_netblocks_file)
     global_tree    = setup_netblocks(global_netblocks_file)
-    host_netblocks_tree = setup_cache_tree(host_netblock_cache)
-    netblock_country_tree = setup_cache_tree(netblock_country_cache)
+    host_netblocks_tree = setup_cache_tree(host_netblock_cache, 'hosts')
+    netblock_country_tree = setup_cache_tree(netblock_country_cache, 'country')
 
 def errordoc(metalink, message):
     if metalink:
