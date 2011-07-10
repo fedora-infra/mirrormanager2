@@ -73,7 +73,7 @@ def lookup_ip_asn(tree, ip):
     """ @t is a radix tree
         @ip is an IPy.IP object which may be contained in an entry in l
         """
-    node = tree.search_best(str(ip))
+    node = tree.search_best(ip.strNormal())
     if node is None:
         return None
     return node.data['asn']
@@ -185,25 +185,23 @@ def metalink(cache, directory, file, hosts_and_urls):
     doc += '</metalink>\n'
     return ('metalink', 200, doc)
 
-def tree_lookup(tree, clientIP):
+def tree_lookup(tree, ip):
     # fast lookup in the tree; if present, find all the netblocks by deleting the found one and searching again
     # this is safe w/o copying the tree again only because this is the only place the tree is used, and
     # we'll get a new copy of the tree from our parent the next time it fork()s.
     result = []
-    node = tree.search_best(clientIP.strNormal())
+    if ip is None:
+        return result
+    node = tree.search_best(ip.strNormal())
     while node is not None:
         result.extend(node.data['hosts'])
         prefix = node.prefix
         tree.delete(prefix)
-        node = tree.search_best(clientIP.strNormal())
+        node = tree.search_best(ip.strNormal())
     return result
 
 def client_netblocks(ip):
-    try:
-        clientIP = IP(ip)
-    except:
-        return []
-    result = tree_lookup(host_netblocks_tree, clientIP)
+    return tree_lookup(host_netblocks_tree, ip)
 
 def trim_by_client_country(s, clientCountry):
     if clientCountry is None:
@@ -294,9 +292,8 @@ def do_country(kwargs, cache, clientCountry, requested_countries, header):
 
 def do_netblocks(kwargs, cache, header):
     hostresults = set()
-    client_ip = kwargs['client_ip']
     if not kwargs.has_key('netblock') or kwargs['netblock'] == "1":
-        hosts = client_netblocks(client_ip)
+        hosts = client_netblocks(kwargs['IP'])
         for hostid in hosts:
             if hostid in cache['byHostId']:
                 hostresults.add(hostid)
@@ -305,12 +302,8 @@ def do_netblocks(kwargs, cache, header):
 
 def do_internet2(kwargs, cache, clientCountry, header):
     hostresults = set()
-    client_ip = kwargs['client_ip']
-    if client_ip == 'unknown':
-        return (header, hostresults)
-    try:
-        ip = IP(client_ip)
-    except:
+    ip = kwargs['IP']
+    if ip is None:
         return (header, hostresults)
     asn = lookup_ip_asn(internet2_tree, ip)
     if asn is not None:
@@ -322,12 +315,8 @@ def do_internet2(kwargs, cache, clientCountry, header):
 
 def do_asn(kwargs, cache, header):
     hostresults = set()
-    client_ip = kwargs['client_ip']
-    if client_ip == 'unknown':
-        return (header, hostresults)
-    try:
-        ip = IP(client_ip)
-    except:
+    ip = kwargs['IP']
+    if ip is None:
         return (header, hostresults)
     asn = lookup_ip_asn(global_tree, ip)
     if asn is not None and asn in asn_host_cache:
@@ -404,11 +393,9 @@ def trim_to_preferred_protocols(hosts_and_urls):
             results.append((hostid, url))
     return results
 
-def client_ip_to_country(client_ip):
+def client_ip_to_country(ip):
     clientCountry = None
-    try:
-        ip = IP(client_ip)
-    except:
+    if ip is None:
         return None
 
     # lookup in the cache first
@@ -501,6 +488,11 @@ def do_mirrorlist(kwargs):
                     repo_information += "# repo=%s&arch=%s\n" % i
             return return_error(kwargs, message=repo_information)
 
+    # set kwargs['IP'] exactly once
+    try:
+        kwargs['IP'] = IP(kwargs['client_ip'])
+    except:
+        kwargs['IP'] = None
 
     ordered_mirrorlist = cache.get('ordered_mirrorlist', default_ordered_mirrorlist)
     done = 0
@@ -532,8 +524,7 @@ def do_mirrorlist(kwargs):
                 if not ordered_mirrorlist:
                     done = 1
 
-    client_ip = kwargs['client_ip']
-    clientCountry = client_ip_to_country(client_ip)
+    clientCountry = client_ip_to_country(kwargs['IP'])
 
     if clientCountry is None:
         print_client_country = "N/A"
@@ -542,7 +533,7 @@ def do_mirrorlist(kwargs):
 
     if debug:
         if kwargs.has_key('repo') and kwargs.has_key('arch'):
-            print ("IP: " + client_ip +
+            print ("IP: " + (kwargs['IP'] or 'None') +
                    "; DATE: " + time.strftime("%Y-%m-%d") +
                    "; COUNTRY: " + print_client_country + 
                    "; REPO: " + kwargs['repo'] + 
@@ -550,7 +541,7 @@ def do_mirrorlist(kwargs):
 
     if logfile is not None:
         if kwargs.has_key('repo') and kwargs.has_key('arch'):
-            logfile.write("IP: " + client_ip +
+            logfile.write("IP: " + (kwargs('IP') or 'None') +
                           "; DATE: " + time.strftime("%Y-%m-%d") +
                           "; COUNTRY: " + print_client_country +
                           "; REPO: " + kwargs['repo'] +
