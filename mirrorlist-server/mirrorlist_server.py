@@ -185,8 +185,8 @@ def metalink(cache, directory, file, hosts_and_urls):
     doc += '</metalink>\n'
     return ('metalink', 200, doc)
 
-def tree_lookup(tree, ip):
-    # fast lookup in the tree; if present, find all the netblocks by deleting the found one and searching again
+def tree_lookup(tree, ip, maxResults=None):
+    # fast lookup in the tree; if present, find all the matching values by deleting the found one and searching again
     # this is safe w/o copying the tree again only because this is the only place the tree is used, and
     # we'll get a new copy of the tree from our parent the next time it fork()s.
     result = []
@@ -196,12 +196,12 @@ def tree_lookup(tree, ip):
     while node is not None:
         result.extend(node.data['hosts'])
         prefix = node.prefix
-        tree.delete(prefix)
-        node = tree.search_best(ip.strNormal())
+        if maxResults is None or len(result) < maxResults:
+            tree.delete(prefix)
+            node = tree.search_best(ip.strNormal())
+        else:
+            break
     return result
-
-def client_netblocks(ip):
-    return tree_lookup(host_netblocks_tree, ip)
 
 def trim_by_client_country(s, clientCountry):
     if clientCountry is None:
@@ -293,7 +293,7 @@ def do_country(kwargs, cache, clientCountry, requested_countries, header):
 def do_netblocks(kwargs, cache, header):
     hostresults = set()
     if not kwargs.has_key('netblock') or kwargs['netblock'] == "1":
-        hosts = client_netblocks(kwargs['IP'])
+        hosts = tree_lookup(host_netblocks_tree, kwargs['IP'])
         for hostid in hosts:
             if hostid in cache['byHostId']:
                 hostresults.add(hostid)
@@ -399,7 +399,7 @@ def client_ip_to_country(ip):
         return None
 
     # lookup in the cache first
-    result = tree_lookup(netblock_country_tree, ip)
+    result = tree_lookup(netblock_country_tree, ip, maxResults=1)
     if len(result) > 0:
         clientCountry = result[0]
         return clientCountry
