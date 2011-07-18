@@ -5,11 +5,6 @@ mirrorlist_client.wsgi is the apache process, running under mod_wsgi,
 that takes the request, connects to mirrorlist_server.py, gets a
 response and passes it back to the user.
 
-mirrorlist_client.py is the same, but older and uses mod_python.
-mod_python and mod_wsgi don't interact well, and all the other FI TG
-apps are using mod_wsgi now, so I had to convert this code to create
-.wsgi.  This app will go away soon.
-
-mirrorlist_server_test.py was a hack late one night to throw requests
+test/server_tester.py was a hack late one night to throw requests
 at the server rapidly and randomly.  Found quite a few bugs with it,
 so haven't erased it yet.
