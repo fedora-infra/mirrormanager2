@@ -2,7 +2,7 @@ from sqlobject import *
 from sqlobject.sqlbuilder import *
 from turbogears import identity, config
 from mirrormanager.model import *
-from sqlobject import SQLObject, BoolCol, IntCol 
+from sqlobject import SQLObject, BoolCol, IntCol, UnicodeCol, DatabaseIndex
 from oldtables import *
 import GeoIP
 
@@ -55,6 +55,10 @@ def change_tables():
         OldSiteToSite.sqlmeta.addColumn(DatabaseIndex("username_idx", 'upstream_site', 'username', unique=True), changeSchema=True)
         changes['sitetosite.username_password'] = True
 
+    if 'name' not in OldHostNetblock.sqlmeta.columns:
+        OldHostNetblock.sqlmeta.addColumn(UnicodeCol("name", default=None), changeSchema=True)
+        changes['hostnetblock.name'] = True
+
 def update_countries():
     db_countries = set(c for c.code in Country.select())
     geoip_countries = set(GeoIP.country_codes)
@@ -87,6 +91,10 @@ def fill_new_columns():
         for s in SiteToSite.select():
             s.username = None
             s.password = None
+
+    if changes.get('hostnetblock.name'):
+        for n in HostNetblock.select():
+            n.name = None
 
     update_countries()
 

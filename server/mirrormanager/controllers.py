@@ -642,6 +642,7 @@ class HostAclIPController(HostListitemController):
 
 class HostNetblockFields(widgets.WidgetsList):
     netblock = widgets.TextField(validator=validators.All(validators.UnicodeString,validators.NotEmpty))
+    name = widgets.TextField(validator=validators.UnicodeString)
 
 host_netblock_form = widgets.TableForm(fields=HostNetblockFields(),
                                        submit_text="Create Host Netblock")
@@ -673,11 +674,12 @@ class HostNetblockController(HostListitemController):
             # also accept DNS hostnames
             pass
         
-        HostNetblock(host=host, netblock=kwargs['netblock'])
+        HostNetblock(host=host, netblock=kwargs['netblock'], name=kwargs['name'])
 
 
 class HostPeerAsnFields(widgets.WidgetsList):
     asn = widgets.TextField(validator=validators.All(validators.Int,validators.NotEmpty))
+    name = widgets.TextField(validator=validators.UnicodeString)
 
 host_peer_asn_form = widgets.TableForm(fields=HostPeerAsnFields(),
                                        submit_text="Create Host Peer ASN")
@@ -693,7 +695,7 @@ class HostPeerAsnController(HostListitemController):
         return dict(values=v, host=v.host)
 
     def do_create(self, host, kwargs):
-        HostPeerAsn(host=host, asn=kwargs['asn'])
+        HostPeerAsn(host=host, asn=kwargs['asn'], name=kwargs['name'])
 
 class HostCountryAllowedFields(widgets.WidgetsList):
     country = widgets.TextField(validator=validators.Regex(r'^[a-zA-Z][a-zA-Z]$'),

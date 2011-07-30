@@ -577,6 +577,7 @@ class HostNetblock(SQLObject):
         cacheValues = False
     host = ForeignKey('Host')
     netblock = StringCol()
+    name = UnicodeCol()
 
     def my_site(self):
         return self.host.my_site()
@@ -586,6 +587,7 @@ class HostPeerAsn(SQLObject):
         cacheValues = False
     host = ForeignKey('Host')
     asn = IntCol()
+    name = UnicodeCol()
     idx = DatabaseIndex('host', 'asn', unique=True)    
 
 
