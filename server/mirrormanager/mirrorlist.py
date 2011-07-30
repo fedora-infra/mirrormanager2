@@ -212,13 +212,17 @@ def host_country_cache():
 def asn_host_cache():
     cache = {}
     for host in Host.selectBy(asn_clients=True):
-        if host.asn is None:
-            continue
-        if host.asn not in cache:
-            cache[host.asn] = [host.id]
-        else:
-            cache[host.asn].append(host.id)
+        if host.asn is not None:
+            if host.asn not in cache:
+                cache[host.asn] = [host.id]
+            else:
+                cache[host.asn].append[host.id]
 
+        for peer_asn in host.peer_asns:
+            if peer_asn.asn not in cache:
+                cache[peer_asn.asn] = [host.id]
+            else:
+                cache[peer_asn.asn].append(host.id)
     return cache
 
 def repository_redirect_cache():

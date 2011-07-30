@@ -58,6 +58,26 @@ Last Crawled: ${values.lastCrawled}  <a href="${tg.url('/crawler/'+str(values.id
         </ul>
 </div>
 
+<h3>Peer ASNs</h3>
+		  Peer ASNs are used to guide an end user on nearby networks
+		  to our mirror.  For example, a university
+		  might list their peer ASNs, and the mirrorlist CGI
+		  would return the university-local mirror rather than
+		  a country-local mirror.  You must be in the
+		  MirrorManager administrators group in order to
+		  create new entries here.<br/>
+
+<div py:if="admin_group in tg.identity.groups">
+<a href="${tg.url('/host_peer_asn/0/new?hostid=' + str(values.id))}">[Add]</a><br/>
+</div>
+	<ul>
+	<li py:for="a in values.peer_asns">
+		  <span py:replace="a.asn">ASN</span><a
+	          href="${tg.url('/host_peer_asn/' + str(a.id) + '/delete')}">[Delete]</a>
+        </li>
+        </ul>
+</div>
+
 <h3>Locations</h3>
 Locations are ways to group hosts when netblocks are unwieldy.
 Examples include Amazon EC2 availability zones.  Mirrorlist clients

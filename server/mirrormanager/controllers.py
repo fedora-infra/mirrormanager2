@@ -675,6 +675,26 @@ class HostNetblockController(HostListitemController):
         
         HostNetblock(host=host, netblock=kwargs['netblock'])
 
+
+class HostPeerAsnFields(widgets.WidgetsList):
+    asn = widgets.TextField(validator=validators.All(validators.Int,validators.NotEmpty))
+
+host_peer_asn_form = widgets.TableForm(fields=HostPeerAsnFields(),
+                                       submit_text="Create Host Peer ASN")
+
+class HostPeerAsnController(HostListitemController):
+    require = identity.in_group(admin_group)
+    submit_action_prefix="/host_peer_asn"
+    page_title = "New Host Peer ASN"
+    form = host_peer_asn_form
+
+    def do_get(self, id):
+        v = HostPeerAsn.get(id)
+        return dict(values=v, host=v.host)
+
+    def do_create(self, host, kwargs):
+        HostPeerAsn(host=host, asn=kwargs['asn'])
+
 class HostCountryAllowedFields(widgets.WidgetsList):
     country = widgets.TextField(validator=validators.Regex(r'^[a-zA-Z][a-zA-Z]$'),
                                 help_text="2-letter ISO country code")

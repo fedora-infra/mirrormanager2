@@ -201,6 +201,7 @@ class Host(SQLObject):
     exclusive_dirs = MultipleJoin('DirectoryExclusiveHost')
     locations = SQLRelatedJoin('Location')
     countries = SQLRelatedJoin('Country')
+    peer_asns = MultipleJoin('HostPeerAsn')
 
     def destroySelf(self):
         """Cascade the delete operation"""
@@ -579,6 +580,13 @@ class HostNetblock(SQLObject):
 
     def my_site(self):
         return self.host.my_site()
+
+class HostPeerAsn(SQLObject):
+    class sqlmeta:
+        cacheValues = False
+    host = ForeignKey('Host')
+    asn = IntCol()
+    idx = DatabaseIndex('host', 'asn', unique=True)    
 
 
 class HostStats(SQLObject):
