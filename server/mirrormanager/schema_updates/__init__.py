@@ -2,8 +2,9 @@ from sqlobject import *
 from sqlobject.sqlbuilder import *
 from turbogears import identity, config
 from mirrormanager.model import *
-from sqlobject import SQLObject, BoolCol, IntCol 
+from sqlobject import SQLObject, BoolCol, IntCol, UnicodeCol, DatabaseIndex
 from oldtables import *
+import GeoIP
 
 from turbogears.database import PackageHub
 hub = PackageHub("mirrormanager")
@@ -20,6 +21,7 @@ def change_tables():
     Country.createTable(ifNotExists=True)
     HostCountry.createTable(ifNotExists=True)
     NetblockCountry.createTable(ifNotExists=True)
+    HostPeerAsn.createTable(ifNotExists=True)
 
     if 'emailOnDrop' not in OldSite.sqlmeta.columns and \
             'emailOnAdd' not in OldSite.sqlmeta.columns:
@@ -53,6 +55,16 @@ def change_tables():
         OldSiteToSite.sqlmeta.addColumn(DatabaseIndex("username_idx", 'upstream_site', 'username', unique=True), changeSchema=True)
         changes['sitetosite.username_password'] = True
 
+    if 'name' not in OldHostNetblock.sqlmeta.columns:
+        OldHostNetblock.sqlmeta.addColumn(UnicodeCol("name", default=None), changeSchema=True)
+        changes['hostnetblock.name'] = True
+
+def update_countries():
+    db_countries = set(c for c.code in Country.select())
+    geoip_countries = set(GeoIP.country_codes)
+    diff =  geoip_countries.difference(db_countries)
+    for cc in diff:
+        Country(code=cc)
 
 def fill_new_columns():
     global changes
@@ -80,10 +92,13 @@ def fill_new_columns():
             s.username = None
             s.password = None
 
+    if changes.get('hostnetblock.name'):
+        for n in HostNetblock.select():
+            n.name = None
+
+    update_countries()
+
 
 def update():
-    """Fills newly created database columns with information.
-    Run this after using tg-admin sql upgrade.
-    """
     change_tables()
     fill_new_columns()
