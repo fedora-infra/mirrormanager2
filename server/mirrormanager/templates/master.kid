@@ -18,6 +18,20 @@
       }
     </style>
     <![endif]-->
+    <script type="text/javascript">
+      if (typeof(fedora) == 'undefined') {
+        fedora = {};
+      }
+      fedora.identity = {anonymous: true};
+      /* Remove token and trailing slash */
+      fedora.baseurl = "${tg.url('/')}".replace(/\/?(\?[^?]+)?$/, '');
+    </script>
+    <script type="text/javascript" py:if="not tg.identity.anonymous">
+      fedora.identity = {
+        token: "${tg.identity.csrf_token}",
+        anonymous: false
+      };
+    </script>
 </head>
   <body py:match="item.tag=='{http://www.w3.org/1999/xhtml}body'" py:attrs="item.items()">
   <div id="wrapper">

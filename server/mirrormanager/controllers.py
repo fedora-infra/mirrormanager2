@@ -9,6 +9,7 @@ import turbogears
 from turbogears import controllers, expose, validate, redirect, widgets
 from turbogears import validators, error_handler
 from turbogears import identity
+
 import sqlobject
 from sqlobject.sqlbuilder import *
 from string import strip
@@ -20,6 +21,8 @@ import mirrormanager.model
 from mirrormanager import my_validators
 from mirrormanager.model import *
 from mirrormanager.lib import createErrorString
+from mirrormanager.catwalk import CatWalk
+
 import IPy
 IPy.check_addr_prefixlen = 0
 
@@ -1281,6 +1284,9 @@ class Root(controllers.RootController):
     locationhost = LocationHostController()
     from mirrormanager.xmlrpc import XmlrpcController
     xmlrpc = XmlrpcController()
+
+    catwalk = CatWalk(mirrormanager.model)
+    catwalk = identity.SecureObject(catwalk, identity.in_group(admin_group))
     
     @expose(template="mirrormanager.templates.welcome")
     @identity.require(identity.not_anonymous())
