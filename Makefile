@@ -100,7 +100,9 @@ install-server:
 	install -m 0644	mirrorlist-server/weighted_shuffle.py $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server
 	install -m 0755	mirrorlist-server/mirrorlist_server.py $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server
 	install -m 0755	mirrorlist-server/mirrorlist_statistics.py $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server
+	mkdir -p -m 0755 $(DESTDIR)/etc/httpd/conf.d
 	install -m 0644 mirrorlist-server/apache/mirrorlist-server.conf $(DESTDIR)/etc/httpd/conf.d
+	mkdir -p -m 0755 $(DESTDIR)/etc/supervisord.d
 	install -m 0644 mirrorlist-server/supervisor/mirrorlist-server.ini $(DESTDIR)/etc/supervisord.d
 # other junk
 	mkdir -p -m 0755 $(DESTDIR)/etc/logrotate.d
