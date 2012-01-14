@@ -32,7 +32,7 @@ def change_tables():
     # Host
     # ensure this isn't present anymore
     if 'dnsCountryHost' in OldHost.sqlmeta.columns:
-        OldHost.sqlmeta.delColumn("dnsCountryHost"), changeSchema=True)
+        OldHost.sqlmeta.delColumn("dnsCountryHost", changeSchema=True)
 
     if 'sortorder' not in OldVersion.sqlmeta.columns and \
             'codename' not in OldVersion.sqlmeta.columns:
