@@ -83,7 +83,7 @@
     
     <div id="top_background">
         <div id="top">
-            <h1><a href="/">Toolbox</a> &#x00BB; CatWalk</h1>
+            <h1><a href=${tg.url("/")}>Home</a> &#x00BB; CatWalk</h1>
         </div>
     </div>
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
