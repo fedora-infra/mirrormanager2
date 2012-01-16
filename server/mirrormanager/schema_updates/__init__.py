@@ -17,6 +17,7 @@ def change_tables():
 
     Location.createTable(ifNotExists=True)
     FileGroup.createTable(ifNotExists=True)
+    FileDetailFileGroup.createTable(ifNotExists=True)
     HostLocation.createTable(ifNotExists=True)
     Country.createTable(ifNotExists=True)
     HostCountry.createTable(ifNotExists=True)

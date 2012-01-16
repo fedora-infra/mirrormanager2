@@ -927,6 +927,14 @@ class FileGroup(SQLObject):
     name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
     files = SQLRelatedJoin('FileDetail')
 
+# manual creation of the RelatedJoin table because we're adding it to the schema
+# and SO then requires us to create it ourselves
+class FileDetailFileGroup(SQLObject):
+    class sqlmeta:
+        table = 'file_detail_file_group'
+    file_detail = ForeignKey('FileDetail')
+    file_group = ForeignKey('FileGroup')
+
 class Country(SQLObject):
     code = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
     hosts = SQLRelatedJoin('Host')
