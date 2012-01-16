@@ -62,7 +62,7 @@ def change_tables():
         changes['hostnetblock.name'] = True
 
 def update_countries():
-    db_countries = set(c for c.code in Country.select())
+    db_countries = set(c.code for c in Country.select())
     geoip_countries = set(GeoIP.country_codes)
     diff =  geoip_countries.difference(db_countries)
     for cc in diff:
