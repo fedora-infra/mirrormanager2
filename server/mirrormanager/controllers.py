@@ -845,7 +845,7 @@ class Root(controllers.RootController):
     xmlrpc = XmlrpcController()
 
     adminview = CatWalk(mirrormanager.model)
-    adminview = identity.SecureObject(catwalk, identity.in_group(admin_group))
+    adminview = identity.SecureObject(adminview, identity.in_group(admin_group))
     
     @expose(template="mirrormanager.templates.welcome")
     @identity.require(identity.not_anonymous())
