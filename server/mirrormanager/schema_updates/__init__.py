@@ -52,7 +52,9 @@ def change_tables():
             'password' not in OldSiteToSite.sqlmeta.columns:
         OldSiteToSite.sqlmeta.addColumn(UnicodeCol("username", default=None), changeSchema=True)
         OldSiteToSite.sqlmeta.addColumn(UnicodeCol("password", default=None), changeSchema=True)
-        OldSiteToSite.sqlmeta.addColumn(DatabaseIndex("username_idx", 'upstream_site', 'username', unique=True), changeSchema=True)
+        idx = DatabaseIndex('upstream_site', 'username', unique=True)
+        idx.name = 'username_idx'
+        OldSiteToSite.sqlmeta.addColumn(idx, changeSchema=True)
         changes['sitetosite.username_password'] = True
 
     if 'name' not in OldHostNetblock.sqlmeta.columns:
