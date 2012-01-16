@@ -21,7 +21,7 @@ import mirrormanager.model
 from mirrormanager import my_validators
 from mirrormanager.model import *
 from mirrormanager.lib import createErrorString
-from mirrormanager.catwalk import CatWalk
+from mirrormanager.catwalk import MMCatWalk
 
 import IPy
 IPy.check_addr_prefixlen = 0
@@ -844,7 +844,7 @@ class Root(controllers.RootController):
     from mirrormanager.xmlrpc import XmlrpcController
     xmlrpc = XmlrpcController()
 
-    adminview = CatWalk(mirrormanager.model)
+    adminview = MMCatWalk(mirrormanager.model)
     adminview = identity.SecureObject(adminview, identity.in_group(admin_group))
     
     @expose(template="mirrormanager.templates.welcome")

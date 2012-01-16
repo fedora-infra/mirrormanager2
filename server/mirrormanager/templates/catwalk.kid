@@ -19,6 +19,7 @@
     <script type="text/javascript" src="${tg.widgets}/turbogears.widgets/calendar/calendar.js"></script>
     <script type="text/javascript" src="${tg.widgets}/turbogears.widgets/calendar/lang/calendar-en.js"></script>
     <script type="text/javascript" src="${tg.widgets}/turbogears.widgets/calendar/calendar-setup.js"></script>
+    <script type="text/javascript" src="${tg.tg_toolbox}/catwalk/javascript/catwalk.js"></script>
     <script type="text/javascript" src="${tg.url('/static/javascript/catwalk.js')}"></script>
     <script type="text/javascript" src="${tg.tg_toolbox}/catwalk/javascript/browse.js"></script>
     <script type="text/javascript" src="${tg.tg_toolbox}/catwalk/javascript/greybox/greybox.js"></script>
