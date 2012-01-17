@@ -4,7 +4,7 @@
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
     <title>CatWalk</title>
     <link type="text/css" rel="stylesheet" href="${tg.tg_static}/css/widget.css" />
-    <link type="text/css" rel="stylesheet" href="${tg.tg_static}/css/toolbox.css" />
+    <link type="text/css" rel="stylesheet" href="${tg.url('/static/css/toolbox.css')}" />
     <link type="text/css" rel="stylesheet" href="${tg.tg_toolbox}/catwalk/css/catwalk.css" />
     <link type="text/css" rel="stylesheet" href="${tg.widgets}/turbogears.widgets/calendar/calendar-green.css" />
     <script type="text/javascript" src="${tg.tg_toolbox}/catwalk/javascript/greybox/AmiJS.js"></script>

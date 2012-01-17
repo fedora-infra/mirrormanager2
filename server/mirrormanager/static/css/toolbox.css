@@ -1,0 +1,40 @@
+body {margin:0;padding:0;margin-bottom:50px;
+font-family:verdana,sans-serif;font-size:12px;}
+
+#top_background{background-repeat:repeat-x;
+background-image:url('/mirrormanager/tg_static/images/top_bg.png');}
+#top {height:100px;width:100%;
+background-repeat:no-repeat;background-position:top right;
+background-image:url('/mirrormanager/tg_static/images/top.png');}
+#top h1 {font-size:22px;color:#fff;font-weight:100;
+margin:0;padding:0;margin-left:20px;padding-top:8px;}
+#top h1 a {color:#fff;}
+
+h1,h2,h3,h4,h5 {color:#1F76BD;}
+h2 {margin-top:0;padding-top:0}
+
+#main_content {text-align:left;width:750px;}
+#main_content a {color:#1F76BD;}
+#main_content #tools {border-top:1px solid #1F76BD;}
+#main_content #tools h4 {padding-bottom:3px;margin-bottom:3px;}
+
+ul#toc {position:absolute;right:0;list-style:none;
+margin:0 12px; padding: 4px;
+background-color:#eee;border: 1px solid #999;z-index:2;}
+
+#left_col {width:229px;}
+#left_col a {color:#1F76BD;}
+
+button {background-color:#1F76BD;color:#fff;
+margin-left:4px;text-align:center;}
+
+#under_the_hood {width:100%;text-align:center;
+position:absolute;bottom:0px;}
+
+.disabled, .disabled h4 {color:grey !important;}
+
+dl.param_list dd {float:left;width:110px;
+text-align:right;font-weight:bold;}
+dl.param_list dt {margin-left:160px;}
+
+input {margin:2px;}
