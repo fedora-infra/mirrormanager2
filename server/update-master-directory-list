@@ -249,10 +249,15 @@ def nuke_gone_directories(category, category_directories):
         database.  Be really sure you're ready do to this.  It comes
         in handy when say a Test release is dropped."""
         
-    for d in Directory.select():
-        if len(d.categories == 1) and category in d.categories:
-            if not category_directories.has_key(d.name):
-                d.destroySelf()
+    for d in Directory.select(orderBy='-name'):
+        try:
+            for c in d.categories:
+                if category == c and d.name:
+                    if not category_directories.has_key(d.name):
+                        print "Deleting gone directory %s" % (d.name)
+                        d.destroySelf()
+        except:
+            continue
 
 unreadable_dirs = set()
 
@@ -367,6 +372,7 @@ def sync_category_directories(category, category_directories):
             make_repository(dir, category)
         make_repomd_file_details(dir)
     ageFileDetails()
+#    nuke_gone_directories(category, category_directories)
 
 def parse_rsync_listing(category, f):
     category_directories = {}
