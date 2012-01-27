@@ -5,6 +5,7 @@ pkg_resources.require("TurboGears")
 
 from sqlobject import *
 import sys, os, string, stat
+from optparse import OptionParser
 import turbogears
 from mirrormanager.model import *
 from mirrormanager.repomap import *
@@ -482,14 +483,18 @@ def sync_directories_from_directory(directory, category, excludes=[]):
     sync_category_directories(category, category_directories)
 
 def main():
-    # look on the command line for a desired config file
-    if len(sys.argv) < 2:
-        print "usage: update-master-directory-list dev.cfg [rootdir]"
-        sys.exit(1)
-    if len(sys.argv) >= 2:
-        turbogears.update_config(configfile=sys.argv[1], modulename="mirrormanager.config")
-    if len(sys.argv) >= 3:
-        rootdir=sys.argv[2]
+    global rootdir
+    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option("-c", "--config",
+                      dest="config", default='dev.cfg',
+                      help="TurboGears config file to use")
+    parser.add_option("--rootdir",
+                      dest="rootdir", default=rootdir,
+                      help="on-disk directory trees rooted at [rootdir]")
+
+    (options, args) = parser.parse_args()
+    turbogears.update_config(options.config, modulename="mirrormanager.config")
+    rootdir = options.rootdir
 
     if manage_pidfile(pidfile):
         print "another instance is running, try again later."
