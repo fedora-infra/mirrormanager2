@@ -15,7 +15,7 @@ date
 
 cd ${MM_DIR}
 
-${MM_DIR}/update-master-directory-list /etc/mirrormanager/prod.cfg
+${MM_DIR}/update-master-directory-list -c /etc/mirrormanager/prod.cfg
 ${MM_DIR}/crawler -c /etc/mirrormanager/prod.cfg --threads 15
 
 echo -n "Ending at "

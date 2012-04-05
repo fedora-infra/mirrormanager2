@@ -5,6 +5,7 @@ pkg_resources.require("TurboGears")
 
 from sqlobject import *
 import sys, os, string, stat
+from optparse import OptionParser
 import turbogears
 from mirrormanager.model import *
 from mirrormanager.repomap import *
@@ -19,6 +20,7 @@ from subprocess import Popen, PIPE
 
 rootdir='/'
 pidfile='/var/run/mirrormanager/umdl.pid'
+delete_directories=False
 
 from turbogears.database import PackageHub
 hub = PackageHub("mirrormanager")
@@ -249,10 +251,15 @@ def nuke_gone_directories(category, category_directories):
         database.  Be really sure you're ready do to this.  It comes
         in handy when say a Test release is dropped."""
         
-    for d in Directory.select():
-        if len(d.categories == 1) and category in d.categories:
-            if not category_directories.has_key(d.name):
-                d.destroySelf()
+    for d in Directory.select(orderBy='-name'):
+        try:
+            for c in d.categories:
+                if category == c and d.name:
+                    if not category_directories.has_key(d.name):
+                        print "Deleting gone directory %s" % (d.name)
+                        d.destroySelf()
+        except:
+            continue
 
 unreadable_dirs = set()
 
@@ -367,6 +374,8 @@ def sync_category_directories(category, category_directories):
             make_repository(dir, category)
         make_repomd_file_details(dir)
     ageFileDetails()
+    if delete_directories:
+        nuke_gone_directories(category, category_directories)
 
 def parse_rsync_listing(category, f):
     category_directories = {}
@@ -476,14 +485,23 @@ def sync_directories_from_directory(directory, category, excludes=[]):
     sync_category_directories(category, category_directories)
 
 def main():
-    # look on the command line for a desired config file
-    if len(sys.argv) < 2:
-        print "usage: update-master-directory-list dev.cfg [rootdir]"
-        sys.exit(1)
-    if len(sys.argv) >= 2:
-        turbogears.update_config(configfile=sys.argv[1], modulename="mirrormanager.config")
-    if len(sys.argv) >= 3:
-        rootdir=sys.argv[2]
+    global rootdir
+    global delete_directories
+    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option("-c", "--config",
+                      dest="config", default='dev.cfg',
+                      help="TurboGears config file to use")
+    parser.add_option("--rootdir",
+                      dest="rootdir", default=rootdir,
+                      help="on-disk directory trees rooted at [rootdir]")
+    parser.add_option("--delete-directories",
+                      dest="delete_directories", default=delete_directories, action="store_true",
+                      help="delete directories from the database that are no longer on disk")
+
+    (options, args) = parser.parse_args()
+    turbogears.update_config(options.config, modulename="mirrormanager.config")
+    rootdir = options.rootdir
+    delete_directories = options.delete_directories
 
     if manage_pidfile(pidfile):
         print "another instance is running, try again later."
