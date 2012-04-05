@@ -26,7 +26,7 @@ class SiteToSite(SQLObject):
     upstream_site = ForeignKey('Site')
     downstream_site = ForeignKey('Site')
     idx = DatabaseIndex('upstream_site', 'downstream_site', unique=True)
-    username = UnicodeCol(default=None)
+    username = UnicodeCol(default=None, length=UnicodeColKeyLength)
     password = UnicodeCol(default=None)
     username_idx = DatabaseIndex('upstream_site', 'username', unique=True)
 
