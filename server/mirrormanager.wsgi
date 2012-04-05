@@ -10,7 +10,7 @@ else:
    __requires__ = ['TurboGears[future]']
 
 import pkg_resources
-pkg_resources.require("TurboGears<1.1")
+pkg_resources.require("TurboGears<1.2")
 pkg_resources.require("CherryPy<3.0")
 
 import turbogears
