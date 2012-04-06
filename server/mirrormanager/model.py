@@ -670,7 +670,7 @@ class Directory(SQLObject):
     # e.g. pub/epel
     # e.g. pub/fedora/linux
     name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
-    files = PickleCol(default={})
+    files = PickleCol(default={}, length=2**24)
     readable = BoolCol(default=True)
     ctime = BigIntCol(default=0)
     categories = RelatedJoin('Category')
