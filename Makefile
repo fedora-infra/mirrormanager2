@@ -76,6 +76,7 @@ install: install-server install-client
 
 install-server:
 	mkdir -p -m 0755 $(DESTDIR)/var/lib/mirrormanager
+	mkdir -p -m 0755 $(DESTDIR)/var/lib/mirrormanager/catwalk-session
 	mkdir -p -m 0755 $(DESTDIR)/var/run/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/var/log/mirrormanager
 	mkdir -p -m 0755 $(DESTDIR)/var/log/mirrormanager/crawler

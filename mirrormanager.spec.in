@@ -62,6 +62,7 @@ exit 0
 %defattr(-,root,root,-)
 %{_datadir}/%{name}
 %attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/%{name}/
+%attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/%{name}/catwalk-session/
 %attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/run/%{name}/
 %attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/log/%{name}/
 %attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/log/%{name}/crawler/
