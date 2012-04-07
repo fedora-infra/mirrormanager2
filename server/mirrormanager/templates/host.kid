@@ -23,7 +23,8 @@ py:replace="site.name">Site Name</span></a>
 ${form(value=values, action=tg.url(action), disabled_fields=disabled_fields)}
 <p>* = Required</p>
 
-<div py:if="values is not None and action.endswith('update')">
+<div py:if="values is not None">
+
 Last Checked In: ${values.lastCheckedIn}<br></br>
 Last Crawled: ${values.lastCrawled}  <a href="${tg.url('/crawler/'+str(values.id)+'.log')}">[Log]</a><br></br> 
 
@@ -76,7 +77,6 @@ Last Crawled: ${values.lastCrawled}  <a href="${tg.url('/crawler/'+str(values.id
 	          href="${tg.url('/host_peer_asn/' + str(a.id) + '/delete')}">[Delete]</a>
         </li>
         </ul>
-</div>
 
 <h3>Locations</h3>
 Locations are ways to group hosts when netblocks are unwieldy.
@@ -107,7 +107,6 @@ privileges.
         </ul>
 
 
-<hr></hr>
 <h2>Categories Carried</h2>
 <div py:if="is_siteadmin">
 <a href="${tg.url('/host_category/0/new?hostid=' + str(values.id))}">[Add Category]</a>
@@ -137,12 +136,13 @@ Hosts carry categories of software.  Example Fedora categories include Fedora Co
 </li>
 </ul>
 </div>
+
+</div>
 <hr />
 <p>
-<span py:if="is_siteadmin">
+<span py:if="is_siteadmin and values">
 <a href="${tg.url('/host/' + str(values.id) + '/delete')}">[Delete Host]</a>
 </span>
 </p>
-</div>
 </body>
 </html>
