@@ -18,8 +18,8 @@ fi
 
 rsync -a /usr/share/mirrormanager/server/mirrormanager/static .
 # remove /mirrormanager in the URLs
-find . -name index.html -type f | xargs -n 20 sed -i -e 's:href=\"/mirrormanager/:href=\"/:g'
-find . -name \*.css -type f | xargs -n 20 sed -i -e 's:/mirrormanager/:/:g'
+find . -name index.html -type f -print0 | xargs -0 -n 20 sed -i -e 's:href=\"/mirrormanager/:href=\"/:g'
+find . -name \*.css -type f -print0 | xargs -0 -n 20 sed -i -e 's:/mirrormanager/:/:g'
 popd > /dev/null 2>&1
 mkdir -m 0775 -p "${PUBLICLIST_DIR}"
 # because the arg list is too long for cp
