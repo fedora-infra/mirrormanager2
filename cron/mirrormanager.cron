@@ -1,0 +1,14 @@
+# Example cronjobs for mirrormanager
+# adjust frequency according to how often your content changes
+#
+# refresh the mirrorlist cache at the top of the hour
+55 * * * * mirrormanager /usr/share/mirrormanager/server/update-mirrorlist-server >> /var/log/mirrormanager/mirrorlist.log 2>&1
+
+# update master directory list
+0 */2 * * * mirrormanager cd /usr/share/mirrormanager/server && ./update-master-directory-list /etc/mirrormanager/prod.cfg >> /var/log/mirrormanager/umdl.log 2>&1
+
+# Get the global netblocks list once a day
+30 0 * * * mirrormanager cd /usr/share/mirrormanager/server && ./get_global_netblocks /var/lib/mirrormanager/global_netblocks.txt > /dev/null 2>&1
+
+# run the crawler twice a day
+0 */12 * * * mirrormanager cd /usr/share/mirrormanager/server && ./crawler -c /etc/mirrormanager/prod.cfg --threads 75 >> /var/log/mirrormanager/crawler.log 2>&1
