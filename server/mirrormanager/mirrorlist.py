@@ -1,5 +1,6 @@
 from mirrormanager.model import Directory, Host, RepositoryRedirect, CountryContinentRedirect, Repository, HostCategoryUrl, Location
 from IPy import IP
+import os
 import sha
 import pprint
 import dns.resolver
