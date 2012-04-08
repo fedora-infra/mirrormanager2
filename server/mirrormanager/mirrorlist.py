@@ -17,7 +17,7 @@ host_netblock_cache = {}
 host_country_allowed_cache = {}
 
 def _do_query_directories():
-    common_select = 'SELECT directory.name AS dname, host.id AS hostid, host.country, host_category_url.id, site.private, host.private, host.internet2, host.internet2_clients '
+    common_select = 'SELECT directory.name AS dname, host.id AS hostid, host.country, host_category_url.id, site.private AS siteprivate, host.private AS hostprivate, host.internet2, host.internet2_clients '
     sql1_from = 'FROM directory, host_category_dir, host_category, host_category_url, host, site, category_directory '
     sql2_from = 'FROM directory,                    host_category, host_category_url, host, site, category_directory '
     common_where  = ' WHERE '

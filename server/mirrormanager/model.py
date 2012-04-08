@@ -1,5 +1,5 @@
 from sqlobject import *
-from sqlobject.sqlbuilder import *
+from sqlobject.sqlbuilder import RLIKE
 from turbogears import identity, config
 from datetime import datetime
 import time
@@ -472,7 +472,7 @@ def _publiclist_hosts(product=None, re=None):
 
     sql1_filter = ''
     sql2_filter = ''
-    sql_common_select = "SELECT DISTINCT host.id, host.country, host.name, host.bandwidth_int, host.comment, host.internet2, site.org_url, site.name, category.name, host_category_url.url "
+    sql_common_select = "SELECT DISTINCT host.id, host.country, host.name AS host_name, host.bandwidth_int, host.comment, host.internet2, site.org_url, site.name AS site_name, category.name AS category_name, host_category_url.url "
     sql1_from = "FROM category, host_category, host, site, host_category_url, host_category_dir "
     sql2_from = "FROM category, host_category, host, site, host_category_url, directory, category_directory "
     # join conditions
@@ -496,9 +496,15 @@ def _publiclist_hosts(product=None, re=None):
     sql2_join   = 'AND category_directory.directory_id = directory.id '
     sql2_join  += 'AND category_directory.category_id = category.id '
 
+    def _rlike(pattern, string):
+        # there's probably a beter way to get this, but this works...
+        _dburi = config.get('sqlobject.dburi', 'sqlite://')
+        dbtype = _dburi.strip('notrans_').split(':')[0]
+        return RLIKE('pattern', 'bar').__sqlrepr__(dbtype) + " "
+
     if re is not None:
-        sql1_filter = "AND host_category_dir.path ~ '%s' " % re
-        sql2_filter = "AND directory.name ~ '%s' " % re
+        sql1_filter = "AND " + _rlike('host_category_dir.path', re)
+        sql2_filter = "AND " + _rlike('directory.name', re)
 
     sql1_up2date = 'AND host_category_dir.up2date '
     sql2_up2date = 'AND host_category.always_up2date '
