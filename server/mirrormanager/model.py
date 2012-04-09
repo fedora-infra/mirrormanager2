@@ -5,7 +5,7 @@ from datetime import datetime
 import time
 from string import strip
 import IPy
-from mirrormanager.lib import uniqueify
+from mirrormanager.lib import uniqueify, append_value_to_cache
 from mirrormanager.categorymap import categorymap
 IPy.check_addr_prefixlen = 0
 
@@ -699,36 +699,50 @@ class Directory(SQLObject):
             eh.destroySelf()
         SQLObject.destroySelf(self)
 
-    def age_file_details(self):
+    file_details_cache = dict()
+
+    @staticmethod
+    def ageFileDetails():
+        Directory._fill_file_details_cache()
+        Directory._age_file_details()
+
+    @staticmethod
+    def _fill_file_details_cache():
+        sql = 'SELECT id, directory_id, filename, timestamp from file_detail ORDER BY directory_id, filename, -timestamp'
+        result = FileDetail._connection.queryAll(sql)
+        cache = dict()
+        for (id, directory_id, filename, timestamp) in result:
+            k = (directory_id, filename)
+            v = dict(file_detail_id=id, timestamp=timestamp)
+            append_value_to_cache(cache, k, v)
+        Directory.file_details_cache = cache
+        
+    @staticmethod
+    def _age_file_details():
         """For each file, keep at least 1 FileDetail entry.
         Remove the second-most recent entry if the most recent entry is older than
         max_propogation_days.  This gives mirrors time to pick up the
         most recent change.
         Remove any others that are more than max_stale_days old."""
-        
+
+        t = int(time.time())
         max_stale = config.get('mirrormanager.max_stale_days', 3)
         max_propogation = config.get('mirrormanager.max_propogation_days', 2)
         fd = {}
-        t = int(time.time())
         stale = t - (60*60*24*max_stale)
         propogation = t - (60*60*24*max_propogation)
 
-        for f in self.fileDetails:
-            if f.filename not in fd:
-                fd[f.filename] = [f]
-            else:
-                fd[f.filename].append(f)
-            
-        for filename, fds in fd.iteritems():
+        for k, fds in Directory.file_details_cache.iteritems():
+            (directory_id, filename) = k
             if len(fds) > 1:
                 start=2
                 # second-most recent only if most recent has had time to propogate
-                if fds[0].timestamp < propogation:
+                if fds[0]['timestamp'] < propogation:
                     start=1
                 # all others
                 for f in fds[start:]:
-                    if f.timestamp < stale:
-                        f.destroySelf()
+                    if f['timestamp'] < stale:
+                        FileDetail.get(f['file_detail_id']).destroySelf()
 
 class Category(SQLObject):
     class sqlmeta:
@@ -826,10 +840,6 @@ class Repository(SQLObject):
     directory = ForeignKey('Directory')
     disabled = BoolCol(default=False)
     idx = DatabaseIndex('prefix', 'arch', unique=True)
-
-def ageFileDetails():
-    for d in Directory.select():
-        d.age_file_details()
 
 class FileDetail(SQLObject):
     class sqlmeta:
