@@ -1,24 +1,26 @@
-from mirrormanager.model import Directory, Host, RepositoryRedirect, CountryContinentRedirect, Repository, HostCategoryUrl, Location
-from IPy import IP
+from mirrormanager.model import Directory, Host, RepositoryRedirect, CountryContinentRedirect, Repository, HostCategoryUrl, Location, Version, Category, NetblockCountry
 import os
+from IPy import IP
 import sha
 import pprint
 import dns.resolver
 
-# key is directoryname
-mirrorlist_cache = {}
-
-# key is strings in tuple (repo.prefix, arch)
-repo_arch_to_directoryname = {}
-
-# key is an IPy.IP structure, value is list of host ids
-host_netblock_cache = {}
-
-# key is hostid, value is list of countries to allow
-host_country_allowed_cache = {}
+global_caches = dict(
+    # key is directoryname
+    mirrorlist_cache = {},
+    # key is strings in tuple (repo.prefix, arch)
+    repo_arch_to_directoryname = {},
+    # key is an IPy.IP structure, value is list of host ids
+    host_netblock_cache = {},
+    # key is hostid, value is list of countries to allow
+    host_country_allowed_cache = {},
+    host_country_cache = {},
+    host_bandwidth_cache = {},
+    host_asn_cache = {},
+    )
 
 def _do_query_directories():
-    common_select = 'SELECT directory.name AS dname, host.id AS hostid, host.country, host_category_url.id, site.private AS siteprivate, host.private AS hostprivate, host.internet2, host.internet2_clients '
+    common_select = 'SELECT directory.id as directory_id, directory.name AS dname, host.id AS hostid, host.country, host_category_url.id, site.private AS siteprivate, host.private AS hostprivate, host.internet2, host.internet2_clients '
     sql1_from = 'FROM directory, host_category_dir, host_category, host_category_url, host, site, category_directory '
     sql2_from = 'FROM directory,                    host_category, host_category_url, host, site, category_directory '
     common_where  = ' WHERE '
@@ -44,12 +46,16 @@ def _do_query_directories():
     result = Directory._connection.queryAll(sql)
     return result
 
-def add_host_to_cache(cache, hostid, hcurl):
-    if hostid not in cache:
-        cache[hostid] = [hcurl]
+def append_value_to_cache(cache, key, value):
+    if key not in cache:
+        cache[key] = [value]
     else:
-        cache[hostid].append(hcurl)
+        cache[key].append(value)
     return cache
+
+def add_host_to_cache(cache, hostid, value):
+    append_value_to_cache(cache, hostid, value)
+
 
 def add_host_to_set(s, hostid):
     s.add(hostid)
@@ -88,38 +94,66 @@ def query_directory_exclusive_host():
             cache[dname].add(hostid)
     return cache
 
+
 def populate_directory_cache():
-    global repo_arch_to_directoryname
+    global global_caches
     result = _do_query_directories()
 
     directory_exclusive_hosts = query_directory_exclusive_host()
+    
+    def setup_directory_repo_cache():
+        cache = {}
+        for r in Repository.select():
+            if r.directory:
+                cache[r.directory.id] = r
+        return cache
+    def setup_directory_category_cache():
+        cache = {}
+        sql = 'SELECT category_id, directory_id from category_directory WHERE 1 ORDER BY directory_id'
+        result = Directory._connection.queryAll(sql)
+        for (cid, did) in result:
+            append_value_to_cache(cache, did, cid)
+        return cache
+    def setup_version_ordered_mirrorlist_cache():
+        cache = {}
+        for v in list(Version.select()):
+            cache[v.id] = v.ordered_mirrorlist
+        return cache
+    def setup_category_topdir_cache():
+        cache = {}
+        for c in list(Category.select()):
+            cache[c.id] = len(c.topdir.name)+1 # include trailing /
+        return cache
 
-    directory_exclusive_hosts = query_directory_exclusive_host()
+    directory_repo_cache = setup_directory_repo_cache()
+    directory_category_cache = setup_directory_category_cache()
+    version_ordered_mirrorlist_cache = setup_version_ordered_mirrorlist_cache()
+    category_topdir_cache = setup_category_topdir_cache()
 
     cache = {}
-    for (directoryname, hostid, country, hcurl, siteprivate, hostprivate, i2, i2_clients) in result:
+    for (directory_id, directoryname, hostid, country, hcurl, siteprivate, hostprivate, i2, i2_clients) in result:
         if directoryname in directory_exclusive_hosts and \
                 hostid not in directory_exclusive_hosts[directoryname]:
             continue
 
         if directoryname not in cache:
             cache[directoryname] = {'global':set(), 'byCountry':{}, 'byHostId':{}, 'ordered_mirrorlist':False, 'byCountryInternet2':{}}
-            directory = Directory.byName(directoryname)
-            repo = directory.repository
-            # if a directory is in more than one category, problem...
+
+            repo = directory_repo_cache.get(directory_id)
+
             if repo is not None and repo.arch is not None:
-                repo_arch_to_directoryname[(repo.prefix, repo.arch.name)] = directory.name
-                category = repo.category
-                cache[directoryname]['ordered_mirrorlist'] = repo.version.ordered_mirrorlist
+                global_caches['repo_arch_to_directoryname'][(repo.prefix, repo.arch.name)] = directoryname
+                cache[directoryname]['ordered_mirrorlist'] = repo.version.ordered_mirrorlist # WARNING - this is a query # fixme use cache
+                category_id = directory_category_cache[directory_id]
             else:
-                numcats = len(directory.categories)
+                numcats = len(directory_category_cache.get(directory_id, []))
                 if numcats == 0:
                     # no category, so we can't know a mirror host's URLs.
                     # nothing to add.
                     continue
                 elif numcats >= 1:
                     # any of them will do, so just look at the first one
-                    category = directory.categories[0]
+                    category_id = directory_category_cache[directory_id][0]
 
                 # repodata/ directories aren't themselves repositories, their parent dir is
                 # we're walking the list in order, so the parent will be added to the cache before the child
@@ -127,10 +161,8 @@ def populate_directory_cache():
                     parent = os.path.dirname(directoryname) # parent
                     cache[directoryname]['ordered_mirrorlist'] = cache[parent]['ordered_mirrorlist']
         
-            cache[directoryname]['subpath'] = directoryname[len(category.topdir.name)+1:]
+            cache[directoryname]['subpath'] = directoryname[category_topdir_cache[category_id]:]
             del repo
-            del directory
-            del category
 
         if country is not None:
             country = country.upper()
@@ -150,8 +182,7 @@ def populate_directory_cache():
 
         add_host_to_cache(cache[directoryname]['byHostId'], hostid, hcurl)
 
-    global mirrorlist_cache
-    mirrorlist_cache = shrink(cache)
+    global_caches['mirrorlist_cache'] = shrink(cache)
 
 def name_to_ips(name):
     result=[]
@@ -169,61 +200,50 @@ def name_to_ips(name):
             continue
     return result
 
-def populate_netblock_cache():
-    cache = {}
-    for host in Host.select():
-        if host.is_active() and len(host.netblocks) > 0:
-            for n in host.netblocks:
-                try:
-                    ip = IP(n.netblock)
-                    ips = [ip]
-                except ValueError:
-                    # probably a string
-                    ips = name_to_ips(n.netblock)
+def populate_netblock_cache(cache, host):
+    if host.is_active() and len(host.netblocks) > 0:
+        for n in host.netblocks:
+            try:
+                ip = IP(n.netblock)
+                ips = [ip]
+            except ValueError:
+                # probably a string
+                ips = name_to_ips(n.netblock)
 
-                for ip in ips:
-                    if cache.has_key(ip):
-                        cache[ip].append(host.id)
-                    else:
-                        cache[ip] = [host.id]
-
-    global host_netblock_cache
-    host_netblock_cache = cache
-
-def populate_host_country_allowed_cache():
-    cache = {}
-    for host in Host.select():
-        if host.is_active() and len(host.countries_allowed) > 0:
-            cache[host.id] = [c.country.upper() for c in host.countries_allowed]
-    global host_country_allowed_cache
-    host_country_allowed_cache = cache
-
-def host_bandwidth_cache():
-    cache = {}
-    for host in Host.select():
-        cache[host.id] = host.bandwidth_int
+            for ip in ips:
+                if cache.has_key(ip):
+                    cache[ip].append(host.id)
+                else:
+                    cache[ip] = [host.id]
     return cache
 
-def host_country_cache():
-    cache = {}
-    for host in Host.select():
-        cache[host.id] = host.country
+
+def populate_host_country_allowed_cache(cache, host):
+    if host.is_active() and len(host.countries_allowed) > 0:
+        cache[host.id] = [c.country.upper() for c in host.countries_allowed]
     return cache
 
-def asn_host_cache():
-    cache = {}
-    for host in Host.selectBy(asn_clients=True):
-        if host.asn is not None:
-            if host.asn not in cache:
-                cache[host.asn] = [host.id]
-            else:
-                cache[host.asn].append[host.id]
+def populate_host_bandwidth_cache(cache, host):
+    cache[host.id] = host.bandwidth_int
+    return cache
 
-        for peer_asn in host.peer_asns:
-            if peer_asn.asn not in cache:
-                cache[peer_asn.asn] = [host.id]
-            else:
-                cache[peer_asn.asn].append(host.id)
+def populate_host_country_cache(cache, host):
+    cache[host.id] = host.country
+    return cache
+
+def populate_host_asn_cache(cache, host):
+    if not host.asn_clients: return cache
+    if host.asn is not None:
+        if host.asn not in cache:
+            cache[host.asn] = [host.id]
+        else:
+            cache[host.asn].append[host.id]
+
+    for peer_asn in host.peer_asns:
+        if peer_asn.asn not in cache:
+            cache[peer_asn.asn] = [host.id]
+        else:
+            cache[peer_asn.asn].append(host.id)
     return cache
 
 def repository_redirect_cache():
@@ -248,7 +268,8 @@ def disabled_repository_cache():
 def file_details_cache():
     # cache{directoryname}{filename}[{details}]
     cache = {}
-    for d in Directory.select():
+    # materialize this select to avoid making hundreds of thousands of queries
+    for d in list(Directory.select()):
         if len(d.fileDetails) > 0:
             cache[d.name] = {}
             for fd in d.fileDetails:
@@ -284,26 +305,47 @@ def netblock_country_cache():
             
     return cache
 
+def populate_host_caches():
+    n = dict()
+    ca = dict()
+    b = dict()
+    cc = dict()
+    a = dict()
+    
+    for host in Host.select():
+        n = populate_netblock_cache(n, host)
+        ca = populate_host_country_allowed_cache(ca, host)
+        b = populate_host_bandwidth_cache(b, host)
+        cc = populate_host_country_cache(cc, host)
+        a = populate_host_asn_cache(a, host)
+
+    global global_caches
+    global_caches['host_netblock_cache'] = n
+    global_caches['host_country_allowed_cache'] = ca
+    global_caches['host_bandwidth_cache'] = b
+    global_caches['host_country_cache'] = cc
+    global_caches['host_asn_cache'] = a
+
+
 
 def populate_all_caches():
-    populate_host_country_allowed_cache()
-    populate_netblock_cache()
+    populate_host_caches()
     populate_directory_cache()
 
 import cPickle as pickle
 def dump_caches():
-    data = {'mirrorlist_cache':mirrorlist_cache,
-            'host_netblock_cache':host_netblock_cache,
-            'host_country_allowed_cache':host_country_allowed_cache,
-            'repo_arch_to_directoryname':repo_arch_to_directoryname,
+    data = {'mirrorlist_cache':global_caches['mirrorlist_cache'],
+            'host_netblock_cache':global_caches['host_netblock_cache'],
+            'host_country_allowed_cache':global_caches['host_country_allowed_cache'],
+            'host_bandwidth_cache':global_caches['host_bandwidth_cache'],
+            'host_country_cache':global_caches['host_country_cache'],
+            'asn_host_cache':global_caches['host_asn_cache'], # yeah I misnamed this
+            'repo_arch_to_directoryname':global_caches['repo_arch_to_directoryname'],
             'repo_redirect_cache':repository_redirect_cache(),
             'country_continent_redirect_cache':country_continent_redirect_cache(),
             'disabled_repositories':disabled_repository_cache(),
-            'host_bandwidth_cache':host_bandwidth_cache(),
-            'host_country_cache':host_country_cache(),
             'file_details_cache':file_details_cache(),
             'hcurl_cache':hcurl_cache(),
-            'asn_host_cache':asn_host_cache(),
             'location_cache':location_cache(),
             'netblock_country_cache':netblock_country_cache()}
     
