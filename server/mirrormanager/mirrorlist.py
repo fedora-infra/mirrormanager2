@@ -4,6 +4,7 @@ from IPy import IP
 import sha
 import pprint
 import dns.resolver
+from mirrormanager.lib import append_value_to_cache
 
 global_caches = dict(
     # key is directoryname
@@ -45,13 +46,6 @@ def _do_query_directories():
 
     result = Directory._connection.queryAll(sql)
     return result
-
-def append_value_to_cache(cache, key, value):
-    if key not in cache:
-        cache[key] = [value]
-    else:
-        cache[key].append(value)
-    return cache
 
 def add_host_to_cache(cache, hostid, value):
     append_value_to_cache(cache, hostid, value)
