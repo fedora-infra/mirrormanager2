@@ -79,3 +79,10 @@ def manage_pidfile(pidfile):
         if err.errno == 3: # No such process
             return write_pidfile(pidfile, pid)
     return 1
+
+def append_value_to_cache(cache, key, value):
+    if key not in cache:
+        cache[key] = [value]
+    else:
+        cache[key].append(value)
+    return cache
