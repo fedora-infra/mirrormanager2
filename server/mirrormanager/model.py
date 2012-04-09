@@ -667,6 +667,15 @@ class Version(SQLObject):
     sortorder = IntCol(default=0)
     codename = UnicodeCol(default=None)
 
+def setup_directory_category_cache():
+    cache = {}
+    sql = 'SELECT category_id, directory_id FROM category_directory ORDER BY directory_id'
+    result = Directory._connection.queryAll(sql)
+    for (cid, did) in result:
+        append_value_to_cache(cache, did, cid)
+    return cache
+
+
 class Directory(SQLObject):
     class sqlmeta:
         cacheValues = False
