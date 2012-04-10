@@ -666,6 +666,7 @@ class Version(SQLObject):
     ordered_mirrorlist = BoolCol(default=True)
     sortorder = IntCol(default=0)
     codename = UnicodeCol(default=None)
+    idx = DatabaseIndex('name', 'productID', unique=True)
 
 def setup_directory_category_cache():
     cache = {}

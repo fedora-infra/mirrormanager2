@@ -2,7 +2,8 @@ from sqlobject import *
 from sqlobject.sqlbuilder import *
 from turbogears import identity, config
 from mirrormanager.model import *
-from sqlobject import SQLObject, BoolCol, IntCol, UnicodeCol, DatabaseIndex
+from sqlobject import SQLObject, BoolCol, IntCol, UnicodeCol
+from sqlobject.index import SODatabaseIndex
 from oldtables import *
 import GeoIP
 
@@ -49,18 +50,43 @@ def change_tables():
         OldCategory.sqlmeta.addColumn(UnicodeCol("GeoDNSDomain", default=None), changeSchema=True)
         changes['category.geo_dns_domain'] = True
 
+
+    def _add_site_to_site_index():
+        idx = SODatabaseIndex(OldSiteToSite, 'username_idx',
+                              [dict(column='upstream_site'),
+                               dict(column='username', length=UnicodeColKeyLength)],
+                              0, unique=True)
+        sql = SiteToSite._connection.createIndexSQL(SiteToSite, idx)
+        try:
+            OldSiteToSite._connection.queryAll(sql)
+        except: # already exists
+            pass
+
+
     if 'username' not in OldSiteToSite.sqlmeta.columns and \
             'password' not in OldSiteToSite.sqlmeta.columns:
         OldSiteToSite.sqlmeta.addColumn(UnicodeCol("username", default=None), changeSchema=True)
         OldSiteToSite.sqlmeta.addColumn(UnicodeCol("password", default=None), changeSchema=True)
-        idx = DatabaseIndex('upstream_site', 'username', unique=True)
-        idx.name = 'username_idx'
-        OldSiteToSite.sqlmeta.addColumn(idx, changeSchema=True)
+        _add_site_to_site_index()
         changes['sitetosite.username_password'] = True
 
     if 'name' not in OldHostNetblock.sqlmeta.columns:
         OldHostNetblock.sqlmeta.addColumn(UnicodeCol("name", default=None), changeSchema=True)
         changes['hostnetblock.name'] = True
+
+    def _add_version_index():
+        idx = SODatabaseIndex(OldVersion, 'idx',
+                              [dict(column='name', length=UnicodeColKeyLength),
+                               dict(column='productID')],
+                              0, unique=True)
+        sql = Version._connection.createIndexSQL(Version, idx)
+        try:
+            result = OldVersion._connection.queryAll(sql)
+        except: # it already exists
+            pass
+
+    _add_version_index()
+
 
 def update_countries():
     db_countries = set(c.code for c in Country.select())
