@@ -75,6 +75,11 @@ def change_tables():
         changes['hostnetblock.name'] = True
 
     def _add_version_index():
+        _dburi = config.get('sqlobject.dburi', '')
+        if 'mysql://' in _dburi and OldVersion.sqlmeta.columns['name'].length != UnicodeColKeyLength:
+            sql = 'ALTER TABLE %s CHANGE COLUMN name name VARCHAR(%s)' % (OldVersion.sqlmeta.table, UnicodeColKeyLength)
+            OldVersion._connection.queryAll(sql)
+
         idx = SODatabaseIndex(OldVersion, 'idx',
                               [dict(column='name', length=UnicodeColKeyLength),
                                dict(column='productID')],
