@@ -658,7 +658,7 @@ class Product(SQLObject):
 class Version(SQLObject):
     class sqlmeta:
         cacheValues = False
-    name = UnicodeCol()
+    name = UnicodeCol(length=UnicodeColKeyLength)
     product = ForeignKey('Product')
     isTest = BoolCol(default=False)
     display = BoolCol(default=True)
