@@ -41,3 +41,8 @@ class OldHostNetblock(SQLObject):
     class sqlmeta:
         fromDatabase = True
         table = 'host_netblock'
+
+class OldHostCategory(SQLObject):
+    class sqlmeta:
+        fromDatabase = True
+        table = 'host_category'

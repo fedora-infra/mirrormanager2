@@ -92,6 +92,11 @@ def change_tables():
 
     _add_version_index()
 
+    # delete unused HostCategory fields
+    for c in ('admin_active', 'user_active', 'upstream'): 
+        if c in OldHostCategory.sqlmeta.columns:
+            OldHostCategory.sqlmeta.delColumn(c, changeSchema=True)
+
 
 def update_countries():
     db_countries = set(c.code for c in Country.select())

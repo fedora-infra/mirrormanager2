@@ -9,7 +9,6 @@ mirrormanager.projectname = "Example Mirror Manager Project"
 mirrormanager.projectweb = "http://localhost"
 mirrormanager.cssroot = "http://localhost/mirrormanager/static/css/"
 mirrormanager.copyright = "example"
-mirrormanager.upstream = "rsync://example.com/pub/"
 
 # Update-master-directory-list upstream definition
 # a dictionary in a list with following content

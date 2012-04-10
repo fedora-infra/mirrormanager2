@@ -434,11 +434,6 @@ class HostCategoryFieldsNew(widgets.WidgetsList):
         return [(c.id, c.name) for c in Category.select(orderBy='name')]
     category = widgets.SingleSelectField(options=get_category_options,
                                          validator=validators.NotEmpty())
-    admin_active = widgets.CheckBox(default=True, help_text="unused")
-    user_active = widgets.CheckBox(default=True, help_text="Clear to temporarily disable this category")
-    help_text = 'e.g. '
-    help_text += config.get('mirrormanager.upstream', 'rsync://download.fedora.redhat.com/fedora-linux-core')
-    upstream = widgets.TextField(validator=validators.Any(validators.UnicodeString,validators.Empty), attrs=dict(size='30'), help_text=help_text)
     always_up2date = widgets.CheckBox(default=False, help_text="Set to force belief that the whole category is always in sync.")
 
 class LabelObjName(widgets.Label):
@@ -456,12 +451,6 @@ class InvalidData(Exception):
 
 class HostCategoryFieldsRead(widgets.WidgetsList):
     category = LabelObjName()
-    admin_active = widgets.CheckBox(default=True)
-    user_active = widgets.CheckBox(default=True)
-    help_text = 'e.g. '
-    help_text += config.get('mirrormanager.upstream', 'rsync://download.fedora.redhat.com/fedora-linux-core')
-    upstream = widgets.TextField(attrs=dict(size='30'), validator=validators.Any(validators.UnicodeString,validators.Empty),
-                                 help_text=help_text)
     always_up2date = widgets.CheckBox(default=False, help_text="Set to force belief that the whole category is always in sync.  Be careful with this.")
 
 host_category_form_new = widgets.TableForm(fields=HostCategoryFieldsNew(),
