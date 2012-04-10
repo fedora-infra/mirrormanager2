@@ -1,4 +1,4 @@
-from mirrormanager.model import Directory, Host, RepositoryRedirect, CountryContinentRedirect, Repository, HostCategoryUrl, Location, Version, Category, NetblockCountry
+from mirrormanager.model import Directory, Host, RepositoryRedirect, CountryContinentRedirect, Repository, HostCategoryUrl, Location, Version, Category, NetblockCountry, setup_directory_category_cache
 import os
 from IPy import IP
 import sha
@@ -100,13 +100,6 @@ def populate_directory_cache():
         for r in Repository.select():
             if r.directory:
                 cache[r.directory.id] = r
-        return cache
-    def setup_directory_category_cache():
-        cache = {}
-        sql = 'SELECT category_id, directory_id from category_directory WHERE 1 ORDER BY directory_id'
-        result = Directory._connection.queryAll(sql)
-        for (cid, did) in result:
-            append_value_to_cache(cache, did, cid)
         return cache
     def setup_version_ordered_mirrorlist_cache():
         cache = {}
