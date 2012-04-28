@@ -198,10 +198,7 @@ def populate_netblock_cache(cache, host):
                 ips = name_to_ips(n.netblock)
 
             for ip in ips:
-                if cache.has_key(ip):
-                    cache[ip].append(host.id)
-                else:
-                    cache[ip] = [host.id]
+                append_value_to_cache(cache, ip, host.id)
     return cache
 
 
@@ -221,16 +218,10 @@ def populate_host_country_cache(cache, host):
 def populate_host_asn_cache(cache, host):
     if not host.asn_clients: return cache
     if host.asn is not None:
-        if host.asn not in cache:
-            cache[host.asn] = [host.id]
-        else:
-            cache[host.asn].append[host.id]
+        append_value_to_cache(cache, host.asn, host.id)
 
     for peer_asn in host.peer_asns:
-        if peer_asn.asn not in cache:
-            cache[peer_asn.asn] = [host.id]
-        else:
-            cache[peer_asn.asn].append(host.id)
+        append_value_to_cache(cache, peer_asn.asn, host.id)
     return cache
 
 def repository_redirect_cache():
@@ -261,10 +252,7 @@ def file_details_cache():
             cache[d.name] = {}
             for fd in d.fileDetails:
                 details = dict(timestamp=fd.timestamp, sha1=fd.sha1, md5=fd.md5, sha256=fd.sha256, sha512=fd.sha512, size=fd.size)
-                if fd.filename not in cache[d.name]:
-                    cache[d.name][fd.filename] = [details]
-                else:
-                    cache[d.name][fd.filename].append(details)
+                append_value_to_cache(cache[d.name], d.filename, details)
     return cache
 
 def hcurl_cache():
