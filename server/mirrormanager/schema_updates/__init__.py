@@ -13,6 +13,20 @@ __connection__ = hub
 
 changes = {}
 
+def _bandwidth_int_not_null():
+    _dburi = config.get('sqlobject.dburi', '')
+    if 'mysql://' in _dburi:
+        sql = 'ALTER TABLE host CHANGE COLUMN bandwidth_int bandwidth_int BIGINT NOT NULL'
+    elif 'postgres://' in _dburi:
+        sql = 'ALTER TABLE host ALTER COLUMN bandwidth_int SET NOT NULL'
+    OldHost._connection.queryAll(sql)
+
+def bandwidth_int_not_null():
+    for h in OldHost.select():
+        if h.bandwidth_int is None:
+            h.bandwidth_int = 100
+    _bandwidth_int_not_null()
+
 def change_tables():
     global changes
 
@@ -91,6 +105,7 @@ def change_tables():
             pass
 
     _add_version_index()
+    bandwidth_int_not_null()
 
     # delete unused HostCategory fields
     for c in ('admin_active', 'user_active', 'upstream'): 
