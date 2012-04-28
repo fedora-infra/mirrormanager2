@@ -589,7 +589,7 @@ class HostPeerAsn(SQLObject):
     class sqlmeta:
         cacheValues = False
     host = ForeignKey('Host')
-    asn = IntCol()
+    asn = IntCol(notNone=True)
     name = UnicodeCol()
     idx = DatabaseIndex('host', 'asn', unique=True)    
 
