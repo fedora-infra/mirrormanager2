@@ -38,7 +38,7 @@ def change_tables():
 
     if 'sortorder' not in OldVersion.sqlmeta.columns and \
             'codename' not in OldVersion.sqlmeta.columns:
-        OldVersion.sqlmeta.addColumn(IntCol("sortorder", default=0), changeSchema=True)
+        OldVersion.sqlmeta.addColumn(IntCol("sortorder", default=0, notNone=True), changeSchema=True)
         OldVersion.sqlmeta.addColumn(UnicodeCol("codename", default=None), changeSchema=True)
         changes['version.sortorder_codename'] = True
 

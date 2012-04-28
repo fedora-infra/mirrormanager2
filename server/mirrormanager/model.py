@@ -661,7 +661,7 @@ class Version(SQLObject):
     display = BoolCol(default=True)
     display_name = UnicodeCol(default=None)
     ordered_mirrorlist = BoolCol(default=True)
-    sortorder = IntCol(default=0)
+    sortorder = IntCol(default=0, notNone=True)
     codename = UnicodeCol(default=None)
     idx = DatabaseIndex('name', 'productID', unique=True)
 
