@@ -108,7 +108,7 @@ def change_tables():
     bandwidth_int_not_null()
 
     # delete unused HostCategory fields
-    for c in ('admin_active', 'user_active', 'upstream'): 
+    for c in ('adminActive', 'userActive', 'upstream'): 
         if c in OldHostCategory.sqlmeta.columns:
             OldHostCategory.sqlmeta.delColumn(c, changeSchema=True)
 
