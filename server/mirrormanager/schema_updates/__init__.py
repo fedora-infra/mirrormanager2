@@ -19,12 +19,12 @@ def _bandwidth_int_not_null():
         sql = 'ALTER TABLE host CHANGE COLUMN bandwidth_int bandwidth_int BIGINT NOT NULL'
     elif 'postgres://' in _dburi:
         sql = 'ALTER TABLE host ALTER COLUMN bandwidth_int SET NOT NULL'
-    OldHost._connection.queryAll(sql)
+    return OldHost._connection.query(sql)
 
 def bandwidth_int_not_null():
     for h in OldHost.select():
-        if h.bandwidth_int is None:
-            h.bandwidth_int = 100
+        if h.bandwidthInt is None: # note column name differs due to underscore->CamelCase conversion
+            h.bandwidthInt = 100
     _bandwidth_int_not_null()
 
 def change_tables():
