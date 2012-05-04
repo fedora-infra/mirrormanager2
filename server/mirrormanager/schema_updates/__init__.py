@@ -6,6 +6,7 @@ from sqlobject import SQLObject, BoolCol, IntCol, UnicodeCol
 from sqlobject.index import SODatabaseIndex
 from oldtables import *
 import GeoIP
+import inspect
 
 from turbogears.database import PackageHub
 hub = PackageHub("mirrormanager")
@@ -26,6 +27,10 @@ def bandwidth_int_not_null():
         if h.bandwidthInt is None: # note column name differs due to underscore->CamelCase conversion
             h.bandwidthInt = 100
     _bandwidth_int_not_null()
+
+def _SODatabaseIndex_needs_creationOrder():
+    argspec = inspect.getargspec(SODatabaseIndex.__init__)
+    return 'creationOrder' in argspec.args
 
 def change_tables():
     global changes
@@ -66,10 +71,17 @@ def change_tables():
 
 
     def _add_site_to_site_index():
-        idx = SODatabaseIndex(OldSiteToSite, 'username_idx',
-                              [dict(column='upstream_site'),
-                               dict(column='username', length=UnicodeColKeyLength)],
-                              0, unique=True)
+        if _SODatabaseIndex_needs_creationOrder():
+            idx = SODatabaseIndex(OldSiteToSite, 'username_idx',
+                                  [dict(column='upstream_site'),
+                                   dict(column='username', length=UnicodeColKeyLength)],
+                                  0, unique=True)
+        else:
+            idx = SODatabaseIndex(OldSiteToSite, 'username_idx',
+                                  [dict(column='upstream_site'),
+                                   dict(column='username', length=UnicodeColKeyLength)],
+                                  unique=True)
+            
         sql = SiteToSite._connection.createIndexSQL(SiteToSite, idx)
         try:
             OldSiteToSite._connection.queryAll(sql)
@@ -94,10 +106,17 @@ def change_tables():
             sql = 'ALTER TABLE %s CHANGE COLUMN name name VARCHAR(%s)' % (OldVersion.sqlmeta.table, UnicodeColKeyLength)
             OldVersion._connection.queryAll(sql)
 
-        idx = SODatabaseIndex(OldVersion, 'idx',
-                              [dict(column='name', length=UnicodeColKeyLength),
-                               dict(column='productID')],
-                              unique=True)
+        if _SODatabaseIndex_needs_creationOrder():
+            idx = SODatabaseIndex(OldVersion, 'idx',
+                                  [dict(column='name', length=UnicodeColKeyLength),
+                                   dict(column='productID')],
+                                  0, unique=True)
+        else:
+            idx = SODatabaseIndex(OldVersion, 'idx',
+                                  [dict(column='name', length=UnicodeColKeyLength),
+                                   dict(column='productID')],
+                                  unique=True)
+            
         sql = Version._connection.createIndexSQL(Version, idx)
         try:
             result = OldVersion._connection.queryAll(sql)
