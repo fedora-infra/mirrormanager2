@@ -509,7 +509,7 @@ def sync_directories_from_directory(directory, category, excludes=[]):
         dname = dname.rstrip('/')
         try:
             d_ctime = directory_info[dname]['ctime']
-        except SQLObjectNotFound:
+        except KeyError:
             # we'll need to create it
             d_ctime = 0
 
