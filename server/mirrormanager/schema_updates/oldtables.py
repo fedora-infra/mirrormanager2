@@ -46,3 +46,8 @@ class OldHostCategory(SQLObject):
     class sqlmeta:
         fromDatabase = True
         table = 'host_category'
+
+class OldDirectory(SQLObject):
+    class sqlmeta:
+        fromDatabase = True
+        table = 'directory'
