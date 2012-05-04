@@ -112,6 +112,11 @@ def change_tables():
         if c in OldHostCategory.sqlmeta.columns:
             OldHostCategory.sqlmeta.delColumn(c, changeSchema=True)
 
+    # delete unused Host fields
+    for c in ('bandwidth'):
+        if c in OldHost.sqlmeta.columns:
+            OldHost.sqlmeta.delColumn(c, changeSchema=True)
+
 
 def update_countries():
     db_countries = set(c.code for c in Country.select())

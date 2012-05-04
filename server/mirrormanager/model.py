@@ -180,7 +180,6 @@ class Host(SQLObject):
     admin_active = BoolCol(default=True)
     user_active = BoolCol(default=True)
     country = StringCol(default=None)
-    bandwidth = UnicodeCol(default=None)
     bandwidth_int = IntCol(default=100, notNull=True)
     comment = UnicodeCol(default=None)
     _config = PickleCol(default=None)
