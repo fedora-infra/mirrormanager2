@@ -97,7 +97,7 @@ def change_tables():
         idx = SODatabaseIndex(OldVersion, 'idx',
                               [dict(column='name', length=UnicodeColKeyLength),
                                dict(column='productID')],
-                              0, unique=True)
+                              unique=True)
         sql = Version._connection.createIndexSQL(Version, idx)
         try:
             result = OldVersion._connection.queryAll(sql)
