@@ -156,8 +156,6 @@ class HostCategoryDir(SQLObject):
     directory = ForeignKey('Directory')
     hcdindex = DatabaseIndex('host_category', 'path', unique=True)
     up2date = BoolCol(default=True)
-    files = PickleCol(default=None)
-    lastCrawled = DateTimeCol(default=None)
     
 
 class HostCategoryUrl(SQLObject):
