@@ -356,21 +356,24 @@ def method_pref(urls):
                 break
     return pref
         
+def parent(directory):
+    parentDir = None
+    splitpath = directory.name.split(u'/')
+    if len(splitpath[:-1]) > 0:
+        parentPath = u'/'.join(splitpath[:-1])
+        try:
+            parentDir = Directory.byName(parentPath)
+        except SQLObjectNotFound:
+            pass
+    return parentDir
 
 def add_parents(host_category_dirs, hc, d):
-    splitpath = d.name.split('/')
-    if len(splitpath[:-1]) > 0:
-        parent = '/'.join(splitpath[:-1])
-        try:
-            hcd = host_category_dirs[(hc, parent)]
-        except KeyError:
-            try:
-                parentDir = Directory.byName(parent)
-                host_category_dirs[(hc, parentDir)] = True
-            except SQLObjectNotFound: # recursed out of the directory structure
-                parentDir = None
-                
-        if parentDir and parentDir != hc.category.topdir: # stop at top of the category
+    parentDir = parent(d)
+    if parentDir is not None:
+        if (hc, parentDir) not in host_category_dirs:
+            print "directory %s adding parent %s, unknown up2date state" % (d.name, (hc, parentDir))
+            host_category_dirs[(hc, parentDir)] = None
+        if parentDir != hc.category.topdir: # stop at top of the category
             return add_parents(host_category_dirs, hc, parentDir)
     
     return host_category_dirs
@@ -606,6 +609,7 @@ def per_host(host, options=None):
 
 
                 if has_all_files == False:
+                    print >>logfile, "Not up2date: %s" % (d.name)
                     host_category_dirs[(hc, d)] = False
                 elif has_all_files == True:                
                     host_category_dirs[(hc, d)] = True
