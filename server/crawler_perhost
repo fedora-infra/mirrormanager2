@@ -371,7 +371,6 @@ def add_parents(host_category_dirs, hc, d):
     parentDir = parent(d)
     if parentDir is not None:
         if (hc, parentDir) not in host_category_dirs:
-            print "directory %s adding parent %s, unknown up2date state" % (d.name, (hc, parentDir))
             host_category_dirs[(hc, parentDir)] = None
         if parentDir != hc.category.topdir: # stop at top of the category
             return add_parents(host_category_dirs, hc, parentDir)
