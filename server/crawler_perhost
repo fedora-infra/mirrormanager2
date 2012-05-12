@@ -577,6 +577,16 @@ def per_host(host, options=None):
         if hc.always_up2date:
             continue
         category = hc.category
+
+        foundCategory=False
+        if len(options.categories):
+            for c in options.categories:
+                if category.name == c:
+                    foundCategory=True
+                    break
+        if not foundCategory and len(options.categories):
+            continue
+
         trydirs = category.directories
         categoryUrl = method_pref(host.category_urls(category.name))
         if categoryUrl is None:
@@ -673,6 +683,9 @@ def main():
     parser.add_option("--canary", 
                       dest="canary", action="store_true", default=False,
                       help="fast crawl by only scanning for canary files")
+    parser.add_option("--category", 
+                      dest="categories", action="append", default=[],
+                      help="Category to scan (default=all), can be repeated")
 
     (options, args) = parser.parse_args()
 
