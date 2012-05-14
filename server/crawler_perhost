@@ -331,8 +331,8 @@ def sync_hcds(host, host_category_dirs):
 
     # now-historical HostCategoryDirs are not up2date
     # we wait for a cascading Directory delete to delete this
-    for hc in host.categories:
-        for hcd in hc.dirs:
+    for hc in list(host.categories):
+        for hcd in list(hc.dirs):
             if hcd.directory is not None and not hcd.directory.readable:
                 continue
             try:
@@ -383,7 +383,7 @@ def compare_sha256(d, filename, graburl):
     found = False
     s = urlgrabber.urlread(graburl)
     sha256 = hashlib.sha256(s).hexdigest()
-    for fd in d.fileDetails:
+    for fd in list(d.fileDetails):
         if fd.filename == filename and fd.sha256 is not None:
             if fd.sha256 == sha256:
                 found = True
@@ -572,7 +572,7 @@ def per_host(host, options=None):
     signal.signal(signal.SIGHUP, sighup_handler)
 
     hoststate = hostState(http_debuglevel=http_debuglevel, ftp_debuglevel=ftp_debuglevel)
-    for hc in host.categories:
+    for hc in list(host.categories):
         if hc.always_up2date:
             continue
         category = hc.category
@@ -586,7 +586,7 @@ def per_host(host, options=None):
         if not foundCategory and len(options.categories):
             continue
 
-        trydirs = category.directories
+        trydirs = list(category.directories)
         categoryUrl = method_pref(host.category_urls(category.name))
         if categoryUrl is None:
             continue
