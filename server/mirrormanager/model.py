@@ -188,7 +188,7 @@ class Host(SQLObject):
     internet2_clients = BoolCol(default=False)
     asn = IntCol(default=None)
     asn_clients = BoolCol(default=True)
-    max_connections = IntCol(default=1, notNone=True)
+    max_connections = IntCol(default=1, notNone=True, unsigned=True)
     countries_allowed = MultipleJoin('HostCountryAllowed')
     netblocks = MultipleJoin('HostNetblock', orderBy='netblock')
     acl_ips = MultipleJoin('HostAclIp', orderBy='ip')
