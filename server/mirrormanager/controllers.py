@@ -328,6 +328,7 @@ class HostFields(widgets.WidgetsList):
     asn_clients = widgets.CheckBox('asn_clients', label="ASN Clients?", default=True, help_text="Serve all clients from the same ASN.  Used for ISPs, companies, or schools, not personal networks.")
     robot_email = widgets.TextField(label="Robot email", validator=validators.All(validators.UnicodeString,validators.Email), help_text="email address, will receive notice of upstream content updates")
     comment = widgets.TextField(validator=validators.Any(validators.UnicodeString, validators.Empty), help_text="text, anything else you'd like a public end user to know about your mirror")
+    max_connections = widgets.TextField("max_connections", label="Max connections per client", default='1', validator=validators.Int, help_text="Maximum parallel download connections per client, suggested via metalinks.")
 
 host_form = widgets.TableForm(fields=HostFields(),
                               submit_text="Save Host")

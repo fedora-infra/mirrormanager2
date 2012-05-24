@@ -55,6 +55,10 @@ def change_tables():
     if 'dnsCountryHost' in OldHost.sqlmeta.columns:
         OldHost.sqlmeta.delColumn("dnsCountryHost", changeSchema=True)
 
+    if 'max_connections' not in OldHost.sqlmeta.columns:
+        OldHost.sqlmeta.addColumn(IntCol("max_connections", default=1, notNone=True), changeSchema=True)
+        changes['host.max_connections'] = True
+
     if 'sortorder' not in OldVersion.sqlmeta.columns and \
             'codename' not in OldVersion.sqlmeta.columns:
         OldVersion.sqlmeta.addColumn(IntCol("sortorder", default=0, notNone=True), changeSchema=True)
@@ -161,6 +165,10 @@ def fill_new_columns():
         for s in Site.select():
             s.emailOnDrop=False
             s.emailOnAdd=False
+
+    if changes.get('host.max_connections'):
+        for h in Host.select():
+            h.max_connections = 1
 
     if changes.get('version.sortorder_codename'):
         for v in Version.select():

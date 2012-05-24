@@ -207,6 +207,11 @@ def populate_host_country_allowed_cache(cache, host):
         cache[host.id] = [c.country.upper() for c in host.countries_allowed]
     return cache
 
+
+def populate_host_max_connections_cache(cache, host):
+    cache[host.id] = host.max_connections
+    return cache
+
 def populate_host_bandwidth_cache(cache, host):
     cache[host.id] = host.bandwidth_int
     return cache
@@ -286,6 +291,7 @@ def populate_host_caches():
     b = dict()
     cc = dict()
     a = dict()
+    mc = dict()
     
     for host in Host.select():
         n = populate_netblock_cache(n, host)
@@ -293,6 +299,7 @@ def populate_host_caches():
         b = populate_host_bandwidth_cache(b, host)
         cc = populate_host_country_cache(cc, host)
         a = populate_host_asn_cache(a, host)
+        mc = populate_host_max_connections_cache(mc, host)
 
     global global_caches
     global_caches['host_netblock_cache'] = n
@@ -300,6 +307,7 @@ def populate_host_caches():
     global_caches['host_bandwidth_cache'] = b
     global_caches['host_country_cache'] = cc
     global_caches['host_asn_cache'] = a
+    global_caches['host_max_connections_cache'] = mc
 
 
 
@@ -314,6 +322,7 @@ def dump_caches():
             'host_country_allowed_cache':global_caches['host_country_allowed_cache'],
             'host_bandwidth_cache':global_caches['host_bandwidth_cache'],
             'host_country_cache':global_caches['host_country_cache'],
+            'host_max_connections_cache':global_caches['host_max_connections_cache']
             'asn_host_cache':global_caches['host_asn_cache'], # yeah I misnamed this
             'repo_arch_to_directoryname':global_caches['repo_arch_to_directoryname'],
             'repo_redirect_cache':repository_redirect_cache(),

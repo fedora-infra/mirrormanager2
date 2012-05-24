@@ -59,6 +59,7 @@ country_continents = GeoIP.country_continents
 disabled_repositories = {}
 host_bandwidth_cache = {}
 host_country_cache = {}
+host_max_connections_cache = {}
 file_details_cache = {}
 hcurl_cache = {}
 asn_host_cache = {}
@@ -163,7 +164,7 @@ def metalink(cache, directory, file, hosts_and_urls):
             doc += indent(4) + '</mm0:alternate>\n'
         doc += indent(3) + '</mm0:alternates>\n'
 
-    doc += indent(3) + '<resources maxconnections="1">\n'
+    doc += indent(3) + '<resources maxconnections="%d">\n' % (host_max_connections_cache.get(hostid, 1))
     for (hostid, hcurls) in hosts_and_urls:
         private = ''
         if hostid not in cache['global']:
@@ -651,6 +652,7 @@ def read_caches():
     global mirrorlist_cache
     global host_netblock_cache
     global host_country_allowed_cache
+    global host_max_connections_cache
     global repo_arch_to_directoryname
     global repo_redirect
     global country_continent_redirect_cache
@@ -699,6 +701,8 @@ def read_caches():
         location_cache = data['location_cache']
     if 'netblock_country_cache' in data:
         netblock_country_cache = data['netblock_country_cache']
+    if 'host_max_connections_cache' in data:
+        host_max_connections_cache = data['host_max_connections_cache']
 
     del data
     setup_continents()
