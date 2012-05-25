@@ -322,7 +322,7 @@ def dump_caches():
             'host_country_allowed_cache':global_caches['host_country_allowed_cache'],
             'host_bandwidth_cache':global_caches['host_bandwidth_cache'],
             'host_country_cache':global_caches['host_country_cache'],
-            'host_max_connections_cache':global_caches['host_max_connections_cache']
+            'host_max_connections_cache':global_caches['host_max_connections_cache'],
             'asn_host_cache':global_caches['host_asn_cache'], # yeah I misnamed this
             'repo_arch_to_directoryname':global_caches['repo_arch_to_directoryname'],
             'repo_redirect_cache':repository_redirect_cache(),
