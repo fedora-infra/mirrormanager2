@@ -145,10 +145,10 @@ def change_tables():
         if c in OldDirectory.sqlmeta.columns:
             OldDirectory.sqlmeta.delColumn(c, changeSchema=True)
 
-    # delete unused HostCategoryDirectory fields
+    # delete unused HostCategoryDir fields
     for c in ('lastCrawled', 'files'):
-        if c in OldHostCategoryDirectory.sqlmeta.columns:
-            OldHostCategoryDirectory.sqlmeta.delColumn(c, changeSchema=True)
+        if c in OldHostCategoryDir.sqlmeta.columns:
+            OldHostCategoryDir.sqlmeta.delColumn(c, changeSchema=True)
 
 
 def update_countries():
