@@ -55,7 +55,7 @@ def change_tables():
     if 'dnsCountryHost' in OldHost.sqlmeta.columns:
         OldHost.sqlmeta.delColumn("dnsCountryHost", changeSchema=True)
 
-    if 'max_connections' not in OldHost.sqlmeta.columns:
+    if 'maxConnections' not in OldHost.sqlmeta.columns:
         OldHost.sqlmeta.addColumn(IntCol("max_connections", default=1, notNone=True), changeSchema=True)
         changes['host.max_connections'] = True
 
