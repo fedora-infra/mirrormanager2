@@ -11,7 +11,6 @@ Source0:        https://fedorahosted.org/releases/m/i/%{name}/%{name}-%{version}
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildRequires:  python
 Requires:       TurboGears, python-IPy, python-GeoIP, wget, yum, psmisc, python-dns, python-fedora >= 0.3.14, python-fedora-turbogears, py-radix, mod_wsgi, python-TurboMail
-Requires:       python-basemap >= 0.99.4, python-basemap-data >= 0.99.4
 Requires:	supervisor
 Requires(pre):  shadow-utils
 
@@ -37,6 +36,16 @@ Client-side, run on each downstream mirror, to report back to the
 MirrorManager database a description of the content carried by that
 mirror.
 
+%package maps
+# separate subpackage because python-basemap-data is 143MB
+Requires:       %{name} = %{version}-%{release}
+Requires:       python-basemap >= 0.99.4, python-basemap-data >= 0.99.4
+Summary:        MirrorManager map generator
+Group:          Applications/Internet
+
+%description maps
+The MirrorManager map generator creates a world map PNG noting public mirrors.
+
 %prep
 %setup -q
 
@@ -61,6 +70,7 @@ exit 0
 %files
 %defattr(-,root,root,-)
 %{_datadir}/%{name}
+%exclude %{_datadir}/%{name}/server/generate-worldmap
 %attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/%{name}/
 %attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/%{name}/catwalk-session/
 %attr(-,mirrormanager,mirrormanager) %dir %{_localstatedir}/run/%{name}/
@@ -86,8 +96,15 @@ exit 0
 %config(noreplace) %{_sysconfdir}/%{name}-client/report_mirror.conf
 %doc LICENSE-MIT-X11 client/README
 
+%files maps
+%defattr(-,root,root,-)
+%{_datadir}/%{name}/server/generate-worldmap
+%doc LICENSES LICENSE-GPLv2
 
 %changelog
+* Sat Jun  9 2012 Matt Domsch <mdomsch@fedoraproject.org>
+- move -maps to separate subpackage
+
 * Thu Nov 25 2010 Matt Domsch <mdomsch@fedoraproject.org>
 - add tmpfiles.d file (BZ636623)
 
