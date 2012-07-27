@@ -38,11 +38,13 @@ gi = None
 
 def lookup_host_locations():
     results = []
-    for h in Host.select():
+    embargoed_countries = set([x.country_code.upper() for x in list(EmbargoedCountry.select())])
+    for h in list(Host.select()):
         if h.private or h.site.private or \
                not h.user_active or not h.admin_active or \
                not h.site.user_active or not h.site.admin_active:
             continue
+        if h.country and h.country.upper() in embargoed_countries: continue
         try:
             gir = gi.record_by_name(h.name)
         except:
