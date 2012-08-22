@@ -275,7 +275,7 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
 
     if status >= 200 and status < 300:
         # fixme should check last_modified too
-        if filedata['size'] == content_length:
+        if filedata['size'] == content_length or content_length is None: # handle no content-length header, streaming/chunked return or zero-length file
             return True
         else:
             return False
