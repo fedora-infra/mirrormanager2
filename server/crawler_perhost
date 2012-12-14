@@ -21,7 +21,7 @@ from smtplib import SMTP
 
 from turbogears.database import PackageHub
 hostid = None
-logfile = None
+logfile = sys.stdout
 
 ################################################
 # overrides for httplib because we're
@@ -465,6 +465,7 @@ def dienow():
     global must_dienow
     must_dienow = True
     print >>logfile, "Host %d timeout expired, killing this process.  Better luck next time." % hostid
+    logfile.flush()
     os.kill(mypid, signal.SIGUSR1)
     os._exit(0)
 
@@ -526,6 +527,7 @@ def sigusr1_handler(signum, frame):
             mark_not_up2date(None, Host.get(hostid), "Crawler timed out before completing.  Host is likely overloaded.")
         except:
             pass
+    logfile.flush()
     os._exit(1)
 
 reopenLogs = False
@@ -594,6 +596,7 @@ def per_host(host, options=None):
         
         for d in trydirs:
             if must_dienow:
+                logfile.flush()
                 sys.exit(1)
                 
             global reopenLogs
@@ -633,11 +636,13 @@ def per_host(host, options=None):
                 timer.cancel()
                 msg = "Server load exceeded - try later"
                 print >> logfile, msg
+                logfile.flush()
                 sys.exit(1)
 
             except:
                 timer.cancel()
                 mark_not_up2date(sys.exc_info(), host, "Unknown exception raised.  This is a bug in the MM crawler.")
+                logfile.flush()
                 sys.exit(1)
 
     hoststate.close()
@@ -701,24 +706,26 @@ def main():
     
     if options.logfile is not None:
         logfile = open(options.logfile, "a+b")
-    else:
-        logfile = sys.stdout
         
     try:
         host = Host.get(options.hostid)
     except:
         print >>logfile, "Host %s not found." % options.hostid
+        logfile.flush()
         sys.exit(1)
 
     hostid = host.id
     print >>logfile, "Starting crawl %s" % (datetime.utcnow().isoformat())
-    per_host(host.id, options=options)
-    print >>logfile, "Ending crawl %s" % (datetime.utcnow().isoformat())
+    logfile.flush()
 
+    per_host(host.id, options=options)
+
+    print >>logfile, "Ending crawl %s" % (datetime.utcnow().isoformat())
     logfile.flush()
     if logfile != sys.stdout: logfile.close()
 
 
 if __name__ == "__main__":
-    sys.exit(main())
-        
+    rc = main()
+    logfile.flush()
+    sys.exit(rc)
