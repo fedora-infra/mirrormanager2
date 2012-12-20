@@ -366,7 +366,7 @@ def append_path(hosts, cache, file, pathIsDirectory=False):
             if file is None and pathIsDirectory:
                 s += "/"
             if file is not None:
-                if not s.endswidth('/'):
+                if not s.endswith('/'):
                     s += "/"
                 s += file
             hcurls.append(s)
