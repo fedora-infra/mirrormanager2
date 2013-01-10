@@ -18,20 +18,12 @@ Long Term:
 
 * only repositories are using the ordered_mirrorlist field, not say iso/ directories.  Do we care?
 
-* Track multiple master mirrors (e.g. secondary arches)
-  - done via separate directory trees (e.g. pub/fedora and pub/secondary) right now
-
 * cronjob to mark private mirrors as not-up2date, some amount of time
   after the content has changed but they haven't run report_mirror.
 
 * metalinks for multiple CDs/files
 - Just like torrents, we should have a single metalink that downloads
 all the CDs in a set via one URL.
-
-* Torrents
-In Fedora 12 or 13, the master directory layout may change such that it
-matches the torrent layouts.  When this happens, the .torrent files
-will be in the tree.  Include them in the proper metalinks.
 
 * replace kid templates with genshi
 http://genshi.edgewall.org/wiki/GenshiVsKid
