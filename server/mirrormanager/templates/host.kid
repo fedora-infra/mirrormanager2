@@ -49,7 +49,9 @@ Last Crawled: ${values.lastCrawled}  <a href="${tg.url('/crawler/'+str(values.id
 		  would return the university-local mirror rather than
 		  a country-local mirror.
 		  Format is one of 18.0.0.0/255.0.0.0, 18.0.0.0/8, 
-		  an IPv6 prefix/length, or a DNS hostname.<br/>
+		  an IPv6 prefix/length, or a DNS hostname.
+                  Values must be public IP addresses (no RFC1918 private space addresses).<br/>
+
 <a href="${tg.url('/host_netblock/0/new?hostid=' + str(values.id))}">[Add]</a><br/>
 	<ul>
 	<li py:for="a in values.netblocks">
