@@ -763,7 +763,7 @@ class MirrorlistHandler(StreamRequestHandler):
             results = r['results']
             resulttype = r['resulttype']
             returncode = r['returncode']
-      except Exception, e:
+        except Exception, e:
             message=u'# Bad Request %s\n# %s' % (e, d)
             returncode = 400
             results = []
