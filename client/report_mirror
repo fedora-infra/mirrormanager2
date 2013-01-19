@@ -9,6 +9,9 @@ import base64
 import bz2
 import socket
 
+# globals
+exclude_list = []
+
 class HostConfig(object):
     """Holder for config info from the configuration file"""
     def __init__(self):
@@ -34,6 +37,28 @@ def urlsafe_b64encode(s):
       return _translate(encoded, {'+': altchars[0], '/': altchars[1]})
    return encoded
 
+def get_exclude_dir_patterns_from_file(options):
+    global exclude_list
+    if options.exclude_from:
+        f = open(options.exclude_from, 'r')
+        for line in f:
+            line = line.strip()
+            if line.startswith(u'#'): continue
+            exclude_list.append(line)
+        f.close()
+
+import copy
+def exclude_dirs(root, dirs):
+    global exclude_list
+    copydirs = copy.copy(dirs)
+    # iterate over the copy so we can modify the original
+    for d in copydirs:
+        testdir = os.path.join(root, d, '') #keep trailing /, we know it's a directory
+        for pattern in exclude_list:
+            if pattern in testdir:
+		dirs.remove(d)
+		break
+
 def gen_dirtree(path):
     # structure here is:
     # dirtree is a dict
@@ -51,6 +76,7 @@ def gen_dirtree(path):
 
     dirtree = {}
     for dirpath, dirnames, filenames in os.walk(path):
+        exclude_dirs(dirpath, dirnames)
         statfiles = {}
         if path.endswith('/'):
             short_path = dirpath[len(path):]
@@ -182,7 +208,7 @@ def config(cfg, item, crawl=True):
 
     return True
 
-
+options=None
 
 def main():
     from optparse import OptionParser
@@ -214,10 +240,14 @@ def main():
                       dest="debug",
                       default=False,
                       help='Enable debugging output')
-
+    parser.add_option("--exclude-from",
+                      dest="exclude_from",
+                      default=None,
+                      help='get exclude patterns from FILE')
 
     (options, args) = parser.parse_args()
     item = HostConfig()
+    get_exclude_dir_patterns_from_file(options)
     if options.input:
         infile = open(options.input, 'rb')
         item.config = pickle.load(infile)
