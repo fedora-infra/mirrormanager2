@@ -976,10 +976,6 @@ class NetblockCountry(SQLObject):
     def _set_country(self, country):
         self._SO_set_country(country.upper())
 
-    def _set_continent(self, continent):
-        self._SO_set_continent(continent.upper())
-
-
 
 ###############################################################
 # These classes are only used if you're not using the
