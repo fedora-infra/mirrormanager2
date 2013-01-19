@@ -679,8 +679,8 @@ def main():
                       help="Include hosts marked 'private' in the crawl")
 
     parser.add_option("--timeout-minutes", type="int",
-                      dest="timeout_minutes", default=60,
-                      help="Minutes to let the crawler run before killed (default=60)")
+                      dest="timeout_minutes", default=90,
+                      help="Minutes to let the crawler run before killed (default=90)")
     parser.add_option("--logfile", type="string", metavar="FILE",
                       dest="logfile", default=None,
                       help="write logs to FILE")
