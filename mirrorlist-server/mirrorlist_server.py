@@ -596,10 +596,11 @@ def do_mirrorlist(kwargs):
         v4_netblocks = []
         v6_netblocks = []
         for n in s:
-            if n.version() == 4:
-                v4_netblocks.append(n)
-            elif n.version() == 6:
-                v6_netblocks.append(n)
+            ip = IP(n)
+            if ip.version() == 4:
+                v4_netblocks.append(ip)
+            elif ip.version() == 6:
+                v6_netblocks.append(ip)
         # mix up the order, as sort will preserve same-key ordering
         random.shuffle(v4_netblocks)
         v4_netblocks.sort(key=ipy_len)
