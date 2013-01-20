@@ -11,6 +11,8 @@ from string import zfill, atoi
 import datetime
 import time
 import radix
+import logging
+import logging.handlers
 
 from IPy import IP
 import GeoIP
@@ -69,6 +71,12 @@ host_netblocks_tree = radix.Radix()
 netblock_country_tree = radix.Radix()
 location_cache = {}
 netblock_country_cache = {}
+
+## Set up our syslog data.
+syslogger = logging.getLogger('mirrormanager')
+syslogger.setLevel(logging.INFO)
+handler = logging.handlers.SysLogHandler(address='/dev/log', facility=logging.handlers.SysLogHandler.LOG_LOCAL4)
+syslogger.addHandler(handler)
 
 def lookup_ip_asn(tree, ip):
     """ @t is a radix tree
@@ -598,17 +606,40 @@ def do_mirrorlist(kwargs):
         random.shuffle(v6_netblocks)
         v6_netblocks.sort(key=ipy_len)
         return v6_netblocks + v4_netblocks
-    
-    location_hosts    = _random_shuffle(location_results)
-    netblock_hosts    = _ordered_netblocks(netblock_results)
-    asn_hosts         = _random_shuffle(asn_results)
-    internet2_hosts   = _random_shuffle(internet2_results)
-    country_hosts     = shuffle(country_results)
-    geoip_hosts       = shuffle(geoip_results)
-    continent_hosts   = shuffle(continent_results)
-    global_hosts      = shuffle(global_results)
 
-    allhosts = uniqueify(location_hosts + netblock_hosts + asn_hosts + internet2_hosts + country_hosts + geoip_hosts + continent_hosts + global_hosts)
+    def whereismymirror(result_sets):
+        return_string = 'None'
+        allhosts = []
+        found = False
+        for (l,s,f) in result_sets:
+            if len(l) > 0:
+                allhosts.extend(f(l))
+                if not found:
+                    return_string = s
+                    found = True
+                    
+        allhosts = uniqueify(allhosts)
+        return allhosts, return_string
+
+    result_sets = [ 
+        (location_results, "location", _random_shuffle),
+        (netblock_results, "netblocks", _ordered_netblocks),
+        (asn_results, "asn", _random_shuffle),
+        (internet2_results, "I2", _random_shuffle),
+        (country_results, "country", shuffle),
+        (geoip_results, "geoip", shuffle),
+        (continent_results, "continent", shuffle),
+        (global_results, "global", shuffle),
+        ]
+
+    allhosts, where_string = whereismymirror(result_sets)
+    try:
+        ip_str = kwargs['IP'].strNormal()
+    except:
+        ip_str = 'Unknown IP'
+    log_string = "%s found its best mirror from %s" % (ip_str, where_string)
+    syslogger.info(log_string)
+
     hosts_and_urls = append_path(allhosts, cache, file, pathIsDirectory=pathIsDirectory)
 
     if 'metalink' in kwargs and kwargs['metalink']:
