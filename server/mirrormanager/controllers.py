@@ -693,7 +693,7 @@ class HostPeerAsnController(HostListitemController):
         return dict(values=v, host=v.host)
 
     def do_create(self, host, kwargs):
-        HostPeerAsn(host=host, asn=kwargs['asn'], name=kwargs['name'])
+        HostPeerAsn(host=host, asn=int(kwargs['asn']), name=kwargs['name'])
 
 class HostCountryAllowedFields(widgets.WidgetsList):
     country = widgets.TextField(validator=validators.Regex(r'^[a-zA-Z][a-zA-Z]$'),
