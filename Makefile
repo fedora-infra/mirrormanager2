@@ -30,7 +30,7 @@ $(RELEASE_PY):
 prep: $(SPEC) $(RELEASE_PY)
 	cd server ; python setup.py egg_info
 	echo 'db_module=mirrormanager.model' > server/mirrormanager.egg-info/sqlobject.txt
-	echo 'history_dir=$$base/mirrormanager/sqlobject-history' >> server/mirrormanager.egg-info/sqlobject.txt
+#	echo 'history_dir=$$base/mirrormanager/sqlobject-history' >> server/mirrormanager.egg-info/sqlobject.txt
 	sync ; sync ; sync
 
 tarball: clean prep $(TARBALL)
@@ -44,6 +44,7 @@ $(TARBALL):
 	find $${tmp_dir}/$(RELEASE_STRING) -depth -name .git -type d -exec rm -rf \{\} \; ; \
 	find $${tmp_dir}/$(RELEASE_STRING) -depth -name dist -type d -exec rm -rf \{\} \; ; \
 	find $${tmp_dir}/$(RELEASE_STRING) -depth -name fedora-test-data -type d -exec rm -rf \{\} \; ; \
+	find $${tmp_dir}/$(RELEASE_STRING) -depth -name sqlobject-history -type d -exec rm -rf \{\} \; ; \
 	find $${tmp_dir}/$(RELEASE_STRING) -depth -name \*~ -type f -exec rm -f \{\} \; ; \
 	find $${tmp_dir}/$(RELEASE_STRING) -depth -name \*.rpm -type f -exec rm -f \{\} \; ; \
 	find $${tmp_dir}/$(RELEASE_STRING) -depth -name \*.tar.gz -type f -exec rm -f \{\} \; ; \
