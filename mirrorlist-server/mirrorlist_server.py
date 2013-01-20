@@ -186,7 +186,7 @@ def metalink(cache, directory, file, hosts_and_urls):
     doc += '</metalink>\n'
     return ('metalink', 200, doc)
 
-def tree_lookup(tree, key, field, maxResults=None):
+def tree_lookup(tree, ip, field, maxResults=None):
     # fast lookup in the tree; if present, find all the matching values by deleting the found one and searching again
     # this is safe w/o copying the tree again only because this is the only place the tree is used, and
     # we'll get a new copy of the tree from our parent the next time it fork()s.
