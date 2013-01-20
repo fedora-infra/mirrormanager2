@@ -61,14 +61,23 @@ def do_mirrorlist(d):
 # This takes 0.120-0.126 seconds, so should be done before any requests
 import random
 
-client_ip = "%s.%s.%s.%s" % (random.randint(0,255), random.randint(0,255), random.randint(0,255), random.randint(0,255))
+while True:
+    client_ip = "%s.%s.%s.%s" % (random.randint(0,255), random.randint(0,255), random.randint(0,255), random.randint(0,255))
 
-d = {'repo':'fedora-12',
-     'arch':'i386',
-     'client_ip':client_ip}
+    d = {'repo':'fedora-18',
+         'arch':'i386',
+         'metalink':False}
 
-while 1:
-  start = datetime.utcnow()
-  result = do_mirrorlist(d)
-  end = datetime.utcnow()
-  print "[%s]   connect: %s  total: %s" % (pid, connectTime, (end-start))
+    for k, v in d.iteritems():
+        try:
+            d[k] = unicode(v, 'utf8', 'replace')
+        except:
+            pass
+
+    client_ip = u"%s.%s.%s.%s" % (random.randint(0,255), random.randint(0,255), random.randint(0,255), random.randint(0,255))
+    d['client_ip'] = client_ip
+
+    start = datetime.utcnow()
+    result = do_mirrorlist(d)
+    end = datetime.utcnow()
+    print "[%s]   connect: %s  total: %s" % (pid, connectTime, (end-start))
