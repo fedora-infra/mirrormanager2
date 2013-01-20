@@ -2,6 +2,7 @@ import sys
 import logging
 import cherrypy
 from turbogears import config
+import traceback
 
 admin_group = config.get('mirrormanager.admin_group', 'sysadmin')
 
@@ -598,9 +599,13 @@ class HostListitemController(controllers.Controller, identity.SecureResource, co
         except InvalidData, msg:
             turbogears.flash(msg)
             raise turbogears.redirect("/host/%s" % host.id)
-        except: # probably sqlite IntegrityError but we can't catch that for some reason... 
-            errmsg = sys.exc_info()
-            turbogears.flash("Unexpected Error:", errmsg)
+        except Exception, e: # probably sqlite IntegrityError but we can't catch that for some reason... 
+            etype, value, tb = sys.exc_info()
+            s = traceback.format_exception(etype, value, tb)
+            lines  = ''
+            for line in s:
+                lines += line
+            turbogears.flash("Unexpected Error: %s" % lines)
 
         raise turbogears.redirect("/host/%s" % host.id)
 
