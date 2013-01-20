@@ -75,8 +75,8 @@ Last Crawled: ${values.lastCrawled}  <a href="${tg.url('/crawler/'+str(values.id
 </div>
 	<ul>
 	<li py:for="a in values.peer_asns">
-		  <span py:replace="a.asn">ASN</span><a
-	          href="${tg.url('/host_peer_asn/' + str(a.id) + '/delete')}">[Delete]</a>
+		  <span py:replace="a.name">name</span>: ASN <span py:replace="a.asn">ASN</span>
+		  <a href="${tg.url('/host_peer_asn/' + str(a.id) + '/delete')}">[Delete]</a>
         </li>
         </ul>
 
