@@ -1,0 +1,6 @@
+*.pyc
+*.pyo
+*~
+mirrormanager.spec
+.gitignore
+.gitk
