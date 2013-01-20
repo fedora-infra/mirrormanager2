@@ -55,9 +55,16 @@ import random
 
 client_ip = "%s.%s.%s.%s" % (random.randint(0,255), random.randint(0,255), random.randint(0,255), random.randint(0,255))
 
-d = {'repo':'fedora-9',
-     'arch':'i386',
-     'client_ip':client_ip}
+d = {'repo':'fedora-18',
+     'arch':'x86_64',
+     'client_ip':client_ip,
+     'metalink': False}
+
+for k, v in d.iteritems():
+    try:
+        d[k] = unicode(v, 'utf8', 'replace')
+    except:
+        pass
 
 print do_mirrorlist(d)
 
