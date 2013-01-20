@@ -836,6 +836,7 @@ class Root(controllers.RootController):
     host_category = HostCategoryController()
     host_category_url = HostCategoryUrlController()
     site2site = SiteToSiteController()
+    host_peer_asn = HostPeerAsnController()
     from mirrormanager.xmlrpc import XmlrpcController
     xmlrpc = XmlrpcController()
 
