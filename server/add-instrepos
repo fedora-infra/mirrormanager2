@@ -1,0 +1,70 @@
+#!/usr/bin/python
+__requires__ = 'TurboGears[future]'
+import pkg_resources
+pkg_resources.require("TurboGears")
+
+from sqlobject import *
+import turbogears
+from mirrormanager.model import *
+from optparse import OptionParser
+import re
+import sys
+
+from turbogears.database import PackageHub
+hub = __connection__ = None
+
+options = None
+
+archiveCategory = 'Fedora Archive'
+originalCategory = 'Fedora Linux'
+
+
+def doit():
+    global options
+    ver = Version.selectBy(name=options.version)[0]
+    category = Category.byName(u'Fedora Linux')    
+    i386 = Arch.byName(u'i386')
+    x86_64 = Arch.byName(u'x86_64')
+    arches = (i386, x86_64)
+#    ppc64 = Arch.byName(u'ppc64')
+#    arches = (ppc64,)
+    for a in arches:
+      d = u'pub/fedora/linux/releases/18/Fedora/%s/os' % (a.name)
+      d = Directory.byName(d)
+      repo = Repository.selectBy(directory=d)[0]
+      if not repo:
+        print u"no repo for path %s" % d.name
+        continue
+      repo.prefix = u'fedora-install-18'
+      repo.arch = a
+
+
+
+def main():
+    global options
+    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option("-c", "--config",
+                      dest="config", default='/etc/mirrormanager/prod.cfg',
+                      help="TurboGears config file to use (default=/etc/mirrormanager/prod.cfg)")
+    parser.add_option("--version",
+                      dest="version", action="store", type="string", help="OS version to move (e.g. '14') [required]", default=None)
+                      help="TurboGears config file to use (default=/etc/mirrormanager/prod.cfg)")
+
+    (options, args) = parser.parse_args()
+    if options.version is None:
+        parser.print_help()
+        sys.exit(1)
+
+    turbogears.update_config(configfile=options.config,
+                             modulename="mirrormanager.config")
+    global hub
+    global __connection__
+    hub = PackageHub("mirrormanager")
+    __connection__ = hub
+    
+    doit()
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
+        

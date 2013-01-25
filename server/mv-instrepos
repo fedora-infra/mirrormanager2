@@ -1,0 +1,74 @@
+#!/usr/bin/python
+__requires__ = 'TurboGears[future]'
+import pkg_resources
+pkg_resources.require("TurboGears")
+
+from sqlobject import *
+import turbogears
+from mirrormanager.model import *
+from optparse import OptionParser
+import re
+import sys
+
+from turbogears.database import PackageHub
+hub = __connection__ = None
+
+options = None
+
+archiveCategory = 'Fedora Archive'
+originalCategory = 'Fedora Linux'
+
+
+def doit():
+    global options
+    ver = Version.selectBy(name=u'18')[0]
+    category = Category.byName(u'Fedora Linux')    
+    i386 = Arch.byName(u'i386')
+    x86_64 = Arch.byName(u'x86_64')
+    s390x = Arch.byName(u's390x')
+    ppc64 = Arch.byName(u'ppc64')
+#    arches = (i386, x86_64)
+    arches = (s390x, ppc64)
+    for a in arches:
+      repos = Repository.selectBy(prefix=u'fedora-install-18', arch=a)
+      for r in repos:
+        print "destroying %s" % r
+        r.destroySelf()
+
+      d = u'pub/fedora-secondary/releases/18/Fedora/%s/os' % (a.name)
+      repos = Repository.selectBy(name=d)
+      for r in repos:
+        print "destroying %s" % r
+        r.destroySelf()
+        
+
+      d = Directory.byName(d)
+      print "creating repo for arch %s" % a.name
+      r = Repository(name=d.name, prefix=u'fedora-install-18', arch=a, directory=d, version=ver, category=category)
+      d.repo = r
+
+
+def main():
+    global options
+    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option("-c", "--config",
+                      dest="config", default='/etc/mirrormanager/prod.cfg',
+                      help="TurboGears config file to use (default=/etc/mirrormanager/prod.cfg)")
+
+
+
+    (options, args) = parser.parse_args()
+
+    turbogears.update_config(configfile=options.config,
+                             modulename="mirrormanager.config")
+    global hub
+    global __connection__
+    hub = PackageHub("mirrormanager")
+    __connection__ = hub
+    
+    doit()
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
+        
