@@ -30,7 +30,7 @@ def user_group_setup():
 def create_arches():
     def _do_create(arch, primary):
         try:
-            a = Arch(name=arch)
+            a = Arch(name=arch, primaryArch=primary)
             print "created architecture %s" % arch
         except DuplicateEntryError:
             pass
