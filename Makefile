@@ -131,3 +131,7 @@ git-sign-push:
 	git tag -s -m v$(RELEASE_VERSION) v$(RELEASE_VERSION)
 	git push
 	git push --tags
+
+schema:
+	mkdir -p dist/schema_docs
+	java -jar schemaSpy_5.0.0.jar -t mysql -host localhost -db mirrormanager -u mirrormanager -p mirrormanager -o dist/schema_docs/ -dp /usr/share/java/mysql-connector-java-5.1.22.jar
