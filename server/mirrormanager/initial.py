@@ -4,10 +4,12 @@ from mirrormanager.model import User, Group
 def user_group_setup():
     try:
         Group(group_name='user', display_name='User')
+        print "created group 'user'"
     except DuplicateEntryError:
         pass
     try:
         Group(group_name='sysadmin', display_name='Admin')
+        print "created group 'sysadmin'"
     except DuplicateEntryError:
         pass
     try:
@@ -19,10 +21,8 @@ def user_group_setup():
             display_name='Admin',
             password='admin'
             )
+        print "created user 'admin', password 'admin'.  You will want to change that."
+        a.addGroup(Group.by_group_name('user'))
+        a.addGroup(Group.by_group_name('sysadmin'))
     except DuplicateEntryError:
         pass
-    
-    a.addGroup(Group.by_group_name('user'))
-    a.addGroup(Group.by_group_name('sysadmin'))
-        
-user_group_setup()

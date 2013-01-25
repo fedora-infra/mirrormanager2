@@ -1,7 +1,6 @@
 To use MirrorManager with a local mysql database, connected over a Unix socket, use the following in /etc/mirrormanager/prod.cfg:
 
-sqlobject.dburi="notrans_mysql://mirrormanager:mirrormanager@localhost:3128/mirrormanager?unix_socket=/var/lib/mysql/mysql.sock"
-
+sqlobject.dburi="notrans_mysql://mirrormanager:mirrormanager@localhost:3128/mirrormanager?unix_socket=/var/lib/mysql/mysql.sock&charset=utf8&use_unicode=1"
 
 Create the database in mysql, and grant rights to a mirrormanager user with password 'mirrormanager':
 $ mysql
@@ -11,11 +10,11 @@ $ mysql
 
 
 Create the database schema:
+$ cd /usr/share/mirrormanager/server
 $ tg-admin -c /etc/mirrormanager/prod.cfg sql create
 
-Initial population of database data:
-$ tg-admin -c /etc/mirrormanager/prod.cfg shell
-> import mirrormanager.initial
+Initial population of database data (user and sysadmin groups, admin user):
+$ ./initialize-database -c /etc/mirrormanager/prod.cfg
 
 Start apache:
 $ sudo service httpd start
