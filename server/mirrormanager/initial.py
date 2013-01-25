@@ -1,5 +1,5 @@
 from sqlobject.dberrors import DuplicateEntryError
-from mirrormanager.model import User, Group
+from mirrormanager.model import User, Group, Arch
 
 def user_group_setup():
     try:
@@ -26,3 +26,18 @@ def user_group_setup():
         a.addGroup(Group.by_group_name('sysadmin'))
     except DuplicateEntryError:
         pass
+
+def create_arches():
+    def _do_create(arch, primary):
+        try:
+            a = Arch(name=arch)
+            print "created architecture %s" % arch
+        except DuplicateEntryError:
+            pass
+
+    primary_arches = (u'i386', u'x86_64', u'source')
+    secondary_arches = (u'ppc', u'ppc64', u'sparc', u'sparc64', u'arm', u'armhfp', u's390', u's390x', u'ia64')
+    for arch in primary_arches:
+        _do_create(arch, True)
+    for arch in secondary_arches:
+        _do_create(arch, False)

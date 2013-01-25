@@ -8,13 +8,14 @@ pkg_resources.require("TurboGears")
 
 import turbogears
 from turbogears.database import PackageHub
-from mirrormanager.initial import user_group_setup
+from mirrormanager.initial import user_group_setup, create_arches
 
 hub = __connection__ = None
 options = None
 
 def doit():
     user_group_setup()
+    create_arches()
 
 def main():
     global options
