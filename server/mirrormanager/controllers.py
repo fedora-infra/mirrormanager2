@@ -847,7 +847,7 @@ class Root(controllers.RootController):
     @identity.require(identity.not_anonymous())
     def index(self):
         if admin_group in identity.current.groups:
-            sites = Site.select(orderBy='name')
+            sites = all_sites_and_hosts()
         else:
             sites = user_sites(identity)
         return {"sites":sites}
