@@ -5,6 +5,11 @@ Short Term:
 
 * add metalink/HTTP support, handy for what otherwise is a redirect to a single mirror
 
+* Better theming support.  Right now it's very Fedora-centric in the
+  UI, and there are various "if project==rpmfusion" kinds of things
+  scattered throughout. Ugly.  Make it easy to point to custom css and
+  custom theme, so the Fedora theme becomes just separate theme.
+
 
 
 Long Term:
