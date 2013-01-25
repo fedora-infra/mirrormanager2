@@ -3,6 +3,8 @@ Short Term:
 * make sure host_location and file_detail_file_group tables get
   created correctly (e.g. have an ID column).
 
+* add metalink/HTTP support, handy for what otherwise is a redirect to a single mirror
+
 
 
 Long Term:
