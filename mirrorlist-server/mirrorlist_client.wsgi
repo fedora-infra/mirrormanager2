@@ -70,7 +70,7 @@ def real_client_ip(xforwardedfor):
     return xforwardedfor.split(',')[-1].strip()
 
 def request_setup(environ, request):
-    fields = ['repo', 'arch', 'country', 'path', 'netblock', 'location']
+    fields = ['repo', 'arch', 'country', 'path', 'netblock', 'location', 'version', 'cc']
     d = {}
     request_data = request.GET
     for f in fields:
@@ -87,6 +87,16 @@ def request_setup(environ, request):
     else:
         client_ip = request.environ['REMOTE_ADDR']
     d['client_ip'] = client_ip
+
+    # convert cc to country (for CentOS)
+    if 'cc' in d and 'country' not in d:
+        d['country'] = d['cc']
+        del d['cc']
+
+    # convert version=&repo=& to repo=<repo>-<version> (for CentOS)
+    if 'version' in d and 'repo' in d:
+        d['repo'] = "%s-%s" % (d['repo'], d['version']))
+        del d['version']
 
     d['metalink'] = False
     scriptname = ''
