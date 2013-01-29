@@ -1,7 +1,7 @@
 from mirrormanager.model import Directory, Host, RepositoryRedirect, CountryContinentRedirect, Repository, HostCategoryUrl, Location, Version, Category, NetblockCountry, setup_directory_category_cache
 import os
 from IPy import IP
-import sha
+import hashlib
 import pprint
 import dns.resolver
 from mirrormanager.lib import append_value_to_cache
@@ -61,7 +61,7 @@ def shrink(mc):
     for d in mc:
         for subcache in subcaches:
             c = mc[d][subcache]
-            s = sha.sha(pp.pformat(c))
+            s = hashlib.sha1(pp.pformat(c)).hexdigest()
             if s in matches:
                 d[c] = matches[s]
             else:
