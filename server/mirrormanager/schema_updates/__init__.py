@@ -14,19 +14,25 @@ __connection__ = hub
 
 changes = {}
 
-def _bandwidth_int_not_null():
+# On Postgres at least, one cannot create a new column with notNull=True, even with default=<something>
+# because it will fail to create the column, claiming the new column is full of null values,
+# which violates the notNull constraint.
+# So, you have to create the column, fill it with the default value, and then
+# add the notNull=True constraint thereafter.
+
+def _set_not_null(table, col):
     _dburi = config.get('sqlobject.dburi', '')
     if 'mysql://' in _dburi:
-        sql = 'ALTER TABLE host CHANGE COLUMN bandwidth_int bandwidth_int BIGINT NOT NULL'
+        sql = 'ALTER TABLE %s CHANGE COLUMN %s BIGINT NOT NULL' % (table.sqlmeta.table, col)
     elif 'postgres://' in _dburi:
-        sql = 'ALTER TABLE host ALTER COLUMN bandwidth_int SET NOT NULL'
-    return OldHost._connection.query(sql)
+        sql = 'ALTER TABLE %s ALTER COLUMN %s SET NOT NULL' % (table.sqlmeta.table, col)
+    return table._connection.query(sql)
 
 def bandwidth_int_not_null():
     for h in OldHost.select():
         if h.bandwidthInt is None: # note column name differs due to underscore->CamelCase conversion
             h.bandwidthInt = 100
-    _bandwidth_int_not_null()
+    _set_not_null(OldHost, 'bandwidth_int')
 
 def _SODatabaseIndex_needs_creationOrder():
     argspec = inspect.getargspec(SODatabaseIndex.__init__)
@@ -56,12 +62,12 @@ def change_tables():
         OldHost.sqlmeta.delColumn("dnsCountryHost", changeSchema=True)
 
     if 'maxConnections' not in OldHost.sqlmeta.columns:
-        OldHost.sqlmeta.addColumn(IntCol("max_connections", default=1, notNone=True), changeSchema=True)
+        OldHost.sqlmeta.addColumn(IntCol("max_connections", default=1), changeSchema=True)
         changes['host.max_connections'] = True
 
     if 'sortorder' not in OldVersion.sqlmeta.columns and \
             'codename' not in OldVersion.sqlmeta.columns:
-        OldVersion.sqlmeta.addColumn(IntCol("sortorder", default=0, notNone=True), changeSchema=True)
+        OldVersion.sqlmeta.addColumn(IntCol("sortorder", default=0), changeSchema=True)
         OldVersion.sqlmeta.addColumn(UnicodeCol("codename", default=None), changeSchema=True)
         changes['version.sortorder_codename'] = True
 
@@ -77,12 +83,12 @@ def change_tables():
     def _add_site_to_site_index():
         if _SODatabaseIndex_needs_creationOrder():
             idx = SODatabaseIndex(OldSiteToSite, 'username_idx',
-                                  [dict(column='upstream_site'),
+                                  [dict(column='upstream_site_id'),
                                    dict(column='username', length=UnicodeColKeyLength)],
                                   0, unique=True)
         else:
             idx = SODatabaseIndex(OldSiteToSite, 'username_idx',
-                                  [dict(column='upstream_site'),
+                                  [dict(column='upstream_site_id'),
                                    dict(column='username', length=UnicodeColKeyLength)],
                                   unique=True)
             
@@ -169,11 +175,14 @@ def fill_new_columns():
     if changes.get('host.max_connections'):
         for h in Host.select():
             h.max_connections = 1
+            _set_not_null(OldHost, 'max_connections')
+            
 
     if changes.get('version.sortorder_codename'):
         for v in Version.select():
             v.sortorder = 0
             v.codename = None
+        _set_not_null(OldVersion, 'sortorder')
 
     if changes.get('product.publiclist'):
         for p in Product.select():
