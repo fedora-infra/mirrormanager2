@@ -27,8 +27,7 @@ def doit():
     dirRe = re.compile(options.directoryRe)
     for d in c.directories:
         if dirRe.search(d.name):
-            r = d.repository
-            if r is not None:
+            for r in d.repositories:
                 t = archiveTopdir + d.name[len(originalTopdir):]
                 print "trying to find %s" % t
                 try:

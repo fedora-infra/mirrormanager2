@@ -28,8 +28,7 @@ def doit():
     oldRe = re.compile(oldpattern)
     for d in c.directories:
         if oldRe.search(d.name):
-            r = d.repository
-            if r is not None:
+            for r in d.repositories:
                 t = d.name.replace(oldpattern, newpattern)
                 #print "trying to find %s" % t
                 try:

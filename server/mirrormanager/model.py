@@ -731,7 +731,7 @@ class Directory(SQLObject):
     readable = BoolCol(default=True)
     ctime = BigIntCol(default=0)
     categories = RelatedJoin('Category')
-    repository = SingleJoin('Repository') # zero or one repository, set if this dir contains a yum repo
+    repositories = MultipleJoin('Repository') # zero or one repository, set if this dir contains a yum repo
     host_category_dirs = MultipleJoin('HostCategoryDir')
     fileDetails = MultipleJoin('FileDetail', orderBy=['filename', '-timestamp'])
     exclusive_hosts = MultipleJoin('DirectoryExclusiveHost')
@@ -739,8 +739,8 @@ class Directory(SQLObject):
     def destroySelf(self):
         for c in self.categories:
             self.removeCategory(c)
-        if self.repository is not None:
-            self.repository.destroySelf()
+        for r in self.repositories:
+            r.destroySelf()
         # don't destroy a whole category if only deleting a directory
         for hcd in self.host_category_dirs:
             hcd.destroySelf()
