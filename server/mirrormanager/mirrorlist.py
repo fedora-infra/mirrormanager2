@@ -323,7 +323,7 @@ def populate_all_caches():
     populate_directory_cache()
 
 import cPickle as pickle
-def dump_caches():
+def dump_caches(filename):
     data = {'mirrorlist_cache':global_caches['mirrorlist_cache'],
             'host_netblock_cache':global_caches['host_netblock_cache'],
             'host_country_allowed_cache':global_caches['host_country_allowed_cache'],
@@ -341,7 +341,7 @@ def dump_caches():
             'netblock_country_cache':netblock_country_cache()}
     
     try:
-        f = open('/var/lib/mirrormanager/mirrorlist_cache.pkl', 'w')
+        f = open(filename, 'w')
         pickle.dump(data, f)
         f.close()
     except:
