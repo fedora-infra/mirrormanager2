@@ -6,15 +6,16 @@ import random
 import bisect
 
 class WeightedListItem:
-    start = 0
-    weight = 0
-    data = None
-
     def __init__(self, weight, data, start=0):
         self.data = data
-        self.weight = weight
         self.start = start
+        self.weight = weight
 
+        if type(weight) != int:
+            self.weight = 1
+        elif weight < 1:
+            self.weight = 1
+        
     def __contains__(self, val):
         return (val >= self.start and val < (self.start + self.weight))
 
