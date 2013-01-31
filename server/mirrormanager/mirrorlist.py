@@ -213,7 +213,14 @@ def populate_host_max_connections_cache(cache, host):
     return cache
 
 def populate_host_bandwidth_cache(cache, host):
-    cache[host.id] = host.bandwidth_int
+    try:
+        i = int(host.bandwidth_int)
+        if i < 1: i = 1
+        elif i > 100000: i = 100000 # max bandwidth 100Gb
+        cache[host.id] = i
+    except:
+        cache[host.id] = 1
+
     return cache
 
 def populate_host_country_cache(cache, host):
