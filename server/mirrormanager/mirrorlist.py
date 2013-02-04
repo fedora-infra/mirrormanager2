@@ -63,7 +63,7 @@ def shrink(mc):
             c = mc[d][subcache]
             s = hashlib.sha1(pp.pformat(c)).hexdigest()
             if s in matches:
-                d[c] = matches[s]
+                mc[d][subcache] = matches[s]
             else:
                 matches[s] = c
     return mc
