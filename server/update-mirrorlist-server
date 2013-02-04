@@ -11,6 +11,10 @@ echo $$ > ${LOCKFILE}
 trap "rm -f ${LOCKFILE}" QUIT TERM INT HUP EXIT
 
 cd ${MM_DIR}
+rm -rf ${CACHEDIR}/old
+mkdir -p ${CACHEDIR}/old
+cp -ar ${CACHEDIR}/*  ${CACHEDIR}/old/
+
 ${MM_DIR}/update-static-content ${MIRRORLIST_DIR}
 ${MM_DIR}/refresh_mirrorlist_cache -c /etc/mirrormanager/prod.cfg
 ${MM_DIR}/get_internet2_netblocks ${CACHEDIR}/i2_netblocks.txt

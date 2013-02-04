@@ -14,16 +14,23 @@ import mirrormanager.zonecreator
 from turbogears.database import PackageHub
 hub = __connection__ = None
 
+options = None
+
 def doit():
+    global options
     populate_all_caches()
-    dump_caches()
+    dump_caches(options.output)
     mirrormanager.zonecreator.writeZoneFiles()
 
 def main():
+    global options
     parser = OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option("-c", "--config",
                       dest="config", default='dev.cfg',
                       help="TurboGears config file to use")
+    parser.add_option("-o", "--output",
+                      dest="output", default='/var/lib/mirrormanager/mirrorlist_cache.pkl',
+                      help="output file")
 
     (options, args) = parser.parse_args()
 

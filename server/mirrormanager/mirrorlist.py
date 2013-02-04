@@ -1,7 +1,7 @@
 from mirrormanager.model import Directory, Host, RepositoryRedirect, CountryContinentRedirect, Repository, HostCategoryUrl, Location, Version, Category, NetblockCountry, setup_directory_category_cache
 import os
 from IPy import IP
-import sha
+import hashlib
 import pprint
 import dns.resolver
 from mirrormanager.lib import append_value_to_cache
@@ -61,7 +61,7 @@ def shrink(mc):
     for d in mc:
         for subcache in subcaches:
             c = mc[d][subcache]
-            s = sha.sha(pp.pformat(c))
+            s = hashlib.sha1(pp.pformat(c)).hexdigest()
             if s in matches:
                 d[c] = matches[s]
             else:
@@ -323,7 +323,7 @@ def populate_all_caches():
     populate_directory_cache()
 
 import cPickle as pickle
-def dump_caches():
+def dump_caches(filename):
     data = {'mirrorlist_cache':global_caches['mirrorlist_cache'],
             'host_netblock_cache':global_caches['host_netblock_cache'],
             'host_country_allowed_cache':global_caches['host_country_allowed_cache'],
@@ -341,7 +341,7 @@ def dump_caches():
             'netblock_country_cache':netblock_country_cache()}
     
     try:
-        f = open('/var/lib/mirrormanager/mirrorlist_cache.pkl', 'w')
+        f = open(filename, 'w')
         pickle.dump(data, f)
         f.close()
     except:
