@@ -264,7 +264,7 @@ def file_details_cache():
             cache[d.name] = {}
             for fd in d.fileDetails:
                 details = dict(timestamp=fd.timestamp, sha1=fd.sha1, md5=fd.md5, sha256=fd.sha256, sha512=fd.sha512, size=fd.size)
-                append_value_to_cache(cache[d.name], d.filename, details)
+                append_value_to_cache(cache[d.name], fd.filename, details)
     return cache
 
 def hcurl_cache():
