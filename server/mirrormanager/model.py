@@ -1,4 +1,5 @@
 from sqlobject import *
+from sqlobject.converters import sqlrepr
 from sqlobject.sqlbuilder import RLIKE
 from turbogears import identity, config
 from datetime import datetime
@@ -537,15 +538,20 @@ def _publiclist_hosts(product=None, re=None):
     sql2_join   = 'AND category_directory.directory_id = directory.id '
     sql2_join  += 'AND category_directory.category_id = category.id '
 
+    class MY_RLIKE(RLIKE):
+        def __sqlrepr__(self, db):
+            return "(%s %s (%s))" % (
+                sqlrepr(self.expr, db), self._get_op(db), self.string)
+
     def _rlike(pattern, string):
         # there's probably a beter way to get this, but this works...
         _dburi = config.get('sqlobject.dburi', 'sqlite://')
         dbtype = _dburi.strip('notrans_').split(':')[0]
-        return RLIKE('pattern', 'bar').__sqlrepr__(dbtype) + " "
+        return MY_RLIKE(pattern, string).__sqlrepr__(dbtype) + " "
 
     if re is not None:
-        sql1_filter = "AND " + _rlike('host_category_dir.path', re)
-        sql2_filter = "AND " + _rlike('directory.name', re)
+        sql1_filter = "AND " + _rlike(re, 'host_category_dir.path')
+        sql2_filter = "AND " + _rlike(re, 'directory.name')
 
     sql1_up2date = 'AND host_category_dir.up2date '
     sql2_up2date = 'AND host_category.always_up2date '
