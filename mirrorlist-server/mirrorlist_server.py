@@ -4,18 +4,30 @@
 #  by Matt Domsch <Matt_Domsch@dell.com>
 # Licensed under the MIT/X11 license
 
-from SocketServer import StreamRequestHandler, ForkingMixIn, UnixStreamServer, BaseServer
-import cPickle as pickle
-import os, sys, signal, random, socket, getopt
-from string import zfill, atoi
+# standard library modules in alphabetical order
 import datetime
-import time
-import radix
+import getopt
 import logging
 import logging.handlers
+import os
+import random
+import cPickle as pickle
+import signal
+import socket
+from SocketServer import StreamRequestHandler, ForkingMixIn, UnixStreamServer, BaseServer
+import sys
+from string import zfill, atoi
+import time
 
+try:
+    import threading
+except ImportError:
+    import dummy_threading as threading
+
+# not-so-standard library modules that this program needs
 from IPy import IP
 import GeoIP
+import radix
 from weighted_shuffle import weighted_shuffle
 
 # can be overridden on the command line
@@ -824,12 +836,17 @@ def sighup_handler(signum, frame):
     if signum == signal.SIGHUP:
         if debug:
             print "Got SIGHUP; reloading data"
-        open_geoip_databases()
-        read_caches()
         if logfile is not None:
             name = logfile.name
             logfile.close()
             logfile = open(name, 'a')
+
+        # put this in a separate thread so it doesn't block clients
+        if threading.active_count() < 2:
+            thread = threading.Thread(target=load_databases_and_caches)
+            thread.daemon = False
+            thread.start()
+
     signal.signal(signal.SIGHUP, sighup_handler)
 
 class ForkingUnixStreamServer(ForkingMixIn, UnixStreamServer):
@@ -910,6 +927,10 @@ def convert_teredo_v4(ip):
     v4addr = '%d.%d.%d.%d' % (a,b,c,d)
     return IP(v4addr)
 
+def load_databases_and_caches(*args, **kwargs):
+    open_geoip_databases()
+    read_caches()
+
 def main():
     global logfile
     parse_args()
@@ -919,8 +940,7 @@ def main():
     except:
         pass
 
-    open_geoip_databases()
-    read_caches()
+    load_databases_and_caches()                              
     signal.signal(signal.SIGHUP, sighup_handler)
     ss = ForkingUnixStreamServer(socketfile, MirrorlistHandler)
     ss.serve_forever()
