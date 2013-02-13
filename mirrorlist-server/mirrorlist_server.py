@@ -12,6 +12,7 @@ import logging.handlers
 import os
 import random
 import cPickle as pickle
+import select
 import signal
 import socket
 from SocketServer import StreamRequestHandler, ForkingMixIn, UnixStreamServer, BaseServer
@@ -37,6 +38,7 @@ internet2_netblocks_file = '/var/lib/mirrormanager/i2_netblocks.txt'
 global_netblocks_file = '/var/lib/mirrormanager/global_netblocks.txt'
 logfile = None
 debug = False
+must_die = False
 # at a point in time when we're no longer serving content for versions
 # that don't use yum prioritymethod=fallback
 # (e.g. after Fedora 7 is past end-of-life)
@@ -849,6 +851,13 @@ def sighup_handler(signum, frame):
 
     signal.signal(signal.SIGHUP, sighup_handler)
 
+def sigterm_handler(signum, frame):
+    global must_die
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    if signum == signal.SIGTERM:
+        must_die = True
+
 class ForkingUnixStreamServer(ForkingMixIn, UnixStreamServer):
     request_queue_size = 300
     def finish_request(self, request, client_address):
@@ -943,7 +952,12 @@ def main():
     load_databases_and_caches()                              
     signal.signal(signal.SIGHUP, sighup_handler)
     ss = ForkingUnixStreamServer(socketfile, MirrorlistHandler)
-    ss.serve_forever()
+
+    while not must_die:
+        try:
+            ss.serve_forever()
+        except select.error:
+            pass
 
     try:
         os.unlink(socketfile)
