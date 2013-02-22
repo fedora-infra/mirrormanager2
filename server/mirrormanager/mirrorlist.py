@@ -97,7 +97,7 @@ def populate_directory_cache():
     
     def setup_directory_repo_cache():
         cache = {}
-        for r in Repository.select():
+        for r in list(Repository.select()):
             if r.directory:
                 cache[r.directory.id] = r
         return cache
@@ -189,7 +189,7 @@ def name_to_ips(name):
 
 def populate_netblock_cache(cache, host):
     if host.is_active() and len(host.netblocks) > 0:
-        for n in host.netblocks:
+        for n in list(host.netblocks):
             try:
                 ip = IP(n.netblock)
                 ips = [ip]
@@ -204,7 +204,7 @@ def populate_netblock_cache(cache, host):
 
 def populate_host_country_allowed_cache(cache, host):
     if host.is_active() and len(host.countries_allowed) > 0:
-        cache[host.id] = [c.country.upper() for c in host.countries_allowed]
+        cache[host.id] = [c.country.upper() for c in list(host.countries_allowed)]
     return cache
 
 
@@ -232,25 +232,25 @@ def populate_host_asn_cache(cache, host):
     if host.asn is not None:
         append_value_to_cache(cache, host.asn, host.id)
 
-    for peer_asn in host.peer_asns:
+    for peer_asn in list(host.peer_asns):
         append_value_to_cache(cache, peer_asn.asn, host.id)
     return cache
 
 def repository_redirect_cache():
     cache = {}
-    for r in RepositoryRedirect.select():
+    for r in list(RepositoryRedirect.select()):
         cache[r.fromRepo] = r.toRepo
     return cache
 
 def country_continent_redirect_cache():
     cache = {}
-    for c in CountryContinentRedirect.select():
+    for c in list(CountryContinentRedirect.select()):
         cache[c.country] = c.continent
     return cache
 
 def disabled_repository_cache():
     cache = {}
-    for r in Repository.select():
+    for r in list(Repository.select()):
         if r.disabled:
             cache[r.prefix] = True
     return cache
@@ -262,26 +262,26 @@ def file_details_cache():
     for d in list(Directory.select()):
         if len(d.fileDetails) > 0:
             cache[d.name] = {}
-            for fd in d.fileDetails:
+            for fd in list(d.fileDetails):
                 details = dict(timestamp=fd.timestamp, sha1=fd.sha1, md5=fd.md5, sha256=fd.sha256, sha512=fd.sha512, size=fd.size)
                 append_value_to_cache(cache[d.name], fd.filename, details)
     return cache
 
 def hcurl_cache():
     cache = {}
-    for hcurl in HostCategoryUrl.select():
+    for hcurl in list(HostCategoryUrl.select()):
         cache[hcurl.id] = hcurl.url
     return cache
 
 def location_cache():
     cache = {}
-    for location in Location.select():
-        cache[location.name] = [host.id for host in location.hosts]
+    for location in list(Location.select()):
+        cache[location.name] = [host.id for host in list(location.hosts)]
     return cache
 
 def netblock_country_cache():
     cache = {}
-    for n in NetblockCountry.select():
+    for n in list(NetblockCountry.select()):
         ip = None
         try:
             ip = IP(n.netblock)
@@ -300,7 +300,7 @@ def populate_host_caches():
     a = dict()
     mc = dict()
     
-    for host in Host.select():
+    for host in list(Host.select()):
         n = populate_netblock_cache(n, host)
         ca = populate_host_country_allowed_cache(ca, host)
         b = populate_host_bandwidth_cache(b, host)
