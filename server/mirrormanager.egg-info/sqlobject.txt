@@ -1,2 +1,1 @@
 db_module=mirrormanager.model
-history_dir=$base/mirrormanager/sqlobject-history
