@@ -1,0 +1,376 @@
+#!/usr/bin/python
+#
+# Copyright 2011 Dell, Inc.
+#   by Matt Domsch <Matt_Domsch@dell.com>
+# MIT/X11 license
+
+# FIXME: add a wiki page to the CentOS wiki describing how to configure report_mirror.conf, and fix the email link
+# FIXME: add header to CSV file noted below
+# FIXME: filter out duplicates from the CSV file (if any)
+
+
+__requires__ = 'TurboGears[future]'
+import pkg_resources
+pkg_resources.require("TurboGears")
+
+from sqlobject import *
+import sys
+import turbogears
+from mirrormanager.model import *
+from mirrormanager.mirrorlist import name_to_ips
+from optparse import OptionParser
+import csv
+import random, string
+import urllib
+import radix
+from IPy import IP
+import GeoIP
+import smtplib
+from email.mime.text import MIMEText
+
+from turbogears.database import PackageHub
+from turbogears import config
+hub = __connection__ = None
+
+centos_upstream = u'rsync://msync.centos.org/CentOS'
+internet2_netblocks_file = '/var/lib/mirrormanager/i2_netblocks.txt'
+global_netblocks_file = '/var/lib/mirrormanager/global_netblocks.txt'
+internet2_tree = radix.Radix()
+global_tree = radix.Radix()
+gipv4=None
+gipv6=None
+
+
+def generate_password():
+    # from http://en.wikipedia.org/wiki/Random_password_generator
+    myrg = random.SystemRandom()
+    length = 16
+    # If you want non-English characters, remove the [0:52]
+    alphabet = string.letters[0:52] + string.digits
+    pw = str().join(myrg.choice(alphabet) for _ in range(length))
+    return pw
+
+def setup_netblocks(netblocks_file):
+
+    tree = radix.Radix()
+    if netblocks_file is not None:
+        try:
+            f = open(netblocks_file, 'r')
+        except:
+            return tree
+        for l in f:
+            try:
+                s = l.split()
+                start, mask = s[0].split('/')
+                mask = int(mask)
+                if mask == 0: continue
+                asn = int(s[1])
+                node = tree.add(s[0])
+                node.data['asn'] = asn
+            except:
+                pass
+        f.close()
+
+    return tree
+
+internet2_tree = setup_netblocks(internet2_netblocks_file)
+global_tree    = setup_netblocks(global_netblocks_file)
+
+def lookup_ip_asn(tree, ip):
+    """ @t is a radix tree
+        @ip is an IPy.IP object which may be contained in an entry in l
+        """
+    node = tree.search_best(str(ip))
+    if node is None:
+        return None
+    return node.data['asn']
+
+def internet2(ip):
+    asn = lookup_ip_asn(internet2_tree, ip)
+    if asn is not None:
+        return True
+    return False
+
+def asn(ip):
+    asn = lookup_ip_asn(global_tree, ip)
+    return asn
+
+def hostnames_from_urls(*urls):
+    hostnames = set()
+    for url in urls:
+        hostport,path = urllib.splithost(url)
+        host, port = urllib.splitnport(hostport)
+        hostnames.add(host)
+    return hostnames
+
+def ips_from_hostnames(hostnames):
+    result = set()
+    for hostname in hostnames:
+        ips = name_to_ips(hostname)
+        for ip in ips:
+            result.add(ip)
+    return result
+
+def urls_in_internet2(*urls):
+    rc = False
+    hostnames = hostnames_from_urls(urls)
+    ips = ips_from_hostnames(hostnames)
+    for ip in ips:
+        if internet2(ip):
+            rc = True
+    return rc
+
+def asn_from_urls(*urls):
+    result = set()
+    hostnames = hostnames_from_urls(urls)
+    ips = ips_from_hostnames(hostnames)
+    for ip in ips:
+        asn = asn(ip)
+        if asn is not None:
+            result.add(asn)
+
+    result = list(result)
+    if len(result) > 1:
+        print "hostnames %s has several ASNs" % hostnames
+        result = result[0]
+    elif len(result) == 1:
+        result = result[0]
+    else:
+        result = []
+    return result
+
+def open_geoip_databases():
+    global gipv4
+    global gipv6
+    try:
+        gipv4 = GeoIP.open("/usr/share/GeoIP/GeoIP.dat", GeoIP.GEOIP_STANDARD)
+    except:
+        gipv4=None
+    try:
+        gipv6 = GeoIP.open("/usr/share/GeoIP/GeoIPv6.dat", GeoIP.GEOIP_STANDARD)
+    except:
+        gipv6=None
+
+def convert_6to4_v4(ip):
+    all_6to4 = IP('2002::/16')
+    if ip.version() != 6 or ip not in all_6to4:
+        return None
+    parts=ip.strNormal().split(':')
+
+    ab = int(parts[1],16)
+    a = (ab >> 8) & 0xFF
+    b = ab & 0xFF
+    cd = int(parts[2],16)
+    c = (cd >> 8) & 0xFF
+    d = cd & 0xFF
+
+    v4addr = '%d.%d.%d.%d' % (a,b,c,d)
+    return IP(v4addr)
+
+def convert_teredo_v4(ip):
+    teredo_std = IP('2001::/32')
+    teredo_xp  = IP('3FFE:831F::/32')
+    if ip.version() != 6 or (ip not in teredo_std and ip not in teredo_xp):
+        return None
+    parts=ip.strNormal().split(':')
+
+    ab = int(parts[6],16)
+    a = ((ab >> 8) & 0xFF) ^ 0xFF
+    b = (ab & 0xFF) ^ 0xFF
+    cd = int(parts[7],16)
+    c = ((cd >> 8) & 0xFF) ^ 0xFF
+    d = (cd & 0xFF) ^ 0xFF
+
+    v4addr = '%d.%d.%d.%d' % (a,b,c,d)
+    return IP(v4addr)
+
+def lookup_geoip(ip):
+    clientCounry = None
+    # attempt IPv6, then IPv6 6to4 as IPv4, then Teredo, then IPv4
+    try:
+        if ip.version() == 6:
+            if gipv6 is not None:
+                clientCountry = gipv6.country_code_by_addr_v6(ip.strNormal())
+            if clientCountry is None:
+                # Try the IPv6-to-IPv4 translation schemes
+                for scheme in (convert_6to4_v4, convert_teredo_v4):
+                    result = scheme(ip)
+                    if result is not None:
+                        ip = result
+                        break
+        if ip.version() == 4 and gipv4 is not None:
+            clientCountry = gipv4.country_code_by_addr(ip.strNormal())
+    except:
+        pass
+    return clientCountry
+
+def country_from_urls(*urls):
+    hostnames = hostnames_from_urls(urls)
+    ips = ips_from_hostnames(hostnames)
+    for ip in ips:
+        country = lookup_geoip(ip)
+        if country:
+            return country
+    return None
+
+# fixme make sure the CSV file has this header:
+# "site_name","http_url","ftp_url","rsync_url","bandwidth","display_name","user_name","site_url","country"
+# "LMU Muenchen, Dpt. Biologie 2, IT-Gruppe","http://centos.bio.lmu.de/","ftp://centos.bio.lmu.de/centos/","rsync://centos.bio.lmu.de/CentOS/","100Mbit","Ralph Angenendt","centos-mirror-lmu@strg-alt-entf.org","http://zi.bio.lmu.de/","de"
+#
+#These are the fields: Name of the mirror's sponsor, then the mirror URLs
+#(http,ftp and rsync). Next field is bandwidth (where we have *tons* of
+#mirrors without any entry - mostly older entries). Then "Contact Name",
+#"Contact Mail", "URL to sponsor" and the countrycode (here de for Germany).
+
+
+def process(row):
+    # Create User
+    # avoid duplicate users
+    try:
+        new_user = True
+        user = User(user_name=row['user_name'],
+                    email_address = row['user_name'],
+                    display_name = row['display_name'],
+                    password = generate_password())
+    except:
+        user = User.byName(row['user_name'])
+        new_user = False
+    # Create Site
+    # avoid duplicate sites
+        try:
+            site = Site(name=row['site_name'],
+                        password=generate_password(),
+                        orgUrl=row['site_url'])
+        except:
+            site = Site.byName(row['site_name'])
+    # Create SiteAdmin
+    # if user and site were both duplicates, this could fail
+    try:
+        siteAdmin = SiteAdmin(user, site)
+    except:
+        pass
+    # Create Host
+    # fixme: be sure to filter out duplicate hosts from the CSV file before calling this program
+    try:
+        host = Host(name=hostname,
+                    site=site,
+                    country=row['country'].upper() or country_from_urls(row['http_url'], row['ftp_url'], row['rsync_url']),
+                    bandwidth_int = row['bandwidth'],
+                    internet2 = urls_in_internet2(row['http_url'], row['ftp_url'], row['rsync_url']),
+                    asn = asn_from_urls(row['http_url'], row['ftp_url'], row['rsync_url']),
+                    )
+    except:
+        # duplicate hosts means we've gone this far already somehow before.
+        # don't bother doing any more
+        return user, False
+    # Create HostCategory
+    category = Category.byName("CentOS")
+    host_category = host_category(host=host,
+                                  category=category,
+                                  upstream=centos_upstream)
+    # Create HostCategoryURLs
+    if row['http_url']:
+        http_url = HostCategoryUrl(host_category=host_category,
+                               url = row['http_url'])
+    if row['ftp_url']:
+        ftp_url = HostCategoryUrl(host_category=host_category,
+                                  url = row['ftp_url'])
+    if row['rsync_url']:
+        rsync_url = HostCategoryUrl(host_category=host_category,
+                                    url = row['rsync_url'])
+    return user, new_user
+
+def email_user(user):
+    subject = "Welcome to the CentOS MirrorManager"
+    msg = """Thank you for your continued support of CentOS [1] by
+providing a public mirror for users worldwide.
+
+CentOS has chosen to use MirrorManager [2] to keep track of the list of
+mirrors.  MirrorManager allows you as a mirror administrator to maintain
+information about your own mirror (your URLs, etc.) yourself.  In this email
+you will find your personal username and password with which you may log into the
+CentOS MirrorManager instance and see and edit information about your mirror.
+
+MirrorManager web interface:  http://mirrormanager.centos.org
+Username: %(user_name)s
+Password: %(password)s
+
+Mirrors should run the 'report_mirror' script, part of the mirrormanger-client
+RPM available from the EPEL (Extra Package for Enterprise Linux) repository,
+after each successful rsync run.  Consult the CentOS wiki [3] for configuration
+information.
+
+You will start to see the MirrorManager crawler in your HTTP and FTP logs,
+checking on the status of your mirror.  The crawler uses lightweight
+HTTP HEAD and FTP DIR calls to verify your mirror has content at the expected
+directory locations.
+
+If you have any questions, please direct them to the mailing list:
+CentOS-mirror@centos.org [4].
+
+Thanks,
+CentOS
+
+[1] http://centos.org
+[2] http://mirrormanager.org
+[3] http://wiki.centos.org/
+[4] http://lists.centos.org/mailman/listinfo/centos-mirror
+"""
+
+# Create a text/plain message
+    msg = MIMEText(msg % dict(user_name = user.user_name,
+                              password = user.password))
+
+# me == the sender's email address
+# you == the recipient's email address
+    msg['Subject'] = subject
+    msg['From'] = 'centos-mirror-admin@centos.org'
+    msg['To'] = user.email_address
+
+# Send the message via our own SMTP server, but don't include the
+# envelope header.
+    s = smtplib.SMTP('localhost')
+    s.sendmail(me, [you], msg.as_string())
+    s.quit()
+
+
+def doit(options, args):
+    if options.filename == '-':
+        f = sys.stdin
+    else:
+        f = open(options.filename, 'r')
+    csv_reader = reader(f, dialect='excel')
+    for row in csv_reader:
+        user, new_user = process(row)
+        if new_user:
+            email_user(user)
+
+
+def main():
+    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option("-c", "--config",
+                      dest="config", default='/etc/mirrormanager/prod.cfg',
+                      help="TurboGears config file to use")
+    parser.add_option("-f", "--file",
+                      dest="filename", default=None,
+                      help="file name to import")
+
+    (options, args) = parser.parse_args()
+    if not options.filename:
+        parser.print_help()
+        sys.exit(1)
+
+    turbogears.update_config(configfile=options.config,
+                             modulename="mirrormanager.config")
+    global hub
+    global __connection__
+    global repos
+    hub = PackageHub("mirrormanager")
+    __connection__ = hub
+
+    doit(options, args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
