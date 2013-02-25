@@ -131,22 +131,21 @@ def populate_directory_cache():
             if repo is not None and repo.arch is not None:
                 global_caches['repo_arch_to_directoryname'][(repo.prefix, repo.arch.name)] = directoryname
                 cache[directoryname]['ordered_mirrorlist'] = repo.version.ordered_mirrorlist # WARNING - this is a query # fixme use cache
-                category_id = directory_category_cache[directory_id]
-            else:
-                numcats = len(directory_category_cache.get(directory_id, []))
-                if numcats == 0:
-                    # no category, so we can't know a mirror host's URLs.
-                    # nothing to add.
-                    continue
-                elif numcats >= 1:
-                    # any of them will do, so just look at the first one
-                    category_id = directory_category_cache[directory_id][0]
 
-                # repodata/ directories aren't themselves repositories, their parent dir is
-                # we're walking the list in order, so the parent will be added to the cache before the child
-                if directoryname.endswith('/repodata'):
-                    parent = os.path.dirname(directoryname) # parent
-                    cache[directoryname]['ordered_mirrorlist'] = cache[parent]['ordered_mirrorlist']
+            numcats = len(directory_category_cache.get(directory_id, []))
+            if numcats == 0:
+                # no category, so we can't know a mirror host's URLs.
+                # nothing to add.
+                continue
+            elif numcats >= 1:
+                # any of them will do, so just look at the first one
+                category_id = directory_category_cache[directory_id][0]
+
+            # repodata/ directories aren't themselves repositories, their parent dir is
+            # we're walking the list in order, so the parent will be added to the cache before the child
+            if directoryname.endswith('/repodata'):
+                parent = os.path.dirname(directoryname) # parent
+                cache[directoryname]['ordered_mirrorlist'] = cache[parent]['ordered_mirrorlist']
         
             cache[directoryname]['subpath'] = directoryname[category_topdir_cache[category_id]:]
             del repo
