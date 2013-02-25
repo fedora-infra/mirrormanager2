@@ -162,7 +162,7 @@ def generate_one_html(engine, pvaMatrix, productname=None, vername=None, archnam
     for h in hosts:
         if not isinstance(h.bandwidth_int, int):
                  print '%s bandwidth_int was not an int: %s' % (h, h.bandwidth_int)
-                 h.bandwidth_int = 0
+                 h.bandwidth_int = 1
         bandwidth = bandwidth + h.bandwidth_int
     bandwidth = bandwidth / 1024 # convert to Gb
 
