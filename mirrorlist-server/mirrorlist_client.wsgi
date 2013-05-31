@@ -95,7 +95,7 @@ def request_setup(environ, request):
 
     # convert version=&repo=& to repo=<repo>-<version> (for CentOS)
     if 'version' in d and 'repo' in d:
-        d['repo'] = "%s-%s" % (d['repo'], d['version']))
+        d['repo'] = "%s-%s" % (d['repo'], d['version'])
         del d['version']
 
     d['metalink'] = False
