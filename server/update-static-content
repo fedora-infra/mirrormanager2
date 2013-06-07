@@ -1,11 +1,21 @@
 #!/bin/bash
 
-PUBLICLIST_DIR="$1"
-[ -z "${PUBLICLIST_DIR}" ] && exit 1
-mkdir -p "${PUBLICLIST_DIR}"
+LOCKFILE=/var/lock/mirrormanager/update-static-content.lock
+PUBLICLIST_DIR=/var/lib/mirrormanager/mirrorlists
 
+[ -e ${LOCKFILE} ] && kill -0 $(cat ${LOCKFILE}) && exit 2
+mkdir -p $(dirname ${LOCKFILE})
+echo $$ > ${LOCKFILE}
+trap "cleanup" QUIT TERM INT HUP EXIT
+
+function cleanup()
+{
+    [ -n "$temp_dir_name" ] && rm -rf $temp_dir_name
+    rm -f ${LOCKFILE}
+}    
+
+mkdir -p "${PUBLICLIST_DIR}"
 temp_dir_name=`mktemp -d /tmp/mirrorlists.XXXXXX`
-trap "rm -rf $temp_dir_name" QUIT TERM INT HUP EXIT
 
 pushd $temp_dir_name > /dev/null 2>&1
 /usr/share/mirrormanager/server/generate-publiclist -c /etc/mirrormanager/prod.cfg -o ${temp_dir_name}/publiclist

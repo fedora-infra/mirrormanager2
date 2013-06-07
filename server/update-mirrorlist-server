@@ -1,7 +1,6 @@
 #!/bin/bash
 
 MM_DIR=/usr/share/mirrormanager/server
-MIRRORLIST_DIR=/var/lib/mirrormanager/mirrorlists
 LOCKFILE=/var/lock/mirrormanager/update-mirrorlist-server.lock
 CACHEDIR=/var/lib/mirrormanager
 
@@ -15,7 +14,6 @@ rm -rf ${CACHEDIR}/old
 mkdir -p ${CACHEDIR}/old
 cp -ar ${CACHEDIR}/*  ${CACHEDIR}/old/
 
-${MM_DIR}/update-static-content ${MIRRORLIST_DIR}
 ${MM_DIR}/refresh_mirrorlist_cache -c /etc/mirrormanager/prod.cfg
 ${MM_DIR}/get_internet2_netblocks ${CACHEDIR}/i2_netblocks.txt
 killall -HUP mirrorlist_server.py
