@@ -604,13 +604,16 @@ def do_mirrorlist(kwargs):
         random.shuffle(l)
         return l
 
+    # FIXME this is unused.  Need to figure out how to retain the object that was the netblock that we found this host in
+    # during the tree_lookup() above, so we know how big each netblock containing this item was, so we can later
+    # sort on the size of the netblock.  But that's a longer-term goal.  For now, ignore all this and just randomize the list.
     def _ordered_netblocks(s):
         def ipy_len(ip):
             return ip.len()
         v4_netblocks = []
         v6_netblocks = []
-        for n in s:
-            ip = IP(n)
+        for hostid in s:
+            ip = IP(n) # FIXME n is undefined to make this fail
             if ip.version() == 4:
                 v4_netblocks.append(ip)
             elif ip.version() == 6:
@@ -638,7 +641,7 @@ def do_mirrorlist(kwargs):
 
     result_sets = [ 
         (location_results, "location", _random_shuffle),
-        (netblock_results, "netblocks", _ordered_netblocks),
+        (netblock_results, "netblocks", _random_shuffle),
         (asn_results, "asn", _random_shuffle),
         (internet2_results, "I2", _random_shuffle),
         (country_results, "country", shuffle),
