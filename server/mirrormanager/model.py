@@ -163,7 +163,7 @@ def all_sites_and_hosts():
         sql += 'FROM site, host '
         sql += 'WHERE '
         sql += 'host.site_id = site.id '
-        sql += 'GROUP BY site.id  '
+        sql += 'GROUP BY site.id, site.name, host.id, host.name  '
         sql += 'ORDER BY site.name, host.name '
         result = Site._connection.queryAll(sql)
         return result
