@@ -541,7 +541,7 @@ def _publiclist_hosts(product=None, re=None):
     class MY_RLIKE(RLIKE):
         def __sqlrepr__(self, db):
             return "(%s %s (%s))" % (
-                sqlrepr(self.expr, db), self._get_op(db), self.string)
+                self.string, self._get_op(db), sqlrepr(self.expr, db))
 
     def _rlike(pattern, string):
         # there's probably a beter way to get this, but this works...
