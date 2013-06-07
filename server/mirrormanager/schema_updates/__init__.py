@@ -175,7 +175,7 @@ def fill_new_columns():
     if changes.get('host.max_connections'):
         for h in Host.select():
             h.max_connections = 1
-            _set_not_null(OldHost, 'max_connections')
+        _set_not_null(OldHost, 'max_connections')
             
 
     if changes.get('version.sortorder_codename'):
