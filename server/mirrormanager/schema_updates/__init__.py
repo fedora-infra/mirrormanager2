@@ -83,12 +83,12 @@ def change_tables():
     def _add_site_to_site_index():
         if _SODatabaseIndex_needs_creationOrder():
             idx = SODatabaseIndex(OldSiteToSite, 'username_idx',
-                                  [dict(column='upstream_site_id'),
+                                  [dict(column='upstreamSiteIDID'),
                                    dict(column='username', length=UnicodeColKeyLength)],
                                   0, unique=True)
         else:
             idx = SODatabaseIndex(OldSiteToSite, 'username_idx',
-                                  [dict(column='upstream_site_id'),
+                                  [dict(column='upstreamSiteIDID'),
                                    dict(column='username', length=UnicodeColKeyLength)],
                                   unique=True)
             
