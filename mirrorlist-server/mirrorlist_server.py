@@ -19,6 +19,7 @@ from SocketServer import StreamRequestHandler, ForkingMixIn, UnixStreamServer, B
 import sys
 from string import zfill, atoi
 import time
+import traceback
 
 try:
     import threading
@@ -824,6 +825,10 @@ class MirrorlistHandler(StreamRequestHandler):
             returncode = r['returncode']
         except Exception, e:
             message=u'# Bad Request %s\n# %s' % (e, d)
+            exception_msg = traceback.format_exc(e)
+            sys.stderr.write(message+'\n')
+            sys.stderr.write(exception_msg)
+            sys.stderr.flush()
             returncode = 400
             results = []
             resulttype = 'mirrorlist'
