@@ -764,17 +764,11 @@ def read_caches():
     if 'host_max_connections_cache' in data:
         host_max_connections_cache = data['host_max_connections_cache']
 
-    del data
     setup_continents()
     global internet2_tree
     global global_tree
     global host_netblocks_tree
     global netblock_country_tree
-
-    del internet2_tree
-    del global_tree
-    del host_netblocks_tree
-    del netblock_country_tree
 
     internet2_tree = setup_netblocks(internet2_netblocks_file)
     global_tree    = setup_netblocks(global_netblocks_file)
@@ -835,17 +829,13 @@ class MirrorlistHandler(StreamRequestHandler):
             if d['metalink']:
                 resulttype = 'metalink'
                 results = errordoc(d['metalink'], message)
-        del d
-        del p
 
         try:
             p = pickle.dumps({'message':message, 'resulttype':resulttype, 'results':results, 'returncode':returncode})
             self.connection.sendall(zfill('%s' % len(p), 10))
-            del results
 
             self.connection.sendall(p)
             self.connection.shutdown(socket.SHUT_WR)
-            del p
         except:
             pass
         
