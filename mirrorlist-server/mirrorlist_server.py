@@ -212,14 +212,21 @@ def tree_lookup(tree, ip, field, maxResults=None):
     # fast lookup in the tree; if present, find all the matching values by deleting the found one and searching again
     # this is safe w/o copying the tree again only because this is the only place the tree is used, and
     # we'll get a new copy of the tree from our parent the next time it fork()s.
+    # returns a list of tuples (prefix, data)
     result = []
+    len_data = 0
     if ip is None:
         return result
     node = tree.search_best(ip.strNormal())
     while node is not None:
-        result.extend(node.data[field])
         prefix = node.prefix
-        if maxResults is None or len(result) < maxResults:
+        if type(node.data[field]) == list:
+            len_data += len(node.data[field]) 
+        else:
+            len_data += 1
+        t = (prefix, node.data[field],)
+        result.append(t)
+        if maxResults is None or len_data < maxResults:
             tree.delete(prefix)
             node = tree.search_best(ip.strNormal())
         else:
@@ -316,11 +323,12 @@ def do_country(kwargs, cache, clientCountry, requested_countries, header):
 def do_netblocks(kwargs, cache, header):
     hostresults = set()
     if not kwargs.has_key('netblock') or kwargs['netblock'] == "1":
-        hosts = tree_lookup(host_netblocks_tree, kwargs['IP'], 'hosts')
-        for hostid in hosts:
-            if hostid in cache['byHostId']:
-                hostresults.add(hostid)
-                header += 'Using preferred netblock '
+        tree_results = tree_lookup(host_netblocks_tree, kwargs['IP'], 'hosts')
+        for (prefix, hostids) in tree_results:
+            for hostid in hostids:
+                if hostid in cache['byHostId']:
+                    hostresults.add((prefix, hostid,))
+                    header += 'Using preferred netblock '
     return (header, hostresults)
 
 def do_internet2(kwargs, cache, clientCountry, header):
@@ -424,9 +432,9 @@ def client_ip_to_country(ip):
         return None
 
     # lookup in the cache first
-    result = tree_lookup(netblock_country_tree, ip, 'country', maxResults=1)
-    if len(result) > 0:
-        clientCountry = result[0]
+    tree_results = tree_lookup(netblock_country_tree, ip, 'country', maxResults=1)
+    if len(tree_results) > 0:
+        (prefix, clientCountry) = tree_results[0]
         return clientCountry
     
     # attempt IPv6, then IPv6 6to4 as IPv4, then Teredo, then IPv4
@@ -604,25 +612,25 @@ def do_mirrorlist(kwargs):
         random.shuffle(l)
         return l
 
-    # FIXME this is unused.  Need to figure out how to retain the object that was the netblock that we found this host in
-    # during the tree_lookup() above, so we know how big each netblock containing this item was, so we can later
-    # sort on the size of the netblock.  But that's a longer-term goal.  For now, ignore all this and just randomize the list.
     def _ordered_netblocks(s):
-        def ipy_len(ip):
-            return ip.len()
+        def ipy_len(t):
+            (prefix, hostid) = t
+            return IP(prefix).len()
         v4_netblocks = []
         v6_netblocks = []
-        for hostid in s:
-            ip = IP(n) # FIXME n is undefined to make this fail
+        for (prefix, hostid) in s:
+            ip = IP(prefix)
             if ip.version() == 4:
-                v4_netblocks.append(ip)
+                v4_netblocks.append((prefix, hostid))
             elif ip.version() == 6:
-                v6_netblocks.append(ip)
+                v6_netblocks.append((prefix, hostid))
         # mix up the order, as sort will preserve same-key ordering
         random.shuffle(v4_netblocks)
         v4_netblocks.sort(key=ipy_len)
         random.shuffle(v6_netblocks)
         v6_netblocks.sort(key=ipy_len)
+        v4_netblocks = [t[1] for t in v4_netblocks]
+        v6_netblocks = [t[1] for t in v6_netblocks]
         return v6_netblocks + v4_netblocks
 
     def whereismymirror(result_sets):
@@ -641,7 +649,7 @@ def do_mirrorlist(kwargs):
 
     result_sets = [ 
         (location_results, "location", _random_shuffle),
-        (netblock_results, "netblocks", _random_shuffle),
+        (netblock_results, "netblocks", _ordered_netblocks),
         (asn_results, "asn", _random_shuffle),
         (internet2_results, "I2", _random_shuffle),
         (country_results, "country", shuffle),
@@ -769,7 +777,9 @@ def read_caches():
 
     internet2_tree = setup_netblocks(internet2_netblocks_file)
     global_tree    = setup_netblocks(global_netblocks_file)
+    # host_netblocks_tree key is a netblock, value is a list of host IDs
     host_netblocks_tree = setup_cache_tree(host_netblock_cache, 'hosts')
+    # netblock_country_tree key is a netblock, value is a single country string
     netblock_country_tree = setup_cache_tree(netblock_country_cache, 'country')
 
 def errordoc(metalink, message):
