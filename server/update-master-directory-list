@@ -9,14 +9,13 @@ from optparse import OptionParser
 import turbogears
 from mirrormanager.model import *
 from mirrormanager.repomap import *
-from mirrormanager.lib import manage_pidfile, remove_pidfile
+from mirrormanager.lib import manage_pidfile, remove_pidfile, run_rsync
 import re
 import glob
 import yum.repoMDObject
 import datetime, time
 import hashlib
 from turbogears import config
-from subprocess import Popen, PIPE
 
 rootdir='/'
 pidfile='/var/run/mirrormanager/umdl.pid'
@@ -418,8 +417,7 @@ def sync_category_directories(category, category_directories, directory_info):
     nuke_gone_directories(category, category_directories)
 
 
-def parse_rsync_listing(cname, f):
-    category = Category.byName(cname)
+def parse_rsync_listing(category, f):
     topdir_name = category.topdir.name
     category_directories = {}
     for line in f:
@@ -437,22 +435,12 @@ def parse_rsync_listing(cname, f):
     directory_info = cache_directory_info()
     sync_category_directories(category, category_directories, directory_info)
 
-
-
 def sync_directories_using_rsync(rsyncpath, category, extra_rsync_args=None):
-    cmd = "rsync --temp-dir=/tmp -r --exclude=.snapshot --exclude='*.~tmp~'"
-    if extra_rsync_args is not None:
-        cmd += ' ' + extra_rsync_args
-    cmd += ' ' + rsyncpath
-    try:
-        devnull = open('/dev/null', 'r')
-        p = Popen(cmd, shell=True, stdin=devnull, stdout=PIPE, bufsize=1, close_fds=True)
-    except:
-        print "Category %s: Unable to run %s" % (category.name, args)
-        devnull.close()
+    result, output = run_rsync(rsyncpath, extra_rsync_args)
+    if result is False:
+        print "Category %s: %s" % (category.name, output)
         return
-    parse_rsync_listing(category, p.stdout)
-    devnull.close()
+    parse_rsync_listing(category, output)
 
 def sync_directories_from_file(filename, category):
     f = open(filename, 'r')

@@ -1,4 +1,5 @@
 import types, os
+from subprocess import Popen, PIPE
 
 def createErrorString(tg_errors):
     """
@@ -86,3 +87,21 @@ def append_value_to_cache(cache, key, value):
     else:
         cache[key].append(value)
     return cache
+
+def run_rsync(rsyncpath, extra_rsync_args=None):
+    output = None
+    result = True
+    cmd = "rsync --temp-dir=/tmp -r --exclude=.snapshot --exclude='*.~tmp~'"
+    if extra_rsync_args is not None:
+        cmd += ' ' + extra_rsync_args
+    cmd += ' ' + rsyncpath
+    try:
+        devnull = open('/dev/null', 'r')
+        print cmd
+        p = Popen(cmd, shell=True, stdin=devnull, stdout=PIPE, bufsize=1, close_fds=True)
+        output = p.stdout
+    except:
+        output = "Unable to run " + args
+        result = False
+    devnull.close()
+    return (result, output)
