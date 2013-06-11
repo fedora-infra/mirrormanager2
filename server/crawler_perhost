@@ -8,6 +8,7 @@ import sys, os, signal, socket
 import turbogears
 from turbogears import config
 from mirrormanager.model import *
+from mirrormanager.lib import run_rsync
 from datetime import datetime
 import ftplib
 from ftplib import FTP
@@ -149,6 +150,21 @@ class hostState:
 class TryLater(Exception): pass
 class ForbiddenExpected(Exception): pass
 
+
+def get_rsync_dir(url):
+    result, output = run_rsync(url, '--no-motd')
+
+    if result is False:
+        return None
+
+    listing = []
+
+    for line in output:
+        listing.append(line)
+
+    output.close()
+    return listing
+     
 
 def get_ftp_dir(hoststate, url, readable, i=0):
     if i > 1:
@@ -343,8 +359,15 @@ def sync_hcds(host, host_category_dirs):
                     hcd.sync()
     
 
-def method_pref(urls):
+def method_pref(urls, prev=""):
+    """ return which of the hosts connection method should be used
+    rsync > http > ftp """
     pref = None
+    for u in urls:
+        if prev.startswith('rsync:'):
+            break
+        if u.startswith('rsync:'):
+            return u
     for u in urls:
         if u.startswith('http:'):
             pref = u
@@ -425,6 +448,65 @@ def try_perfile(d, hoststate, url):
 
     return True
 
+def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLen):
+    """ In addition to the crawls using http and ftp, this rsync crawl
+    scans the complete category with one connection instead perdir (ftp)
+    or perfile(http). """
+
+    if not url.startswith('rsync'):
+        return None
+
+    # rsync URL available, let's use it; it requires only one network connection
+    # instead of multiples like with http and ftp
+
+    results = {}
+    rsync = {}
+    if not url.endswith('/'):
+        url += '/'
+
+    listing = get_rsync_dir(url)
+
+    # put the rsync listing in a dict for easy access
+    for line in listing:
+        fields = line.split()
+        rsync[fields[4]] = {'mode': fields[0], 'size': fields[1], 'date': fields[2], 'time': fields[3]}
+    
+    prefix = ""
+    all_files = True
+
+    # for all directories in this category
+    for d in trydirs:
+        # the rsync listing is missing the category part of the url
+        # remove if from the ones we are comparing it with
+        name = d.name[categoryPrefixLen:]
+        prefix = d.name[:categoryPrefixLen]
+        for file in d.files.keys():
+            if len(name) == 0:
+                key = file
+            else:
+                key = name + "/" + file
+            try:
+                if rsync[key]['size'] != d.files[file]['size']:
+                    all_files = False
+                    break
+            except:
+                all_files = False
+                break
+
+            if all_files is False:
+                host_category_dirs[(hc, d)] = False
+            else:
+                host_category_dirs[(hc, d)] = True
+                host_category_dirs = add_parents(host_category_dirs, hc, d)
+
+    if len(host_category_dirs) > 0:
+        sync_hcds(host, host_category_dirs)
+        print prefix + " udpated"
+        return True
+
+    mark_not_up2date(host, "No host category directories found.  Check that your Host Category URLs are correct.")
+
+    return False
 
 def try_perdir(d, hoststate, url):
     if d.files is None:
@@ -594,6 +676,19 @@ def per_host(host, options=None):
             continue
         categoryPrefixLen = len(category.topdir.name)+1
         
+        # check the complete category in one go with rsync
+        has_all_files = try_percategory(trydirs, categoryUrl, host_category_dirs, hc, host, categoryPrefixLen)
+
+        if has_all_files == True:
+            # all files in this category are up to date
+            # no further checks necessary
+            # do the next category
+            continue
+
+        # change preferred protocol if necessary to http or ftp
+        categoryUrl = method_pref(host.category_urls(category.name), categoryUrl)
+
+
         for d in trydirs:
             if must_dienow:
                 logfile.flush()
