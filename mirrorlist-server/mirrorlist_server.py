@@ -858,6 +858,8 @@ def sighup_handler(signum, frame):
             thread.start()
 
     signal.signal(signal.SIGHUP, sighup_handler)
+    # restart interrupted syscalls like select
+    signal.siginterrupt(signal.SIGHUP, False)
 
 def sigterm_handler(signum, frame):
     global must_die
@@ -959,6 +961,8 @@ def main():
 
     load_databases_and_caches()                              
     signal.signal(signal.SIGHUP, sighup_handler)
+    # restart interrupted syscalls like select
+    signal.siginterrupt(signal.SIGHUP, False)
     ss = ForkingUnixStreamServer(socketfile, MirrorlistHandler)
 
     while not must_die:
