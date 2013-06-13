@@ -102,6 +102,11 @@ install-server:
 	install -m 0644	mirrorlist-server/weighted_shuffle.py $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server
 	install -m 0755	mirrorlist-server/mirrorlist_server.py $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server
 	install -m 0755	mirrorlist-server/mirrorlist_statistics.py $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server
+# mirrorlist-server/test
+	mkdir -p -m 0755 $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server/test
+	install -m 0755	mirrorlist-server/test/induce-stress $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server/test/induce-stress
+	install -m 0755	mirrorlist-server/test/server_tester.py $(DESTDIR)/usr/share/mirrormanager/mirrorlist-server/test/server_tester.py
+# apache
 	mkdir -p -m 0755 $(DESTDIR)/etc/httpd/conf.d
 	install -m 0644 mirrorlist-server/apache/mirrorlist-server.conf $(DESTDIR)/etc/httpd/conf.d
 	mkdir -p -m 0755 $(DESTDIR)/etc/supervisord.d
