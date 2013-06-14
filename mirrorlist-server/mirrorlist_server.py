@@ -188,7 +188,7 @@ def metalink(cache, directory, file, hosts_and_urls):
             doc += indent(4) + '</mm0:alternate>\n'
         doc += indent(3) + '</mm0:alternates>\n'
 
-    doc += indent(3) + '<resources maxconnections="%d">\n' % (host_max_connections_cache.get(hostid, 1))
+    doc += indent(3) + '<resources>\n'
     for (hostid, hcurls) in hosts_and_urls:
         private = ''
         if hostid not in cache['global']:
