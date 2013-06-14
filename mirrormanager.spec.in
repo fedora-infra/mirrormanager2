@@ -1,6 +1,6 @@
 Name:           mirrormanager
 Version:        ##VERSION##
-Release:        0.5%{?dist}
+Release:        0.6%{?dist}
 Summary:        Fedora mirror management system
 BuildArch:      noarch
 
@@ -102,7 +102,7 @@ exit 0
 %doc LICENSES LICENSE-GPLv2
 
 %changelog
-* Tue Jun 11 2013 Matt Domsch <mdomsch@fedoraproject.org> - 1.4.0-0.5
+* Fri Jun 14 2013 Matt Domsch <mdomsch@fedoraproject.org> - 1.4.0-0.6
 - more fixes
 
 * Fri Jan 25 2013 Matt Domsch <mdomsch@fedoraproject.org> - 1.4.0-0.1
