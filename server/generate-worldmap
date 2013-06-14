@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright 2007 Dell, Inc.
+# Copyright 2007,2008,2010,2012 Dell, Inc.
 #   by Matt Domsch <Matt_Domsch@dell.com>
 # Based on examples from python-GeoIP and python-basemap-examples
 # Licensed under the GNU General Public License v2

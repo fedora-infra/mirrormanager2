@@ -6,7 +6,7 @@ description = "MirrorManager"
 long_description = "Fedora Content Mirror Tracker"
 author = "Matt Domsch"
 email = "Matt_Domsch@dell.com"
-copyright = "Copyright 2006-2010 Dell, Inc."
+copyright = "Copyright 2006-2013 Dell, Inc."
 
 # if it's open source, you might want to specify these
 url = "http://mirrormanager.org"
