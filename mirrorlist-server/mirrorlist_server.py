@@ -33,6 +33,7 @@ import radix
 from weighted_shuffle import weighted_shuffle
 
 # can be overridden on the command line
+pidfile = '/var/run/mirrormanager/mirrorlist_server.pid'
 socketfile = '/var/run/mirrormanager/mirrorlist_server.sock'
 cachefile = '/var/lib/mirrormanager/mirrorlist_cache.pkl'
 internet2_netblocks_file = '/var/lib/mirrormanager/i2_netblocks.txt'
@@ -258,21 +259,23 @@ def shuffle(s):
 continents = {}
 
 def handle_country_continent_redirect():
-    global country_continents
-    country_continents = GeoIP.country_continents
+    new_country_continents = GeoIP.country_continents
     for country, continent in country_continent_redirect_cache.iteritems():
-        country_continents[country] = continent
+        new_country_continents[country] = continent
+    global country_continents
+    country_continents = new_country_continents
 
 def setup_continents():
-    global continents
-    continents = {}
+    new_continents = {}
     handle_country_continent_redirect()
     for c in country_continents.keys():
         continent = country_continents[c]
-        if continent not in continents:
-            continents[continent] = [c]
+        if continent not in new_continents:
+            new_continents[continent] = [c]
         else:
-            continents[continent].append(c)
+            new_continents[continent].append(c)
+    global continents
+    continents = new_continents
     
 def do_global(kwargs, cache, clientCountry, header):
     c = trim_by_client_country(cache['global'], clientCountry)
@@ -565,21 +568,15 @@ def do_mirrorlist(kwargs):
     else:
         print_client_country = clientCountry
 
-    if debug:
-        if kwargs.has_key('repo') and kwargs.has_key('arch'):
-            print ("IP: " + (kwargs['IP'] or 'None') +
-                   "; DATE: " + time.strftime("%Y-%m-%d") +
-                   "; COUNTRY: " + print_client_country + 
-                   "; REPO: " + kwargs['repo'] + 
-                   "; ARCH: " + kwargs['arch'])
+    if debug and kwargs.has_key('repo') and kwargs.has_key('arch'):
+        msg = "IP: %s; DATE: %s; COUNTRY: %s; REPO: %s; ARCH: %s"  % (
+            (kwargs['IP'] or 'None'), time.strftime("%Y-%m-%d"),
+            print_client_country, kwargs['repo'], kwargs['arch'])
 
-    if logfile is not None:
-        if kwargs.has_key('repo') and kwargs.has_key('arch'):
-            logfile.write("IP: " + (kwargs('IP') or 'None') +
-                          "; DATE: " + time.strftime("%Y-%m-%d") +
-                          "; COUNTRY: " + print_client_country +
-                          "; REPO: " + kwargs['repo'] +
-                          "; ARCH: " + kwargs['arch'] + "\n")
+        print msg
+
+        if logfile is not None:
+            logfile.write(msg + "\n")
             logfile.flush()
 
     if not done:
@@ -838,28 +835,19 @@ class MirrorlistHandler(StreamRequestHandler):
             self.connection.shutdown(socket.SHUT_WR)
         except:
             pass
-        
 
 def sighup_handler(signum, frame):
     global logfile
-    signal.signal(signal.SIGHUP, signal.SIG_IGN)
-    if signum == signal.SIGHUP:
-        if debug:
-            print "Got SIGHUP; reloading data"
-        if logfile is not None:
-            name = logfile.name
-            logfile.close()
-            logfile = open(name, 'a')
+    if logfile is not None:
+        name = logfile.name
+        logfile.close()
+        logfile = open(name, 'a')
 
-        # put this in a separate thread so it doesn't block clients
-        if threading.active_count() < 2:
-            thread = threading.Thread(target=load_databases_and_caches)
-            thread.daemon = False
-            thread.start()
-
-    signal.signal(signal.SIGHUP, sighup_handler)
-    # restart interrupted syscalls like select
-    signal.siginterrupt(signal.SIGHUP, False)
+    # put this in a separate thread so it doesn't block clients
+    if threading.active_count() < 2:
+        thread = threading.Thread(target=load_databases_and_caches)
+        thread.daemon = False
+        thread.start()
 
 def sigterm_handler(signum, frame):
     global must_die
@@ -881,8 +869,9 @@ def parse_args():
     global global_netblocks_file
     global debug
     global logfile
-    opts, args = getopt.getopt(sys.argv[1:], "c:i:g:s:dl:",
-                               ["cache", "internet2_netblocks", "global_netblocks", "socket", "debug", "log="])
+    global pidfile
+    opts, args = getopt.getopt(sys.argv[1:], "c:i:g:p:s:dl:",
+                               ["cache", "internet2_netblocks", "global_netblocks", "pidfile", "socket", "debug", "log="])
     for option, argument in opts:
         if option in ("-c", "--cache"):
             cachefile = argument
@@ -892,6 +881,8 @@ def parse_args():
             global_netblocks_file = argument
         if option in ("-s", "--socket"):
             socketfile = argument
+        if option in ("-p", "--pidfile"):
+            pidfile = argument
         if option in ("-l", "--log"):
             try:
                 logfile = open(argument, 'a')
@@ -899,7 +890,6 @@ def parse_args():
                 logfile = None
         if option in ("-d", "--debug"):
             debug = True
-            print "debug output enabled"
 
 def open_geoip_databases():
     global gipv4
@@ -947,12 +937,67 @@ def convert_teredo_v4(ip):
     return IP(v4addr)
 
 def load_databases_and_caches(*args, **kwargs):
+    sys.stderr.write("load_databases_and_caches...")
+    sys.stderr.flush()
     open_geoip_databases()
     read_caches()
+    sys.stderr.write("done.\n")
+    sys.stderr.flush()
+
+def remove_pidfile(pidfile):
+    os.unlink(pidfile)
+
+def create_pidfile_dir(pidfile):
+    piddir = os.path.dirname(pidfile)
+    try:
+        os.makedirs(piddir, mode=0755)
+    except OSError, err:
+        if err.errno == 17: # File exists
+            pass
+        else:
+            raise
+    except:
+        raise
+
+def write_pidfile(pidfile, pid):
+    create_pidfile_dir(pidfile)
+    f = open(pidfile, 'w')
+    f.write(str(pid))
+    f.close()
+    return 0
+
+def manage_pidfile(pidfile):
+    """returns 1 if another process is running that is named in pidfile,
+    otherwise creates/writes pidfile and returns 0."""
+    pid = os.getpid()
+    try:
+        f = open(pidfile, 'r')
+    except IOError, err:
+        if err.errno == 2: # No such file or directory
+            return write_pidfile(pidfile, pid)
+        return 1
+
+    oldpid=f.read()
+    f.close()
+
+    # is the oldpid process still running?
+    try:
+        os.kill(int(oldpid), 0)
+    except ValueError: # malformed oldpid
+        return write_pidfile(pidfile, pid)
+    except OSError, err:
+        if err.errno == 3: # No such process
+            return write_pidfile(pidfile, pid)
+    return 1
+
 
 def main():
     global logfile
+    global pidfile
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
     parse_args()
+    manage_pidfile(pidfile)
+
     oldumask = os.umask(0)
     try:
         os.unlink(socketfile)
@@ -982,6 +1027,7 @@ def main():
         except:
             pass
 
+    remove_pidfile(pidfile)
     return 0
 
 
