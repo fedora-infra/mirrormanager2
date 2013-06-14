@@ -49,8 +49,7 @@ $(TARBALL):
 	find $${tmp_dir}/$(RELEASE_STRING) -depth -name \*.rpm -type f -exec rm -f \{\} \; ; \
 	find $${tmp_dir}/$(RELEASE_STRING) -depth -name \*.tar.xz -type f -exec rm -f \{\} \; ; \
 	sync ; sync ; sync ; \
-	tar cvf $(TARBALL) -C $${tmp_dir} $(RELEASE_STRING) ; \
-	xz -c -9 $(TARBALL) ; \
+	tar cv -C $${tmp_dir} $(RELEASE_STRING) | xz -c -9 > $(TARBALL); \
 	rm -rf $${tmp_dir} ;
 
 # Use older digest algorithms for local rpmbuilds, as EPEL5 and
