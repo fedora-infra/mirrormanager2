@@ -1,4 +1,4 @@
-RELEASE_DATE := "31-Oct-2010"
+RELEASE_DATE := "14-Jun-2013"
 RELEASE_MAJOR := 1
 RELEASE_MINOR := 4
 RELEASE_EXTRALEVEL := .0
@@ -8,7 +8,7 @@ RELEASE_STRING := $(RELEASE_NAME)-$(RELEASE_VERSION)
 
 SPEC=mirrormanager.spec
 RELEASE_PY=server/mirrormanager/release.py
-TARBALL=dist/$(RELEASE_STRING).tar.bz2
+TARBALL=dist/$(RELEASE_STRING).tar.xz
 STARTSCRIPT=server/start-mirrormanager
 PROGRAMDIR=/usr/share/mirrormanager/server
 SBINDIR=/usr/sbin
@@ -17,7 +17,7 @@ SBINDIR=/usr/sbin
 all:
 
 clean:
-	-rm -rf *.tar.gz *.rpm *~ dist/ $(SPEC) $(RELEASE_PY) server/mirrormanager.egg-info server/build
+	-rm -rf *.tar.xz *.rpm *~ dist/ $(SPEC) $(RELEASE_PY) server/mirrormanager.egg-info server/build
 	-find . -name \*.pyc -exec rm \{\} \;
 	-find . -name \*.pyo -exec rm \{\} \;
 
@@ -47,9 +47,10 @@ $(TARBALL):
 	find $${tmp_dir}/$(RELEASE_STRING) -depth -name sqlobject-history -type d -exec rm -rf \{\} \; ; \
 	find $${tmp_dir}/$(RELEASE_STRING) -depth -name \*~ -type f -exec rm -f \{\} \; ; \
 	find $${tmp_dir}/$(RELEASE_STRING) -depth -name \*.rpm -type f -exec rm -f \{\} \; ; \
-	find $${tmp_dir}/$(RELEASE_STRING) -depth -name \*.tar.gz -type f -exec rm -f \{\} \; ; \
+	find $${tmp_dir}/$(RELEASE_STRING) -depth -name \*.tar.xz -type f -exec rm -f \{\} \; ; \
 	sync ; sync ; sync ; \
-	tar cvjf $(TARBALL) -C $${tmp_dir} $(RELEASE_STRING) ; \
+	tar cvf $(TARBALL) -C $${tmp_dir} $(RELEASE_STRING) ; \
+	xz -c -9 $(TARBALL) ; \
 	rm -rf $${tmp_dir} ;
 
 # Use older digest algorithms for local rpmbuilds, as EPEL5 and
