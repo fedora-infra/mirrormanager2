@@ -847,7 +847,12 @@ def sighup_handler(signum, frame):
     if threading.active_count() < 2:
         thread = threading.Thread(target=load_databases_and_caches)
         thread.daemon = False
-        thread.start()
+        try:
+            thread.start()
+        except KeyError:
+        # bug fix for handing an exception when unable to delete from _limbo even though it's not in limbo
+        # https://code.google.com/p/googleappengine/source/browse/trunk/python/google/appengine/dist27/threading.py?r=327
+            pass
 
 def sigterm_handler(signum, frame):
     global must_die
