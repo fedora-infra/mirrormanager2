@@ -569,14 +569,15 @@ def do_mirrorlist(kwargs):
         print_client_country = clientCountry
 
     if debug and kwargs.has_key('repo') and kwargs.has_key('arch'):
-        msg = "IP: %s; DATE: %s; COUNTRY: %s; REPO: %s; ARCH: %s"  % (
+        msg = "IP: %s; DATE: %s; COUNTRY: %s; REPO: %s; ARCH: %s\n"  % (
             (kwargs['IP'] or 'None'), time.strftime("%Y-%m-%d"),
             print_client_country, kwargs['repo'], kwargs['arch'])
 
-        print msg
+        sys.stdout.write(msg)
+        sys.stdout.flush()
 
         if logfile is not None:
-            logfile.write(msg + "\n")
+            logfile.write(msg)
             logfile.flush()
 
     if not done:
