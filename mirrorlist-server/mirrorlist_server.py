@@ -698,7 +698,7 @@ def setup_netblocks(netblocks_file, asns_wanted=None):
                 mask = int(mask)
                 if mask == 0: continue
                 asn = int(s[1])
-                if asns_wanted is None or (asns_wanted is not None and asn in asns_wanted):
+                if asns_wanted is None or asn in asns_wanted:
                     node = tree.add(s[0])
                     node.data['asn'] = asn
             except:
