@@ -115,13 +115,13 @@ def guess_ver_arch_from_path(category, product_id, path):
 
     # create Versions if we can figure it out...
     if ver is None:
-        ver = create_version_from_path(category, path)
-        if ver:
-            version_cache.append(dict(id = ver.id,
-                                      name = ver.name,
-                                      product_id = product_id,
-                                      ordered_mirrorlist = ver.ordered_mirrorlist)
-                                 )
+        v = create_version_from_path(category, path)
+        if v:
+            ver = dict(id = v.id, name = v.name,
+                     product_id = product_id,
+                     ordered_mirrorlist = v.ordered_mirrorlist)
+
+            version_cache.append(ver)
     return (ver, arch)
 
 
