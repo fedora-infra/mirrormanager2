@@ -684,7 +684,7 @@ def setup_cache_tree(cache, field):
         node.data[field] = v
     return tree
 
-def setup_netblocks(netblocks_file):
+def setup_netblocks(netblocks_file, asns_wanted=None):
     tree = radix.Radix()
     if netblocks_file is not None:
         try:
@@ -698,12 +698,12 @@ def setup_netblocks(netblocks_file):
                 mask = int(mask)
                 if mask == 0: continue
                 asn = int(s[1])
-                node = tree.add(s[0])
-                node.data['asn'] = asn
+                if asns_wanted is None or (asns_wanted is not None and asn in asns_wanted):
+                    node = tree.add(s[0])
+                    node.data['asn'] = asn
             except:
                 pass
         f.close()
-
     return tree
 
 def read_caches():
@@ -769,7 +769,7 @@ def read_caches():
     global netblock_country_tree
 
     internet2_tree = setup_netblocks(internet2_netblocks_file)
-    global_tree    = setup_netblocks(global_netblocks_file)
+    global_tree    = setup_netblocks(global_netblocks_file, asn_host_cache)
     # host_netblocks_tree key is a netblock, value is a list of host IDs
     host_netblocks_tree = setup_cache_tree(host_netblock_cache, 'hosts')
     # netblock_country_tree key is a netblock, value is a single country string
