@@ -96,7 +96,7 @@ def repo_prefix(path, category, ver):
 
     version = u'unknown'
     if not isRawhide and ver is not None:
-        version = ver.name
+        version = ver['name']
 
     if isCore:
         if isUpdatesReleased:
