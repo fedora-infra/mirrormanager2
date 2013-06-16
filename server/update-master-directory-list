@@ -285,7 +285,8 @@ def nuke_gone_directories(category, category_directories):
             for c in cache[d.id]:
                 if category == c and dname:
                     if not category_directories.has_key(dname):
-                        print "Deleting gone directory %s" % (dname)
+                        sys.stdout.write("Deleting gone directory %s\n" % (dname))
+                        sys.stdout.flush()
                         d.destroySelf()
         except:
             continue
@@ -442,7 +443,8 @@ def parse_rsync_listing(category, f):
 def sync_directories_using_rsync(rsyncpath, category, extra_rsync_args=None):
     result, output = run_rsync(rsyncpath, extra_rsync_args)
     if result is False:
-        print "Category %s: %s" % (category.name, output)
+        sys.stdout.write("rsync failed for Category %s: %s\n" % (category.name, output))
+        sys.stdout.flush()
         return
     parse_rsync_listing(category, output)
 
@@ -485,7 +487,7 @@ def sync_directories_from_directory(directory, category, excludes=[]):
                 next=True
                 break
         if next:
-            print "excluding %s" % (dirpath)
+            sys.stdout.write("excluding %s\n" % (dirpath))
             # exclude all its subdirs too
             dirnames[:] = []
             continue
@@ -514,7 +516,8 @@ def sync_directories_from_directory(directory, category, excludes=[]):
 
         changed = (d_ctime != ctime)
         if changed:
-            print "%s has changed" % dname
+            sys.stdout.write("%s has changed\n" % dname)
+            sys.stdout.flush()
         category_directories[dname] = {'files':{}, 'isRepository':isRepo, 'readable':readable, 'ctime':ctime, 'changed':changed}
 
         # skip per-file stat()s if the directory hasn't changed
@@ -549,10 +552,13 @@ def main():
     delete_directories = options.delete_directories
 
     if manage_pidfile(pidfile):
-        print "another instance is running, try again later."
+        sys.stdout.write("another instance is running, try again later.\n")
+        sys.stdout.flush()
         sys.exit(1)
 
-    print "Starting umdl %s" % (datetime.datetime.utcnow().isoformat())
+
+    sys.stdout.write("Starting umdl %s\n" % (datetime.datetime.utcnow().isoformat()))
+    sys.stdout.flush()
     setup_arch_version_cache()
     for i in config.get('umdl.master_directories'):
         try:
@@ -564,11 +570,13 @@ def main():
         try:
             category = Category.byName(cname)
         except SQLObjectNotFound:
-            print 'Error: umdl.master_directories Category %s does not exist in the database, skipping' % (cname)
+            sys.stdout.write('Error: umdl.master_directories Category %s does not exist in the database, skipping\n' % (cname))
+            sys.stdout.flush()
             continue            
 
         if category.product is None:
-            print 'Error: umdl.master_directories Category %s has null Product, skipping' % (cname)
+            sys.stdout.write('Error: umdl.master_directories Category %s has null Product, skipping\n' % (cname))
+            sys.stdout.flush()
             continue            
 
         if i['type'] == 'rsync':
@@ -582,7 +590,8 @@ def main():
             sync_directories_from_directory(i['path'], category, excludes)
 
     remove_pidfile(pidfile)
-    print "Ending umdl %s" % (datetime.datetime.utcnow().isoformat())
+    sys.stdout.write("Ending umdl %s\n" % (datetime.datetime.utcnow().isoformat()))
+    sys.stdout.flush()
 
     return 0
 
