@@ -250,6 +250,10 @@ def make_repository(dir, dname, category, product_id, topdir):
     if ver is None or arch is None:
         return None
 
+    # stop making duplicate Repository objects.
+    if len(dir.repositories) > 0:
+        return None
+
     prefix = repo_prefix(path, category, ver)
     try:
 	# historically, Repository.name was a longer string with
