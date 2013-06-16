@@ -273,23 +273,18 @@ def make_repository(dir, dname, category, product_id, topdir):
 
     return repo
 
-def nuke_gone_directories(category, category_directories):
+def nuke_gone_directories(rootdir):
     """ deleting a Directory has a ripple effect through the whole
         database.  Be really sure you're ready do to this.  It comes
         in handy when say a Test release is dropped."""
         
-    cache = setup_directory_category_cache()
-    for d in list(Directory.select(orderBy='-name')):
+    for d in Directory.select(orderBy='-name'):
         dname = d.name
-        try:
-            for c in cache[d.id]:
-                if category == c and dname:
-                    if not category_directories.has_key(dname):
-                        sys.stdout.write("Deleting gone directory %s\n" % (dname))
-                        sys.stdout.flush()
-                        d.destroySelf()
-        except:
-            continue
+        if not os.path.isdir(os.path.join(rootdir, dname)):
+            if len(d.categories) == 1: # safety, this should always trigger
+                sys.stdout.write("Deleting gone directory %s\n" % (dname))
+                sys.stdout.flush()
+                d.destroySelf()
 
 unreadable_dirs = set()
 
@@ -419,7 +414,6 @@ def sync_category_directories(category, category_directories, directory_info):
             make_repository(D, dirpath, category, product_id, topdir)
         make_repomd_file_details(dirpath, D)
     Directory.ageFileDetails()
-    nuke_gone_directories(category, category_directories)
 
 
 def parse_rsync_listing(category, f):
@@ -589,6 +583,8 @@ def main():
             excludes = i.get('excludes', [])
             sync_directories_from_directory(i['path'], category, excludes)
 
+    if options.delete_directories:
+        nuke_gone_directories(options.rootdir)
     remove_pidfile(pidfile)
     sys.stdout.write("Ending umdl %s\n" % (datetime.datetime.utcnow().isoformat()))
     sys.stdout.flush()
