@@ -503,11 +503,8 @@ def _publiclist_sql_to_list(sqlresult, valid_categories):
             if len(hosts[h].categories) == 0:
                 del hosts[h]
 
-        # turn the dict into a list
-        l = []
-        for k, v in hosts.iteritems():
-            l.append(v)
-        l.sort()
+        # turn the dict values into a list
+        l = sorted(hosts.values())
         return l
 
 def _publiclist_hosts(product=None, re=None):
@@ -677,8 +674,7 @@ def publiclist_arches():
             rc = 1
         return rc
 
-    result = [a for a in Arch.selectBy(publiclist=True)]
-    result.sort(compare)
+    result = sorted(Arch.selectBy(publiclist=True), cmp=compare)
     return result
 
 # e.g. 'fedora' and 'epel'

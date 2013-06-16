@@ -929,8 +929,7 @@ class Root(controllers.RootController):
         includes.update(newer_dirs)
         for n in newer_dirs:
             includes.update(parents(n))
-        includes = list(includes)
-        includes.sort()
+        includes = sorted(includes)
         # add trailing slash as rsync wants it
         for i in xrange(len(includes)):
             includes[i] += u'/'

@@ -75,8 +75,7 @@ and development networks globally.
 <td>
 <table>
 <?python
-   categories = host.categories.keys()
-   categories.sort()
+   categories = sorted(host.categories.keys())
 ?>
 <tr py:for="hc in categories">
 <td><span py:replace="host.categories[hc].name">Category name</span></td>
