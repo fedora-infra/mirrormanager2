@@ -16,6 +16,6 @@ cp -ar ${CACHEDIR}/*  ${CACHEDIR}/old/
 
 ${MM_DIR}/refresh_mirrorlist_cache -c /etc/mirrormanager/prod.cfg
 ${MM_DIR}/get_internet2_netblocks ${CACHEDIR}/i2_netblocks.txt
-killall -HUP mirrorlist_server.py
+kill -HUP $(cat /var/run/mirrormanager/mirrorlist_server.pid)
 
 exit 0
