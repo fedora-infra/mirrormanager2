@@ -409,8 +409,8 @@ def sync_category_directories(category, category_directories, directory_info):
     # this has to be a second pass to be sure the child repodata/ dir is created in the db first
     for dirpath, value in category_directories.iteritems():
         d = directory_info[dirpath]
+        D = Directory.get(d['id'])
         if value['isRepository']:
-            D = Directory.get(d['id'])
             make_repository(D, dirpath, category, product_id, topdir)
         make_repomd_file_details(dirpath, D)
     Directory.ageFileDetails()
