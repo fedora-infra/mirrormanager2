@@ -556,9 +556,9 @@ def main():
     setup_arch_version_cache()
     for i in config.get('umdl.master_directories'):
         try:
-            options = i['options']
+            sync_options = i['options']
         except KeyError:
-            options = None
+            sync_options = None
 
         cname = i['category']
         try:
@@ -574,7 +574,7 @@ def main():
             continue            
 
         if i['type'] == 'rsync':
-            sync_directories_using_rsync(i['url'], category, options)
+            sync_directories_using_rsync(i['url'], category, sync_options)
 
         if i['type'] == 'file':
             sync_directories_from_file(i['url'], category)
