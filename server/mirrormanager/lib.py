@@ -53,7 +53,7 @@ def create_pidfile_dir(pidfile):
 def write_pidfile(pidfile, pid):
     create_pidfile_dir(pidfile)
     f = open(pidfile, 'w')
-    f.write(str(pid))
+    f.write(str(pid)+'\n')
     f.close()
     return 0
 
