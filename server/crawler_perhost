@@ -19,6 +19,7 @@ import threading
 import urlgrabber
 import hashlib
 from smtplib import SMTP
+import traceback
 
 from turbogears.database import PackageHub
 hostid = None
@@ -150,21 +151,6 @@ class hostState:
 class TryLater(Exception): pass
 class ForbiddenExpected(Exception): pass
 
-
-def get_rsync_dir(url):
-    result, output = run_rsync(url, '--no-motd')
-
-    if result is False:
-        return None
-
-    listing = []
-
-    for line in output:
-        listing.append(line)
-
-    output.close()
-    return listing
-     
 
 def get_ftp_dir(hoststate, url, readable, i=0):
     if i > 1:
@@ -464,18 +450,26 @@ def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLe
     if not url.endswith('/'):
         url += '/'
 
-    listing = get_rsync_dir(url)
+    result, listing = run_rsync(url, '--no-motd')
+    if not result:
+        return None
 
     # put the rsync listing in a dict for easy access
-    for line in listing:
+    while True:
+        line = listing.readline()
+        if not line: break
         fields = line.split()
-        rsync[fields[4]] = {'mode': fields[0], 'size': fields[1], 'date': fields[2], 'time': fields[3]}
+        try:
+            rsync[fields[4]] = {'mode': fields[0], 'size': fields[1], 'date': fields[2], 'time': fields[3]}
+        except IndexError:
+            sys.stderr.write("invalid rsync line: %s\n" % line)
+            sys.stderr.flush()
     
     prefix = ""
-    all_files = True
 
     # for all directories in this category
     for d in trydirs:
+        all_files = True
         # the rsync listing is missing the category part of the url
         # remove if from the ones we are comparing it with
         name = d.name[categoryPrefixLen:]
@@ -487,21 +481,30 @@ def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLe
                 key = name + "/" + file
             try:
                 if rsync[key]['size'] != d.files[file]['size']:
+                    sys.stdout.write('rsync: file size mismatch %s %s != %s\n' % (file, d.files[file]['size'], rsync[key]['size']))
+                    sys.stdout.flush()
                     all_files = False
                     break
-            except:
+            except KeyError: # file is not in the rsync listing
                 all_files = False
                 break
+            except Exception, e: # something else went wrong
+                all_files = False
+                exception_msg = "Exception caught in try_percategory()\n"
+                exception_msg += traceback.format_exc(e)
+                sys.stderr.write(exception_msg)
+                sys.stderr.flush()
+                break
 
-            if all_files is False:
-                host_category_dirs[(hc, d)] = False
-            else:
-                host_category_dirs[(hc, d)] = True
-                host_category_dirs = add_parents(host_category_dirs, hc, d)
+        if all_files is False:
+            host_category_dirs[(hc, d)] = False
+        else:
+            print d.name
+            host_category_dirs[(hc, d)] = True
+            host_category_dirs = add_parents(host_category_dirs, hc, d)
 
     if len(host_category_dirs) > 0:
         sync_hcds(host, host_category_dirs)
-        print prefix + " updated"
         return True
 
     mark_not_up2date(host, "No host category directories found.  Check that your Host Category URLs are correct.")

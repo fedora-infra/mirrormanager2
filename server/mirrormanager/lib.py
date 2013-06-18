@@ -1,5 +1,7 @@
-import types, os
-from subprocess import Popen, PIPE
+import os
+import subprocess
+import tempfile
+import types
 
 def createErrorString(tg_errors):
     """
@@ -89,19 +91,25 @@ def append_value_to_cache(cache, key, value):
     return cache
 
 def run_rsync(rsyncpath, extra_rsync_args=None):
-    output = None
+    tmpfile = tempfile.SpooledTemporaryFile()
     result = True
     cmd = "rsync --temp-dir=/tmp -r --exclude=.snapshot --exclude='*.~tmp~'"
     if extra_rsync_args is not None:
         cmd += ' ' + extra_rsync_args
     cmd += ' ' + rsyncpath
     try:
-        devnull = open('/dev/null', 'r')
-        print cmd
-        p = Popen(cmd, shell=True, stdin=devnull, stdout=PIPE, bufsize=1, close_fds=True)
-        output = p.stdout
-    except:
-        output = "Unable to run " + args
+        devnull = open('/dev/null', 'rw')
+        sys.stderr.write('invoking %s\n' % cmd)
+        sys.stderr.flush()
+        p = subprocess.Popen(cmd, shell=True, stdin=devnull,
+                             stdout=tmpfile, stderr=devnull, close_fds=True, bufsize=-1)
+        p.wait()
+    except Exception, e:
+        msg = "Exception invoking rsync:\n"
+        msg += traceback.format_exc(e)
+        sys.stderr.write(msg+'\n')
+        sys.stderr.flush()
         result = False
-    devnull.close()
-    return (result, output)
+    tmpfile.flush()
+    tmpfile.seek(0)
+    return (result, tmpfile)

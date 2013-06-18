@@ -419,7 +419,9 @@ def sync_category_directories(category, category_directories, directory_info):
 def parse_rsync_listing(category, f):
     topdir_name = category.topdir.name
     category_directories = {}
-    for line in f:
+    while True:
+        line = f.readline()
+        if not line: break
         line.strip()
         l = line.split()
         if line.startswith('d') and len(l) == 5 and len(l[0]) == 10: # good guess it's a directory line
