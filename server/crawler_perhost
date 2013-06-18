@@ -327,6 +327,8 @@ def sync_hcds(host, host_category_dirs):
             hcd.sync()
             if up2date == False:
                 print >>logfile, "Directory %s is not up-to-date on this host." % d.name
+            else:
+                print >>logfile, d.name
                 
         current_hcds[hcd] = True
 
@@ -480,7 +482,7 @@ def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLe
             else:
                 key = name + "/" + file
             try:
-                if rsync[key]['size'] != d.files[file]['size']:
+                if rsync[key]['size'] != d.files[file]['size'] and not rsync[key]['mode'].startswith('l'): # ignore symlink size differences
                     sys.stdout.write('rsync: file size mismatch %s %s != %s\n' % (file, d.files[file]['size'], rsync[key]['size']))
                     sys.stdout.flush()
                     all_files = False
@@ -499,7 +501,6 @@ def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLe
         if all_files is False:
             host_category_dirs[(hc, d)] = False
         else:
-            print d.name
             host_category_dirs[(hc, d)] = True
             host_category_dirs = add_parents(host_category_dirs, hc, d)
 
