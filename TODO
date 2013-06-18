@@ -10,6 +10,14 @@ Short Term:
   scattered throughout. Ugly.  Make it easy to point to custom css and
   custom theme, so the Fedora theme becomes just separate theme.
 
+* clean up add-instrepos and mv-instrepos - ideally umdl would handle these.
+* move Fedora-specific apps into a server/fedora directory, add /usr/share/mirrormanager/server to sys.path.
+* improve and use errorcheck code - lots mirrors seem to be missing categories or URLs
+* crawlers failing after a 90min timeout - why?
+* make sure umdl handles SIGHUP, re-opens its log files.
+* make sure crawlers handle SIGHUP, reopens their log files.
+* consider making http redirects only redirect to http servers, not FTP (fixes bfo/ipxe)
+
 
 
 Long Term:
