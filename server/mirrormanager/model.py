@@ -1,6 +1,6 @@
 from sqlobject import *
 from sqlobject.converters import sqlrepr
-from sqlobject.sqlbuilder import RLIKE
+from sqlobject.sqlbuilder import RLIKE, AND, OR, INNERJOINOn
 from turbogears import identity, config
 from datetime import datetime
 import time
