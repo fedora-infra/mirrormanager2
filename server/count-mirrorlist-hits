@@ -1,0 +1,63 @@
+#!/usr/bin/python
+import sys
+import optparse
+
+
+stats = dict(I2 = 0,
+             netblocks = 0,
+             asn = 0,
+             geoip = 0,
+             country = 0,
+             continent = 0)
+stats['global'] = 0
+stats['None'] = 0
+last_zone = 'geoip'
+             
+
+def handle_repeated(line):
+    return int(line[-2])
+
+def parse_line(line):
+    global stats
+    global last_zone
+    line = line.split()
+    if line[4] != 'mirrorlist:': return
+    if line[-1] == 'times':
+        additional = handle_repeated(line)
+        stats[last_zone] += additional
+        return
+        
+    where = line[-1]
+    last_zone = where
+    stats[where] += 1
+
+def total():
+    total = 0;
+    for v in stats.values():
+        total += v
+    return total
+
+def read_files(filenames):
+    for fname in filenames:
+        f = open(fname)
+        while True:
+            line = f.readline()
+            if not line: break
+            parse_line(line)
+        f.close()
+
+            
+
+def main():
+    parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
+    (options, args) = parser.parse_args()
+    read_files(args)
+    t = total()
+    print "total hits: %s" % t
+    for k, v in stats.iteritems():
+        print "%s had %s hits, %s%%" % (k, v, v*100/t)
+    return 0
+
+if __name__ == "__main__":
+    rc = main()
+    sys.exit(rc)
