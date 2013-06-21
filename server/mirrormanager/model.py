@@ -152,7 +152,7 @@ def user_sites(identity):
                                                                      SiteAdmin.q.username == identity.current.user_name)))
     for site in query_result:
         for h in site.hosts:
-            result.append((site.id, site.name, host.id, host.name))
+            result.append((site.id, site.name, h.id, h.name))
 
     sites = _min_sites_and_hosts(result)
     return sites
