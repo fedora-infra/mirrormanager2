@@ -4,7 +4,7 @@
 <div class="floatright">
 <table cellspacing="0" class="compact altrows minilist">
   <caption><strong>Mirror list filter</strong></caption>
-  <tr><th>Project</th><th>Version</th><th colspan='0'>Architecture</th></tr>
+  <tr><th>Project</th><th>Version</th><th colspan="${len(arches)}">Architecture</th></tr>
 <?python
 displayproducts = [p for p in products if p.publiclist]
 ?>
