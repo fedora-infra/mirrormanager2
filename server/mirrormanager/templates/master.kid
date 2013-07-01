@@ -32,6 +32,12 @@
         anonymous: false
       };
     </script>
+<?python
+is_sysadmin = False
+admin_group = tg.config('mirrormanager.admin_group', 'sysadmin')
+if admin_group in tg.identity.groups:
+   is_sysadmin = True
+?>
 </head>
   <body py:match="item.tag=='{http://www.w3.org/1999/xhtml}body'" py:attrs="item.items()">
   <div id="wrapper">
@@ -47,7 +53,7 @@
           <h2>Navigation</h2>
           <ul>
             <li><a href="${tg.url('/')}" py:attrs="{'title': _('Mirror Manager main page')}">Main</a></li>
-            <li><a href="${tg.url('/adminview')}" py:attrs="{'title': _('Mirror Manager Admin View')}">Admin View</a></li>
+            <li py:if="is_sysadmin"><a href="${tg.url('/adminview')}" py:attrs="{'title': _('Mirror Manager Admin View')}">Admin View</a></li>
             <li><a href="${tg.url('/help')}" py:attrs="{'title': _('Mirror Manager Help')}">Help</a></li>
           </ul>
           <h2>${tg.config('mirrormanager.projectname','Fedora')} websites</h2>
