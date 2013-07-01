@@ -9,6 +9,7 @@ from mirrormanager.model import *
 from optparse import OptionParser
 import re
 import sys
+import os
 
 from turbogears.database import PackageHub
 hub = __connection__ = None
@@ -26,6 +27,10 @@ def doit():
         for r in repos:
             print "destroying %s" % r
             r.destroySelf()
+        repos = Repository.selectBy(name=d)
+        for r in repos:
+            print "destroying %s" % r
+            r.destroySelf()
 
         if a.primaryArch:
             d = u'pub/fedora/linux/releases/%s/Fedora/%s/os' % (ver.name, a.name)
@@ -33,10 +38,10 @@ def doit():
         else:
             d = u'pub/fedora-secondary/releases/%s/Fedora/%s/os' % (ver.name, a.name)
             category = Category.byName(u'Fedora Secondary Arches')    
-        repos = Repository.selectBy(name=d)
-        for r in repos:
-            print "destroying %s" % r
-            r.destroySelf()
+
+        if not os.path.isdir(os.path.join('/', d)):
+            print "directory %s does not exist, skipping creation of a repository there"
+            continue
 
         d = Directory.byName(d)
         print "creating fedora-install-%s repo for arch %s" % (ver.name, a.name)
