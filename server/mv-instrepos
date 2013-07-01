@@ -15,37 +15,32 @@ hub = __connection__ = None
 
 options = None
 
-archiveCategory = 'Fedora Archive'
-originalCategory = 'Fedora Linux'
-
-
 def doit():
     global options
-    ver = Version.selectBy(name=u'18')[0]
-    category = Category.byName(u'Fedora Linux')    
-    i386 = Arch.byName(u'i386')
-    x86_64 = Arch.byName(u'x86_64')
-    s390x = Arch.byName(u's390x')
-    ppc64 = Arch.byName(u'ppc64')
-#    arches = (i386, x86_64)
-    arches = (s390x, ppc64)
-    for a in arches:
-      repos = Repository.selectBy(prefix=u'fedora-install-18', arch=a)
-      for r in repos:
-        print "destroying %s" % r
-        r.destroySelf()
+    product=Product.byName(u"Fedora")
+    ver = Version.selectBy(product=product, name=options.version)[0]
 
-      d = u'pub/fedora-secondary/releases/18/Fedora/%s/os' % (a.name)
-      repos = Repository.selectBy(name=d)
-      for r in repos:
-        print "destroying %s" % r
-        r.destroySelf()
-        
+    for a in Arch.select():
+        if a.name == u'source': continue
+        repos = Repository.selectBy(prefix=u'fedora-install-%s' % ver.name arch=a)
+        for r in repos:
+            print "destroying %s" % r
+            r.destroySelf()
 
-      d = Directory.byName(d)
-      print "creating repo for arch %s" % a.name
-      r = Repository(name=d.name, prefix=u'fedora-install-18', arch=a, directory=d, version=ver, category=category)
-      d.repo = r
+        if a.primaryArch:
+            d = u'pub/fedora/linux/releases/%s/Fedora/%s/os' % (ver.name, a.name)
+            category = Category.byName(u'Fedora Linux')    
+        else:
+            d = u'pub/fedora-secondary/releases/%s/Fedora/%s/os' % (ver.name, a.name)
+            category = Category.byName(u'Fedora Secondary Arches')    
+        repos = Repository.selectBy(name=d)
+        for r in repos:
+            print "destroying %s" % r
+            r.destroySelf()
+
+        d = Directory.byName(d)
+        print "creating fedora-install-%s repo for arch %s" % (ver.name, a.name)
+        r = Repository(name=d.name, prefix=u'fedora-install-%s' % ver.name, arch=a, directory=d, version=ver, category=category)
 
 
 def main():
@@ -54,10 +49,14 @@ def main():
     parser.add_option("-c", "--config",
                       dest="config", default='/etc/mirrormanager/prod.cfg',
                       help="TurboGears config file to use (default=/etc/mirrormanager/prod.cfg)")
-
-
+    parser.add_option("-v", "--version",
+                      dest="version", default=None,
+                      help="the Version to move")
 
     (options, args) = parser.parse_args()
+    if options.version is None:
+        print "Error: You must specify a version."
+        return 1
 
     turbogears.update_config(configfile=options.config,
                              modulename="mirrormanager.config")
