@@ -3,23 +3,28 @@ __requires__ = 'TurboGears[future]'
 import pkg_resources
 pkg_resources.require("TurboGears")
 
-from sqlobject import *
-import sys, os, signal, socket
-import turbogears
-from turbogears import config
-from mirrormanager.model import *
-from mirrormanager.lib import run_rsync
 from datetime import datetime
 import ftplib
 from ftplib import FTP
-import httplib
-from urlparse import urlsplit
-from optparse import OptionParser
-import threading
-import urlgrabber
 import hashlib
+import httplib
+from optparse import OptionParser
+import os
+import sys
+import signal
 from smtplib import SMTP
+import socket
+from urlparse import urlsplit
+import threading
 import traceback
+import urlgrabber
+
+from sqlobject import *
+import turbogears
+from turbogears import config
+sys.path.append('/usr/share/mirrormanager/server')
+from mirrormanager.model import *
+from mirrormanager.lib import run_rsync
 
 from turbogears.database import PackageHub
 hostid = None
@@ -304,7 +309,10 @@ def sync_hcds(host, host_category_dirs):
     current_hcds = {}
     now = datetime.utcnow()
     host.lastCrawled = now
-    for (hc, d), up2date in host_category_dirs.iteritems():
+    keys = host_category_dirs.keys()
+    keys = sorted(keys, key=lambda t: t[1].name)
+    for (hc, d) in keys:
+        up2date = host_category_dirs[(hc, d)]
         if up2date is None:
             continue
 
@@ -339,9 +347,7 @@ def sync_hcds(host, host_category_dirs):
         for hcd in list(hc.dirs):
             if hcd.directory is not None and not hcd.directory.readable:
                 continue
-            try:
-                thcd = current_hcds[hcd]
-            except KeyError:
+            if hcd not in current_hcds:
                 if hcd.up2date != False:
                     hcd.up2date=False
                     hcd.sync()
@@ -436,7 +442,7 @@ def try_perfile(d, hoststate, url):
 
     return True
 
-def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLen):
+def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLen, options):
     """ In addition to the crawls using http and ftp, this rsync crawl
     scans the complete category with one connection instead perdir (ftp)
     or perfile(http). """
@@ -446,14 +452,14 @@ def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLe
 
     # rsync URL available, let's use it; it requires only one network connection
     # instead of multiples like with http and ftp
-
-    results = {}
     rsync = {}
     if not url.endswith('/'):
         url += '/'
 
     result, listing = run_rsync(url, '--no-motd')
     if not result:
+        print >>logfile, 'rsync failed'
+        logfile.flush()
         return None
 
     # put the rsync listing in a dict for easy access
@@ -464,38 +470,46 @@ def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLe
         try:
             rsync[fields[4]] = {'mode': fields[0], 'size': fields[1], 'date': fields[2], 'time': fields[3]}
         except IndexError:
-            sys.stderr.write("invalid rsync line: %s\n" % line)
-            sys.stderr.flush()
+            if options.debug_rsync:
+                print >>logfile, "invalid rsync line: %s\n" % line
+                logfile.flush()
     
-    prefix = ""
-
     # for all directories in this category
     for d in trydirs:
+        # ignore unreadable directories - we can't really know about them
+        if not d.readable:
+            host_category_dirs[(hc, d)] = None
+            continue
         all_files = True
         # the rsync listing is missing the category part of the url
         # remove if from the ones we are comparing it with
         name = d.name[categoryPrefixLen:]
-        prefix = d.name[:categoryPrefixLen]
-        for file in d.files.keys():
+        for filename in sorted(d.files.keys()):
             if len(name) == 0:
-                key = file
+                key = filename
             else:
-                key = name + "/" + file
+                key = os.path.join(name, filename)
             try:
-                if rsync[key]['size'] != d.files[file]['size'] and not rsync[key]['mode'].startswith('l'): # ignore symlink size differences
-                    sys.stdout.write('rsync: file size mismatch %s %s != %s\n' % (file, d.files[file]['size'], rsync[key]['size']))
-                    sys.stdout.flush()
+                if options.debug_rsync:
+                    print >>logfile, 'trying with key %s' % key
+                    logfile.flush()
+                if rsync[key]['size'] != d.files[filename]['size'] and not rsync[key]['mode'].startswith('l'): # ignore symlink size differences
+                    if options.debug_rsync:
+                        print >>logfile, 'rsync: file size mismatch %s %s != %s\n' % (filename, d.files[filename]['size'], rsync[key]['size'])
+                        logfile.flush()
                     all_files = False
                     break
-            except KeyError: # file is not in the rsync listing
-                all_files = False
+            except KeyError, e: # file is not in the rsync listing
+                msg = 'Missing remote file %s\n' % key
+                print >>logfile, msg
+                logfile.flush()
                 break
             except Exception, e: # something else went wrong
-                all_files = False
                 exception_msg = "Exception caught in try_percategory()\n"
                 exception_msg += traceback.format_exc(e)
-                sys.stderr.write(exception_msg)
-                sys.stderr.flush()
+                print >>logfile, exception_msg
+                logfile.flush()
+                all_files = False
                 break
 
         if all_files is False:
@@ -505,11 +519,9 @@ def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLe
             host_category_dirs = add_parents(host_category_dirs, hc, d)
 
     if len(host_category_dirs) > 0:
-        sync_hcds(host, host_category_dirs)
         return True
 
     mark_not_up2date(host, "No host category directories found.  Check that your Host Category URLs are correct.")
-
     return False
 
 def try_perdir(d, hoststate, url):
@@ -633,7 +645,26 @@ def sighup_handler(signum, frame):
     signal.signal(signal.SIGHUP, sighup_handler)
 
 
-def per_host(host, options=None):
+def select_host_categories_to_scan(options):
+    result = []
+    if len(options.categories):
+        for c in options.categories:
+            try:
+                category = Category.byName(c)
+                host = Host.get(options.hostid)
+                hc = HostCategory.selectBy(host=host, category=category)[0]
+                result.append(hc)
+            except SQLObjectNotFound:
+                print >>logfile, "Category '%s' specified on the command line is not found on this host, ignoring.\n" % c
+                logfile.flush()
+                continue
+
+    else:
+        result = list(host.categories)
+    return result
+
+
+def per_host(host, options):
     """Canary mode looks for 2 things:
     directory.path ends in 'iso' or directory.path ends in 'repodata'.  In
     this case it checks for availability of each of the files in those
@@ -641,7 +672,6 @@ def per_host(host, options=None):
     """
     global must_dienow
     host = Host.get(host)
-    done_host=False
     host_category_dirs = {}
     if host.private and not options.include_private:
         return
@@ -660,38 +690,30 @@ def per_host(host, options=None):
     signal.signal(signal.SIGHUP, sighup_handler)
 
     hoststate = hostState(http_debuglevel=http_debuglevel, ftp_debuglevel=ftp_debuglevel)
-    for hc in list(host.categories):
+
+    for hc in select_host_categories_to_scan(options):
         if hc.always_up2date:
             continue
         category = hc.category
 
-        foundCategory=False
-        if len(options.categories):
-            for c in options.categories:
-                if category.name == c:
-                    foundCategory=True
-                    break
-        if not foundCategory and len(options.categories):
-            continue
-
-        trydirs = list(category.directories)
         categoryUrl = method_pref(host.category_urls(category.name))
         if categoryUrl is None:
             continue
         categoryPrefixLen = len(category.topdir.name)+1
-        
-        # check the complete category in one go with rsync
-        has_all_files = try_percategory(trydirs, categoryUrl, host_category_dirs, hc, host, categoryPrefixLen)
 
-        if has_all_files == True:
-            # all files in this category are up to date
+        trydirs = list(hc.category.directories) # this is a long query...
+        # check the complete category in one go with rsync
+        has_all_files = try_percategory(trydirs, categoryUrl, host_category_dirs, hc, host, categoryPrefixLen, options)
+
+        if type(has_all_files) == type(True):
+            # all files in this category are up to date, or not
             # no further checks necessary
             # do the next category
             continue
 
+        # has_all_files is None, we don't know what failed, but something did
         # change preferred protocol if necessary to http or ftp
         categoryUrl = method_pref(host.category_urls(category.name), categoryUrl)
-
 
         for d in trydirs:
             if must_dienow:
@@ -773,6 +795,10 @@ def main():
                       action="store_true", dest="debug_ftp", default=False,
                       help="Dump FTP headers for each transaction")
 
+    parser.add_option("--debug-rsync",
+                      action="store_true", dest="debug_rsync", default=False,
+                      help="Be verbose about actions taken while using rsync")
+
     parser.add_option("--include-private",
                       action="store_true", dest="include_private", default=False,
                       help="Include hosts marked 'private' in the crawl")
@@ -817,7 +843,7 @@ def main():
     print >>logfile, "Starting crawl %s" % (datetime.utcnow().isoformat())
     logfile.flush()
 
-    per_host(host.id, options=options)
+    per_host(host.id, options)
 
     print >>logfile, "Ending crawl %s" % (datetime.utcnow().isoformat())
     logfile.flush()
