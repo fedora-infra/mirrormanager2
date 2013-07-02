@@ -3,13 +3,15 @@ __requires__ = 'TurboGears[future]'
 import pkg_resources
 pkg_resources.require("TurboGears")
 
-from sqlobject import *
-import turbogears
-from mirrormanager.model import *
-from optparse import OptionParser
-import re
+# std imports
+import optparse
 import sys
 import os
+# TurboGears imports
+import sqlobject
+import turbogears
+from mirrormanager.model import Product, Version, Arch, Repository, Category, Directory
+
 
 from turbogears.database import PackageHub
 hub = __connection__ = None
@@ -23,11 +25,7 @@ def doit():
 
     for a in Arch.select():
         if a.name == u'source': continue
-        repos = Repository.selectBy(prefix=u'fedora-install-%s' % ver.name arch=a)
-        for r in repos:
-            print "destroying %s" % r
-            r.destroySelf()
-        repos = Repository.selectBy(name=d)
+        repos = Repository.selectBy(prefix=u'fedora-install-%s' % ver.name, arch=a)
         for r in repos:
             print "destroying %s" % r
             r.destroySelf()
@@ -39,18 +37,27 @@ def doit():
             d = u'pub/fedora-secondary/releases/%s/Fedora/%s/os' % (ver.name, a.name)
             category = Category.byName(u'Fedora Secondary Arches')    
 
+        repos = Repository.selectBy(name=d)
+        for r in repos:
+            print "destroying %s" % r
+            r.destroySelf()
+
         if not os.path.isdir(os.path.join('/', d)):
-            print "directory %s does not exist, skipping creation of a repository there"
+            print "directory %s does not exist on disk, skipping creation of a repository there"
             continue
 
-        d = Directory.byName(d)
+        try:
+            d = Directory.byName(d)
+        except sqlobject.SQLObjectNotFound:
+            print "directory %s exists on disk, but not in the database yet, skipping creation of a repository there until after the next UMDL run."
+            continue
         print "creating fedora-install-%s repo for arch %s" % (ver.name, a.name)
         r = Repository(name=d.name, prefix=u'fedora-install-%s' % ver.name, arch=a, directory=d, version=ver, category=category)
 
 
 def main():
     global options
-    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option("-c", "--config",
                       dest="config", default='/etc/mirrormanager/prod.cfg',
                       help="TurboGears config file to use (default=/etc/mirrormanager/prod.cfg)")
