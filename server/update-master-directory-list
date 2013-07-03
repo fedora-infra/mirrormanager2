@@ -438,10 +438,12 @@ def parse_rsync_listing(category, f):
 
 def sync_directories_using_rsync(rsyncpath, category, extra_rsync_args=None):
     result, output = run_rsync(rsyncpath, extra_rsync_args)
-    if result is False:
-        sys.stdout.write("rsync failed for Category %s: %s\n" % (category.name, output))
+    if result > 0:
+        sys.stdout.write("rsync returned exit code %d for Category %s: %s\n" % (result,
+                                                                                category.name,
+                                                                                output))
         sys.stdout.flush()
-        return
+    # still, try to use the output listing if we can
     parse_rsync_listing(category, output)
 
 def sync_directories_from_file(filename, category):
