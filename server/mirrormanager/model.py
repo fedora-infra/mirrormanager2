@@ -764,7 +764,6 @@ class Directory(SQLObject):
         t = int(time.time())
         max_stale = config.get('mirrormanager.max_stale_days', 3)
         max_propogation = config.get('mirrormanager.max_propogation_days', 2)
-        fd = {}
         stale = t - (60*60*24*max_stale)
         propogation = t - (60*60*24*max_propogation)
 

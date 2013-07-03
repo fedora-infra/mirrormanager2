@@ -494,7 +494,6 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
     def read(self, hostcategory):
         downstream_siteadmin_check(hostcategory.my_site(), identity)
         submit_action = "/host_category/%s/update" % hostcategory.id
-        disabled_fields=self.disabled_fields()
         return dict(form=host_category_form_read, values=hostcategory, action=submit_action, disabled_fields=self.disabled_fields(), host=hostcategory.host)
 
     @expose(template="kid:mirrormanager.templates.hostcategory")
@@ -599,7 +598,7 @@ class HostListitemController(controllers.Controller, identity.SecureResource, co
         except InvalidData, msg:
             turbogears.flash(msg)
             raise turbogears.redirect("/host/%s" % host.id)
-        except Exception, e: # probably sqlite IntegrityError but we can't catch that for some reason... 
+        except Exception: # probably sqlite IntegrityError but we can't catch that for some reason... 
             etype, value, tb = sys.exc_info()
             s = traceback.format_exception(etype, value, tb)
             lines  = ''
