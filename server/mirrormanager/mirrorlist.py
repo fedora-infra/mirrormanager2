@@ -287,7 +287,7 @@ def netblock_country_cache():
         except:
             continue
         # guaranteed to be unique by database constraints
-        cache[ip.strNormal()] = (n.country)
+        cache[ip] = (n.country)
             
     return cache
 
