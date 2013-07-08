@@ -3,11 +3,12 @@ __requires__ = 'TurboGears[future]'
 import pkg_resources
 pkg_resources.require("TurboGears")
 
+import sys, re, os
+from optparse import OptionParser
 from sqlobject import *
 import turbogears
-from mirrormanager.model import *
-from optparse import OptionParser
-import sys, re, os
+sys.path.append('/usr/share/mirrormanager/server')
+from mirrormanager.model import Category, Directory
 
 from turbogears.database import PackageHub
 hub = __connection__ = None
