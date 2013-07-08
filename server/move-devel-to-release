@@ -37,6 +37,12 @@ def doit():
                 t = d.name.replace(oldpattern, newpattern)
                 try:
                     new_d = Directory.byName(t)
+                except SQLObjectNotFound:
+                    sys.stderr.write("target Directory(%) not found, ignoring.\n")
+                    sys.stderr.flush()
+                    break
+                    
+                try:
                     r.directory = new_d
                     r.category = c
                     r.sync()
