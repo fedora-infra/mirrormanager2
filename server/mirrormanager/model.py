@@ -791,6 +791,7 @@ class Category(SQLObject):
     publiclist = BoolCol(default=True)
     GeoDNSDomain = UnicodeCol(default=None)
     directories = RelatedJoin('Directory', orderBy='name') # all the directories that are part of this category
+    repositories = MultipleJoin('Repository')
     hostCategories = MultipleJoin('HostCategory')
 
     def destroySelf(self):
