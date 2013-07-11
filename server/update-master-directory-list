@@ -263,6 +263,8 @@ def make_repository(dir, dname, category, product_id, topdir):
 	# anything meaningful.  So simply have it match dir.name,
 	# which can't conflict.
         repo = Repository(name=dir.name, category=category, version=ver, arch=arch, directory=dir, prefix=prefix)
+        sys.stdout.write('Created Repository %s -> Directory %s\n' % (repo, dir))
+        sys.stdout.flush()
     except:
         # repo exists, but it may be one we want to move
         #try:
