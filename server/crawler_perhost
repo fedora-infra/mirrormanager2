@@ -646,11 +646,11 @@ def sighup_handler(signum, frame):
 
 def select_host_categories_to_scan(options):
     result = []
+    host = Host.get(options.hostid)
     if len(options.categories):
         for c in options.categories:
             try:
                 category = Category.byName(c)
-                host = Host.get(options.hostid)
                 hc = HostCategory.selectBy(host=host, category=category)[0]
                 result.append(hc)
             except SQLObjectNotFound:
