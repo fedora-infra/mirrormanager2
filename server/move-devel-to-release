@@ -8,7 +8,7 @@ from optparse import OptionParser
 from sqlobject import *
 import turbogears
 sys.path.append('/usr/share/mirrormanager/server')
-from mirrormanager.model import Category, Directory
+from mirrormanager.model import Category, Directory, Version
 
 from turbogears.database import PackageHub
 hub = __connection__ = None
@@ -16,6 +16,19 @@ hub = __connection__ = None
 options = None
 
 # moving from pub/fedora/linux/development/14/x86_64/os to pub/fedora/linux/releases/14/Everything/x86_64/os
+# by now, UMDL would have created a new repository object at the target directory anyhow
+# except it's version and arch values are wrong
+# and we want to zero out the values in the current repository object
+
+def fixup_repos(version, fromrepo, torepo):
+    fromrepo_arch = fromrepo.arch
+    fromrepo.arch = None
+    fromrepo.sync()
+    
+    torepo.prefix = fromrepo.prefix
+    torepo.arch = fromrepo_arch
+    torepo.version = version
+    torepo.sync()
 
 
 def doit():
@@ -27,28 +40,33 @@ def doit():
         print_categories(sys.stderr)
         sys.stderr.flush()
         sys.exit(1)
-    topdir = c.topdir.name
+
+    try:
+        v = Version.selectBy(product=c.product, name=options.version)[0]
+    except:
+        raise # fixme
     oldpattern = os.path.join('development', options.version)
     newpattern = os.path.join('releases', options.version, 'Everything')
     oldRe = re.compile(oldpattern)
-    for d in c.directories:
+    for r in c.repositories:
+        d = r.directory
         if oldRe.search(d.name):
-            for r in d.repositories:
-                t = d.name.replace(oldpattern, newpattern)
-                try:
-                    new_d = Directory.byName(t)
-                except SQLObjectNotFound:
-                    sys.stderr.write("target Directory(%) not found, ignoring.\n")
-                    sys.stderr.flush()
-                    break
-                    
-                try:
-                    r.directory = new_d
-                    r.category = c
-                    r.sync()
-                    print "%s => %s" % (d.name, t)
-                except:
-                    raise
+            t = d.name.replace(oldpattern, newpattern)
+            try:
+                new_d = Directory.byName(t)
+            except SQLObjectNotFound:
+                sys.stderr.write("target Directory(%s) not found, ignoring.\n" % t)
+                sys.stderr.flush()
+                continue
+
+            l = len(new_d.repositories)
+            if l == 0:
+                continue # uh oh, umdl hasn't found this directory yet.  Pretty unlikely...
+            if l > 1:
+                raise ValueError # uh oh, how'd we wind up with 2 repos pointing at this directory?
+
+            fixup_repos(v, r, new_d.repositories[0])
+            print "%s => %s" % (d.name, t)
 
 def print_categories(fileno):
     fileno.write("Available categories:\n")
