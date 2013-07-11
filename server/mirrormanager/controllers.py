@@ -790,7 +790,8 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
             del kwargs['hcid']
             HostCategoryUrl(host_category=hc, **kwargs)
         except: # probably sqlite IntegrityError but we can't catch that for some reason... 
-            turbogears.flash("Error: entity already exists")
+            turbogears.flash("Error: URL already in use by another host")
+            raise turbogears.redirect("/host_category/%s" % hcid)
         turbogears.flash("Success: HostCategoryURL created.")
         raise turbogears.redirect("/host_category/%s" % hcid)
 
