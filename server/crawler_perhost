@@ -156,6 +156,7 @@ class hostState:
 
 class TryLater(Exception): pass
 class ForbiddenExpected(Exception): pass
+class TimeoutException(Exception): pass
 
 
 def get_ftp_dir(hoststate, url, readable, i=0):
@@ -472,6 +473,9 @@ def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLe
     
     # for all directories in this category
     for d in trydirs:
+        if must_dienow:
+            raise TimeoutException
+
         # ignore unreadable directories - we can't really know about them
         if not d.readable:
             host_category_dirs[(hc, d)] = None
@@ -550,9 +554,7 @@ mypid = None
 def dienow():
     global must_dienow
     must_dienow = True
-    logger.error("Host %d timeout expired, killing this process.  Better luck next time." % hostid)
-    os.kill(mypid, signal.SIGUSR1)
-    os._exit(0)
+    logger.error("Timeout expired. Better luck next time.")
 
 def send_email(host, report_str, exc):
     SMTP_DATE_FORMAT = "%a, %d %b %Y %H:%M:%S %z"
@@ -604,15 +606,6 @@ def mark_not_up2date(exc, host, reason="Unknown", mail=True):
     if mail:
         send_email(host, msg, exc)
 
-def sigusr1_handler(signum, frame):
-    if signum == signal.SIGUSR1:
-        signal.signal(signal.SIGUSR1, signal.SIG_IGN)
-        try:
-            mark_not_up2date(None, Host.get(hostid), "Crawler timed out before completing.  Host is likely overloaded.")
-        except:
-            pass
-    os._exit(1)
-
 def select_host_categories_to_scan(options):
     result = []
     host = Host.get(options.hostid)
@@ -638,26 +631,28 @@ def per_host(host, options):
     directories.
     """
     global must_dienow
+    rc = 0
     host = Host.get(host)
     host_category_dirs = {}
     if host.private and not options.include_private:
-        return
+        return 1
     http_debuglevel = 0
     ftp_debuglevel = 0
     if options.debug:
         http_debuglevel = 2
         ftp_debuglevel = 2
 
+    timer = threading.Timer(options.timeout_minutes * 60.0, dienow)
     if options.timeout_minutes > 0:
-        timer = threading.Timer(options.timeout_minutes * 60.0, dienow)
         timer.start()
-
-    signal.signal(signal.SIGUSR1, sigusr1_handler)
-    signal.signal(signal.SIGHUP, signal.SIG_IGN)
 
     hoststate = hostState(http_debuglevel=http_debuglevel, ftp_debuglevel=ftp_debuglevel)
 
     for hc in select_host_categories_to_scan(options):
+        if must_dienow:
+            timer.cancel()
+            raise TimeoutException
+
         if hc.always_up2date:
             continue
         category = hc.category
@@ -669,7 +664,11 @@ def per_host(host, options):
 
         trydirs = list(hc.category.directories) # this is a long query...
         # check the complete category in one go with rsync
-        has_all_files = try_percategory(trydirs, categoryUrl, host_category_dirs, hc, host, categoryPrefixLen, options)
+        try:
+            has_all_files = try_percategory(trydirs, categoryUrl, host_category_dirs, hc, host, categoryPrefixLen, options)
+        except TimeoutException:
+            timer.cancel()
+            raise
 
         if type(has_all_files) == type(True):
             # all files in this category are up to date, or not
@@ -683,7 +682,8 @@ def per_host(host, options):
 
         for d in trydirs:
             if must_dienow:
-                return 1
+                timer.cancel()
+                raise TimeoutException
                 
             if not d.readable:
                 continue
@@ -717,21 +717,22 @@ def per_host(host, options):
                 timer.cancel()
                 msg = "Server load exceeded - try later"
                 logger.error(msg)
-                return 1
-
+                rc = 1
+                
             except:
                 timer.cancel()
                 mark_not_up2date(sys.exc_info(), host, "Unknown exception raised.  This is a bug in the MM crawler.")
-                return 1
+                rc = 1
 
+    timer.cancel()
     hoststate.close()
-    if options.timeout_minutes > 0:
-        timer.cancel()
 
     if len(host_category_dirs) > 0:
         sync_hcds(host, host_category_dirs)
     else:
         mark_not_up2date(None, host, "No host category directories found.  Check that your Host Category URLs are correct.")
+        return 1
+    return rc
 
 def main():
     global mypid
@@ -777,6 +778,7 @@ def main():
     __connection__ = hub
     
     os.chdir('/tmp')
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
 
     global logger
     if options.logfile is not None:
@@ -801,7 +803,11 @@ def main():
     hostid = host.id
     logger.info("Starting crawl")
 
-    rc = per_host(host.id, options)
+    try:
+        rc = per_host(host.id, options)
+    except TimeoutException:
+        mark_not_up2date(None, host.id, "Crawler timed out before completing.  Host is likely overloaded.")
+        rc = 2
 
     logger.info("Ending crawl")
     return rc
