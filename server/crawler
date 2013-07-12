@@ -3,13 +3,18 @@ __requires__ = 'TurboGears[future]'
 import pkg_resources
 pkg_resources.require("TurboGears")
 
+import datetime
+from optparse import OptionParser
+import os
+from subprocess import Popen
+import sys
+
 from sqlobject import *
-import sys, os
 import turbogears
+
+sys.path.append('/usr/share/mirrormanager/server')
 from mirrormanager.model import *
 from mirrormanager.lib import manage_pidfile, remove_pidfile
-from optparse import OptionParser
-from subprocess import Popen
 
 pidfile='/var/run/mirrormanager/crawler.pid'
 
@@ -21,6 +26,7 @@ class ForkingMaster:
         self.active_children = None
         self.max_children = max_children
         self.devnull = open('/dev/null', 'rw')
+        self.timings = {}
 
     def collect_children(self):
         """Internal routine to wait for died children."""
@@ -37,12 +43,14 @@ class ForkingMaster:
                 pid = None
             if not pid: break
             self.active_children.remove(pid)
+            self.stop_time(pid)
 
-    def process_request(self, command, args):
+    def process_request(self, command, args, hostid):
         """Fork a new subprocess to process the request."""
         self.collect_children()
         print "Starting crawler %s" % args
         p = Popen(args, executable=command, stdin=self.devnull, stdout=self.devnull, stderr=self.devnull, close_fds=True)
+        self.start_time(p.pid, hostid)
         # Parent process
         if self.active_children is None:
             self.active_children = []
@@ -52,6 +60,19 @@ class ForkingMaster:
         self.max_children = 0
         self.collect_children()
 
+    def start_time(self, pid, hostid):
+        self.timings[pid] = dict()
+        self.timings[pid]['start'] = datetime.datetime.utcnow()
+        self.timings[pid]['hostid'] = hostid
+
+    def stop_time(self, pid):
+        self.timings[pid]['stop'] = datetime.datetime.utcnow()
+
+        diff = self.timings[pid]['stop'] - self.timings[pid]['start']
+        host = Host.get(self.timings[pid]['hostid'])
+        sys.stdout.write('Host name %s crawl time %s\n' % (host.name, str(diff)))
+        sys.stdout.flush()
+        del self.timings[pid]
 
 def doit(options, include_private=False, threads=10, config=None, logdir=None):
     master = ForkingMaster(max_children=threads)
@@ -74,7 +95,7 @@ def doit(options, include_private=False, threads=10, config=None, logdir=None):
             logfilename = os.path.join(logdir, str(h.id) + '.log')
             args.append('--logfile=%s' % logfilename)
 
-        master.process_request(command, args)
+        master.process_request(command, args, h.id)
         
     master.wait_for_completion()
 
