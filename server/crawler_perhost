@@ -28,6 +28,8 @@ from mirrormanager.model import Directory, Category, HostCategoryDir, Host, Host
 from mirrormanager.lib import run_rsync
 
 from turbogears.database import PackageHub
+hub = None
+__connection__ = None
 hostid = None
 logger = sys.stdout
 
@@ -38,7 +40,7 @@ logger = sys.stdout
 class myHTTPResponse(httplib.HTTPResponse):
     def begin(self):
         httplib.HTTPResponse.begin(self)
-        self.will_close=False
+        self.will_close = False
 
     def isclosed(self):
         """This is a hack, because otherwise httplib will fail getresponse()"""
@@ -62,8 +64,8 @@ class myHTTPResponse(httplib.HTTPResponse):
             ka = self.msg.getheader('keep-alive')
             if ka is not None:
                 maxidx = ka.index('max=')
-                max = ka[maxidx+4:]
-                if max == '1':
+                maxval = ka[maxidx+4:]
+                if maxval == '1':
                     return False
                 return True
             else:
@@ -76,7 +78,7 @@ class myHTTPResponse(httplib.HTTPResponse):
         return False
 
 class myHTTPConnection(httplib.HTTPConnection):
-    response_class=myHTTPResponse
+    response_class = myHTTPResponse
     
     def end_request(self):
         self.__response = None
@@ -271,7 +273,7 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
         if retry == 0:
             # retry once
             hoststate.close_http(url)
-            return check_head(hoststate, url, filedata, recursion, retry=1)
+            return check_head(hoststate, url, filedata, recursion, readable, retry=1)
         else:
             raise HTTPUnknown()
 
@@ -333,7 +335,7 @@ def sync_hcds(host, host_category_dirs):
         if hcd.directory is None:
             hcd.directory = d
         if hcd.up2date != up2date:
-            hcd.up2date=up2date
+            hcd.up2date = up2date
             hcd.sync()
             if up2date == False:
                 logger.info("Directory %s is not up-to-date on this host." % d.name)
@@ -351,7 +353,7 @@ def sync_hcds(host, host_category_dirs):
                 continue
             if hcd not in current_hcds:
                 if hcd.up2date != False:
-                    hcd.up2date=False
+                    hcd.up2date = False
                     hcd.sync()
     
 
@@ -413,11 +415,11 @@ def try_perfile(d, hoststate, url):
     if d.files is None:
         return None
     exists = None
-    for file in d.files.keys():
+    for filename in d.files.keys():
         exists = None
-        graburl = "%s/%s" % (url, file)
+        graburl = "%s/%s" % (url, filename)
         try:
-            exists = check_url(hoststate, graburl, d.files[file], 0, d.readable)
+            exists = check_url(hoststate, graburl, d.files[filename], 0, d.readable)
             if exists == False:
                 return False
         except TryLater:
@@ -430,9 +432,9 @@ def try_perfile(d, hoststate, url):
         except:
             return None
 
-        if file == 'repomd.xml':
+        if filename == 'repomd.xml':
             try:
-                exists = compare_sha256(d, file, graburl)
+                exists = compare_sha256(d, filename, graburl)
             except:
                 pass
             if exists == False:
@@ -541,9 +543,9 @@ def try_perdir(d, hoststate, url):
         except IndexError: # line doesn't have 8 fields, it's not a dir line
             pass
 
-    for file in d.files.keys():
+    for filename in d.files.keys():
         try:
-            if results[file]['size'] != d.files[file]['size']:
+            if results[filename]['size'] != d.files[filename]['size']:
                 return False
         except:
             return False
@@ -630,7 +632,6 @@ def per_host(host, options):
     this case it checks for availability of each of the files in those
     directories.
     """
-    global must_dienow
     rc = 0
     host = Host.get(host)
     host_category_dirs = {}
@@ -813,5 +814,4 @@ def main():
     return rc
 
 if __name__ == "__main__":
-    rc = main()
-    sys.exit(rc)
+    sys.exit(main())
