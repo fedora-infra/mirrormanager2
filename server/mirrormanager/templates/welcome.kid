@@ -5,7 +5,10 @@
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
 <title>Welcome to ${tg.config('mirrormanager.projectname','Fedora')} Mirror Manager</title>
 <?python
+is_sysadmin = False
 admin_group = tg.config('mirrormanager.admin_group', 'sysadmin')
+if admin_group in tg.identity.groups:
+    is_sysadmin = True
 ?>
 </head>
 <body>

@@ -36,7 +36,7 @@
 is_sysadmin = False
 admin_group = tg.config('mirrormanager.admin_group', 'sysadmin')
 if admin_group in tg.identity.groups:
-   is_sysadmin = True
+    is_sysadmin = True
 ?>
 </head>
   <body py:match="item.tag=='{http://www.w3.org/1999/xhtml}body'" py:attrs="item.items()">
