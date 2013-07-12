@@ -337,7 +337,8 @@ def sync_hcds(host, host_category_dirs):
                 print >>logfile, "Directory %s is not up-to-date on this host." % d.name
             else:
                 print >>logfile, d.name
-                
+
+            logfile.flush()
         current_hcds[hcd] = True
 
 
@@ -612,8 +613,10 @@ def mark_not_up2date(exc, host, reason="Unknown", mail=True):
     host.lastCrawled = datetime.utcnow()
     msg = "Host marked not up2date: %s" % reason
     print >> logfile, msg
+    logfile.flush()
     if exc is not None:
         print >> logfile, exc[0], exc[1], exc[2]
+        logfile.flush()
     if mail:
         send_email(host, msg, exc)
 
@@ -752,6 +755,7 @@ def per_host(host, options):
                     # could be a dir with no files, or an unreadable dir.
                     # defer decision on this dir, let a child decide.
                     pass
+                logfile.flush()
             except TryLater:
                 timer.cancel()
                 msg = "Server load exceeded - try later"
