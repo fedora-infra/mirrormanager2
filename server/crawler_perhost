@@ -613,9 +613,6 @@ def sigusr1_handler(signum, frame):
             pass
     os._exit(1)
 
-def sighup_handler(signum, frame):
-    pass
-
 def select_host_categories_to_scan(options):
     result = []
     host = Host.get(options.hostid)
@@ -656,7 +653,7 @@ def per_host(host, options):
         timer.start()
 
     signal.signal(signal.SIGUSR1, sigusr1_handler)
-    signal.signal(signal.SIGHUP, sighup_handler)
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
 
     hoststate = hostState(http_debuglevel=http_debuglevel, ftp_debuglevel=ftp_debuglevel)
 
