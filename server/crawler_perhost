@@ -761,7 +761,7 @@ def main():
     parser.add_option("--category", 
                       dest="categories", action="append", default=[],
                       help="Category to scan (default=all), can be repeated")
-    parser.add_option("--debug-http", "--debug-ftp", "--debug-rsync",
+    parser.add_option("--debug",
                       dest="debug", action="store_true", default=False,
                       help="Enable debug logging")
 
