@@ -4,6 +4,7 @@ import pkg_resources
 pkg_resources.require("TurboGears")
 
 import datetime as dt
+import logging
 from optparse import OptionParser
 import os
 from subprocess import Popen
@@ -20,6 +21,7 @@ pidfile='/var/run/mirrormanager/crawler.pid'
 
 from turbogears.database import PackageHub
 hub = __connection__ = None
+logger = None
 
 class ForkingMaster:
     def __init__(self, max_children=10):
@@ -45,12 +47,12 @@ class ForkingMaster:
             self.active_children.remove(pid)
             self.stop_time(pid)
 
-    def process_request(self, command, args, hostid):
+    def process_request(self, command, args, host):
         """Fork a new subprocess to process the request."""
         self.collect_children()
-        print "Starting crawler %s" % args
+        logging.info("Starting crawler %s: %s" % (host.name), args)
         p = Popen(args, executable=command, stdin=self.devnull, stdout=self.devnull, stderr=self.devnull, close_fds=True)
-        self.start_time(p.pid, hostid)
+        self.start_time(p.pid, host.id)
         # Parent process
         if self.active_children is None:
             self.active_children = []
@@ -70,32 +72,34 @@ class ForkingMaster:
 
         diff = self.timings[pid]['stop'] - self.timings[pid]['start']
         host = Host.get(self.timings[pid]['hostid'])
-        sys.stdout.write('Host name %s crawl time %s\n' % (host.name, str(diff)))
-        sys.stdout.flush()
+        logger.info('Host %s (id=%s) crawl time %s' % (host.name, host.id, str(diff)))
         del self.timings[pid]
 
 def doit(options, include_private=False, threads=10, config=None, logdir=None):
     master = ForkingMaster(max_children=threads)
     command = './crawler_perhost'
     commonargs = [ command, '-c', config]
-    if include_private:
-        commonargs.append('--include-private')
     if options.canary:
         commonargs.append('--canary')
 
     for h in Host.select():
+        commonargs = [ command, '-c', config]
+        if options.canary:
+            commonargs.append('--canary')
         if not h.is_active():
             continue
+        if include_private or (h.internet2 and h.internet2_clients):
+            commonargs.append('--include-private')
+            include_private = True
         if not include_private and h.is_private():
-            if not (h.internet2 and h.internet2_clients):
-                continue
+            continue
 
         args = commonargs + ['--hostid=%s' % h.id]
         if logdir is not None:
             logfilename = os.path.join(logdir, str(h.id) + '.log')
             args.append('--logfile=%s' % logfilename)
 
-        master.process_request(command, args, h.id)
+        master.process_request(command, args, h)
         
     master.wait_for_completion()
 
@@ -103,7 +107,7 @@ def doit(options, include_private=False, threads=10, config=None, logdir=None):
 def main():
     if manage_pidfile(pidfile):
         print "another instance is running, try again later."
-        sys.exit(1)
+        return 1
 
     parser = OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option("-c", "--config",
@@ -119,7 +123,10 @@ def main():
                       help="max threads to start in parallel")
     parser.add_option("-l", "--logdir", type="string", metavar="DIR",
                       dest="logdir", default='/var/log/mirrormanager/crawler',
-                      help="write logfiles to DIR")
+                      help="write individual host logfiles to DIR")
+    parser.add_option("--logfile", type="string", metavar="FILE",
+                      dest="logfile", default='/var/log/mirrormanager/crawler.log',
+                      help="write logfile to FILE")
 
     parser.add_option("--canary", 
                       dest="canary", action="store_true", default=False,
@@ -133,9 +140,20 @@ def main():
     global __connection__
     hub = PackageHub("mirrormanager")
     __connection__ = hub
+
+    global logger
+    if options.logfile is not None:
+        fmt ='%(asctime)s %(message)s'
+        datefmt ='%m/%d/%Y %I:%M:%S %p'
+        formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
+        logger = logging.getLogger('crawler_perhost')
+        handler = logging.handlers.WatchedFileHandler(options.logfile, "a+b")
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
     
     doit(options, include_private=options.include_private, threads=options.threads, config=options.config, logdir=options.logdir)
     remove_pidfile(pidfile)
+    return 0
 
 if __name__ == "__main__":
     sys.exit(main())
