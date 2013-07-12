@@ -15,16 +15,16 @@ import sys
 import signal
 from smtplib import SMTP
 import socket
+import time
 from urlparse import urlsplit
 import threading
-import traceback
 import urlgrabber
 
-from sqlobject import *
+from sqlobject import SQLObjectNotFound
 import turbogears
 from turbogears import config
 sys.path.append('/usr/share/mirrormanager/server')
-from mirrormanager.model import *
+from mirrormanager.model import Directory, Category, HostCategoryDir, Host, HostCategory
 from mirrormanager.lib import run_rsync
 
 from turbogears.database import PackageHub
@@ -495,11 +495,11 @@ def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLe
                     logger.debug('rsync: file size mismatch %s %s != %s\n' % (filename, d.files[filename]['size'], rsync[key]['size']))
                     all_files = False
                     break
-            except KeyError, e: # file is not in the rsync listing
+            except KeyError: # file is not in the rsync listing
                 msg = 'Missing remote file %s\n' % key
                 logger.debug(msg)
                 break
-            except Exception, e: # something else went wrong
+            except: # something else went wrong
                 exception_msg = "Exception caught in try_percategory()\n"
                 logger.exception(exception_msg)
                 all_files = False
@@ -586,7 +586,7 @@ Date: %s
         smtp.sendmail(config.get('crawler.smtp_from'),
                       config.get('crawler.admin_mail_to'),
                       msg)
-    except Exception, e:
+    except:
         logger.exception("Error sending email")
         logger.debug("Email message follows:")
         logger.debug(msg)
@@ -782,8 +782,8 @@ def main():
 
     global logger
     if options.logfile is not None:
-        fmt ='%(asctime)s %(message)s'
-        datefmt ='%m/%d/%Y %I:%M:%S %p'
+        fmt = '%(asctime)s %(message)s'
+        datefmt = '%m/%d/%Y %I:%M:%S %p'
         formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
         logger = logging.getLogger('crawler_perhost')
         handler = logging.handlers.WatchedFileHandler(options.logfile, "a+b")
