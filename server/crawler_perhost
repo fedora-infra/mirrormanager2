@@ -8,6 +8,7 @@ import ftplib
 from ftplib import FTP
 import hashlib
 import httplib
+import logging
 from optparse import OptionParser
 import os
 import sys
@@ -28,7 +29,7 @@ from mirrormanager.lib import run_rsync
 
 from turbogears.database import PackageHub
 hostid = None
-logfile = sys.stdout
+logger = sys.stdout
 
 ################################################
 # overrides for httplib because we're
@@ -119,7 +120,7 @@ class hostState:
 
     def check_ftp_dir_callback(self, line):
         if self.ftp_debuglevel > 0:
-            print >>logfile, line
+            logger.info(line)
         self.ftp_dir_results.append(line)
 
     def ftp_dir(self, url):
@@ -180,7 +181,7 @@ def get_ftp_dir(hoststate, url, readable, i=0):
         if str(e).startswith('500'): # Oops
             raise TryLater()
         else:
-            print >>logfile, "unknown permanent error %s on %s" % (e, url)
+            logger.error("unknown permanent error %s on %s" % (e, url))
             raise
     except ftplib.error_temp, e:
         # Returned by Boston University when directory does not exist
@@ -188,13 +189,13 @@ def get_ftp_dir(hoststate, url, readable, i=0):
             return []
         # Returned by Princeton University when cannot log in due to connection restrictions
         if str(e).startswith('421'):
-            print >>logfile, "Connections Exceeded %s" % url
+            logger.info("Connections Exceeded %s" % url)
             raise TryLater()
         if str(e).startswith('425'):
-            print >>logfile, "Failed to establish connection on %s" % url
+            logger.info("Failed to establish connection on %s" % url)
             raise TryLater()
         else:
-            print >>logfile, "unknown error %s on %s" % (e, url)
+            logger.error("unknown error %s on %s" % (e, url))
             raise 
     except (EOFError, socket.error):
         hoststate.close_ftp(url)
@@ -302,7 +303,7 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
     elif status >= 500:
         raise HTTP500()
 
-    print >>logfile, "status = %s" % status
+    logger.info("status = %s" % status)
     raise HTTPUnknown()
 
 def sync_hcds(host, host_category_dirs):
@@ -334,11 +335,10 @@ def sync_hcds(host, host_category_dirs):
             hcd.up2date=up2date
             hcd.sync()
             if up2date == False:
-                print >>logfile, "Directory %s is not up-to-date on this host." % d.name
+                logger.info("Directory %s is not up-to-date on this host." % d.name)
             else:
-                print >>logfile, d.name
+                logger.info(d.name)
 
-            logfile.flush()
         current_hcds[hcd] = True
 
 
@@ -417,7 +417,6 @@ def try_perfile(d, hoststate, url):
         graburl = "%s/%s" % (url, file)
         try:
             exists = check_url(hoststate, graburl, d.files[file], 0, d.readable)
-            #print >>logfile, "%s %s" % (exists, graburl)
             if exists == False:
                 return False
         except TryLater:
@@ -459,8 +458,7 @@ def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLe
 
     result, listing = run_rsync(url, '--no-motd')
     if result > 0:
-        print >>logfile, 'rsync returned exit code %d' % result
-        logfile.flush()
+        logger.info('rsync returned exit code %d' % result)
 
     # put the rsync listing in a dict for easy access
     while True:
@@ -470,9 +468,7 @@ def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLe
         try:
             rsync[fields[4]] = {'mode': fields[0], 'size': fields[1], 'date': fields[2], 'time': fields[3]}
         except IndexError:
-            if options.debug_rsync:
-                print >>logfile, "invalid rsync line: %s\n" % line
-                logfile.flush()
+            logger.debug("invalid rsync line: %s\n" % line)
     
     # for all directories in this category
     for d in trydirs:
@@ -490,25 +486,18 @@ def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLe
             else:
                 key = os.path.join(name, filename)
             try:
-                if options.debug_rsync:
-                    print >>logfile, 'trying with key %s' % key
-                    logfile.flush()
+                logger.debug('trying with key %s' % key)
                 if rsync[key]['size'] != d.files[filename]['size'] and not rsync[key]['mode'].startswith('l'): # ignore symlink size differences
-                    if options.debug_rsync:
-                        print >>logfile, 'rsync: file size mismatch %s %s != %s\n' % (filename, d.files[filename]['size'], rsync[key]['size'])
-                        logfile.flush()
+                    logger.debug('rsync: file size mismatch %s %s != %s\n' % (filename, d.files[filename]['size'], rsync[key]['size']))
                     all_files = False
                     break
             except KeyError, e: # file is not in the rsync listing
                 msg = 'Missing remote file %s\n' % key
-                print >>logfile, msg
-                logfile.flush()
+                logger.debug(msg)
                 break
             except Exception, e: # something else went wrong
                 exception_msg = "Exception caught in try_percategory()\n"
-                exception_msg += traceback.format_exc(e)
-                print >>logfile, exception_msg
-                logfile.flush()
+                logger.exception(exception_msg)
                 all_files = False
                 break
 
@@ -537,7 +526,6 @@ def try_perdir(d, hoststate, url):
         return None
 
     if len(listing) == 0:
-        #print >>logfile, 'FALSE %s' % url
         return False
     
     for line in listing:
@@ -562,8 +550,7 @@ mypid = None
 def dienow():
     global must_dienow
     must_dienow = True
-    print >>logfile, "Host %d timeout expired, killing this process.  Better luck next time." % hostid
-    logfile.flush()
+    logger.error("Host %d timeout expired, killing this process.  Better luck next time." % hostid)
     os.kill(mypid, signal.SIGUSR1)
     os._exit(0)
 
@@ -598,10 +585,9 @@ Date: %s
                       config.get('crawler.admin_mail_to'),
                       msg)
     except Exception, e:
-        print "Error sending email"
-        print e
-        print "Email message follows:"
-        print msg
+        logger.exception("Error sending email")
+        logger.debug("Email message follows:")
+        logger.debug(msg)
 
     try:
         smtp.quit()
@@ -612,11 +598,9 @@ def mark_not_up2date(exc, host, reason="Unknown", mail=True):
     host.set_not_up2date()
     host.lastCrawled = datetime.utcnow()
     msg = "Host marked not up2date: %s" % reason
-    print >> logfile, msg
-    logfile.flush()
+    logger.warning(msg)
     if exc is not None:
-        print >> logfile, exc[0], exc[1], exc[2]
-        logfile.flush()
+        logger.debug("%s %s %s" % (exc[0], exc[1], exc[2]))
     if mail:
         send_email(host, msg, exc)
 
@@ -627,25 +611,10 @@ def sigusr1_handler(signum, frame):
             mark_not_up2date(None, Host.get(hostid), "Crawler timed out before completing.  Host is likely overloaded.")
         except:
             pass
-    logfile.flush()
     os._exit(1)
 
-reopenLogs = False
-def reopen_logs():
-    global logfile
-    if logfile is not None and logfile != sys.stdout:
-        fname = logfile.name
-        logfile.flush()
-        # it's a logfile, don't care if it's fsynced to disk or not...
-        logfile.close()
-        logfile = open(fname, 'a+b')
-
 def sighup_handler(signum, frame):
-    if signum == signal.SIGHUP:
-        global reopenLogs
-        reopenLogs = True
-    signal.signal(signal.SIGHUP, sighup_handler)
-
+    pass
 
 def select_host_categories_to_scan(options):
     result = []
@@ -657,8 +626,7 @@ def select_host_categories_to_scan(options):
                 hc = HostCategory.selectBy(host=host, category=category)[0]
                 result.append(hc)
             except SQLObjectNotFound:
-                print >>logfile, "Category '%s' specified on the command line is not found on this host, ignoring.\n" % c
-                logfile.flush()
+                logger.warning("Category '%s' specified on the command line is not found on this host, ignoring.\n" % c)
                 continue
 
     else:
@@ -679,9 +647,8 @@ def per_host(host, options):
         return
     http_debuglevel = 0
     ftp_debuglevel = 0
-    if options.debug_http:
+    if options.debug:
         http_debuglevel = 2
-    if options.debug_ftp:
         ftp_debuglevel = 2
 
     if options.timeout_minutes > 0:
@@ -719,14 +686,8 @@ def per_host(host, options):
 
         for d in trydirs:
             if must_dienow:
-                logfile.flush()
-                sys.exit(1)
+                return 1
                 
-            global reopenLogs
-            if reopenLogs:
-                reopenLogs = False
-                reopen_logs()
-
             if not d.readable:
                 continue
 
@@ -744,30 +705,27 @@ def per_host(host, options):
 
 
                 if has_all_files == False:
-                    print >>logfile, "Not up2date: %s" % (d.name)
+                    logger.warning("Not up2date: %s" % (d.name))
                     host_category_dirs[(hc, d)] = False
                 elif has_all_files == True:                
                     host_category_dirs[(hc, d)] = True
-                    print >>logfile, url
+                    logger.info(url)
                     # make sure our parent dirs appear on the list too
                     host_category_dirs = add_parents(host_category_dirs, hc, d)
                 else:
                     # could be a dir with no files, or an unreadable dir.
                     # defer decision on this dir, let a child decide.
                     pass
-                logfile.flush()
             except TryLater:
                 timer.cancel()
                 msg = "Server load exceeded - try later"
-                print >> logfile, msg
-                logfile.flush()
-                sys.exit(1)
+                logger.error(msg)
+                return 1
 
             except:
                 timer.cancel()
                 mark_not_up2date(sys.exc_info(), host, "Unknown exception raised.  This is a bug in the MM crawler.")
-                logfile.flush()
-                sys.exit(1)
+                return 1
 
     hoststate.close()
     if options.timeout_minutes > 0:
@@ -790,18 +748,6 @@ def main():
                       dest="hostid", type='int', default=None,
                       help="Crawl a single host at site")
 
-    parser.add_option("--debug-http",
-                      action="store_true", dest="debug_http", default=False,
-                      help="Dump HTTP headers for each transaction")
-
-    parser.add_option("--debug-ftp",
-                      action="store_true", dest="debug_ftp", default=False,
-                      help="Dump FTP headers for each transaction")
-
-    parser.add_option("--debug-rsync",
-                      action="store_true", dest="debug_rsync", default=False,
-                      help="Be verbose about actions taken while using rsync")
-
     parser.add_option("--include-private",
                       action="store_true", dest="include_private", default=False,
                       help="Include hosts marked 'private' in the crawl")
@@ -818,6 +764,9 @@ def main():
     parser.add_option("--category", 
                       dest="categories", action="append", default=[],
                       help="Category to scan (default=all), can be repeated")
+    parser.add_option("--debug-http", "--debug-ftp", "--debug-rsync",
+                      dest="debug", action="store_true", default=False,
+                      help="Enable debug logging")
 
     (options, args) = parser.parse_args()
 
@@ -826,34 +775,40 @@ def main():
     global hub
     global __connection__
     global hostid
-    global logfile
+    global logger
     hub = PackageHub("mirrormanager")
     __connection__ = hub
     
     os.chdir('/tmp')
-    
+
+    global logger
     if options.logfile is not None:
-        logfile = open(options.logfile, "a+b")
+        fmt ='%(asctime)s %(message)s'
+        datefmt ='%m/%d/%Y %I:%M:%S %p'
+        formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
+        logger = logging.getLogger('crawler_perhost')
+        handler = logging.handlers.WatchedFileHandler(options.logfile, "a+b")
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        if options.debug:
+            logger.setLevel(logging.DEBUG)
+            # fixme - http and FTP debugging is still getting printed to stdout
+            # from the httplib module
         
     try:
         host = Host.get(options.hostid)
     except:
-        print >>logfile, "Host %s not found." % options.hostid
-        logfile.flush()
-        sys.exit(1)
+        logger.error("Host %s not found." % options.hostid)
+        return 1
 
     hostid = host.id
-    print >>logfile, "Starting crawl %s" % (datetime.utcnow().isoformat())
-    logfile.flush()
+    logger.info("Starting crawl")
 
-    per_host(host.id, options)
+    rc = per_host(host.id, options)
 
-    print >>logfile, "Ending crawl %s" % (datetime.utcnow().isoformat())
-    logfile.flush()
-    if logfile != sys.stdout: logfile.close()
-
+    logger.info("Ending crawl")
+    return rc
 
 if __name__ == "__main__":
     rc = main()
-    logfile.flush()
     sys.exit(rc)
