@@ -3,19 +3,27 @@ __requires__ = 'TurboGears[future]'
 import pkg_resources
 pkg_resources.require("TurboGears")
 
+import glob
+import re
+import optparse
+import os
+import stat
+import string
+import sys
+import yum.repoMDObject
+import datetime
+import time
+import hashlib
+
 from sqlobject import *
-import sys, os, string, stat
-from optparse import OptionParser
 import turbogears
+from turbogears import config
+
+sys.path.append('/usr/share/mirrormanager/server')
 from mirrormanager.model import *
 from mirrormanager.repomap import *
 from mirrormanager.lib import manage_pidfile, remove_pidfile, run_rsync
-import re
-import glob
-import yum.repoMDObject
-import datetime, time
-import hashlib
-from turbogears import config
+
 
 rootdir='/'
 pidfile='/var/run/mirrormanager/umdl.pid'
@@ -535,7 +543,7 @@ def sync_directories_from_directory(directory, category, excludes=[]):
 def main():
     global rootdir
     global delete_directories
-    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option("-c", "--config",
                       dest="config", default='dev.cfg',
                       help="TurboGears config file to use")
