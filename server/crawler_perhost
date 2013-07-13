@@ -681,6 +681,7 @@ def per_host(host, options):
         # change preferred protocol if necessary to http or ftp
         categoryUrl = method_pref(host.category_urls(category.name), categoryUrl)
 
+        try_later_delay = 1
         for d in trydirs:
             if must_dienow:
                 timer.cancel()
@@ -715,24 +716,26 @@ def per_host(host, options):
                     # defer decision on this dir, let a child decide.
                     pass
             except TryLater:
-                timer.cancel()
-                msg = "Server load exceeded - try later"
-                logger.error(msg)
-                rc = 1
+                msg = "Server load exceeded - try later (%s seconds)" % try_later_delay
+                logger.warning(msg)
+                time.sleep(try_later_delay)
+                if try_later_delay < 64:
+                    try_later_delay = try_later_delay << 1
                 
             except:
-                timer.cancel()
                 mark_not_up2date(sys.exc_info(), host, "Unknown exception raised.  This is a bug in the MM crawler.")
                 rc = 1
+                break
 
     timer.cancel()
     hoststate.close()
 
-    if len(host_category_dirs) > 0:
-        sync_hcds(host, host_category_dirs)
-    else:
-        mark_not_up2date(None, host, "No host category directories found.  Check that your Host Category URLs are correct.")
-        return 1
+    if rc == 0:
+        if len(host_category_dirs) > 0:
+            sync_hcds(host, host_category_dirs)
+        else:
+            mark_not_up2date(None, host, "No host category directories found.  Check that your Host Category URLs are correct.")
+            return 1
     return rc
 
 def main():
