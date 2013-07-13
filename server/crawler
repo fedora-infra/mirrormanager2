@@ -77,7 +77,7 @@ class ForkingMaster:
 
 def doit(options, include_private=False, threads=10, config=None, logdir=None):
     master = ForkingMaster(max_children=threads)
-    command = './crawler_perhost'
+    command = '/usr/share/mirrormanager/server/crawler_perhost'
     commonargs = [ command, '-c', config]
     if options.canary:
         commonargs.append('--canary')
