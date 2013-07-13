@@ -309,15 +309,29 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
     logger.info("status = %s" % status)
     raise HTTPUnknown()
 
+def report_stats(stats):
+    msg = "Total directories: %d\n" % stats['numkeys']
+    msg += "Changed to up2date: %d\n" % stats['up2date']
+    msg += "Changed to not up2date: %d\n" % stats['not_up2date']
+    msg += "Unchanged: %d\n" % stats['unchanged']
+    msg += "Unknown disposition: %d\n" % stats['unknown']
+    msg += "New HostCategoryDir created: %d\n" % stats['newdir']
+    msg += "HostCategoryDir now deleted on the master, marked not up2date: %d" % stats['deleted_on_master']
+    return msg
+
 def sync_hcds(host, host_category_dirs):
+    stats = dict(up2date = 0, not_up2date = 0, unchanged = 0,
+                 unknown = 0, newdir = 0, deleted_on_master = 0)
     current_hcds = {}
     now = datetime.utcnow()
     host.lastCrawled = now
     keys = host_category_dirs.keys()
-    keys = sorted(keys, key=lambda t: t[1].name)
+    keys = sorted(keys, key = lambda t: t[1].name)
+    stats['numkeys'] = len(keys)
     for (hc, d) in keys:
         up2date = host_category_dirs[(hc, d)]
         if up2date is None:
+            stats['unknown'] += 1
             continue
 
         topname = hc.category.topdir.name
@@ -331,6 +345,7 @@ def sync_hcds(host, host_category_dirs):
             # chances are the mirror is excluding that directory
             if not up2date: continue
             hcd = HostCategoryDir(host_category=hc, path=path, directory=d)
+            stats['newdir'] += 1
 
         if hcd.directory is None:
             hcd.directory = d
@@ -339,23 +354,28 @@ def sync_hcds(host, host_category_dirs):
             hcd.sync()
             if up2date == False:
                 logger.info("Directory %s is not up-to-date on this host." % d.name)
+                stats['not_up2date'] += 1
             else:
                 logger.info(d.name)
+                stats['up2date'] += 1
+        else:
+            stats['unchanged'] += 1
 
         current_hcds[hcd] = True
-
 
     # now-historical HostCategoryDirs are not up2date
     # we wait for a cascading Directory delete to delete this
     for hc in list(host.categories):
         for hcd in list(hc.dirs):
             if hcd.directory is not None and not hcd.directory.readable:
+                stats['unreadable'] += 1
                 continue
             if hcd not in current_hcds:
                 if hcd.up2date != False:
                     hcd.up2date = False
                     hcd.sync()
-    
+                    stats['deleted_on_master'] += 1
+    logger.info(report_stats(stats))
 
 def method_pref(urls, prev=""):
     """ return which of the hosts connection method should be used
@@ -473,6 +493,7 @@ def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLe
         except IndexError:
             logger.debug("invalid rsync line: %s\n" % line)
     
+    logger.debug("rsync listing has %d lines" % len(rsync))
     # for all directories in this category
     for d in trydirs:
         if must_dienow:
@@ -659,6 +680,8 @@ def per_host(host, options):
         if hc.always_up2date:
             continue
         category = hc.category
+
+        logger.debug("scanning Category %s" % category.name)
 
         categoryUrl = method_pref(host.category_urls(category.name))
         if categoryUrl is None:
