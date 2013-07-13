@@ -4,6 +4,7 @@ import pkg_resources
 pkg_resources.require("TurboGears")
 
 import glob
+import logging
 import re
 import optparse
 import os
@@ -28,6 +29,7 @@ from mirrormanager.lib import manage_pidfile, remove_pidfile, run_rsync
 rootdir='/'
 pidfile='/var/run/mirrormanager/umdl.pid'
 delete_directories=False
+logger = None
 
 from turbogears.database import PackageHub
 hub = PackageHub("mirrormanager")
@@ -271,8 +273,7 @@ def make_repository(dir, dname, category, product_id, topdir):
 	# anything meaningful.  So simply have it match dir.name,
 	# which can't conflict.
         repo = Repository(name=dir.name, category=category, version=ver, arch=arch, directory=dir, prefix=prefix)
-        sys.stdout.write('Created Repository %s -> Directory %s\n' % (repo, dir))
-        sys.stdout.flush()
+        logger.info('Created Repository %s -> Directory %s' % (repo, dir))
     except:
         # repo exists, but it may be one we want to move
         #try:
@@ -292,8 +293,7 @@ def nuke_gone_directories(rootdir):
         dname = d.name
         if not os.path.isdir(os.path.join(rootdir, dname)):
             if len(d.categories) == 1: # safety, this should always trigger
-                sys.stdout.write("Deleting gone directory %s\n" % (dname))
-                sys.stdout.flush()
+                logger.info("Deleting gone directory %s" % (dname))
                 d.destroySelf()
 
 unreadable_dirs = set()
@@ -449,10 +449,9 @@ def parse_rsync_listing(category, f):
 def sync_directories_using_rsync(rsyncpath, category, extra_rsync_args=None):
     result, output = run_rsync(rsyncpath, extra_rsync_args)
     if result > 0:
-        sys.stdout.write("rsync returned exit code %d for Category %s: %s\n" % (result,
+        logger.info("rsync returned exit code %d for Category %s: %s" % (result,
                                                                                 category.name,
                                                                                 output))
-        sys.stdout.flush()
     # still, try to use the output listing if we can
     parse_rsync_listing(category, output)
 
@@ -495,7 +494,7 @@ def sync_directories_from_directory(directory, category, excludes=[]):
                 next=True
                 break
         if next:
-            sys.stdout.write("excluding %s\n" % (dirpath))
+            logger.info("excluding %s" % (dirpath))
             # exclude all its subdirs too
             dirnames[:] = []
             continue
@@ -524,8 +523,7 @@ def sync_directories_from_directory(directory, category, excludes=[]):
 
         changed = (d_ctime != ctime)
         if changed:
-            sys.stdout.write("%s has changed\n" % dname)
-            sys.stdout.flush()
+            logger.info("%s has changed" % dname)
         category_directories[dname] = {'files':{}, 'isRepository':isRepo, 'readable':readable, 'ctime':ctime, 'changed':changed}
 
         # skip per-file stat()s if the directory hasn't changed
@@ -543,6 +541,7 @@ def sync_directories_from_directory(directory, category, excludes=[]):
 def main():
     global rootdir
     global delete_directories
+    global logger
     parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option("-c", "--config",
                       dest="config", default='dev.cfg',
@@ -550,6 +549,13 @@ def main():
     parser.add_option("--rootdir",
                       dest="rootdir", default=rootdir,
                       help="on-disk directory trees rooted at [rootdir]")
+    parser.add_option("--logfile",
+                      dest="logfile", default='/var/log/mirrormanager/umdl.log',
+                      help="on-disk directory trees rooted at [rootdir]")
+    parser.add_option("--debug",
+                      dest="debug", default=False, action="store_true",
+                      help="enable debugging")
+
     parser.add_option("--delete-directories",
                       dest="delete_directories", default=delete_directories, action="store_true",
                       help="delete directories from the database that are no longer on disk")
@@ -559,14 +565,23 @@ def main():
     rootdir = options.rootdir
     delete_directories = options.delete_directories
 
+    fmt = '%(asctime)s %(message)s'
+    datefmt = '%m/%d/%Y %I:%M:%S %p'
+    formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
+    logger = logging.getLogger('umdl')
+    handler = logging.handlers.WatchedFileHandler(options.logfile, "a+b")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    if options.debug:
+        logger.setLevel(logging.DEBUG)
+
+
     if manage_pidfile(pidfile):
-        sys.stdout.write("another instance is running, try again later.\n")
-        sys.stdout.flush()
+        logger.warning("another instance is running, try again later.")
         sys.exit(1)
 
 
-    sys.stdout.write("Starting umdl %s\n" % (datetime.datetime.utcnow().isoformat()))
-    sys.stdout.flush()
+    logger.info("Starting umdl")
     setup_arch_version_cache()
     for i in config.get('umdl.master_directories'):
         try:
@@ -578,13 +593,11 @@ def main():
         try:
             category = Category.byName(cname)
         except SQLObjectNotFound:
-            sys.stdout.write('Error: umdl.master_directories Category %s does not exist in the database, skipping\n' % (cname))
-            sys.stdout.flush()
+            logger.error('umdl.master_directories Category %s does not exist in the database, skipping' % (cname))
             continue            
 
         if category.product is None:
-            sys.stdout.write('Error: umdl.master_directories Category %s has null Product, skipping\n' % (cname))
-            sys.stdout.flush()
+            logger.error('umdl.master_directories Category %s has null Product, skipping' % (cname))
             continue            
 
         if i['type'] == 'rsync':
@@ -600,8 +613,7 @@ def main():
     if options.delete_directories:
         nuke_gone_directories(options.rootdir)
     remove_pidfile(pidfile)
-    sys.stdout.write("Ending umdl %s\n" % (datetime.datetime.utcnow().isoformat()))
-    sys.stdout.flush()
+    logger.info("Ending umdl")
 
     return 0
 
