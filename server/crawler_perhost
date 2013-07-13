@@ -310,14 +310,20 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
     raise HTTPUnknown()
 
 def report_stats(stats):
-    msg = "Total directories: %d\n" % stats['numkeys']
-    msg += "Changed to up2date: %d\n" % stats['up2date']
-    msg += "Changed to not up2date: %d\n" % stats['not_up2date']
-    msg += "Unchanged: %d\n" % stats['unchanged']
-    msg += "Unknown disposition: %d\n" % stats['unknown']
-    msg += "New HostCategoryDir created: %d\n" % stats['newdir']
-    msg += "HostCategoryDir now deleted on the master, marked not up2date: %d" % stats['deleted_on_master']
-    return msg
+    msg = "Total directories: %d" % stats['numkeys']
+    logger.info(msg)
+    msg = "Changed to up2date: %d" % stats['up2date']
+    logger.info(msg)
+    msg = "Changed to not up2date: %d" % stats['not_up2date']
+    logger.info(msg)
+    msg = "Unchanged: %d" % stats['unchanged']
+    logger.info(msg)
+    msg = "Unknown disposition: %d" % stats['unknown']
+    logger.info(msg)
+    msg = "New HostCategoryDirs created: %d" % stats['newdir']
+    logger.info(msg)
+    msg = "HostCategoryDirs now deleted on the master, marked not up2date: %d" % stats['deleted_on_master']
+    logger.info(msg)
 
 def sync_hcds(host, host_category_dirs):
     stats = dict(up2date = 0, not_up2date = 0, unchanged = 0,
@@ -375,7 +381,7 @@ def sync_hcds(host, host_category_dirs):
                     hcd.up2date = False
                     hcd.sync()
                     stats['deleted_on_master'] += 1
-    logger.info(report_stats(stats))
+    report_stats(stats)
 
 def method_pref(urls, prev=""):
     """ return which of the hosts connection method should be used
@@ -479,9 +485,13 @@ def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLe
     if not url.endswith('/'):
         url += '/'
 
+    rsync_start_time = datetime.utcnow()
     result, listing = run_rsync(url, '--no-motd')
+    rsync_stop_time = datetime.utcnow()
     if result > 0:
         logger.info('rsync returned exit code %d' % result)
+    msg = "rsync time: %s" % str(rsync_stop_time - rsync_start_time)
+    logger.info(msg)
 
     # put the rsync listing in a dict for easy access
     while True:
@@ -681,7 +691,7 @@ def per_host(host, options):
             continue
         category = hc.category
 
-        logger.debug("scanning Category %s" % category.name)
+        logger.info("scanning Category %s" % category.name)
 
         categoryUrl = method_pref(host.category_urls(category.name))
         if categoryUrl is None:
