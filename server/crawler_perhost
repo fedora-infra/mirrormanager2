@@ -598,7 +598,7 @@ Date: %s
     except:
         pass
 
-def mark_not_up2date(exc, host, reason="Unknown", mail=True):
+def mark_not_up2date(exc, host, reason="Unknown", mail=False):
     host.set_not_up2date()
     host.lastCrawled = datetime.utcnow()
     msg = "Host marked not up2date: %s" % reason
