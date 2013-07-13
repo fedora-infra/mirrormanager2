@@ -559,6 +559,9 @@ def dienow():
     logger.error("Timeout expired. Better luck next time.")
 
 def send_email(host, report_str, exc):
+    if not config.get('crawler.send_email', False):
+        return
+
     SMTP_DATE_FORMAT = "%a, %d %b %Y %H:%M:%S %z"
     msg = """From: %s
 To: %s
@@ -598,15 +601,14 @@ Date: %s
     except:
         pass
 
-def mark_not_up2date(exc, host, reason="Unknown", mail=False):
+def mark_not_up2date(exc, host, reason="Unknown"):
     host.set_not_up2date()
     host.lastCrawled = datetime.utcnow()
     msg = "Host marked not up2date: %s" % reason
     logger.warning(msg)
     if exc is not None:
         logger.debug("%s %s %s" % (exc[0], exc[1], exc[2]))
-    if mail:
-        send_email(host, msg, exc)
+    send_email(host, msg, exc)
 
 def select_host_categories_to_scan(options):
     result = []
