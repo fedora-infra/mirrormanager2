@@ -17,6 +17,7 @@ import dns.resolver
 from IPy import IP
 import textwrap
 import logging
+import email
 
 from sqlobject import *
 import turbogears
@@ -50,28 +51,19 @@ class SiteResult(object):
         self.messages = []
         self.admin_emails = []
 
-def send_mail(sender, to, subject, body, cc=[]):
-    SMTP_DATE_FORMAT = "%a, %d %b %Y %H:%M:%S %z"
-    msg = """From: %s
-To: %s
-Subject: %s
-Date: %s
-CC: %s
-
-""" % ('mirror-admin@fedoraproject.org',
-       ', '.join(to),
-       subject,
-       time.strftime(SMTP_DATE_FORMAT),
-       ', '.join(cc))
-
-    msg += body
+def send_mail(sender, to, subject, body, cc=[], bcc=[]):
+    message = email.mime.text.MIMEText(body.encode('utf-8'), 'plain', 'utf-8')
+    message['Subject'] = email.header.Header(subject, 'utf-8')
+    message['From'] = email.header.Header(u'mirror-admin@fedoraproject.org', u'utf-8')
+    message['To'] = email.header.Header(u', '.join(to), 'utf-8')
+    message['Cc'] = email.header.Header(u', '.join(cc), 'utf-8')
 
     try:
         smtp = smtplib.SMTP('bastion', 25)
     
-        smtp.sendmail('mirror-admin@fedoraproject.org',
-                      to,
-                      msg)
+        smtp.sendmail(u'mirror-admin@fedoraproject.org',
+                      to + cc + bcc,
+                      message.as_string())
     except:
         logger.exception("Error sending email")
         logger.debug("Email message follows:")
@@ -196,7 +188,7 @@ def check_host(sr, host):
 
     ips = name_to_ips(host.name)
     if len(ips) == 0 and not host.is_private():
-        msg = u"Host name %s not found in DNS.  Please use a FQDN for your host name.  You will also need to make the corresponding change in your report_mirror.conf file." % (host.name)
+        msg = u"* Host name %s not found in DNS.  Please use a FQDN for your host name.  You will also need to make the corresponding change in your report_mirror.conf file." % (host.name)
         host_messages.append(msg)
     else:
         if host.internet2:
@@ -207,11 +199,11 @@ def check_host(sr, host):
                     really_on_i2 = True
                     break;
             if not really_on_i2:
-                msg = u"Host %s claims to be on Internet2, but is not in the Internet2 BGP table.  Please clear the Internet2 flag." % (host.name)
+                msg = u"* Host %s claims to be on Internet2, but is not in the Internet2 BGP table.  Please clear the Internet2 flag." % (host.name)
                 host_messages.append(msg)
     
     if host.country is None:
-        msg = u"Host %s does not list the country it is in.  Please add the country." % (host.name)
+        msg = u"* Host %s does not list the country it is in.  Please add the country." % (host.name)
         host_messages.append(msg)
     else:
         really_in_country = False
@@ -222,23 +214,23 @@ def check_host(sr, host):
                 really_in_country = True
                 break
         if country and not really_in_country:
-            msg = u"Host %s claims to be in country %s, but GeoIP reports them in %s.  Please contact mirror-admin@fedoraproject.org if you believe the GeoIP database is incorrect." % (host.name, host.country, country)
+            msg = u"* Host %s claims to be in country %s, but GeoIP reports them in %s.  Please contact mirror-admin@fedoraproject.org if you believe the GeoIP database is incorrect." % (host.name, host.country, country)
             host_messages.append(msg)
 
 
     if host.asn_clients:
         if host.asn is None:
-            msg = u"Host %s has set asn_clients, but has not set it's Autonomous System Number (ASN).  Please set a value for ASN (lookup tool at http://asn.cymru.com/)." % (host.name)
+            msg = u"* Host %s has set asn_clients, but has not set it's Autonomous System Number (ASN).  Please set a value for ASN (lookup tool at http://asn.cymru.com/)." % (host.name)
             host_messages.append(msg)
         else:
             for ip in ips:
                 asn = lookup_ip_asn(global_tree, ip)
                 if host.asn != asn:
-                    msg = u"Host %s has set ASN=%s, but appears in ASN %s in the global BGP table.  Please contact mirror-admin@fedoraproject.org if you believe your value is correct." % (host.name, host.asn, asn)
+                    msg = u"* Host %s has set ASN=%s, but appears in ASN %s in the global BGP table.  Please contact mirror-admin@fedoraproject.org if you believe your value is correct." % (host.name, host.asn, asn)
                     host_messages.append(msg)
 
     if len(host.categories) == 0:
-        msg = u"Host %s has no content Categories.  Please add Host Categories to the content your mirror carries." % (host.name)
+        msg = u"* Host %s has no content Categories.  Please add Host Categories to the content your mirror carries." % (host.name)
         host_messages.append(msg)
 
     always_up2date = False
@@ -248,7 +240,7 @@ def check_host(sr, host):
     for hc in host.categories:
         if hc.category.name not in undesired_categories:
             if len(hc.urls) == 0:
-                    msg = u"Host %s Category %s has no URLs.  Please add a URL to the content your mirror carries, or if not carried, delete the Category." % (host.name, hc.category.name)
+                    msg = u"* Host %s Category %s has no URLs.  Please add a URL to the content your mirror carries, or if not carried, delete the Category." % (host.name, hc.category.name)
                     host_messages.append(msg)            
 
             has_rsync = False
@@ -257,23 +249,23 @@ def check_host(sr, host):
                     has_rsync = True
                     break
             if not has_rsync:
-                msg = u"Please consider adding an rsync URL for Category %s.  This will speed up the MirrorManager crawler and reduce load on your server.  URLs can be marked 'for other mirrors only', in which case they will not appear in publiclists, mirrorlists, or metalinks, but will be available to the MirrorManager crawler.  If necessary, you can restrict access to only allow from the MirrorManager crawler through a 'hosts allow = 209.132.181.0/24' line in your rsyncd.conf file." % hc.category.name
+                msg = u"* Please consider adding an rsync URL for Category %s.  This will speed up the MirrorManager crawler and reduce load on your server.  URLs can be marked 'for other mirrors only', in which case they will not appear in publiclists, mirrorlists, or metalinks, but will be available to the MirrorManager crawler.  If necessary, you can restrict access to only allow from the MirrorManager crawler through a 'hosts allow = 209.132.181.0/24' line in your rsyncd.conf file." % hc.category.name
                 host_messages.append(msg)
 
             if hc.always_up2date: always_up2date = True
             if len(hc.dirs) == 0 and not hc.always_up2date:
-                msg = u"Host %s Category %s has no up-to-date directories. "  % (host.name, hc.category.name)
+                msg = u"* Host %s Category %s has no up-to-date directories. "  % (host.name, hc.category.name)
                 if len(hc.urls) > 0:
-                    msg = msg + u"Check that your Category URL points to %s. " % (hc.category.topdir.name)
+                    msg += u"Check that your Category URL points to %s. " % (hc.category.topdir.name)
 
-                msg = msg + u"Consult the crawler logs and check your report_mirror.conf."
+                msg += u"* Consult the crawler logs and check your report_mirror.conf."
                 host_messages.append(msg)
 
 
     private_msg = u"  Private mirrors must run report_mirror after each rsync run completes in order for MirrorManager to know what content your mirror carries.  The crawler does not generally run against private mirrors."
     public_msg = u"  Public mirrors are encouraged to run report_mirror after each rsync run completes."
     if host.lastCheckedIn is None and not always_up2date:
-        msg = u"Host %s has never checked in with report_mirror." % (host.name)
+        msg = u"* Host %s has never checked in with report_mirror." % (host.name)
         if host.is_private():
             msg += private_msg
         else:
@@ -281,7 +273,7 @@ def check_host(sr, host):
         host_messages.append(msg)
     elif host.lastCheckedIn is not None:
         if host.lastCheckedIn <  (dt.datetime.utcnow() - one_day):
-            msg = u"Host %s has not checked in with report_mirror in 24 hours, last check in %s." % (host.name, host.lastCheckedIn)
+            msg = u"* Host %s has not checked in with report_mirror in 24 hours, last check in %s." % (host.name, host.lastCheckedIn)
             if host.is_private():
                 msg += private_msg
             else:
@@ -290,15 +282,15 @@ def check_host(sr, host):
 
 
     if host.is_private() and len(host.netblocks) == 0 and (host.asn is None or not host.asn_clients):
-        msg = u"Host %s is private has no netblocks or ASN set or asn_clients set.  Clients will not automatically be directed to your mirror.  Please set either netblocks or ASN value and asn_clients." % (host.name)
+        msg = u"* Host %s is private has no netblocks or ASN set or asn_clients set.  Clients will not automatically be directed to your mirror.  Please set either netblocks or ASN value and asn_clients." % (host.name)
         host_messages.append(msg)
 
     if len(host_messages):
-        host_mm_url = config.get('base_url_filter.base_url') + turbogears.url('/host/%d' % host.id) 
-        msg = "Report for Host name %s [%s]:" % (host.name, host_mm_url)
+        host_mm_url = u"https://admin.fedoraproject.org/mirrormanager/host/%d" % host.id
+        msg = u"* Details for Host name %s [%s]:" % (host.name, host_mm_url)
         sr.messages.append(msg)
-        sr.messages.extend(host_messages)
-        
+        for msg in host_messages:
+            sr.messages.append(u"    " + msg)
 
 AS = None
 
@@ -360,12 +352,12 @@ def check_site(site):
     for username, person in users_accountinfo(site_admins(site)).iteritems():
         sr.admin_emails.append(person['email'])
         if person['status'] == u'inactive':
-            msg = u"Site Admin Username %s is inactive in FAS.  Visit https://admin.fedoraproject.org/accounts/ to log in and change your password, so you may make changes to your site's information in the MirrorManager database." % (username)
+            msg = u"* Site Admin Username %s is inactive in FAS.  Visit https://admin.fedoraproject.org/accounts/ to log in and change your password, so you may make changes to your site's information in the MirrorManager database." % (username)
             sr.messages.append(msg)
 
 
     if len(site.hosts) == 0:
-        msg = u"Site %s has no Hosts.  Please add one or more Hosts to your Site entry." % (site.name)
+        msg = u"* Site %s has no Hosts.  Please add one or more Hosts to your Site entry.  Without Hosts, no clients can connect to your server." % (site.name)
         sr.messages.append(msg)
 
     for host in site.hosts:
@@ -381,23 +373,38 @@ def send_site_emails(sr, cc=[], sender=None):
     if len(sr.messages) == 0: return
     if len(sr.admin_emails) == 0: return
 #    if not config.get('errorcheck.send_email', False): return
-    projectname = config.get('mirrormanager.project.name', u'')
+    projectname = config.get('mirrormanager.project.name', u'Fedora')
 #    sender = config.get('errorcheck.mail_from')
 #    if sender is None:
 #        print "unable to send mail: mirrormanager.mail_from is not set"
 #    return
-    sender = 'mirror-admin@fedoraproject.org'
-    subject = projectname + u' MirrorManager report for ' + sr.site.name
-    url = config.get('base_url_filter.base_url') + turbogears.url('/')
-    siteurl = url + 'site/' + str(sr.site.id)
+    sender = u'mirror-admin@fedoraproject.org'
+    subject = u'%s MirrorManager report for %s' % (projectname, sr.site.name)
+    baseurl = config.get('base_url_filter.base_url')
+    siteurl = u'%s/site/%d' % (baseurl, sr.site.id)
     body = u'''\
-This is an automated report from the %(project)s MirrorManager at %(url)s.
+This is an automated report from the %(project)s MirrorManager at %(baseurl)s.
 Site: %(site)s    %(siteurl)s
 
-''' % dict(project=projectname, url=url, site=sr.site.name, siteurl=siteurl)
+''' % dict(project=projectname, site=sr.site.name, siteurl=siteurl, baseurl=baseurl)
 
     for msg in sr.messages:
-        body += textwrapper.fill('* ' + msg) + u'\n'
+        body += textwrapper.fill(msg)
+        body += u'\n'
+
+    msg = u'''
+If you no longer mirror Fedora, we thank you for your past support,
+and ask that you please delete any references to your mirror from
+the MirrorManager database. This will prevent any further such reports
+from being mailed to you unnecessarily.
+
+If you have any other questions, consult https://fedoraproject.org/wiki/Infrastructure/Mirroring
+or mail to mirror-admin@fedoraproject.org.
+'''
+    msg = textwrapper.fill(msg)
+    body += u'\n'
+    body += msg
+    body += u'\n'
 
     to = sr.admin_emails
     send_mail(sender, to, subject, body, cc=cc)
@@ -441,7 +448,12 @@ def doit():
 
     check_objects()
 
-    for site in Site.select():
+    if len(options.site):
+        sites = [Site.get(id) for id in options.site]
+    else:
+        sites = Site.select()
+
+    for site in sites:
         sr = check_site(site)
         if sr is not None:
             if options.email:
@@ -475,6 +487,9 @@ def main():
     parser.add_option("--debug", 
                       dest="debug", default=False, action="store_true",
                       help="enable debugging output")
+    parser.add_option("--site", 
+                      dest="site", default=[], action="append",
+                      help="Site(s) to scan, rather than all.  Can be used multiple times.")
                       
 
     (options, args) = parser.parse_args()
