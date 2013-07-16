@@ -88,11 +88,9 @@ def doit(options, include_private=False, threads=10, config=None, logdir=None):
             commonargs.append('--canary')
         if not h.is_active():
             continue
-        if include_private or (h.internet2 and h.internet2_clients):
-            commonargs.append('--include-private')
-            include_private = True
-        if not include_private and h.is_private():
+        if h.is_private() and not (include_private or (h.internet2 and h.internet2_clients)):
             continue
+        commonargs.append('--include-private')
 
         args = commonargs + ['--hostid=%s' % h.id]
         if logdir is not None:
