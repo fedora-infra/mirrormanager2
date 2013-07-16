@@ -67,7 +67,10 @@ def send_mail(sender, to, subject, body, cc=[], bcc=[]):
     except:
         logger.exception("Error sending email")
         logger.debug("Email message follows:")
-        logger.debug(msg)
+        try:
+            logger.debug(message.as_string())
+        except:
+            pass
 
     try:
         smtp.quit()
@@ -286,7 +289,7 @@ def check_host(sr, host):
         host_messages.append(msg)
 
     if len(host_messages):
-        host_mm_url = u"https://admin.fedoraproject.org/mirrormanager/host/%d" % host.id
+        host_mm_url = turbogears.url(u'/host/%d' % host.id)
         msg = u"* Details for Host name %s [%s]:" % (host.name, host_mm_url)
         sr.messages.append(msg)
         for msg in host_messages:
@@ -362,11 +365,6 @@ def check_site(site):
 
     for host in site.hosts:
         check_host(sr, host)
-
-    if len(sr.messages) > 0:
-        logger.info("==== Site: %s  ====\n" % (site.name))
-        for msg in sr.messages:
-            logger.info("\t%s" %  msg)
     return sr
 
 def send_site_emails(sr, cc=[], sender=None):
@@ -380,8 +378,8 @@ def send_site_emails(sr, cc=[], sender=None):
 #    return
     sender = u'mirror-admin@fedoraproject.org'
     subject = u'%s MirrorManager report for %s' % (projectname, sr.site.name)
-    baseurl = config.get('base_url_filter.base_url')
-    siteurl = u'%s/site/%d' % (baseurl, sr.site.id)
+    baseurl = turbogears.url(u'/')
+    siteurl = turbogears.url(u'/site/%d' % (sr.site.id)
     body = u'''\
 This is an automated report from the %(project)s MirrorManager at %(baseurl)s.
 Site: %(site)s    %(siteurl)s
@@ -451,13 +449,23 @@ def doit():
     if len(options.site):
         sites = [Site.get(id) for id in options.site]
     else:
-        sites = Site.select()
+        sites = Site.select(orderBy='id')
 
     for site in sites:
-        sr = check_site(site)
-        if sr is not None:
-            if options.email:
-                send_site_emails(sr, options.cc)
+        try:
+            if site.id < int(options.minsite): continue
+            sr = check_site(site)
+            if sr is not None:
+                if len(sr.messages) > 0:
+                    logger.info("==== Site %d: %s  ====\n" % (site.id, site.name))
+                    for msg in sr.messages:
+                        logger.info("\t%s" %  msg)
+                if options.email:
+                    send_site_emails(sr, options.cc)
+        except KeyboardInterrupt:
+            break
+        except:
+            logger.exception('')
 
 
 def main():
@@ -484,12 +492,12 @@ def main():
     parser.add_option("--cc", 
                       dest="cc", default=[], action="append",
                       help="Email address to include on cc:")
-    parser.add_option("--debug", 
-                      dest="debug", default=False, action="store_true",
-                      help="enable debugging output")
     parser.add_option("--site", 
                       dest="site", default=[], action="append",
                       help="Site(s) to scan, rather than all.  Can be used multiple times.")
+    parser.add_option("--minsite", 
+                      dest="minsite", default=0, action="store", metavar="ID",
+                      help="Scan sites greater than ID.")
                       
 
     (options, args) = parser.parse_args()
@@ -512,8 +520,7 @@ def main():
     handler = logging.handlers.WatchedFileHandler(options.logfile, "a+b")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
-    if options.debug:
-        logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.DEBUG)
 
     global hub
     global __connection__
