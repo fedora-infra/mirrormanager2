@@ -9,22 +9,23 @@ from optparse import OptionParser
 import os
 from subprocess import Popen
 import sys
+import time
 
-from sqlobject import *
 import turbogears
 
 sys.path.append('/usr/share/mirrormanager/server')
-from mirrormanager.model import *
+from mirrormanager.model import Host
 from mirrormanager.lib import manage_pidfile, remove_pidfile
 
 pidfile='/var/run/mirrormanager/crawler.pid'
+options = None
 
 from turbogears.database import PackageHub
 hub = __connection__ = None
 logger = None
 
 class ForkingMaster:
-    def __init__(self, max_children=10):
+    def __init__(self, max_children = 10):
         self.active_children = None
         self.max_children = max_children
         self.devnull = open('/dev/null', 'rw')
@@ -75,34 +76,49 @@ class ForkingMaster:
         logger.info('Host %s (id=%s) crawl time %s' % (host.name, host.id, str(diff)))
         del self.timings[pid]
 
-def doit(options, include_private=False, threads=10, config=None, logdir=None):
-    master = ForkingMaster(max_children=threads)
+def doit():
+    master = ForkingMaster(max_children=options.threads)
     command = '/usr/share/mirrormanager/server/crawler_perhost'
-    commonargs = [ command, '-c', config]
+    commonargs = [ command, '-c', options.config, '--timeout-minutes', '360']
     if options.canary:
         commonargs.append('--canary')
 
-    for h in Host.select():
-        commonargs = [ command, '-c', config]
-        if options.canary:
-            commonargs.append('--canary')
-        if not h.is_active():
-            continue
-        if h.is_private() and not (include_private or (h.internet2 and h.internet2_clients)):
-            continue
-        commonargs.append('--include-private')
 
-        args = commonargs + ['--hostid=%s' % h.id]
-        if logdir is not None:
-            logfilename = os.path.join(logdir, str(h.id) + '.log')
-            args.append('--logfile=%s' % logfilename)
-
-        master.process_request(command, args, h)
+    numhosts = Host.selectBy(private=False).count()
+    i = 0
+    for h in Host.selectBy(private=False).orderBy('id'):
+        i += 1
+        try:
+            if not (h.admin_active and h.user_active and h.site.user_active and h.site.admin_active):
+                continue
+            if h.site.private:
+                continue
+            
+            hostargs = []
+            hostargs.extend(['--hostid', str(h.id)])
+            logfilename = os.path.join(options.logdir, str(h.id) + '.log')
+            hostargs.extend(['--logfile', logfilename])
+            args = commonargs + hostargs
+            logger.debug('starting crawler for host %s (id=%d) %d/%d' % (h.name, h.id, i, numhosts))
+            master.process_request(command, args, h)
+        except AssertionError: # someone deleted our host while we were looking at it
+            continue
         
     master.wait_for_completion()
 
+def setup_logger():
+    fmt = "%(asctime)s %(message)s\n"
+    formatter = logging.Formatter(fmt=fmt)
+    formatter.converter = time.gmtime
+    logger = logging.getLogger('crawler')
+    handler = logging.handlers.WatchedFileHandler(options.logfile, "a+b")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+    return logger
 
 def main():
+    global options
     if manage_pidfile(pidfile):
         print "another instance is running, try again later."
         return 1
@@ -140,16 +156,9 @@ def main():
     __connection__ = hub
 
     global logger
-    if options.logfile is not None:
-        fmt ='%(asctime)s %(message)s'
-        datefmt ='%m/%d/%Y %I:%M:%S %p'
-        formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
-        logger = logging.getLogger('crawler_perhost')
-        handler = logging.handlers.WatchedFileHandler(options.logfile, "a+b")
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
+    logger = setup_logger()
     
-    doit(options, include_private=options.include_private, threads=options.threads, config=options.config, logdir=options.logdir)
+    doit()
     remove_pidfile(pidfile)
     return 0
 
