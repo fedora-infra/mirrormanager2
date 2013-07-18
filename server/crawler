@@ -79,7 +79,7 @@ class ForkingMaster:
 def doit():
     master = ForkingMaster(max_children=options.threads)
     command = '/usr/share/mirrormanager/server/crawler_perhost'
-    commonargs = [ command, '-c', options.config, '--timeout-minutes', '360']
+    commonargs = [ command, '-c', options.config, '--timeout-minutes', '90']
     if options.canary:
         commonargs.append('--canary')
 
@@ -107,7 +107,7 @@ def doit():
     master.wait_for_completion()
 
 def setup_logger():
-    fmt = "%(asctime)s %(message)s\n"
+    fmt = "%(asctime)s %(message)s"
     formatter = logging.Formatter(fmt=fmt)
     formatter.converter = time.gmtime
     logger = logging.getLogger('crawler')
