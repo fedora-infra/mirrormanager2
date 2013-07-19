@@ -5,6 +5,7 @@ pkg_resources.require("TurboGears")
 
 from sqlobject import *
 import sys, os, string, errno
+import datetime as dt
 import turbogears
 import turbogears.util as tg_util
 from turbogears import view, database, errorhandling, config
@@ -177,7 +178,8 @@ def generate_one_html(engine, pvaMatrix, productname=None, vername=None, archnam
                          pva=pva,
                          products=list(Product.select(orderBy='name')),
                          arches=publiclist_arches(),
-                         report_problems_to_email = config.get('mirrormanager.report_problems_to_email', 'webmaster'))
+                         report_problems_to_email = config.get('mirrormanager.report_problems_to_email', 'webmaster'),
+                         utcnow = dt.datetime.utcnow())
 
     t=engine.load_template('mirrormanager.templates.publiclist')
     out_html = _process_output(template_data, template=t, format='html', engine=engine)

@@ -102,7 +102,8 @@ and development networks globally.
   <div id="footer">
     <p class="disclaimer">
       Listing generated
-      by <a href="http://mirrormanager.org/">MirrorManager</a>.
+      by <a href="http://mirrormanager.org/">MirrorManager</a> at
+      ${utcnow} UTC. 
       Please direct questions or problems with this list to ${report_problems_to_email}.
     </p>
   </div>
