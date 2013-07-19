@@ -17,7 +17,6 @@ from smtplib import SMTP
 import socket
 import time
 from urlparse import urlsplit
-import threading
 import urlgrabber
 
 from sqlobject import SQLObjectNotFound
@@ -659,6 +658,12 @@ def select_host_categories_to_scan(options):
     return result
 
 
+def sigalrm_handler(signal, stackframe):
+    logger.warning("SIGALRM received, exiting.")
+    global must_dienow
+    must_dienow = True
+
+
 def per_host(host, options):
     """Canary mode looks for 2 things:
     directory.path ends in 'iso' or directory.path ends in 'repodata'.  In
@@ -676,15 +681,14 @@ def per_host(host, options):
         http_debuglevel = 2
         ftp_debuglevel = 2
 
-    timer = threading.Timer(options.timeout_minutes * 60.0, dienow)
+    
     if options.timeout_minutes > 0:
-        timer.start()
+        signal.alarm(options.timeout_minutes * 60)
 
     hoststate = hostState(http_debuglevel=http_debuglevel, ftp_debuglevel=ftp_debuglevel)
 
     for hc in select_host_categories_to_scan(options):
         if must_dienow:
-            timer.cancel()
             raise TimeoutException
 
         if hc.always_up2date:
@@ -703,7 +707,6 @@ def per_host(host, options):
         try:
             has_all_files = try_percategory(trydirs, categoryUrl, host_category_dirs, hc, host, categoryPrefixLen, options)
         except TimeoutException:
-            timer.cancel()
             raise
 
         if type(has_all_files) == type(True):
@@ -719,7 +722,6 @@ def per_host(host, options):
         try_later_delay = 1
         for d in trydirs:
             if must_dienow:
-                timer.cancel()
                 raise TimeoutException
                 
             if not d.readable:
@@ -762,9 +764,9 @@ def per_host(host, options):
                 rc = 1
                 break
 
-    timer.cancel()
     hoststate.close()
 
+    signal.alarm(0) # we got this far, don't alarm out now!
     if rc == 0:
         if len(host_category_dirs) > 0:
             sync_hcds(host, host_category_dirs)
@@ -817,7 +819,7 @@ def main():
     __connection__ = hub
     
     os.chdir('/tmp')
-    signal.signal(signal.SIGHUP, signal.SIG_IGN)
+    signal.signal(signal.SIGALRM, sigalrm_handler)
 
     global logger
     if options.logfile is not None:
@@ -845,7 +847,7 @@ def main():
     try:
         rc = per_host(host.id, options)
     except TimeoutException:
-        mark_not_up2date(None, host.id, "Crawler timed out before completing.  Host is likely overloaded.")
+#        mark_not_up2date(None, host.id, "Crawler timed out before completing.  Host is likely overloaded.")
         rc = 2
 
     logger.info("Ending crawl")
