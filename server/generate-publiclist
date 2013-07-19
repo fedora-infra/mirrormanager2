@@ -176,7 +176,7 @@ def generate_one_html(engine, pvaMatrix, productname=None, vername=None, archnam
     template_data = dict(page_title=title, hosts=hosts, numhosts=len(hosts), bandwidth=bandwidth,
                          pvaMatrix=pvaMatrix,
                          pva=pva,
-                         products=list(Product.select(orderBy='name')),
+                         products=list(Product.select().orderBy('name')),
                          arches=publiclist_arches(),
                          report_problems_to_email = config.get('mirrormanager.report_problems_to_email', 'webmaster'),
                          utcnow = dt.datetime.utcnow())

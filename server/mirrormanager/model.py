@@ -661,7 +661,7 @@ class Arch(SQLObject):
     primaryArch = BoolCol(default=True)
 
 def publiclist_arches():
-    return list(Arch.selectBy(publiclist=True, orderBy=['-primaryArch', 'name']))
+    return list(Arch.selectBy(publiclist=True).orderBy(['-primaryArch', 'name']))
 
 # e.g. 'fedora' and 'epel'
 class Product(SQLObject):
@@ -681,7 +681,7 @@ class Product(SQLObject):
 
     @staticmethod
     def selectFieldOptions():
-        return [(p.id, p.name) for p in Product.select(orderBy='name')]
+        return [(p.id, p.name) for p in Product.select().orderBy('name')]
         
 
 class Version(SQLObject):

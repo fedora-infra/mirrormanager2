@@ -450,7 +450,7 @@ def doit():
     if len(options.site):
         sites = [Site.get(id) for id in options.site]
     else:
-        sites = Site.select(orderBy='id')
+        sites = Site.select().orderBy('id')
 
     for site in sites:
         try:

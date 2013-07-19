@@ -237,7 +237,7 @@ class SiteAdminController(controllers.Controller, identity.SecureResource, conte
 ##############################################
 class SiteToSiteFields(widgets.WidgetsList):
     def get_sites_options():
-        return [(s.id, s.name) for s in Site.select(orderBy='name')]
+        return [(s.id, s.name) for s in Site.select().orderBy('name')]
 
     sites = widgets.MultipleSelectField(options=get_sites_options, size=15,
                                         validator=validators.NotEmpty())
@@ -433,7 +433,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
 ##################################################################33
 class HostCategoryFieldsNew(widgets.WidgetsList):
     def get_category_options():
-        return [(c.id, c.name) for c in Category.select(orderBy='name')]
+        return [(c.id, c.name) for c in Category.select().orderBy('name')]
     category = widgets.SingleSelectField(options=get_category_options,
                                          validator=validators.NotEmpty())
     always_up2date = widgets.CheckBox(default=False, help_text="Set to force belief that the whole category is always in sync.")
@@ -856,7 +856,7 @@ class Root(controllers.RootController):
     @identity.require(identity.not_anonymous())
     def help(self):
         if admin_group in identity.current.groups:
-            sites = Site.select(orderBy='name')
+            sites = Site.select().orderBy('name')
         else:
             sites = user_sites(identity)
         return {}
