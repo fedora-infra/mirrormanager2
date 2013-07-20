@@ -53,7 +53,7 @@ class ForkingMaster:
         options = os.WNOHANG
         while True:
             try:
-                pid, status = os.waitpid(0, options)
+                pid, status = os.waitpid(-1, options)
             except OSError as e:
                 logger.debug(str(e))
                 if e.errno == errno.ECHILD:
@@ -69,14 +69,16 @@ class ForkingMaster:
             for p in self.active_children:
                 if p.pid == pid:
                     self.stop_time(p)
-                    logger.debug("Removing child pid %d" % p.pid)
+                    logger.debug("Removing child pid %d, leaving %d active children" % (p.pid, len(self.active_children)-1))
                     self.active_children.remove(p)
         return True
 
     def process_request(self, command, args, host):
         """Fork a new subprocess to process the request."""
         logger.info("Starting crawler %s: %s" % (host.name, args))
-        p = Popen(args, executable=command, stdin=self.devnull, stdout=self.devnull, stderr=self.devnull, close_fds=True)
+        stdout = open(os.path.join(options.logdir, '%d-stdout.log' % host.id), 'a')
+        stderr = open(os.path.join(options.logdir, '%d-stderr.log' % host.id), 'a')
+        p = Popen(args, executable=command, stdin=self.devnull, stdout=stdout, stderr=stderr, close_fds=True)
         self.start_time(p, host.id)
         logger.debug("Adding child pid %d" % p.pid)
         self.active_children.append(p)
