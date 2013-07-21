@@ -26,6 +26,9 @@ from turbogears.database import PackageHub
 hub = __connection__ = None
 logger = None
 
+def total_seconds(td):
+    td.seconds + td.days * 24 * 3600
+
 class ForkingMaster:
     def __init__(self, max_children = 10):
         self.active_children = []
@@ -107,10 +110,12 @@ class ForkingMaster:
         diff = self.timings[p.pid]['stop'] - self.timings[p.pid]['start']
         host = Host.get(self.timings[p.pid]['hostid'])
         logger.info('Host %s (id=%s) crawl time %s' % (host.name, host.id, str(diff)))
-        host.last_crawl_duration = diff
+        try:
+            seconds = int(diff.total_seconds())
+        except AttributeError: # python < 2.7
+            seconds = total_seconds(diff)
+        host.last_crawl_duration = seconds
         del self.timings[p.pid]
-
-
 
 def doit():
     master = ForkingMaster(max_children=options.threads)
@@ -120,7 +125,7 @@ def doit():
 
     numhosts = Host.selectBy(private=False).count()
     i = 0
-    for h in list(Host.selectBy(private=False).orderBy(['-last_crawl_duration', 'id'])):
+    for h in list(Host.selectBy(private=False).orderBy('-last_crawl_duration')):
         i += 1
         try:
             if h.id < options.startid: continue

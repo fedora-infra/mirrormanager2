@@ -66,7 +66,7 @@ def change_tables():
         changes['host.max_connections'] = True
 
     if 'lastCrawlDuration' not in OldHost.sqlmeta.columns:
-        OldHost.sqlmeta.addColumn(IntCol("last_crawl_duration", default=None), changeSchema=True)
+        OldHost.sqlmeta.addColumn(IntCol("last_crawl_duration", default=0), changeSchema=True)
         changes['host.last_crawl_duration'] = True
 
     if 'sortorder' not in OldVersion.sqlmeta.columns and \
@@ -181,7 +181,7 @@ def fill_new_columns():
         if changes.get('host.max_connections'):
             h.max_connections = 1
         if changes.get('host.last_crawl_duration'):
-            h.last_crawl_duration = None
+            h.last_crawl_duration = 0
     if changes.get('host.max_connections'):
         _set_not_null(OldHost, 'max_connections')
 
