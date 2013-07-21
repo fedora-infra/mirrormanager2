@@ -65,6 +65,10 @@ def change_tables():
         OldHost.sqlmeta.addColumn(IntCol("max_connections", default=1), changeSchema=True)
         changes['host.max_connections'] = True
 
+    if 'lastCrawlDuration' not in OldHost.sqlmeta.columns:
+        OldHost.sqlmeta.addColumn(IntCol("last_crawl_duration", default=None), changeSchema=True)
+        changes['host.last_crawl_duration'] = True
+
     if 'sortorder' not in OldVersion.sqlmeta.columns and \
             'codename' not in OldVersion.sqlmeta.columns:
         OldVersion.sqlmeta.addColumn(IntCol("sortorder", default=0), changeSchema=True)
@@ -172,11 +176,14 @@ def fill_new_columns():
             s.emailOnDrop=False
             s.emailOnAdd=False
 
-    if changes.get('host.max_connections'):
-        for h in Host.select():
+
+    for h in Host.select():
+        if changes.get('host.max_connections'):
             h.max_connections = 1
+        if changes.get('host.last_crawl_duration'):
+            h.last_crawl_duration = None
+    if changes.get('host.max_connections'):
         _set_not_null(OldHost, 'max_connections')
-            
 
     if changes.get('version.sortorder_codename'):
         for v in Version.select():

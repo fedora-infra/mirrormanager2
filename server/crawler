@@ -109,6 +109,7 @@ class ForkingMaster:
         diff = self.timings[p.pid]['stop'] - self.timings[p.pid]['start']
         host = Host.get(self.timings[p.pid]['hostid'])
         logger.info('Host %s (id=%s) crawl time %s' % (host.name, host.id, str(diff)))
+        host.last_crawl_duration = diff
         del self.timings[p.pid]
 
 
@@ -121,7 +122,7 @@ def doit():
 
     numhosts = Host.selectBy(private=False).count()
     i = 0
-    for h in list(Host.selectBy(private=False).orderBy('id')):
+    for h in list(Host.selectBy(private=False).orderBy(['-last_crawl_duration', 'id'])):
         i += 1
         try:
             if h.id < options.startid: continue

@@ -236,6 +236,7 @@ class Host(SQLObject):
     asn = IntCol(default=None)
     asn_clients = BoolCol(default=True)
     max_connections = IntCol(default=1, notNone=True, unsigned=True)
+    last_crawl_duration = DateTimeCol(default=None)
     countries_allowed = MultipleJoin('HostCountryAllowed')
     netblocks = MultipleJoin('HostNetblock', orderBy='netblock')
     acl_ips = MultipleJoin('HostAclIp', orderBy='ip')
