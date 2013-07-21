@@ -487,10 +487,14 @@ def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLe
     rsync_start_time = datetime.utcnow()
     result, listing = run_rsync(url, '--no-motd')
     rsync_stop_time = datetime.utcnow()
-    if result > 0:
-        logger.info('rsync returned exit code %d' % result)
     msg = "rsync time: %s" % str(rsync_stop_time - rsync_start_time)
     logger.info(msg)
+    if result == 10:
+        # no rsync content, fail!
+        logger.warning('Connection to host %s Refused.  Please check that the URL is correct and that the host has an rsync module still available.' % host.name)
+        return False
+    if result > 0:
+        logger.info('rsync returned exit code %d' % result)
 
     # put the rsync listing in a dict for easy access
     while True:
@@ -503,6 +507,9 @@ def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLe
             logger.debug("invalid rsync line: %s\n" % line)
     
     logger.debug("rsync listing has %d lines" % len(rsync))
+    if len(rsync) == 0:
+        # no rsync content, fail!
+        return False
     # for all directories in this category
     for d in trydirs:
         if must_dienow:
