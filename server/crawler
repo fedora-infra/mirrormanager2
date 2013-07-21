@@ -76,9 +76,7 @@ class ForkingMaster:
     def process_request(self, command, args, host):
         """Fork a new subprocess to process the request."""
         logger.info("Starting crawler %s: %s" % (host.name, args))
-        stdout = open(os.path.join(options.logdir, '%d-stdout.log' % host.id), 'a')
-        stderr = open(os.path.join(options.logdir, '%d-stderr.log' % host.id), 'a')
-        p = Popen(args, executable=command, stdin=self.devnull, stdout=stdout, stderr=stderr, close_fds=True)
+        p = Popen(args, executable=command, stdin=self.devnull, stdout=self.devnull, stderr=self.devnull, close_fds=True)
         self.start_time(p, host.id)
         logger.debug("Adding child pid %d" % p.pid)
         self.active_children.append(p)
@@ -116,7 +114,7 @@ class ForkingMaster:
 
 def doit():
     master = ForkingMaster(max_children=options.threads)
-    commonargs = [ options.crawler_perhost, '-c', options.config, '--debug']
+    commonargs = [ options.crawler_perhost, '-c', options.config]
     if options.canary:
         commonargs.append('--canary')
 
