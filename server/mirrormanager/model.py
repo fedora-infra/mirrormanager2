@@ -391,11 +391,6 @@ class Host(SQLObject):
                                  limit=1)
         return sr.count() > 0
 
-    def category_urls(self, cname):
-        for hc in self.categories:
-            if hc.category.name == cname:
-                return [hcurl.url for hcurl in HostCategoryUrl.selectBy(host_category=hc)]
-
     def directory_urls(self, directory, category):
         """Given what we know about the host and the categories it carries
         return the URLs by which we can get at it (whether or not it's actually present can be determined later."""

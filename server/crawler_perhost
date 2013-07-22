@@ -704,7 +704,8 @@ def per_host(host, options):
 
         logger.info("scanning Category %s" % category.name)
 
-        categoryUrl = method_pref(host.category_urls(category.name))
+        host_category_urls = [hcurl.url for hcurl in hc.urls]
+        categoryUrl = method_pref(host_category_urls)
         if categoryUrl is None:
             continue
         categoryPrefixLen = len(category.topdir.name)+1
@@ -724,7 +725,7 @@ def per_host(host, options):
 
         # has_all_files is None, we don't know what failed, but something did
         # change preferred protocol if necessary to http or ftp
-        categoryUrl = method_pref(host.category_urls(category.name), categoryUrl)
+        categoryUrl = method_pref(host_category_urls, categoryUrl)
 
         try_later_delay = 1
         for d in trydirs:
