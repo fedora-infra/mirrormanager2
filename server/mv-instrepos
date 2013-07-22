@@ -30,12 +30,22 @@ def doit():
             print "destroying %s" % r
             r.destroySelf()
 
-        if a.primaryArch:
-            d = u'pub/fedora/linux/releases/%s/Fedora/%s/os' % (ver.name, a.name)
-            category = Category.byName(u'Fedora Linux')    
+        if options.version != 'development': # yeah, development is ver.name, displayname is rawhide
+            prefix=u'fedora-install-%s' % ver.name
+            if a.primaryArch:
+                d = u'pub/fedora/linux/releases/%s/Fedora/%s/os' % (ver.name, a.name)
+                category = Category.byName(u'Fedora Linux')    
+            else:
+                d = u'pub/fedora-secondary/releases/%s/Fedora/%s/os' % (ver.name, a.name)
+                category = Category.byName(u'Fedora Secondary Arches')
         else:
-            d = u'pub/fedora-secondary/releases/%s/Fedora/%s/os' % (ver.name, a.name)
-            category = Category.byName(u'Fedora Secondary Arches')    
+            prefix=u'fedora-install-rawhide'
+            if a.primaryArch:
+                d = u'pub/fedora/linux/development/rawhide/%s/os' % (a.name)
+                category = Category.byName(u'Fedora Linux')    
+            else:
+                d = u'pub/fedora-secondary/development/rawhide/%s/os' % (a.name)
+                category = Category.byName(u'Fedora Secondary Arches')
 
         repos = Repository.selectBy(name=d)
         for r in repos:
@@ -43,7 +53,7 @@ def doit():
             r.destroySelf()
 
         if not os.path.isdir(os.path.join('/', d)):
-            print "directory %s does not exist on disk, skipping creation of a repository there"
+            print "directory %s does not exist on disk, skipping creation of a repository there" % d
             continue
 
         try:
@@ -51,8 +61,8 @@ def doit():
         except sqlobject.SQLObjectNotFound:
             print "directory %s exists on disk, but not in the database yet, skipping creation of a repository there until after the next UMDL run."
             continue
-        print "creating fedora-install-%s repo for arch %s" % (ver.name, a.name)
-        r = Repository(name=d.name, prefix=u'fedora-install-%s' % ver.name, arch=a, directory=d, version=ver, category=category)
+        print "creating %s repo for arch %s" % (prefix, a.name)
+        r = Repository(name=d.name, prefix=prefix, arch=a, directory=d, version=ver, category=category)
 
 
 def main():
