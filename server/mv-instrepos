@@ -30,7 +30,16 @@ def doit():
             print "destroying %s" % r
             r.destroySelf()
 
-        if options.version != 'development': # yeah, development is ver.name, displayname is rawhide
+        if options.version == 'development': # yeah, development is ver.name, displayname is rawhide
+            # We need a RepositoryRedirect here instead, as Repositories already exist to these directories.
+            fromRepo = u'fedora-install-rawhide'
+            toRepo = u'rawhide'
+            try:
+                rr = RepositoryRedirect(fromRepo = fromRepo, toRepo = toRepo)
+            except:
+                print "Repository Redirect %s -> %s already exists, ignoring." % (fromRepo, toRepo)
+                pass
+        else:
             prefix=u'fedora-install-%s' % ver.name
             if a.primaryArch:
                 d = u'pub/fedora/linux/releases/%s/Fedora/%s/os' % (ver.name, a.name)
@@ -38,31 +47,23 @@ def doit():
             else:
                 d = u'pub/fedora-secondary/releases/%s/Fedora/%s/os' % (ver.name, a.name)
                 category = Category.byName(u'Fedora Secondary Arches')
-        else:
-            prefix=u'fedora-install-rawhide'
-            if a.primaryArch:
-                d = u'pub/fedora/linux/development/rawhide/%s/os' % (a.name)
-                category = Category.byName(u'Fedora Linux')    
-            else:
-                d = u'pub/fedora-secondary/development/rawhide/%s/os' % (a.name)
-                category = Category.byName(u'Fedora Secondary Arches')
 
-        repos = Repository.selectBy(name=d)
-        for r in repos:
-            print "destroying %s" % r
-            r.destroySelf()
+            repos = Repository.selectBy(name=d)
+            for r in repos:
+                print "destroying %s" % r
+                r.destroySelf()
 
-        if not os.path.isdir(os.path.join('/', d)):
-            print "directory %s does not exist on disk, skipping creation of a repository there" % d
-            continue
+            if not os.path.isdir(os.path.join('/', d)):
+                print "directory %s does not exist on disk, skipping creation of a repository there" % d
+                continue
 
-        try:
-            d = Directory.byName(d)
-        except sqlobject.SQLObjectNotFound:
-            print "directory %s exists on disk, but not in the database yet, skipping creation of a repository there until after the next UMDL run."
-            continue
-        print "creating %s repo for arch %s" % (prefix, a.name)
-        r = Repository(name=d.name, prefix=prefix, arch=a, directory=d, version=ver, category=category)
+            try:
+                d = Directory.byName(d)
+            except sqlobject.SQLObjectNotFound:
+                print "directory %s exists on disk, but not in the database yet, skipping creation of a repository there until after the next UMDL run."
+                continue
+            print "creating %s repo for arch %s" % (prefix, a.name)
+            r = Repository(name=d.name, prefix=prefix, arch=a, directory=d, version=ver, category=category)
 
 
 def main():
