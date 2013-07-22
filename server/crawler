@@ -182,7 +182,7 @@ def main():
                       dest="logdir", default='/var/log/mirrormanager/crawler',
                       help="write individual host logfiles to DIR")
     parser.add_option("--timeout-minutes", type="int",
-                      dest="timeout_minutes", default=90,
+                      dest="timeout_minutes", default=120,
                       help="per-host timeout, in minutes")
     parser.add_option("--logfile", type="string", metavar="FILE",
                       dest="logfile", default='/var/log/mirrormanager/crawler.log',
