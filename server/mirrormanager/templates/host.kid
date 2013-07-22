@@ -25,8 +25,9 @@ ${form(value=values, action=tg.url(action), disabled_fields=disabled_fields)}
 
 <div py:if="values is not None">
 
-Last Checked In: ${values.lastCheckedIn}<br></br>
-Last Crawled: ${values.lastCrawled}  <a href="${tg.url('/crawler/'+str(values.id)+'.log')}">[Log]</a><br></br> 
+Last Checked In: ${values.lastCheckedIn}<br/>
+Last Crawled: ${values.lastCrawled}  <a href="${tg.url('/crawler/'+str(values.id)+'.log')}">[Log]</a><br/>
+Last Crawl Duration: ${values.last_crawl_duration} seconds<br/>
 
 
 <div py:if="is_siteadmin">
