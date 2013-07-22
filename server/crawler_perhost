@@ -773,7 +773,8 @@ def per_host(host, options):
 
     hoststate.close()
 
-    signal.alarm(0) # we got this far, don't alarm out now!
+    if options.timeout_minutes > 0:
+        signal.alarm(0) # we got this far, don't alarm out now!
     if rc == 0:
         if len(host_category_dirs) > 0:
             sync_hcds(host, host_category_dirs)
@@ -799,8 +800,8 @@ def main():
                       help="Include hosts marked 'private' in the crawl")
 
     parser.add_option("--timeout-minutes", type="int",
-                      dest="timeout_minutes", default=180,
-                      help="Minutes to let the crawler run before killed (default=180)")
+                      dest="timeout_minutes", default=0,
+                      help="Minutes to let the crawler run before killed (default=0, no timeout)")
     parser.add_option("--logfile", type="string", metavar="FILE",
                       dest="logfile", default=None,
                       help="write logs to FILE")
