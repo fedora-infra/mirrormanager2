@@ -394,7 +394,7 @@ class Host(SQLObject):
     def category_urls(self, cname):
         for hc in self.categories:
             if hc.category.name == cname:
-                return [hcurl.url for hcurl in HostCategoryUrl.selectBy(host_category=hc, private=False)]
+                return [hcurl.url for hcurl in HostCategoryUrl.selectBy(host_category=hc)]
 
     def directory_urls(self, directory, category):
         """Given what we know about the host and the categories it carries
