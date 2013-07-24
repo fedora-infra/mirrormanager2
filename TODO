@@ -12,10 +12,7 @@ Short Term:
 
 * clean up add-instrepos and mv-instrepos - ideally umdl would handle these.
 * move Fedora-specific apps into a server/fedora directory, add /usr/share/mirrormanager/server to sys.path.
-* improve and use errorcheck code - lots mirrors seem to be missing categories or URLs
 * crawlers failing after a 90min timeout - why?
-* make sure umdl handles SIGHUP, re-opens its log files.
-* make sure crawlers handle SIGHUP, reopens their log files.
 * consider making http redirects only redirect to http servers, not FTP (fixes bfo/ipxe)
 
 
@@ -30,8 +27,6 @@ Long Term:
   mirrorlists, with why.
 
 * push mirroring.  Shell out to remote servers when content is changed on the master, to trigger them into syncing.
-
-* only repositories are using the ordered_mirrorlist field, not say iso/ directories.  Do we care?
 
 * cronjob to mark private mirrors as not-up2date, some amount of time
   after the content has changed but they haven't run report_mirror.
