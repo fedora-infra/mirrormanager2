@@ -97,6 +97,9 @@ exit 0
 %doc LICENSES LICENSE-GPLv2
 
 %changelog
+* Tue Jul 23 2013 Matt Domsch <mdomsch@fedoraproject.org> - 1.4.2-1
+- upstream bugfix release
+
 * Mon Jun 17 2013 Matt Domsch <mdomsch@fedoraproject.org> - 1.4.1-1
 - upstream 1.4.1 pure bugfix release
 
