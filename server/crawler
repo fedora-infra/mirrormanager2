@@ -27,7 +27,7 @@ hub = __connection__ = None
 logger = None
 
 def total_seconds(td):
-    td.seconds + td.days * 24 * 3600
+    return td.seconds + td.days * 24 * 3600
 
 class ForkingMaster:
     def __init__(self, max_children = 10):
