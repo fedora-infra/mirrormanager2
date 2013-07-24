@@ -98,20 +98,11 @@ def run_rsync(rsyncpath, extra_rsync_args=None):
     if extra_rsync_args is not None:
         cmd += ' ' + extra_rsync_args
     cmd += ' ' + rsyncpath
-    try:
-        devnull = open('/dev/null', 'r+')
-        sys.stderr.write('invoking %s\n' % cmd)
-        sys.stderr.flush()
-        p = subprocess.Popen(cmd, shell=True, stdin=devnull,
-                             stdout=tmpfile, stderr=devnull, close_fds=True, bufsize=-1)
-        p.wait()
-        result = p.returncode
-    except Exception, e:
-        msg = "Exception invoking rsync:\n"
-        msg += traceback.format_exc(e)
-        sys.stderr.write(msg+'\n')
-        sys.stderr.flush()
-        result = p.returncode
+    devnull = open('/dev/null', 'r+')
+    p = subprocess.Popen(cmd, shell=True, stdin=devnull,
+                         stdout=tmpfile, stderr=devnull, close_fds=True, bufsize=-1)
+    p.wait()
+    result = p.returncode
     tmpfile.flush()
     tmpfile.seek(0)
     return (result, tmpfile)

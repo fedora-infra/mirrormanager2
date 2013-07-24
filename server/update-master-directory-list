@@ -447,7 +447,11 @@ def parse_rsync_listing(category, f):
     sync_category_directories(category, category_directories, directory_info)
 
 def sync_directories_using_rsync(rsyncpath, category, extra_rsync_args=None):
-    result, output = run_rsync(rsyncpath, extra_rsync_args)
+    try:
+        result, output = run_rsync(rsyncpath, extra_rsync_args)
+    except:
+        logger.warning('Failed to run rsync.', exc_info = True)
+        return
     if result > 0:
         logger.info("rsync returned exit code %d for Category %s: %s" % (result,
                                                                                 category.name,
