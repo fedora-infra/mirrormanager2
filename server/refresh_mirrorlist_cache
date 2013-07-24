@@ -3,28 +3,24 @@ __requires__ = 'TurboGears[future]'
 import pkg_resources
 pkg_resources.require("TurboGears")
 
-from sqlobject import *
 import sys
+import optparse
 import turbogears
-from mirrormanager.model import *
-from mirrormanager.mirrorlist import populate_all_caches, dump_caches
-from optparse import OptionParser
-import mirrormanager.zonecreator
-
 from turbogears.database import PackageHub
-hub = __connection__ = None
+sys.path.append('/usr/share/mirrormanager/server')
+from mirrormanager.mirrorlist import populate_all_caches, dump_caches
 
+hub = __connection__ = None
 options = None
 
 def doit():
     global options
     populate_all_caches()
     dump_caches(options.output)
-    mirrormanager.zonecreator.writeZoneFiles()
 
 def main():
     global options
-    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option("-c", "--config",
                       dest="config", default='dev.cfg',
                       help="TurboGears config file to use")
@@ -42,7 +38,7 @@ def main():
     __connection__ = hub
     
     doit()
-
+    return 0
 
 
 if __name__ == "__main__":
