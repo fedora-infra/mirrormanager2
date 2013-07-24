@@ -99,7 +99,7 @@ def run_rsync(rsyncpath, extra_rsync_args=None):
         cmd += ' ' + extra_rsync_args
     cmd += ' ' + rsyncpath
     try:
-        devnull = open('/dev/null', 'rw')
+        devnull = open('/dev/null', 'r+')
         sys.stderr.write('invoking %s\n' % cmd)
         sys.stderr.flush()
         p = subprocess.Popen(cmd, shell=True, stdin=devnull,

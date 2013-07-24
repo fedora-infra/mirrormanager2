@@ -33,7 +33,7 @@ class ForkingMaster:
     def __init__(self, max_children = 10):
         self.active_children = []
         self.max_children = max_children
-        self.devnull = open('/dev/null', 'rw')
+        self.devnull = open('/dev/null', 'r+')
         self.timings = {}
 
 
