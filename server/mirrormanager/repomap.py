@@ -1,54 +1,3 @@
-# The various name permutations for mirrorlist files are:
-# core-6-US-i386.txt and  core-6-global-i386.txt
-# core-source-6-global-i386.txt (no per-country)
-# core-debug-6-global-i386.txt (no per-country)
-# extras-6-US-i386.txt and extras-6-glboal-i386.txt
-# extras-source-6-global-i386.txt (no per-country)
-# extras-debug-6-global-i386.txt (no per-country)
-# rawhide-US-i386.txt
-# updates-released-6-US-i386.txt 
-# updates-released-debug-fc6-US-i386.txt
-# updates-released-
-#
-# country or global is usually appended
-# basearch is always appended coming from the mirrorlist cgi
-# to the key, the value $releasever is always appended, except for rawhide and development
-# hint - this isn't actually used by anything right now
-repomap = {
-    u'core-' : (u'Fedora', u'Fedora Core'),
-    u'core-debug-' : (u'Fedora', u'Fedora Core'),
-    u'core-source-' : (u'Fedora', u'Fedora Core'),
-
-    u'updates-released-' : (u'Fedora', u'Fedora Core'),
-    u'updates-released-debug-' : (u'Fedora', u'Fedora Core'),
-    u'updates-released-source-' : (u'Fedora', u'Fedora Core'),
-
-    u'updates-testing-' : (u'Fedora', u'Fedora Core'),
-    u'updates-testing-debug-' : (u'Fedora', u'Fedora Core'),
-    u'updates-testing-source-' : (u'Fedora', u'Fedora Core'),
-
-    u'rawhide' : (u'Fedora', u'Fedora Linux'),
-    u'rawhide-debug' : (u'Fedora', u'Fedora Linux'),
-    u'rawhide-source' : (u'Fedora', u'Fedora Linux'),
-
-    u'extras-' : (u'Fedora', u'Fedora Extras'),
-    u'extras-debug-' : (u'Fedora', u'Fedora Extras'),
-    u'extras-source-' : (u'Fedora', u'Fedora Extras'),
-
-    u'extras-devel' : (u'Fedora', u'Fedora Extras'),
-    u'extras-devel-debug' : (u'Fedora', u'Fedora Extras'),
-    u'extras-devel-source' : (u'Fedora', u'Fedora Extras'),
-
-    u'epel-' : (u'EPEL', u'Fedora EPEL'),
-    u'epel-debug-' : (u'EPEL', u'Fedora EPEL'),
-    u'epel-source-' : (u'EPEL', u'Fedora EPEL'),
-
-    u'rhel-' : (u'RHEL', u'RHEL'),
-    u'rhel-debug-' : (u'RHEL', u'RHEL'),
-    u'rhel-source-' : (u'RHEL', u'RHEL'),
-    u'rhel-optional-' : (u'RHEL', u'RHEL'),
-    }
-
 import re
 
 def is_development(path):
@@ -80,8 +29,6 @@ def repo_prefix(path, category, ver):
     isEverything = u'Everything' in path
     
 
-    isCore = u'core/' in path
-    isExtras = u'extras/' in path
     isEpel = (category.name == u'Fedora EPEL')
     isFedoraLinux = (category.name == u'Fedora Linux')
     isFedoraSecondary = (category.name == u'Fedora Secondary Arches')
@@ -98,51 +45,7 @@ def repo_prefix(path, category, ver):
     if not isRawhide and ver is not None:
         version = ver['name']
 
-    if isCore:
-        if isUpdatesReleased:
-            # updates-released-
-            if isDebug:
-                prefix = u'updates-released-debug-fc%s' % version
-            elif isSource:
-                prefix = u'updates-released-source-fc%s' % version
-            else:
-                prefix = u'updates-released-fc%s' % version
-        elif isUpdatesTesting:
-            # updates-testing-
-            if isDebug:
-                prefix = u'updates-testing-debug-fc%s' % version
-            elif isSource:
-                prefix = u'updates-testing-source-fc%s' % version
-            else:
-                prefix = u'updates-testing-fc%s' % version
-        elif isRawhide:
-            # rawhide
-            # Core rawhide is dead.
-            prefix = None
-        else:
-            # core-
-            if isDebug:
-                prefix = u'core-debug-%s' % version
-            elif isSource:
-                prefix = u'core-source-%s' % version
-            else:
-                prefix = u'core-%s' % version
-        
-    elif isExtras:
-        if isRawhide:
-            # extras-development
-            # extras-development is dead.
-            prefix = None
-        else:
-            # extras-
-            if isDebug:
-                prefix = u'extras-debug-%s' % version
-            elif isSource:
-                prefix = u'extras-source-%s' % version
-            else:
-                prefix = u'extras-%s' % version
-
-    elif isEpel:
+    if isEpel:
         # epel-
         if isTesting:
             # testing-

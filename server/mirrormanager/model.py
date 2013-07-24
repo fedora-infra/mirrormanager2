@@ -706,8 +706,6 @@ class Directory(SQLObject):
     class sqlmeta:
         cacheValues = False
     # Full path
-    # e.g. pub/fedora/linux/core/6/i386/os
-    # e.g. pub/fedora/linux/extras
     # e.g. pub/epel
     # e.g. pub/fedora/linux
     name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
@@ -782,7 +780,7 @@ class Category(SQLObject):
     class sqlmeta:
         cacheValues = False
     # Top-level mirroring
-    # e.g. core, extras, release, epel
+    # e.g. 'Fedora Linux', 'Fedora Archive'
     name = UnicodeCol(alternateID=True, length=UnicodeColKeyLength)
     product = ForeignKey('Product')
     canonicalhost = UnicodeCol(default='http://download.fedora.redhat.com')

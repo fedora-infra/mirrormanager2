@@ -238,32 +238,29 @@ def check_host(sr, host):
 
     always_up2date = False
 
-    undesired_categories = [u'Fedora Core', u'Fedora Extras']
-
     for hc in host.categories:
-        if hc.category.name not in undesired_categories:
-            if len(hc.urls) == 0:
-                    msg = u"* Host %s Category %s has no URLs.  Please add a URL to the content your mirror carries, or if not carried, delete the Category." % (host.name, hc.category.name)
-                    host_messages.append(msg)            
+        if len(hc.urls) == 0:
+                msg = u"* Host %s Category %s has no URLs.  Please add a URL to the content your mirror carries, or if not carried, delete the Category." % (host.name, hc.category.name)
+                host_messages.append(msg)            
 
-            has_rsync = False
-            for url in hc.urls:
-                if url.url.startswith(u'rsync://'):
-                    has_rsync = True
-                    break
-            if not has_rsync:
-                if (host.internet2 and host.internet2_clients) or not host.is_private():
-                    msg = u"* Please consider adding an rsync URL for Category %s.  This will speed up the MirrorManager crawler and reduce load on your server.  URLs can be marked 'for other mirrors only', in which case they will not appear in publiclists, mirrorlists, or metalinks, but will be available to the MirrorManager crawler.  If necessary, you can restrict access to only allow from the MirrorManager crawler through a 'hosts allow = 209.132.181.0/24' line in your rsyncd.conf file." % hc.category.name
-                    host_messages.append(msg)
-
-            if hc.always_up2date: always_up2date = True
-            if len(hc.dirs) == 0 and not hc.always_up2date:
-                msg = u"* Host %s Category %s has no up-to-date directories. "  % (host.name, hc.category.name)
-                if len(hc.urls) > 0:
-                    msg += u"Check that your Category URL points to %s. " % (hc.category.topdir.name)
-
-                msg += u"* Consult the crawler logs and check your report_mirror.conf."
+        has_rsync = False
+        for url in hc.urls:
+            if url.url.startswith(u'rsync://'):
+                has_rsync = True
+                break
+        if not has_rsync:
+            if (host.internet2 and host.internet2_clients) or not host.is_private():
+                msg = u"* Please consider adding an rsync URL for Category %s.  This will speed up the MirrorManager crawler and reduce load on your server.  URLs can be marked 'for other mirrors only', in which case they will not appear in publiclists, mirrorlists, or metalinks, but will be available to the MirrorManager crawler.  If necessary, you can restrict access to only allow from the MirrorManager crawler through a 'hosts allow = 209.132.181.0/24' line in your rsyncd.conf file." % hc.category.name
                 host_messages.append(msg)
+
+        if hc.always_up2date: always_up2date = True
+        if len(hc.dirs) == 0 and not hc.always_up2date:
+            msg = u"* Host %s Category %s has no up-to-date directories. "  % (host.name, hc.category.name)
+            if len(hc.urls) > 0:
+                msg += u"Check that your Category URL points to %s. " % (hc.category.topdir.name)
+
+            msg += u"* Consult the crawler logs and check your report_mirror.conf."
+            host_messages.append(msg)
 
 
     private_msg = u"  Private mirrors must run report_mirror after each rsync run completes in order for MirrorManager to know what content your mirror carries.  The crawler does not generally run against private mirrors."
