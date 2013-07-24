@@ -557,7 +557,7 @@ def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLe
     if len(host_category_dirs) > 0:
         return True
 
-    mark_not_up2date(host, "No host category directories found.  Check that your Host Category URLs are correct.")
+    mark_not_up2date(None, host, "No host category directories found.  Check that your Host Category URLs are correct.")
     return False
 
 def try_perdir(d, hoststate, url):
