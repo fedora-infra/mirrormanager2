@@ -178,6 +178,9 @@ def generate_one_html(engine, pvaMatrix, productname=None, vername=None, archnam
         hosts = publiclist_hosts(productname=productname, vername=vername, archname=archname)
         logger.debug('pvaMatrix(%s, %s, %s) did not have hosts, query required.' % (productname, vername, archname))
 
+    if len(hosts) == 0:
+        return
+
     bandwidth = 0
     for h in hosts:
         bandwidth += h.bandwidth_int
