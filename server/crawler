@@ -79,7 +79,7 @@ class ForkingMaster:
     def process_request(self, command, args, host):
         """Fork a new subprocess to process the request."""
         logger.info("Starting crawler %s: %s" % (host.name, args))
-        stderr = open(os.path.join(options.logdir, "%d-stderr.log" % host.id), 'r+')
+        stderr = open(os.path.join(options.logdir, "%d-stderr.log" % host.id), 'a')
         p = Popen(args, executable=command, stdin=self.devnull, stdout=self.devnull, stderr=stderr, close_fds=True)
         self.start_time(p, host.id)
         logger.debug("Adding child pid %d" % p.pid)
