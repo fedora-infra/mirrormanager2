@@ -43,7 +43,7 @@ def categorymap(productname, vername):
     for c in categoriesToDrop:
         try:
             categories.remove(c)
-        except KeyError:
+        except ValueError:
             pass
 
     return categories
