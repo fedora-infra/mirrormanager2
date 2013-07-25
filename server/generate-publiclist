@@ -178,14 +178,9 @@ def generate_one_html(engine, pvaMatrix, productname=None, vername=None, archnam
         hosts = publiclist_hosts(productname=productname, vername=vername, archname=archname)
         logger.debug('pvaMatrix(%s, %s, %s) did not have hosts, query required.' % (productname, vername, archname))
 
-
     bandwidth = 0
     for h in hosts:
-        if not isinstance(h.bandwidth_int, int):
-            msg = '%s bandwidth_int was not an int: %s' % (h, h.bandwidth_int)
-            logger.warning(msg)
-            h.bandwidth_int = 1
-        bandwidth = bandwidth + h.bandwidth_int
+        bandwidth += h.bandwidth_int
     bandwidth = bandwidth / 1024 # convert to Gb
 
     template_data = dict(page_title=title, hosts=hosts, numhosts=len(hosts), bandwidth=bandwidth,
