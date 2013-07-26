@@ -520,55 +520,48 @@ def _publiclist_hosts(product=None, re=None):
 
     sql1_filter = ''
     sql2_filter = ''
-    sql_common_select  = "SELECT DISTINCT host.id, host.country, host.name AS host_name, host.bandwidth_int, host.comment, host.internet2, "
-    sql_common_select += "site.org_url, site.name AS site_name, category.name AS category_name, host_category_url.url "
-    sql_common_from    = "FROM category, host_category, host, site, host_category_url "
+    sql_common  = "SELECT host.id, host.country, host.name AS host_name, host.bandwidth_int, host.comment, host.internet2, "
+    sql_common += "site.org_url, site.name AS site_name, category.name AS category_name, host_category_url.url "
+    sql_common += "FROM category, host_category, host, site, host_category_url "
     # join conditions
-    sql_common  = "WHERE "
+    sql_common += "WHERE "
     sql_common += "host_category.category_id = category.id AND "
     sql_common += "host_category.host_id = host.id AND "
     sql_common += "host_category_url.host_category_id = host_category.id AND "
     if product is not None:
         sql_common += "category.product_id = %s AND " % product.id
     sql_common += "host.site_id = site.id "
-    # select conditions                                                                                                                                                                          # up2date, active, not private                                                                                                                                                           
+    # select conditions
+    # up2date, active, not private
     sql_common += 'AND host.user_active AND site.user_active '
     sql_common += 'AND host.admin_active AND site.admin_active '
     sql_common += 'AND NOT host.private '
     sql_common += 'AND NOT site.private '
     sql_common += 'AND NOT host_category_url.private '
     sql_common += 'AND category.publiclist '
-    sql_common += 'AND EXISTS '
 
     if re is not None:
         sql1_filter = "AND " + _rlike(re, 'host_category_dir.path')
         sql2_filter = "AND " + _rlike(re, 'directory.name')
 
     sql1_subselect = '('
-    sql1_subselect += 'SELECT 1 from host_category, host_category_dir '
-    sql1_subselect += 'WHERE host_category.category_id = category.id '
-    sql1_subselect += 'AND   host_category.host_id = host.id '
-    sql1_subselect += 'AND   host_category_dir.host_category_id = host_category.id '
+    sql1_subselect += 'SELECT 1 from host_category_dir '
+    sql1_subselect += 'WHERE host_category_dir.host_category_id = host_category.id '
     sql1_subselect += 'AND   host_category_dir.up2date '
     sql1_subselect += sql1_filter
     sql1_subselect += 'LIMIT 1 '
     sql1_subselect += ') '
 
     sql2_subselect = '('
-    sql2_subselect += 'SELECT 1 from host_category, category_directory, directory '
-    sql2_subselect += 'WHERE host_category.category_id = category.id '
-    sql2_subselect += 'AND   host_category.host_id = host.id '
-    sql2_subselect += 'AND category_directory.directory_id = directory.id '
-    sql2_subselect += 'AND category_directory.category_id = category.id '
+    sql2_subselect += 'SELECT 1 from category_directory, directory '
+    sql2_subselect += 'WHERE category_directory.directory_id = directory.id '
+    sql2_subselect += 'AND   category_directory.category_id = category.id '
     sql2_subselect += 'AND host_category.always_up2date '
     sql2_subselect += sql2_filter
     sql2_subselect += 'LIMIT 1 '
     sql2_subselect += ') '
 
-    sql1 = sql_common_select + sql_common_from + sql_common + sql1_subselect
-    sql2 = sql_common_select + sql_common_from + sql_common + sql2_subselect
-    
-    sql = "SELECT * FROM ( ( %s ) UNION ( %s ) ) AS subquery" % (sql1, sql2)
+    sql = sql_common + 'AND ( EXISTS ' + sql1_subselect + 'OR  EXISTS ' + sql2_subselect + ') '
 
     result = Directory._connection.queryAll(sql)
     return result
