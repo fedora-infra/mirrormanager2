@@ -115,12 +115,13 @@ class ProductVersionArchMatrix:
         return result
 
     def fill(self):
+        arches = publiclist_arches()
         self.data = {}
-        for p in Product.select():
-            for v in p.versions:
+        for p in list(Product.select()):
+            for v in list(p.versions):
                 if not v.display:
                     continue
-                for a in publiclist_arches():
+                for a in arches:
                     hosts = publiclist_hosts(productname=p.name, vername=v.name, archname=a.name)
                     self.set_pva(p.name, v.name, a.name, hosts)
                     msg = "filled %s/%s/%s with %s hosts" % (p.name, v.name, a.name, len(hosts))
@@ -142,27 +143,45 @@ def generate_all():
     engine = engines.get('kid', None)
     pvaMatrix = ProductVersionArchMatrix()
     pvaMatrix.fill()
-
-    generate_one_html(engine, pvaMatrix)
-    for p in Product.select():
-        generate_one_html(engine, pvaMatrix, productname=p.name)
+    products = list(Product.select().orderBy('name'))
+    arches = publiclist_arches()
+    email  = config.get('mirrormanager.report_problems_to_email', 'webmaster')
+    utcnow = dt.datetime.utcnow()
+    projectname = config.get('mirrormanager.projectname','Fedora')
+    template = engine.load_template('mirrormanager.templates.publiclist')
+    generate_one_html(engine, template, pvaMatrix, projectname, products,
+                      arches, email, utcnow)
+    for p in products:
+        generate_one_html(engine, template, pvaMatrix, projectname, products,
+                          arches, email, utcnow, productname=p.name)
         
         for v in p.versions:
             if not v.display:
                 continue
-            generate_one_html(engine, pvaMatrix, productname=p.name, vername=v.name)
-
-            for a in publiclist_arches():
-                generate_one_html(engine, pvaMatrix, productname=p.name, vername=v.name, archname=a.name)
+            generate_one_html(engine, template, pvaMatrix, projectname, products,
+                              arches, email, utcnow, productname=p.name, vername=v.name)
 
 
-def generate_one_html(engine, pvaMatrix, productname=None, vername=None, archname=None):
+            for a in arches:
+                generate_one_html(engine, template, pvaMatrix, projectname, products,
+                                  arches, email, utcnow,
+                                  productname=p.name, vername=v.name, archname=a.name)
+
+
+def generate_one_html(engine, template, pvaMatrix, projectname, products, arches,
+                      email, utcnow, productname=None, vername=None, archname=None):
+    try:
+        hosts = pvaMatrix.get_pva(productname, vername, archname)
+    except KeyError:
+        hosts = publiclist_hosts(productname=productname, vername=vername, archname=archname)
+
+    if len(hosts) == 0:
+        return
 
     pva = make_pva(productname, vername, archname)
-    msg = "making %s" % pva
+    title = "%s %s Public Active Mirrors" % (projectname, pva)
+    msg = "making %s, %d hosts" % (pva, len(hosts))
     logger.info(msg)
-    title = "%s %s Public Active Mirrors" % (config.get('mirrormanager.projectname','Fedora'),
-                                             pva)
 
     output_dir = os.path.join(options.output, pva)
     try:
@@ -171,39 +190,28 @@ def generate_one_html(engine, pvaMatrix, productname=None, vername=None, archnam
         if e.errno != errno.EEXIST:
             raise
 
-    try:
-        hosts = pvaMatrix.get_pva(productname, vername, archname)
-        logger.debug('pvaMatrix(%s, %s, %s) had %d hosts' % (productname, vername, archname, len(hosts)))
-    except KeyError:
-        hosts = publiclist_hosts(productname=productname, vername=vername, archname=archname)
-        logger.debug('pvaMatrix(%s, %s, %s) did not have hosts, query required.' % (productname, vername, archname))
-
-    if len(hosts) == 0:
-        return
-
     bandwidth = 0
     for h in hosts:
         bandwidth += h.bandwidth_int
     bandwidth = bandwidth / 1024 # convert to Gb
 
-    template_data = dict(page_title=title, hosts=hosts, numhosts=len(hosts), bandwidth=bandwidth,
-                         pvaMatrix=pvaMatrix,
-                         pva=pva,
-                         products=list(Product.select().orderBy('name')),
-                         arches=publiclist_arches(),
-                         report_problems_to_email = config.get('mirrormanager.report_problems_to_email', 'webmaster'),
-                         utcnow = dt.datetime.utcnow())
+    template_data = dict(page_title = title,
+                         hosts = hosts, numhosts = len(hosts),
+                         bandwidth = bandwidth,
+                         pvaMatrix = pvaMatrix,
+                         pva = pva,
+                         products = products,
+                         arches = arches,
+                         report_problems_to_email = email,
+                         utcnow = utcnow)
 
-    t=engine.load_template('mirrormanager.templates.publiclist')
-    out_html = _process_output(template_data, template=t, format='html', engine=engine)
+    out_html = _process_output(template_data, template = template,
+                               format = 'html', engine = engine)
 
     fname = "index.html"
     f = open(os.path.join(output_dir, fname), "w")
     f.write(out_html)
     f.close()
-
-
-
 
 options=None
 
