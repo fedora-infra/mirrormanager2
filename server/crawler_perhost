@@ -93,6 +93,7 @@ class hostState:
         self.http_debuglevel = http_debuglevel
         self.ftp_debuglevel = ftp_debuglevel
         self.ftp_dir_results = None
+        self.keepalives_available = False
 
 
     def get_connection(self, url):
@@ -277,7 +278,10 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
             raise HTTPUnknown()
 
     conn.end_request()
-    if not r.keepalive_ok():
+    keepalive_ok = r.keepalive_ok()
+    if keepalive_ok:
+        hoststate.keepalives_available = True
+    if not keepalive_ok:
         hoststate.close_http(url)
 
     content_length = r.getheader('Content-Length')
@@ -751,7 +755,6 @@ def per_host(host, options):
                 if has_all_files is None:
                     has_all_files = try_perfile(d, hoststate, url)
 
-
                 if has_all_files == False:
                     logger.warning("Not up2date: %s" % (d.name))
                     host_category_dirs[(hc, d)] = False
@@ -767,6 +770,9 @@ def per_host(host, options):
             except TryLater:
                 msg = "Server load exceeded - try later (%s seconds)" % try_later_delay
                 logger.warning(msg)
+                if categoryUrl.startswith('http') and not hoststate.keepalives_available:
+                    logger.warning("Host %s (id=%d) does not have HTTP Keep-Alives enabled." % (host.name, host.id))
+
                 time.sleep(try_later_delay)
                 if try_later_delay < 64:
                     try_later_delay = try_later_delay << 1
@@ -775,7 +781,8 @@ def per_host(host, options):
                 mark_not_up2date(sys.exc_info(), host, "Unknown exception raised.  This is a bug in the MM crawler.")
                 rc = 1
                 break
-
+    if categoryUrl.startswith('http') and not hoststate.keepalives_available:
+        logger.warning("Host %s (id=%d) does not have HTTP Keep-Alives enabled." % (host.name, host.id))
     hoststate.close()
 
     if options.timeout_minutes > 0:
