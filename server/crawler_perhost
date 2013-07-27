@@ -774,7 +774,7 @@ def per_host(host, options):
                     logger.warning("Host %s (id=%d) does not have HTTP Keep-Alives enabled." % (host.name, host.id))
 
                 time.sleep(try_later_delay)
-                if try_later_delay < 64:
+                if try_later_delay < 8:
                     try_later_delay = try_later_delay << 1
                 
             except:
