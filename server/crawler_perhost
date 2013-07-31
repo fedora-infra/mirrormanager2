@@ -702,7 +702,13 @@ def per_host(host, options):
 
     hoststate = hostState(http_debuglevel=http_debuglevel, ftp_debuglevel=ftp_debuglevel)
 
-    for hc in select_host_categories_to_scan(options):
+    categoryUrl = ''
+    host_categories_to_scan = select_host_categories_to_scan(options)
+    if len(host_categories_to_scan) == 0:
+        mark_not_up2date(None, host, "No host category directories found.  Check that your Host Category URLs are correct.")
+        return 1
+
+    for hc in host_categories_to_scan:
         if must_dienow:
             raise TimeoutException
 
@@ -781,8 +787,8 @@ def per_host(host, options):
                 mark_not_up2date(sys.exc_info(), host, "Unknown exception raised.  This is a bug in the MM crawler.")
                 rc = 1
                 break
-    if categoryUrl.startswith('http') and not hoststate.keepalives_available:
-        logger.warning("Host %s (id=%d) does not have HTTP Keep-Alives enabled." % (host.name, host.id))
+        if categoryUrl.startswith('http') and not hoststate.keepalives_available:
+            logger.warning("Host %s (id=%d) does not have HTTP Keep-Alives enabled." % (host.name, host.id))
     hoststate.close()
 
     if options.timeout_minutes > 0:
@@ -790,9 +796,6 @@ def per_host(host, options):
     if rc == 0:
         if len(host_category_dirs) > 0:
             sync_hcds(host, host_category_dirs)
-        else:
-            mark_not_up2date(None, host, "No host category directories found.  Check that your Host Category URLs are correct.")
-            return 1
     return rc
 
 def main():
