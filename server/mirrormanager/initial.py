@@ -35,8 +35,8 @@ def create_arches():
         except DuplicateEntryError:
             pass
 
-    primary_arches = (u'i386', u'x86_64', u'source')
-    secondary_arches = (u'ppc', u'ppc64', u'sparc', u'sparc64', u'arm', u'armhfp', u's390', u's390x', u'ia64')
+    primary_arches = (u'i386', u'x86_64', u'source', u'armhfp')
+    secondary_arches = (u'ppc', u'ppc64', u'sparc', u'sparc64', u'arm', u's390', u's390x', u'ia64')
     for arch in primary_arches:
         _do_create(arch, True)
     for arch in secondary_arches:
