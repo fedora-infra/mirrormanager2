@@ -130,7 +130,7 @@ def doit():
         i += 1
         try:
             if h.id < options.startid: continue
-            if h.id >= options.stopid: break
+            if h.id >= options.stopid: continue
             master.wait_for_available_slot()
 
             if not (h.admin_active and h.user_active and h.site.user_active and h.site.admin_active):
