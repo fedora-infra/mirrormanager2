@@ -98,7 +98,7 @@ def populate_directory_cache():
     def setup_directory_repo_cache():
         cache = {}
         for r in list(Repository.select()):
-            if r.directory:
+            if r.directory and r.version and r.arch:
                 cache[r.directory.id] = r
         return cache
     def setup_version_ordered_mirrorlist_cache():
