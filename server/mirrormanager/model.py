@@ -121,57 +121,12 @@ class SiteAdmin(SQLObject):
     def my_site(self):
         return self.site
 
-
-class MiniSite(object):
-    def __init__(self, id, name):
-        self.id = id
-        self.name = name
-        self.hosts = []
-
-class MiniHost(object):
-    def __init__(self, id, name):
-        self.id = id
-        self.name = name
-
-def _min_sites_and_hosts(results):
-    sites = []
-    site = None
-    current_site = None
-    for (site_id, site_name, host_id, host_name) in results:
-        if current_site != site_id:
-            site = MiniSite(site_id, site_name)
-            sites.append(site)
-            current_site = site_id
-        host = MiniHost(host_id, host_name)
-        site.hosts.append(host)
-    return sites
-
 def user_sites(identity):
     result = []
-    query_result = Site.select(join=INNERJOINOn(Site, SiteAdmin, AND(SiteAdmin.q.siteID == Site.q.id,
+    sites = Site.select(join=INNERJOINOn(Site, SiteAdmin, AND(SiteAdmin.q.siteID == Site.q.id,
                                                                      SiteAdmin.q.username == identity.current.user_name)))
-    for site in query_result:
-        for h in site.hosts:
-            result.append((site.id, site.name, h.id, h.name))
+    return list(sites)
 
-    sites = _min_sites_and_hosts(result)
-    return sites
-
-def all_sites_and_hosts():
-    def _all_sites_and_hosts():
-        sql  = 'SELECT site.id AS site_id, site.name AS site_name, host.id AS host_id, host.name AS host_name '
-        sql += 'FROM site, host '
-        sql += 'WHERE '
-        sql += 'host.site_id = site.id '
-        sql += 'GROUP BY site.id, site.name, host.id, host.name  '
-        sql += 'ORDER BY site.name, host.name '
-        result = Site._connection.queryAll(sql)
-        return result
-
-    sites = _min_sites_and_hosts(_all_sites_and_hosts())
-    return sites
-        
-    
 class HostCategory(SQLObject):
     class sqlmeta:
         cacheValues = False
