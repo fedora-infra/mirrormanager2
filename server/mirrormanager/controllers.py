@@ -875,10 +875,13 @@ class Root(controllers.RootController):
 
     @expose(template="kid:mirrormanager.templates.rsync_acl", format="plain", content_type="text/plain", allow_json=True)
     def mirroradmins(self, **kwargs):
-        if 'host' not in kwargs:
-            return dict(values=[])
-        host = kwargs['host']
-        return dict(values=host_siteadmins(host))
+        if 'host' in kwargs:
+            host = kwargs['host']
+            return dict(values=host_siteadmins(host))
+        else:
+            public_only = bool(int(kwargs.get('public_only', 1)))
+            values = mirror_admins(public_only=public_only)
+            return dict(values=values)
 
     @expose(template="kid:mirrormanager.templates.rsyncFilter", format="plain", content_type="text/plain")
     def rsyncFilter(self, **kwargs):

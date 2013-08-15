@@ -881,6 +881,18 @@ class DirectoryExclusiveHost(SQLObject):
     host = ForeignKey('Host')
     idx = DatabaseIndex('directory', 'host', unique=True)
 
+def mirror_admins(public_only=True):
+    sql  = 'SELECT DISTINCT site_admin.username '
+    sql += 'FROM site, host, site_admin '
+    sql += 'WHERE host.site_id = site.id '
+    sql += 'AND site_admin.site_id = site.id '
+    if public:
+        sql += 'AND site.public AND host.public '
+    sql += 'ORDER BY site_admin.username '
+    qresult = Directory._connection.queryAll(sql)
+    result = [x[0] for x in qresult]
+    return result
+
 def _host_siteadmins(url):
     sql = 'SELECT DISTINCT site_admin.username FROM '
     sql += 'host_category_url, host_category, host, site, site_admin WHERE '
