@@ -23,7 +23,7 @@ if admin_group in tg.identity.groups:
 	  <a href="${tg.url('/site/'+str(site.id))}"><span py:replace="site.name">Site Name</span></a>
 	  
 	  <ul>
-	  <li py:for="h in site.hosts">
+	  <li py:for="h in list(site.hosts)">
 	  <a href="${tg.url('/host/'+str(h.id))}"><span
 	  py:replace="h.name">Host Name</span></a>
 	  </li>
