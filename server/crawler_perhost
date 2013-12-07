@@ -3,7 +3,7 @@ __requires__ = 'TurboGears[future]'
 import pkg_resources
 pkg_resources.require("TurboGears")
 
-from datetime import datetime
+import datetime
 import ftplib
 from ftplib import FTP
 import hashlib
@@ -332,7 +332,7 @@ def sync_hcds(host, host_category_dirs):
     stats = dict(up2date = 0, not_up2date = 0, unchanged = 0,
                  unknown = 0, newdir = 0, deleted_on_master = 0)
     current_hcds = {}
-    now = datetime.utcnow()
+    now = datetime.datetime.utcnow()
     host.lastCrawled = now
     keys = host_category_dirs.keys()
     keys = sorted(keys, key = lambda t: t[1].name)
@@ -488,13 +488,13 @@ def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLe
     if not url.endswith('/'):
         url += '/'
 
-    rsync_start_time = datetime.utcnow()
+    rsync_start_time = datetime.datetime.utcnow()
     try:
         result, listing = run_rsync(url, '--no-motd')
     except:
         logger.warning('Failed to run rsync.', exc_info = True)
         return False
-    rsync_stop_time = datetime.utcnow()
+    rsync_stop_time = datetime.datetime.utcnow()
     msg = "rsync time: %s" % str(rsync_stop_time - rsync_start_time)
     logger.info(msg)
     if result == 10:
@@ -648,7 +648,7 @@ Date: %s
 
 def mark_not_up2date(exc, host, reason="Unknown"):
     host.set_not_up2date()
-    host.lastCrawled = datetime.utcnow()
+    host.lastCrawled = datetime.datetime.utcnow()
     msg = "Host marked not up2date: %s" % reason
     logger.warning(msg)
     if exc is not None:

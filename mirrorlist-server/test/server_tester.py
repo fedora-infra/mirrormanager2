@@ -7,7 +7,7 @@
 import socket, os
 import cPickle as pickle
 from string import zfill, atoi
-from datetime import datetime
+import datetime
 
 socketfile = '/var/run/mirrormanager/mirrorlist_server.sock'
 
@@ -17,9 +17,9 @@ connectTime = None
 def do_mirrorlist(d):
     try:
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        start = datetime.utcnow()
+        start = datetime.datetime.utcnow()
         s.connect(socketfile)
-        end = datetime.utcnow()
+        end = datetime.datetime.utcnow()
     except:
         raise
 
@@ -77,7 +77,7 @@ while True:
     client_ip = u"%s.%s.%s.%s" % (random.randint(0,255), random.randint(0,255), random.randint(0,255), random.randint(0,255))
     d['client_ip'] = client_ip
 
-    start = datetime.utcnow()
+    start = datetime.datetime.utcnow()
     result = do_mirrorlist(d)
-    end = datetime.utcnow()
+    end = datetime.datetime.utcnow()
     print "[%s]   connect: %s  total: %s" % (pid, connectTime, (end-start))

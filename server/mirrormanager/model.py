@@ -2,7 +2,7 @@ from sqlobject import *
 from sqlobject.converters import sqlrepr
 from sqlobject.sqlbuilder import RLIKE, AND, OR, INNERJOINOn
 from turbogears import identity, config
-from datetime import datetime
+import datetime
 import time
 from string import strip
 import IPy
@@ -43,7 +43,7 @@ class Site(SQLObject):
     private = BoolCol(default=False)
     admin_active = BoolCol(default=True)
     user_active  = BoolCol(default=True)
-    createdAt = DateTimeCol(default=datetime.utcnow())
+    createdAt = DateTimeCol(default=datetime.datetime.utcnow())
     createdBy = UnicodeCol(default=None)
     # allow all sites to pull from me
     allSitesCanPullFromMe = BoolCol(default=False)
@@ -323,7 +323,7 @@ class Host(SQLObject):
     def _set_config(self, config):
         # really, we don't store the config anymore
         self._config = None
-        self.lastCheckedIn = datetime.utcnow()
+        self.lastCheckedIn = datetime.datetime.utcnow()
 
     def checkin(self, config):
         message = self._uploaded_config(config)
@@ -605,7 +605,7 @@ class HostStats(SQLObject):
     class sqlmeta:
         cacheValues = False
     host = ForeignKey('Host')
-    _timestamp = DateTimeCol(default=datetime.utcnow())
+    _timestamp = DateTimeCol(default=datetime.datetime.utcnow())
     type = UnicodeCol(default=None)
     data = PickleCol(default=None)
 
@@ -988,7 +988,7 @@ class Visit(SQLObject):
 
     visit_key = StringCol(length=40, alternateID=True,
                           alternateMethodName="by_visit_key")
-    created = DateTimeCol(default=datetime.now)
+    created = DateTimeCol(default=datetime.datetime.now)
     expiry = DateTimeCol()
 
     def lookup_visit(cls, visit_key):
@@ -1017,7 +1017,7 @@ class Group(SQLObject):
     group_name = UnicodeCol(length=16, alternateID=True,
                             alternateMethodName="by_group_name")
     display_name = UnicodeCol(length=255)
-    created = DateTimeCol(default=datetime.now)
+    created = DateTimeCol(default=datetime.datetime.now)
 
     # collection of all users belonging to this group
     users = RelatedJoin("User", intermediateTable="user_group",
@@ -1044,7 +1044,7 @@ class User(SQLObject):
                                alternateMethodName="by_email_address")
     display_name = UnicodeCol(length=255)
     password = UnicodeCol(length=40)
-    created = DateTimeCol(default=datetime.now)
+    created = DateTimeCol(default=datetime.datetime.now)
 
     # groups this user belongs to
     groups = RelatedJoin("Group", intermediateTable="user_group",

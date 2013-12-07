@@ -17,7 +17,6 @@ from string import zfill, atoi, strip, replace
 from paste.wsgiwrappers import *
 import gzip
 import cStringIO
-from datetime import datetime, timedelta
 
 socketfile = '/var/run/mirrormanager/mirrorlist_server.sock'
 select_timeout = 60 # seconds
