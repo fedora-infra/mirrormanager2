@@ -27,6 +27,7 @@ def repo_prefix(path, category, ver):
     if not isUpdatesTesting:
         isUpdatesReleased = u'updates' in path
     isEverything = u'Everything' in path
+    isFedora = u'Fedora' in path
     
 
     isEpel = (category.name == u'Fedora EPEL')
@@ -65,15 +66,23 @@ def repo_prefix(path, category, ver):
 
     elif isFedoraLinux or isFedoraSecondary or isFedoraArchive:
         if isReleases or isDevelopment:
-            if isReleases and not isEverything: prefix = None
-            # fedora-
-            elif isDebug:
-                prefix = u'fedora-debug-%s' % version
-            elif isSource:
-                prefix = u'fedora-source-%s' % version
-            else:
-                prefix=u'fedora-%s' % version
-            
+            if isReleases:
+                if isEverything:
+                    # fedora-
+                    if isDebug:
+                        prefix = u'fedora-debug-%s' % version
+                    elif isSource:
+                        prefix = u'fedora-source-%s' % version
+                    else:
+                        prefix=u'fedora-%s' % version
+                elif isFedora:
+                    if isDebug or isSource:
+                        # ignore releases/$version/Fedora/$arch/debug/
+                        # ignore releases/$version/Fedora/source/SRPMS/
+                        prefix = None
+                    else:
+                        # fedora-install-
+                        prefix = u'fedora-install-%s' % version
         elif isUpdatesReleased:
             # updates-released-
             if isDebug:
