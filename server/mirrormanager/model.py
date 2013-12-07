@@ -190,7 +190,7 @@ class Host(SQLObject):
     internet2_clients = BoolCol(default=False)
     asn = IntCol(default=None)
     asn_clients = BoolCol(default=True)
-    max_connections = IntCol(default=1, notNone=True, unsigned=True)
+    max_connections = IntCol(default=1, notNone=True)
     last_crawl_duration = BigIntCol(default=0)
     countries_allowed = MultipleJoin('HostCountryAllowed')
     netblocks = MultipleJoin('HostNetblock', orderBy='netblock')
