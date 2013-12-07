@@ -41,3 +41,8 @@ def create_arches():
         _do_create(arch, True)
     for arch in secondary_arches:
         _do_create(arch, False)
+
+def setup_centos():
+    p = Product(name=u'CentOS')
+    d = Directory(name=u'centos')
+    c = Category(name=u'CentOS', product=p, topdir=d, canonicalhost=u'rsync://msync.centos.org/CentOS')

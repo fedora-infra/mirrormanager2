@@ -8,7 +8,7 @@ pkg_resources.require("TurboGears")
 
 import turbogears
 from turbogears.database import PackageHub
-from mirrormanager.initial import user_group_setup, create_arches
+from mirrormanager.initial import user_group_setup, create_arches, setup_centos
 
 hub = __connection__ = None
 options = None
@@ -16,6 +16,8 @@ options = None
 def doit():
     user_group_setup()
     create_arches()
+    if options.distro == u'CentOS':
+        setup_centos()
 
 def main():
     global options
@@ -23,6 +25,9 @@ def main():
     parser.add_option("-c", "--config",
                       dest="config", default='/etc/mirrormanager/prod.cfg',
                       help="TurboGears config file to use (default=/etc/mirrormanager/prod.cfg)")
+    parser.add_option("-d", "--distro",
+                      dest="distro", default=u'Fedora', choices=[u'Fedora', u'CentOS']
+                      help="Distro to for which initialize")
 
     (options, args) = parser.parse_args()
 
