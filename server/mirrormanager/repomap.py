@@ -7,6 +7,15 @@ def is_development(path):
         return m.group(1)
     return None
 
+def centos_prefix(path):
+    choices = (u'os', u'updates', u'extras', u'centosplus',
+               u'contrib', u'fasttrack', u'cr', u'addons', u'xen4')
+    for c in choices:
+        pattern = u'/' + c + u'/'
+        if pattern in path:
+            return c
+    return None
+
 def repo_prefix(path, category, ver):
 
     prefix = None
@@ -39,7 +48,7 @@ def repo_prefix(path, category, ver):
     isRrpmfusionFreeFedora = (category.name == u'RPMFUSION free Fedora')
     isRrpmfusionNonfreeEl = (category.name == u'RPMFUSION nonfree EL')
     isRrpmfusionNonfreeFedora = (category.name == u'RPMFUSION nonfree Fedora')
-
+    isCentOS = (category.name == u'CentOS')
     isRhel = (category.name == u'RHEL')
 
     version = u'unknown'
@@ -277,5 +286,8 @@ def repo_prefix(path, category, ver):
 
         if prefix and isBeta:
             prefix = u'%s-beta' % prefix
+
+    elif isCentOS:
+        prefix = centos_prefix(path)
 
     return prefix
