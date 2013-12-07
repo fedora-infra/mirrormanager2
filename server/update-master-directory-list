@@ -84,52 +84,42 @@ def create_version_from_path(category, path):
 
     return ver
 
-arch_cache = dict()
-version_cache = []
+arch_cache = None
+version_cache = None
 
 def setup_arch_version_cache():
     global arch_cache
-    arch_cache = dict()
-    for a in list(Arch.select()):
-        arch_cache[a.name] = dict(name=a.name,
-                                  id=a.id)
+    if arch_cache is None:
+        arch_cache = list(Arch.select())
 
     global version_cache
-    version_cache = []
-    for v in list(Version.select(orderBy='-id')):
-        version_cache.append(dict(id = v.id,
-                                  name = v.name,
-                                  product_id = v.product.id,
-                                  ordered_mirrorlist = v.ordered_mirrorlist)
-                             )
+    if version_cache is None:
+        version_cache = list(Version.select(orderBy='-id'))
 
 def guess_ver_arch_from_path(category, product_id, path):
     arch = None
     if 'SRPMS' in path:
-        arch = arch_cache['source']
+        arch = Arch.byName('source')
     else:
-        for aname, v in arch_cache.iteritems():
-            s = '.*(^|/)%s(/|$).*' % (aname)
+        for a in arch_cache:
+            s = '.*(^|/)%s(/|$).*' % (a.name)
             if re.compile(s).match(path):
-                arch = aname
+                arch = a
                 break
 
     ver = None
     # newest versions/IDs first, also handles stupid Fedora 9.newkey hack.
     for v in version_cache:
-        if v['product_id'] != product_id: continue
-        s = '.*(^|/)%s(/|$).*' % (v['name'])
+        if v.product.id != product_id: continue
+        s = '.*(^|/)%s(/|$).*' % (v.name)
         if re.compile(s).match(path):
             ver = v
             break
 
     # create Versions if we can figure it out...
     if ver is None:
-        v = create_version_from_path(category, path)
-        if v:
-            ver = dict(id = v.id, name = v.name,
-                     product_id = product_id,
-                     ordered_mirrorlist = v.ordered_mirrorlist)
+        ver = create_version_from_path(category, path)
+        if ver:
 
             version_cache.append(ver)
     return (ver, arch)
@@ -273,7 +263,7 @@ def make_repository(dir, dname, category, product_id, topdir):
 	# anything meaningful.  So simply have it match dir.name,
 	# which can't conflict.
         repo = Repository(name=dir.name, category=category, version=ver, arch=arch, directory=dir, prefix=prefix)
-        logger.info('Created Repository %s -> Directory %s' % (repo, dir))
+        logger.info('Created Repository(prefix=%s, version=%s, arch=%s, category=%s) -> Directory %s' % (prefix, ver.name, arch.name, category.name, dir.name))
     except:
         # repo exists, but it may be one we want to move
         #try:
