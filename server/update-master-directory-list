@@ -26,35 +26,18 @@ from mirrormanager.repomap import *
 from mirrormanager.lib import manage_pidfile, remove_pidfile, run_rsync
 
 
-rootdir='/'
 pidfile='/var/run/mirrormanager/umdl.pid'
 delete_directories=False
 logger = None
+stdexcludes=['.*\.snapshot', '.*/\.~tmp~']
 
 from turbogears.database import PackageHub
 hub = PackageHub("mirrormanager")
 __connection__ = hub
 
-def trim_os_from_dirname(dirname):
-    if config.get('mirrormanager.projectname') == 'CentOS':
-        return dirname
-    # trim the /os off the name
-    index = dirname.rfind('/os')
-    if index > 0:
-        dirname = dirname[:index]
-    return dirname
-
-def rename_SRPMS_source(l):
-    rc = []
-    for i in l:
-        if i == 'source':
-            pass
-        elif i == 'SRPMS':
-            rc.append('source')
-        else:
-            rc.append(i)
-    return rc
-
+def remove_category_topdir(topdirName, path):
+    path = path[len(topdirName)+1:]
+    return path
 
 def _get_version_from_path(path):
     # Debian/Ubuntu versioning
@@ -73,7 +56,7 @@ def create_version_from_path(category, path):
     ver = None
     vname = _get_version_from_path(path)
     if vname is not None and vname != '':
-        if '/test/' in path:
+        if u'/test/' in path:
             isTest = True
         else:
             isTest = False
@@ -90,38 +73,42 @@ version_cache = None
 def setup_arch_version_cache():
     global arch_cache
     if arch_cache is None:
-        arch_cache = list(Arch.select())
+        arch_cache = []
+        for a in list(Arch.select()):
+            arch_cache.append(a.sqlmeta.asDict())
 
     global version_cache
     if version_cache is None:
-        version_cache = list(Version.select(orderBy='-id'))
+        version_cache = []
+        for v in list(Version.select(orderBy='-id')):
+            version_cache.append(v.sqlmeta.asDict())
 
-def guess_ver_arch_from_path(category, product_id, path):
+def guess_ver_arch_from_path(category, path):
     arch = None
     if 'SRPMS' in path:
         arch = Arch.byName('source')
     else:
         for a in arch_cache:
-            s = '.*(^|/)%s(/|$).*' % (a.name)
+            s = '.*(^|/)%s(/|$).*' % (a['name'])
             if re.compile(s).match(path):
-                arch = a
+                arch = Arch.get(a['id'])
                 break
+            
 
     ver = None
     # newest versions/IDs first, also handles stupid Fedora 9.newkey hack.
     for v in version_cache:
-        if v.product.id != product_id: continue
-        s = '.*(^|/)%s(/|$).*' % (v.name)
+        if v['productID'] != category.product.id: continue
+        s = '.*(^|/)%s(/|$).*' % (v['name'])
         if re.compile(s).match(path):
-            ver = v
+            ver = Version.get(v['id'])
             break
 
     # create Versions if we can figure it out...
     if ver is None:
         ver = create_version_from_path(category, path)
         if ver:
-
-            version_cache.append(ver)
+            version_cache.append(ver.sqlmeta.asDict())
     return (ver, arch)
 
 
@@ -134,11 +121,11 @@ def set_repomd_timestamp(yumrepo):
     yumrepo.timestamp = timestamp
     return timestamp
 
-def make_file_details_from_checksums(dname, D):
-    def _parse_checksum_file(path, checksumlen):
+def make_file_details_from_checksums(diskpath, relativeDName, D):
+    def _parse_checksum_file(relativeDName, checksumlen):
         r = {}
         try:
-            f = open(path, 'r')
+            f = open(os.path.join(diskpath, relativeDName),  'r')
             for line in f:
                 line = line.strip()
                 s = line.split()
@@ -154,23 +141,25 @@ def make_file_details_from_checksums(dname, D):
             pass
         return r
 
-    def _checksums_from_globs(dirname, globs, checksumlen):
+    def _checksums_from_globs(relativeDName, globs, checksumlen):
         d = {}
         checksum_files = []
         for g in globs:
-            checksum_files.extend(glob.glob(os.path.join(rootdir, dirname, g)))
+            checksum_files.extend(glob.glob(os.path.join(diskpath, relativeDName, g)))
         for f in checksum_files:
             d.update(_parse_checksum_file(f, checksumlen))
         return d
 
-    sha1_globs = ['*.sha1sum', 'SHA1SUM']
-    md5_globs = ['*.md5sum', 'MD5SUM']
-    sha256_globs = ['*-CHECKSUM']
+    if diskpath is None: return
+
+    sha1_globs = ['*.sha1sum', 'SHA1SUM', 'sha1sum.txt']
+    md5_globs = ['*.md5sum', 'MD5SUM', 'md5sum.txt']
+    sha256_globs = ['*-CHECKSUM', 'sha256sum.txt']
     sha512_globs = ['*.sha512sum', 'SHA512SUM']
-    md5dict = _checksums_from_globs(dname, md5_globs, 32)
-    sha1dict = _checksums_from_globs(dname, sha1_globs, 40)
-    sha256dict = _checksums_from_globs(dname, sha256_globs, 64)
-    sha512dict = _checksums_from_globs(dname, sha512_globs, 128)
+    md5dict = _checksums_from_globs(relativeDName, md5_globs, 32)
+    sha1dict = _checksums_from_globs(relativeDName, sha1_globs, 40)
+    sha256dict = _checksums_from_globs(relativeDName, sha256_globs, 64)
+    sha512dict = _checksums_from_globs(relativeDName, sha512_globs, 128)
 
     files = set()
     for k in md5dict.keys():
@@ -184,7 +173,7 @@ def make_file_details_from_checksums(dname, D):
 
     for f in files:
         try:
-            s = os.stat(os.path.join(rootdir, dname, f))
+            s = os.stat(os.path.join(diskpath, relativeDName, f))
         except OSError:
             # bail if the file doesn't actually exist
             continue
@@ -202,14 +191,14 @@ def make_file_details_from_checksums(dname, D):
                             timestamp=ctime, size=size)
     
 
-def make_repomd_file_details(dname, D):
-    if not dname.endswith('/repodata'):
-        return
-    repomd_fname = os.path.join(rootdir, dname, 'repomd.xml')
-    if not os.path.exists(repomd_fname):
+def make_repomd_file_details(diskpath, relativeDName, D, category):
+    if diskpath is None: return
+    if not relativeDName.endswith(u'/repodata'): return
+    absolutepath = os.path.join(diskpath, relativeDName, 'repomd.xml')
+    if not os.path.exists(absolutepath):
         return
     try:
-        f = open(repomd_fname, 'r')
+        f = open(absolutepath, 'r')
         repomd = f.read()
         f.close()
     except:
@@ -220,7 +209,7 @@ def make_repomd_file_details(dname, D):
     sha256 = hashlib.sha256(repomd).hexdigest()
     sha512 = hashlib.sha512(repomd).hexdigest()
 
-    yumrepo = yum.repoMDObject.RepoMD('repoid', repomd_fname)
+    yumrepo = yum.repoMDObject.RepoMD('repoid', absolutepath)
     if 'timestamp' not in yumrepo.__dict__:
         set_repomd_timestamp(yumrepo)
     timestamp = yumrepo.timestamp
@@ -243,18 +232,17 @@ def move_repository_from_development(prefix, arch, newdir):
             repo.directory = newdir
     return repo
 
-def make_repository(dir, dname, category, product_id, topdir):
+def make_repository(directory, relativeDName, category):
     repo = None
-    path = dname[len(topdir)+1:]
-    (ver, arch) = guess_ver_arch_from_path(category, product_id, path)
+    (ver, arch) = guess_ver_arch_from_path(category, relativeDName)
     if ver is None or arch is None:
         return None
 
     # stop making duplicate Repository objects.
-    if len(dir.repositories) > 0:
+    if len(directory.repositories) > 0:
         return None
 
-    prefix = repo_prefix(path, category, ver)
+    prefix = repo_prefix(relativeDName, category, ver)
     try:
 	# historically, Repository.name was a longer string with
 	# product and category deliniations.  But we were getting
@@ -262,35 +250,42 @@ def make_repository(dir, dname, category, product_id, topdir):
 	# repositories under repositories.  And .name isn't used for
 	# anything meaningful.  So simply have it match dir.name,
 	# which can't conflict.
-        repo = Repository(name=dir.name, category=category, version=ver, arch=arch, directory=dir, prefix=prefix)
-        logger.info('Created Repository(prefix=%s, version=%s, arch=%s, category=%s) -> Directory %s' % (prefix, ver.name, arch.name, category.name, dir.name))
+        repo = Repository(name=directory.name, category=category, version=ver, arch=arch, directory=directory, prefix=prefix)
+        logger.info('Created Repository(prefix=%s, version=%s, arch=%s, category=%s) -> Directory %s' % (prefix, ver.name, arch.name, category.name, directory.name))
     except:
-        # repo exists, but it may be one we want to move
-        #try:
-        #repo = move_repository_from_development(prefix, arch, dir)
-        #except:
-        #pass
         pass
 
     return repo
 
-def nuke_gone_directories(rootdir):
+def is_excluded(path, excludes):
+    for e in excludes:
+        if re.compile(e).match(path):
+            return True
+    return False
+
+
+def nuke_gone_directories(diskpath, category, excludes):
     """ deleting a Directory has a ripple effect through the whole
         database.  Be really sure you're ready do to this.  It comes
         in handy when say a Test release is dropped."""
-        
-    for d in Directory.select(orderBy='-name'):
-        dname = d.name
-        if not os.path.isdir(os.path.join(rootdir, dname)):
-            if len(d.categories) == 1: # safety, this should always trigger
-                logger.info("Deleting gone directory %s" % (dname))
-                d.destroySelf()
 
-unreadable_dirs = set()
+    topdirName = category.topdir.name
+        
+    for d in category.directories(orderBy='-name'):
+        if is_excluded(d.name, excludes): continue
+        relativeDName = remove_category_topdir(topdirName, d.name)
+        if not os.path.isdir(os.path.join(diskpath, relativeDName)):
+            if len(d.categories) == 1: # safety, this should always trigger
+                logger.info("Deleting gone directory %s" % (d.name))
+                d.destroySelf()
 
 def parent_dir(path):
     sdir = path.split('/')[:-1]
-    return '/'.join(sdir)
+    try:
+        parent = os.path.join(*sdir)
+    except TypeError: # 
+        parent = u''
+    return parent
 
 
 def ctime_from_rsync(date, hms):
@@ -300,35 +295,38 @@ def ctime_from_rsync(date, hms):
     return int(time.mktime(t.timetuple()))
 
 
-def make_one_directory(line, category, path, category_directories):
-    global unreadble_dirs
+def fill_category_directories_from_rsync(line, category, topdirName, category_directories):
     readable=True
-    d = line.split()[4]
+    relativeDName = line.split()[4]
     if re.compile('^\.$').match(d):
-        dname = path
+        directoryname = topdirName
     else:
-        dname = "%s/%s" % (path, d)
+        directoryname = os.path.join(topdirName, relativeDName)
+
+    if is_excluded(directoryname, stdexcludes + category.excludes): return
+
     perms = line.split()[0]
-    if not re.compile('^d......r.x').match(perms) or parent_dir(dname) in unreadable_dirs:
+    if not re.compile('^d......r.x').match(perms) or parent_dir(relativeDName) in category.unreadable_dirs:
         readable=False
-        unreadable_dirs.add(dname)
+        category.unreadable_dirs.add(relativeDName)
 
     try:
         perm, size, date, hms, filepath = line.split()
     except ValueError:
         raise
     ctime = ctime_from_rsync(date, hms)
-    category_directories[dname] = {'files':{}, 'isRepository':False, 'readable':readable, 'ctime':ctime, 'changed':True}
-    if d.endswith('repodata'):
-        parent_dname = dname[:-len('/repodata')]
-        try:
-            category_directories[parent_dname]['isRepository'] = True
-        except KeyError:
-            category_directories[parent_dname] = {'files':{}, 'isRepository':True, 'readable':readable, 'ctime':ctime, 'changed':True}
-            
-    return dname, category_directories
 
-def add_file_to_directory(line, path, category_directories):
+    category_directories[relativeDName] = {'files':{}, 'isRepository':False, 'readable':readable, 'ctime':ctime, 'changed':True}
+    if d.endswith('repodata'):
+        parent_relativeDName = parent_dir(relativeDName)
+        try:
+            category_directories[parent_relativeDName]['isRepository'] = True
+        except KeyError:
+            category_directories[parent_relativeDName] = {'files':{}, 'isRepository':True, 'readable':readable, 'ctime':ctime, 'changed':True}
+            
+    return category_directories
+
+def add_file_to_directory(line, category_directories):
     try:
         perm, size, date, hms, filepath = line.split()
     except ValueError:
@@ -342,11 +340,11 @@ def add_file_to_directory(line, path, category_directories):
     filename = l[-1]
     subpath = l[:-1]
     if len(subpath) > 0:
-        dirpath = ("%s/" % path) + '/'.join(subpath)
+        relativeDName = os.path.join(*subpath)
     else:
-        dirpath = path
-    category_directories[dirpath]['files'][filename] = {'size':size,
-                                                        'stat':dt}
+        relativeDName = ''
+    category_directories[relativeDName]['files'][filename] = {'size':size,
+                                                              'stat':dt}
 
 def short_filelist(files):
     html=0
@@ -354,10 +352,10 @@ def short_filelist(files):
     hdrs=0
     drpms=0
     for f in files.keys():
-        if f.endswith('.html'): html=html+1
-        if f.endswith('.rpm'):  rpms=rpms+1
-        if f.endswith('.hdr'):  hdrs=hdrs+1
-        if f.endswith('.drpm'):  drpms=drpms+1
+        if f.endswith('.html'):  html += 1
+        if f.endswith('.rpm'):   rpms += 1
+        if f.endswith('.hdr'):   hdrs += 1
+        if f.endswith('.drpm'): drpms += 1
     if html>10 or rpms > 10 or hdrs > 10 or drpms > 10:
         date_file_list = []
         rc = {}
@@ -374,28 +372,32 @@ def short_filelist(files):
     else:
         return files
 
-def sync_category_directories(category, category_directories, directory_info):
-    product_id = category.product.id
-    topdir = category.topdir.name
-    excludes=['.snapshot', '.~tmp~']
-    for dirpath, value in category_directories.iteritems():
-        if excludes[0] in dirpath or excludes[1] in dirpath:
-            continue
+
+
+
+def sync_category_directories(diskpath, category, category_directories):
+    for relativeDName in sorted(category_directories.keys()):
+        value = category_directories[relativeDName]
         set_readable = False
         set_ctime = False
         set_files = False
         try:
-            d = directory_info[dirpath]
+            d = category.directory_cache[relativeDName]
             if d['readable'] != value['readable']: set_readable = True
             if d['ctime'] != value['ctime']:       set_ctime = True
+            D = Directory.get(d['id'])
         except KeyError:
-            D = Directory(name=dirpath,readable=value['readable'], ctime=value['ctime'])
-            D.addCategory(category)
-            d = directory_info[dirpath] = dict(id=D.id, readable=value['readable'], ctime=value['ctime'])
+            if relativeDName == u'':
+                D = category.topdir
+            else:
+                dname = os.path.join(category.topdir.name, relativeDName)
+                D = Directory(name=dname, readable=value['readable'], ctime=value['ctime'])
+                logger.debug(u'Created Directory(%s, readable=%s, ctime=%s)' % (dname, value['readable'], value['ctime']))
+                D.addCategory(category)
+            d = category.directory_cache[relativeDName] = D.sqlmeta.asDict()
 
         if value['changed']: set_files = True
 
-        D = Directory.get(d['id'])
         if (set_readable or set_ctime or set_files):
             if set_readable:
                 D.readable = value['readable']
@@ -404,41 +406,40 @@ def sync_category_directories(category, category_directories, directory_info):
             if set_files:
                 if D.files != short_filelist(value['files']):
                     D.files = short_filelist(value['files'])
-        make_file_details_from_checksums(dirpath, D)
+        make_file_details_from_checksums(diskpath, relativeDName, D)
 
     # this has to be a second pass to be sure the child repodata/ dir is created in the db first
-    for dirpath, value in category_directories.iteritems():
-        d = directory_info[dirpath]
+    for relativeDName, value in category_directories.iteritems():
+        d = category.directory_cache[relativeDName]
         D = Directory.get(d['id'])
         if value['isRepository']:
-            make_repository(D, dirpath, category, product_id, topdir)
-        make_repomd_file_details(dirpath, D)
+            make_repository(D, relativeDName, category)
+        make_repomd_file_details(diskpath, relativeDName, D, category)
     Directory.ageFileDetails()
 
 
 def parse_rsync_listing(category, f):
-    topdir_name = category.topdir.name
+    topdirName = category.topdir.name
     category_directories = {}
+    category.unreadable_dirs = set()
     while True:
         line = f.readline()
         if not line: break
         line.strip()
         l = line.split()
         if line.startswith('d') and len(l) == 5 and len(l[0]) == 10: # good guess it's a directory line
-            if re.compile('^\.$').match(line):
-                # we know the top-level category directory already exists, don't try to re-make it
-                # fixme I don't think this ever hits
+            if re.compile('^\.$').match(line): # we know category.topdir exists and isn't excluded
                 pass
             else:
-                dname, category_directories = make_one_directory(line, category, topdir_name, category_directories)
+                category_directories = fill_category_directories_from_rsync(line, category, topdirName, category_directories)
         else:
-            add_file_to_directory(line, topdir_name, category_directories)
-    directory_info = cache_directory_info()
-    sync_category_directories(category, category_directories, directory_info)
+            add_file_to_directory(line, category_directories)
 
-def sync_directories_using_rsync(rsyncpath, category, extra_rsync_args=None):
+    sync_category_directories(None, category, category_directories)
+
+def sync_directories_using_rsync(rsyncpath, category):
     try:
-        result, output = run_rsync(rsyncpath, extra_rsync_args)
+        result, output = run_rsync(rsyncpath, category.extra_rsync_options)
     except:
         logger.warning('Failed to run rsync.', exc_info = True)
         return
@@ -451,101 +452,82 @@ def sync_directories_using_rsync(rsyncpath, category, extra_rsync_args=None):
 
 def sync_directories_from_file(filename, category):
     f = open(filename, 'r')
-    parse_rsync_listing(category, f)
+    parse_rsync_listing(None, category, f)
     f.close()
 
-def cache_directory_info():
+def cache_directories(category):
     cache = dict()
-    sql = "SELECT id, name, ctime, readable FROM directory"
-    result = Directory._connection.queryAll(sql)
-    for (id, name, ctime, readable) in result:
-        cache[name] = dict(id=id, ctime=ctime, readable=readable)
+    topdirName = category.topdir.name
+    for directory in list(category.directories):
+        d = directory.sqlmeta.asDict()
+        relativeDName = remove_category_topdir(topdirName, d['name']).strip(u'/')
+        cache[relativeDName] = d
     return cache
 
-def sync_directories_from_directory(directory, category, excludes=[]):
-    global unreadable_dirs
-    # drop trailing slashes from path
-    directory = directory.rstrip('/')
+def sync_directories_from_disk(diskpath, category, excludes=[]):
+    category.unreadable_dirs = set()
+    # drop any trailing slashes from diskpath
+    diskpath = diskpath.rstrip(u'/')
     category_directories = {}
-    topdir = category.topdir
-    topdirName = topdir.name
-    
-    directory_info = cache_directory_info()
 
-    # fixme
-    # if directory looks like /path/to/something/pub/fedora/linux
-    # and topdir.name is pub/fedora/linux
-    # which means we keep only [:-len(topdir.name)]
-    # we want to os.walk(directory)
-    # and the resulting dirpaths look like /path/to/something/pub/fedora/linux
-    # and the matching directory is pub/fedora/linux.
-    # paths below this then have directories of $path/dirname[len(topdir)+1:]
-    stdexcludes=['.*\.snapshot', '.*/\.~tmp~']
-    for dirpath, dirnames, filenames in os.walk(directory, topdown=True):
-        next=False
-        for e in stdexcludes + excludes:
-            if re.compile(e).match(dirpath):
-                next=True
-                break
-        if next:
-            logger.info("excluding %s" % (dirpath))
+    for dirpath, dirnames, filenames in os.walk(diskpath, topdown=True):
+        relativeDName = dirpath[len(diskpath) + 1:]
+        relativeDName = relativeDName.strip(u'/')
+        if is_excluded(relativeDName, stdexcludes + excludes):
+            logger.info("excluding %s" % (relativeDName))
             # exclude all its subdirs too
             dirnames[:] = []
             continue
 
-        # avoid disappearing files
+
+        # avoid disappearing directories
         try:
-            s = os.stat(dirpath)
+            s = os.stat(os.path.join(diskpath, relativeDName))
             ctime = s[stat.ST_CTIME]
         except OSError:
             continue
 
-        i = string.index(dirpath, topdirName)
-        dname = dirpath[i:]
-        dname = dname.rstrip('/')
         try:
-            d_ctime = directory_info[dname]['ctime']
+            d_ctime = category.directory_cache[relativeDName]['ctime']
         except KeyError:
             # we'll need to create it
             d_ctime = 0
 
+        dirnames.sort()
+
         mode = s.st_mode
         readable = not not (mode & stat.S_IRWXO & (stat.S_IROTH|stat.S_IXOTH))
-        if not readable or parent_dir(dname) in unreadable_dirs:
-            unreadable_dirs.add(dname)
-        isRepo = 'repodata' in dirnames
+        if not readable or parent_dir(relativeDName) in category.unreadable_dirs:
+            category.unreadable_dirs.add(relativeDName)
+        isRepo = u'repodata' in dirnames
 
         changed = (d_ctime != ctime)
         if changed:
-            logger.info("%s has changed" % dname)
-        category_directories[dname] = {'files':{}, 'isRepository':isRepo, 'readable':readable, 'ctime':ctime, 'changed':changed}
+            logger.info("%s has changed: %s != %s" % (relativeDName, d_ctime, ctime))
+        category_directories[relativeDName] = {'files':{}, 'isRepository':isRepo, 'readable':readable, 'ctime':ctime, 'changed':changed}
 
         # skip per-file stat()s if the directory hasn't changed
         if changed:
             for f in filenames:
                 try:
-                    s = os.stat(os.path.join(dirpath, f))
+                    s = os.stat(os.path.join(diskpath, relativeDName, f))
                 except OSError:
                     continue
-                category_directories[dname]['files'][f] = {'size':str(s.st_size),
-                                                           'stat':s[stat.ST_CTIME]}
+                category_directories[relativeDName]['files'][f] = {'size':str(s.st_size),
+                                                                   'stat':s[stat.ST_CTIME]}
 
-    sync_category_directories(category, category_directories, directory_info)
+    sync_category_directories(diskpath, category, category_directories)
 
 def main():
-    global rootdir
     global delete_directories
     global logger
     parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option("-c", "--config",
                       dest="config", default='dev.cfg',
                       help="TurboGears config file to use")
-    parser.add_option("--rootdir",
-                      dest="rootdir", default=rootdir,
-                      help="on-disk directory trees rooted at [rootdir]")
     parser.add_option("--logfile",
                       dest="logfile", default='/var/log/mirrormanager/umdl.log',
-                      help="on-disk directory trees rooted at [rootdir]")
+                      metavar="FILE", help="write logs to FILE")
     parser.add_option("--debug",
                       dest="debug", default=False, action="store_true",
                       help="enable debugging")
@@ -556,7 +538,6 @@ def main():
 
     (options, args) = parser.parse_args()
     turbogears.update_config(options.config, modulename="mirrormanager.config")
-    rootdir = options.rootdir
     delete_directories = options.delete_directories
 
     fmt = '%(asctime)s %(message)s'
@@ -578,11 +559,6 @@ def main():
     logger.info("Starting umdl")
     setup_arch_version_cache()
     for i in config.get('umdl.master_directories'):
-        try:
-            sync_options = i['options']
-        except KeyError:
-            sync_options = None
-
         cname = i['category']
         try:
             category = Category.byName(cname)
@@ -594,18 +570,22 @@ def main():
             logger.error('umdl.master_directories Category %s has null Product, skipping' % (cname))
             continue            
 
+        category.excludes = i.get('excludes', [])
+        category.extra_rsync_options = i.get('options')
+        category.directory_cache = cache_directories(category)
+
         if i['type'] == 'rsync':
-            sync_directories_using_rsync(i['url'], category, sync_options)
+            sync_directories_using_rsync(i['url'], category)
 
         if i['type'] == 'file':
             sync_directories_from_file(i['url'], category)
 
         if i['type'] == 'directory':
-            excludes = i.get('excludes', [])
-            sync_directories_from_directory(i['path'], category, excludes)
+            sync_directories_from_disk(i['path'], category)
 
-    if options.delete_directories:
-        nuke_gone_directories(options.rootdir)
+            if options.delete_directories:
+                nuke_gone_directories(i['path'], category)
+
     remove_pidfile(pidfile)
     logger.info("Ending umdl")
 

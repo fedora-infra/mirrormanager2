@@ -24,7 +24,9 @@ umdl.master_directories = ''' [
 #       { 'type':'rsync', 'url':'/pub/epel/', 'category':'Fedora EPEL' },
 #       { 'type':'rsync', 'url':'/pub/fedora/linux/', 'category':'Fedora Linux',
 #               'options':"--exclude='**/core/' --exclude='**/extras/' --exclude='**/[7-8]'" },
-        ] '''
+#       { 'type':'directory', 'path':'/srv/rsync/pub/fedora/linux/', 'category':'Fedora Linux',
+#               'excludes':['**/core/', '**/extras/', '**/[7-8]' ] },
+	] '''
 
 # manage-repo-redirects (mrr) repository definition
 # this can be used to define a repository redirect
