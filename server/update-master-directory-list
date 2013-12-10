@@ -155,7 +155,7 @@ def make_file_details_from_checksums(diskpath, relativeDName, D):
     sha1_globs = ['*.sha1sum', 'SHA1SUM', 'sha1sum.txt']
     md5_globs = ['*.md5sum', 'MD5SUM', 'md5sum.txt']
     sha256_globs = ['*-CHECKSUM', 'sha256sum.txt']
-    sha512_globs = ['*.sha512sum', 'SHA512SUM']
+    sha512_globs = ['*.sha512sum', 'SHA512SUM', 'sha512sum.txt']
     md5dict = _checksums_from_globs(relativeDName, md5_globs, 32)
     sha1dict = _checksums_from_globs(relativeDName, sha1_globs, 40)
     sha256dict = _checksums_from_globs(relativeDName, sha256_globs, 64)
