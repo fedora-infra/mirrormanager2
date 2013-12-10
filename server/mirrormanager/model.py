@@ -886,7 +886,7 @@ def mirror_admins(public_only=True):
     sql += 'FROM site, host, site_admin '
     sql += 'WHERE host.site_id = site.id '
     sql += 'AND site_admin.site_id = site.id '
-    if public:
+    if public_only:
         sql += 'AND site.public AND host.public '
     sql += 'ORDER BY site_admin.username '
     qresult = Directory._connection.queryAll(sql)
