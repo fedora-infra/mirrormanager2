@@ -46,3 +46,4 @@ def setup_centos():
     p = Product(name=u'CentOS')
     d = Directory(name=u'centos')
     c = Category(name=u'CentOS', product=p, topdir=d, canonicalhost=u'rsync://msync.centos.org/CentOS')
+    d.addCategory(c)
