@@ -1,0 +1,425 @@
+
+/* Main Fedora CSS. Please do not edit -- override in your app */
+
+*
+{
+  margin: 0;
+  padding: 0;
+}
+
+html, body
+{
+  height: 100%;
+}
+
+body
+{
+  min-height: 100%;
+  font-size: 1em;
+  background: #FFFFFF url(/mirrormanager/static/images/fedora/images/border-left.png) 0 0 repeat-y;
+}
+
+    
+a img
+{
+  border: none;
+}
+
+div#wrapper
+{
+  margin-left: 18px;
+  font: normal 0.9em/1.5 sans-serif;
+  min-height: 100%;
+  background: #FFFFFF url(/mirrormanager/static/images/fedora/images/border-right.png) 100% 0 repeat-y;
+}
+
+div#wrapper2 {
+  max-width: 160ex;
+  min-height: 35em;
+}
+
+div.wrapper3 { /* half of wrapper2, for consistent tables */
+  width: 80ex;
+}
+
+#head
+{
+  border-top: 10px solid #337ACC;
+  padding: 1ex 17px;
+  margin-right: 18px;
+  background: #FFFFFF url(/mirrormanager/static/images/fedora/images/line.png) 0 100% repeat-x;
+}
+
+#head h1 a
+{
+  display: block;
+  text-indent: -9999px;
+  background: url(/mirrormanager/static/images/centos/centos-logo.png) 20px 50% no-repeat;
+  height: 73px;
+  width: 138px;
+  overflow: hidden;
+}
+
+#sidebar
+{
+  float: left;
+  width: 13em;
+  margin: 4ex 2ex;
+  background: #FFFFFF;
+  padding-bottom: 3ex;
+}
+
+#banner
+{
+  text-indent: -9999px;
+  background: url(/mirrormanager/static/images/fedora/images/banner.jpg) 0 0 no-repeat;
+  height: 75px;
+  width: 400px;
+  margin: 0 auto;
+}
+
+#get
+{
+  text-align: center;
+  margin: 1ex 0.5ex;
+  font-weight: bold;
+}
+
+#get ul
+{
+  font-weight: normal;
+  list-style: none;
+  display: inline;
+  font-size: 1.4ex;
+}
+
+#get li
+{
+  display: inline;
+  border-left: 1px solid #CCCCCC;
+  margin-left: -1px;
+  padding: 0 1ex;
+}
+
+#get li.first
+{
+  border-left: none;
+}
+
+#get a
+{
+  color: #00356B;
+}
+
+#nav
+{
+  margin: 0 0 0;
+  padding: 0 1.5ex;
+}
+
+#nav h2
+{
+  border-bottom: 1px dotted #AAAAAA;
+  color: #444444;
+  font-size: 1.5ex;
+  margin: 3ex 0 1ex;
+  text-transform: uppercase;
+  font-weight: normal;
+}
+
+#nav ul {
+  padding-left: 2.2em;
+}
+
+#nav ul ul,
+#nav ul ol,
+#nav ol ul,
+#nav ol ol {
+	margin-left: 0em;
+	padding-left: 1em;
+	font-size: 90%;
+}
+
+#nav .navnote {
+  font-size: 75%;
+  color: #777;
+}
+
+#nav a
+{
+  font-weight: bold;
+  margin-right: 0.75ex;
+  color: #729FCF;
+}
+
+#nav a:active
+{
+  background-color: #ddd;
+}
+
+
+#content
+{
+  margin: 0 3ex;
+  padding: 3ex;
+  color: #333;
+  background: #FFFFFF;
+}
+
+#content h1
+{
+  font-size: 160%;
+  margin: 1.5ex 0 1.5ex 0;
+}
+
+#content h2
+{
+  font-size: 140%;
+  margin: 2ex 0 0.8em 0;
+  border-bottom: 1px dotted #ccc;
+}
+
+#content h2 div {
+  font-size: 1ex;
+  font-weight: normal;
+}
+
+#content h3
+{
+  color: #337acc;
+  margin: 1.2em 0 0.7em 0;
+  font-size: 120%;
+  border-bottom: 3px double #eee;
+}
+
+#content h4
+{
+  color: #777;
+  margin: 1em 0 0.7em 0;
+  font-size: 2ex;
+  text-transform: uppercase;
+  font-size: 105%;
+}
+
+#content h5
+{
+    font-size: 100%;
+}
+#content p
+{
+  margin: 1ex 1ex 1ex 0;
+}
+
+#content img
+{
+
+}
+
+#content a
+{
+  color: #337ACC;
+}
+
+
+ul,
+ol {
+	padding-left: 2.5em;
+}
+
+ul {
+	list-style: url(/mirrormanager/static/images/fedora/images/arrowS.png) circle;
+}
+
+ol {
+	list-style-image: none !important;
+}
+
+ul li {
+	padding-left: 0.2em;
+	line-height: 1.5em;
+}
+
+ol li {
+	padding-left: 0.5em;
+}
+
+ul ul,
+ul ol,
+ol ul,
+ol ol {
+	margin-left: 0em;
+}
+
+ul li p,
+ol li p {
+	line-height: 1.3em;
+	margin-left: 0em !important;
+}
+
+
+
+.download
+{
+  list-style-image: url(/mirrormanager/static/images/fedora/images/arrowS.png);
+  list-style-position: outside;
+  margin: 1.6ex 3ex;
+}
+
+.download li
+{
+  color: #777777;
+  font-size: 1.8ex;
+  background: #EFEFEF;
+  padding: 1ex;
+  border-bottom: 1px dotted #AAAAAA;
+}
+
+.download a
+{
+  font-weight: bold;
+}
+
+.roles
+{
+  list-style: none;
+  background: red;
+  display: inline;
+}
+
+.roles li
+{
+  float: left;
+  margin-bottom: 0.5ex;
+}
+
+.roles a
+{
+  line-height: 1;
+  width: 130px;
+  height: 150px;
+  text-align: center;
+  display: block;
+  text-decoration: none;
+}
+
+.roles a:hover
+{
+  background-color: #EFEFEF;
+}
+
+.roles img
+{
+}
+
+#footer
+{
+  position: relative;
+  font: normal 1.3ex sans-serif;
+  clear: both;
+  text-align: center;
+  background: #FFFFFF url(/mirrormanager/static/images/fedora/images/line-bottom.png) 0 0 repeat-x;
+  margin: 0 0 0;
+  border-bottom: 10px solid #337ACC;
+  height: 80px;
+  color: #AAAAAA;
+  width: 100%;
+}
+
+#bottom
+{
+  background: #FFFFFF url(/mirrormanager/static/images/fedora/images/border-right.png) 100% 0 repeat-y;
+  margin-right: 18px;
+  margin-top: 5em;
+  bottom: 0;
+}
+
+#footer ul
+{
+  list-style: none;
+}
+
+#footer li
+{
+  display: inline;
+  border-left: 1px solid #AAAAAA;
+  padding: 0 0.75ex;
+  margin-left: -1px;
+}
+
+#footer li.first
+{
+  border-left: none;
+}
+
+#footer a
+{
+  color: #223344;
+}
+
+#footer a:hover
+{
+  color: #112233;
+}
+
+#footer .copy
+{
+  padding-top: 3ex;
+}
+
+#footer .disclaimer
+{
+}
+
+#screenshot-banner a {
+  font-size: 1.6ex;
+  text-align: left;
+}
+
+#screenshot-banner ul
+{
+  list-style: none;
+}
+
+#screenshot-banner li
+{
+  display: inline;
+}
+
+#screenshot-banner img
+{
+  vertical-align: bottom;
+  border: 0;
+}
+
+/* Some nifty tables */
+
+table.nifty tr > th,
+table.nifty tr > td {
+	padding: 0.2em 0.5em;
+}
+
+table.nifty tr > th {
+	border-top: 1px solid #ddd;
+	background-color: #eee;
+	border-bottom: 1px solid #ddd;
+}
+
+table.nifty tr.odd > td {
+	border-top: 1px solid #ddd;
+	background-color: #f0f0f0;
+	border-bottom: 1px solid #ddd;
+}
+
+table.nifty tr.even > td {
+	background-color: #fff;
+}
+
+table.nifty td.separator {
+    border-bottom: 1px solid #ddd;
+}
+
+table.compact tr td,
+table.compact tr th {
+    font-size: 90%;
+    padding: 0.2em 0.2em;
+}
