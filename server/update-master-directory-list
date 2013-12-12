@@ -23,7 +23,7 @@ from turbogears import config
 sys.path.append('/usr/share/mirrormanager/server')
 from mirrormanager.model import *
 from mirrormanager.repomap import *
-from mirrormanager.lib import manage_pidfile, remove_pidfile, run_rsync
+from mirrormanager.lib import manage_pidfile, remove_pidfile, run_rsync, parent_dir
 
 
 pidfile='/var/run/mirrormanager/umdl.pid'
@@ -278,15 +278,6 @@ def nuke_gone_directories(diskpath, category, excludes):
             if len(d.categories) == 1: # safety, this should always trigger
                 logger.info("Deleting gone directory %s" % (d.name))
                 d.destroySelf()
-
-def parent_dir(path):
-    sdir = path.split('/')[:-1]
-    try:
-        parent = os.path.join(*sdir)
-    except TypeError: # 
-        parent = u''
-    return parent
-
 
 def ctime_from_rsync(date, hms):
     year, month, day = date.split('/')

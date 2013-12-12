@@ -120,3 +120,11 @@ def project_dict(formname, template_engine="kid", **kw):
     d['tg_template'] = "%s:%s" % (template_engine, template)
     d.update(**kw)
     return d
+
+def parent_dir(path):
+    sdir = path.split('/')[:-1]
+    try:
+        parent = os.path.join(*sdir)
+    except TypeError: # 
+        parent = u''
+    return parent
