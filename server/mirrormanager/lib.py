@@ -116,7 +116,7 @@ def project_template(formname):
 
 def project_dict(formname, template_engine="kid", **kw):
     d = dict()
-    template = project_template(formname, template_engine)
+    template = project_template(formname)
     d['tg_template'] = "%s:%s" % (template_engine, template)
     d.update(**kw)
     return d
