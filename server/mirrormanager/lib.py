@@ -108,11 +108,15 @@ def run_rsync(rsyncpath, extra_rsync_args=None):
     tmpfile.seek(0)
     return (result, tmpfile)
 
+
+def project_template(formname):
+    project = config.get("mirrormanager.project_template", "fedora")
+    template = "mirrormanager.templates.%s.%s" % (project, formname)
+    return template
+
 def project_dict(formname, template_engine="kid", **kw):
     d = dict()
-    project = config.get("mirrormanager.project_template", "fedora")
-    template = "%s:mirrormanager.templates.%s.%s" % (template_engine,
-                                                     project, formname)
-    d['tg_template'] = template
+    template = project_template(formname, template_engine)
+    d['tg_template'] = "%s:%s" % (template_engine, template)
     d.update(**kw)
     return d

@@ -19,6 +19,7 @@ from turbogears.view import engines
 from turbogears.database import PackageHub
 sys.path.append("/usr/share/mirrormanager/server")
 from mirrormanager.model import Product, publiclist_arches, publiclist_hosts
+from mirrormanager.lib import project_template
 
 hub = __connection__ = None
 logger = None
@@ -148,7 +149,7 @@ def generate_all():
     email  = config.get('mirrormanager.report_problems_to_email', 'webmaster')
     utcnow = dt.datetime.utcnow()
     projectname = config.get('mirrormanager.projectname','Fedora')
-    template = engine.load_template('mirrormanager.templates.publiclist')
+    template = engine.load_template(project_template('publiclist'))
     generate_one_html(engine, template, pvaMatrix, projectname, products,
                       arches, email, utcnow)
     for p in products:
