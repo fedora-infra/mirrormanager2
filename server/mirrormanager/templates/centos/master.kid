@@ -84,18 +84,8 @@ if admin_group in tg.identity.groups:
     <div id="bottom">
       <div py:if="tg.config('mirrormanager.copyright', 'fedora') == 'fedora'" id="footer">
         <p class="copy">Copyright &copy; 2007 Red Hat, Inc. and others.  All Rights Reserved.
-        Please send any comments or corrections to the <a href="mailto:webmaster@fedoraproject.org">websites team</a>.
+        Please send any comments or corrections to the <a href="http://lists.centos.org/mailman/listinfo/CentOS-mirror">websites team</a>.
         </p>
-        <p class="disclaimer">
-        The Fedora Project is maintained and driven by the community and sponsored by Red Hat.  This is a community maintained site.  Red Hat is not responsible for content.
-        </p>
-        <ul>
-          <li class="first"><a href="http://fedoraproject.org/wiki/Legal">Legal</a></li>
-          <li><a href="http://fedoraproject.org/wiki/Legal/TrademarkGuidelines">Trademark Guidelines</a></li>
-        </ul>
-      </div>
-      <div py:if="tg.config('mirrormanager.copyright', 'fedora') != 'fedora'" id="footer">
-        Some other copyright???
       </div>
     </div>
   </div>

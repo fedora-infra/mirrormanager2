@@ -46,7 +46,7 @@ donations.
 <p>
 To become a public ${tg.config('mirrormanager.projectname','Fedora')} mirror, please see <a
   py:attrs="{'href': tg.config('mirrormanager.mirrorwiki', 'http://fedoraproject.org/wiki/Infrastructure/Mirroring')}">
-our wiki page on Mirroring</a>.
+our page on Mirroring</a>.
 </p>
 
 <p>

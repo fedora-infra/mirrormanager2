@@ -47,8 +47,8 @@ Control List.  As such, each Host should create one or more <strong>ACL
 IPs</strong>.  Hosts can also be temporarily marked inactive.
 </p>
 <p>
-Hosts carry content by <strong>Category</strong>.  Fedora's categories include
-Fedora Linux (Fedora 7 and newer).  Hosts expose a Category via one or
+Hosts carry content by <strong>Category</strong>.  CentOS has a single Category, "CentOS".
+Hosts expose a Category via one or
 more <strong>URLs</strong> (public URLs for anonymous http/ftp/rsync, or private URLs
 for use by other mirrors only).
 </p>

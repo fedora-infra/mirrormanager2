@@ -115,7 +115,7 @@ privileges.
 <a href="${tg.url('/host_category/0/new?hostid=' + str(values.id))}">[Add Category]</a>
 </div>
 <p>
-Hosts carry categories of software.  Example Fedora categories include Fedora and Fedora Archive.
+Hosts carry categories of software.  CentOS has only category "CentOS".
 </p>
 <div py:if="values.categories is not None">
 <ul>
