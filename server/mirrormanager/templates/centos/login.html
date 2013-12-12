@@ -13,6 +13,23 @@
 
 <body>
   <h1 class="icon48 password">Login</h1>
-  <loginform>${message}</loginform>
+  <div id="loginform">
+    <p py:content="message">Login message.</p>
+    <form action="${tg.url(previous_url)}" method="post" class="loginfields">
+      <h2><span>Login</span></h2>
+      <div>
+        <label for="user_name">Username:</label><input type="text" id="user_name" name="user_name" class="text"></input><br/>
+        <label for="password">Password:</label><input type="password" id="password" name="password" class="text"></input>
+        <input type="submit" id="submit" name="login" value="Login"/>
+        <input py:if="forward_url" type="hidden" name="forward_url"
+          value="${forward_url}"/>
+        <py:for each="name,values in original_parameters.items()">
+          <input py:for="value in isinstance(values, list) and values or [values]"
+            py:if="isinstance(value, basestring)"
+            type="hidden" name="${name}" value="${value}"/>
+        </py:for>
+      </div>
+    </form>
+  </div>
 </body>
 </html>

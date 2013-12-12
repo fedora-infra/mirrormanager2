@@ -7,7 +7,7 @@ import traceback
 admin_group = config.get('mirrormanager.admin_group', 'sysadmin')
 
 import turbogears
-from turbogears import controllers, expose, validate, redirect, widgets
+from turbogears import controllers, expose, validate, redirect, widgets, visit
 from turbogears import validators, error_handler
 from turbogears import identity
 
@@ -937,10 +937,50 @@ class Root(controllers.RootController):
             includes[i] += u'/'
         return project_dict('rsync_acl', includes=includes, excludes=excludes, message=message)
 
-    @expose(template="genshi:mirrormanager.templates.login", allow_json=True)
-    def login(self, forward_url=None, previous_url=None, *args, **kw):
+    def fedora_login(self, forward_url=None, previous_url=None, *args, **kw):
         login_dict = fc_login(forward_url, previous_url, args, kw)
         return project_dict('login', template_engine='genshi', **login_dict)
+
+
+    def nonfedora_login(self, forward_url=None, *args, **kw):
+        """Show the login form or forward user to previously requested page."""
+
+        if forward_url:
+            if isinstance(forward_url, list):
+                forward_url = forward_url.pop(0)
+            else:
+                del cherrypy.request.params['forward_url']
+
+        new_visit = visit.current()
+        if new_visit:
+            new_visit = new_visit.is_new
+
+        if (not new_visit and not identity.current.anonymous
+                and identity.was_login_attempted()
+                and not identity.get_identity_errors()):
+            redirect(forward_url or '/', kw)
+
+        if identity.was_login_attempted():
+            if new_visit:
+                msg = _(u"Cannot log in because your browser "
+                         "does not support session cookies.")
+            else:
+                msg = _(u"The credentials you supplied were not correct or "
+                         "did not grant access to this resource.")
+        elif identity.get_identity_errors():
+            msg = _(u"You must provide your credentials before accessing "
+                     "this resource.")
+        else:
+            msg = _(u"Please log in.")
+            if not forward_url:
+                forward_url = cherrypy.request.headers.get("Referer", "/")
+
+        # we do not set the response status here anymore since it
+        # is now handled in the identity exception.
+        return project_dict('login', template_engine='genshi', logging_in=True, message=msg,
+            forward_url=forward_url, previous_url=cherrypy.request.path_info,
+            original_parameters=cherrypy.request.params)
+
 
     @expose(allow_json=True)
     def logout(self):
@@ -987,4 +1027,11 @@ class Root(controllers.RootController):
         
         raise redirect("/")
         
-
+    if config.get('identity.provider') == 'sqlobjectcsrf':
+        @expose(template="genshi:mirrormanager.templates.login", allow_json=True)
+        def login(self, **kw):
+            return self.nonfedora_login(**kw)
+    else:
+        @expose(template="genshi:mirrormanager.templates.login", allow_json=True)
+        def login(self, **kw):
+            return self.fedora_login(**kw)
