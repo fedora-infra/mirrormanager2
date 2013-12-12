@@ -21,7 +21,7 @@ from fedora.tg.controllers import logout as fc_logout
 import mirrormanager.model
 from mirrormanager import my_validators
 from mirrormanager.model import *
-from mirrormanager.lib import createErrorString
+from mirrormanager.lib import createErrorString, project_dict
 from mirrormanager.catwalk import MMCatWalk
 
 import IPy
@@ -38,7 +38,6 @@ def downstream_siteadmin_check(site, identity):
     if not site.is_siteadmin(identity) and not site.is_downstream_siteadmin(identity):
         turbogears.flash("Error:You are not an admin for Site %s or for a Site immediately downstream from Site %s" % (site.name, site.name))
         raise redirect("/")
-
 
 
 # From the TurboGears book
@@ -113,12 +112,12 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
     def read(self, site):
         downstream_siteadmin_check(site, identity)
         submit_action = "/site/%s/update" % site.id
-        return dict(form=site_form, values=site, action=submit_action, disabled_fields=self.disabled_fields(site=site))
+        return project_dict('site', form=site_form, values=site, action=submit_action, disabled_fields=self.disabled_fields(site=site))
 
     @expose(template="kid:mirrormanager.templates.site")
     def new(self, **kwargs):
         submit_action = "/site/0/create"
-        return dict(form=site_form, values=None, action=submit_action, disabled_fields=self.disabled_fields())
+        return project_dict('site', form=site_form, values=None, action=submit_action, disabled_fields=self.disabled_fields())
     
     @expose(template="kid:mirrormanager.templates.site")
     @validate(form=site_form)
@@ -151,7 +150,7 @@ class SiteController(controllers.Controller, identity.SecureResource, content):
         if tg_errors is not None:
             submit_action = "/site/%s/update" % site.id
             turbogears.flash("Error updating Site: %s" % createErrorString(tg_errors))
-            return dict(form=site_form, values=site, action=submit_action,
+            return project_dict('site', form=site_form, values=site, action=submit_action,
                         disabled_fields=self.disabled_fields())
 
         if not identity.in_group(admin_group) and kwargs.has_key('admin_active'):
@@ -200,7 +199,7 @@ class SiteAdminController(controllers.Controller, identity.SecureResource, conte
 
         siteadmin_check(site, identity)
         submit_action = "/siteadmin/0/create?siteid=%s" % siteid
-        return dict(form=siteadmin_form, values=None, action=submit_action, page_title="New Site Admin", site=site)
+        return project_dict('boringsiteform', form=siteadmin_form, values=None, action=submit_action, page_title="New Site Admin", site=site)
     
     @expose(template="kid:mirrormanager.templates.boringsiteform")
     @error_handler(new)
@@ -265,7 +264,7 @@ class SiteToSiteController(controllers.Controller, identity.SecureResource, cont
 
         siteadmin_check(site, identity)
         submit_action = "/site2site/0/create?siteid=%s" % siteid
-        return dict(form=site_to_site_form, values=None, action=submit_action, page_title="Add Downstream Site", site=site)
+        return project_dict('boringsiteform', form=site_to_site_form, values=None, action=submit_action, page_title="Add Downstream Site", site=site)
     
     @expose()
     @validate(form=site_to_site_form)
@@ -362,7 +361,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
         except sqlobject.SQLObjectNotFound:
             raise redirect("/")
         submit_action = "/host/0/create?siteid=%s" % siteid
-        return dict(form=host_form, values=None, action=submit_action, disabled_fields=self.disabled_fields(),
+        return project_dict('host', form=host_form, values=None, action=submit_action, disabled_fields=self.disabled_fields(),
                     page_title="Create Host", site=Site.get(siteid))
 
     @expose(template="kid:mirrormanager.templates.host")
@@ -373,7 +372,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
             del kwargs['admin_active']
         site = Site.get(siteid)
         submit_action = "/host/0/create?siteid=%s" % site.id
-        errordict = dict(form=host_form, values=None, action=submit_action, disabled_fields=self.disabled_fields(),
+        errordict = project_dict('host', form=host_form, values=None, action=submit_action, disabled_fields=self.disabled_fields(),
                          page_title="Create Host", site=site)
 
         # handle the validation error
@@ -396,7 +395,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
     def read(self, host):
         downstream_siteadmin_check(host.my_site(), identity)
         submit_action = "/host/%s/update" % host.id
-        return dict(form=host_form, values=host, action=submit_action,
+        return project_dict('host', form=host_form, values=host, action=submit_action,
                     disabled_fields=self.disabled_fields(host=host), page_title="Host", site=host.site)
 
     @expose(template="kid:mirrormanager.templates.host")
@@ -408,7 +407,7 @@ class HostController(controllers.Controller, identity.SecureResource, content):
         if tg_errors is not None:
             submit_action = "/host/%s/update" % host.id
             turbogears.flash("Error updating Host: %s" % createErrorString(tg_errors))
-            return dict(form=host_form, values=host, action=submit_action,
+            return project_dict('host', form=host_form, values=host, action=submit_action,
                         disabled_fields=self.disabled_fields(host=host), page_title="Host", site=host.site)
 
 
@@ -487,14 +486,14 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
             raise redirect("/")
         siteadmin_check(host.my_site(), identity)
         submit_action = "/host_category/0/create?hostid=%s" % hostid
-        return dict(form=host_category_form_new, values=None, action=submit_action, disabled_fields=self.disabled_fields(), host=host)
+        return project_dict('hostcategory', form=host_category_form_new, values=None, action=submit_action, disabled_fields=self.disabled_fields(), host=host)
     
     
     @expose(template="kid:mirrormanager.templates.hostcategory")
     def read(self, hostcategory):
         downstream_siteadmin_check(hostcategory.my_site(), identity)
         submit_action = "/host_category/%s/update" % hostcategory.id
-        return dict(form=host_category_form_read, values=hostcategory, action=submit_action, disabled_fields=self.disabled_fields(), host=hostcategory.host)
+        return project_dict('hostcategory', form=host_category_form_read, values=hostcategory, action=submit_action, disabled_fields=self.disabled_fields(), host=hostcategory.host)
 
     @expose(template="kid:mirrormanager.templates.hostcategory")
     @validate(form=host_category_form_new)
@@ -539,7 +538,7 @@ class HostCategoryController(controllers.Controller, identity.SecureResource, co
         if tg_errors is not None:
             turbogears.flash("Error updating HostCategory: %s" % createErrorString(tg_errors))
             submit_action = "/host_category/%s/update" % hostcategory.id
-            return dict(form=host_category_form_read, values=hostcategory, action=submit_action,
+            return project_dict('hostcategory', form=host_category_form_read, values=hostcategory, action=submit_action,
                         disabled_fields=self.disabled_fields(), host=hostcategory.host)
         
         
@@ -574,7 +573,7 @@ class HostListitemController(controllers.Controller, identity.SecureResource, co
 
         siteadmin_check(host.my_site(), identity)
         submit_action = "%s/0/create?hostid=%s" % (self.submit_action_prefix, hostid)
-        return dict(form=self.form, values=None, action=submit_action, page_title=self.page_title, host=host)
+        return project_dict('boringhostform', form=self.form, values=None, action=submit_action, page_title=self.page_title, host=host)
     
     @expose(template="kid:mirrormanager.templates.boringhostform")
     @validate(form=form)
@@ -746,7 +745,7 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
         siteadmin_check(host.my_site(), identity)
             
         submit_action = "/host_category_url/0/create?hcid=%s" % hcid
-        return dict(form=self.form, values=None, action=submit_action, page_title=self.page_title, host_category=host_category)
+        return project_dict('hostcategoryurl', form=self.form, values=None, action=submit_action, page_title=self.page_title, host_category=host_category)
 
     @expose(template="kid:mirrormanager.templates.hostcategoryurl")
     @validate(form=form)
@@ -799,7 +798,7 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
     def read(self, hcurl):
         downstream_siteadmin_check(hcurl.my_site(), identity)
         submit_action = "/host_category_url/%s/update" % hcurl.id
-        return dict(form=self.form, values=hcurl, action=submit_action, page_title=self.page_title, host_category=hcurl.host_category)
+        return project_dict('hostcategoryurl', form=self.form, values=hcurl, action=submit_action, page_title=self.page_title, host_category=hcurl.host_category)
         
     @expose(template="kid:mirrormanager.templates.hostcategoryurl")
     def update(self, hcurl, **kwargs):
@@ -809,7 +808,7 @@ class HostCategoryUrlController(controllers.Controller, identity.SecureResource,
         hcurl.set(**kwargs)
         hcurl.sync()
         submit_action = "/host_category_url/%s/update" % hcurl.id
-        return dict(form=self.form, values=hcurl, action=submit_action, page_title=self.page_title, host_category=hcurl.host_category)
+        return project_dict('hostcategoryurl', form=self.form, values=hcurl, action=submit_action, page_title=self.page_title, host_category=hcurl.host_category)
         
             
     
@@ -850,7 +849,7 @@ class Root(controllers.RootController):
             sites = Site.select().orderBy('name')
         else:
             sites = user_sites(identity)
-        return {"sites":sites}
+        return project_dict('welcome', sites=sites)
 
     @expose(template="kid:mirrormanager.templates.help")
     @identity.require(identity.not_anonymous())
@@ -859,7 +858,7 @@ class Root(controllers.RootController):
             sites = Site.select().orderBy('name')
         else:
             sites = user_sites(identity)
-        return {}
+        return project_dict('help')
         
     @expose(template="kid:mirrormanager.templates.rsync_acl", format="plain", content_type="text/plain")
     def rsync_acl(self, **kwargs):
@@ -871,17 +870,17 @@ class Root(controllers.RootController):
             public_only = True
 
         result = rsync_acl_list(internet2_only=internet2_only, public_only=public_only)
-        return dict(values=result)
+        return project_dict('rsync_acl', values=result)
 
     @expose(template="kid:mirrormanager.templates.rsync_acl", format="plain", content_type="text/plain", allow_json=True)
     def mirroradmins(self, **kwargs):
         if 'host' in kwargs:
             host = kwargs['host']
-            return dict(values=host_siteadmins(host))
+            return project_dict('rsync_acl', values=host_siteadmins(host))
         else:
             public_only = bool(int(kwargs.get('public_only', 1)))
             values = mirror_admins(public_only=public_only)
-            return dict(values=values)
+            return project_dict('rsync_acl', values=values)
 
     @expose(template="kid:mirrormanager.templates.rsyncFilter", format="plain", content_type="text/plain")
     def rsyncFilter(self, **kwargs):
@@ -915,13 +914,13 @@ class Root(controllers.RootController):
             num_prefix = num_prefix_components(stripprefix)
         except KeyError:
             message=u'Missing categories, since, or stripprefix arguments'
-            return dict(includes=[], excludes=excludes, message=message)
+            return project_dict('rsync_acl', includes=[], excludes=excludes, message=message)
         
         try:
             since = int(since)
         except:
             message=u'value of argument since is not an integer'
-            return dict(includes=[], excludes=excludes, message=message)
+            return project_dict('rsync_acl', includes=[], excludes=excludes, message=message)
 
         includes = set()
         categories_requested = c.split(',')
@@ -936,12 +935,12 @@ class Root(controllers.RootController):
         # add trailing slash as rsync wants it
         for i in xrange(len(includes)):
             includes[i] += u'/'
-        return dict(includes=includes, excludes=excludes, message=message)
+        return project_dict('rsync_acl', includes=includes, excludes=excludes, message=message)
 
     @expose(template="genshi:mirrormanager.templates.login", allow_json=True)
     def login(self, forward_url=None, previous_url=None, *args, **kw):
         login_dict = fc_login(forward_url, previous_url, args, kw)
-        return login_dict
+        return project_dict('login', template_engine='genshi', **login_dict)
 
     @expose(allow_json=True)
     def logout(self):
@@ -953,7 +952,7 @@ class Root(controllers.RootController):
             turbogears.flash(createErrorString(tg_errors))
             username, display_name, email_address = map(cherrypy.request.input_values.get, ["username", "display_name", "email_address"])
                     
-        return dict(username=username, display_name=display_name, email_address=email_address)
+        return project_dict('register', username=username, display_name=display_name, email_address=email_address)
 
     @expose()
     @error_handler(register)

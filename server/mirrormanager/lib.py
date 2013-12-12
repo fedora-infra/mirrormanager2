@@ -4,6 +4,7 @@ import sys
 import tempfile
 import traceback
 import types
+from turbogears import config
 
 def createErrorString(tg_errors):
     """
@@ -106,3 +107,12 @@ def run_rsync(rsyncpath, extra_rsync_args=None):
     tmpfile.flush()
     tmpfile.seek(0)
     return (result, tmpfile)
+
+def project_dict(formname, template_engine="kid", **kw):
+    d = dict()
+    project = config.get("mirrormanager.project_template", "fedora")
+    template = "%s:mirrormanager.templates.%s.%s" % (template_engine,
+                                                     project, formname)
+    d['tg_template'] = template
+    d.update(**kw)
+    return d

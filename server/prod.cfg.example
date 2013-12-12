@@ -9,6 +9,7 @@ mirrormanager.projectname = "Example Mirror Manager Project"
 mirrormanager.projectweb = "http://localhost"
 mirrormanager.cssroot = "http://localhost/mirrormanager/static/css/"
 mirrormanager.copyright = "example"
+mirrormanager.project_template = "fedora"
 
 # Update-master-directory-list upstream definition
 # a dictionary in a list with following content
