@@ -34,17 +34,10 @@
           <ul>
             <li><a href="${tg.url('/publiclist')}" py:attrs="{'title': 'Public mirror list'}">Public list</a></li>
           </ul>
-          <h2>Fedora websites</h2>
+          <h2>CentOS websites</h2>
           <ul>
-            <li><a href="http://fedoraproject.org/" py:attrs="{'title': 'Fedora Project homepage'}">Fedora Home</a></li>
-            <li><a href="http://docs.fedoraproject.org/" py:attrs="{'title': 'Fedora documentation'}">Docs</a>
-              <span class="navnote">Fedora documentation</span></li>
-              <li><a href="http://fedoraproject.org/wiki/" py:attrs="{'title': 'Collaborative knowledge'}">Wiki</a>
-              <span class="navnote">Collaborative knowledge</span></li>
-              <li><a href="http://planet.fedoraproject.org/" py:attrs="{'title': 'The voices of the community'}">Planet</a>
-              <span class="navnote">The voices of the community</span></li>
-            <li><a href="http://fedorapeople.org/" title="'Community webpages'">People</a>
-              <span class="navnote">Community webpages</span></li>
+            <li><a href="http://www.centos.org/" py:attrs="{'title': 'CentOS homepage'}">CentOS Home</a></li>
+            <li><a href="http://mirror-status.centos.org/" py:attrs="{'title': 'CentOS mirror status'}">Mirror status</a></li>
           </ul>
         </div>
       </div>
