@@ -19,7 +19,7 @@ import cherrypy
 import cherrypy._cpwsgi
 import atexit
 from os.path import exists, dirname, join
-from fedora.tg.tg1utils import enable_csrf
+from fedora.tg.utils import enable_csrf
 
 cherrypy.lowercase_api = True
 
