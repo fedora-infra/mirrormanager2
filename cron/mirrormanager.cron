@@ -8,10 +8,12 @@
 55 0 * * * mirrormanager /usr/share/mirrormanager/server/update-static-content >> /var/log/mirrormanager/static-content.log 2>&1
 
 # update master directory list
-0 */2 * * * mirrormanager cd /usr/share/mirrormanager/server && ./update-master-directory-list -c /etc/mirrormanager/prod.cfg >> /var/log/mirrormanager/umdl.log 2>&1
+# logs sent to /var/log/mirrormanager/umdl.log by default
+0 */2 * * * mirrormanager cd /usr/share/mirrormanager/server && ./update-master-directory-list -c /etc/mirrormanager/prod.cfg > /dev/null
 
 # Get the global netblocks list once a day
 30 0 * * * mirrormanager cd /usr/share/mirrormanager/server && ./get_global_netblocks /var/lib/mirrormanager/global_netblocks.txt > /dev/null 2>&1
 
 # run the crawler twice a day
-0 */12 * * * mirrormanager cd /usr/share/mirrormanager/server && ./crawler -c /etc/mirrormanager/prod.cfg --threads 75 >> /var/log/mirrormanager/crawler.log 2>&1
+# logs sent to /var/log/mirrormanager/crawler.log and crawl/* by default
+0 */12 * * * mirrormanager cd /usr/share/mirrormanager/server && ./crawler -c /etc/mirrormanager/prod.cfg --threads 75 > /dev/null 2>&1
