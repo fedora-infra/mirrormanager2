@@ -14,6 +14,7 @@ BuildRequires:  python >= 2.6
 Requires:       TurboGears, python-IPy, python-GeoIP, wget, yum, psmisc, python-dns, python-fedora >= 0.3.14, python-fedora-turbogears, py-radix, mod_wsgi, python-TurboMail
 Requires:	supervisor
 Requires(pre):  shadow-utils
+Requires(pre):  policycoreutils-python
 
 %description
 MirrorManager tracks all the content provided on a master mirror
@@ -60,6 +61,7 @@ getent group mirrormanager >/dev/null || groupadd -r mirrormanager
 getent passwd mirrormanager >/dev/null || \
   useradd -r -g mirrormanager -d /var/lib/mirrormanager -s /sbin/nologin \
   -c "MirrorManager" mirrormanager
+semanage fcontext -a -t httpd_sys_content_t '/var/lib/mirrormanager/mirrorlists(/.*)?'
 exit 0
 
 %files
