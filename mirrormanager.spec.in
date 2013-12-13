@@ -62,6 +62,7 @@ getent passwd mirrormanager >/dev/null || \
   useradd -r -g mirrormanager -d /var/lib/mirrormanager -s /sbin/nologin \
   -c "MirrorManager" mirrormanager
 semanage fcontext -a -t httpd_sys_content_t '/var/lib/mirrormanager/mirrorlists(/.*)?'
+semanage fcontext -a -t httpd_sys_content_t '/var/log/mirrormanager/crawler(/.*)?'
 exit 0
 
 %files
