@@ -18,9 +18,13 @@ import socket
 import time
 from urlparse import urlsplit
 import urlgrabber
+import warnings
 
 from sqlobject import SQLObjectNotFound
-import turbogears
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning) 
+    import turbogears
+
 from turbogears import config
 sys.path.append('/usr/share/mirrormanager/server')
 from mirrormanager.model import Directory, Category, HostCategoryDir, Host, HostCategory

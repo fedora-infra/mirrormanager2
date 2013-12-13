@@ -12,7 +12,10 @@ import optparse
 import os
 import sys
 import time
-import turbogears
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning) 
+    import turbogears
 import turbogears.util as tg_util
 from turbogears import config
 from turbogears.view import engines

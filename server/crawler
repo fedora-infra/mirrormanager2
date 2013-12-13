@@ -12,8 +12,10 @@ import signal
 from subprocess import Popen
 import sys
 import time
-
-import turbogears
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning) 
+    import turbogears
 
 sys.path.append('/usr/share/mirrormanager/server')
 from mirrormanager.model import Host

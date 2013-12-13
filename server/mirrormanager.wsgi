@@ -12,8 +12,10 @@ else:
 import pkg_resources
 pkg_resources.require("TurboGears<1.2")
 pkg_resources.require("CherryPy<3.0")
-
-import turbogears
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning) 
+    import turbogears
 from turbogears import startup
 import cherrypy
 import cherrypy._cpwsgi

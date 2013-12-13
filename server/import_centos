@@ -15,7 +15,10 @@ pkg_resources.require("TurboGears")
 
 from sqlobject import *
 import sys
-import turbogears
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning) 
+    import turbogears
 from mirrormanager.model import *
 from mirrormanager.mirrorlist import name_to_ips
 from optparse import OptionParser

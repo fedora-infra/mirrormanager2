@@ -6,7 +6,10 @@ __requires__ = 'TurboGears[future]'
 import pkg_resources
 pkg_resources.require("TurboGears")
 
-import turbogears
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning) 
+    import turbogears
 from turbogears.database import PackageHub
 from mirrormanager.initial import user_group_setup, create_arches, setup_centos
 

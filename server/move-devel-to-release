@@ -6,7 +6,10 @@ pkg_resources.require("TurboGears")
 import sys, re, os
 from optparse import OptionParser
 from sqlobject import *
-import turbogears
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning) 
+    import turbogears
 sys.path.append('/usr/share/mirrormanager/server')
 from mirrormanager.model import Category, Directory, Version
 

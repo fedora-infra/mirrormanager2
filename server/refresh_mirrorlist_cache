@@ -5,7 +5,10 @@ pkg_resources.require("TurboGears")
 
 import sys
 import optparse
-import turbogears
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning) 
+    import turbogears
 from turbogears.database import PackageHub
 sys.path.append('/usr/share/mirrormanager/server')
 from mirrormanager.mirrorlist import populate_all_caches, dump_caches

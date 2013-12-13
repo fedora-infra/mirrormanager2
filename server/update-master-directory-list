@@ -15,9 +15,12 @@ import yum.repoMDObject
 import datetime
 import time
 import hashlib
+import warnings
 
 from sqlobject import *
-import turbogears
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning) 
+    import turbogears
 from turbogears import config
 
 sys.path.append('/usr/share/mirrormanager/server')
