@@ -42,7 +42,7 @@ internet2_tree = radix.Radix()
 global_tree = radix.Radix()
 gipv4=None
 gipv6=None
-
+admin = None
 
 def generate_password():
     # from http://en.wikipedia.org/wiki/Random_password_generator
@@ -98,13 +98,22 @@ def asn(ip):
     asn = lookup_ip_asn(global_tree, ip)
     return asn
 
+def hostname_from_url(url):
+    if '://' not in url: return None
+    protocol, rest = url.split('://', 1)
+    rest = u'//' + rest
+    hostport,path = urllib.splithost(rest)
+    host, port = urllib.splitnport(hostport)
+    return host
+
 def hostnames_from_urls(*urls):
     hostnames = set()
     for url in urls:
-        hostport,path = urllib.splithost(url)
-        host, port = urllib.splitnport(hostport)
-        hostnames.add(host)
+        hostname = hostname_from_url(url)
+        if hostname:
+            hostnames.add(hostname)
     return hostnames
+
 
 def ips_from_hostnames(hostnames):
     result = set()
@@ -116,7 +125,7 @@ def ips_from_hostnames(hostnames):
 
 def urls_in_internet2(*urls):
     rc = False
-    hostnames = hostnames_from_urls(urls)
+    hostnames = hostnames_from_urls(*urls)
     ips = ips_from_hostnames(hostnames)
     for ip in ips:
         if internet2(ip):
@@ -125,12 +134,12 @@ def urls_in_internet2(*urls):
 
 def asn_from_urls(*urls):
     result = set()
-    hostnames = hostnames_from_urls(urls)
+    hostnames = hostnames_from_urls(*urls)
     ips = ips_from_hostnames(hostnames)
     for ip in ips:
-        asn = asn(ip)
-        if asn is not None:
-            result.add(asn)
+        ASN = asn(ip)
+        if ASN is not None:
+            result.add(ASN)
 
     result = list(result)
     if len(result) > 1:
@@ -139,7 +148,7 @@ def asn_from_urls(*urls):
     elif len(result) == 1:
         result = result[0]
     else:
-        result = []
+        result = None
     return result
 
 def open_geoip_databases():
@@ -188,7 +197,7 @@ def convert_teredo_v4(ip):
     return IP(v4addr)
 
 def lookup_geoip(ip):
-    clientCounry = None
+    clientCountry = None
     # attempt IPv6, then IPv6 6to4 as IPv4, then Teredo, then IPv4
     try:
         if ip.version() == 6:
@@ -208,7 +217,7 @@ def lookup_geoip(ip):
     return clientCountry
 
 def country_from_urls(*urls):
-    hostnames = hostnames_from_urls(urls)
+    hostnames = hostnames_from_urls(*urls)
     ips = ips_from_hostnames(hostnames)
     for ip in ips:
         country = lookup_geoip(ip)
@@ -216,72 +225,104 @@ def country_from_urls(*urls):
             return country
     return None
 
-# fixme make sure the CSV file has this header:
-# "site_name","http_url","ftp_url","rsync_url","bandwidth","display_name","user_name","site_url","country"
-# "LMU Muenchen, Dpt. Biologie 2, IT-Gruppe","http://centos.bio.lmu.de/","ftp://centos.bio.lmu.de/centos/","rsync://centos.bio.lmu.de/CentOS/","100Mbit","Ralph Angenendt","centos-mirror-lmu@strg-alt-entf.org","http://zi.bio.lmu.de/","de"
-#
-#These are the fields: Name of the mirror's sponsor, then the mirror URLs
-#(http,ftp and rsync). Next field is bandwidth (where we have *tons* of
-#mirrors without any entry - mostly older entries). Then "Contact Name",
-#"Contact Mail", "URL to sponsor" and the countrycode (here de for Germany).
+def one_hostname_from_urls(http, ftp, rsync):
+    if len(http):
+        return hostname_from_url(http)
+    elif len(ftp):
+        return hostname_from_url(ftp)
+    elif len(rsync):
+        return hostname_from_url(rsync)
+    else:
+        return None
 
+# "Sponsor"," Location Major"," Location Minor"," http-URL"," ftp-URL"," rsync-URL"," Bandwidth (if available)"," state (current mostly)"," Sponsor URL"," cc"," continent"
 
 def process(row):
-    # Create User
-    # avoid duplicate users
-    try:
-        new_user = True
-        user = User(user_name=row['user_name'],
-                    email_address = row['user_name'],
-                    display_name = row['display_name'],
-                    password = generate_password())
-    except:
-        user = User.byName(row['user_name'])
-        new_user = False
     # Create Site
     # avoid duplicate sites
-        try:
-            site = Site(name=row['site_name'],
-                        password=generate_password(),
-                        orgUrl=row['site_url'])
-        except:
-            site = Site.byName(row['site_name'])
+    http_url = row['http-URL'].strip().rstrip('/')
+    ftp_url = row['ftp-URL'].strip().rstrip('/')
+    rsync_url = row['rsync-URL'].strip().rstrip('/')
+    try:
+        site = Site(name=row['Sponsor'],
+                    password=generate_password(),
+                    orgUrl=row.get('Sponsor URL'))
+        print "Site %s created" % (site.name)
+    except:
+        return # no duplicates
+
     # Create SiteAdmin
     # if user and site were both duplicates, this could fail
     try:
-        siteAdmin = SiteAdmin(user, site)
+        siteAdmin = SiteAdmin(admin, site)
     except:
         pass
     # Create Host
     # fixme: be sure to filter out duplicate hosts from the CSV file before calling this program
+    hostname = one_hostname_from_urls(http_url, ftp_url, rsync_url)
+    if hostname is None:
+        print "no hostname for row %s" % row
+        return
     try:
-        host = Host(name=hostname,
-                    site=site,
-                    country=row['country'].upper() or country_from_urls(row['http_url'], row['ftp_url'], row['rsync_url']),
-                    bandwidth_int = row['bandwidth'],
-                    internet2 = urls_in_internet2(row['http_url'], row['ftp_url'], row['rsync_url']),
-                    asn = asn_from_urls(row['http_url'], row['ftp_url'], row['rsync_url']),
+        country = row['cc'].upper() or country_from_urls(http_url, ftp_url, rsync_url)
+        internet2 = urls_in_internet2(http_url, ftp_url, rsync_url)
+        asn = asn_from_urls(http_url, ftp_url, rsync_url)
+        bandwidth_int = row['Bandwidth (if available)']
+        bandwidth_int = bandwidth_int.strip()
+        if len(bandwidth_int):
+            bandwidth_int = int(bandwidth_int)
+        else:
+            bandwidth_int = 100
+        host = Host(name = hostname,
+                    site = site,
+                    country = country,
+                    internet2 = internet2,
+                    asn = asn,
+                    bandwidth_int = bandwidth_int
                     )
+        print "Host %s created" % host
     except:
         # duplicate hosts means we've gone this far already somehow before.
         # don't bother doing any more
-        return user, False
+        raise
     # Create HostCategory
     category = Category.byName("CentOS")
-    host_category = host_category(host=host,
-                                  category=category,
-                                  upstream=centos_upstream)
+    host_category = HostCategory(host=host,
+                                 category=category)
+
     # Create HostCategoryURLs
-    if row['http_url']:
-        http_url = HostCategoryUrl(host_category=host_category,
-                               url = row['http_url'])
-    if row['ftp_url']:
-        ftp_url = HostCategoryUrl(host_category=host_category,
-                                  url = row['ftp_url'])
-    if row['rsync_url']:
-        rsync_url = HostCategoryUrl(host_category=host_category,
-                                    url = row['rsync_url'])
-    return user, new_user
+    if http_url:
+        if http_url.startswith('http'):
+            try:
+                http_url = HostCategoryUrl(host_category=host_category,
+                                           url = http_url)
+            except:
+                print "ERROR: HTTP URL for %s is a duplicate" % row
+                
+        else:
+            print "ERROR: HTTP URL for %s is invalid" % row
+
+    if ftp_url:
+        if ftp_url.startswith('ftp'):
+            try:
+                ftp_url = HostCategoryUrl(host_category=host_category,
+                                          url = ftp_url)
+            except:
+                print "ERROR: HTTP URL for %s is a duplicate" % row
+                
+        else:
+            print "ERROR: FTP URL for %s is invalid" % row
+
+    if rsync_url:
+        if rsync_url.startswith('rsync'):
+            try:
+                rsync_url = HostCategoryUrl(host_category=host_category,
+                                            url = rsync_url)
+            except:
+                print "ERROR: RSYNC URL for %s is a duplicate" % row
+                
+        else:
+            print "ERROR: RSYNC URL for %s is invalid" % row
 
 def email_user(user):
     subject = "Welcome to the CentOS MirrorManager"
@@ -342,12 +383,13 @@ def doit(options, args):
         f = sys.stdin
     else:
         f = open(options.filename, 'r')
-    csv_reader = reader(f, dialect='excel')
+    csv_reader = csv.DictReader(f, dialect='excel')
     for row in csv_reader:
-        user, new_user = process(row)
-        if new_user:
-            email_user(user)
-
+        print row
+#        user, new_user = process(row)
+        process(row)
+#        if new_user:
+#            email_user(user)
 
 def main():
     parser = OptionParser(usage=sys.argv[0] + " [options]")
@@ -367,12 +409,13 @@ def main():
                              modulename="mirrormanager.config")
     global hub
     global __connection__
-    global repos
     hub = PackageHub("mirrormanager")
     __connection__ = hub
 
-    doit(options, args)
+    global admin
+    admin = User.selectBy(user_name=u'admin')[0]
 
+    doit(options, args)
 
 if __name__ == "__main__":
     sys.exit(main())
