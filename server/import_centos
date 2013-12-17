@@ -23,7 +23,8 @@ from mirrormanager.model import *
 from mirrormanager.mirrorlist import name_to_ips
 from optparse import OptionParser
 import csv
-import random, string
+import random
+import string
 import urllib
 import radix
 from IPy import IP
@@ -35,6 +36,7 @@ from turbogears.database import PackageHub
 from turbogears import config
 hub = __connection__ = None
 
+centos_category = None
 centos_upstream = u'rsync://msync.centos.org/CentOS'
 internet2_netblocks_file = '/var/lib/mirrormanager/i2_netblocks.txt'
 global_netblocks_file = '/var/lib/mirrormanager/global_netblocks.txt'
@@ -235,19 +237,26 @@ def one_hostname_from_urls(http, ftp, rsync):
     else:
         return None
 
-# "Sponsor"," Location Major"," Location Minor"," http-URL"," ftp-URL"," rsync-URL"," Bandwidth (if available)"," state (current mostly)"," Sponsor URL"," cc"," continent"
+# "Sponsor","Location Major","Location Minor","http-URL","ftp-URL","rsync-URL","Bandwidth (if available)","state (current mostly)","Sponsor URL","cc","continent"
 
 def process(row):
+    for key in row.keys():
+        row[key] = row[key].decode('utf-8').strip()
+        if row[key] == u'' and not 'URL' in key: # we'll get those later
+            row[key] = None
+
     # Create Site
     # avoid duplicate sites
-    http_url = row['http-URL'].strip().rstrip('/')
-    ftp_url = row['ftp-URL'].strip().rstrip('/')
-    rsync_url = row['rsync-URL'].strip().rstrip('/')
+    http_url  = row[u'http-URL'].rstrip(u'/')
+    ftp_url   = row[u'ftp-URL'].rstrip(u'/')
+    rsync_url = row[u'rsync-URL'].rstrip(u'/')
+    orgUrl    = row[u'Sponsor URL']
+    siteName  = row[u'Sponsor']
     try:
-        site = Site(name=row['Sponsor'],
+        site = Site(name=row[u'Sponsor'],
                     password=generate_password(),
-                    orgUrl=row.get('Sponsor URL'))
-        print "Site %s created" % (site.name)
+                    orgUrl=orgUrl)
+        print u"%s created" % (siteName)
     except:
         return # no duplicates
 
@@ -264,13 +273,20 @@ def process(row):
         print "no hostname for row %s" % row
         return
     try:
-        country = row['cc'].upper() or country_from_urls(http_url, ftp_url, rsync_url)
+        country = row[u'cc']
+        if country is None:
+            country = country_from_urls(http_url, ftp_url, rsync_url)
+        else:
+            country = country.upper()
         internet2 = urls_in_internet2(http_url, ftp_url, rsync_url)
         asn = asn_from_urls(http_url, ftp_url, rsync_url)
-        bandwidth_int = row['Bandwidth (if available)']
-        bandwidth_int = bandwidth_int.strip()
-        if len(bandwidth_int):
-            bandwidth_int = int(bandwidth_int)
+        bandwidth_int = row[u'Bandwidth (if available)']
+        if bandwidth_int is not None and len(bandwidth_int):
+            try:
+                bandwidth_int = int(bandwidth_int)
+            except:
+                bandwidth_int = 100
+                
         else:
             bandwidth_int = 100
         host = Host(name = hostname,
@@ -280,49 +296,46 @@ def process(row):
                     asn = asn,
                     bandwidth_int = bandwidth_int
                     )
-        print "Host %s created" % host
     except:
         # duplicate hosts means we've gone this far already somehow before.
         # don't bother doing any more
         raise
     # Create HostCategory
-    category = Category.byName("CentOS")
-    host_category = HostCategory(host=host,
-                                 category=category)
+    host_category = HostCategory(host=host, category=centos_category)
 
     # Create HostCategoryURLs
     if http_url:
-        if http_url.startswith('http'):
+        if http_url.startswith(u'http'):
             try:
                 http_url = HostCategoryUrl(host_category=host_category,
                                            url = http_url)
             except:
-                print "ERROR: HTTP URL for %s is a duplicate" % row
+                print u"ERROR: HTTP URL for %s is a duplicate" % row
                 
         else:
-            print "ERROR: HTTP URL for %s is invalid" % row
+            print u"ERROR: HTTP URL for %s is invalid" % row
 
     if ftp_url:
-        if ftp_url.startswith('ftp'):
+        if ftp_url.startswith(u'ftp'):
             try:
-                ftp_url = HostCategoryUrl(host_category=host_category,
+                ftp_iurl = HostCategoryUrl(host_category=host_category,
                                           url = ftp_url)
             except:
-                print "ERROR: HTTP URL for %s is a duplicate" % row
+                print u"ERROR: HTTP URL for %s is a duplicate" % row
                 
         else:
-            print "ERROR: FTP URL for %s is invalid" % row
+            print u"ERROR: FTP URL for %s is invalid" % row
 
     if rsync_url:
-        if rsync_url.startswith('rsync'):
+        if rsync_url.startswith(u'rsync'):
             try:
                 rsync_url = HostCategoryUrl(host_category=host_category,
                                             url = rsync_url)
             except:
-                print "ERROR: RSYNC URL for %s is a duplicate" % row
+                print u"ERROR: RSYNC URL for %s is a duplicate" % row
                 
         else:
-            print "ERROR: RSYNC URL for %s is invalid" % row
+            print u"ERROR: RSYNC URL for %s is invalid" % row
 
 def email_user(user):
     subject = "Welcome to the CentOS MirrorManager"
@@ -382,14 +395,11 @@ def doit(options, args):
     if options.filename == '-':
         f = sys.stdin
     else:
-        f = open(options.filename, 'r')
+        f = open(options.filename, 'rb')
     csv_reader = csv.DictReader(f, dialect='excel')
     for row in csv_reader:
-        print row
-#        user, new_user = process(row)
         process(row)
-#        if new_user:
-#            email_user(user)
+
 
 def main():
     parser = OptionParser(usage=sys.argv[0] + " [options]")
@@ -414,6 +424,9 @@ def main():
 
     global admin
     admin = User.selectBy(user_name=u'admin')[0]
+
+    global centos_category
+    centos_category = Category.byName(u"CentOS")
 
     doit(options, args)
 
