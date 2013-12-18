@@ -686,7 +686,10 @@ class Directory(SQLObject):
             r.destroySelf()
         # don't destroy a whole category if only deleting a directory
         for hcd in self.host_category_dirs:
-            hcd.destroySelf()
+            # try/except this because crawlers running in parallel may
+            # create or destroy these at will
+            try: hcd.destroySelf()
+            except: pass
         for fd in self.fileDetails:
             fd.destroySelf()
         for eh in self.exclusive_hosts:
