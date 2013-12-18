@@ -323,7 +323,7 @@ class Host(SQLObject):
     def _set_config(self, config):
         # really, we don't store the config anymore
         self._config = None
-        self.lastCheckedIn = datetime.datetime.utcnow
+        self.lastCheckedIn = datetime.datetime.utcnow()
 
     def checkin(self, config):
         message = self._uploaded_config(config)
