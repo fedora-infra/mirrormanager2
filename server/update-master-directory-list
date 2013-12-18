@@ -273,8 +273,10 @@ def nuke_gone_directories(diskpath, category):
         in handy when say a Test release is dropped."""
 
     topdirName = category.topdir.name
-        
-    for d in category.directories(orderBy='-name'):
+
+    directories = category.directories # in ascending name order
+    directories.reverse() # now in decending name order, bottoms up
+    for d in directories:
         if is_excluded(d.name, category.excludes): continue
         relativeDName = remove_category_topdir(topdirName, d.name)
         if not os.path.isdir(os.path.join(diskpath, relativeDName)):
