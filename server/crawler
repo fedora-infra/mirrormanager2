@@ -152,7 +152,7 @@ def doit():
         
     master.wait_for_completion()
 
-def setup_logger():
+def setup_logger(debug):
     fmt = "%(asctime)s %(message)s"
     formatter = logging.Formatter(fmt=fmt)
     formatter.converter = time.gmtime
@@ -160,7 +160,10 @@ def setup_logger():
     handler = logging.handlers.WatchedFileHandler(options.logfile, "a+b")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
-    logger.setLevel(logging.DEBUG)
+    if debug:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
     return logger
 
 def main():
@@ -204,6 +207,10 @@ def main():
                       dest="canary", action="store_true", default=False,
                       help="fast crawl by only scanning for canary files")
 
+    parser.add_option("--debug", "-d",
+                      dest="debug", action="store_true", default=False,
+                      help="enable printing of debug-level messages")
+
     (options, args) = parser.parse_args()
 
     turbogears.update_config(configfile=options.config,
@@ -214,7 +221,7 @@ def main():
     __connection__ = hub
 
     global logger
-    logger = setup_logger()
+    logger = setup_logger(options.debug)
     
     doit()
     remove_pidfile(pidfile)
