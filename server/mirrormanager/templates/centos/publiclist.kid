@@ -64,18 +64,37 @@ and development networks globally.
 
 <p py:if="len(hosts) == 0">There are no mirrors matching your your search criteria.</p>
 
+<?python
+country_codes = set()
+for h in hosts:
+    country_codes.add(h.country)
+country_codes = sorted(list(country_codes))
+previous_country=None
+?>
+
+<P>
+Countries: 
+<span py:for="cc in country_codes">
+  <a href="#${cc}"><span py:replace="cc">CC</span></a>&nbsp;
+</span>
+</P>
+
 <table border="1" class="altrows">
 <tr><th>Country</th><th>Site</th><th>Host</th><th>Content</th><th>Bandwidth (Mbits/sec)</th><th>I2</th><th>Comments</th></tr>
 <tr py:for="i,host in enumerate(hosts)"
     py:attrs="{'class': i%2 and 'odd' or 'even'}">
-<td><span py:if="host.country is not None" py:replace="host.country.upper()">Country</span></td>
+<td><a py:if="host.country != previous_country" name="${host.country}"/>
+<?python
+previous_country = host.country
+?>
+<span py:if="host.country is not None" py:replace="host.country.upper()">Country</span></td>
 <td><a href="${host.site_url}"><span py:replace="host.site_name">Site Name</span></a></td>
 <td><span py:replace="host.name">Host Name</span></td>
 
 <td>
 <table>
 <?python
-   categories = sorted(host.categories.keys())
+categories = sorted(host.categories.keys())
 ?>
 <tr py:for="hc in categories">
 <td><span py:replace="host.categories[hc].name">Category name</span></td>
