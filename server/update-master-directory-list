@@ -267,7 +267,7 @@ def is_excluded(path, excludes):
     return False
 
 
-def nuke_gone_directories(diskpath, category, excludes):
+def nuke_gone_directories(diskpath, category):
     """ deleting a Directory has a ripple effect through the whole
         database.  Be really sure you're ready do to this.  It comes
         in handy when say a Test release is dropped."""
@@ -275,7 +275,7 @@ def nuke_gone_directories(diskpath, category, excludes):
     topdirName = category.topdir.name
         
     for d in category.directories(orderBy='-name'):
-        if is_excluded(d.name, excludes): continue
+        if is_excluded(d.name, category.excludes): continue
         relativeDName = remove_category_topdir(topdirName, d.name)
         if not os.path.isdir(os.path.join(diskpath, relativeDName)):
             if len(d.categories) == 1: # safety, this should always trigger
