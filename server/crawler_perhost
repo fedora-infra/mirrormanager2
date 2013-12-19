@@ -549,6 +549,7 @@ def try_percategory(trydirs, url, host_category_dirs, hc, host, categoryPrefixLe
             except KeyError: # file is not in the rsync listing
                 msg = 'Missing remote file %s\n' % key
                 logger.debug(msg)
+                all_files = False
                 break
             except: # something else went wrong
                 exception_msg = "Exception caught in try_percategory()\n"
