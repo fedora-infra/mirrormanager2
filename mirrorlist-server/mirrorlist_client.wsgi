@@ -134,6 +134,13 @@ def manage_compression(request, response, buf):
         response.headers['Content-Encoding'] = 'gzip'
     return buf
 
+def keep_only_http_results(input):
+    output = []
+    for hostid, url in input:
+        if url.startswith(u'http'):
+            output.append((hostid, url))
+    return output
+
 def application(environ, start_response):
     request = WSGIRequest(environ)
     response = WSGIResponse()
@@ -155,12 +162,15 @@ def application(environ, start_response):
         if 'redirect' in request.GET:
             if len(results) == 0:
                 response.status_code=404
-                return response(environ, start_response)
             else: 
-                (hostid, url) = results[0]
-                response.status_code=302
-                response.headers['Location'] = str(url)
-                return response(environ, start_response)
+                results = keep_only_http_results(results)
+                if len(results):
+                    (hostid, url) = results[0]
+                    response.status_code=302
+                    response.headers['Location'] = str(url)
+                else:
+                    response.status_code=404
+        return response(environ, start_response)
 
         text = ""
         text += message + '\n'
