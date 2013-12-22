@@ -170,7 +170,7 @@ def application(environ, start_response):
                     response.headers['Location'] = str(url)
                 else:
                     response.status_code=404
-        return response(environ, start_response)
+            return response(environ, start_response)
 
         text = ""
         text += message + '\n'
