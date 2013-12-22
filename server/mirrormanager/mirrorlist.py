@@ -124,7 +124,7 @@ def populate_directory_cache():
             continue
 
         if directoryname not in cache:
-            cache[directoryname] = {'global':set(), 'byCountry':{}, 'byHostId':{}, 'ordered_mirrorlist':False, 'byCountryInternet2':{}}
+            cache[directoryname] = {'global':set(), 'byCountry':{}, 'byHostId':{}, 'ordered_mirrorlist':True, 'byCountryInternet2':{}}
 
             repo = directory_repo_cache.get(directory_id)
 
