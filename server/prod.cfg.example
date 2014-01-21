@@ -57,6 +57,9 @@ mrr.repos = ''' {
 # sqlobject.dburi="notrans_postgres://mirrormanager@127.0.0.1/mirrormanager"
 # sqlobject.dburi="notrans_mysql://username:password@hostname:port/databasename"
 # Note: MirrorManager doesn't use Transactions, so preceed with 'notrans_' as shown.
+# Note: If you are using a database on another server, over a network socket,
+#       and selinux is enabled, you will need to run:
+#       sudo setsebool -P httpd_can_network_connect_db 1
 sqlobject.dburi="notrans_sqlite:///var/lib/mirrormanager/sqlite.db"
 
 

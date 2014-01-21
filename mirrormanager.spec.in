@@ -62,10 +62,6 @@ getent passwd mirrormanager >/dev/null || \
   -c "MirrorManager" mirrormanager
 exit 0
 
-%post
-setsebool -P httpd_can_network_connect_db 1
-exit 0
-
 
 %files
 %defattr(-,root,root,-)
