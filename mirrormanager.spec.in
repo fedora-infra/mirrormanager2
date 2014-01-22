@@ -98,6 +98,9 @@ exit 0
 %doc LICENSES LICENSE-GPLv2
 
 %changelog
+* Tue Jan 21 2014 Matt Domsch <mdomsch@fedoraproject.org> - 1.4.4-1
+- upstream bugfix release
+
 * Wed Dec 18 2013 Matt Domsch <mdomsch@fedoraproject.org> - 1.4.3-1
 - upstream bugfix release
 - Reduce Fedora-isms to make it more usable for other distributions
