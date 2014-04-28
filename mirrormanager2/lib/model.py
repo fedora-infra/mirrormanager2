@@ -130,11 +130,11 @@ class SiteToSite(BASE):
     # Relations
     upstream_site = relation(
         'site',
-        foreign_keys=[upstream_site_id], remote_side=['Site.id'],
+        foreign_keys=[upstream_site_id], remote_side=[Site.id],
     )
     downstream_site = relation(
         'site',
-        foreign_keys=[downstream_site_id], remote_side=['Site.id'],
+        foreign_keys=[downstream_site_id], remote_side=[Site.id],
     )
 
     # Constraints
@@ -163,7 +163,7 @@ class SiteAdmin(BASE):
     # Relation
     site = relation(
         'site',
-        foreign_keys=[site_id], remote_side=['Site.id'],
+        foreign_keys=[site_id], remote_side=[Site.id],
         backref=backref('admins'),
     )
 
@@ -208,13 +208,13 @@ class HostCategory(BASE):
     # Relations
     category = relation(
         'category',
-        foreign_keys=[category_id], remote_side=['category.id'],
+        foreign_keys=[category_id], remote_side=[Category.id],
         backref=backref('host_categories')
     )
 
     host = relation(
         'host',
-        foreign_keys=[host_id], remote_side=['host.id'],
+        foreign_keys=[host_id], remote_side=[Host.id],
         backref=backref('categories')
     )
 
@@ -244,13 +244,13 @@ class HostCategoryDir(BASE):
     # Relations
     directory = relation(
         'directory',
-        foreign_keys=[directory_id], remote_side=['directory.id'],
+        foreign_keys=[directory_id], remote_side=[Directory.id],
         backref=backref('host_category_dirs'),
     )
 
     host_category = relation(
         'host_category',
-        foreign_keys=[host_category_id], remote_side=['host_category.id'],
+        foreign_keys=[host_category_id], remote_side=[HostCategory.id],
         backref=backref('dirs', order_by=path),
     )
 
@@ -274,7 +274,7 @@ class HostCategoryUrl(BASE):
     # Relations
     host_category = relation(
         'host_category',
-        foreign_keys=[host_category_id], remote_side=['host_category.id'],
+        foreign_keys=[host_category_id], remote_side=[HostCategory.id],
         backref=backref('urls'),
     )
 
@@ -310,7 +310,7 @@ class Host(BASE):
     # Relations
     site = relation(
         'site',
-        foreign_keys=[site_id], remote_side=['site.id'],
+        foreign_keys=[site_id], remote_side=[Site.id],
     )
 
     #exclusive_dirs = MultipleJoin('DirectoryExclusiveHost')
@@ -336,7 +336,7 @@ class HostAclIp(BASE):
     # Relation
     host = relation(
         'host',
-        foreign_keys=[host_id], remote_side=['host.id'],
+        foreign_keys=[host_id], remote_side=[Host.id],
         backref=backref('acl_ips', order_by='host_acl_ip.ip'),
     )
 
@@ -356,7 +356,7 @@ class HostCountryAllowed(BASE):
     # Relation
     host = relation(
         'host',
-        foreign_keys=[host_id], remote_side=['host.id'],
+        foreign_keys=[host_id], remote_side=[Host.id],
         backref=backref('countries_allowed'),
     )
 
@@ -377,7 +377,7 @@ class HostNetblock(BASE):
     # Relation
     host = relation(
         'host',
-        foreign_keys=[host_id], remote_side=['host.id'],
+        foreign_keys=[host_id], remote_side=[Host.id],
         backref=backref('netblocks', order_by='host_netblock.netblocks'),
     )
 
@@ -398,7 +398,7 @@ class HostPeerAsn(BASE):
     # Relation
     host = relation(
         'host',
-        foreign_keys=[host_id], remote_side=['host.id'],
+        foreign_keys=[host_id], remote_side=[Host.id],
         backref=backref('peer_asns'),
     )
 
@@ -424,7 +424,7 @@ class HostStats(BASE):
     # Relation
     host = relation(
         'host',
-        foreign_keys=[host_id], remote_side=['Host.id'],
+        foreign_keys=[host_id], remote_side=[Host.id],
     )
 
 
@@ -468,7 +468,7 @@ class Version(BASE):
     # Relations
     product = relation(
         'product',
-        foreign_keys=[product_id], remote_side=['Product.id'],
+        foreign_keys=[product_id], remote_side=[Product.id],
         backref=backref('versions'),
     )
 
@@ -514,11 +514,11 @@ class Category(BASE):
     # Relations
     product = relation(
         'product',
-        foreign_keys=[product_id], remote_side=['product.id'],
+        foreign_keys=[product_id], remote_side=[Product.id],
     )
     topdir = relation(
         'directory',
-        foreign_keys=[topdir_id], remote_side=['directory.id'],
+        foreign_keys=[topdir_id], remote_side=[Directory.id],
     )
 
     # all the directories that are part of this category
@@ -545,20 +545,20 @@ class Repository(BASE):
     # Relations
     category = relation(
         'category',
-        foreign_keys=[category_id], remote_side=['category.id'],
+        foreign_keys=[category_id], remote_side=[Category.id],
         backref=backref('repositories')
     )
     version = relation(
         'version',
-        foreign_keys=[version_id], remote_side=['version.id'],
+        foreign_keys=[version_id], remote_side=[Version.id],
     )
     arch = relation(
         'arch',
-        foreign_keys=[arch_id], remote_side=['arch.id'],
+        foreign_keys=[arch_id], remote_side=[Arch.id],
     )
     directory = relation(
         'directory',
-        foreign_keys=[directory_id], remote_side=['directory.id'],
+        foreign_keys=[directory_id], remote_side=[Directory.id],
     )
 
     # Constraints
@@ -586,7 +586,7 @@ class FileDetail(BASE):
     # Relations
     directory = relation(
         'directory',
-        foreign_keys=[directory_id], remote_side=['directory.id'],
+        foreign_keys=[directory_id], remote_side=[Directory.id],
     )
 
     #fileGroups = SQLRelatedJoin('FileGroup')
@@ -639,11 +639,11 @@ class DirectoryExclusiveHost(BASE):
     # Relations
     directory = relation(
         'directory',
-        foreign_keys=[directory_id], remote_side=['directory.id'],
+        foreign_keys=[directory_id], remote_side=[Directory.id],
     )
     host = relation(
         'host',
-        foreign_keys=[host_id], remote_side=['host.id'],
+        foreign_keys=[host_id], remote_side=[Host.id],
     )
 
     # Constraints
@@ -680,12 +680,12 @@ class HostLocation(BASE):
     # Relations
     host = relation(
         'host',
-        foreign_keys=[host_id], remote_side=['host.id'],
+        foreign_keys=[host_id], remote_side=[Host.id],
         #backref=backref('hosts')
     )
     location = relation(
         'location',
-        foreign_keys=[location_id], remote_side=['location.id'],
+        foreign_keys=[location_id], remote_side=[Location.id],
     )
 
     # Constraints
@@ -718,12 +718,12 @@ class FileDetailFileGroup(BASE):
     # Relations
     file_detail = relation(
         'file_detail',
-        foreign_keys=[file_detail_id], remote_side=['file_detail.id'],
+        foreign_keys=[file_detail_id], remote_side=[FileDetail.id],
         #backref=backref('hosts')
     )
     file_group = relation(
         'file_group',
-        foreign_keys=[file_group_id], remote_side=['file_group.id'],
+        foreign_keys=[file_group_id], remote_side=[FileGroup.id],
     )
 
 
@@ -751,12 +751,12 @@ class HostCountry(BASE):
     # Relations
     host = relation(
         'host',
-        foreign_keys=[host_id], remote_side=['host.id'],
+        foreign_keys=[host_id], remote_side=[Host.id],
         #backref=backref('hosts')
     )
     country = relation(
         'country',
-        foreign_keys=[country_id], remote_side=['country.id'],
+        foreign_keys=[country_id], remote_side=[country.id],
         #backref=backref('hosts')
     )
 
