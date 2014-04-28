@@ -344,7 +344,8 @@ class HostCategoryDir(BASE):
         sa.Integer, sa.ForeignKey('host_category.id'), nullable=True)
     # subset of the path starting below HostCategory.path
     path = sa.Column(sa.Text(), nullable=True)
-    up2date = sa.Column(sa.Boolean(), default=True, nullable=False)
+    up2date = sa.Column(
+        sa.Boolean, default=True, nullable=False, index=True)
     directory_id = sa.Column(
         sa.Integer, sa.ForeignKey('directory.id'), nullable=True)
 
