@@ -108,3 +108,13 @@ def is_mirrormanager_admin(user):
         return len(admins.intersection(set(user.groups))) > 0
     else:
         return user in APP.config['ADMIN_GROUP']
+
+
+## Flask application
+@APP.route('/')
+def index():
+    """ Displays the index page.
+    """
+    return flask.render_template(
+        'index.html',
+    )
