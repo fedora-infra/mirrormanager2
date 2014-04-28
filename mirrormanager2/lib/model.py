@@ -79,7 +79,6 @@ def create_tables(db_url, alembic_ini=None, debug=False):
     """
     engine = create_engine(db_url, echo=debug)
     BASE.metadata.create_all(engine)
-    #engine.execute(collection_package_create_view(driver=engine.driver))
     if db_url.startswith('sqlite:'):
         ## Ignore the warning about con_record
         # pylint: disable=W0613
