@@ -30,9 +30,11 @@ from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import SQLAlchemyError
 
+from mirrormanager2.lib import model
+
 
 def create_session(db_url, debug=False, pool_recycle=3600):
-    """ Create the Session object to use to query the database.
+    ''' Create the Session object to use to query the database.
 
     :arg db_url: URL used to connect to the database. The URL contains
     information with regards to the database engine, the host to connect
@@ -42,8 +44,38 @@ def create_session(db_url, debug=False, pool_recycle=3600):
         output of sqlalchemy or not.
     :return a Session that can be used to query the database.
 
-    """
+    '''
     engine = sqlalchemy.create_engine(
         db_url, echo=debug, pool_recycle=pool_recycle)
     scopedsession = scoped_session(sessionmaker(bind=engine))
     return scopedsession
+
+
+def get_mirrors(
+        session, private=None, internet2=None, internet2_clients=None,
+        asn_clients=None, admin_active=None, user_active=None):
+    ''' Retrieve the mirrors based on the criteria specified.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Host
+    ).order_by(
+        model.Host.country
+    )
+
+    if private is not None:
+        query = query.filter(model.Host.private == private)
+    if internet2 is not None:
+        query = query.filter(model.Host.internet2 == internet2)
+    if internet2_clients is not None:
+        query = query.filter(model.Host.internet2_clients == internet2_clients)
+    if asn_clients is not None:
+        query = query.filter(model.Host.asn_clients == asn_clients)
+    if admin_active is not None:
+        query = query.filter(model.Host.admin_active == admin_active)
+    if user_active is not None:
+        query = query.filter(model.Host.user_active == user_active)
+
+    return query.all()
