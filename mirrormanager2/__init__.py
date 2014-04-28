@@ -118,3 +118,37 @@ def index():
     return flask.render_template(
         'index.html',
     )
+
+
+@APP.route('/login', methods=['GET', 'POST'])
+def auth_login():  # pragma: no cover
+    """ Login mechanism for this application.
+    """
+    next_url = flask.url_for('index')
+    if 'next' in flask.request.values:
+        next_url = flask.request.values['next']
+
+    if next_url == flask.url_for('auth_login'):
+        next_url = flask.url_for('index')
+
+    if hasattr(flask.g, 'fas_user') and flask.g.fas_user is not None:
+        return flask.redirect(next_url)
+    else:
+        return FAS.login(return_url=next_url)
+
+
+@APP.route('/logout')
+def auth_logout():
+    """ Log out if the user is logged in other do nothing.
+    Return to the index page at the end.
+    """
+    next_url = flask.url_for('index')
+    if 'next' in flask.request.values:  # pragma: no cover
+        next_url = flask.request.values['next']
+
+    if next_url == flask.url_for('auth_login'):  # pragma: no cover
+        next_url = flask.url_for('index')
+    if hasattr(flask.g, 'fas_user') and flask.g.fas_user is not None:
+        FAS.logout()
+        flask.flash("You are no longer logged-in")
+    return flask.redirect(next_url)
