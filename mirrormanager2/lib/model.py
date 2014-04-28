@@ -115,62 +115,6 @@ def drop_tables(db_url, engine):  # pragma: no cover
     BASE.metadata.drop_all(engine)
 
 
-class SiteToSite(BASE):
-
-    __tablename__ = 'site_to_site'
-
-    id = sa.Column(sa.Integer, primary_key=True)
-    username = sa.Column(sa.Text(), default=None, nullable=True)
-    password = sa.Column(sa.Text(), default=None, nullable=True)
-    upstream_site_id = sa.Column(
-        sa.Integer, sa.ForeignKey('site.id'), nullable=False)
-    downstream_site_id = sa.Column(
-        sa.Integer, sa.ForeignKey('site.id'), nullable=False)
-
-    # Relations
-    upstream_site = relation(
-        'site',
-        foreign_keys=[upstream_site_id], remote_side=[Site.id],
-    )
-    downstream_site = relation(
-        'site',
-        foreign_keys=[downstream_site_id], remote_side=[Site.id],
-    )
-
-    # Constraints
-    __table_args__ = (
-        sa.UniqueConstraint(
-            'upstream_site_id', 'downstream_site_id',
-            name='site_to_site_idx'),
-        sa.UniqueConstraint(
-            'upstream_site_id', 'username',
-            name='site_to_site_username_idx'),
-    )
-
-    def my_site(self):
-        return self.upstream_site
-
-
-class SiteAdmin(BASE):
-
-    __tablename__ = 'site_admin'
-
-    id = sa.Column(sa.Integer, primary_key=True)
-    username = sa.Column(sa.Text(), default=None, nullable=True)
-    site_id = sa.Column(
-        sa.Integer, sa.ForeignKey('site.id'), nullable=False)
-
-    # Relation
-    site = relation(
-        'site',
-        foreign_keys=[site_id], remote_side=[Site.id],
-        backref=backref('admins'),
-    )
-
-    def my_site(self):
-        return self.site
-
-
 class Site(BASE):
 
     __tablename__ = 'site'
@@ -182,104 +126,24 @@ class Site(BASE):
     private = sa.Column(sa.Boolean(), default=False, nullable=False)
     admin_active = sa.Column(sa.Boolean(), default=True, nullable=False)
     user_active = sa.Column(sa.Boolean(), default=True, nullable=False)
-    createdAt = sa.Column(
+    created_at = sa.Column(
         sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
-    createdBy = sa.Column(sa.Text(), nullable=False)
+    created_by = sa.Column(sa.Text(), nullable=False)
     # allow all sites to pull from me
-    allSitesCanPullFromMe = sa.Column(
+    all_sites_can_pull_from_me = sa.Column(
         sa.Boolean(), default=False, nullable=False)
-    downstreamComments = sa.Column(sa.Text(), default=None, nullable=True)
-    emailOnDrop = sa.Column(sa.Boolean(), default=False, nullable=False)
-    emailOnAdd = sa.Column(sa.Boolean(), default=False, nullable=False)
-
-    #hosts  = MultipleJoin('Host')
+    downstream_comments = sa.Column(sa.Text(), default=None, nullable=True)
+    email_on_drop = sa.Column(sa.Boolean(), default=False, nullable=False)
+    email_on_add = sa.Column(sa.Boolean(), default=False, nullable=False)
 
 
-class HostCategory(BASE):
+class Country(BASE):
 
-    __tablename__ = 'host_category'
+    __tablename__ = 'country'
 
     id = sa.Column(sa.Integer, primary_key=True)
-    host_id = sa.Column(sa.Integer, sa.ForeignKey('host.id'), nullable=True)
-    category_id = sa.Column(
-        sa.Integer, sa.ForeignKey('category.id'), nullable=True)
-    always_up2date = sa.Column(sa.Boolean(), default=False, nullable=False)
-
-    # Relations
-    category = relation(
-        'category',
-        foreign_keys=[category_id], remote_side=[Category.id],
-        backref=backref('host_categories')
-    )
-
-    host = relation(
-        'host',
-        foreign_keys=[host_id], remote_side=[Host.id],
-        backref=backref('categories')
-    )
-
-    # Constraints
-    __table_args__ = (
-        sa.UniqueConstraint(
-            'host_id', 'category_id', name='host_category_hcindex'),
-    )
-
-    def my_site(self):
-        return self.host.my_site()
-
-
-class HostCategoryDir(BASE):
-
-    __tablename__ = 'host_category_dir'
-
-    id = sa.Column(sa.Integer, primary_key=True)
-    host_category_id = sa.Column(
-        sa.Integer, sa.ForeignKey('host_category.id'), nullable=True)
-    # subset of the path starting below HostCategory.path
-    path = sa.Column(sa.Text(), nullable=True)
-    up2date = sa.Column(sa.Boolean(), default=True, nullable=False)
-    directory_id = sa.Column(
-        sa.Integer, sa.ForeignKey('directory.id'), nullable=True)
-
-    # Relations
-    directory = relation(
-        'directory',
-        foreign_keys=[directory_id], remote_side=[Directory.id],
-        backref=backref('host_category_dirs'),
-    )
-
-    host_category = relation(
-        'host_category',
-        foreign_keys=[host_category_id], remote_side=[HostCategory.id],
-        backref=backref('dirs', order_by=path),
-    )
-
-    # Constraints
-    __table_args__ = (
-        sa.UniqueConstraint(
-            'host_category_id', 'path', name='host_category_dir_hcdindex'),
-    )
-
-
-class HostCategoryUrl(BASE):
-
-    __tablename__ = 'host_category_url'
-
-    id = sa.Column(sa.Integer, primary_key=True)
-    host_category_id = sa.Column(
-        sa.Integer, sa.ForeignKey('host_category.id'), nullable=True)
-    url = sa.Column(sa.Text(), nullable=False, unique=True)
-    private = sa.Column(sa.Boolean(), default=False, nullable=False)
-
-    # Relations
-    host_category = relation(
-        'host_category',
-        foreign_keys=[host_category_id], remote_side=[HostCategory.id],
-        backref=backref('urls'),
-    )
-
-    def my_site(self):
-        return self.host_category.my_site()
+    code = sa.Column(sa.Text(), nullable=False, unique=True)
+    #hosts = SQLRelatedJoin('Host')
 
 
 class Host(BASE):
@@ -309,8 +173,9 @@ class Host(BASE):
 
     # Relations
     site = relation(
-        'site',
+        'Site',
         foreign_keys=[site_id], remote_side=[Site.id],
+        backref=backref('hosts')
     )
 
     #exclusive_dirs = MultipleJoin('DirectoryExclusiveHost')
@@ -324,6 +189,206 @@ class Host(BASE):
     )
 
 
+class Directory(BASE):
+
+    __tablename__ = 'directory'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    # Full path
+    # e.g. pub/epel
+    # e.g. pub/fedora/linux
+    name = sa.Column(sa.Text(), nullable=False, unique=True)
+    files = sa.Column(sa.LargeBinary(), nullable=True)
+    readable = sa.Column(sa.Boolean(), default=True, nullable=False)
+    ctime = sa.Column(sa.BigInteger, default=0, nullable=True)
+
+
+# e.g. 'fedora' and 'epel'
+class Product(BASE):
+
+    __tablename__ = 'product'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    name = sa.Column(sa.Text(), nullable=False, unique=True)
+    publiclist = sa.Column(sa.Boolean(), default=True, nullable=False)
+
+
+class Category(BASE):
+
+    __tablename__ = 'category'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    # Top-level mirroring
+    # e.g. 'Fedora Linux', 'Fedora Archive'
+    name = sa.Column(sa.Text(), nullable=False, unique=True)
+    canonicalhost = sa.Column(
+        sa.Text(), nullable=True,
+        default='http://download.fedora.redhat.com')
+    publiclist = sa.Column(sa.Boolean(), default=True, nullable=False)
+    geo_dns_domain = sa.Column(sa.Text(), nullable=True)
+    product_id = sa.Column(
+        sa.Integer, sa.ForeignKey('product.id'), nullable=True)
+    topdir_id = sa.Column(
+        sa.Integer, sa.ForeignKey('directory.id'), nullable=True)
+
+    # Relations
+    product = relation(
+        'Product',
+        foreign_keys=[product_id], remote_side=[Product.id],
+        backref=backref('categories')
+    )
+    topdir = relation(
+        'Directory',
+        foreign_keys=[topdir_id], remote_side=[Directory.id],
+    )
+
+    # all the directories that are part of this category
+    #directories = RelatedJoin('Directory', orderBy='name')
+
+
+class SiteToSite(BASE):
+
+    __tablename__ = 'site_to_site'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    username = sa.Column(sa.Text(), default=None, nullable=True)
+    password = sa.Column(sa.Text(), default=None, nullable=True)
+    upstream_site_id = sa.Column(
+        sa.Integer, sa.ForeignKey('site.id'), nullable=False)
+    downstream_site_id = sa.Column(
+        sa.Integer, sa.ForeignKey('site.id'), nullable=False)
+
+    # Relations
+    upstream_site = relation(
+        'Site',
+        foreign_keys=[upstream_site_id], remote_side=[Site.id],
+    )
+    downstream_site = relation(
+        'Site',
+        foreign_keys=[downstream_site_id], remote_side=[Site.id],
+    )
+
+    # Constraints
+    __table_args__ = (
+        sa.UniqueConstraint(
+            'upstream_site_id', 'downstream_site_id',
+            name='site_to_site_idx'),
+        sa.UniqueConstraint(
+            'upstream_site_id', 'username',
+            name='site_to_site_username_idx'),
+    )
+
+    def my_site(self):
+        return self.upstream_site
+
+
+class SiteAdmin(BASE):
+
+    __tablename__ = 'site_admin'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    username = sa.Column(sa.Text(), default=None, nullable=True)
+    site_id = sa.Column(
+        sa.Integer, sa.ForeignKey('site.id'), nullable=False)
+
+    # Relation
+    site = relation(
+        'Site',
+        foreign_keys=[site_id], remote_side=[Site.id],
+        backref=backref('admins'),
+    )
+
+    def my_site(self):
+        return self.site
+
+
+class HostCategory(BASE):
+
+    __tablename__ = 'host_category'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    host_id = sa.Column(sa.Integer, sa.ForeignKey('host.id'), nullable=True)
+    category_id = sa.Column(
+        sa.Integer, sa.ForeignKey('category.id'), nullable=True)
+    always_up2date = sa.Column(sa.Boolean(), default=False, nullable=False)
+
+    # Relations
+    category = relation(
+        'Category',
+        foreign_keys=[category_id], remote_side=[Category.id],
+        backref=backref('host_categories')
+    )
+
+    host = relation(
+        'Host',
+        foreign_keys=[host_id], remote_side=[Host.id],
+        backref=backref('categories')
+    )
+
+    # Constraints
+    __table_args__ = (
+        sa.UniqueConstraint(
+            'host_id', 'category_id', name='host_category_hcindex'),
+    )
+
+    def my_site(self):
+        return self.host.my_site()
+
+
+class HostCategoryDir(BASE):
+
+    __tablename__ = 'host_category_dir'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    host_category_id = sa.Column(
+        sa.Integer, sa.ForeignKey('host_category.id'), nullable=True)
+    # subset of the path starting below HostCategory.path
+    path = sa.Column(sa.Text(), nullable=True)
+    up2date = sa.Column(sa.Boolean(), default=True, nullable=False)
+    directory_id = sa.Column(
+        sa.Integer, sa.ForeignKey('directory.id'), nullable=True)
+
+    # Relations
+    directory = relation(
+        'Directory',
+        foreign_keys=[directory_id], remote_side=[Directory.id],
+        backref=backref('host_category_dirs'),
+    )
+
+    host_category = relation(
+        'HostCategory',
+        foreign_keys=[host_category_id], remote_side=[HostCategory.id],
+        backref=backref('dirs', order_by=path),
+    )
+
+    # Constraints
+    __table_args__ = (
+        sa.UniqueConstraint(
+            'host_category_id', 'path', name='host_category_dir_hcdindex'),
+    )
+
+
+class HostCategoryUrl(BASE):
+
+    __tablename__ = 'host_category_url'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    host_category_id = sa.Column(
+        sa.Integer, sa.ForeignKey('host_category.id'), nullable=True)
+    url = sa.Column(sa.Text(), nullable=False, unique=True)
+    private = sa.Column(sa.Boolean(), default=False, nullable=False)
+
+    # Relations
+    host_category = relation(
+        'HostCategory',
+        foreign_keys=[host_category_id], remote_side=[HostCategory.id],
+        backref=backref('urls'),
+    )
+
+    def my_site(self):
+        return self.host_category.my_site()
+
+
 class HostAclIp(BASE):
 
     __tablename__ = 'host_acl_ip'
@@ -335,9 +400,9 @@ class HostAclIp(BASE):
 
     # Relation
     host = relation(
-        'host',
+        'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
-        backref=backref('acl_ips', order_by='host_acl_ip.ip'),
+        backref=backref('acl_ips', order_by='HostAclIp.ip'),
     )
 
     def my_site(self):
@@ -355,7 +420,7 @@ class HostCountryAllowed(BASE):
 
     # Relation
     host = relation(
-        'host',
+        'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
         backref=backref('countries_allowed'),
     )
@@ -376,9 +441,9 @@ class HostNetblock(BASE):
 
     # Relation
     host = relation(
-        'host',
+        'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
-        backref=backref('netblocks', order_by='host_netblock.netblocks'),
+        backref=backref('netblocks', order_by='HostNetblock.netblock'),
     )
 
     def my_site(self):
@@ -397,7 +462,7 @@ class HostPeerAsn(BASE):
 
     # Relation
     host = relation(
-        'host',
+        'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
         backref=backref('peer_asns'),
     )
@@ -423,7 +488,7 @@ class HostStats(BASE):
 
     # Relation
     host = relation(
-        'host',
+        'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
     )
 
@@ -436,18 +501,6 @@ class Arch(BASE):
     name = sa.Column(sa.Text(), nullable=False, unique=True)
     publiclist = sa.Column(sa.Boolean(), default=True, nullable=False)
     primaryArch = sa.Column(sa.Boolean(), default=True, nullable=False)
-
-
-# e.g. 'fedora' and 'epel'
-class Product(BASE):
-
-    __tablename__ = 'product'
-
-    id = sa.Column(sa.Integer, primary_key=True)
-    name = sa.Column(sa.Text(), nullable=False, unique=True)
-    publiclist = sa.Column(sa.Boolean(), default=True, nullable=False)
-
-    #categories = MultipleJoin('Category')
 
 
 class Version(BASE):
@@ -467,7 +520,7 @@ class Version(BASE):
 
     # Relations
     product = relation(
-        'product',
+        'Product',
         foreign_keys=[product_id], remote_side=[Product.id],
         backref=backref('versions'),
     )
@@ -477,52 +530,6 @@ class Version(BASE):
         sa.UniqueConstraint(
             'name', 'product_id', name='version_idx'),
     )
-
-
-class Directory(BASE):
-
-    __tablename__ = 'directory'
-
-    id = sa.Column(sa.Integer, primary_key=True)
-    # Full path
-    # e.g. pub/epel
-    # e.g. pub/fedora/linux
-    name = sa.Column(sa.Text(), nullable=False, unique=True)
-    files = sa.Column(sa.LargeBinary(), nullable=True)
-    readable = sa.Column(sa.Boolean(), default=True, nullable=False)
-    ctime = sa.Column(sa.BigInteger, default=0, nullable=True)
-
-
-class Category(BASE):
-
-    __tablename__ = 'category'
-
-    id = sa.Column(sa.Integer, primary_key=True)
-    # Top-level mirroring
-    # e.g. 'Fedora Linux', 'Fedora Archive'
-    name = sa.Column(sa.Text(), nullable=False, unique=True)
-    canonicalhost = sa.Column(
-        sa.Text(), nullable=True,
-        default='http://download.fedora.redhat.com')
-    publiclist = sa.Column(sa.Boolean(), default=True, nullable=False)
-    GeoDNSDomain = sa.Column(sa.Text(), nullable=True)
-    product_id = sa.Column(
-        sa.Integer, sa.ForeignKey('product.id'), nullable=True)
-    topdir_id = sa.Column(
-        sa.Integer, sa.ForeignKey('directory.id'), nullable=True)
-
-    # Relations
-    product = relation(
-        'product',
-        foreign_keys=[product_id], remote_side=[Product.id],
-    )
-    topdir = relation(
-        'directory',
-        foreign_keys=[topdir_id], remote_side=[Directory.id],
-    )
-
-    # all the directories that are part of this category
-    #directories = RelatedJoin('Directory', orderBy='name')
 
 
 class Repository(BASE):
@@ -544,20 +551,20 @@ class Repository(BASE):
 
     # Relations
     category = relation(
-        'category',
+        'Category',
         foreign_keys=[category_id], remote_side=[Category.id],
         backref=backref('repositories')
     )
     version = relation(
-        'version',
+        'Version',
         foreign_keys=[version_id], remote_side=[Version.id],
     )
     arch = relation(
-        'arch',
+        'Arch',
         foreign_keys=[arch_id], remote_side=[Arch.id],
     )
     directory = relation(
-        'directory',
+        'Directory',
         foreign_keys=[directory_id], remote_side=[Directory.id],
     )
 
@@ -585,7 +592,7 @@ class FileDetail(BASE):
 
     # Relations
     directory = relation(
-        'directory',
+        'Directory',
         foreign_keys=[directory_id], remote_side=[Directory.id],
     )
 
@@ -638,11 +645,11 @@ class DirectoryExclusiveHost(BASE):
 
     # Relations
     directory = relation(
-        'directory',
+        'Directory',
         foreign_keys=[directory_id], remote_side=[Directory.id],
     )
     host = relation(
-        'host',
+        'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
     )
 
@@ -679,12 +686,12 @@ class HostLocation(BASE):
 
     # Relations
     host = relation(
-        'host',
+        'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
         #backref=backref('hosts')
     )
     location = relation(
-        'location',
+        'Location',
         foreign_keys=[location_id], remote_side=[Location.id],
     )
 
@@ -717,23 +724,14 @@ class FileDetailFileGroup(BASE):
 
     # Relations
     file_detail = relation(
-        'file_detail',
+        'FileDetail',
         foreign_keys=[file_detail_id], remote_side=[FileDetail.id],
         #backref=backref('hosts')
     )
     file_group = relation(
-        'file_group',
+        'FileGroup',
         foreign_keys=[file_group_id], remote_side=[FileGroup.id],
     )
-
-
-class Country(BASE):
-
-    __tablename__ = 'country'
-
-    id = sa.Column(sa.Integer, primary_key=True)
-    code = sa.Column(sa.Text(), nullable=False, unique=True)
-    #hosts = SQLRelatedJoin('Host')
 
 
 class HostCountry(BASE):
@@ -750,13 +748,13 @@ class HostCountry(BASE):
 
     # Relations
     host = relation(
-        'host',
+        'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
         #backref=backref('hosts')
     )
     country = relation(
-        'country',
-        foreign_keys=[country_id], remote_side=[country.id],
+        'Country',
+        foreign_keys=[country_id], remote_side=[Country.id],
         #backref=backref('hosts')
     )
 
