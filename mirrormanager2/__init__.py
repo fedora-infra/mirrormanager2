@@ -48,6 +48,13 @@ if APP.config.get('MM_AUTHENTICATION') == 'FAS':
     FAS = FAS(APP)
 
 
+# Points the template and static folders to the desired theme
+APP.template_folder = os.path.join(
+    APP.template_folder, APP.config['THEME_FOLDER'])
+APP.static_folder = os.path.join(
+    APP.static_folder, APP.config['THEME_FOLDER'])
+
+
 # Set up the logger
 ## Send emails for big exception
 MAIL_HANDLER = logging.handlers.SMTPHandler(
