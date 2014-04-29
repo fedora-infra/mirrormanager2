@@ -42,7 +42,7 @@ if 'MM2_CONFIG' in os.environ:  # pragma: no cover
     APP.config.from_envvar('MM2_CONFIG')
 
 
-if APP.config.get('MM_AUTHENTICATION') == 'FAS':
+if APP.config.get('MM_AUTHENTICATION') == 'fas':
     # Use FAS for authentication
     from flask.ext.fas_openid import FAS
     FAS = FAS(APP)
@@ -96,7 +96,7 @@ def is_mirrormanager_admin(user):
     """
     if not user:
         return False
-    if APP.config.get('MM_AUTHENTICATION', None) == 'FAS':
+    if APP.config.get('MM_AUTHENTICATION', None) == 'fas':
         if not user.cla_done or len(user.groups) < 1:
             return False
 
