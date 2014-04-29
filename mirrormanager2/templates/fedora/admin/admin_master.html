@@ -1,0 +1,98 @@
+{% extends 'admin/master.html' %}
+{% import 'admin/lib.html' as lib with context %}
+{% import 'admin/static.html' as admin_static with context%}
+
+{% macro extra() %}
+  <input name="_add_another" type="submit" class="btn btn-large"
+        value="{{ _gettext('Save and Add') }}" />
+{% endmacro %}
+
+{% block head %}
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="shortcut icon" type="image/vnd.microsoft.icon"
+        href="{{ url_for('static', filename='favicon.ico')}}"/>
+    <link rel="stylesheet" type="text/css" media="screen"
+        href="{{ url_for('static', filename='koji.css') }}"/>
+    <link rel="stylesheet" type="text/css" media="screen"
+        href="{{ url_for('static', filename='mirrormanager2.css') }}"/>
+    <link type="text/css" rel="stylesheet"
+        href="{{ url_for('static',
+            filename='fedocal/jquery-ui-1.9.2.custom.css')}}" />
+
+    <link href="{{ admin_static.url(filename='select2/select2.css') }}"
+        rel="stylesheet">
+    <link href="{{ admin_static.url(
+        filename='datetimepicker/bootstrap-datetimepicker.css') }}"
+        rel="stylesheet">
+{% endblock %}
+
+{%block tag %}admin{% endblock %}
+
+{% block page_body %}
+    <div id="wrap">
+      <div id="innerwrap">
+
+        <!-- HEADER -->
+        <div id="header">
+          <img src="{{ url_for('static', filename='mirrormanager-logo.png') }}"
+            alt="MirrorManager Logo" id="kojiLogo"/>
+        </div><!-- end header -->
+
+        <!-- MAIN NAVIGATION -->
+        <div id="mainNav">
+          <h4 class="hide">Main Site Links:</h4>
+          <ul>
+            <li id="homeTab"><a href="{{url_for('index')}}">Home</a></li>
+            <li id="mirrorsTab"><a href="{{url_for('list_mirrors')}}">Mirrors</a></li>
+            {% if is_admin %}
+            <li id="adminTab"><a href="{{url_for('admin_index')}}">Admin</a></li>
+            {% endif %}
+          </ul>
+        </div><!-- end mainNav -->
+
+        <span id="loginInfo">
+          {% if g.fas_user %}
+            <span class="text">logged in as </span>
+            {{ g.fas_user.username }} |
+            <a href="{{ url_for('auth_logout') }}?next={{request.url}}">log out</a>
+          {% else %}
+        <a href="{{ url_for('auth_login') }}?next={{request.url}}">login</a>
+          {% endif %}
+        </span>
+
+        <div id="content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if category, messages %}
+                <ul id="flashes">
+                    {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            {% endwith %}
+
+            {{ super() }}
+
+        {% block content %}{% endblock %}
+
+        </div>
+
+        <p id="footer">
+          Copyright &copy; 2014 Red Hat
+          <a href="https://fedorahosted.org/mirrormanager/">mirrormanager</a>
+          -- {{version}}
+          -- <a href="http://mirrormanager.rtfd.org"
+                target="_blank">Documentation</a>
+          -- <a href="http://mirrormanager.readthedocs.org/en/latest/contributors.html">Authors</a>
+        </p>
+
+      </div>
+    </div>
+{% endblock %}
+
+{% block tail %}
+  {{ super() }}
+  <script src="{{ admin_static.url(
+    filename='datetimepicker/bootstrap-datetimepicker.js') }}"></script>
+  <script src="{{ admin_static.url(filename='admin/js/form.js') }}"></script>
+{% endblock %}
