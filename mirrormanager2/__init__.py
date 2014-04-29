@@ -33,6 +33,8 @@ import flask
 
 from functools import wraps
 
+from flask.ext.admin import Admin
+
 __version__ = '2.0.1'
 
 APP = flask.Flask(__name__)
@@ -40,6 +42,8 @@ APP = flask.Flask(__name__)
 APP.config.from_object('mirrormanager2.default_config')
 if 'MM2_CONFIG' in os.environ:  # pragma: no cover
     APP.config.from_envvar('MM2_CONFIG')
+
+ADMIN = Admin(APP)
 
 
 if APP.config.get('MM_AUTHENTICATION') == 'fas':
@@ -198,3 +202,5 @@ def auth_logout():
         FAS.logout()
         flask.flash("You are no longer logged-in")
     return flask.redirect(next_url)
+
+import admin
