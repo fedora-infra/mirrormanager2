@@ -157,6 +157,14 @@ def list_mirrors():
         mirrors=mirrors,
     )
 
+@APP.route('/admin')
+def admin_index():
+    """ Displays the index page of the admin section
+    """
+
+    return flask.render_template(
+        'index.html',
+    )
 
 @APP.route('/login', methods=['GET', 'POST'])
 def auth_login():  # pragma: no cover
