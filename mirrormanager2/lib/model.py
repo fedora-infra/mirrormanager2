@@ -136,6 +136,9 @@ class Site(BASE):
     email_on_drop = sa.Column(sa.Boolean(), default=False, nullable=False)
     email_on_add = sa.Column(sa.Boolean(), default=False, nullable=False)
 
+    def __repr__(self):
+        ''' Return a string representation of the object. '''
+        return '<Site(%s - %s)>' % (self.id, self.name)
 
 class Country(BASE):
 
@@ -188,6 +191,10 @@ class Host(BASE):
             'site_id', 'name', name='host_idx'),
     )
 
+    def __repr__(self):
+        ''' Return a string representation of the object. '''
+        return '<Host(%s - %s)>' % (self.id, self.name)
+
 
 class Directory(BASE):
 
@@ -202,6 +209,9 @@ class Directory(BASE):
     readable = sa.Column(sa.Boolean(), default=True, nullable=False)
     ctime = sa.Column(sa.BigInteger, default=0, nullable=True)
 
+    def __repr__(self):
+        ''' Return a string representation of the object. '''
+        return '<Directory(%s - %s)>' % (self.id, self.name)
 
 # e.g. 'fedora' and 'epel'
 class Product(BASE):
@@ -212,6 +222,9 @@ class Product(BASE):
     name = sa.Column(sa.Text(), nullable=False, unique=True)
     publiclist = sa.Column(sa.Boolean(), default=True, nullable=False)
 
+    def __repr__(self):
+        ''' Return a string representation of the object. '''
+        return '<Product(%s - %s)>' % (self.id, self.name)
 
 class Category(BASE):
 
@@ -245,6 +258,9 @@ class Category(BASE):
     # all the directories that are part of this category
     #directories = RelatedJoin('Directory', orderBy='name')
 
+    def __repr__(self):
+        ''' Return a string representation of the object. '''
+        return '<Category(%s - %s)>' % (self.id, self.name)
 
 class SiteToSite(BASE):
 
@@ -333,6 +349,10 @@ class HostCategory(BASE):
 
     def my_site(self):
         return self.host.my_site()
+
+    def __repr__(self):
+        ''' Return a string representation of the object. '''
+        return '<HostCategory(%s - %s)>' % (self.id, self.category)
 
 
 class HostCategoryDir(BASE):
@@ -503,6 +523,9 @@ class Arch(BASE):
     publiclist = sa.Column(sa.Boolean(), default=True, nullable=False)
     primary_arch = sa.Column(sa.Boolean(), default=True, nullable=False)
 
+    def __repr__(self):
+        ''' Return a string representation of the object. '''
+        return '<Arch(%s - %s)>' % (self.id, self.name)
 
 class Version(BASE):
 
@@ -531,6 +554,10 @@ class Version(BASE):
         sa.UniqueConstraint(
             'name', 'product_id', name='version_idx'),
     )
+
+    def __repr__(self):
+        ''' Return a string representation of the object. '''
+        return '<Version(%s - %s)>' % (self.id, self.name)
 
 
 class Repository(BASE):
