@@ -53,6 +53,21 @@ def create_session(db_url, debug=False, pool_recycle=3600):
     return scopedsession
 
 
+def get_site(session, site_id):
+    ''' Return a specified Site via its identifier.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Site
+    ).filter(
+        model.Site.id == site_id
+    )
+
+    return query.first()
+
+
 def add_admin_to_site(session, site, admin):
     ''' Add an admin to the specified site.
 
