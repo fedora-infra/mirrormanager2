@@ -1,0 +1,46 @@
+{% extends "master.html" %}
+
+{% block title %}Home{% endblock %}
+{%block tag %}home{% endblock %}
+
+{% block content %}
+<h2>Public active mirrors</h2>
+
+{% if mirrors %}
+<p>
+  We have currently {{ mirrors | length }} active mirrors
+</p>
+
+<table>
+  {% for mirror in mirrors %}
+  <tr>
+    <td>{{ mirror.country }}</td>
+    <td>
+      <a href="{{ mirror.site.org_url }}">
+        {{ mirror.site.name }}
+      </a>
+    </td>
+    <td>{{ mirror.name }}</td>
+    <td>
+      {% for cat in mirror.categories %}
+        {% if cat.urls %}
+          {{ cat.category.name }}
+          {% for url in cat.urls %}
+            <a href="{{ url.url }}">{{ url.url.split('://')[0] }}</a>
+          {% endfor %} <br />
+        {% endif %}
+      {% endfor %}
+    </td>
+    <td>{{ mirror.bandwidth_int }}</td>
+    <td>{% if mirror.internet2 %}Yes{% else %}No{% endif %}</td>
+    <td>{% if mirror.comment %}{{ mirror.comment }}{% endif %}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>
+  There are currently no active mirrors registered.
+</p>
+{% endif %}
+
+{% endblock %}
