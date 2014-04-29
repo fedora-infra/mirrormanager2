@@ -68,6 +68,21 @@ def get_site(session, site_id):
     return query.first()
 
 
+def get_host(session, host_id):
+    ''' Return a specified Host via its identifier.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Host
+    ).filter(
+        model.Host.id == host_id
+    )
+
+    return query.first()
+
+
 def add_admin_to_site(session, site, admin):
     ''' Add an admin to the specified site.
 
