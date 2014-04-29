@@ -240,6 +240,40 @@ def host_new(site_id):
     )
 
 
+@APP.route('/host/<host_id>', methods=['GET', 'POST'])
+def host_view(host_id):
+    """ Create a new host.
+    """
+    hostobj = mmlib.get_host(SESSION, host_id)
+
+    if hostobj is None:
+        flask.abort(404, 'Host not found')
+
+    form = forms.AddHostForm(obj=hostobj)
+    if form.validate_on_submit():
+        form.populate_obj(obj=host)
+        host.bandwidth_int = int(host.bandwidth_int)
+        host.asn = None if not host.asn else int(host.asn)
+
+        try:
+            SESSION.flush()
+            flask.flash('Host updated')
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            flask.flash('Could not update the host')
+            APP.logger.debug('Could not update the host')
+            APP.logger.exception(err)
+
+        SESSION.commit()
+        return flask.redirect(flask.url_for('host_view', host_id=host_id))
+
+    return flask.render_template(
+        'host.html',
+        form=form,
+        host=hostobj,
+    )
+
+
 @APP.route('/mirrors')
 def list_mirrors():
     """ Displays the page listing all mirrors.
