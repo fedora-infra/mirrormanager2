@@ -172,6 +172,9 @@ li#adminTabSelected a {
     border-top-right-radius: 5px;
 }
 
+#adminTab, #adminTabSelected{
+    float:right !important;
+}
 
 img.sort {
     /* used for up/down sort arrows*/
