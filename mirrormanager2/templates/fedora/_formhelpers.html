@@ -30,17 +30,15 @@
 <tr>
     <td>{{ field.label }}</td>
     <td>{{ field(**kwargs)|safe }}</td>
+
     {% if escape_after %}
     {% autoescape off%} {% if after %} <td>{{ after }}</td>{% endif %} {% endautoescape %}
     {% else %}
-    {% if after %} <td>{{ after }}</td>{% endif %} 
+    {% if after %} <td>{{ after }}</td>{% endif %}
+    {% endif %}
+
+    {% if field.errors and field in field.errors %}
+    <td>{{ field.errors[field] }}</td>
     {% endif %}
 </tr>
-{% if field.errors %}
-<tr class="errors">
-{% for error in field.errors %}
-<td>{{ error }}</td>
-{% endfor %}
-</tr>
-{% endif %}
 {% endmacro %}
