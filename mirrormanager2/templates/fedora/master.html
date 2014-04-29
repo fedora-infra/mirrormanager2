@@ -31,8 +31,8 @@
           <ul>
             <li id="homeTab"><a href="{{url_for('index')}}">Home</a></li>
             <li id="mirrorsTab"><a href="{{url_for('list_mirrors')}}">Mirrors</a></li>
-            {% if admin %}
-            <li id="adminTab"><a href="{{url_for('admin')}}">Admin</a></li>
+            {% if is_admin %}
+            <li id="adminTab"><a href="{{url_for('admin_index')}}">Admin</a></li>
             {% endif %}
           </ul>
         </div><!-- end mainNav -->
