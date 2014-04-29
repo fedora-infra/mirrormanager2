@@ -1,0 +1,51 @@
+{% extends 'admin/admin_master.html' %}
+{% import 'admin/lib.html' as lib with context %}
+{% import 'admin/static.html' as admin_static with context%}
+
+{% macro extra() %}
+  <input name="_add_another" type="submit" class="btn btn-large"
+        value="{{ _gettext('Save and Add') }}" />
+{% endmacro %}
+
+{% block head %}
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="shortcut icon" type="image/vnd.microsoft.icon"
+        href="{{ url_for('static', filename='favicon.ico')}}"/>
+    <link rel="stylesheet" type="text/css" media="screen"
+        href="{{ url_for('static', filename='koji.css') }}"/>
+    <link rel="stylesheet" type="text/css" media="screen"
+        href="{{ url_for('static', filename='mirrormanager2.css') }}"/>
+    <link type="text/css" rel="stylesheet"
+        href="{{ url_for('static',
+            filename='fedocal/jquery-ui-1.9.2.custom.css')}}" />
+
+    <link href="{{ admin_static.url(filename='select2/select2.css') }}"
+        rel="stylesheet">
+    <link href="{{ admin_static.url(
+        filename='datetimepicker/bootstrap-datetimepicker.css') }}"
+        rel="stylesheet">
+{% endblock %}
+
+{%block tag %}admin{% endblock %}
+
+{% block content %}
+    {% if filters %}
+        {{ model_layout.filter_form() }}
+        <div class="clearfix"></div>
+    {% endif %}
+
+<ul class="nav nav-tabs">
+      <li>
+          <a href="{{ return_url }}">{{ _gettext('List') }}</a>
+      </li>
+      <li class="active">
+          <a href="javascript:void(0)">{{ _gettext('Create') }}</a>
+      </li>
+</ul>
+
+  {% call lib.form_tag(form) %}
+      {{ lib.render_form_fields(form, form_opts=form_opts) }}
+      {{ lib.render_form_buttons(return_url, extra()) }}
+  {% endcall %}
+
+{% endblock %}
