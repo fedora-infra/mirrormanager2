@@ -57,9 +57,18 @@ class HostView(MMModelView):
         'robot_email')
 
 
+class DirectoryView(MMModelView):
+    ''' View of the Host table specifying which field of the table should
+    be shown (and their order).
+    '''
+
+    # Override displayed fields
+    column_list = ('name', 'readable', 'ctime')
+
+
 ADMIN.add_view(MMModelView(model.Site, SESSION))
 ADMIN.add_view(HostView(model.Host, SESSION, category='Host'))
 ADMIN.add_view(MMModelView(model.HostCategory, SESSION, category='Host'))
 ADMIN.add_view(MMModelView(model.HostCategoryDir, SESSION, category='Host'))
 ADMIN.add_view(MMModelView(model.HostCategoryUrl, SESSION, category='Host'))
-ADMIN.add_view(MMModelView(model.Directory, SESSION))
+ADMIN.add_view(DirectoryView(model.Directory, SESSION))
