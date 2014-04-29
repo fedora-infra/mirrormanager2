@@ -53,6 +53,29 @@ def create_session(db_url, debug=False, pool_recycle=3600):
     return scopedsession
 
 
+def add_admin_to_site(session, site, admin):
+    ''' Add an admin to the specified site.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.SiteAdmin
+    ).filter(
+        model.SiteAdmin.site_id == site_id
+    )
+
+    admins = [sa.username for sa in query.all()]
+
+    if admin in admins:
+        return '%s was already listed as an admin' % admin
+    else:
+        sa = model.SiteAdmin(site_id=site_id, username=admin)
+        session.add(sa)
+        session.flush()
+        return '%s added as an admin' % admin
+
+
 def get_mirrors(
         session, private=None, internet2=None, internet2_clients=None,
         asn_clients=None, admin_active=None, user_active=None, urls=None,
