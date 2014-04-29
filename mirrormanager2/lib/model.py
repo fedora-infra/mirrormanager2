@@ -157,12 +157,12 @@ class Host(BASE):
     name = sa.Column(sa.Text(), nullable=False)
     site_id = sa.Column(
         sa.Integer, sa.ForeignKey('site.id'), nullable=True)
-    robot_email = sa.Column(sa.Text(), nullable=False)
+    robot_email = sa.Column(sa.Text(), nullable=True)
     admin_active = sa.Column(sa.Boolean(), default=True, nullable=False)
     user_active = sa.Column(sa.Boolean(), default=True, nullable=False)
     country = sa.Column(sa.Text(), nullable=False)
     bandwidth_int = sa.Column(sa.Integer, default=100, nullable=True)
-    comment = sa.Column(sa.Text(), nullable=False)
+    comment = sa.Column(sa.Text(), nullable=True)
     #_config = PickleCol(default=None)
     last_checked_in = sa.Column(sa.DateTime, nullable=True, default=None)
     last_crawled = sa.Column(sa.DateTime, nullable=True, default=None)
@@ -294,9 +294,6 @@ class SiteToSite(BASE):
             name='site_to_site_username_idx'),
     )
 
-    def my_site(self):
-        return self.upstream_site
-
 
 class SiteAdmin(BASE):
 
@@ -313,9 +310,6 @@ class SiteAdmin(BASE):
         foreign_keys=[site_id], remote_side=[Site.id],
         backref=backref('admins'),
     )
-
-    def my_site(self):
-        return self.site
 
 
 class HostCategory(BASE):
