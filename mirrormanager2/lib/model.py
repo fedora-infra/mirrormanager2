@@ -501,7 +501,7 @@ class Arch(BASE):
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.Text(), nullable=False, unique=True)
     publiclist = sa.Column(sa.Boolean(), default=True, nullable=False)
-    primaryArch = sa.Column(sa.Boolean(), default=True, nullable=False)
+    primary_arch = sa.Column(sa.Boolean(), default=True, nullable=False)
 
 
 class Version(BASE):
