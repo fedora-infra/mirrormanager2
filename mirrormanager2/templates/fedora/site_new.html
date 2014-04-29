@@ -1,0 +1,55 @@
+{% extends "master.html" %}
+{% from "_formhelpers.html" import render_field_in_row %}
+
+{% block title %}New Site{% endblock %}
+{%block tag %}home{% endblock %}
+
+{% block content %}
+<h2>Export Compliance</h2>
+
+<p>
+  By downloading Fedora software, you acknowledge that you understand all of
+  the following: Fedora software and technical information may be subject to
+  the U.S. Export Administration Regulations (the “EAR”) and other U.S. and
+  foreign laws and may not be exported, re-exported or transferred
+  (a) to any country listed in Country Group E:1 in Supplement No. 1 to part
+  740 of the EAR (currently, Cuba, Iran, North Korea, Sudan and Syria);
+  (b) to any prohibited destination or to any end user who has been prohibited
+  from participating in U.S. export transactions by any federal agency of the
+  U.S. government; or
+  (c) for use in connection with the design, development or production of
+  nuclear, chemical or biological weapons, or rocket systems, space launch
+  vehicles, or sounding rockets, or unmanned air vehicle systems.
+</p>
+
+<p>
+  You may not download Fedora software or technical information if you are
+  located in one of these countries or otherwise subject to these restrictions.
+  You may not provide Fedora software or technical information to individuals
+  or entities located in one of these countries or otherwise subject to these
+  restrictions. You are also responsible for compliance with foreign law
+  requirements applicable to the import, export and use of Fedora software
+  and technical information.
+</p>
+
+<form action="" method="POST">
+  <table>
+    {{ render_field_in_row(form.name) }}
+    {{ render_field_in_row(form.password) }}
+    {{ render_field_in_row(form.org_url) }}
+    {{ render_field_in_row(form.private) }}
+    {{ render_field_in_row(form.admin_active) }}
+    {{ render_field_in_row(form.user_active) }}
+    {{ render_field_in_row(form.all_sites_can_pull_from_me) }}
+    {{ render_field_in_row(form.downstream_comments) }}
+  </table>
+  <p class="buttons indent">
+    <input type="submit" class="submit positive button" value="Create">
+    <a href="{{ url_for('index') }}">
+      <input type="button" value="Cancel" class="button">
+    </a>
+    {{ form.csrf_token }}
+  </p>
+</form>
+
+{% endblock %}
