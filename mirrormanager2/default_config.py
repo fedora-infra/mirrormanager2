@@ -39,3 +39,11 @@ SECRET_KEY = '<insert here your own key>'
 
 # Folder containing the theme to use, defaults to the Fedora theme
 THEME_FOLDER = 'fedora'
+
+# Which authentication method to use, defaults to `fas` can be `openid`
+# or `local`
+MM_AUTHENTICATION = 'fas'
+
+# If the authentication method is `fas`, groups in which should be the user
+# to be recognized as an admin.
+ADMIN_GROUP = ('sysadmin-main', )
