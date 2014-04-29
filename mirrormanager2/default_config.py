@@ -37,4 +37,5 @@ ITEMS_PER_PAGE = 50
 # secret key used to generate unique csrf token
 SECRET_KEY = '<insert here your own key>'
 
+# Folder containing the theme to use, defaults to the Fedora theme
 THEME_FOLDER = 'fedora'
