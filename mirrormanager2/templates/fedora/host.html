@@ -9,7 +9,8 @@
 
 <p>
   Back to <a href="{{ url_for('site_view', site_id=host.site_id) }}">
-    {{ host.site.name }}</a>
+    {{ host.site.name }}
+  </a>
 </p>
 
 <form action="" method="POST">
@@ -40,8 +41,69 @@
 <p>
 Last Checked In: {{ host.last_checked_in or '-' }} <br />
 Last Crawled: {% if host.last_crawled %} {{ host.last_crawled
-    }} <a href="">[Log]</a> {% else %} - {% endif %} <br />
+  }} <a href="">[Log]</a> {% else %} - {% endif %} <br />
 Last Crawl Duration: {{ host.last_crawl_duration }} seconds
+</p>
+
+<h3>
+  Master rsync server Access Control List IPs
+</h3>
+<p>
+  These host DNS names and/or IP addresses will be allowed to rsync from
+  the master rsync/ftp servers. List here all the machines that you use for
+  pulling.
+</p>
+
+<h3>
+  Site-local Netblocks
+</h3>
+<p>
+  Netblocks are used to try to guide and end user to a site-specific mirror.
+  For example, a university might list their netblocks, and the mirrorlist
+  CGI would return the university-local mirror rather than a country-local
+  mirror. Format is one of 18.0.0.0/255.0.0.0, 18.0.0.0/8, an IPv6
+  prefix/length, or a DNS hostname. Values must be public IP addresses (no
+  RFC1918 private space addresses).
+</p>
+
+<h3>
+  Peer ASNs
+</h3>
+<p>
+  Peer ASNs are used to guide an end user on nearby networks to our mirror.
+  For example, a university might list their peer ASNs, and the mirrorlist
+  CGI would return the university-local mirror rather than a country-local
+  mirror. You must be in the MirrorManager administrators group in order to
+  create new entries here.
+</p>
+
+<h3>
+  Locations
+</h3>
+<p>
+  Locations are ways to group hosts when netblocks are unwieldy. Examples
+  include Amazon EC2 availability zones. Mirrorlist clients append
+  location=string to their request URLs to specify a preferred location.
+  Setting up locations requires MirrorManager administrator privileges.
+</p>
+
+<h3>
+  Countries Allowed
+</h3>
+<p>
+  Some mirrors need to restrict themselves to serving only end users from
+  their country. If you're one of these, list the 2-letter ISO code for the
+  countries you will allow end users to be from. The mirrorlist CGI will
+  honor this.
+</p>
+
+<h3>
+Categories Carried
+</h3>
+[Add Category]
+<p>
+  Hosts carry categories of software. Example Fedora categories include
+  Fedora and Fedora Archive.
 </p>
 
 {% endblock %}
