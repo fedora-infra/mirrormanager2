@@ -161,9 +161,9 @@ p#footer a {
 body#home #mainNav li#homeTab a,
 body#mirrors #mainNav li#mirrorsTab a,
 body#mymeeting #mainNav li#mymeetingTab a,
-body#admin #mainNav li#adminTab a {
+li#adminTabSelected a {
     background-color: #fff;
-    color: #444;
+    color: #444 !important;
     -webkit-border-top-left-radius: 5px;
     -webkit-border-top-right-radius: 5px;
     -moz-border-radius-topleft: 5px;
