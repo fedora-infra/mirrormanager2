@@ -180,6 +180,29 @@ def site_new():
     )
 
 
+@APP.route('/site/<site_id>')
+def site_view(site_id):
+    """ View information about a given site.
+    """
+    siteobj = mmlib.get_site(SESSION, site_id)
+
+    if siteobj is None:
+        flask.abort(404, 'Site not found')
+
+    form = forms.AddSiteForm(obj=siteobj)
+    if form.validate_on_submit():
+        obj = form.populate_obj(obj=siteobj)
+        SESSION.commit()
+        flask.flash('Site Updated')
+        return flask.redirect(flask.url_for('index'))
+
+    return flask.render_template(
+        'site.html',
+        site=siteobj,
+        form=form,
+    )
+
+
 @APP.route('/mirrors')
 def list_mirrors():
     """ Displays the page listing all mirrors.
