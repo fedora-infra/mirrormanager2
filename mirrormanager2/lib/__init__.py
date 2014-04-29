@@ -23,6 +23,8 @@
 MirrorManager2 internal api.
 '''
 
+import datetime
+
 import sqlalchemy
 
 from sqlalchemy.orm import sessionmaker
@@ -53,7 +55,10 @@ def create_session(db_url, debug=False, pool_recycle=3600):
 
 def get_mirrors(
         session, private=None, internet2=None, internet2_clients=None,
-        asn_clients=None, admin_active=None, user_active=None):
+        asn_clients=None, admin_active=None, user_active=None, urls=None,
+        last_crawl_duration=False, last_checked_in=False, last_crawled=False,
+        site_private=None, site_admin_active=None, site_user_active=None,
+        up2date=None, host_category_url_private=None):
     ''' Retrieve the mirrors based on the criteria specified.
 
     :arg session: the session with which to connect to the database.
@@ -62,7 +67,7 @@ def get_mirrors(
     query = session.query(
         model.Host
     ).order_by(
-        model.Host.country
+        model.Host.country, model.Host.name
     )
 
     if private is not None:
@@ -77,5 +82,49 @@ def get_mirrors(
         query = query.filter(model.Host.admin_active == admin_active)
     if user_active is not None:
         query = query.filter(model.Host.user_active == user_active)
+
+    if host_category_url_private is not None:
+        query = query.filter(
+            model.HostCategory.host_id == model.Host.id
+        ).filter(
+            model.HostCategoryUrl.host_category_id == model.HostCategory.id
+        ).filter(
+            model.HostCategoryUrl.private == host_category_url_private
+        )
+
+    if last_crawl_duration is True:
+        query = query.filter(model.Host.last_crawl_duration > 0)
+    if last_crawled is True:
+        query = query.filter(model.Host.last_crawled != None)
+    if last_checked_in is True:
+        query = query.filter(model.Host.last_checked_in != None)
+
+    if site_private is not None:
+        query = query.filter(
+            model.Host.site_id == model.Site.id
+        ).filter(
+            model.Site.private == site_private
+        )
+    if site_user_active is not None:
+        query = query.filter(
+            model.Host.site_id == model.Site.id
+        ).filter(
+            model.Site.user_active == site_user_active
+        )
+    if site_admin_active is not None:
+        query = query.filter(
+            model.Host.site_id == model.Site.id
+        ).filter(
+            model.Site.admin_active == site_admin_active
+        )
+
+    if up2date is not None:
+        query = query.filter(
+            model.Host.id == model.HostCategory.host_id
+        ).filter(
+            model.HostCategory.id == model.HostCategoryDir.host_category_id
+        ).filter(
+            model.HostCategoryDir.up2date == up2date
+        )
 
     return query.all()
