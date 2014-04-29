@@ -111,6 +111,20 @@ def is_mirrormanager_admin(user):
 
 
 ## Flask application
+
+@APP.context_processor
+def inject_variables():
+    """ Inject some variables into every template.
+    """
+    admin = False
+    if hasattr(flask.g, 'fas_user') and flask.g.fas_user:
+        admin = is_mirrormanager_admin(flask.g.fas_user)
+
+    return dict(
+        is_admin=admin,
+        version=__version__
+    )
+
 @APP.route('/')
 def index():
     """ Displays the index page.
