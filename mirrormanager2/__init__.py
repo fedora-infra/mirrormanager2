@@ -32,8 +32,8 @@ import sys
 import flask
 
 from functools import wraps
-
 from flask.ext.admin import Admin
+from sqlalchemy.exc import SQLAlchemyError
 
 __version__ = '2.0.1'
 
@@ -90,6 +90,8 @@ LOG = APP.logger
 
 
 import mirrormanager2.lib as mmlib
+import mirrormanager2.forms as forms
+import mirrormanager2.lib.model as model
 
 
 SESSION = mmlib.create_session(APP.config['DB_URL'])
@@ -135,6 +137,46 @@ def index():
     """
     return flask.render_template(
         'index.html',
+    )
+
+
+@APP.route('/site/new', methods=['GET', 'POST'])
+def site_new():
+    """ Create a new site.
+    """
+    form = forms.AddSiteForm()
+    if form.validate_on_submit():
+        site = model.Site()
+        SESSION.add(site)
+        form.populate_obj(obj=site)
+        site.created_by = flask.g.fas_user.username
+
+        try:
+            SESSION.flush()
+            flask.flash('Site added')
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            flask.flash('Could not create the new site')
+            APP.logger.debug('Could not create the new site')
+            APP.logger.exception(err)
+            return flask.redirect(flask.url_for('index'))
+
+        try:
+            msg = add_admin_to_site(SESSION, site, flask.g.fas_user.username)
+            fask.flash(msg)
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            APP.logger.debug(
+                'Could not add admin "%s" to site "%s"' % (
+                    flask.g.fas_user.username, site))
+            APP.logger.exception(err)
+
+        SESSION.commit()
+        return flask.redirect(flask.url_for('index'))
+
+    return flask.render_template(
+        'site_new.html',
+        form=form,
     )
 
 
