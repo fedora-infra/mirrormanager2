@@ -43,20 +43,6 @@ class MMModelView(ModelView):
         return admin
 
 
-class HostView(MMModelView):
-    ''' View of the Host table specifying which field of the table should
-    be shown (and their order).
-    '''
-
-    # Override displayed fields
-    column_list = (
-        'country', 'name', 'site_id', 'admin_active', 'user_active',
-        'last_crawled', 'private', 'bandwidth_int', 'comment',
-        'last_checked_in', 'internet2', 'internet2_client', 'asn',
-        'asn_clients', 'max_connections', 'last_crawl_duration',
-        'robot_email')
-
-
 class DirectoryView(MMModelView):
     ''' View of the Host table specifying which field of the table should
     be shown (and their order).
@@ -76,7 +62,7 @@ ADMIN.add_view(DirectoryView(model.DirectoryExclusiveHost, SESSION, category='Di
 ADMIN.add_view(MMModelView(model.FileDetail, SESSION, category='File'))
 ADMIN.add_view(MMModelView(model.FileDetailFileGroup, SESSION, category='File'))
 ADMIN.add_view(MMModelView(model.FileGroup, SESSION, category='File'))
-ADMIN.add_view(HostView(model.Host, SESSION, category='Host'))
+ADMIN.add_view(MMModelView(model.Host, SESSION, category='Host'))
 ADMIN.add_view(MMModelView(model.HostAclIp, SESSION, category='Host'))
 ADMIN.add_view(MMModelView(model.HostCategory, SESSION, category='Host'))
 ADMIN.add_view(MMModelView(model.HostCategoryDir, SESSION, category='Host'))
