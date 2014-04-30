@@ -1,0 +1,30 @@
+{% extends "master.html" %}
+{% from "_formhelpers.html" import render_field_in_row %}
+
+{% block title %}New Host Category URL{% endblock %}
+{%block tag %}home{% endblock %}
+
+{% block content %}
+<h2>Add host category URL</h2>
+
+<p>
+  Back to <a href="{{ url_for('host_view', host_id=host.id) }}">
+    {{ host.name }}</a>
+</p>
+
+<form action="{{ url_for('host_category_url_new',
+                 host_id=host.id, hc_id=hostcategory.id) }}" method="POST">
+  <table>
+    {{ render_field_in_row(form.url) }}
+    {{ render_field_in_row(form.private) }}
+  </table>
+  <p class="buttons indent">
+    <input type="submit" class="submit positive button" value="Create">
+    <a href="{{ url_for('host_view', host_id=host.id) }}">
+      <input type="button" value="Cancel" class="button">
+    </a>
+    {{ form.csrf_token }}
+  </p>
+</form>
+
+{% endblock %}
