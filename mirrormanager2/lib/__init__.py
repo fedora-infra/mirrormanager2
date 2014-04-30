@@ -208,6 +208,21 @@ def get_version_by_name_version(session, p_name, p_version):
     return query.first()
 
 
+def get_arch_by_name(session, arch_name):
+    ''' Return a Arch specified via name.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Arch
+    ).filter(
+        model.Arch.name == arch_name
+    )
+
+    return query.first()
+
+
 def get_categories(session):
     ''' Return the list of all the categories in the database.
 
