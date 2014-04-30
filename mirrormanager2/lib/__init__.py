@@ -201,6 +201,21 @@ def get_categories(session):
     return query.all()
 
 
+def get_products(session):
+    ''' Return the list of all the products in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Product
+    ).order_by(
+        model.Product.name
+    )
+
+    return query.all()
+
+
 def add_admin_to_site(session, site, admin):
     ''' Add an admin to the specified site.
 
