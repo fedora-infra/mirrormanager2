@@ -185,7 +185,15 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
   <ul>
   {% for country in host.countries %}
     <li>
-      {{ country.country.code }} <a href="">[delete]</a>
+      <form class="icon" method="POST"
+        action="{{ url_for('host_country_delete', host_id=host.id,
+                   host_country_id=country.id) }}">
+      {{ country.country.code }}
+        <button
+          onclick="return confirm('You sure you want to delete this country?');"
+          title="Delete country">
+          <span class="icon icon-trash blue"></span>
+        </button>
     </li>
   {% endfor %}
   </ul>
