@@ -777,8 +777,6 @@ class HostCountry(BASE):
         sa.Integer, sa.ForeignKey('country.id'), nullable=False)
     host_id = sa.Column(
         sa.Integer, sa.ForeignKey('host.id'), nullable=False)
-    country_id = sa.Column(
-        sa.Integer, sa.ForeignKey('country.id'), nullable=False)
 
     # Relations
     host = relation(
