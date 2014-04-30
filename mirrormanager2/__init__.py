@@ -60,7 +60,7 @@ APP.static_folder = os.path.join(
 
 
 # Set up the logger
-## Send emails for big exception
+# Send emails for big exception
 MAIL_HANDLER = logging.handlers.SMTPHandler(
     APP.config.get('SMTP_SERVER', '127.0.0.1'),
     'nobody@fedoraproject.org',
@@ -116,7 +116,7 @@ def is_mirrormanager_admin(user):
         return user in APP.config['ADMIN_GROUP']
 
 
-## Flask application
+# # Flask application
 
 @APP.context_processor
 def inject_variables():
@@ -130,6 +130,7 @@ def inject_variables():
         is_admin=admin,
         version=__version__
     )
+
 
 @APP.route('/')
 def index():
@@ -709,8 +710,9 @@ def host_category_url_new(host_id, hc_id):
     )
 
 
-@APP.route('/host/<host_id>/category/<hc_id>/url/<host_category_url_id>/delete',
-           methods=['POST'])
+@APP.route(
+    '/host/<host_id>/category/<hc_id>/url/<host_category_url_id>/delete',
+    methods=['POST'])
 def host_category_url_delete(host_id, hc_id, host_category_url_id):
     """ Delete a host_category_url.
     """
@@ -756,8 +758,8 @@ def list_mirrors():
         user_active=True,
         site_admin_active=True,
         site_user_active=True,
-        #last_checked_in=True,
-        #last_crawled=True,
+        # last_checked_in=True,
+        # last_crawled=True,
         up2date=True,
         host_category_url_private=False,
     )
