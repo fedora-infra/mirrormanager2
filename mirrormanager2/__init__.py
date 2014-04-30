@@ -577,7 +577,8 @@ def host_category_new(host_id):
             APP.logger.exception(err)
 
         SESSION.commit()
-        return flask.redirect(flask.url_for('host_view', host_id=host_id))
+        return flask.redirect(
+            flask.url_for('host_category', host_id=hostobj.id, hc_id=hcobj.id))
 
     return flask.render_template(
         'host_category_new.html',
