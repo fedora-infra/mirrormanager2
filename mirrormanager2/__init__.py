@@ -274,6 +274,41 @@ def host_view(host_id):
     )
 
 
+@APP.route('/host/<host_id>/host_acl_ip/new', methods=['GET', 'POST'])
+def host_acl_ip_new(host_id):
+    """ Create a new host_acl_ip.
+    """
+    hostobj = mmlib.get_host(SESSION, host_id)
+
+    if hostobj is None:
+        flask.abort(404, 'Host not found')
+
+    form = forms.AddHostAclIpForm(obj=hostobj)
+    if form.validate_on_submit():
+        host_acl = model.HostAclIp()
+        SESSION.add(host_acl)
+        host_acl.host_id = hostobj.id
+        form.populate_obj(obj=host_acl)
+
+        try:
+            SESSION.flush()
+            flask.flash('Host ACL IP added')
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            flask.flash('Could not add ACL IP to the host')
+            APP.logger.debug('Could not add ACL IP to the host')
+            APP.logger.exception(err)
+
+        SESSION.commit()
+        return flask.redirect(flask.url_for('host_view', host_id=host_id))
+
+    return flask.render_template(
+        'host_acl_ip_new.html',
+        form=form,
+        host=hostobj,
+    )
+
+
 @APP.route('/mirrors')
 def list_mirrors():
     """ Displays the page listing all mirrors.
