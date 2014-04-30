@@ -194,6 +194,7 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
           title="Delete country">
           <span class="icon icon-trash blue"></span>
         </button>
+      </form>
     </li>
   {% endfor %}
   </ul>
@@ -215,7 +216,11 @@ Categories Carried
   <ul>
   {% for category in host.categories %}
     <li>
-      {{ category.category.name }} <a href="">[delete]</a>
+      <a href="{{ url_for('host_category', host_id=host.id,
+                  hc_id=category.id) }}">
+      {{ category.category.name }}
+      </a>
+      <a href="">[delete]</a>
     </li>
     {% if category.urls %}
     <li>
