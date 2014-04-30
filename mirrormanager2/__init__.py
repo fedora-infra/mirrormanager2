@@ -148,9 +148,22 @@ def index():
 
 
 @APP.route('/mirrors')
-def list_mirrors():
+@APP.route('/mirrors/<p_name>/<p_version>')
+@APP.route('/mirrors/<p_name>/<p_version>/<p_arch>')
+def list_mirrors(p_name=None, p_version=None, p_arch=None):
     """ Displays the page listing all mirrors.
     """
+    version_id = None
+    arch_id = None
+    if p_name and p_version:
+        version = mmlib.get_version_by_name_version(
+            SESSION, p_name, p_version)
+        version_id = version.id
+
+    if p_arch:
+        arch = mmlib.get_arch_by_name(SESSION, p_arch)
+        arch_id = arch.id
+
     mirrors = mmlib.get_mirrors(
         SESSION,
         private=False,
@@ -163,6 +176,10 @@ def list_mirrors():
         # last_crawled=True,
         up2date=True,
         host_category_url_private=False,
+        # # Can't use these arguments they just blow up postgresql
+        # TODO: fix this
+        # version_id=version_id,
+        # arch_id=arch_id,
     )
 
     return flask.render_template(
