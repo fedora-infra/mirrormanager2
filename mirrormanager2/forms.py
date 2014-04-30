@@ -202,3 +202,11 @@ class AddHostCategoryForm(wtf.Form):
                 (cat.id, cat.name)
                 for cat in kwargs['categories']
             ]
+
+
+class EditHostCategoryForm(wtf.Form):
+    """ Form to edit a host_category. """
+    always_up2date = wtforms.BooleanField(
+        'Always up to date',
+        default=False
+    )
