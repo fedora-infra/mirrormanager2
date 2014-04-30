@@ -309,6 +309,35 @@ def host_acl_ip_new(host_id):
     )
 
 
+@APP.route('/host/<host_id>/host_acl_ip/<host_acl_ip_id>/delete',
+           methods=['POST'])
+def host_acl_ip_delete(host_id, host_acl_ip_id):
+    """ Delete a host_acl_ip.
+    """
+    hostobj = mmlib.get_host(SESSION, host_id)
+
+    if hostobj is None:
+        flask.abort(404, 'Host not found')
+
+    hostaclobj = mmlib.get_host_acl_ip(SESSION, host_acl_ip_id)
+
+    if hostaclobj is None:
+        flask.abort(404, 'Host ACL IP not found')
+    else:
+        SESSION.delete(hostaclobj)
+    try:
+        SESSION.flush()
+        flask.flash('Host ACL IP deleted')
+    except SQLAlchemyError as err:
+        SESSION.rollback()
+        flask.flash('Could not add ACL IP to the host')
+        APP.logger.debug('Could not add ACL IP to the host')
+        APP.logger.exception(err)
+
+    SESSION.commit()
+    return flask.redirect(flask.url_for('host_view', host_id=host_id))
+
+
 @APP.route('/mirrors')
 def list_mirrors():
     """ Displays the page listing all mirrors.
