@@ -188,6 +188,26 @@ def get_country_by_name(session, country_code):
     return query.first()
 
 
+def get_version_by_name_version(session, p_name, p_version):
+    ''' Return a specified Version given the Product name and Version name
+    provided.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Version
+    ).filter(
+        model.Version.product_id == model.Product.id
+    ).filter(
+        model.Product.name == p_name
+    ).filter(
+        model.Version.name == p_version
+    )
+
+    return query.first()
+
+
 def get_categories(session):
     ''' Return the list of all the categories in the database.
 
