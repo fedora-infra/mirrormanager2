@@ -401,6 +401,41 @@ def host_netblock_delete(host_id, host_netblock_id):
     return flask.redirect(flask.url_for('host_view', host_id=host_id))
 
 
+@APP.route('/host/<host_id>/asn/new', methods=['GET', 'POST'])
+def host_asn_new(host_id):
+    """ Create a new host_peer_asn.
+    """
+    hostobj = mmlib.get_host(SESSION, host_id)
+
+    if hostobj is None:
+        flask.abort(404, 'Host not found')
+
+    form = forms.AddHostAsnForm()
+    if form.validate_on_submit():
+        host_asn = model.HostPeerAsn()
+        SESSION.add(host_asn)
+        host_asn.host_id = hostobj.id
+        form.populate_obj(obj=host_asn)
+        host_asn.asn = int(host_asn.asn)
+
+        try:
+            SESSION.flush()
+            flask.flash('Host Peer ASN added')
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            flask.flash('Could not add Peer ASN to the host')
+            APP.logger.debug('Could not add Peer ASN to the host')
+            APP.logger.exception(err)
+
+        SESSION.commit()
+        return flask.redirect(flask.url_for('host_view', host_id=host_id))
+
+    return flask.render_template(
+        'host_asn_new.html',
+        form=form,
+        host=hostobj,
+    )
+
 @APP.route('/mirrors')
 def list_mirrors():
     """ Displays the page listing all mirrors.
