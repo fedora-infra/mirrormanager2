@@ -510,6 +510,36 @@ def host_country_new(host_id):
         host=hostobj,
     )
 
+
+@APP.route('/host/<host_id>/host_country/<host_country_id>/delete',
+           methods=['POST'])
+def host_country_delete(host_id, host_country_id):
+    """ Delete a host_country.
+    """
+    hostobj = mmlib.get_host(SESSION, host_id)
+
+    if hostobj is None:
+        flask.abort(404, 'Host not found')
+
+    hostcntobj = mmlib.get_host_country(SESSION, host_country_id)
+
+    if hostcntobj is None:
+        flask.abort(404, 'Host Country not found')
+    else:
+        SESSION.delete(hostcntobj)
+
+    try:
+        SESSION.commit()
+        flask.flash('Host Country deleted')
+    except SQLAlchemyError as err:
+        SESSION.rollback()
+        flask.flash('Could not delete Country of the host')
+        APP.logger.debug('Could not delete Country of the host')
+        APP.logger.exception(err)
+
+    return flask.redirect(flask.url_for('host_view', host_id=host_id))
+
+
 @APP.route('/mirrors')
 def list_mirrors():
     """ Displays the page listing all mirrors.
