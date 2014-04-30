@@ -28,4 +28,29 @@ I2 means both Internet2 and its peer high speed research and development
 networks globally.
 </p>
 
+
+<table>
+{% for product in products %}
+<tr>
+    <td rowspan="{{product.displayed_versions | length }}">{{product.name}}</td>
+    {% for version in product.displayed_versions %}
+    {% if not loop.first %}
+    <tr>
+    {% endif %}
+    <td>{{ version.display_name or version.name }}</td>
+    {% for arch in arches %}
+    {% if arch in version.arches %}
+    <td>{{ arch }}</td>
+    {% else %}
+    <td></td>
+    {% endif %}
+    {% endfor %}
+    {% if not loop.last %}
+    </tr>
+    {% endif %}
+    {% endfor %}
+</tr>
+{% endfor %}
+</table>
+
 {% endblock %}
