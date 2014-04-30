@@ -25,3 +25,27 @@ input[type="checkbox"] {
 .blue {
     color:#0066CC;
 }
+
+#matrixtitle {
+    background-color: #2963A6;
+    color: #FFFFFF;
+    text-align: center;
+}
+
+#matrixheadings, #matrixheadings th {
+    background-color: #DDDDDD;
+    border-bottom: 1px solid #BBBBBB;
+    margin: 0;
+    color: #333333;
+    text-align: center;
+}
+
+.matrix_section, .matrix_section td {
+    border-bottom: 1px solid #BBBBBB !important;
+}
+
+.matrix_even, .matrix_even td {
+    background-color: #F0F0F0;
+    border-bottom: 1px solid #DDDDDD;
+    border-top: 1px solid #DDDDDD;
+}
