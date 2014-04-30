@@ -577,6 +577,16 @@ class Version(BASE):
         ''' Return a string representation of the object. '''
         return '<Version(%s - %s)>' % (self.id, self.name)
 
+    @property
+    def arches(self):
+        ''' Return a list of arches this Version supports via its
+        repositories.
+        '''
+        arches = set()
+        for repo in self.repositories:
+            arches.add(repo.arch.name)
+        return arches
+
 
 class Repository(BASE):
 
