@@ -58,6 +58,7 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
   the master rsync/ftp servers. List here all the machines that you use for
   pulling.
 </p>
+
 <a class="icon icon-plus-sign blue"
   href="{{ url_for('host_acl_ip_new', host_id=host.id) }}"> [add]</a>
 {% if host.acl_ips %}
@@ -67,7 +68,8 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
       <form class="icon" method="POST"
         action="{{ url_for('host_acl_ip_delete', host_id=host.id, host_acl_ip_id=acl.id) }}">
       {{ acl.ip }}
-        <button onclick="return confirm('You sure you want to delete this ACL?');"
+        <button
+          onclick="return confirm('You sure you want to delete this ACL?');"
           title="Delete ACL IP">
           <span class="icon icon-trash blue"></span>
         </button>
@@ -89,13 +91,23 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
   prefix/length, or a DNS hostname. Values must be public IP addresses (no
   RFC1918 private space addresses).
 </p>
+
 <a class="icon icon-plus-sign blue"
   href="{{ url_for('host_netblock_new', host_id=host.id) }}"> [add]</a>
 {% if host.netblocks %}
   <ul>
   {% for netblock in host.netblocks %}
     <li>
-      {{ netblock.netblock }} <a href="">[delete]</a>
+      <form class="icon" method="POST"
+        action="{{ url_for('host_netblock_delete', host_id=host.id,
+                   host_netblock_id=netblock.id) }}">
+      {{ netblock.netblock }}
+        <button
+          onclick="return confirm('You sure you want to delete this netblock?');"
+          title="Delete netblock">
+          <span class="icon icon-trash blue"></span>
+        </button>
+      </form>
     </li>
   {% endfor %}
   </ul>
