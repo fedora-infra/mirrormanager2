@@ -136,8 +136,14 @@ def inject_variables():
 def index():
     """ Displays the index page.
     """
+    products = mmlib.get_products(SESSION)
+    arches = mmlib.get_arches(SESSION)
+    arches_name = [arch.name for arch in arches]
+
     return flask.render_template(
         'index.html',
+        products=products,
+        arches=arches_name,
     )
 
 
