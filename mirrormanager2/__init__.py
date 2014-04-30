@@ -466,6 +466,50 @@ def host_asn_delete(host_id, host_asn_id):
     return flask.redirect(flask.url_for('host_view', host_id=host_id))
 
 
+@APP.route('/host/<host_id>/country/new', methods=['GET', 'POST'])
+def host_country_new(host_id):
+    """ Create a new host_country.
+    """
+    hostobj = mmlib.get_host(SESSION, host_id)
+
+    if hostobj is None:
+        flask.abort(404, 'Host not found')
+
+    form = forms.AddHostCountryForm()
+    if form.validate_on_submit():
+        country_name = form.country.data
+        country = mmlib.get_country_by_name(SESSION, country_name)
+        if country is None:
+            flask.flash('Invalid country code')
+            return flask.render_template(
+                'host_country_new.html',
+                form=form,
+                host=hostobj,
+            )
+
+        host_country = model.HostCountry()
+        host_country.host_id = hostobj.id
+        host_country.country_id = country.id
+        SESSION.add(host_country)
+
+        try:
+            SESSION.flush()
+            flask.flash('Host Country added')
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            flask.flash('Could not add Country to the host')
+            APP.logger.debug('Could not add Country to the host')
+            APP.logger.exception(err)
+
+        SESSION.commit()
+        return flask.redirect(flask.url_for('host_view', host_id=host_id))
+
+    return flask.render_template(
+        'host_country_new.html',
+        form=form,
+        host=hostobj,
+    )
+
 @APP.route('/mirrors')
 def list_mirrors():
     """ Displays the page listing all mirrors.
