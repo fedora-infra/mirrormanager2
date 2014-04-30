@@ -113,6 +113,21 @@ def get_host_netblock(session, host_netblock_id):
     return query.first()
 
 
+def get_host_peer_asn(session, host_asn_id):
+    ''' Return a specified HostPeerAsn via its identifier.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.HostPeerAsn
+    ).filter(
+        model.HostPeerAsn.id == host_asn_id
+    )
+
+    return query.first()
+
+
 def add_admin_to_site(session, site, admin):
     ''' Add an admin to the specified site.
 
