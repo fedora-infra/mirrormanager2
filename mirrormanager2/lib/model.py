@@ -400,6 +400,12 @@ class HostCategoryUrl(BASE):
         backref=backref('urls'),
     )
 
+    # Constraints
+    __table_args__ = (
+        sa.UniqueConstraint(
+            'host_category_id', 'url', name='host_category_url_hcdindex'),
+    )
+
     def my_site(self):
         return self.host_category.my_site()
 
@@ -418,6 +424,12 @@ class HostAclIp(BASE):
         'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
         backref=backref('acl_ips', order_by='HostAclIp.ip'),
+    )
+
+    # Constraints
+    __table_args__ = (
+        sa.UniqueConstraint(
+            'host_id', 'ip', name='host_acl_ip_hipindex'),
     )
 
     def my_site(self):
