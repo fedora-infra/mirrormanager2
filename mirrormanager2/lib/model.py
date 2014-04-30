@@ -355,7 +355,9 @@ class HostCategoryDir(BASE):
 
     id = sa.Column(sa.Integer, primary_key=True)
     host_category_id = sa.Column(
-        sa.Integer, sa.ForeignKey('host_category.id'), nullable=True)
+        sa.Integer,
+        sa.ForeignKey('host_category.id', onupdate='CASCADE', ondelete='CASCADE'),
+        nullable=False)
     # subset of the path starting below HostCategory.path
     path = sa.Column(sa.Text(), nullable=True)
     up2date = sa.Column(
@@ -389,7 +391,9 @@ class HostCategoryUrl(BASE):
 
     id = sa.Column(sa.Integer, primary_key=True)
     host_category_id = sa.Column(
-        sa.Integer, sa.ForeignKey('host_category.id'), nullable=True)
+        sa.Integer,
+        sa.ForeignKey('host_category.id', onupdate='CASCADE', ondelete='CASCADE'),
+        nullable=False)
     url = sa.Column(sa.Text(), nullable=False, unique=True)
     private = sa.Column(sa.Boolean(), default=False, nullable=False)
 
