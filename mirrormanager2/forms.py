@@ -210,3 +210,15 @@ class EditHostCategoryForm(wtf.Form):
         'Always up to date',
         default=False
     )
+
+
+class AddHostCategoryUrlForm(wtf.Form):
+    """ Form to add a host_category_url. """
+    url = wtforms.TextField(
+        'URL  <span class="error">*</span>',
+        [wtforms.validators.Required()]
+    )
+    private = wtforms.BooleanField(
+        'Private',
+        default=False,
+    )
