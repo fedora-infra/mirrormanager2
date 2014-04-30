@@ -710,7 +710,7 @@ class HostLocation(BASE):
     host = relation(
         'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
-        #backref=backref('hosts')
+        backref=backref('locations')
     )
     location = relation(
         'Location',
@@ -772,7 +772,7 @@ class HostCountry(BASE):
     host = relation(
         'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
-        #backref=backref('hosts')
+        backref=backref('countries')
     )
     country = relation(
         'Country',
