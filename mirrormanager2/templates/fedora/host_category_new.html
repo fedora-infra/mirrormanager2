@@ -1,0 +1,34 @@
+{% extends "master.html" %}
+{% from "_formhelpers.html" import render_field_in_row %}
+
+{% block title %}New Host Category{% endblock %}
+{%block tag %}home{% endblock %}
+
+{% block content %}
+<h2>Add host category</h2>
+
+<p>
+  Back to <a href="{{ url_for('host_view', host_id=host.id) }}">
+    {{ host.name }}</a>
+</p>
+
+<p>
+   Hosts carry categories of software. Example Fedora categories include
+   Fedora and Fedora Archive.
+</p>
+
+<form action="{{ url_for('host_category_new', host_id=host.id) }}" method="POST">
+  <table>
+    {{ render_field_in_row(form.category_id) }}
+    {{ render_field_in_row(form.always_up2date) }}
+  </table>
+  <p class="buttons indent">
+    <input type="submit" class="submit positive button" value="Create">
+    <a href="{{ url_for('host_view', host_id=host.id) }}">
+      <input type="button" value="Cancel" class="button">
+    </a>
+    {{ form.csrf_token }}
+  </p>
+</form>
+
+{% endblock %}
