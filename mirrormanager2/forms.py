@@ -138,3 +138,10 @@ class AddHostForm(wtf.Form):
         [wtforms.validators.Required(), is_number],
         default=1
     )
+
+class AddHostAclIpForm(wtf.Form):
+    """ Form to add or edit a host_acl_ip. """
+    ip = wtforms.TextField(
+        'IP  <span class="error">*</span>',
+        [wtforms.validators.Required()]
+    )
