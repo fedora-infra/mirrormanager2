@@ -37,10 +37,20 @@ networks globally.
     {% if not loop.first %}
     <tr>
     {% endif %}
-    <td>{{ version.display_name or version.name }}</td>
+    <td>
+      <a href="{{ url_for('list_mirrors',
+                p_name=product.name, p_version=version.name) }}">
+        {{ version.display_name or version.name }}
+      </a>
+    </td>
     {% for arch in arches %}
     {% if arch in version.arches %}
-    <td>{{ arch }}</td>
+    <td>
+      <a href="{{ url_for('list_mirrors',
+                p_name=product.name, p_version=version.name, p_arch=arch) }}">
+        {{ arch }}
+      </a>
+    </td>
     {% else %}
     <td></td>
     {% endif %}
