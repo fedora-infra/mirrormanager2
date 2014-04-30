@@ -586,6 +586,49 @@ def host_category_new(host_id):
     )
 
 
+@APP.route('/host/<host_id>/category/<hc_id>', methods=['GET', 'POST'])
+def host_category(host_id, hc_id):
+    """ View a host_category.
+    """
+    hostobj = mmlib.get_host(SESSION, host_id)
+
+    if hostobj is None:
+        flask.abort(404, 'Host not found')
+
+    hcobj = mmlib.get_host_category(SESSION, hc_id)
+
+    if hcobj is None:
+        flask.abort(404, 'Host/Category not found')
+
+    categories = mmlib.get_categories(SESSION)
+
+    form = forms.EditHostCategoryForm(obj=hcobj)
+
+    if form.validate_on_submit():
+
+        form.populate_obj(obj=hcobj)
+
+        try:
+            SESSION.flush()
+            flask.flash('Host Category updated')
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            flask.flash('Could not update Category to the host')
+            APP.logger.debug('Could not update Category to the host')
+            APP.logger.exception(err)
+
+        SESSION.commit()
+        return flask.redirect(
+            flask.url_for('host_category', host_id=hostobj.id, hc_id=hcobj.id))
+
+    return flask.render_template(
+        'host_category.html',
+        form=form,
+        host=hostobj,
+        hostcategory=hcobj,
+    )
+
+
 @APP.route('/host/<host_id>/category/<hc_id>/url/new', methods=['GET', 'POST'])
 def host_category_url_new(host_id, hc_id):
     """ Create a new host_category_url.
