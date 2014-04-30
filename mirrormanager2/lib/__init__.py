@@ -216,6 +216,21 @@ def get_products(session):
     return query.all()
 
 
+def get_arches(session):
+    ''' Return the list of all the arch in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Arch
+    ).order_by(
+        model.Arch.name
+    )
+
+    return query.all()
+
+
 def add_admin_to_site(session, site, admin):
     ''' Add an admin to the specified site.
 
