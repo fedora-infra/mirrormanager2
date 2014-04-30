@@ -157,3 +157,16 @@ class AddHostNetblockForm(wtf.Form):
         'Netblock  <span class="error">*</span>',
         [wtforms.validators.Required()]
     )
+
+
+class AddHostAsnForm(wtf.Form):
+    """ Form to add or edit a host_peer_asn. """
+    name = wtforms.TextField(
+        'Name  <span class="error">*</span>',
+        [wtforms.validators.Required()]
+    )
+    asn = wtforms.TextField(
+        'ASN  <span class="error">*</span>',
+        [wtforms.validators.Required(), is_number]
+    )
+
