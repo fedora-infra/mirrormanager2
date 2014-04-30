@@ -259,7 +259,8 @@ def get_mirrors(
         asn_clients=None, admin_active=None, user_active=None, urls=None,
         last_crawl_duration=False, last_checked_in=False, last_crawled=False,
         site_private=None, site_admin_active=None, site_user_active=None,
-        up2date=None, host_category_url_private=None):
+        up2date=None, host_category_url_private=None,
+        version_id=None):
     ''' Retrieve the mirrors based on the criteria specified.
 
     :arg session: the session with which to connect to the database.
@@ -326,6 +327,15 @@ def get_mirrors(
             model.HostCategory.id == model.HostCategoryDir.host_category_id
         ).filter(
             model.HostCategoryDir.up2date == up2date
+        )
+
+    if version_id is not None:
+        query = query.filter(
+            model.Host.id == model.HostCategory.host_id
+        ).filter(
+            model.HostCategory.id == model.Repository.category_id
+        ).filter(
+            model.Repository.version_id == version_id
         )
 
     return query.all()
