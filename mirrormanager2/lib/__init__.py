@@ -158,6 +158,21 @@ def get_host_category(session, host_category_id):
     return query.first()
 
 
+def get_host_category_url(session, host_category_url_id):
+    ''' Return a specified HostCategoryUrl via its identifier.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.HostCategoryUrl
+    ).filter(
+        model.HostCategoryUrl.id == host_category_url_id
+    )
+
+    return query.first()
+
+
 def get_country_by_name(session, country_code):
     ''' Return a specified Country via its two letter code.
 
