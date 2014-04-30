@@ -216,11 +216,19 @@ Categories Carried
   <ul>
   {% for category in host.categories %}
     <li>
-      <a href="{{ url_for('host_category', host_id=host.id,
-                  hc_id=category.id) }}">
-      {{ category.category.name }}
-      </a>
-      <a href="">[delete]</a>
+      <form class="icon" method="POST"
+        action="{{ url_for('host_category_delete', host_id=host.id,
+                   hc_id=category.id) }}">
+        <a href="{{ url_for('host_category', host_id=host.id,
+                    hc_id=category.id) }}">
+        {{ category.category.name }}
+        </a>
+        <button
+          onclick="return confirm('You sure you want to delete this category?');"
+          title="Delete category">
+          <span class="icon icon-trash blue"></span>
+        </button>
+      </form>
     </li>
     {% if category.urls %}
     <li>
