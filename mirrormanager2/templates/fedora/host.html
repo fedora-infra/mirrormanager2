@@ -156,6 +156,7 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
   location=string to their request URLs to specify a preferred location.
   Setting up locations requires MirrorManager administrator privileges.
 </p>
+
 <a href="">[add]</a>
 {% if host.locations %}
   <ul>
@@ -177,6 +178,7 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
   countries you will allow end users to be from. The mirrorlist CGI will
   honor this.
 </p>
+
 <a class="icon icon-plus-sign blue"
   href="{{ url_for('host_country_new', host_id=host.id) }}"> [add]</a>
 {% if host.countries %}
@@ -198,6 +200,7 @@ Categories Carried
   Hosts carry categories of software. Example Fedora categories include
   Fedora and Fedora Archive.
 </p>
+
 <a href="">[add]</a>
 {% if host.categories %}
   <ul>
