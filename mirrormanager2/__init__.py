@@ -578,7 +578,8 @@ def host_category_new(host_id):
 
         SESSION.commit()
         return flask.redirect(
-            flask.url_for('host_category', host_id=hostobj.id, hc_id=hcobj.id))
+            flask.url_for(
+                'host_category', host_id=hostobj.id, hc_id=host_category.id))
 
     return flask.render_template(
         'host_category_new.html',
