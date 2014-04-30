@@ -333,7 +333,9 @@ def get_mirrors(
         query = query.filter(
             model.Host.id == model.HostCategory.host_id
         ).filter(
-            model.HostCategory.id == model.Repository.category_id
+            model.HostCategory.category_id == model.Category.id
+        ).filter(
+            model.Category.id == model.Repository.category_id
         ).filter(
             model.Repository.version_id == version_id
         )
@@ -342,7 +344,9 @@ def get_mirrors(
         query = query.filter(
             model.Host.id == model.HostCategory.host_id
         ).filter(
-            model.HostCategory.id == model.Repository.category_id
+            model.HostCategory.category_id == model.Category.id
+        ).filter(
+            model.Category.id == model.Repository.category_id
         ).filter(
             model.Repository.arch_id == arch_id
         )
