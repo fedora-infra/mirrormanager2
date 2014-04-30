@@ -53,6 +53,17 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
   the master rsync/ftp servers. List here all the machines that you use for
   pulling.
 </p>
+<a href="">[add]</a>
+{% if host.acl_ips %}
+  <ul>
+  {% for acl in host.acl_ips %}
+    <li>
+      {{ acl.ip }} <a href="">[delete]</a>
+    </li>
+  {% endfor %}
+  </ul>
+{% endif %}
+
 
 <h3>
   Site-local Netblocks
@@ -65,6 +76,17 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
   prefix/length, or a DNS hostname. Values must be public IP addresses (no
   RFC1918 private space addresses).
 </p>
+<a href="">[add]</a>
+{% if host.netblocks %}
+  <ul>
+  {% for netblock in host.netblocks %}
+    <li>
+      {{ netblock.netblock }} <a href="">[delete]</a>
+    </li>
+  {% endfor %}
+  </ul>
+{% endif %}
+
 
 <h3>
   Peer ASNs
@@ -76,6 +98,17 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
   mirror. You must be in the MirrorManager administrators group in order to
   create new entries here.
 </p>
+<a href="">[add]</a>
+{% if host.peer_asns %}
+  <ul>
+  {% for asn in host.peer_asns %}
+    <li>
+      {{ asn.asn }} <a href="">[delete]</a>
+    </li>
+  {% endfor %}
+  </ul>
+{% endif %}
+
 
 <h3>
   Locations
@@ -86,6 +119,17 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
   location=string to their request URLs to specify a preferred location.
   Setting up locations requires MirrorManager administrator privileges.
 </p>
+<a href="">[add]</a>
+{% if host.locations %}
+  <ul>
+  {% for location in host.locations %}
+    <li>
+      {{ location.location.name }} <a href="">[delete]</a>
+    </li>
+  {% endfor %}
+  </ul>
+{% endif %}
+
 
 <h3>
   Countries Allowed
@@ -96,6 +140,17 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
   countries you will allow end users to be from. The mirrorlist CGI will
   honor this.
 </p>
+<a href="">[add]</a>
+{% if host.countries %}
+  <ul>
+  {% for country in host.countries %}
+    <li>
+      {{ country.country.name }} <a href="">[delete]</a>
+    </li>
+  {% endfor %}
+  </ul>
+{% endif %}
+
 
 <h3>
 Categories Carried
@@ -105,5 +160,25 @@ Categories Carried
   Hosts carry categories of software. Example Fedora categories include
   Fedora and Fedora Archive.
 </p>
+<a href="">[add]</a>
+{% if host.categories %}
+  <ul>
+  {% for category in host.categories %}
+    <li>
+      {{ category.category.name }} <a href="">[delete]</a>
+    </li>
+    <li>
+      {% if category.urls %}
+      <ul>
+        {% for url in category.urls %}
+        <li>{{ url.url }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </li>
+
+  {% endfor %}
+  </ul>
+{% endif %}
 
 {% endblock %}
