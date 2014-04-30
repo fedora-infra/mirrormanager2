@@ -588,6 +588,38 @@ def host_category_new(host_id):
     )
 
 
+@APP.route('/host/<host_id>/category/<hc_id>/delete', methods=['GET', 'POST'])
+def host_category_delete(host_id, hc_id):
+    """ Delete a host_category.
+    """
+    hostobj = mmlib.get_host(SESSION, host_id)
+
+    if hostobj is None:
+        flask.abort(404, 'Host not found')
+
+    hcobj = mmlib.get_host_category(SESSION, hc_id)
+
+    if hcobj is None:
+        flask.abort(404, 'Host/Category not found')
+    else:
+        for url in hcobj.urls:
+            SESSION.delete(url)
+        for dirs in hcobj.dirs:
+            SESSION.delete(dirs)
+        SESSION.delete(hcobj)
+
+    try:
+        SESSION.commit()
+        flask.flash('Host Category deleted')
+    except SQLAlchemyError as err:
+        SESSION.rollback()
+        flask.flash('Could not delete Category of the host')
+        APP.logger.debug('Could not delete Category of the host')
+        APP.logger.exception(err)
+
+    return flask.redirect(flask.url_for('host_view', host_id=host_id))
+
+
 @APP.route('/host/<host_id>/category/<hc_id>', methods=['GET', 'POST'])
 def host_category(host_id, hc_id):
     """ View a host_category.
