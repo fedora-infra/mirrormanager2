@@ -177,3 +177,28 @@ class AddHostCountryForm(wtf.Form):
         'Country  <span class="error">*</span>',
         [wtforms.validators.Required()]
     )
+
+
+class AddHostCategoryForm(wtf.Form):
+    """ Form to add a host_category. """
+    category_id = wtforms.SelectField(
+        'Category',
+        [wtforms.validators.Required(), is_number],
+        choices=[(item, item) for item in []]
+    )
+    always_up2date = wtforms.BooleanField(
+        'Always up to date',
+        default=False
+    )
+
+    def __init__(self, *args, **kwargs):
+        """ Calls the default constructor with the normal argument but
+        uses the list of collection provided to fill the choices of the
+        drop-down list.
+        """
+        super(AddHostCategoryForm, self).__init__(*args, **kwargs)
+        if 'categories' in kwargs:
+            self.category_id.choices = [
+                (cat.id, cat.name)
+                for cat in kwargs['categories']
+            ]
