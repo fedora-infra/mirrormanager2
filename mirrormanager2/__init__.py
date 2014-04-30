@@ -283,7 +283,7 @@ def host_acl_ip_new(host_id):
     if hostobj is None:
         flask.abort(404, 'Host not found')
 
-    form = forms.AddHostAclIpForm(obj=hostobj)
+    form = forms.AddHostAclIpForm()
     if form.validate_on_submit():
         host_acl = model.HostAclIp()
         SESSION.add(host_acl)
@@ -336,6 +336,41 @@ def host_acl_ip_delete(host_id, host_acl_ip_id):
 
     SESSION.commit()
     return flask.redirect(flask.url_for('host_view', host_id=host_id))
+
+
+@APP.route('/host/<host_id>/netblock/new', methods=['GET', 'POST'])
+def host_netblock_new(host_id):
+    """ Create a new host_netblock.
+    """
+    hostobj = mmlib.get_host(SESSION, host_id)
+
+    if hostobj is None:
+        flask.abort(404, 'Host not found')
+
+    form = forms.AddHostNetblockForm()
+    if form.validate_on_submit():
+        host_netblock = model.HostNetblock()
+        SESSION.add(host_netblock)
+        host_netblock.host_id = hostobj.id
+        form.populate_obj(obj=host_netblock)
+
+        try:
+            SESSION.flush()
+            flask.flash('Host netblock added')
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            flask.flash('Could not add netblock to the host')
+            APP.logger.debug('Could not add netblock to the host')
+            APP.logger.exception(err)
+
+        SESSION.commit()
+        return flask.redirect(flask.url_for('host_view', host_id=host_id))
+
+    return flask.render_template(
+        'host_netblock_new.html',
+        form=form,
+        host=hostobj,
+    )
 
 
 @APP.route('/mirrors')
