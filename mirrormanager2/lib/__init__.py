@@ -128,6 +128,21 @@ def get_host_peer_asn(session, host_asn_id):
     return query.first()
 
 
+def get_country_by_name(session, country_code):
+    ''' Return a specified Country via its two letter code.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Country
+    ).filter(
+        model.Country.code == country_code
+    )
+
+    return query.first()
+
+
 def add_admin_to_site(session, site, admin):
     ''' Add an admin to the specified site.
 
