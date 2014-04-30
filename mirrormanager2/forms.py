@@ -89,11 +89,11 @@ class AddHostForm(wtf.Form):
         [wtforms.validators.Required()]
     )
     admin_active = wtforms.BooleanField(
-        'Admin active  <span class="error">*</span>',
+        'Admin active',
         default=True
     )
     user_active = wtforms.BooleanField(
-        'User active  <span class="error">*</span>',
+        'User active',
         default=True
     )
     country =  wtforms.TextField(
