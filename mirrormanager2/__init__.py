@@ -632,6 +632,41 @@ def host_category_url_new(host_id, hc_id):
     )
 
 
+@APP.route('/host/<host_id>/category/<hc_id>/url/<host_category_url_id>/delete',
+           methods=['POST'])
+def host_category_url_delete(host_id, hc_id, host_category_url_id):
+    """ Delete a host_category_url.
+    """
+    hostobj = mmlib.get_host(SESSION, host_id)
+
+    if hostobj is None:
+        flask.abort(404, 'Host not found')
+
+    hcobj = mmlib.get_host_category(SESSION, hc_id)
+
+    if hcobj is None:
+        flask.abort(404, 'Host/Category not found')
+
+    hostcaturlobj = mmlib.get_host_category_url(SESSION, host_category_url_id)
+
+    if hostcaturlobj is None:
+        flask.abort(404, 'Host category URL not found')
+    else:
+        SESSION.delete(hostcaturlobj)
+
+    try:
+        SESSION.commit()
+        flask.flash('Host category URL deleted')
+    except SQLAlchemyError as err:
+        SESSION.rollback()
+        flask.flash('Could not delete category URL of the host')
+        APP.logger.debug('Could not delete category URL of the host')
+        APP.logger.exception(err)
+
+    return flask.redirect(
+        flask.url_for('host_category', host_id=hostobj.id, hc_id=hcobj.id))
+
+
 @APP.route('/mirrors')
 def list_mirrors():
     """ Displays the page listing all mirrors.
