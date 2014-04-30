@@ -140,13 +140,14 @@ class Site(BASE):
         ''' Return a string representation of the object. '''
         return '<Site(%s - %s)>' % (self.id, self.name)
 
+
 class Country(BASE):
 
     __tablename__ = 'country'
 
     id = sa.Column(sa.Integer, primary_key=True)
     code = sa.Column(sa.Text(), nullable=False, unique=True)
-    #hosts = SQLRelatedJoin('Host')
+    # hosts = SQLRelatedJoin('Host')
 
 
 class Host(BASE):
@@ -163,7 +164,7 @@ class Host(BASE):
     country = sa.Column(sa.Text(), nullable=False)
     bandwidth_int = sa.Column(sa.Integer, default=100, nullable=True)
     comment = sa.Column(sa.Text(), nullable=True)
-    #_config = PickleCol(default=None)
+    # _config = PickleCol(default=None)
     last_checked_in = sa.Column(sa.DateTime, nullable=True, default=None)
     last_crawled = sa.Column(sa.DateTime, nullable=True, default=None)
     private = sa.Column(sa.Boolean(), default=False, nullable=False)
@@ -181,9 +182,9 @@ class Host(BASE):
         backref=backref('hosts')
     )
 
-    #exclusive_dirs = MultipleJoin('DirectoryExclusiveHost')
-    #locations = SQLRelatedJoin('Location')
-    #countries = SQLRelatedJoin('Country')
+    # exclusive_dirs = MultipleJoin('DirectoryExclusiveHost')
+    # locations = SQLRelatedJoin('Location')
+    # countries = SQLRelatedJoin('Country')
 
     # Constraints
     __table_args__ = (
@@ -213,6 +214,7 @@ class Directory(BASE):
         ''' Return a string representation of the object. '''
         return '<Directory(%s - %s)>' % (self.id, self.name)
 
+
 # e.g. 'fedora' and 'epel'
 class Product(BASE):
 
@@ -225,6 +227,7 @@ class Product(BASE):
     def __repr__(self):
         ''' Return a string representation of the object. '''
         return '<Product(%s - %s)>' % (self.id, self.name)
+
 
 class Category(BASE):
 
@@ -256,11 +259,12 @@ class Category(BASE):
     )
 
     # all the directories that are part of this category
-    #directories = RelatedJoin('Directory', orderBy='name')
+    # directories = RelatedJoin('Directory', orderBy='name')
 
     def __repr__(self):
         ''' Return a string representation of the object. '''
         return '<Category(%s - %s)>' % (self.id, self.name)
+
 
 class SiteToSite(BASE):
 
@@ -353,7 +357,8 @@ class HostCategoryDir(BASE):
     id = sa.Column(sa.Integer, primary_key=True)
     host_category_id = sa.Column(
         sa.Integer,
-        sa.ForeignKey('host_category.id', onupdate='CASCADE', ondelete='CASCADE'),
+        sa.ForeignKey(
+            'host_category.id', onupdate='CASCADE', ondelete='CASCADE'),
         nullable=False)
     # subset of the path starting below HostCategory.path
     path = sa.Column(sa.Text(), nullable=True)
@@ -389,7 +394,8 @@ class HostCategoryUrl(BASE):
     id = sa.Column(sa.Integer, primary_key=True)
     host_category_id = sa.Column(
         sa.Integer,
-        sa.ForeignKey('host_category.id', onupdate='CASCADE', ondelete='CASCADE'),
+        sa.ForeignKey(
+            'host_category.id', onupdate='CASCADE', ondelete='CASCADE'),
         nullable=False)
     url = sa.Column(sa.Text(), nullable=False, unique=True)
     private = sa.Column(sa.Boolean(), default=False, nullable=False)
@@ -522,6 +528,7 @@ class Arch(BASE):
         ''' Return a string representation of the object. '''
         return '<Arch(%s - %s)>' % (self.id, self.name)
 
+
 class Version(BASE):
 
     __tablename__ = 'version'
@@ -619,7 +626,7 @@ class FileDetail(BASE):
         foreign_keys=[directory_id], remote_side=[Directory.id],
     )
 
-    #fileGroups = SQLRelatedJoin('FileGroup')
+    # fileGroups = SQLRelatedJoin('FileGroup')
 
 
 class RepositoryRedirect(BASE):
@@ -693,7 +700,7 @@ class Location(BASE):
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.Text(), nullable=False, unique=True)
 
-    #hosts = SQLRelatedJoin('Host')
+    # hosts = SQLRelatedJoin('Host')
 
 
 # manual creation of the RelatedJoin table so we can guarantee uniqueness
@@ -732,7 +739,7 @@ class FileGroup(BASE):
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.Text(), nullable=False, unique=True)
 
-    #files = SQLRelatedJoin('FileDetail')
+    # files = SQLRelatedJoin('FileDetail')
 
 
 class FileDetailFileGroup(BASE):
@@ -749,7 +756,7 @@ class FileDetailFileGroup(BASE):
     file_detail = relation(
         'FileDetail',
         foreign_keys=[file_detail_id], remote_side=[FileDetail.id],
-        #backref=backref('hosts')
+        # backref=backref('hosts')
     )
     file_group = relation(
         'FileGroup',
@@ -776,7 +783,7 @@ class HostCountry(BASE):
     country = relation(
         'Country',
         foreign_keys=[country_id], remote_side=[Country.id],
-        #backref=backref('hosts')
+        # backref=backref('hosts')
     )
 
     # Constraints
@@ -836,13 +843,13 @@ class Group(BASE):
         sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
 
     # collection of all users belonging to this group
-    #users = RelatedJoin("User", intermediateTable="user_group",
-                        #joinColumn="group_id", otherColumn="user_id")
+    # users = RelatedJoin("User", intermediateTable="user_group",
+    # joinColumn="group_id", otherColumn="user_id")
 
     # collection of all permissions for this group
-    #permissions = RelatedJoin("Permission", joinColumn="group_id",
-                              #intermediateTable="group_permission",
-                              #otherColumn="permission_id")
+    # permissions = RelatedJoin("Permission", joinColumn="group_id",
+    # intermediateTable="group_permission",
+    # otherColumn="permission_id")
 
 
 class UserGroup(BASE):
@@ -879,8 +886,8 @@ class User(BASE):
         sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
 
     # groups this user belongs to
-    #groups = RelatedJoin("Group", intermediateTable="user_group",
-                         #joinColumn="user_id", otherColumn="group_id")
+    # groups = RelatedJoin("Group", intermediateTable="user_group",
+    # joinColumn="user_id", otherColumn="group_id")
 
 
 class Permission(BASE):
@@ -892,10 +899,10 @@ class Permission(BASE):
     permission_name = sa.Column(sa.String(16), nullable=False, unique=True)
     description = sa.Column(sa.String(255), nullable=True)
 
-    #groups = RelatedJoin("Group",
-                        #intermediateTable="group_permission",
-                         #joinColumn="permission_id",
-                         #otherColumn="group_id")
+    # groups = RelatedJoin("Group",
+    # intermediateTable="group_permission",
+    # joinColumn="permission_id",
+    # otherColumn="group_id")
 
 
 class GroupPermission(BASE):
