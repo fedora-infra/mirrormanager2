@@ -228,6 +228,22 @@ class Product(BASE):
         ''' Return a string representation of the object. '''
         return '<Product(%s - %s)>' % (self.id, self.name)
 
+    @property
+    def displayed_versions(self):
+        versions = {}
+        for version in self.versions:
+            if version.display:
+                versions[version.name] = version
+        if self.name == 'Fedora' and 'development' in versions:
+            rawhide = versions['development']
+            del(versions['development'])
+            keys = [int(key) for key in versions]
+            tmp = [versions[str(key)] for key in sorted(keys, reverse=True)]
+            tmp.insert(0, rawhide)
+            return tmp
+        else:
+            return [versions[key] for key in sorted(versions)]
+
 
 class Category(BASE):
 
