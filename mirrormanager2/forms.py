@@ -148,7 +148,7 @@ class AddHostAclIpForm(wtf.Form):
 
 
 class AddHostNetblockForm(wtf.Form):
-    """ Form to add or edit a host_acl_ip. """
+    """ Form to add or edit a host_netblock. """
     name = wtforms.TextField(
         'Name  <span class="error">*</span>',
         [wtforms.validators.Required()]
