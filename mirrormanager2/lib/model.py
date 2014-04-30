@@ -49,16 +49,16 @@ BASE = declarative_base()
 
 ERROR_LOG = logging.getLogger('mirrormanager2.lib.model')
 
-## Apparently some of our methods have too few public methods
+# # Apparently some of our methods have too few public methods
 # pylint: disable=R0903
-## Others have too many attributes
+# # Others have too many attributes
 # pylint: disable=R0902
-## Others have too many arguments
+# # Others have too many arguments
 # pylint: disable=R0913
-## We use id for the identifier in our db but that's too short
+# # We use id for the identifier in our db but that's too short
 # pylint: disable=C0103
-## Some of the object we use here have inherited methods which apparently
-## pylint does not detect.
+# # Some of the object we use here have inherited methods which apparently
+# # pylint does not detect.
 # pylint: disable=E1101
 
 
@@ -80,7 +80,7 @@ def create_tables(db_url, alembic_ini=None, debug=False):
     engine = create_engine(db_url, echo=debug)
     BASE.metadata.create_all(engine)
     if db_url.startswith('sqlite:'):
-        ## Ignore the warning about con_record
+        # Ignore the warning about con_record
         # pylint: disable=W0613
         def _fk_pragma_on_connect(dbapi_con, con_record):
             ''' Tries to enforce referential constraints on sqlite. '''
@@ -91,7 +91,7 @@ def create_tables(db_url, alembic_ini=None, debug=False):
         # then, load the Alembic configuration and generate the
         # version table, "stamping" it with the most recent rev:
 
-        ## Ignore the warning missing alembic
+        # Ignore the warning missing alembic
         # pylint: disable=F0401
         from alembic.config import Config
         from alembic import command
@@ -795,7 +795,7 @@ class NetblockCountry(BASE):
     country = sa.Column(sa.Text(), nullable=False)
 
 
-###############################################################
+# ##########################################################
 # These classes are only used if you're not using the
 # Fedora Account System or some other backend that provides
 # Identity management
@@ -835,11 +835,11 @@ class Group(BASE):
     created = sa.Column(
         sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
 
-    ## collection of all users belonging to this group
+    # collection of all users belonging to this group
     #users = RelatedJoin("User", intermediateTable="user_group",
                         #joinColumn="group_id", otherColumn="user_id")
 
-    ## collection of all permissions for this group
+    # collection of all permissions for this group
     #permissions = RelatedJoin("Permission", joinColumn="group_id",
                               #intermediateTable="group_permission",
                               #otherColumn="permission_id")
