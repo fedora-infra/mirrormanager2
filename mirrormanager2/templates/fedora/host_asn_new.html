@@ -1,0 +1,37 @@
+{% extends "master.html" %}
+{% from "_formhelpers.html" import render_field_in_row %}
+
+{% block title %}New Host netblock{% endblock %}
+{%block tag %}home{% endblock %}
+
+{% block content %}
+<h2>Add host Peer ASNs </h2>
+
+<p>
+  Back to <a href="{{ url_for('host_view', host_id=host.id) }}">
+    {{ host.name }}</a>
+</p>
+
+<p>
+  Peer ASNs are used to guide an end user on nearby networks to our mirror.
+  For example, a university might list their peer ASNs, and the mirrorlist
+  CGI would return the university-local mirror rather than a country-local
+  mirror. You must be in the MirrorManager administrators group in order to
+  create new entries here.
+</p>
+
+<form action="{{ url_for('host_asn_new', host_id=host.id) }}" method="POST">
+  <table>
+    {{ render_field_in_row(form.asn) }}
+    {{ render_field_in_row(form.name) }}
+  </table>
+  <p class="buttons indent">
+    <input type="submit" class="submit positive button" value="Create">
+    <a href="{{ url_for('host_view', host_id=host.id) }}">
+      <input type="button" value="Cancel" class="button">
+    </a>
+    {{ form.csrf_token }}
+  </p>
+</form>
+
+{% endblock %}
