@@ -341,9 +341,6 @@ class HostCategory(BASE):
             'host_id', 'category_id', name='host_category_hcindex'),
     )
 
-    def my_site(self):
-        return self.host.my_site()
-
     def __repr__(self):
         ''' Return a string representation of the object. '''
         return '<HostCategory(%s - %s)>' % (self.id, self.category)
@@ -410,9 +407,6 @@ class HostCategoryUrl(BASE):
             'host_category_id', 'url', name='host_category_url_hcdindex'),
     )
 
-    def my_site(self):
-        return self.host_category.my_site()
-
 
 class HostAclIp(BASE):
 
@@ -436,9 +430,6 @@ class HostAclIp(BASE):
             'host_id', 'ip', name='host_acl_ip_hipindex'),
     )
 
-    def my_site(self):
-        return self.host.my_site()
-
 
 class HostCountryAllowed(BASE):
 
@@ -455,9 +446,6 @@ class HostCountryAllowed(BASE):
         foreign_keys=[host_id], remote_side=[Host.id],
         backref=backref('countries_allowed'),
     )
-
-    def my_site(self):
-        return self.host.my_site()
 
 
 class HostNetblock(BASE):
@@ -476,9 +464,6 @@ class HostNetblock(BASE):
         foreign_keys=[host_id], remote_side=[Host.id],
         backref=backref('netblocks', order_by='HostNetblock.netblock'),
     )
-
-    def my_site(self):
-        return self.host.my_site()
 
 
 class HostPeerAsn(BASE):
