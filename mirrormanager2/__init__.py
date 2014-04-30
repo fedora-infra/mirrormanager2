@@ -147,6 +147,30 @@ def index():
     )
 
 
+@APP.route('/mirrors')
+def list_mirrors():
+    """ Displays the page listing all mirrors.
+    """
+    mirrors = mmlib.get_mirrors(
+        SESSION,
+        private=False,
+        site_private=False,
+        admin_active=True,
+        user_active=True,
+        site_admin_active=True,
+        site_user_active=True,
+        # last_checked_in=True,
+        # last_crawled=True,
+        up2date=True,
+        host_category_url_private=False,
+    )
+
+    return flask.render_template(
+        'mirrors.html',
+        mirrors=mirrors,
+    )
+
+
 @APP.route('/site/new', methods=['GET', 'POST'])
 def site_new():
     """ Create a new site.
@@ -750,30 +774,6 @@ def host_category_url_delete(host_id, hc_id, host_category_url_id):
 
     return flask.redirect(
         flask.url_for('host_category', host_id=hostobj.id, hc_id=hcobj.id))
-
-
-@APP.route('/mirrors')
-def list_mirrors():
-    """ Displays the page listing all mirrors.
-    """
-    mirrors = mmlib.get_mirrors(
-        SESSION,
-        private=False,
-        site_private=False,
-        admin_active=True,
-        user_active=True,
-        site_admin_active=True,
-        site_user_active=True,
-        # last_checked_in=True,
-        # last_crawled=True,
-        up2date=True,
-        host_category_url_private=False,
-    )
-
-    return flask.render_template(
-        'mirrors.html',
-        mirrors=mirrors,
-    )
 
 
 @APP.route('/login', methods=['GET', 'POST'])
