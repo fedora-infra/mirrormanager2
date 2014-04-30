@@ -23,13 +23,13 @@
 MirrorManager2 forms.
 '''
 
-## pylint cannot import flask extension correctly
+# # pylint cannot import flask extension correctly
 # pylint: disable=E0611,F0401
-## The forms here don't have specific methods, they just inherit them.
+# # The forms here don't have specific methods, they just inherit them.
 # pylint: disable=R0903
-## We apparently use old style super in our __init__
+# # We apparently use old style super in our __init__
 # pylint: disable=E1002
-## Couple of our forms do not even have __init__
+# # Couple of our forms do not even have __init__
 # pylint: disable=W0232
 
 
@@ -96,7 +96,7 @@ class AddHostForm(wtf.Form):
         'User active',
         default=True
     )
-    country =  wtforms.TextField(
+    country = wtforms.TextField(
         'Country  <span class="error">*</span>',
         [wtforms.validators.Required()]
     )
@@ -138,6 +138,7 @@ class AddHostForm(wtf.Form):
         [wtforms.validators.Required(), is_number],
         default=1
     )
+
 
 class AddHostAclIpForm(wtf.Form):
     """ Form to add or edit a host_acl_ip. """
