@@ -586,6 +586,52 @@ def host_category_new(host_id):
     )
 
 
+@APP.route('/host/<host_id>/category/<hc_id>/url/new', methods=['GET', 'POST'])
+def host_category_url_new(host_id, hc_id):
+    """ Create a new host_category_url.
+    """
+    hostobj = mmlib.get_host(SESSION, host_id)
+
+    if hostobj is None:
+        flask.abort(404, 'Host not found')
+
+    hcobj = mmlib.get_host_category(SESSION, hc_id)
+
+    if hcobj is None:
+        flask.abort(404, 'Host/Category not found')
+
+    categories = mmlib.get_categories(SESSION)
+
+    form = forms.AddHostCategoryUrlForm()
+
+    if form.validate_on_submit():
+
+        host_category_u = model.HostCategoryUrl()
+        host_category_u.host_category_id = hcobj.id
+        form.populate_obj(obj=host_category_u)
+        SESSION.add(host_category_u)
+
+        try:
+            SESSION.flush()
+            flask.flash('Host Category URL added')
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            flask.flash('Could not add Category URL to the host')
+            APP.logger.debug('Could not add Category URL to the host')
+            APP.logger.exception(err)
+
+        SESSION.commit()
+        return flask.redirect(
+            flask.url_for('host_category', host_id=host_id, hc_id=hc_id))
+
+    return flask.render_template(
+        'host_category_url_new.html',
+        form=form,
+        host=hostobj,
+        hostcategory=hcobj,
+    )
+
+
 @APP.route('/mirrors')
 def list_mirrors():
     """ Displays the page listing all mirrors.
