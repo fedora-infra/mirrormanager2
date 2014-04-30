@@ -170,3 +170,10 @@ class AddHostAsnForm(wtf.Form):
         [wtforms.validators.Required(), is_number]
     )
 
+
+class AddHostCountryForm(wtf.Form):
+    """ Form to add or edit a host_country. """
+    country = wtforms.TextField(
+        'Country  <span class="error">*</span>',
+        [wtforms.validators.Required()]
+    )
