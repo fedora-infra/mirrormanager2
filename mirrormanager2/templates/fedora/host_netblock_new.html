@@ -1,0 +1,38 @@
+{% extends "master.html" %}
+{% from "_formhelpers.html" import render_field_in_row %}
+
+{% block title %}New Host netblock{% endblock %}
+{%block tag %}home{% endblock %}
+
+{% block content %}
+<h2>Add host netblock</h2>
+
+<p>
+  Back to <a href="{{ url_for('host_view', host_id=host.id) }}">
+    {{ host.name }}</a>
+</p>
+
+<p>
+  Netblocks are used to try to guide and end user to a site-specific mirror.
+  For example, a university might list their netblocks, and the mirrorlist
+  CGI would return the university-local mirror rather than a country-local
+  mirror. Format is one of 18.0.0.0/255.0.0.0, 18.0.0.0/8, an IPv6
+  prefix/length, or a DNS hostname. Values must be public IP addresses
+  (no RFC1918 private space addresses).
+</p>
+
+<form action="{{ url_for('host_netblock_new', host_id=host.id) }}" method="POST">
+  <table>
+    {{ render_field_in_row(form.netblock) }}
+    {{ render_field_in_row(form.name) }}
+  </table>
+  <p class="buttons indent">
+    <input type="submit" class="submit positive button" value="Create">
+    <a href="{{ url_for('host_view', host_id=host.id) }}">
+      <input type="button" value="Cancel" class="button">
+    </a>
+    {{ form.csrf_token }}
+  </p>
+</form>
+
+{% endblock %}
