@@ -55,12 +55,17 @@ class DirectoryView(MMModelView):
 ADMIN.add_view(MMModelView(model.Arch, SESSION))
 ADMIN.add_view(MMModelView(model.Category, SESSION))
 ADMIN.add_view(MMModelView(model.Country, SESSION, category='Country'))
-ADMIN.add_view(MMModelView(model.CountryContinentRedirect, SESSION, category='Country'))
-ADMIN.add_view(MMModelView(model.EmbargoedCountry, SESSION, category='Country'))
+ADMIN.add_view(
+    MMModelView(model.CountryContinentRedirect, SESSION, category='Country'))
+ADMIN.add_view(
+    MMModelView(model.EmbargoedCountry, SESSION, category='Country'))
 ADMIN.add_view(DirectoryView(model.Directory, SESSION, category='Directory'))
-ADMIN.add_view(DirectoryView(model.DirectoryExclusiveHost, SESSION, category='Directory'))
+ADMIN.add_view(
+    DirectoryView(
+        model.DirectoryExclusiveHost, SESSION, category='Directory'))
 ADMIN.add_view(MMModelView(model.FileDetail, SESSION, category='File'))
-ADMIN.add_view(MMModelView(model.FileDetailFileGroup, SESSION, category='File'))
+ADMIN.add_view(
+    MMModelView(model.FileDetailFileGroup, SESSION, category='File'))
 ADMIN.add_view(MMModelView(model.FileGroup, SESSION, category='File'))
 ADMIN.add_view(MMModelView(model.Host, SESSION, category='Host'))
 ADMIN.add_view(MMModelView(model.HostAclIp, SESSION, category='Host'))
@@ -77,7 +82,8 @@ ADMIN.add_view(MMModelView(model.Location, SESSION))
 ADMIN.add_view(MMModelView(model.NetblockCountry, SESSION))
 ADMIN.add_view(MMModelView(model.Product, SESSION))
 ADMIN.add_view(MMModelView(model.Repository, SESSION, category='Repository'))
-ADMIN.add_view(MMModelView(model.RepositoryRedirect, SESSION, category='Repository'))
+ADMIN.add_view(
+    MMModelView(model.RepositoryRedirect, SESSION, category='Repository'))
 ADMIN.add_view(MMModelView(model.Site, SESSION, category='Site'))
 ADMIN.add_view(MMModelView(model.SiteAdmin, SESSION, category='Site'))
 ADMIN.add_view(MMModelView(model.SiteToSite, SESSION, category='Site'))
