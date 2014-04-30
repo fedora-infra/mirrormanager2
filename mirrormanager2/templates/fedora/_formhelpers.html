@@ -37,8 +37,8 @@
     {% if after %} <td>{{ after }}</td>{% endif %}
     {% endif %}
 
-    {% if field.errors and field in field.errors %}
-    <td>{{ field.errors[field] }}</td>
+    {% if field.errors %}
+    <td>{% for error in field.errors %}{{ error }}<br />{% endfor %}</td>
     {% endif %}
 </tr>
 {% endmacro %}
