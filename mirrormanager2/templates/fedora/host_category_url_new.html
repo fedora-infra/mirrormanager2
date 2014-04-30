@@ -8,8 +8,10 @@
 <h2>Add host category URL</h2>
 
 <p>
-  Back to <a href="{{ url_for('host_view', host_id=host.id) }}">
-    {{ host.name }}</a>
+  Back to <a href="{{ url_for('site_view', site_id=host.site_id) }}">
+    {{ host.site.name }}</a> / <a href="{{ url_for('host_view', host_id=host.id) }}">
+    {{ host.name }}</a> / <a href="{{ url_for('host_category', host_id=host.id,
+    hc_id=hostcategory.id) }}">{{ hostcategory.category.name }} </a>
 </p>
 
 <form action="{{ url_for('host_category_url_new',
