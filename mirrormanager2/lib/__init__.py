@@ -83,6 +83,21 @@ def get_host(session, host_id):
     return query.first()
 
 
+def get_host_acl_ip(session, host_acl_ip_id):
+    ''' Return a specified HostAclIp via its identifier.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.HostAclIp
+    ).filter(
+        model.HostAclIp.id == host_acl_ip_id
+    )
+
+    return query.first()
+
+
 def add_admin_to_site(session, site, admin):
     ''' Add an admin to the specified site.
 
