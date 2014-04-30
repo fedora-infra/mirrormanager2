@@ -158,6 +158,19 @@ def get_country_by_name(session, country_code):
     return query.first()
 
 
+def get_categories(session):
+    ''' Return the list of all the categories in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Category
+    )
+
+    return query.all()
+
+
 def add_admin_to_site(session, site, admin):
     ''' Add an admin to the specified site.
 
