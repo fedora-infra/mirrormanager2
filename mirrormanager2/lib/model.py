@@ -604,6 +604,7 @@ class Repository(BASE):
     version = relation(
         'Version',
         foreign_keys=[version_id], remote_side=[Version.id],
+        backref=backref('repositories')
     )
     arch = relation(
         'Arch',
