@@ -89,7 +89,8 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
   prefix/length, or a DNS hostname. Values must be public IP addresses (no
   RFC1918 private space addresses).
 </p>
-<a href="">[add]</a>
+<a class="icon icon-plus-sign blue"
+  href="{{ url_for('host_netblock_new', host_id=host.id) }}"> [add]</a>
 {% if host.netblocks %}
   <ul>
   {% for netblock in host.netblocks %}
