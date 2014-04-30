@@ -98,6 +98,21 @@ def get_host_acl_ip(session, host_acl_ip_id):
     return query.first()
 
 
+def get_host_netblock(session, host_netblock_id):
+    ''' Return a specified HostNetblock via its identifier.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.HostNetblock
+    ).filter(
+        model.HostNetblock.id == host_netblock_id
+    )
+
+    return query.first()
+
+
 def add_admin_to_site(session, site, admin):
     ''' Add an admin to the specified site.
 
