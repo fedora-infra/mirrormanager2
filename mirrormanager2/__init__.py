@@ -804,10 +804,11 @@ def auth_login():  # pragma: no cover
     if next_url == flask.url_for('auth_login'):
         next_url = flask.url_for('index')
 
-    if hasattr(flask.g, 'fas_user') and flask.g.fas_user is not None:
-        return flask.redirect(next_url)
-    else:
-        return FAS.login(return_url=next_url)
+    if APP.config.get('MM_AUTHENTICATION', None) == 'fas':
+        if hasattr(flask.g, 'fas_user') and flask.g.fas_user is not None:
+            return flask.redirect(next_url)
+        else:
+            return FAS.login(return_url=next_url)
 
 
 @APP.route('/logout')
@@ -821,9 +822,11 @@ def auth_logout():
 
     if next_url == flask.url_for('auth_login'):  # pragma: no cover
         next_url = flask.url_for('index')
-    if hasattr(flask.g, 'fas_user') and flask.g.fas_user is not None:
-        FAS.logout()
-        flask.flash("You are no longer logged-in")
+
+    if APP.config.get('MM_AUTHENTICATION', None) == 'fas':
+        if hasattr(flask.g, 'fas_user') and flask.g.fas_user is not None:
+            FAS.logout()
+            flask.flash("You are no longer logged-in")
     return flask.redirect(next_url)
 
 import admin
