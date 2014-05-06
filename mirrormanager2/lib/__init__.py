@@ -188,6 +188,21 @@ def get_country_by_name(session, country_code):
     return query.first()
 
 
+def get_user_by_username(session, username):
+    ''' Return a specified User via its username.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.User
+    ).filter(
+        model.User.username == username
+    )
+
+    return query.first()
+
+
 def get_user_by_email(session, email):
     ''' Return a specified User via its email address.
 
