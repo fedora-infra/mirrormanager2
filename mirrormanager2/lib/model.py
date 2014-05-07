@@ -909,6 +909,7 @@ class User(BASE):
     email_address = sa.Column(sa.String(255), nullable=False, unique=True)
     display_name = sa.Column(sa.String(255), nullable=True)
     password = sa.Column(sa.String(40), nullable=True)
+    token = sa.Column(sa.String(40), nullable=True)
     created = sa.Column(
         sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
 
