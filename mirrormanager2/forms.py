@@ -223,3 +223,27 @@ class AddHostCategoryUrlForm(wtf.Form):
         'Private',
         default=False,
     )
+
+
+class NewUserForm(wtf.Form):
+    """ Form to add a new user to the local database. """
+    username = wtforms.TextField(
+        'username  <span class="error">*</span>',
+        [wtforms.validators.Required()]
+    )
+    display_name = wtforms.TextField(
+        'Full name',
+        [wtforms.validators.Optional()]
+    )
+    display_name = wtforms.TextField(
+        'Email address  <span class="error">*</span>',
+        [wtforms.validators.Required(), wtf.Email()]
+    )
+    password = wtforms.PasswordField(
+        'P  assword  <span class="error">*</span>',
+        [wtforms.validators.Required()]
+    )
+    confirm_password = wtforms.PasswordField(
+        'Confirm password  <span class="error">*</span>',
+        [wtforms.validators.Required()]
+    )
