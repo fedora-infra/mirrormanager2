@@ -24,6 +24,8 @@ MirrorManager2 internal api.
 '''
 
 import datetime
+import random
+import string
 
 import sqlalchemy
 
@@ -432,3 +434,16 @@ def get_mirrors(
         )
 
     return query.all()
+
+
+def id_generator(size=15, chars=string.ascii_uppercase + string.digits):
+    """ Generates a random identifier for the given size and using the
+    specified characters.
+    If no size is specified, it uses 15 as default.
+    If no characters are specified, it uses ascii char upper case and
+    digits.
+    :arg size: the size of the identifier to return.
+    :arg chars: the list of characters that can be used in the
+        idenfitier.
+    """
+    return ''.join(random.choice(chars) for x in range(size))
