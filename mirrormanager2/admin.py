@@ -27,7 +27,7 @@ import flask
 from flask.ext.admin import BaseView, expose
 from flask.ext.admin.contrib.sqla import ModelView
 
-from mirrormanager2 import ADMIN, SESSION, is_mirrormanager_admin
+from mirrormanager2 import APP, ADMIN, SESSION, is_mirrormanager_admin
 from mirrormanager2.lib import model
 
 
@@ -50,6 +50,16 @@ class DirectoryView(MMModelView):
 
     # Override displayed fields
     column_list = ('name', 'readable', 'ctime')
+
+
+class UserView(MMModelView):
+    ''' View of the User table specifying which field of the table should
+    be shown (and their order).
+    '''
+
+    # Override displayed fields
+    column_list = (
+        'id', 'user_name', 'display_name', 'email_address', 'created')
 
 
 ADMIN.add_view(MMModelView(model.Arch, SESSION))
@@ -88,3 +98,7 @@ ADMIN.add_view(MMModelView(model.Site, SESSION, category='Site'))
 ADMIN.add_view(MMModelView(model.SiteAdmin, SESSION, category='Site'))
 ADMIN.add_view(MMModelView(model.SiteToSite, SESSION, category='Site'))
 ADMIN.add_view(MMModelView(model.Version, SESSION))
+if APP.config.get('MM_AUTHENTICATION', None) == 'local':
+    ADMIN.add_view(UserView(model.User, SESSION))
+    ADMIN.add_view(MMModelView(model.UserGroup, SESSION))
+    ADMIN.add_view(MMModelView(model.Group, SESSION))
