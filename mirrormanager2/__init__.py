@@ -809,6 +809,13 @@ def auth_login():  # pragma: no cover
             return flask.redirect(next_url)
         else:
             return FAS.login(return_url=next_url)
+    elif APP.config.get('MM_AUTHENTICATION', None) == 'local':
+        form = forms.LoginForm()
+        return flask.render_template(
+            'login.html',
+            next_url=next_url,
+            form=form,
+        )
 
 
 @APP.route('/logout')
