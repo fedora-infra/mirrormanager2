@@ -239,7 +239,7 @@ class LoginForm(wtf.Form):
 
 class NewUserForm(wtf.Form):
     """ Form to add a new user to the local database. """
-    username = wtforms.TextField(
+    user_name = wtforms.TextField(
         'username  <span class="error">*</span>',
         [wtforms.validators.Required()]
     )

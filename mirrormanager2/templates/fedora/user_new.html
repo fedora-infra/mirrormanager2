@@ -15,7 +15,7 @@
 
 <form action="{{ url_for('new_user') }}" method="POST">
   <table>
-    {{ render_field_in_row(form.username) }}
+    {{ render_field_in_row(form.user_name) }}
     {{ render_field_in_row(form.display_name) }}
     {{ render_field_in_row(form.email_address) }}
     {{ render_field_in_row(form.password) }}
