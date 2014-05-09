@@ -247,7 +247,7 @@ class NewUserForm(wtf.Form):
         'Full name',
         [wtforms.validators.Optional()]
     )
-    display_name = wtforms.TextField(
+    email_address = wtforms.TextField(
         'Email address  <span class="error">*</span>',
         [wtforms.validators.Required(), wtf.Email()]
     )
