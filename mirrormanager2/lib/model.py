@@ -913,6 +913,11 @@ class User(BASE):
     created = sa.Column(
         sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
 
+    @property
+    def username(self):
+        ''' Return the username. '''
+        return self.user_name
+
     # groups this user belongs to
     # groups = RelatedJoin("Group", intermediateTable="user_group",
     # joinColumn="user_id", otherColumn="group_id")
