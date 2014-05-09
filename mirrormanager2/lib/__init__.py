@@ -199,7 +199,7 @@ def get_user_by_username(session, username):
     query = session.query(
         model.User
     ).filter(
-        model.User.username == username
+        model.User.user_name == username
     )
 
     return query.first()
