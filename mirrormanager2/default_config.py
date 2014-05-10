@@ -49,3 +49,6 @@ ADMIN_GROUP = ('sysadmin-main', )
 
 # Email address used in the 'From' field of the emails sent.
 EMAIL_FROM = 'nobody@fedoraproject.org'
+
+# SMTP server to use, defaults to ``localhost``.
+SMTP_SERVER = 'localhost'
