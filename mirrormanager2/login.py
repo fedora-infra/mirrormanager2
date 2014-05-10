@@ -156,10 +156,10 @@ You account will not be activated until you finish this step.
 Sincerely,
 Your MirrorManager admin.
 """ % (
-    {
-        'username': user.username, 'url': flask.request.base_url,
-        'confirm_root': flask.url_for('confirm_user', token=user.token)
-    })
+        {
+            'username': user.username, 'url': flask.request.base_url,
+            'confirm_root': flask.url_for('confirm_user', token=user.token)
+        })
 
     mirrormanager2.notifications.email_publish(
         to_email=user.email_address,
