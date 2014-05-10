@@ -27,7 +27,6 @@ notifications we could use.
 '''
 
 
-
 import smtplib
 import warnings
 
@@ -38,9 +37,9 @@ import pkgdb2
 
 def fedmsg_publish(*args, **kwargs):  # pragma: no cover
     ''' Try to publish a message on the fedmsg bus. '''
-    ## We catch Exception if we want :-p
+    # We catch Exception if we want :-p
     # pylint: disable=W0703
-    ## Ignore message about fedmsg import
+    # Ignore message about fedmsg import
     # pylint: disable=F0401
     try:
         import fedmsg
