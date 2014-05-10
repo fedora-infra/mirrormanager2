@@ -46,3 +46,6 @@ MM_AUTHENTICATION = 'fas'
 # If the authentication method is `fas`, groups in which should be the user
 # to be recognized as an admin.
 ADMIN_GROUP = ('sysadmin-main', )
+
+# Email address used in the 'From' field of the emails sent.
+EMAIL_FROM = 'nobody@fedoraproject.org'
