@@ -910,6 +910,7 @@ class User(BASE):
     display_name = sa.Column(sa.String(255), nullable=True)
     password = sa.Column(sa.String(40), nullable=True)
     token = sa.Column(sa.String(50), nullable=True)
+    session = sa.Column(sa.String(50), nullable=True)
     created = sa.Column(
         sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
 
