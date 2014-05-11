@@ -837,4 +837,7 @@ def auth_logout():
     return flask.redirect(next_url)
 
 import admin
-import login
+
+# Only import the login controller if the app is set up for local login
+if APP.config.get('MM_AUTHENTICATION', None) == 'local':
+    import login
