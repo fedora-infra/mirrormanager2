@@ -235,6 +235,22 @@ def get_user_by_token(session, token):
     return query.first()
 
 
+def get_user_by_session(session, sessionid):
+    ''' Return a specified User via its session identifier.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.User
+    ).filter(
+        model.User.session == sessionid
+    )
+
+    return query.first()
+
+
+
 def get_version_by_name_version(session, p_name, p_version):
     ''' Return a specified Version given the Product name and Version name
     provided.
