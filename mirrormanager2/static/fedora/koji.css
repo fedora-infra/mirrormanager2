@@ -160,7 +160,7 @@ p#footer a {
 
 body#home #mainNav li#homeTab a,
 body#mirrors #mainNav li#mirrorsTab a,
-body#mymeeting #mainNav li#mymeetingTab a,
+body#mysites #mainNav li#mysitesTab a,
 li#adminTabSelected a {
     background-color: #fff;
     color: #444 !important;
