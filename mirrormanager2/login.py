@@ -208,6 +208,50 @@ def lost_password():
         form=form,
     )
 
+
+@APP.route('/password/reset/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    """ Method to allow a user to reset his/her password.
+    """
+    form = mirrormanager2.forms.ResetPasswordForm()
+
+    user_obj = mirrormanager2.lib.get_user_by_token(SESSION, token)
+    if not user_obj:
+        flask.flash('No user associated with this token.', 'error')
+        return flask.redirect(flask.url_for('auth_login'))
+    elif not user_obj.token:
+        flask.flash(
+            'Invalid user, this user never asked for a password change',
+            'error')
+        return flask.redirect(flask.url_for('auth_login'))
+
+    if form.validate_on_submit():
+
+        password = '%s%s' % (
+            form.password.data, APP.config.get('PASSWORD_SEED', None))
+        user_obj.password = hashlib.sha512(password).hexdigest()
+        user_obj.token = None
+        SESSION.add(user_obj)
+
+        try:
+            SESSION.commit()
+            flask.flash(
+                'Password changed')
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            flask.flash('Could not set the new password.', 'error')
+            APP.logger.debug(
+                'Password lost change - Error setting password.')
+            APP.logger.exception(err)
+
+        return flask.redirect(flask.url_for('auth_login'))
+
+    return flask.render_template(
+        'password_reset.html',
+        form=form,
+        token=token,
+    )
+
 #
 # Methods specific to local login.
 #

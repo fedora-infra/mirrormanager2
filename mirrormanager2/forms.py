@@ -240,6 +240,18 @@ class LostPasswordForm(wtf.Form):
     )
 
 
+class ResetPasswordForm(wtf.Form):
+    """ Form to reset one's password in the local database. """
+    password = wtforms.PasswordField(
+        'Password  <span class="error">*</span>',
+        [wtforms.validators.Required()]
+    )
+    confirm_password = wtforms.PasswordField(
+        'Confirm password  <span class="error">*</span>',
+        [wtforms.validators.Required(), same_password]
+    )
+
+
 class LoginForm(wtf.Form):
     """ Form to login via the local database. """
     username = wtforms.TextField(
