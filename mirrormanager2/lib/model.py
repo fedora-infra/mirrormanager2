@@ -869,9 +869,10 @@ class Group(BASE):
     created = sa.Column(
         sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
 
-    # collection of all users belonging to this group
-    # users = RelatedJoin("User", intermediateTable="user_group",
-    # joinColumn="group_id", otherColumn="user_id")
+    def __repr__(self):
+        ''' Return a string representation of this object. '''
+
+        return 'Group: %s - name %s' % (self.id, self.group_name)
 
     # collection of all permissions for this group
     # permissions = RelatedJoin("Permission", joinColumn="group_id",
