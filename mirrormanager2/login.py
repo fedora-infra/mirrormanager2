@@ -164,6 +164,8 @@ def send_confirmation_email(user):
     address.
     """
 
+    url = APP.config.get('APPLICATION_URL', flask.request.url_root)
+
     message = """ Dear %(username)s,
 
 Thank you for registering on MirrorManager at %(url)s.
@@ -178,7 +180,7 @@ Sincerely,
 Your MirrorManager admin.
 """ % (
         {
-            'username': user.username, 'url': flask.request.base_url,
+            'username': user.username, 'url': url,
             'confirm_root': flask.url_for('confirm_user', token=user.token)
         })
 
