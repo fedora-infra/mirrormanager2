@@ -32,6 +32,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 import mirrormanager2.forms
 import mirrormanager2.lib
+import mirrormanager2.lib.notifications
 from mirrormanager2 import APP, SESSION, is_mirrormanager_admin
 from mirrormanager2.lib import model
 
@@ -181,7 +182,7 @@ Your MirrorManager admin.
             'confirm_root': flask.url_for('confirm_user', token=user.token)
         })
 
-    mirrormanager2.notifications.email_publish(
+    mirrormanager2.lib.notifications.email_publish(
         to_email=user.email_address,
         subject='[MirrorManager] Confirm your user account',
         message=message,
