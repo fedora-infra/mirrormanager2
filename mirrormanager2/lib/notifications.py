@@ -32,8 +32,6 @@ import warnings
 
 from email.mime.text import MIMEText
 
-import pkgdb2
-
 
 def fedmsg_publish(*args, **kwargs):  # pragma: no cover
     ''' Try to publish a message on the fedmsg bus. '''
