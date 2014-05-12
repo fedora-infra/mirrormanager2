@@ -107,12 +107,12 @@ def do_login():
         user_obj = mirrormanager2.lib.get_user_by_username(SESSION, username)
         if not user_obj or user_obj.password != password:
             flask.flash('Username or password invalid.', 'error')
-            return flask.redirect('login')
+            return flask.redirect(flask.url_for('auth_login'))
         elif user_obj.token:
             flask.flash(
-                'Invalid user, did you confirm the creation with provided '
-                'by email?', 'error')
-            return flask.redirect('login')
+                'Invalid user, did you confirm the creation with the url '
+                'provided by email?', 'error')
+            return flask.redirect(flask.url_for('auth_login'))
         else:
             visit_key = mirrormanager2.lib.id_generator(40)
             expiry = datetime.datetime.now() + APP.config.get(
@@ -137,7 +137,7 @@ def do_login():
         return flask.redirect(next_url)
     else:
         flask.flash('Insufficient information provided', 'error')
-    return flask.redirect('login')
+    return flask.redirect(flask.url_for('auth_login'))
 
 
 @APP.route('/confirm/<token>')
@@ -154,7 +154,7 @@ def confirm_user(token):
         try:
             SESSION.commit()
             flask.flash('Email confirmed, account activated')
-            return flask.redirect(flask.url_for('login'))
+            return flask.redirect(flask.url_for('auth_login'))
         except SQLAlchemyError, err:  # pragma: no cover
             flask.flash(
                 'Could not set the account as active in the db, '
