@@ -935,6 +935,11 @@ class User(BASE):
         ''' Return the username. '''
         return self.user_name
 
+    @property
+    def groups(self):
+        ''' Return the list of Group.group_name in which the user is. '''
+        return [group.group_name for group in self.group_objs]
+
     # groups this user belongs to
     # groups = RelatedJoin("Group", intermediateTable="user_group",
     # joinColumn="user_id", otherColumn="group_id")
