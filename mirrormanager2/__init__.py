@@ -242,7 +242,7 @@ def site_new():
     )
 
 
-@APP.route('/site/<site_id>')
+@APP.route('/site/<site_id>', methods=['GET', 'POST'])
 def site_view(site_id):
     """ View information about a given site.
     """
