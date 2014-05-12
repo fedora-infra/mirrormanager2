@@ -58,3 +58,15 @@ EMAIL_FROM = 'nobody@fedoraproject.org'
 # SMTP server to use,
 # Default: ``localhost``.
 SMTP_SERVER = 'localhost'
+
+# When this is set to True, the session cookie will only be returned to the
+# server via ssl (https). If you connect to the server via plain http, the
+# cookie will not be sent. This prevents sniffing of the cookie contents.
+# This may be set to False when testing your application but should always
+# be set to True in production.
+# Default: ``True``.
+MM_COOKIE_REQUIRES_HTTPS = False
+
+# The name of the cookie used to store the session id.
+# Default: ``.MirrorManager``.
+MM_COOKIE_NAME = 'MirrorManager'
