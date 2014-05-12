@@ -74,3 +74,8 @@ MM_COOKIE_REQUIRES_HTTPS = True
 # The name of the cookie used to store the session id.
 # Default: ``.MirrorManager``.
 MM_COOKIE_NAME = 'MirrorManager'
+
+# If not specified the application will rely on the root_url when sending
+# emails, otherwise it will use this URL
+# Default: ``None``.
+APPLICATION_URL = None
