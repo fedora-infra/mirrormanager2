@@ -873,6 +873,10 @@ class Group(BASE):
 
 
 class UserGroup(BASE):
+    """
+    Association table linking the mm_user table to the mm_group table.
+    This allow linking users to groups.
+    """
 
     __tablename__ = 'mm_user_group'
 
