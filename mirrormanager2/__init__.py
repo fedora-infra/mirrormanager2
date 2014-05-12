@@ -834,6 +834,8 @@ def auth_logout():
         if hasattr(flask.g, 'fas_user') and flask.g.fas_user is not None:
             FAS.logout()
             flask.flash("You are no longer logged-in")
+    elif APP.config.get('MM_AUTHENTICATION', None) == 'local':
+        login.logout()
     return flask.redirect(next_url)
 
 import admin
