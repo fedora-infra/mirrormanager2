@@ -182,6 +182,27 @@ Your MirrorManager admin.
     )
 
 
+def logout():
+    """ Log the user out by expiring the user's session.
+    """
+    user = mirrormanager2.lib.get_user_by_session(
+        SESSION, flask.g.fas_session_id)
+    user.session = None
+    flask.g.fas_session_id = None
+    flask.g.fas_user = None
+
+    SESSION.add(user)
+
+    try:
+        SESSION.commit()
+        flask.flash('You have been logged out')
+    except SQLAlchemyError, err:  # pragma: no cover
+        flask.flash(
+            'Could not inactivate the session in the db, '
+            'please report this error to an admin', 'error')
+        APP.logger.exception(err)
+
+
 def _check_session_cookie():
     """ Set the user into flask.g if the user is logged in.
     """
