@@ -203,6 +203,17 @@ def mysite():
     )
 
 
+@APP.route('/admin/all_sites')
+def all_sites():
+    """ Return the list of all sites for the admins. """
+    sites = mirrormanager2.lib.get_all_sites(SESSION)
+    return flask.render_template(
+        'my_sites.html',
+        username='Admin - List all',
+        sites=sites,
+    )
+
+
 @APP.route('/site/new', methods=['GET', 'POST'])
 def site_new():
     """ Create a new site.
