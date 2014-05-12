@@ -91,3 +91,4 @@ ADMIN.add_view(MMModelView(model.Version, SESSION))
 if APP.config.get('MM_AUTHENTICATION', None) == 'local':
     ADMIN.add_view(MMModelView(model.User, SESSION))
     ADMIN.add_view(MMModelView(model.Group, SESSION))
+    ADMIN.add_view(MMModelView(model.UserVisit, SESSION))
