@@ -830,9 +830,8 @@ class NetblockCountry(BASE):
 
 
 # ##########################################################
-# These classes are only used if you're not using the
-# Fedora Account System or some other backend that provides
-# Identity management
+# These classes are only used if you're using the `local` authentication
+# method
 class UserVisit(BASE):
 
     __tablename__ = 'mm_user_visit'
