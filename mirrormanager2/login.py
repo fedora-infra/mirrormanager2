@@ -163,6 +163,51 @@ def confirm_user(token):
 
     return flask.redirect(flask.url_for('index'))
 
+
+@APP.route('/password/lost', methods=['GET', 'POST'])
+def lost_password():
+    """ Method to allow a user to change his/her password assuming the email
+    is not compromised.
+    """
+    form = mirrormanager2.forms.LostPasswordForm()
+    if form.validate_on_submit():
+
+        username = form.username.data
+        user_obj = mirrormanager2.lib.get_user_by_username(SESSION, username)
+        if not user_obj:
+            flask.flash('Username invalid.', 'error')
+            return flask.redirect(flask.url_for('auth_login'))
+        elif user_obj.token:
+            flask.flash(
+                'Invalid user, did you confirm the creation with the url '
+                'provided by email? Or did you already ask for a password '
+                'change?', 'error')
+            return flask.redirect(flask.url_for('auth_login'))
+
+        token = mirrormanager2.lib.id_generator(40)
+        user_obj.token = token
+        SESSION.add(user_obj)
+
+        try:
+            SESSION.commit()
+            send_lostpassword_email(user_obj)
+            flask.flash(
+                'Check your email to finish changing your password')
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            flask.flash(
+                'Could not set the token allowing changing a password.',
+                'error')
+            APP.logger.debug('Password lost change - Error setting token.')
+            APP.logger.exception(err)
+
+        return flask.redirect(flask.url_for('auth_login'))
+
+    return flask.render_template(
+        'password_change.html',
+        form=form,
+    )
+
 #
 # Methods specific to local login.
 #

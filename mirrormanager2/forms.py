@@ -232,6 +232,14 @@ class AddHostCategoryUrlForm(wtf.Form):
     )
 
 
+class LostPasswordForm(wtf.Form):
+    """ Form to ask for a password change. """
+    username = wtforms.TextField(
+        'username  <span class="error">*</span>',
+        [wtforms.validators.Required()]
+    )
+
+
 class LoginForm(wtf.Form):
     """ Form to login via the local database. """
     username = wtforms.TextField(
