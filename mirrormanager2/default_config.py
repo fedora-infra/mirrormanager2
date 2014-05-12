@@ -39,6 +39,10 @@ ITEMS_PER_PAGE = 50
 # secret key used to generate unique csrf token
 SECRET_KEY = '<insert here your own key>'
 
+# Seed used to make the password harder to brute force in case of leaking
+# This should be kept really secret!
+PASSWORD_SEED = "You'd better change it and keep it secret"
+
 # Folder containing the theme to use.
 # Default: ``fedora``.
 THEME_FOLDER = 'fedora'
