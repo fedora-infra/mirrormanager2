@@ -103,8 +103,20 @@ def do_login():
                 'by email?', 'error')
             return flask.redirect('login')
         else:
-            flask.flash('Welcome %s' % user_obj.username)
-            flask.g.fas_user = user_obj
+            session = mirrormanager2.lib.id_generator(40)
+            user_obj.session = session
+            SESSION.add(user_obj)
+            try:
+                SESSION.commit()
+                flask.g.fas_user = user_obj
+                flask.g.fas_session_id = session
+                flask.flash('Welcome %s' % user_obj.username)
+            except SQLAlchemyError, err:  # pragma: no cover
+                flask.flash(
+                    'Could not set the session in the db, '
+                    'please report this error to an admin', 'error')
+                APP.logger.exception(err)
+
         return flask.redirect(next_url)
     else:
         flask.flash('Insufficient information provided', 'error')
