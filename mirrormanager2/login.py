@@ -169,7 +169,7 @@ Thank you for registering on MirrorManager at %(url)s.
 
 To finish your registration, please click on the following link or copy/paste
 it in your browser:
-  %(url)/%(confirm_root)
+  %(url)s/%(confirm_root)s
 
 You account will not be activated until you finish this step.
 
