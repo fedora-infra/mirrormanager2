@@ -841,3 +841,5 @@ import admin
 # Only import the login controller if the app is set up for local login
 if APP.config.get('MM_AUTHENTICATION', None) == 'local':
     import login
+    APP.before_request(login._check_session_cookie)
+    APP.after_request(login._send_session_cookie)
