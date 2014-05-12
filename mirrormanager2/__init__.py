@@ -102,10 +102,13 @@ def is_mirrormanager_admin(user):
     """
     if not user:
         return False
-    if APP.config.get('MM_AUTHENTICATION', None) == 'fas':
+    auth_method = APP.config.get('MM_AUTHENTICATION', None)
+
+    if auth_method == 'fas':
         if not user.cla_done or len(user.groups) < 1:
             return False
 
+    if auth_method in ('fas', 'local'):
         admins = APP.config['ADMIN_GROUP']
         if isinstance(admins, basestring):
             admins = [admins]
