@@ -912,7 +912,14 @@ class User(BASE):
     token = sa.Column(sa.String(50), nullable=True)
     session = sa.Column(sa.String(50), nullable=True)
     created = sa.Column(
-        sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
+        sa.DateTime,
+        nullable=False,
+        default=sa.func.now())
+    updated_on = sa.Column(
+        sa.DateTime,
+        nullable=False,
+        default=sa.func.now(),
+        onupdate=sa.func.now())
 
     @property
     def username(self):
