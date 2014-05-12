@@ -221,6 +221,7 @@ def _check_session_cookie():
             if now > expire:
                 flask.flash('Session timed-out', 'error')
                 session_id = None
+                user = None
             else:
                 user.updated_on = now
                 SESSION.add(user)
