@@ -70,6 +70,21 @@ def get_site(session, site_id):
     return query.first()
 
 
+def get_all_sites(session):
+    ''' Return all existing Site.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Site
+    ).order_by(
+        model.Site.name, model.Site.created_at
+    )
+
+    return query.all()
+
+
 def get_host(session, host_id):
     ''' Return a specified Host via its identifier.
 
