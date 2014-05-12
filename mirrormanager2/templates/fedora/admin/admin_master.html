@@ -42,8 +42,12 @@
           <ul>
             <li id="homeTab"><a href="{{url_for('index')}}">Home</a></li>
             <li id="mirrorsTab"><a href="{{url_for('list_mirrors')}}">Mirrors</a></li>
+            {% if g.fas_user %}
+            <li id="mysitesTab"><a href="{{url_for('mysite')}}">My Sites</a></li>
+            {% endif %}
             {% if is_admin %}
             <li id="adminTabSelected"><a href="{{url_for('admin.index')}}">Admin</a></li>
+            <li id="allSitesTab"><a href="{{url_for('all_sites')}}">All sites</a></li>
             {% endif %}
           </ul>
         </div><!-- end mainNav -->
