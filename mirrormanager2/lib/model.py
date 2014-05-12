@@ -905,7 +905,7 @@ class User(BASE):
     user_name = sa.Column(sa.String(16), nullable=False, unique=True)
     email_address = sa.Column(sa.String(255), nullable=False, unique=True)
     display_name = sa.Column(sa.String(255), nullable=True)
-    password = sa.Column(sa.String(40), nullable=True)
+    password = sa.Column(sa.Text, nullable=True)
     token = sa.Column(sa.String(50), nullable=True)
     created = sa.Column(
         sa.DateTime,
