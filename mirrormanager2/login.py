@@ -202,6 +202,40 @@ Your MirrorManager admin.
     )
 
 
+def send_lostpassword_email(user):
+    """ Sends the email with the information on how to reset his/her password
+    to the user.
+    """
+    url = APP.config.get('APPLICATION_URL', flask.request.url_root)
+
+    message = """ Dear %(username)s,
+
+The IP address %(ip)s has requested a password change for this account.
+
+If you wish to change your password, please click on the following link or
+copy/paste it in your browser:
+  %(url)s/%(confirm_root)s
+
+If you did not request this change, please inform an admin immediately!
+
+Sincerely,
+Your MirrorManager admin.
+""" % (
+        {
+            'username': user.username, 'url': url or flask.request.url_root,
+            'confirm_root': flask.url_for('reset_password', token=user.token),
+            'ip': flask.request.remote_addr,
+        })
+
+    mirrormanager2.lib.notifications.email_publish(
+        to_email=user.email_address,
+        subject='[MirrorManager] Confirm your password change',
+        message=message,
+        from_email=APP.config.get('EMAIL_FROM', 'nobody@fedoraproject.org'),
+        smtp_server=APP.config.get('SMTP_SERVER', 'localhost')
+    )
+
+
 def logout():
     """ Log the user out by expiring the user's session.
     """
