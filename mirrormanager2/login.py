@@ -23,6 +23,7 @@
 MirrorManager2 local login flask controller.
 '''
 
+import hashlib
 import datetime
 
 import flask
@@ -54,6 +55,10 @@ def new_user():
         if mirrormanager2.lib.get_user_by_email(SESSION, email):
             flask.flash('Email address already taken.', 'error')
             return flask.redirect(flask.request.url)
+
+        password = '%s%s' % (
+            form.password.data, APP.config.get('PASSWORD_SEED', None))
+        form.password.data = hashlib.sha512(password).hexdigest()
 
         token = mirrormanager2.lib.id_generator(40)
 
@@ -95,7 +100,9 @@ def do_login():
 
     if form.validate_on_submit():
         username = form.username.data
-        password = form.password.data
+        password = '%s%s' % (
+            form.password.data, APP.config.get('PASSWORD_SEED', None))
+        password = hashlib.sha512(password).hexdigest()
 
         user_obj = mirrormanager2.lib.get_user_by_username(SESSION, username)
         if not user_obj or user_obj.password != password:
