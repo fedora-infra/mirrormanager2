@@ -833,25 +833,17 @@ class NetblockCountry(BASE):
 # These classes are only used if you're not using the
 # Fedora Account System or some other backend that provides
 # Identity management
-class Visit(BASE):
+class VisitUser(BASE):
 
-    __tablename__ = 'visit'
+    __tablename__ = 'mm_user_visit'
 
     id = sa.Column(sa.Integer, primary_key=True)
+    user_id = sa.Column(
+        sa.Integer, sa.ForeignKey('mm_user.id'), nullable=False)
     visit_key = sa.Column(sa.String(40), nullable=False, unique=True)
     created = sa.Column(
         sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
     expiry = sa.Column(sa.DateTime)
-
-
-class VisitIdentity(BASE):
-
-    __tablename__ = 'visit_identity'
-
-    id = sa.Column(sa.Integer, primary_key=True)
-    visit_key = sa.Column(sa.String(40), nullable=False, unique=True)
-    user_id = sa.Column(
-        sa.Integer, sa.ForeignKey('mm_user.id'), nullable=False)
 
 
 class Group(BASE):
