@@ -54,9 +54,6 @@ def email_publish(
         smtp_server='localhost'):  # pragma: no cover
     ''' Send notification by email. '''
 
-    if not package:
-        return
-
     msg = MIMEText(message)
     msg['Subject'] = subject
     msg['From'] = from_email
