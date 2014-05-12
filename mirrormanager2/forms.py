@@ -47,6 +47,13 @@ def is_number(form, field):
         raise wtf.ValidationError('Field must contain a number')
 
 
+def same_password(form, field):
+    ''' Check if the data in the field is the same as in the password field.
+    '''
+    if field.data != form.password.data:
+        raise wtf.ValidationError('Both password fields should be equal')
+
+
 class AddSiteForm(wtf.Form):
     """ Form to add or edit a site. """
     name = wtforms.TextField(
@@ -257,5 +264,5 @@ class NewUserForm(wtf.Form):
     )
     confirm_password = wtforms.PasswordField(
         'Confirm password  <span class="error">*</span>',
-        [wtforms.validators.Required()]
+        [wtforms.validators.Required(), same_password]
     )
