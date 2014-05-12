@@ -212,11 +212,23 @@ def _check_session_cookie():
             SESSION, sessionid)
         if session and session.user:
             now = datetime.datetime.now()
+            new_expiry = now + APP.config.get('PERMANENT_SESSION_LIFETIME')
             if now > session.expiry:
                 flask.flash('Session timed-out', 'error')
             else:
                 session_id = session.visit_key
                 user = session.user
+
+                session.expiry = new_expiry
+                SESSION.add(session)
+                try:
+                    SESSION.commit()
+                except SQLAlchemyError, err:  # pragma: no cover
+                    flask.flash(
+                        'Could not prolong the session in the db, '
+                        'please report this error to an admin', 'error')
+                    APP.logger.exception(err)
+
     flask.g.fas_session_id = session_id
     flask.g.fas_user = user
 
