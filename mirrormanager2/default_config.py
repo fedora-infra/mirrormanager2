@@ -26,29 +26,35 @@ MirrorManager2 default configuration api.
 from datetime import timedelta
 
 # Set the time after which the session expires
+# Default: ``timedelta(hours=1)`` corresponds to 1 hour.
 PERMANENT_SESSION_LIFETIME = timedelta(hours=1)
 
 # url to the database server:
 DB_URL = 'sqlite:////var/tmp/mirrormanager2_dev.sqlite'
 
 # the number of items to display on the search pages
+# Default: ``50``.
 ITEMS_PER_PAGE = 50
 
 # secret key used to generate unique csrf token
 SECRET_KEY = '<insert here your own key>'
 
-# Folder containing the theme to use, defaults to the Fedora theme
+# Folder containing the theme to use.
+# Default: ``fedora``.
 THEME_FOLDER = 'fedora'
 
 # Which authentication method to use, defaults to `fas` can be or `local`
-MM_AUTHENTICATION = 'fas'
+# Default: ``fas``.
+MM_AUTHENTICATION = 'local'
 
 # If the authentication method is `fas`, groups in which should be the user
 # to be recognized as an admin.
 ADMIN_GROUP = ('sysadmin-main', )
 
 # Email address used in the 'From' field of the emails sent.
+# Default: ``nobody@fedoraproject.org``.
 EMAIL_FROM = 'nobody@fedoraproject.org'
 
-# SMTP server to use, defaults to ``localhost``.
+# SMTP server to use,
+# Default: ``localhost``.
 SMTP_SERVER = 'localhost'
