@@ -916,9 +916,9 @@ class User(BASE):
     # Relations
     group_objs = relation(
         "Group",
-        secondary="user_group",
-        primaryjoin="mm_user.c.id==user_group.c.user_id",
-        secondaryjoin="mm_group.c.id==user_group.c.group_id",
+        secondary="mm_user_group",
+        primaryjoin="mm_user.c.id==mm_user_group.c.user_id",
+        secondaryjoin="mm_group.c.id==mm_user_group.c.group_id",
         backref="users",
     )
 
