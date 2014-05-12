@@ -198,6 +198,7 @@ def mysite():
         SESSION, flask.g.fas_user.username)
     return flask.render_template(
         'my_sites.html',
+        username="%s's" % flask.g.fas_user.username,
         sites=sites,
     )
 
