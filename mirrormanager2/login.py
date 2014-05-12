@@ -154,6 +154,7 @@ def confirm_user(token):
         try:
             SESSION.commit()
             flask.flash('Email confirmed, account activated')
+            return flask.redirect(flask.url_for('login'))
         except SQLAlchemyError, err:  # pragma: no cover
             flask.flash(
                 'Could not set the account as active in the db, '
