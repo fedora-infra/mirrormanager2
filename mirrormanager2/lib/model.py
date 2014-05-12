@@ -921,6 +921,15 @@ class User(BASE):
         default=sa.func.now(),
         onupdate=sa.func.now())
 
+    # Relations
+    group_objs = relation(
+        "Group",
+        secondary="user_group",
+        primaryjoin="mm_user.c.id==user_group.c.user_id",
+        secondaryjoin="mm_group.c.id==user_group.c.group_id",
+        backref="users",
+    )
+
     @property
     def username(self):
         ''' Return the username. '''
