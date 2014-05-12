@@ -23,6 +23,8 @@
 MirrorManager2 local login flask controller.
 '''
 
+import datetime
+
 import flask
 from flask.ext.admin import BaseView, expose
 from flask.ext.admin.contrib.sqla import ModelView
@@ -212,6 +214,23 @@ def _check_session_cookie():
         user = mirrormanager2.lib.get_user_by_session(SESSION, session_id)
         if not user or not user.session:
             session_id = None
+        else:
+            now = datetime.datetime.now()
+            expire = user.updated_on + APP.config.get(
+                'PERMANENT_SESSION_LIFETIME')
+            if now > expire:
+                flask.flash('Session timed-out', 'error')
+                session_id = None
+            else:
+                user.updated_on = now
+                SESSION.add(user)
+                try:
+                    SESSION.commit()
+                except SQLAlchemyError, err:  # pragma: no cover
+                    flask.flash(
+                        'Could not prolong the session in the db, '
+                        'please report this error to an admin', 'error')
+                    APP.logger.exception(err)
     else:
         session_id = None
         user = None
