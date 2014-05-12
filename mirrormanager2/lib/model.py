@@ -874,7 +874,7 @@ class Group(BASE):
 
 class UserGroup(BASE):
 
-    __tablename__ = 'user_group'
+    __tablename__ = 'mm_user_group'
 
     user_id = sa.Column(
         sa.Integer, sa.ForeignKey('mm_user.id'), primary_key=True)
