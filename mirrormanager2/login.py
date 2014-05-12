@@ -180,3 +180,33 @@ Your MirrorManager admin.
         from_email=APP.config.get('EMAIL_FROM', 'nobody@fedoraproject.org'),
         smtp_server=APP.config.get('SMTP_SERVER', 'localhost')
     )
+
+
+def _check_session_cookie():
+    """ Set the user into flask.g if the user is logged in.
+    """
+    cookie_name = APP.config.get('MM_COOKIE_NAME', 'MirrorManager')
+    if cookie_name and cookie_name in flask.request.cookies:
+        session_id = flask.request.cookies[cookie_name]
+        user = mirrormanager2.lib.get_user_by_session(SESSION, session_id)
+        if not user or not user.session:
+            session_id = None
+    else:
+        session_id = None
+        user = None
+    flask.g.fas_session_id = session_id
+    flask.g.fas_user = user
+
+
+def _send_session_cookie(response):
+    """ Set the session cookie if the user is authenticated. """
+    cookie_name = APP.config.get('MM_COOKIE_NAME', 'MirrorManager')
+    secure = APP.config.get('MM_COOKIE_REQUIRES_HTTPS', True)
+
+    response.set_cookie(
+        key=cookie_name,
+        value=flask.g.fas_session_id or '',
+        secure=secure,
+        httponly=True,
+    )
+    return response
