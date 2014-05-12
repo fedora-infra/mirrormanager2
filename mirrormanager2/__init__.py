@@ -191,6 +191,17 @@ def list_mirrors(p_name=None, p_version=None, p_arch=None):
     )
 
 
+@APP.route('/site/mine')
+def mysite():
+    """ Return the list of site managed by the user. """
+    sites = mirrormanager2.lib.get_user_sites(
+        SESSION, flask.g.fas_user.username)
+    return flask.render_template(
+        'my_sites.html',
+        sites=sites,
+    )
+
+
 @APP.route('/site/new', methods=['GET', 'POST'])
 def site_new():
     """ Create a new site.

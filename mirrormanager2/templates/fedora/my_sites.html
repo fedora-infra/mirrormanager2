@@ -1,0 +1,97 @@
+{% extends "master.html" %}
+
+{% block title %}Home{% endblock %}
+{%block tag %}mysites{% endblock %}
+
+{% block content %}
+<h2>{{g.fas_user.username}}'s sites</h2>
+
+{% if sites %}
+<p>
+  You have currently {{ sites | length }} sites listed
+</p>
+
+<table>
+  <tr>
+    <th>Site name</th>
+    <th>Mirror</th>
+    <th>Admin Active</th>
+    <th>User Active</th>
+    <th>Private</th>
+    <th>Bandwith</th>
+    <th>Last crawled</th>
+  </tr>
+  {% for site in sites %}
+  <tr>
+    <td rowspan="{{ site.hosts | length }}" class="matrix_section">
+      <a href="{{ site.org_url }}">
+        {{ site.name }}
+      </a>
+    </td>
+    {% for host in site.hosts %}
+    {% if not loop.first %}
+    </tr>
+    <tr>
+    {% endif %}
+
+    {% if loop.last %}
+    <td class="matrix_section {{ loop.cycle('matrix_odd', 'matrix_even') }}">
+    {% else %}
+    <td class="{{ loop.cycle('matrix_odd', 'matrix_even') }}">
+    {% endif %}
+      <a href="{{ url_for('host_view', host_id=host.id) }}">
+        {{host.name}}
+      </a>
+    </td>
+
+    {% if loop.last %}
+    <td class="matrix_section {{ loop.cycle('matrix_odd', 'matrix_even') }}">
+    {% else %}
+    <td class="{{ loop.cycle('matrix_odd', 'matrix_even') }}">
+    {% endif %}
+      {{host.admin_active}}
+    </td>
+
+    {% if loop.last %}
+    <td class="matrix_section {{ loop.cycle('matrix_odd', 'matrix_even') }}">
+    {% else %}
+    <td class="{{ loop.cycle('matrix_odd', 'matrix_even') }}">
+    {% endif %}
+      {{host.user_active}}
+    </td>
+
+    {% if loop.last %}
+    <td class="matrix_section {{ loop.cycle('matrix_odd', 'matrix_even') }}">
+    {% else %}
+    <td class="{{ loop.cycle('matrix_odd', 'matrix_even') }}">
+    {% endif %}
+      {{host.private}}
+    </td>
+
+    {% if loop.last %}
+    <td class="matrix_section {{ loop.cycle('matrix_odd', 'matrix_even') }}">
+    {% else %}
+    <td class="{{ loop.cycle('matrix_odd', 'matrix_even') }}">
+    {% endif %}
+      {{host.bandwidth_int}}
+    </td>
+
+    {% if loop.last %}
+    <td class="matrix_section {{ loop.cycle('matrix_odd', 'matrix_even') }}">
+    {% else %}
+    <td class="{{ loop.cycle('matrix_odd', 'matrix_even') }}">
+    {% endif %}
+      {{host.last_crawled}}
+    </td>
+
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>
+  You apparently did not register any sites yet.
+</p>
+{% endif %}
+
+{% endblock %}
