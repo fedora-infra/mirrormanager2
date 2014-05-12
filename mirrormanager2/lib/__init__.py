@@ -451,6 +451,22 @@ def get_mirrors(
     return query.all()
 
 
+def get_user_sites(session, username):
+    """ Return the list of sites the specified user is admin of.
+    """
+    query = session.query(
+        model.Site
+    ).filter(
+        model.Site.id == model.SiteAdmin.site_id
+    ).filter(
+        model.SiteAdmin.username == username
+    ).order_by(
+        model.Site.name, model.Site.created_at
+    )
+
+    return query.all()
+
+
 def id_generator(size=15, chars=string.ascii_uppercase + string.digits):
     """ Generates a random identifier for the given size and using the
     specified characters.
