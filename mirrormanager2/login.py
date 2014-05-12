@@ -105,13 +105,19 @@ def do_login():
                 'by email?', 'error')
             return flask.redirect('login')
         else:
-            session = mirrormanager2.lib.id_generator(40)
-            user_obj.session = session
-            SESSION.add(user_obj)
+            visit_key = mirrormanager2.lib.id_generator(40)
+            expiry = datetime.datetime.now() + APP.config.get(
+                'PERMANENT_SESSION_LIFETIME')
+            session = model.VisitUser(
+                user_id=user_obj.id,
+                visit_key=visit_key,
+                expiry=expiry,
+            )
+            SESSION.add(session)
             try:
                 SESSION.commit()
                 flask.g.fas_user = user_obj
-                flask.g.fas_session_id = session
+                flask.g.fas_session_id = visit_key
                 flask.flash('Welcome %s' % user_obj.username)
             except SQLAlchemyError, err:  # pragma: no cover
                 flask.flash(
@@ -187,54 +193,30 @@ Your MirrorManager admin.
 def logout():
     """ Log the user out by expiring the user's session.
     """
-    user = mirrormanager2.lib.get_user_by_session(
-        SESSION, flask.g.fas_session_id)
-    user.session = None
     flask.g.fas_session_id = None
     flask.g.fas_user = None
 
-    SESSION.add(user)
-
-    try:
-        SESSION.commit()
-        flask.flash('You have been logged out')
-    except SQLAlchemyError, err:  # pragma: no cover
-        flask.flash(
-            'Could not inactivate the session in the db, '
-            'please report this error to an admin', 'error')
-        APP.logger.exception(err)
+    flask.flash('You have been logged out')
 
 
 def _check_session_cookie():
     """ Set the user into flask.g if the user is logged in.
     """
     cookie_name = APP.config.get('MM_COOKIE_NAME', 'MirrorManager')
+    session_id = None
+    user = None
+
     if cookie_name and cookie_name in flask.request.cookies:
-        session_id = flask.request.cookies[cookie_name]
-        user = mirrormanager2.lib.get_user_by_session(SESSION, session_id)
-        if not user or not user.session:
-            session_id = None
-        else:
+        sessionid = flask.request.cookies[cookie_name]
+        session = mirrormanager2.lib.get_session_by_visitkey(
+            SESSION, sessionid)
+        if session and session.user:
             now = datetime.datetime.now()
-            expire = user.updated_on + APP.config.get(
-                'PERMANENT_SESSION_LIFETIME')
-            if now > expire:
+            if now > session.expiry:
                 flask.flash('Session timed-out', 'error')
-                session_id = None
-                user = None
             else:
-                user.updated_on = now
-                SESSION.add(user)
-                try:
-                    SESSION.commit()
-                except SQLAlchemyError, err:  # pragma: no cover
-                    flask.flash(
-                        'Could not prolong the session in the db, '
-                        'please report this error to an admin', 'error')
-                    APP.logger.exception(err)
-    else:
-        session_id = None
-        user = None
+                session_id = session.visit_key
+                user = session.user
     flask.g.fas_session_id = session_id
     flask.g.fas_user = user
 
