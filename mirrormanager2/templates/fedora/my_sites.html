@@ -24,7 +24,7 @@
   {% for site in sites %}
   <tr>
     <td rowspan="{{ site.hosts | length }}" class="matrix_section">
-      <a href="{{ site.org_url }}">
+      <a href="{{ url_for('site_view', site_id=site.id) }}">
         {{ site.name }}
       </a>
     </td>
