@@ -945,34 +945,3 @@ class User(BASE):
         ''' Return a string representation of this object. '''
 
         return 'User: %s - name %s' % (self.id, self.user_name)
-
-
-class Permission(BASE):
-
-    __tablename__ = 'permission'
-
-    id = sa.Column(sa.Integer, primary_key=True)
-
-    permission_name = sa.Column(sa.String(16), nullable=False, unique=True)
-    description = sa.Column(sa.String(255), nullable=True)
-
-    # groups = RelatedJoin("Group",
-    # intermediateTable="group_permission",
-    # joinColumn="permission_id",
-    # otherColumn="group_id")
-
-
-class GroupPermission(BASE):
-
-    __tablename__ = 'group_permission'
-
-    permission_id = sa.Column(
-        sa.Integer, sa.ForeignKey('permission.id'), primary_key=True)
-    group_id = sa.Column(
-        sa.Integer, sa.ForeignKey('mm_group.id'), primary_key=True)
-
-    # Constraints
-    __table_args__ = (
-        sa.UniqueConstraint(
-            'permission_id', 'group_id'),
-    )
