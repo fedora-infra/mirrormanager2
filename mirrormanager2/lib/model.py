@@ -921,6 +921,7 @@ class User(BASE):
         secondaryjoin="mm_group.c.id==mm_user_group.c.group_id",
         backref="users",
     )
+    session = relation("VisitUser", backref="user")
 
     @property
     def username(self):
