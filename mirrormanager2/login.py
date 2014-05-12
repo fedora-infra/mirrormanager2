@@ -188,7 +188,7 @@ Sincerely,
 Your MirrorManager admin.
 """ % (
         {
-            'username': user.username, 'url': url,
+            'username': user.username, 'url': url or flask.request.url_root,
             'confirm_root': flask.url_for('confirm_user', token=user.token)
         })
 
