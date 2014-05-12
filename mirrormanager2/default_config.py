@@ -65,7 +65,7 @@ SMTP_SERVER = 'localhost'
 # This may be set to False when testing your application but should always
 # be set to True in production.
 # Default: ``True``.
-MM_COOKIE_REQUIRES_HTTPS = False
+MM_COOKIE_REQUIRES_HTTPS = True
 
 # The name of the cookie used to store the session id.
 # Default: ``.MirrorManager``.
