@@ -72,15 +72,6 @@ class GroupView(MMModelView):
         'id', 'group_name', 'display_name', 'created')
 
 
-class UserGroupView(MMModelView):
-    ''' View of the User table specifying which field of the table should
-    be shown (and their order).
-    '''
-
-    # Override displayed fields
-    column_list = ('user_id', 'group_id')
-
-
 ADMIN.add_view(MMModelView(model.Arch, SESSION))
 ADMIN.add_view(MMModelView(model.Category, SESSION))
 ADMIN.add_view(MMModelView(model.Country, SESSION, category='Country'))
@@ -119,5 +110,4 @@ ADMIN.add_view(MMModelView(model.SiteToSite, SESSION, category='Site'))
 ADMIN.add_view(MMModelView(model.Version, SESSION))
 if APP.config.get('MM_AUTHENTICATION', None) == 'local':
     ADMIN.add_view(UserView(model.User, SESSION))
-    ADMIN.add_view(UserGroupView(model.UserGroup, SESSION))
     ADMIN.add_view(GroupView(model.Group, SESSION))
