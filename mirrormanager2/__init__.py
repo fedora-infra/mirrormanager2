@@ -198,6 +198,7 @@ def mysite():
         SESSION, flask.g.fas_user.username)
     return flask.render_template(
         'my_sites.html',
+        tag='mysites',
         username="%s's" % flask.g.fas_user.username,
         sites=sites,
     )
@@ -209,6 +210,7 @@ def all_sites():
     sites = mirrormanager2.lib.get_all_sites(SESSION)
     return flask.render_template(
         'my_sites.html',
+        tag='allsites',
         username='Admin - List all',
         sites=sites,
     )
