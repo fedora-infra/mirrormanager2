@@ -64,6 +64,7 @@ def new_user():
 
         try:
             SESSION.flush()
+            send_confirmation_email(user)
             flask.flash(
                 'User created, please check your email to activate the '
                 'account')
