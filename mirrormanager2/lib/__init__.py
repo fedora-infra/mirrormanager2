@@ -242,9 +242,9 @@ def get_session_by_visitkey(session, sessionid):
 
     '''
     query = session.query(
-        model.VisitUser
+        model.UserVisit
     ).filter(
-        model.VisitUser.visit_key == sessionid
+        model.UserVisit.visit_key == sessionid
     )
 
     return query.first()

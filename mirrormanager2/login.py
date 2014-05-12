@@ -108,7 +108,7 @@ def do_login():
             visit_key = mirrormanager2.lib.id_generator(40)
             expiry = datetime.datetime.now() + APP.config.get(
                 'PERMANENT_SESSION_LIFETIME')
-            session = model.VisitUser(
+            session = model.UserVisit(
                 user_id=user_obj.id,
                 visit_key=visit_key,
                 expiry=expiry,
