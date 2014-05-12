@@ -940,9 +940,10 @@ class User(BASE):
         ''' Return the list of Group.group_name in which the user is. '''
         return [group.group_name for group in self.group_objs]
 
-    # groups this user belongs to
-    # groups = RelatedJoin("Group", intermediateTable="user_group",
-    # joinColumn="user_id", otherColumn="group_id")
+    def __repr__(self):
+        ''' Return a string representation of this object. '''
+
+        return 'User: %s - name %s' % (self.id, self.user_name)
 
 
 class Permission(BASE):
