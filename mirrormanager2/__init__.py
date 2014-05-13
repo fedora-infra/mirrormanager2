@@ -130,6 +130,19 @@ def is_site_admin(user, site):
     return user.username in admins
 
 
+def login_required(function):
+    """ Flask decorator to ensure that the user is logged in. """
+    @wraps(function)
+    def decorated_function(*args, **kwargs):
+        ''' Wrapped function actually checking if the user is logged in.
+        '''
+        if not hasattr(flask.g, 'fas_user') or flask.g.fas_user is None:
+            return flask.redirect(flask.url_for(
+                'auth_login', next=flask.request.url))
+        return function(*args, **kwargs)
+    return decorated_function
+
+
 # # Flask application
 
 @APP.context_processor
