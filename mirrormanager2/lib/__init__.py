@@ -70,6 +70,21 @@ def get_site(session, site_id):
     return query.first()
 
 
+def get_siteadmin(session, admin_id):
+    ''' Return a specified SiteAdmin via its identifier.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.SiteAdmin
+    ).filter(
+        model.SiteAdmin.id == admin_id
+    )
+
+    return query.first()
+
+
 def get_all_sites(session):
     ''' Return all existing Site.
 
