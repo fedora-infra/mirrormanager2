@@ -148,6 +148,22 @@ def login_required(function):
     return decorated_function
 
 
+def admin_required(function):
+    """ Flask decorator to ensure that the user is logged in. """
+    @wraps(function)
+    def decorated_function(*args, **kwargs):
+        ''' Wrapped function actually checking if the user is logged in.
+        '''
+        if not is_authenticated():
+            return flask.redirect(flask.url_for(
+                'auth_login', next=flask.request.url))
+        elif not is_mirrormanager_admin(flask.g.fas_user):
+            flask.flash('You are not an admin', 'error')
+            return flask.redirect(flask.url_for('index'))
+        return function(*args, **kwargs)
+    return decorated_function
+
+
 # # Flask application
 
 @APP.context_processor
