@@ -1,0 +1,28 @@
+{% extends "master.html" %}
+{% from "_formhelpers.html" import render_field_in_row %}
+
+{% block title %}New Site Admin{% endblock %}
+{%block tag %}home{% endblock %}
+
+{% block content %}
+<h2>Add Site admin to site: {{ site.name }}</h2>
+
+<p>
+  Back to <a href="{{ url_for('site_view', site_id=site.id) }}">
+    {{ site.name }}</a>
+</p>
+
+<form action="{{ url_for('siteadmin_new', site_id=site.id) }}" method="POST">
+  <table>
+    {{ render_field_in_row(form.username) }}
+  </table>
+  <p class="buttons indent">
+    <input type="submit" class="submit positive button" value="Add Admin">
+    <a href="{{ url_for('site_view', site_id=site.id) }}">
+      <input type="button" value="Cancel" class="button">
+    </a>
+    {{ form.csrf_token }}
+  </p>
+</form>
+
+{% endblock %}

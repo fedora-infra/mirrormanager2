@@ -365,6 +365,41 @@ def host_new(site_id):
         site=siteobj,
     )
 
+@APP.route('/site/<site_id>/admin/new', methods=['GET', 'POST'])
+@login_required
+def siteadmin_new(site_id):
+    """ Create a new site_admin.
+    """
+    siteobj = mmlib.get_site(SESSION, site_id)
+
+    if siteobj is None:
+        flask.abort(404, 'Site not found')
+
+    form = forms.LostPasswordForm()
+    if form.validate_on_submit():
+        site_admin = model.SiteAdmin()
+        SESSION.add(site_admin)
+        site_admin.site_id = siteobj.id
+        form.populate_obj(obj=site_admin)
+
+        try:
+            SESSION.flush()
+            flask.flash('Site Admin added')
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            flask.flash('Could not add Site Admin')
+            APP.logger.debug('Could not add Site Admin')
+            APP.logger.exception(err)
+
+        SESSION.commit()
+        return flask.redirect(flask.url_for('site_view', site_id=site_id))
+
+    return flask.render_template(
+        'site_admin_new.html',
+        form=form,
+        site=siteobj,
+    )
+
 
 @APP.route('/host/<host_id>', methods=['GET', 'POST'])
 @login_required
