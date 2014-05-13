@@ -216,6 +216,7 @@ def list_mirrors(p_name=None, p_version=None, p_arch=None):
 
 
 @APP.route('/site/mine')
+@login_required
 def mysite():
     """ Return the list of site managed by the user. """
     sites = mirrormanager2.lib.get_user_sites(
@@ -229,6 +230,7 @@ def mysite():
 
 
 @APP.route('/admin/all_sites')
+@login_required
 def all_sites():
     """ Return the list of all sites for the admins. """
     sites = mirrormanager2.lib.get_all_sites(SESSION)
@@ -241,6 +243,7 @@ def all_sites():
 
 
 @APP.route('/site/new', methods=['GET', 'POST'])
+@login_required
 def site_new():
     """ Create a new site.
     """
@@ -281,6 +284,7 @@ def site_new():
 
 
 @APP.route('/site/<site_id>', methods=['GET', 'POST'])
+@login_required
 def site_view(site_id):
     """ View information about a given site.
     """
@@ -304,6 +308,7 @@ def site_view(site_id):
 
 
 @APP.route('/host/<site_id>/new', methods=['GET', 'POST'])
+@login_required
 def host_new(site_id):
     """ Create a new host.
     """
@@ -341,6 +346,7 @@ def host_new(site_id):
 
 
 @APP.route('/host/<host_id>', methods=['GET', 'POST'])
+@login_required
 def host_view(host_id):
     """ Create a new host.
     """
@@ -375,6 +381,7 @@ def host_view(host_id):
 
 
 @APP.route('/host/<host_id>/host_acl_ip/new', methods=['GET', 'POST'])
+@login_required
 def host_acl_ip_new(host_id):
     """ Create a new host_acl_ip.
     """
@@ -411,6 +418,7 @@ def host_acl_ip_new(host_id):
 
 @APP.route('/host/<host_id>/host_acl_ip/<host_acl_ip_id>/delete',
            methods=['POST'])
+@login_required
 def host_acl_ip_delete(host_id, host_acl_ip_id):
     """ Delete a host_acl_ip.
     """
@@ -439,6 +447,7 @@ def host_acl_ip_delete(host_id, host_acl_ip_id):
 
 
 @APP.route('/host/<host_id>/netblock/new', methods=['GET', 'POST'])
+@login_required
 def host_netblock_new(host_id):
     """ Create a new host_netblock.
     """
@@ -475,6 +484,7 @@ def host_netblock_new(host_id):
 
 @APP.route('/host/<host_id>/host_netblock/<host_netblock_id>/delete',
            methods=['POST'])
+@login_required
 def host_netblock_delete(host_id, host_netblock_id):
     """ Delete a host_netblock.
     """
@@ -502,6 +512,7 @@ def host_netblock_delete(host_id, host_netblock_id):
 
 
 @APP.route('/host/<host_id>/asn/new', methods=['GET', 'POST'])
+@login_required
 def host_asn_new(host_id):
     """ Create a new host_peer_asn.
     """
@@ -539,6 +550,7 @@ def host_asn_new(host_id):
 
 @APP.route('/host/<host_id>/host_asn/<host_asn_id>/delete',
            methods=['POST'])
+@login_required
 def host_asn_delete(host_id, host_asn_id):
     """ Delete a host_peer_asn.
     """
@@ -567,6 +579,7 @@ def host_asn_delete(host_id, host_asn_id):
 
 
 @APP.route('/host/<host_id>/country/new', methods=['GET', 'POST'])
+@login_required
 def host_country_new(host_id):
     """ Create a new host_country.
     """
@@ -613,6 +626,7 @@ def host_country_new(host_id):
 
 @APP.route('/host/<host_id>/host_country/<host_country_id>/delete',
            methods=['POST'])
+@login_required
 def host_country_delete(host_id, host_country_id):
     """ Delete a host_country.
     """
@@ -641,6 +655,7 @@ def host_country_delete(host_id, host_country_id):
 
 
 @APP.route('/host/<host_id>/category/new', methods=['GET', 'POST'])
+@login_required
 def host_category_new(host_id):
     """ Create a new host_category.
     """
@@ -689,6 +704,7 @@ def host_category_new(host_id):
 
 
 @APP.route('/host/<host_id>/category/<hc_id>/delete', methods=['GET', 'POST'])
+@login_required
 def host_category_delete(host_id, hc_id):
     """ Delete a host_category.
     """
@@ -721,6 +737,7 @@ def host_category_delete(host_id, hc_id):
 
 
 @APP.route('/host/<host_id>/category/<hc_id>', methods=['GET', 'POST'])
+@login_required
 def host_category(host_id, hc_id):
     """ View a host_category.
     """
@@ -764,6 +781,7 @@ def host_category(host_id, hc_id):
 
 
 @APP.route('/host/<host_id>/category/<hc_id>/url/new', methods=['GET', 'POST'])
+@login_required
 def host_category_url_new(host_id, hc_id):
     """ Create a new host_category_url.
     """
@@ -812,6 +830,7 @@ def host_category_url_new(host_id, hc_id):
 @APP.route(
     '/host/<host_id>/category/<hc_id>/url/<host_category_url_id>/delete',
     methods=['POST'])
+@login_required
 def host_category_url_delete(host_id, hc_id, host_category_url_id):
     """ Delete a host_category_url.
     """
