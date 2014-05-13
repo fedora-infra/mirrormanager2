@@ -119,6 +119,17 @@ def is_mirrormanager_admin(user):
         return user in APP.config['ADMIN_GROUP']
 
 
+def is_site_admin(user, site):
+    """ Is the user an admin of this site.
+    """
+    if not user:
+        return False
+
+    admins = [admin.username for admin in mirror.admins]
+
+    return user.username in admins
+
+
 # # Flask application
 
 @APP.context_processor
