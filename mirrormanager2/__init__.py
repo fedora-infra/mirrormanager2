@@ -251,7 +251,7 @@ def mysite():
 
 
 @APP.route('/admin/all_sites')
-@login_required
+@admin_required
 def all_sites():
     """ Return the list of all sites for the admins. """
     sites = mirrormanager2.lib.get_all_sites(SESSION)
