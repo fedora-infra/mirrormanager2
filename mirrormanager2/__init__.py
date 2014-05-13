@@ -401,6 +401,44 @@ def siteadmin_new(site_id):
     )
 
 
+@APP.route('/site/<site_id>/admin/<admin_id>/delete', methods=['GET', 'POST'])
+@login_required
+def siteadmin_delete(site_id, admin_id):
+    """ Delete a site_admin.
+    """
+    siteobj = mmlib.get_site(SESSION, site_id)
+
+    if siteobj is None:
+        flask.abort(404, 'Site not found')
+
+    siteadminobj = mmlib.get_siteadmin(SESSION, admin_id)
+
+    if siteadminobj is None:
+        flask.abort(404, 'Site Admin not found')
+
+    if siteadminobj not in siteobj.admins:
+        flask.abort(404, 'Site Admin not related to this Site')
+
+    if len(siteobj.admins) <= 1:
+        flask.flash(
+            'There is only one admin set, you cannot delete it.', 'error')
+        return flask.redirect(flask.url_for('site_view', site_id=site_id))
+
+
+    SESSION.delete(siteadminobj)
+
+    try:
+        SESSION.commit()
+        flask.flash('Site Admin deleted')
+    except SQLAlchemyError as err:
+        SESSION.rollback()
+        flask.flash('Could not delete Site Admin', 'error')
+        APP.logger.debug('Could not delete Site Admin')
+        APP.logger.exception(err)
+
+    return flask.redirect(flask.url_for('site_view', site_id=site_id))
+
+
 @APP.route('/host/<host_id>', methods=['GET', 'POST'])
 @login_required
 def host_view(host_id):
