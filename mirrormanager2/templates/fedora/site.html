@@ -4,6 +4,11 @@
 {% block title %}New Site{% endblock %}
 {%block tag %}home{% endblock %}
 
+{% block header %}
+<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css"
+  rel="stylesheet">
+{% endblock %}
+
 {% block content %}
 <h2>Information site: {{ site.name }}</h2>
 
@@ -55,26 +60,41 @@ Created by: {{ site.created_by }}
 
 <table>
   <tr>
-    <th>
-      Admins <a href="">[add]</a>
+    <th class="matrix_section" rowspan="{{ site.admins | length }}">
+      Admins <a href="{{ url_for('siteadmin_new', site_id=site.id) }}">[add]</a>
     </th>
-    <td>
-      {% for admin in site.admins %}
-        {{ admin.username }}
-        <a href="">[add]</a> <br />
-      {% endfor %}
-    </td>
+    {% for admin in site.admins %}
+    {% if not loop.first %}
+    </tr>
+    <tr>
+    {% endif %}
+      <td class="matrix_section {{ loop.cycle('matrix_odd', 'matrix_even') }}">
+      <form class="icon" method="POST"
+        action="{{ url_for('siteadmin_delete', site_id=site.id, admin_id=admin.id) }}">
+          {{ admin.username }}
+          <button
+            onclick="return confirm('You sure you want to delete this admin?');"
+            title="Delete Site Admin">
+            <span class="icon icon-trash blue"></span>
+          </button>
+        </form>
+      </td>
+    {% endfor %}
   </tr>
   <tr>
-    <th>
+    <th rowspan="{{ site.hosts | length }}" class="matrix_section">
       Hosts <a href="{{ url_for('host_new', site_id=site.id) }}">[add]</a>
     </th>
-    <td>
       {% for host in site.hosts %}
+      {% if not loop.first %}
+      </tr>
+      <tr>
+      {% endif %}
+      <td class="matrix_section {{ loop.cycle('matrix_odd', 'matrix_even') }}">
         <a href="{{ url_for('host_view', host_id=host.id) }}">
         {{ host.name }}</a> <br />
+      </td>
       {% endfor %}
-    </td>
   </tr>
 </table>
 {% endblock %}
