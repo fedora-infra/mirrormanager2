@@ -130,6 +130,11 @@ def is_site_admin(user, site):
     return user.username in admins
 
 
+def is_authenticated():
+    """ Returns whether the user is currently authenticated or not. """
+    return hasattr(flask.g, 'fas_user') and flask.g.fas_user is not None
+
+
 def login_required(function):
     """ Flask decorator to ensure that the user is logged in. """
     @wraps(function)
