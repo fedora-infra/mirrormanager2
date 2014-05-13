@@ -365,6 +365,7 @@ def host_new(site_id):
         site=siteobj,
     )
 
+
 @APP.route('/site/<site_id>/admin/new', methods=['GET', 'POST'])
 @login_required
 def siteadmin_new(site_id):
@@ -423,7 +424,6 @@ def siteadmin_delete(site_id, admin_id):
         flask.flash(
             'There is only one admin set, you cannot delete it.', 'error')
         return flask.redirect(flask.url_for('site_view', site_id=site_id))
-
 
     SESSION.delete(siteadminobj)
 
