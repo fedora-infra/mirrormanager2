@@ -141,7 +141,7 @@ def login_required(function):
     def decorated_function(*args, **kwargs):
         ''' Wrapped function actually checking if the user is logged in.
         '''
-        if not hasattr(flask.g, 'fas_user') or flask.g.fas_user is None:
+        if not is_authenticated():
             return flask.redirect(flask.url_for(
                 'auth_login', next=flask.request.url))
         return function(*args, **kwargs)
