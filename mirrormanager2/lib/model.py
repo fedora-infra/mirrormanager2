@@ -841,6 +841,7 @@ class UserVisit(BASE):
         sa.Integer, sa.ForeignKey('mm_user.id'), nullable=False)
     visit_key = sa.Column(
         sa.String(40), nullable=False, unique=True, index=True)
+    user_ip = sa.Column(sa.String(50), nullable=False)
     created = sa.Column(
         sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
     expiry = sa.Column(sa.DateTime)
