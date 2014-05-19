@@ -351,6 +351,8 @@ def _check_session_cookie():
             new_expiry = now + APP.config.get('PERMANENT_SESSION_LIFETIME')
             if now > session.expiry:
                 flask.flash('Session timed-out', 'error')
+            elif session.user_ip != flask.request.remote_addr:
+                flask.flash('Session expired', 'error')
             else:
                 session_id = session.visit_key
                 user = session.user
