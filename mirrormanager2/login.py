@@ -119,6 +119,7 @@ def do_login():
                 'PERMANENT_SESSION_LIFETIME')
             session = model.UserVisit(
                 user_id=user_obj.id,
+                user_ip=flask.request.remote_addr,
                 visit_key=visit_key,
                 expiry=expiry,
             )
