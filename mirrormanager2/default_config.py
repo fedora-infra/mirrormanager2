@@ -25,7 +25,7 @@ MirrorManager2 default configuration api.
 
 from datetime import timedelta
 
-# Set the time after which the session expires
+# Set the time after which the session expires. Flask's default is 31 days.
 # Default: ``timedelta(hours=1)`` corresponds to 1 hour.
 PERMANENT_SESSION_LIFETIME = timedelta(hours=1)
 
@@ -79,3 +79,9 @@ MM_COOKIE_NAME = 'MirrorManager'
 # emails, otherwise it will use this URL
 # Default: ``None``.
 APPLICATION_URL = None
+
+# Boolean specifying wether to check the user's IP address when retrieving
+# its session. This make things more secure (thus is on by default) but
+# under certain setup it might not work (for example is there are proxies
+# in front of the application).
+CHECK_SESSION_IP = True
