@@ -989,11 +989,6 @@ def auth_logout():
     Return to the index page at the end.
     """
     next_url = flask.url_for('index')
-    if 'next' in flask.request.values:  # pragma: no cover
-        next_url = flask.request.values['next']
-
-    if next_url == flask.url_for('auth_login'):  # pragma: no cover
-        next_url = flask.url_for('index')
 
     if APP.config.get('MM_AUTHENTICATION', None) == 'fas':
         if hasattr(flask.g, 'fas_user') and flask.g.fas_user is not None:
