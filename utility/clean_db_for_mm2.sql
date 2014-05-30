@@ -27,3 +27,13 @@ RENAME TABLE "visit" TO "mm_user_visit";
 ALTER TABLE "mm_user_visit" ADD COLUMN user_id integer;
 ALTER TABLE ONLY "mm_user_visit"
     ADD CONSTRAINT user_id_exists FOREIGN KEY (user_id) REFERENCES mm_user(id);
+
+
+-- Add some indexes
+CREATE INDEX t_repository_category_id_idx ON repository (category_id);
+CREATE INDEX t_repositoryversion_id_idx ON repository (version_id);
+CREATE INDEX t_repositoryarch_id_idx ON repository (arch_id);
+CREATE INDEX t_repositorydirectory_id_idx ON repository (directory_id);
+
+CREATE INDEX t_hostcategory_host_id_idx ON host_category (host_id);
+CREATE INDEX t_hostcategory_category_id_idx ON host_category (category_id);
