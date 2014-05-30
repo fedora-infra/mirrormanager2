@@ -191,6 +191,7 @@ class Host(BASE):
     __table_args__ = (
         sa.UniqueConstraint(
             'site_id', 'name', name='host_idx'),
+        sa.Index('t_host_site_id_idx', 'site_id'),
     )
 
     def __repr__(self):
@@ -278,6 +279,12 @@ class Category(BASE):
     # all the directories that are part of this category
     # directories = RelatedJoin('Directory', orderBy='name')
 
+    # Constraints
+    __table_args__ = (
+        sa.Index('t_category_product_id_idx', 'product_id'),
+        sa.Index('t_category_topdir_id_idx', 'topdir_id'),
+    )
+
     def __repr__(self):
         ''' Return a string representation of the object. '''
         return '<Category(%s - %s)>' % (self.id, self.name)
@@ -313,6 +320,8 @@ class SiteToSite(BASE):
         sa.UniqueConstraint(
             'upstream_site_id', 'username',
             name='site_to_site_username_idx'),
+        sa.Index('t_sitetosite_upstream_site_id_idx', 'upstream_site_id'),
+        sa.Index('t_sitetosite_downstream_site_id_idx', 'downstream_site_id'),
     )
 
 
@@ -330,6 +339,11 @@ class SiteAdmin(BASE):
         'Site',
         foreign_keys=[site_id], remote_side=[Site.id],
         backref=backref('admins'),
+    )
+
+    # Constraints
+    __table_args__ = (
+        sa.Index('t_siteadmin_site_id_idx', 'site_id'),
     )
 
 
@@ -403,6 +417,8 @@ class HostCategoryDir(BASE):
     __table_args__ = (
         sa.UniqueConstraint(
             'host_category_id', 'path', name='host_category_dir_hcdindex'),
+        sa.Index('t_hostcategorydir_host_category_id_idx', 'host_category_id'),
+        sa.Index('t_hostcategorydir_directory_id_idx', 'directory_id'),
     )
 
 
@@ -430,6 +446,7 @@ class HostCategoryUrl(BASE):
     __table_args__ = (
         sa.UniqueConstraint(
             'host_category_id', 'url', name='host_category_url_hcdindex'),
+        sa.Index('t_hostcategoryurl_host_category_id_idx', 'host_category_id'),
     )
 
 
@@ -453,6 +470,7 @@ class HostAclIp(BASE):
     __table_args__ = (
         sa.UniqueConstraint(
             'host_id', 'ip', name='host_acl_ip_hipindex'),
+        sa.Index('t_hostaclip_host_id_idx', 'host_id'),
     )
 
 
@@ -472,6 +490,11 @@ class HostCountryAllowed(BASE):
         backref=backref('countries_allowed'),
     )
 
+    # Constraints
+    __table_args__ = (
+        sa.Index('t_hostcountryallowed_host_id_idx', 'host_id'),
+    )
+
 
 class HostNetblock(BASE):
 
@@ -488,6 +511,11 @@ class HostNetblock(BASE):
         'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
         backref=backref('netblocks', order_by='HostNetblock.netblock'),
+    )
+
+    # Constraints
+    __table_args__ = (
+        sa.Index('t_hostnetblock_host_id_idx', 'host_id'),
     )
 
 
@@ -512,6 +540,7 @@ class HostPeerAsn(BASE):
     __table_args__ = (
         sa.UniqueConstraint(
             'host_id', 'asn', name='host_peer_asn_idx'),
+        sa.Index('t_hostpeerasn_host_id_idx', 'host_id'),
     )
 
 
@@ -531,6 +560,11 @@ class HostStats(BASE):
     host = relation(
         'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
+    )
+
+    # Constraints
+    __table_args__ = (
+        sa.Index('t_hoststats_host_id_idx', 'host_id'),
     )
 
 
@@ -574,6 +608,7 @@ class Version(BASE):
     __table_args__ = (
         sa.UniqueConstraint(
             'name', 'product_id', name='version_idx'),
+        sa.Index('t_version_product_id_idx', 'product_id'),
     )
 
     def __repr__(self):
@@ -721,6 +756,8 @@ class DirectoryExclusiveHost(BASE):
     __table_args__ = (
         sa.UniqueConstraint(
             'directory_id', 'host_id', name='directory_exclusive_host_idx'),
+        sa.Index('t_directoryexclusivehost_host_id_idx', 'host_id'),
+        sa.Index('t_directoryexclusivehost_directory_id_idx', 'directory_id'),
     )
 
 
@@ -763,6 +800,8 @@ class HostLocation(BASE):
     __table_args__ = (
         sa.UniqueConstraint(
             'location_id', 'host_id', name='host_location_hlidx'),
+        sa.Index('t_hostlocation_host_id_idx', 'host_id'),
+        sa.Index('t_hostlocation_location_id_idx', 'location_id'),
     )
 
 
@@ -797,6 +836,12 @@ class FileDetailFileGroup(BASE):
         foreign_keys=[file_group_id], remote_side=[FileGroup.id],
     )
 
+    # Constraints
+    __table_args__ = (
+        sa.Index('t_filedetailfilegroup_file_detail_id_idx', 'file_detail_id'),
+        sa.Index('t_filedetailfilegroup_file_group_id_idx', 'file_group_id'),
+    )
+
 
 class HostCountry(BASE):
 
@@ -824,6 +869,8 @@ class HostCountry(BASE):
     __table_args__ = (
         sa.UniqueConstraint(
             'host_id', 'country_id', name='host_country_hlidx'),
+        sa.Index('t_hostcountry_host_id_idx', 'host_id'),
+        sa.Index('t_hostcountry_country_id_idx', 'country_id'),
     )
 
 
