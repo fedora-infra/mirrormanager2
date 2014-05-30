@@ -224,10 +224,8 @@ def list_mirrors(p_name=None, p_version=None, p_arch=None):
         # last_crawled=True,
         up2date=True,
         host_category_url_private=False,
-        # # Can't use these arguments they just blow up postgresql
-        # TODO: fix this
-        # version_id=version_id,
-        # arch_id=arch_id,
+        version_id=version_id,
+        arch_id=arch_id,
     )
 
     return flask.render_template(
