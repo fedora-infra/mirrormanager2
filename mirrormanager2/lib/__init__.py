@@ -394,9 +394,7 @@ def get_mirrors(
 
     '''
     query = session.query(
-        model.Host
-    ).order_by(
-        model.Host.country, model.Host.name
+        sqlalchemy.func.distinct(model.Host.id)
     )
 
     if private is not None:
@@ -478,7 +476,15 @@ def get_mirrors(
             model.Repository.arch_id == arch_id
         )
 
-    return query.all()
+    final_query = session.query(
+        model.Host
+    ).filter(
+        model.Host.id.in_(query.subquery())
+    ).order_by(
+        model.Host.country, model.Host.name
+    )
+
+    return final_query.all()
 
 
 def get_user_sites(session, username):
