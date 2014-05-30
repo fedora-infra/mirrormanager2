@@ -360,6 +360,8 @@ class HostCategory(BASE):
     __table_args__ = (
         sa.UniqueConstraint(
             'host_id', 'category_id', name='host_category_hcindex'),
+        sa.Index('t_hostcategory_host_id_idx', 'host_id'),
+        sa.Index('t_hostcategory_category_id_idx', 'category_id'),
     )
 
     def __repr__(self):
@@ -630,6 +632,10 @@ class Repository(BASE):
     __table_args__ = (
         sa.UniqueConstraint(
             'prefix', 'arch_id', name='repository_idx'),
+        sa.Index('t_repository_category_id_idx', 'category_id'),
+        sa.Index('t_repository_version_id_idx', 'version_id'),
+        sa.Index('t_repository_arch_id_idx', 'arch_id'),
+        sa.Index('t_repository_directory_id_idx', 'directory_id'),
     )
 
 
