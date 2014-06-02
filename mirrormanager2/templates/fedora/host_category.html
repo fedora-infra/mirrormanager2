@@ -67,10 +67,10 @@
 </ul>
 {% endif %}
 
-{% if hostcategory.dirs %}
+{% if hostcategory.directories %}
 <h3>Up-to-Date Directories this host carries</h3>
 <ul>
-{% for dir in hostcategory.dirs %}
+{% for dir in hostcategory.directories %}
   {% if dir.up2date %}
     <li>{{ dir.path }}</li>
   {% endif %}
