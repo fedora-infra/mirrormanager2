@@ -396,7 +396,7 @@ class HostCategoryDir(BASE):
     host_category = relation(
         'HostCategory',
         foreign_keys=[host_category_id], remote_side=[HostCategory.id],
-        backref=backref('dirs', order_by=path),
+        backref=backref('directories', order_by=path),
     )
 
     # Constraints
