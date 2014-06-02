@@ -165,7 +165,7 @@ class Host(BASE):
     #bandwidth = sa.Column(sa.Text, nullable=True)
     bandwidth_int = sa.Column(sa.Integer, default=100, nullable=True)
     comment = sa.Column(sa.Text(), nullable=True)
-    config = sa.Column(sa.LargeBinary(), nullable=True)
+    config = sa.Column(sa.PickleType(), nullable=True)
     last_checked_in = sa.Column(sa.DateTime, nullable=True, default=None)
     last_crawled = sa.Column(sa.DateTime, nullable=True, default=None)
     private = sa.Column(sa.Boolean(), default=False, nullable=False)
@@ -207,7 +207,7 @@ class Directory(BASE):
     # e.g. pub/epel
     # e.g. pub/fedora/linux
     name = sa.Column(sa.Text(), nullable=False, unique=True)
-    files = sa.Column(sa.LargeBinary(), nullable=True)
+    files = sa.Column(sa.PickleType(), nullable=True)
     readable = sa.Column(sa.Boolean(), default=True, nullable=False)
     ctime = sa.Column(sa.BigInteger, default=0, nullable=True)
 
@@ -523,7 +523,7 @@ class HostStats(BASE):
     timestamp = sa.Column(
         sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
     type = sa.Column(sa.Text(), nullable=True)
-    data = sa.Column(sa.LargeBinary(), nullable=True)
+    data = sa.Column(sa.PickleType(), nullable=True)
     host_id = sa.Column(
         sa.Integer, sa.ForeignKey('host.id'), nullable=True)
 
