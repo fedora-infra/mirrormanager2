@@ -190,6 +190,25 @@ def get_host_category(session, host_category_id):
     return query.first()
 
 
+def get_host_category_by_hostid_category(session, host_id, category):
+    ''' Return all HostCategory having the specified host_id and category.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.HostCategory
+    ).filter(
+        model.HostCategory.host_id == host_id
+    ).filter(
+        model.HostCategory.category_id == Category.id
+    ).filter(
+        model.Category.name == category
+    )
+
+    return query.all()
+
+
 def get_host_category_url(session, host_category_url_id):
     ''' Return a specified HostCategoryUrl via its identifier.
 
@@ -514,3 +533,36 @@ def id_generator(size=15, chars=string.ascii_uppercase + string.digits):
         idenfitier.
     """
     return ''.join(random.choice(chars) for x in range(size))
+
+
+def get_directory_by_name(session, dirname):
+    ''' Return a specified Directory via its name.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Directory
+    ).filter(
+        model.Directory.name == dirname
+    )
+
+    return query.first()
+
+
+def get_hostcategorydir_by_hostcategoryid_and_path(
+        session, host_category_id, path):
+    ''' Return all HostCategoryDir via its host_category_id and path.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.HostCategoryDir
+    ).filter(
+        model.HostCategoryDir.path == path
+    ).filter(
+        model.HostCategoryDir.host_category_id == host_category_id
+    )
+
+    return query.all()
