@@ -6,7 +6,7 @@
 
 # update master directory list
 # logs sent to /var/log/mirrormanager/umdl.log by default
-0 */2 * * * mirrormanager cd /usr/share/mirrormanager/server && ./update-master-directory-list -c /etc/mirrormanager/prod.cfg > /dev/null 2>&1
+0 */2 * * * mirrormanager /usr/bin/mm_update-master-directory-list -c /etc/mirrormanager/prod.cfg > /dev/null 2>&1
 
 # Get the global netblocks list once a day
 30 0 * * * mirrormanager /usr/bin/mm_get_global_netblocks /var/lib/mirrormanager/global_netblocks.txt > /dev/null 2>&1
