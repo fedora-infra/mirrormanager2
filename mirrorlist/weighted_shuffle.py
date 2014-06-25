@@ -5,6 +5,7 @@
 import random
 import bisect
 
+
 class WeightedListItem:
     def __init__(self, weight, data, start=0):
         self.data = data
@@ -15,7 +16,7 @@ class WeightedListItem:
             self.weight = 1
         elif weight < 1:
             self.weight = 1
-        
+
     def __contains__(self, val):
         return (val >= self.start and val < (self.start + self.weight))
 
@@ -26,6 +27,7 @@ class WeightedListItem:
 
     def __repr__(self):
         return "(%s, %s)" % (self.start, self.weight)
+
 
 class WeightedList(list):
     def _assign(self):
@@ -57,6 +59,7 @@ class WeightedList(list):
         li = WeightedListItem(1, None, start=r)
         return bisect.bisect_left(self, li)
 
+
 def weighted_shuffle(l):
     """
     prerequisite: invoke random.seed() before calling this function.
@@ -76,6 +79,7 @@ def weighted_shuffle(l):
             returnlist.append((item.weight, item.data))
             del wl[a]
     return returnlist
+
 
 def unit_test():
     random.seed()
