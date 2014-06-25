@@ -362,6 +362,22 @@ def get_categories(session):
     return query.all()
 
 
+def get_category_by_name(session, name):
+    ''' Return the category present in the database with the specifie name.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Category
+    ).filter(
+        model.Category.name == name
+    )
+
+    return query.first()
+
+
+
 def get_products(session):
     ''' Return the list of all the products in the database.
 
