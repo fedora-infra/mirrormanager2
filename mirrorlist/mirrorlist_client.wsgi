@@ -22,6 +22,7 @@ socketfile = '/var/run/mirrormanager/mirrorlist_server.sock'
 select_timeout = 60 # seconds
 timeout = 5 # seconds
 
+
 def get_mirrorlist(d):
     # any exceptions or timeouts raised here get handled by the caller
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -43,7 +44,7 @@ def get_mirrorlist(d):
     if len(rlist) == 0:
         s.shutdown(socket.SHUT_RD)
         raise socket.timeout
-    
+
     readlen = 0
     resultsize = ''
     while readlen < 10:
@@ -62,14 +63,19 @@ def get_mirrorlist(d):
     s.shutdown(socket.SHUT_RD)
     return results
 
+
 def real_client_ip(xforwardedfor):
     """Only the last-most entry listed is the where the client
     connection to us came from, so that's the only one we can trust in
     any way."""
     return xforwardedfor.split(',')[-1].strip()
 
+
 def request_setup(environ, request):
-    fields = ['repo', 'arch', 'country', 'path', 'netblock', 'location', 'version', 'cc']
+    fields = [
+        'repo', 'arch', 'country', 'path', 'netblock', 'location',
+        'version', 'cc'
+    ]
     d = {}
     request_data = request.GET
     for f in fields:
@@ -81,8 +87,10 @@ def request_setup(environ, request):
 
     if 'ip' in request_data:
         client_ip = strip(request_data['ip'])
-    elif 'X-Forwarded-For' in request.headers and 'mirrorlist_client.noreverseproxy' not in environ:
-        client_ip = real_client_ip(strip(request.headers['X-Forwarded-For']))
+    elif 'X-Forwarded-For' in request.headers \
+            and 'mirrorlist_client.noreverseproxy' not in environ:
+        client_ip = real_client_ip(
+            strip(request.headers['X-Forwarded-For']))
     else:
         client_ip = request.environ['REMOTE_ADDR']
     d['client_ip'] = client_ip
@@ -114,12 +122,14 @@ def request_setup(environ, request):
             pass
     return d
 
+
 def accept_encoding_gzip(request):
     for h in request.headers:
         if h.lower() == 'accept-encoding':
             if 'gzip' in request.headers[h]:
                 return True
     return False
+
 
 def gzipBuf(buf):
     zbuf = cStringIO.StringIO()
@@ -128,11 +138,13 @@ def gzipBuf(buf):
     zfile.close()
     return zbuf.getvalue()
 
+
 def manage_compression(request, response, buf):
     if accept_encoding_gzip(request):
         buf = gzipBuf(buf)
         response.headers['Content-Encoding'] = 'gzip'
     return buf
+
 
 def keep_only_http_results(input):
     output = []
@@ -140,6 +152,7 @@ def keep_only_http_results(input):
         if url.startswith(u'http'):
             output.append((hostid, url))
     return output
+
 
 def application(environ, start_response):
     request = WSGIRequest(environ)
@@ -162,7 +175,7 @@ def application(environ, start_response):
         if 'redirect' in request.GET:
             if len(results) == 0:
                 response.status_code=404
-            else: 
+            else:
                 results = keep_only_http_results(results)
                 if len(results):
                     (hostid, url) = results[0]
