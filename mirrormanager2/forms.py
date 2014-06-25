@@ -276,7 +276,7 @@ class NewUserForm(wtf.Form):
     )
     email_address = wtforms.TextField(
         'Email address  <span class="error">*</span>',
-        [wtforms.validators.Required(), wtf.Email()]
+        [wtforms.validators.Required(), wtforms.validators.Email()]
     )
     password = wtforms.PasswordField(
         'Password  <span class="error">*</span>',
