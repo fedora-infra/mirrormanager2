@@ -1,0 +1,6 @@
+# List of dependencies for the mirrormanager repolist server
+
+GeoIP
+radix
+py-radix
+
