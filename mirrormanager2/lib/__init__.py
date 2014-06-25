@@ -581,6 +581,21 @@ def get_directory_by_name(session, dirname):
     return query.first()
 
 
+def get_directory_by_id(session, id):
+    ''' Return a specified Directory via its identifier.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Directory
+    ).filter(
+        model.Directory.id == id
+    )
+
+    return query.first()
+
+
 def get_hostcategorydir_by_hostcategoryid_and_path(
         session, host_category_id, path):
     ''' Return all HostCategoryDir via its host_category_id and path.
