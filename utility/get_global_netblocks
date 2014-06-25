@@ -1,0 +1,46 @@
+#!/bin/bash
+if [ $# -eq 0 ]; then
+    echo "usage: get_global_netblocks <output_filename>" >&2
+    exit 1
+fi
+
+outfile="$1"
+tmpdir=$(mktemp -d /tmp/get_global_netblocks.XXXXXXXX) || exit 1
+trap "rm -rf ${tmpdir}" EXIT QUIT HUP KILL TERM
+listfile=$tmpdir/list
+
+function last_rib()
+{
+	head -n 20 ${tmpdir}/index.html | grep rib\. | head -n 1 | \
+	awk -F 'href="' '{print $2}' | \
+	sed -e 's/".*//'
+}
+
+function get_ipv6_netblocks()
+{
+    local curdate=$(date +"%Y.%m")
+    URL="http://archive.routeviews.org/route-views6/bgpdata/$curdate/RIBS/"
+    wget -q -O ${tmpdir}/index.html "${URL}?C=M;O=D"
+    last=$(last_rib)
+    wget -O ${tmpdir}/$(basename $last) -q "${URL}/$last"
+    bzcat ${tmpdir}/$(basename $last) | perl zebra-dump-parser/zebra-dump-parser.pl | uniq > $tmpdir/ipv6.txt
+    # this prefix appears repeatedly for multiple ASs, which is nuts.
+    sed -e '/2001::\/32/d' $tmpdir/ipv6.txt >> ${listfile}
+}
+
+function get_global_netblocks()
+{
+    URL='http://ftp.routeviews.org/dnszones/rib.bz2'
+    wget -O ${tmpdir}/rib.bz2 -q "${URL}"
+    bzcat ${tmpdir}/rib.bz2 | perl zebra-dump-parser/zebra-dump-parser.pl | uniq >> ${listfile}
+}
+
+get_global_netblocks
+get_ipv6_netblocks
+if [ -s ${listfile} ]; then
+    cp -f ${listfile} "${outfile}"
+else
+    echo "unable to retrieve netblock list." >&2
+    exit 1
+fi
+exit 0
