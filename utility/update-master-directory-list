@@ -1,7 +1,4 @@
-#!/usr/bin/python
-__requires__ = 'TurboGears[future]'
-import pkg_resources
-pkg_resources.require("TurboGears")
+#!/usr/bin/env python
 
 import glob
 import logging
@@ -17,26 +14,28 @@ import time
 import hashlib
 import warnings
 
-from sqlobject import *
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore", category=DeprecationWarning)
-    import turbogears
-from turbogears import config
 
-sys.path.append('/usr/share/mirrormanager/server')
-from mirrormanager.model import *
-from mirrormanager.repomap import *
-from mirrormanager.lib import manage_pidfile, remove_pidfile, run_rsync, parent_dir
+sys.path.append('..')
+import mirrormanager2.lib
+from mirrormanager2 import APP
+from mirrormanager2.lib.model import Host
+from mirrormanager2.lib.pid import manage_pidfile, remove_pidfile
+from mirrormanager2.lib.sync import run_rsync
 
 
-pidfile='/var/run/mirrormanager/umdl.pid'
+pidfile='umdl.pid'
 delete_directories=False
 logger = None
 stdexcludes=['.*\.snapshot', '.*/\.~tmp~']
 
-from turbogears.database import PackageHub
-hub = PackageHub("mirrormanager")
-__connection__ = hub
+
+def parent_dir(path):
+    sdir = path.split('/')[:-1]
+    try:
+        parent = os.path.join(*sdir)
+    except TypeError: #
+        parent = u''
+    return parent
 
 
 def remove_category_topdir(topdirName, path):
@@ -81,18 +80,14 @@ arch_cache = None
 version_cache = None
 
 
-def setup_arch_version_cache():
+def setup_arch_version_cache(session):
     global arch_cache
     if arch_cache is None:
-        arch_cache = []
-        for a in list(Arch.select()):
-            arch_cache.append(a.sqlmeta.asDict())
+        arch_cache = mirrormanager2.lib.get_arches(session)
 
     global version_cache
     if version_cache is None:
-        version_cache = []
-        for v in list(Version.select(orderBy='-id')):
-            version_cache.append(v.sqlmeta.asDict())
+        version_cache = mirrormanager2.lib.get_versions(session)
 
 
 def guess_ver_arch_from_path(category, path):
@@ -436,7 +431,8 @@ def short_filelist(files):
         return files
 
 
-def sync_category_directories(diskpath, category, category_directories):
+def sync_category_directories(
+        session, diskpath, category, category_directories):
     for relativeDName in sorted(category_directories.keys()):
         value = category_directories[relativeDName]
         set_readable = False
@@ -478,14 +474,14 @@ def sync_category_directories(diskpath, category, category_directories):
     # created in the db first
     for relativeDName, value in category_directories.iteritems():
         d = category.directory_cache[relativeDName]
-        D = Directory.get(d['id'])
+        D = mirrormanager2.lib.get_directory_by_id(session, d.id)
         if value['isRepository']:
             make_repository(D, relativeDName, category)
         make_repomd_file_details(diskpath, relativeDName, D, category)
-    Directory.ageFileDetails()
+    #Directory.ageFileDetails()
 
 
-def parse_rsync_listing(category, f):
+def parse_rsync_listing(session, category, f):
     topdirName = category.topdir.name
     category_directories = {}
     category.unreadable_dirs = set()
@@ -505,7 +501,7 @@ def parse_rsync_listing(category, f):
         else:
             add_file_to_directory(line, category_directories)
 
-    sync_category_directories(None, category, category_directories)
+    sync_category_directories(session, None, category, category_directories)
 
 
 def sync_directories_using_rsync(rsyncpath, category):
@@ -532,14 +528,13 @@ def cache_directories(category):
     cache = dict()
     topdirName = category.topdir.name
     for directory in list(category.directories):
-        d = directory.sqlmeta.asDict()
         relativeDName = remove_category_topdir(
-            topdirName, d['name']).strip(u'/')
-        cache[relativeDName] = d
+            topdirName, directory.name).strip(u'/')
+        cache[relativeDName] = directory
     return cache
 
 
-def sync_directories_from_disk(diskpath, category, excludes=[]):
+def sync_directories_from_disk(session, diskpath, category, excludes=[]):
     category.unreadable_dirs = set()
     # drop any trailing slashes from diskpath
     diskpath = diskpath.rstrip(u'/')
@@ -598,7 +593,8 @@ def sync_directories_from_disk(diskpath, category, excludes=[]):
                     'size':str(s.st_size),
                     'stat':s[stat.ST_CTIME]}
 
-    sync_category_directories(diskpath, category, category_directories)
+    sync_category_directories(
+        session, diskpath, category, category_directories)
 
 
 def main():
@@ -611,7 +607,7 @@ def main():
         help="TurboGears config file to use")
     parser.add_option(
         "--logfile",
-        dest="logfile", default='/var/log/mirrormanager/umdl.log',
+        dest="logfile", default='umdl.log',
         metavar="FILE", help="write logs to FILE")
     parser.add_option(
         "--debug",
@@ -626,8 +622,12 @@ def main():
             "on disk")
 
     (options, args) = parser.parse_args()
-    turbogears.update_config(
-        options.config, modulename="mirrormanager.config")
+    config = dict()
+    with open(options.config) as config_file:
+        exec(compile(config_file.read(), options.config, 'exec'), config)
+
+    session = mirrormanager2.lib.create_session(config['DB_URL'])
+
     delete_directories = options.delete_directories
 
     fmt = '%(asctime)s %(message)s'
@@ -645,20 +645,20 @@ def main():
         sys.exit(1)
 
     logger.info("Starting umdl")
-    setup_arch_version_cache()
-    for i in config.get('umdl.master_directories'):
+    setup_arch_version_cache(session)
+    for i in config.get('umdl_master_directories'):
         cname = i['category']
-        try:
-            category = Category.byName(cname)
-        except SQLObjectNotFound:
+
+        category = mirrormanager2.lib.get_category_by_name(session, cname)
+        if not category:
             logger.error(
-                'umdl.master_directories Category %s does not exist in the '
+                'umdl_master_directories Category %s does not exist in the '
                 'database, skipping' % (cname))
             continue
 
         if category.product is None:
             logger.error(
-                'umdl.master_directories Category %s has null Product, '
+                'umdl_master_directories Category %s has null Product, '
                 'skipping' % (cname))
             continue
 
@@ -667,13 +667,13 @@ def main():
         category.directory_cache = cache_directories(category)
 
         if i['type'] == 'rsync':
-            sync_directories_using_rsync(i['url'], category)
+            sync_directories_using_rsync(session, i['url'], category)
 
         if i['type'] == 'file':
-            sync_directories_from_file(i['url'], category)
+            sync_directories_from_file(session, i['url'], category)
 
         if i['type'] == 'directory':
-            sync_directories_from_disk(i['path'], category)
+            sync_directories_from_disk(session, i['path'], category)
 
             if options.delete_directories:
                 nuke_gone_directories(i['path'], category)
