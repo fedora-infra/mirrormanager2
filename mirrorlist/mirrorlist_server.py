@@ -15,7 +15,8 @@ import cPickle as pickle
 import select
 import signal
 import socket
-from SocketServer import StreamRequestHandler, ForkingMixIn, UnixStreamServer, BaseServer
+from SocketServer import (StreamRequestHandler, ForkingMixIn,
+                          UnixStreamServer, BaseServer)
 import sys
 from string import zfill, atoi
 import time
@@ -91,8 +92,11 @@ netblock_country_cache = {}
 ## Set up our syslog data.
 syslogger = logging.getLogger('mirrormanager')
 syslogger.setLevel(logging.INFO)
-handler = logging.handlers.SysLogHandler(address='/dev/log', facility=logging.handlers.SysLogHandler.LOG_LOCAL4)
+handler = logging.handlers.SysLogHandler(
+    address='/dev/log',
+    facility=logging.handlers.SysLogHandler.LOG_LOCAL4)
 syslogger.addHandler(handler)
+
 
 def lookup_ip_asn(tree, ip):
     """ @t is a radix tree
@@ -120,6 +124,7 @@ def uniqueify(seq, idfun=None):
         result.append(item)
     return result
 
+
 ##### Metalink Support #####
 
 def metalink_header():
@@ -135,6 +140,7 @@ def metalink_header():
     doc += '>\n'
     return doc
 
+
 def metalink_failuredoc(message=None):
     doc = metalink_header()
     if message is not None:
@@ -144,9 +150,11 @@ def metalink_failuredoc(message=None):
     doc += '</metalink>\n'
     return doc
 
+
 def metalink_file_not_found(directory, file):
     message = '%s/%s not found or has no metalink' % (directory, file)
     return metalink_failuredoc(message)
+
 
 def metalink(cache, directory, file, hosts_and_urls):
     preference = 100
@@ -167,19 +175,21 @@ def metalink(cache, directory, file, hosts_and_urls):
     def details(y, indentlevel=2):
         doc = ''
         if y['timestamp'] is not None:
-            doc += indent(indentlevel+1) + '<mm0:timestamp>%s</mm0:timestamp>\n' % y['timestamp']
+            doc += indent(indentlevel+1) \
+                + '<mm0:timestamp>%s</mm0:timestamp>\n' % y['timestamp']
         if y['size'] is not None:
             doc += indent(indentlevel+1) + '<size>%s</size>\n' % y['size']
         doc += indent(indentlevel+1) + '<verification>\n'
         hashes = ('md5', 'sha1', 'sha256', 'sha512')
         for h in hashes:
             if y[h] is not None:
-                doc += indent(indentlevel+2) + '<hash type="%s">%s</hash>\n' % (h, y[h])
+                doc += indent(indentlevel+2) \
+                    + '<hash type="%s">%s</hash>\n' % (h, y[h])
         doc += indent(indentlevel+1) + '</verification>\n'
         return doc
 
     doc += details(y, 2)
-    # there can be multiple files 
+    # there can be multiple files
     if len(detailslist) > 1:
         doc += indent(3) + '<mm0:alternates>\n'
         for y in detailslist[1:]:
@@ -197,10 +207,15 @@ def metalink(cache, directory, file, hosts_and_urls):
             protocol = url.split(':')[0]
             # FIXME January 2010
             # adding protocol= here is not part of the Metalink 3.0 spec,
-            # but MirrorManager 1.2.6 used it accidentally, as did yum 3.2.20-3 as released
-            # in Fedora 8, 9, and 10.  After those three are EOL (~January 2010), the
-            # extra protocol= can be removed.
-            doc += indent(4) + '<url protocol="%s" type="%s" location="%s" preference="%s" %s>' % (protocol, protocol, host_country_cache[hostid].upper(), preference, private)
+            # but MirrorManager 1.2.6 used it accidentally, as did
+            # yum 3.2.20-3 as released in Fedora 8, 9, and 10.  After those
+            # three are EOL (~January 2010), the extra protocol= can be
+            # removed.
+            doc += indent(4) + \
+                '<url protocol="%s" type="%s" location="%s" '\
+                'preference="%s" %s>' % (
+                    protocol, protocol, host_country_cache[hostid].upper(),
+                    preference, private)
             doc += url
             doc += '</url>\n'
         preference = max(preference-1, 1)
@@ -210,10 +225,13 @@ def metalink(cache, directory, file, hosts_and_urls):
     doc += '</metalink>\n'
     return ('metalink', 200, doc)
 
+
 def tree_lookup(tree, ip, field, maxResults=None):
-    # fast lookup in the tree; if present, find all the matching values by deleting the found one and searching again
-    # this is safe w/o copying the tree again only because this is the only place the tree is used, and
-    # we'll get a new copy of the tree from our parent the next time it fork()s.
+    # fast lookup in the tree; if present, find all the matching values by
+    # deleting the found one and searching again this is safe w/o copying
+    # the tree again only because this is the only place the tree is used,
+    # and we'll get a new copy of the tree from our parent the next time it
+    # fork()s.
     # returns a list of tuples (prefix, data)
     result = []
     len_data = 0
@@ -223,7 +241,7 @@ def tree_lookup(tree, ip, field, maxResults=None):
     while node is not None:
         prefix = node.prefix
         if type(node.data[field]) == list:
-            len_data += len(node.data[field]) 
+            len_data += len(node.data[field])
         else:
             len_data += 1
         t = (prefix, node.data[field],)
@@ -235,6 +253,7 @@ def tree_lookup(tree, ip, field, maxResults=None):
             break
     return result
 
+
 def trim_by_client_country(s, clientCountry):
     if clientCountry is None:
         return s
@@ -244,6 +263,7 @@ def trim_by_client_country(s, clientCountry):
                clientCountry not in host_country_allowed_cache[hostid]:
             r.remove(hostid)
     return r
+
 
 def shuffle(s):
     l = []
@@ -256,6 +276,7 @@ def shuffle(s):
         results.append(hostid)
     return results
 
+
 continents = {}
 
 def handle_country_continent_redirect():
@@ -264,6 +285,7 @@ def handle_country_continent_redirect():
         new_country_continents[country] = continent
     global country_continents
     country_continents = new_country_continents
+
 
 def setup_continents():
     new_continents = {}
@@ -276,11 +298,13 @@ def setup_continents():
             new_continents[continent].append(c)
     global continents
     continents = new_continents
-    
+
+
 def do_global(kwargs, cache, clientCountry, header):
     c = trim_by_client_country(cache['global'], clientCountry)
     header += 'country = global '
     return (header, c)
+
 
 def do_countrylist(kwargs, cache, clientCountry, requested_countries, header):
 
@@ -301,16 +325,19 @@ def do_countrylist(kwargs, cache, clientCountry, requested_countries, header):
     s = trim_by_client_country(s, clientCountry)
     return (header, s)
 
+
 def get_same_continent_countries(clientCountry, requested_countries):
     result = []
     for r in requested_countries:
         if r in country_continents:
-            requestedCountries = [c.upper() for c in continents[country_continents[r]] \
-                                      if c != clientCountry ]
+            requestedCountries = [
+                c.upper() for c in continents[country_continents[r]]
+                if c != clientCountry]
             result.extend(requestedCountries)
     uniqueify(result)
     return result
-    
+
+
 def do_continent(kwargs, cache, clientCountry, requested_countries, header):
     if len(requested_countries) > 0:
         rc = requested_countries
@@ -318,11 +345,14 @@ def do_continent(kwargs, cache, clientCountry, requested_countries, header):
         rc = [clientCountry]
     clist = get_same_continent_countries(clientCountry, rc)
     return do_countrylist(kwargs, cache, clientCountry, clist, header)
-                
+
+
 def do_country(kwargs, cache, clientCountry, requested_countries, header):
     if 'GLOBAL' in requested_countries:
         return do_global(kwargs, cache, clientCountry, header)
-    return do_countrylist(kwargs, cache, clientCountry, requested_countries, header)
+    return do_countrylist(
+        kwargs, cache, clientCountry, requested_countries, header)
+
 
 def do_netblocks(kwargs, cache, header):
     hostresults = set()
@@ -335,6 +365,7 @@ def do_netblocks(kwargs, cache, header):
                     header += 'Using preferred netblock '
     return (header, hostresults)
 
+
 def do_internet2(kwargs, cache, clientCountry, header):
     hostresults = set()
     ip = kwargs['IP']
@@ -343,10 +374,12 @@ def do_internet2(kwargs, cache, clientCountry, header):
     asn = lookup_ip_asn(internet2_tree, ip)
     if asn is not None:
         header += 'Using Internet2 '
-        if clientCountry is not None and clientCountry in cache['byCountryInternet2']:
+        if clientCountry is not None \
+                and clientCountry in cache['byCountryInternet2']:
             hostresults = cache['byCountryInternet2'][clientCountry]
             hostresults = trim_by_client_country(hostresults, clientCountry)
     return (header, hostresults)
+
 
 def do_asn(kwargs, cache, header):
     hostresults = set()
@@ -360,7 +393,8 @@ def do_asn(kwargs, cache, header):
                 hostresults.add(hostid)
                 header += 'Using ASN %s ' % asn
     return (header, hostresults)
-                
+
+
 def do_geoip(kwargs, cache, clientCountry, header):
     hostresults = set()
     if clientCountry is not None and clientCountry in cache['byCountry']:
@@ -369,6 +403,7 @@ def do_geoip(kwargs, cache, clientCountry, header):
         hostresults = trim_by_client_country(hostresults, clientCountry)
     return (header, hostresults)
 
+
 def do_location(kwargs, header):
     hostresults = set()
     if 'location' in kwargs and kwargs['location'] in location_cache:
@@ -376,12 +411,14 @@ def do_location(kwargs, header):
         header += "Using location %s " % kwargs['location']
     return (header, hostresults)
 
+
 def add_host_to_cache(cache, hostid, hcurl):
     if hostid not in cache:
         cache[hostid] = [hcurl]
     else:
         cache[hostid].append(hcurl)
     return cache
+
 
 def append_path(hosts, cache, file, pathIsDirectory=False):
     """ given a list of hosts, return a list of objects:
@@ -407,6 +444,7 @@ def append_path(hosts, cache, file, pathIsDirectory=False):
         results.append((hostid, hcurls))
     return results
 
+
 def trim_to_preferred_protocols(hosts_and_urls):
     """ remove all but http and ftp URLs,
     and if both http and ftp are offered,
@@ -420,15 +458,16 @@ def trim_to_preferred_protocols(hosts_and_urls):
             for p in try_protocols:
                 if hcurl.startswith(p+':'):
                     protocols[p] = hcurl
-                    
+
         for p in try_protocols:
             if p in protocols:
                 url = protocols[p]
                 break
- 
+
         if url is not None:
             results.append((hostid, url))
     return results
+
 
 def client_ip_to_country(ip):
     clientCountry = None
@@ -436,16 +475,18 @@ def client_ip_to_country(ip):
         return None
 
     # lookup in the cache first
-    tree_results = tree_lookup(netblock_country_tree, ip, 'country', maxResults=1)
+    tree_results = tree_lookup(
+        netblock_country_tree, ip, 'country', maxResults=1)
     if len(tree_results) > 0:
         (prefix, clientCountry) = tree_results[0]
         return clientCountry
-    
+
     # attempt IPv6, then IPv6 6to4 as IPv4, then Teredo, then IPv4
     try:
         if ip.version() == 6:
             if gipv6 is not None:
-                clientCountry = gipv6.country_code_by_addr_v6(ip.strNormal())
+                clientCountry = gipv6.country_code_by_addr_v6(
+                    ip.strNormal())
             if clientCountry is None:
                 # Try the IPv6-to-IPv4 translation schemes
                 for scheme in (convert_6to4_v4, convert_teredo_v4):
@@ -459,19 +500,28 @@ def client_ip_to_country(ip):
         pass
     return clientCountry
 
+
 def do_mirrorlist(kwargs):
     global debug
     global logfile
 
     def return_error(kwargs, message='', returncode=200):
-        d = dict(returncode=returncode, message=message, resulttype='mirrorlist', results=[])
+        d = dict(
+            returncode=returncode,
+            message=message,
+            resulttype='mirrorlist',
+            results=[])
         if 'metalink' in kwargs and kwargs['metalink']:
             d['resulttype'] = 'metalink'
             d['results'] = metalink_failuredoc(message)
         return d
 
-    if not (kwargs.has_key('repo') and kwargs.has_key('arch')) and not kwargs.has_key('path'):
-        return return_error(kwargs, message='# either path=, or repo= and arch= must be specified')
+    if not (kwargs.has_key('repo') \
+            and kwargs.has_key('arch')) \
+            and not kwargs.has_key('path'):
+        return return_error(
+            kwargs,
+            message='# either path=, or repo= and arch= must be specified')
 
     file = None
     cache = None
@@ -479,7 +529,7 @@ def do_mirrorlist(kwargs):
     if kwargs.has_key('path'):
         path = kwargs['path'].strip('/')
 
-	# Strip duplicate "//" from the path
+    # Strip duplicate "//" from the path
         path = path.replace('//', '/')
 
         header = "# path = %s " % (path)
@@ -496,7 +546,8 @@ def do_mirrorlist(kwargs):
             try:
                 cache = mirrorlist_cache['/'.join(sdir)]
             except KeyError:
-                return return_error(kwargs, message=header + 'error: invalid path')
+                return return_error(
+                    kwargs, message=header + 'error: invalid path')
         dir = '/'.join(sdir)
     else:
         if u'source' in kwargs['repo']:
@@ -531,7 +582,8 @@ def do_mirrorlist(kwargs):
     except:
         kwargs['IP'] = None
 
-    ordered_mirrorlist = cache.get('ordered_mirrorlist', default_ordered_mirrorlist)
+    ordered_mirrorlist = cache.get(
+        'ordered_mirrorlist', default_ordered_mirrorlist)
     done = 0
     location_results = set()
     netblock_results = set()
@@ -546,7 +598,8 @@ def do_mirrorlist(kwargs):
 
     requested_countries = []
     if kwargs.has_key('country'):
-        requested_countries = uniqueify([c.upper() for c in kwargs['country'].split(',') ])
+        requested_countries = uniqueify(
+            [c.upper() for c in kwargs['country'].split(',') ])
 
     # if they specify a country, don't use netblocks or ASN
     if not 'country' in kwargs:
@@ -581,30 +634,36 @@ def do_mirrorlist(kwargs):
             logfile.flush()
 
     if not done:
-        header, internet2_results = do_internet2(kwargs, cache, clientCountry, header)
+        header, internet2_results = do_internet2(
+            kwargs, cache, clientCountry, header)
         if len(internet2_results) + len(netblock_results) + len(asn_results) >= 3:
             if not ordered_mirrorlist:
                 done = 1
 
     if not done and 'country' in kwargs:
-        header, country_results  = do_country(kwargs, cache, clientCountry, requested_countries, header)
+        header, country_results  = do_country(
+            kwargs, cache, clientCountry, requested_countries, header)
         if len(country_results) == 0:
-            header, continent_results = do_continent(kwargs, cache, clientCountry, requested_countries, header)
+            header, continent_results = do_continent(
+                kwargs, cache, clientCountry, requested_countries, header)
         done = 1
 
     if not done:
-        header, geoip_results    = do_geoip(kwargs, cache, clientCountry, header)
+        header, geoip_results = do_geoip(
+            kwargs, cache, clientCountry, header)
         if len(geoip_results) >= 3:
             if not ordered_mirrorlist:
                 done = 1
 
     if not done:
-        header, continent_results = do_continent(kwargs, cache, clientCountry, [], header)
+        header, continent_results = do_continent(
+            kwargs, cache, clientCountry, [], header)
         if len(geoip_results) + len(continent_results) >= 3:
             done = 1
 
     if not done:
-        header, global_results = do_global(kwargs, cache, clientCountry, header)
+        header, global_results = do_global(
+            kwargs, cache, clientCountry, header)
 
     def _random_shuffle(s):
         l = list(s)
@@ -642,11 +701,11 @@ def do_mirrorlist(kwargs):
                 if not found:
                     return_string = s
                     found = True
-                    
+
         allhosts = uniqueify(allhosts)
         return allhosts, return_string
 
-    result_sets = [ 
+    result_sets = [
         (location_results, "location", _random_shuffle),
         (netblock_results, "netblocks", _ordered_netblocks),
         (asn_results, "asn", _random_shuffle),
@@ -662,20 +721,32 @@ def do_mirrorlist(kwargs):
         ip_str = kwargs['IP'].strNormal()
     except:
         ip_str = 'Unknown IP'
-    log_string = "mirrorlist: %s found its best mirror from %s" % (ip_str, where_string)
+    log_string = "mirrorlist: %s found its best mirror from %s" % (
+        ip_str, where_string)
     syslogger.info(log_string)
 
-    hosts_and_urls = append_path(allhosts, cache, file, pathIsDirectory=pathIsDirectory)
+    hosts_and_urls = append_path(
+        allhosts, cache, file, pathIsDirectory=pathIsDirectory)
 
     if 'metalink' in kwargs and kwargs['metalink']:
-        (resulttype, returncode, results)=metalink(cache, dir, file, hosts_and_urls)
-        d = dict(message=None, resulttype=resulttype, returncode=returncode, results=results)
+        (resulttype, returncode, results)=metalink(
+            cache, dir, file, hosts_and_urls)
+        d = dict(
+            message=None,
+            resulttype=resulttype,
+            returncode=returncode,
+            results=results)
         return d
 
     else:
         host_url_list = trim_to_preferred_protocols(hosts_and_urls)
-        d = dict(message=header, resulttype='mirrorlist', returncode=200, results=host_url_list)
+        d = dict(
+            message=header,
+            resulttype='mirrorlist',
+            returncode=200,
+            results=host_url_list)
         return d
+
 
 def setup_cache_tree(cache, field):
     tree = radix.Radix()
@@ -683,6 +754,7 @@ def setup_cache_tree(cache, field):
         node = tree.add(k.strNormal())
         node.data[field] = v
     return tree
+
 
 def setup_netblocks(netblocks_file, asns_wanted=None):
     tree = radix.Radix()
@@ -705,6 +777,7 @@ def setup_netblocks(netblocks_file, asns_wanted=None):
                 pass
         f.close()
     return tree
+
 
 def read_caches():
     global mirrorlist_cache
@@ -742,7 +815,8 @@ def read_caches():
     if 'repo_redirect_cache' in data:
         repo_redirect = data['repo_redirect_cache']
     if 'country_continent_redirect_cache' in data:
-        country_continent_redirect_cache = data['country_continent_redirect_cache']
+        country_continent_redirect_cache = data[
+            'country_continent_redirect_cache']
     if 'disabled_repositories' in data:
         disabled_repositories = data['disabled_repositories']
     if 'host_bandwidth_cache' in data:
@@ -773,7 +847,9 @@ def read_caches():
     # host_netblocks_tree key is a netblock, value is a list of host IDs
     host_netblocks_tree = setup_cache_tree(host_netblock_cache, 'hosts')
     # netblock_country_tree key is a netblock, value is a single country string
-    netblock_country_tree = setup_cache_tree(netblock_country_cache, 'country')
+    netblock_country_tree = setup_cache_tree(
+        netblock_country_cache, 'country')
+
 
 def errordoc(metalink, message):
     if metalink:
@@ -781,6 +857,7 @@ def errordoc(metalink, message):
     else:
         doc = message
     return doc
+
 
 class MirrorlistHandler(StreamRequestHandler):
     def handle(self):
@@ -829,13 +906,18 @@ class MirrorlistHandler(StreamRequestHandler):
                 results = errordoc(d['metalink'], message)
 
         try:
-            p = pickle.dumps({'message':message, 'resulttype':resulttype, 'results':results, 'returncode':returncode})
+            p = pickle.dumps({
+                'message':message,
+                'resulttype':resulttype,
+                'results':results,
+                'returncode':returncode})
             self.connection.sendall(zfill('%s' % len(p), 10))
 
             self.connection.sendall(p)
             self.connection.shutdown(socket.SHUT_WR)
         except:
             pass
+
 
 def sighup_handler(signum, frame):
     global logfile
@@ -851,9 +933,11 @@ def sighup_handler(signum, frame):
         try:
             thread.start()
         except KeyError:
-        # bug fix for handing an exception when unable to delete from _limbo even though it's not in limbo
+        # bug fix for handing an exception when unable to delete from
+        #_limbo even though it's not in limbo
         # https://code.google.com/p/googleappengine/source/browse/trunk/python/google/appengine/dist27/threading.py?r=327
             pass
+
 
 def sigterm_handler(signum, frame):
     global must_die
@@ -862,11 +946,13 @@ def sigterm_handler(signum, frame):
     if signum == signal.SIGTERM:
         must_die = True
 
+
 class ForkingUnixStreamServer(ForkingMixIn, UnixStreamServer):
     request_queue_size = 300
     def finish_request(self, request, client_address):
         signal.signal(signal.SIGHUP, signal.SIG_IGN)
         BaseServer.finish_request(self, request, client_address)
+
 
 def parse_args():
     global cachefile
@@ -876,8 +962,13 @@ def parse_args():
     global debug
     global logfile
     global pidfile
-    opts, args = getopt.getopt(sys.argv[1:], "c:i:g:p:s:dl:",
-                               ["cache", "internet2_netblocks", "global_netblocks", "pidfile", "socket", "debug", "log="])
+    opts, args = getopt.getopt(
+        sys.argv[1:], "c:i:g:p:s:dl:",
+        [
+            "cache", "internet2_netblocks", "global_netblocks",
+            "pidfile", "socket", "debug", "log="
+        ]
+    )
     for option, argument in opts:
         if option in ("-c", "--cache"):
             cachefile = argument
@@ -897,17 +988,21 @@ def parse_args():
         if option in ("-d", "--debug"):
             debug = True
 
+
 def open_geoip_databases():
     global gipv4
     global gipv6
     try:
-        gipv4 = GeoIP.open("/usr/share/GeoIP/GeoIP.dat", GeoIP.GEOIP_STANDARD)
+        gipv4 = GeoIP.open(
+            "/usr/share/GeoIP/GeoIP.dat", GeoIP.GEOIP_STANDARD)
     except:
         gipv4=None
     try:
-        gipv6 = GeoIP.open("/usr/share/GeoIP/GeoIPv6.dat", GeoIP.GEOIP_STANDARD)
+        gipv6 = GeoIP.open(
+            "/usr/share/GeoIP/GeoIPv6.dat", GeoIP.GEOIP_STANDARD)
     except:
         gipv6=None
+
 
 def convert_6to4_v4(ip):
     all_6to4 = IP('2002::/16')
@@ -924,6 +1019,7 @@ def convert_6to4_v4(ip):
 
     v4addr = '%d.%d.%d.%d' % (a,b,c,d)
     return IP(v4addr)
+
 
 def convert_teredo_v4(ip):
     teredo_std = IP('2001::/32')
@@ -942,6 +1038,7 @@ def convert_teredo_v4(ip):
     v4addr = '%d.%d.%d.%d' % (a,b,c,d)
     return IP(v4addr)
 
+
 def load_databases_and_caches(*args, **kwargs):
     sys.stderr.write("load_databases_and_caches...")
     sys.stderr.flush()
@@ -950,11 +1047,15 @@ def load_databases_and_caches(*args, **kwargs):
     sys.stderr.write("done.\n")
     sys.stderr.flush()
 
+
 def remove_pidfile(pidfile):
     os.unlink(pidfile)
 
+
 def create_pidfile_dir(pidfile):
     piddir = os.path.dirname(pidfile)
+    if not piddir:
+        return
     try:
         os.makedirs(piddir, mode=0755)
     except OSError, err:
@@ -965,12 +1066,14 @@ def create_pidfile_dir(pidfile):
     except:
         raise
 
+
 def write_pidfile(pidfile, pid):
     create_pidfile_dir(pidfile)
     f = open(pidfile, 'w')
     f.write(str(pid)+'\n')
     f.close()
     return 0
+
 
 def manage_pidfile(pidfile):
     """returns 1 if another process is running that is named in pidfile,
@@ -1010,7 +1113,7 @@ def main():
     except:
         pass
 
-    load_databases_and_caches()                              
+    load_databases_and_caches()
     signal.signal(signal.SIGHUP, sighup_handler)
     # restart interrupted syscalls like select
     signal.siginterrupt(signal.SIGHUP, False)
