@@ -319,6 +319,21 @@ def get_version_by_name_version(session, p_name, p_version):
     return query.first()
 
 
+def get_versions(session):
+    ''' Return the list of all versions in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Version
+    ).order_by(
+        model.Version.id
+    )
+
+    return query.all()
+
+
 def get_arch_by_name(session, arch_name):
     ''' Return a Arch specified via name.
 
