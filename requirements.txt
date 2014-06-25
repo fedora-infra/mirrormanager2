@@ -1,0 +1,6 @@
+# List of the dependencies for the mirrormanager flask server
+
+flask
+flask-wtf
+wtforms
+SQLAlchemy>=0.7
