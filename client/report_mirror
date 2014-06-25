@@ -12,6 +12,7 @@ import socket
 # globals
 exclude_list = []
 
+
 class HostConfig(object):
     """Holder for config info from the configuration file"""
     def __init__(self):
@@ -22,12 +23,14 @@ class HostConfig(object):
                         'stats': {},
                         }
 
+
 _translation = [chr(_x) for _x in range(256)]
 def _translate(s, altchars):
     translation = _translation[:]
     for k, v in altchars.items():
         translation[ord(k)] = v
     return s.translate(''.join(translation))
+
 
 def urlsafe_b64encode(s):
    import binascii
@@ -36,6 +39,7 @@ def urlsafe_b64encode(s):
    if altchars is not None:
       return _translate(encoded, {'+': altchars[0], '/': altchars[1]})
    return encoded
+
 
 def get_exclude_dir_patterns_from_file(options):
     global exclude_list
@@ -47,17 +51,20 @@ def get_exclude_dir_patterns_from_file(options):
             exclude_list.append(line)
         f.close()
 
+
 import copy
 def exclude_dirs(root, dirs):
     global exclude_list
     copydirs = copy.copy(dirs)
     # iterate over the copy so we can modify the original
     for d in copydirs:
-        testdir = os.path.join(root, d, '') #keep trailing /, we know it's a directory
+        #keep trailing /, we know it's a directory
+        testdir = os.path.join(root, d, '')
         for pattern in exclude_list:
             if pattern in testdir:
-		dirs.remove(d)
-		break
+                dirs.remove(d)
+                break
+
 
 def gen_dirtree(path):
     # structure here is:
@@ -71,8 +78,9 @@ def gen_dirtree(path):
     #                 },
     #   ...
     # }
-    # 
-    # 2009-03-09: MM's web app ignores the statfiles dict.  So don't bother generating it.
+    #
+    # 2009-03-09: MM's web app ignores the statfiles dict.  So don't bother
+    # generating it.
 
     dirtree = {}
     for dirpath, dirnames, filenames in os.walk(path):
@@ -89,18 +97,23 @@ def gen_dirtree(path):
 
     return dirtree
 
+
 def errorprint(error):
     sys.stderr.write(error+'\n')
+
 
 class MissingOption(Exception):
     pass
 
+
 def check_required_options(conf, section, required_options):
     for o in required_options:
         if not conf.has_option(section, o):
-            errorprint('missing required option %s in config [%s]' % (o, section))
+            errorprint(
+                'missing required option %s in config [%s]' % (o, section))
             raise MissingOption()
     return True
+
 
 def parse_value(value):
     """Split multi-line values into a list"""
@@ -108,9 +121,12 @@ def parse_value(value):
         return value.split()
     return value
 
-def parse_section(conf, section, item, required_options, optional_options=[]):
+
+def parse_section(conf, section, item, required_options,
+                  optional_options=[]):
     if conf.has_option(section, 'enabled'):
-        if conf.get(section, 'enabled') != '1' and section.lower() in item.config:
+        if conf.get(section, 'enabled') != '1' \
+                and section.lower() in item.config:
             print 'removing disabled section %s' % (section)
             del item.config[section.lower()]
             return False
@@ -122,28 +138,38 @@ def parse_section(conf, section, item, required_options, optional_options=[]):
         item.config[section.lower()] = {}
 
     for o in required_options:
-        item.config[section.lower()][o] = parse_value(conf.get(section, o))
+        item.config[section.lower()][o] = parse_value(
+            conf.get(section, o))
     for o in optional_options:
         if conf.has_option(section, o):
-            item.config[section.lower()][o] = parse_value(conf.get(section, o))
+            item.config[section.lower()][o] = parse_value(
+                conf.get(section, o))
 
     return True
+
 
 def parse_global(conf, section, item):
     required_options = [ 'enabled', 'server' ]
     if not parse_section(conf, section, item, required_options):
-        errorprint('missing required options (server AND enabled) in [%s] section' % (section))
+        errorprint(
+            'missing required options (server AND enabled) in [%s] section'
+            % (section))
         return False
     return True
+
 
 def parse_site(conf, section, item):
     required_options = [ 'enabled', 'name', 'password' ]
     return parse_section(conf, section, item, required_options)
 
+
 def parse_host(conf, section, item):
     required_options = [ 'enabled', 'name' ]
     optional_options = [ 'user_active' ]
-    return parse_section(conf, section, item, required_options, optional_options=optional_options)
+    return parse_section(
+        conf, section, item, required_options,
+        optional_options=optional_options)
+
 
 def get_stats(conf, section):
     if conf.has_option(section, 'enabled'):
@@ -166,6 +192,7 @@ def get_stats(conf, section):
                 pass
     return statsdata
 
+
 def parse_category(conf, section, item, crawl):
     required_options = [ 'enabled', 'path' ]
     if not parse_section(conf, section, item, required_options):
@@ -176,6 +203,7 @@ def parse_category(conf, section, item, crawl):
         item.config[section.lower()]['dirtree'] = dirtree
     # database doesn't need to know the disk path
     del item.config[section.lower()]['path']
+
 
 def config(cfg, item, crawl=True):
     broken = False
@@ -188,13 +216,18 @@ def config(cfg, item, crawl=True):
 
     try:
         # don't grab parse_stats here
-        for section, parsefunc in [ ('global', parse_global), ('site', parse_site),
-                                    ('host', parse_host)]:
+        for section, parsefunc in [
+                ('global', parse_global),
+                ('site', parse_site),
+                ('host', parse_host)
+            ]:
             if conf.has_section(section):
                 if not parsefunc(conf, section, item):
                     return False
             else:
-                errorprint('Invalid configuration - missing section [%s]' % (section))
+                errorprint(
+                    'Invalid configuration - missing section [%s]'
+                    % (section))
                 sys.exit(1)
 
         for section in conf.sections():
@@ -209,6 +242,7 @@ def config(cfg, item, crawl=True):
     return True
 
 options=None
+
 
 def main():
     from optparse import OptionParser
@@ -263,7 +297,7 @@ def main():
     if options.debug:
         pp = pprint.PrettyPrinter(indent=4)
         pp.pprint(item.config)
-        
+
     if options.output is not None:
         outfile = open(options.output, 'wb')
         outfile.write(p)
@@ -273,7 +307,9 @@ def main():
 #        statdata = get_stats(conf, 'stats')
 
     # upload p and statsdata here
-    if not item.config.has_key('global') or not item.config['global'].has_key('enabled') or item.config['global']['enabled'] != '1':
+    if not item.config.has_key('global') \
+            or not item.config['global'].has_key('enabled') \
+            or item.config['global']['enabled'] != '1':
         sys.exit(1)
 
     if not options.no_send:
@@ -289,13 +325,16 @@ def main():
             try:
                 print server.checkin(data)
             except socket.error, m:
-                print "Error checking in: %s.  Please try again later." % (m[1])
+                print "Error checking in: %s.  Please try again later." % (
+                    m[1])
             except ProtocolError:
-                print "Error checking in: Service Temporarily Unavailable.  Please try again later."
-                sys.exit(1)                
+                print "Error checking in: Service Temporarily "\
+                    "Unavailable.  Please try again later."
+                sys.exit(1)
             except xmlrpclib.Fault:
-                print "Error checking in.  Connection closed before checkin complete.  Please try again later."
-                sys.exit(1)                
+                print "Error checking in.  Connection closed before "\
+                    "checkin complete.  Please try again later."
+                sys.exit(1)
 
 
 if __name__ == '__main__':
