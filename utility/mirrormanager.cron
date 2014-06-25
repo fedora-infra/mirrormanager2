@@ -13,4 +13,4 @@
 
 # run the crawler twice a day
 # logs sent to /var/log/mirrormanager/crawler.log and crawl/* by default
-0 */12 * * * mirrormanager cd /usr/share/mirrormanager/server && ./crawler -c /etc/mirrormanager/prod.cfg --threads 75 > /dev/null 2>&1
+0 */12 * * * mirrormanager /usr/bin/mm_crawler.py -c /etc/mirrormanager/prod.cfg --threads 75 > /dev/null 2>&1
