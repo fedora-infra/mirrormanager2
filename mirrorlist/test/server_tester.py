@@ -14,6 +14,7 @@ socketfile = '/var/run/mirrormanager/mirrorlist_server.sock'
 pid = os.getpid()
 connectTime = None
 
+
 def do_mirrorlist(d):
     try:
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -43,14 +44,14 @@ def do_mirrorlist(d):
         resultsize += s.recv(10 - readlen)
         readlen = len(resultsize)
     resultsize = atoi(resultsize)
-    
+
     #print "reading %s bytes of the results list" % resultsize
     readlen = 0
     p = ''
     while readlen < resultsize:
         p += s.recv(resultsize - readlen)
         readlen = len(p)
-        
+
     s.shutdown(socket.SHUT_RD)
     results = pickle.loads(p)
     del p
