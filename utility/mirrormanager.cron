@@ -4,9 +4,6 @@
 # refresh the mirrorlist cache at the top of the hour
 55 * * * * mirrormanager /usr/share/mirrormanager/server/update-mirrorlist-server > /dev/null 2>&1
 
-# refresh the publiclist static pages daily
-55 0 * * * mirrormanager /usr/share/mirrormanager/server/update-static-content > /dev/null 2>&1
-
 # update master directory list
 # logs sent to /var/log/mirrormanager/umdl.log by default
 0 */2 * * * mirrormanager cd /usr/share/mirrormanager/server && ./update-master-directory-list -c /etc/mirrormanager/prod.cfg > /dev/null 2>&1
