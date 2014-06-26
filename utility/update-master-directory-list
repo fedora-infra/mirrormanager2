@@ -196,17 +196,17 @@ def make_file_details_from_checksums(diskpath, relativeDName, D):
         sha512  = sha512dict.get(f)
         size = s.st_size
         ctime = s[stat.ST_CTIME]
-        try:
-            fd = FileDetail.selectBy(
-                directory=D,
-                filename=f,
-                sha1=sha1,
-                md5=md5,
-                sha256=sha256,
-                sha512=sha512,
-                size=size,
-                timestamp=ctime)[0]
-        except IndexError:
+        fd = mirrormanager2.lib.get_file_detail(
+            session,
+            directory=D.id,
+            filename=f,
+            sha1=sha1,
+            md5=md5,
+            sha256=sha256,
+            sha512=sha512,
+            size=size,
+            timestamp=ctime)
+        if not fd:
             fd = FileDetail(
                 directory=D,
                 filename=f,
@@ -216,6 +216,8 @@ def make_file_details_from_checksums(diskpath, relativeDName, D):
                 sha512=sha512,
                 timestamp=ctime,
                 size=size)
+            session.add(fd)
+            session.commit(fd)
 
 
 def make_repomd_file_details(diskpath, relativeDName, D, category):
@@ -240,17 +242,17 @@ def make_repomd_file_details(diskpath, relativeDName, D, category):
     if 'timestamp' not in yumrepo.__dict__:
         set_repomd_timestamp(yumrepo)
     timestamp = yumrepo.timestamp
-    try:
-        fd = FileDetail.selectBy(
-            directory=D,
-            filename='repomd.xml',
-            sha1=sha1,
-            md5=md5,
-            sha256=sha256,
-            sha512=sha512,
-            timestamp=timestamp,
-            size=size)[0]
-    except IndexError:
+    fd = mirrormanager2.lib.get_file_detail(
+        session,
+        directory=D.id,
+        filename='repomd.xml',
+        sha1=sha1,
+        md5=md5,
+        sha256=sha256,
+        sha512=sha512,
+        size=size,
+        timestamp=ctime)
+    if not fd:
         fd = FileDetail(
             directory=D,
             filename='repomd.xml',
@@ -258,8 +260,10 @@ def make_repomd_file_details(diskpath, relativeDName, D, category):
             md5=md5,
             sha256=sha256,
             sha512=sha512,
-            timestamp=timestamp,
+            timestamp=ctime,
             size=size)
+        session.add(fd)
+        session.commit(fd)
 
 
 def move_repository_from_development(prefix, arch, newdir):
