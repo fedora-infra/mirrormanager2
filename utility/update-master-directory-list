@@ -18,7 +18,8 @@ import warnings
 sys.path.append('..')
 import mirrormanager2.lib
 from mirrormanager2 import APP
-from mirrormanager2.lib.model import Host
+from mirrormanager2.lib.model import (
+    Host, Directory, Repository, Version, FileDetail)
 from mirrormanager2.lib.pid import manage_pidfile, remove_pidfile
 from mirrormanager2.lib.sync import run_rsync
 
@@ -90,10 +91,10 @@ def setup_arch_version_cache(session):
         version_cache = mirrormanager2.lib.get_versions(session)
 
 
-def guess_ver_arch_from_path(category, path):
+def guess_ver_arch_from_path(session, category, path):
     arch = None
     if 'SRPMS' in path:
-        arch = Arch.byName('source')
+        arch = mirrormanager2.lib.get_arch_by_name('source')
     else:
         for a in arch_cache:
             s = '.*(^|/)%s(/|$).*' % (a['name'])
@@ -115,6 +116,8 @@ def guess_ver_arch_from_path(category, path):
     if ver is None:
         ver = create_version_from_path(category, path)
         if ver:
+            session.add(ver)
+            session.commit()
             version_cache.append(ver.sqlmeta.asDict())
     return (ver, arch)
 
@@ -271,9 +274,10 @@ def move_repository_from_development(prefix, arch, newdir):
             repo.directory = newdir
     return repo
 
-def make_repository(directory, relativeDName, category):
+
+def make_repository(session, directory, relativeDName, category):
     repo = None
-    (ver, arch) = guess_ver_arch_from_path(category, relativeDName)
+    (ver, arch) = guess_ver_arch_from_path(session, category, relativeDName)
     if ver is None or arch is None:
         return None
 
@@ -300,10 +304,13 @@ def make_repository(directory, relativeDName, category):
             'Created Repository(prefix=%s, version=%s, arch=%s, '
             'category=%s) -> Directory %s'
             % (prefix, ver.name, arch.name, category.name, directory.name))
+        session.add(repo)
+        session.commit()
     except:
         pass
 
     return repo
+
 
 def is_excluded(path, excludes):
     for e in excludes:
@@ -442,7 +449,7 @@ def sync_category_directories(
             d = category.directory_cache[relativeDName]
             if d['readable'] != value['readable']: set_readable = True
             if d['ctime'] != value['ctime']:       set_ctime = True
-            D = Directory.get(d['id'])
+            D = mirrormanager2.get_directory_by_id(session, d['id'])
         except KeyError:
             if relativeDName == u'':
                 D = category.topdir
@@ -455,8 +462,8 @@ def sync_category_directories(
                 logger.debug(
                     u'Created Directory(%s, readable=%s, ctime=%s)'
                     % (dname, value['readable'], value['ctime']))
-                D.addCategory(category)
-            d = category.directory_cache[relativeDName] = D.sqlmeta.asDict()
+                D.categories.append(category)
+            d = category.directory_cache[relativeDName]
 
         if value['changed']: set_files = True
 
@@ -468,6 +475,8 @@ def sync_category_directories(
             if set_files:
                 if D.files != short_filelist(value['files']):
                     D.files = short_filelist(value['files'])
+        session.add(D)
+        session.commit()
         make_file_details_from_checksums(diskpath, relativeDName, D)
 
     # this has to be a second pass to be sure the child repodata/ dir is
@@ -476,8 +485,10 @@ def sync_category_directories(
         d = category.directory_cache[relativeDName]
         D = mirrormanager2.lib.get_directory_by_id(session, d.id)
         if value['isRepository']:
-            make_repository(D, relativeDName, category)
+            make_repository(session, D, relativeDName, category)
         make_repomd_file_details(diskpath, relativeDName, D, category)
+
+    #FIXME: We don't have this in MM2, should we have something similar?
     #Directory.ageFileDetails()
 
 
