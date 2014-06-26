@@ -682,8 +682,6 @@ class FileDetail(BASE):
         foreign_keys=[directory_id], remote_side=[Directory.id],
     )
 
-    # fileGroups = SQLRelatedJoin('FileGroup')
-
 
 class RepositoryRedirect(BASE):
 
@@ -795,7 +793,14 @@ class FileGroup(BASE):
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.Text(), nullable=False, unique=True)
 
-    # files = SQLRelatedJoin('FileDetail')
+    # all the files related to this group
+    files = relation(
+        "FileDetail",
+        secondary="file_detail_file_group",
+        primaryjoin="file_detail.c.id==file_detail_file_group.c.file_detail_id",
+        secondaryjoin="file_detail_file_group.c.file_group_id==file_group.c.id",
+        backref="fileGroups",
+    )
 
 
 class FileDetailFileGroup(BASE):
@@ -807,17 +812,6 @@ class FileDetailFileGroup(BASE):
         sa.Integer, sa.ForeignKey('file_detail.id'), nullable=False)
     file_group_id = sa.Column(
         sa.Integer, sa.ForeignKey('file_group.id'), nullable=False)
-
-    # Relations
-    file_detail = relation(
-        'FileDetail',
-        foreign_keys=[file_detail_id], remote_side=[FileDetail.id],
-        # backref=backref('hosts')
-    )
-    file_group = relation(
-        'FileGroup',
-        foreign_keys=[file_group_id], remote_side=[FileGroup.id],
-    )
 
 
 class HostCountry(BASE):
