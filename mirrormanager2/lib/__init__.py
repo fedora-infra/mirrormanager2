@@ -580,6 +580,51 @@ def get_directory_by_name(session, dirname):
     return query.first()
 
 
+def get_file_detail(
+        session, filename, directory_id, md5=False, sha1=False, sha256=False,
+        sha512=False, size=False, timestamp=False):
+    ''' Return a specified FileDetail having the corresponding details.
+
+    :arg session: the session with which to connect to the database.
+    :arg filename:
+    :arg directory_id:
+    :kwarg md5:
+    :kwarg sha1:
+    :kwarg sha256:
+    :kwarg sha512:
+    :kwarg size:
+    :kwarg timestamp:
+
+    '''
+    query = session.query(
+        model.FileDetail
+    ).filter(
+        model.FileDetail.filename == filename
+    ).filter(
+        model.FileDetail.directory_id == directory_id
+    )
+
+    if md5 is not False:
+        query = query.filter(model.FileDetail.md5 == md5)
+
+    if sha1 is not False:
+        query = query.filter(model.FileDetail.sha1 == sha1)
+
+    if sha256 is not False:
+        query = query.filter(model.FileDetail.sha256 == sha256)
+
+    if sha512 is not False:
+        query = query.filter(model.FileDetail.sha512 == sha512)
+
+    if size is not False:
+        query = query.filter(model.FileDetail.size == size)
+
+    if timestamp is not False:
+        query = query.filter(model.FileDetail.timestamp == timestamp)
+
+    return query.first()
+
+
 def get_directory_by_id(session, id):
     ''' Return a specified Directory via its identifier.
 
