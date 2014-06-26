@@ -276,13 +276,13 @@ class Category(BASE):
     )
 
     # all the directories that are part of this category
-    # directories = RelatedJoin('Directory', orderBy='name')
-
-    @property
-    def directories(self):
-        for hcat in self.host_categories:
-            for hcatdir in hcat.directories:
-                yield hcatdir.directory
+    directories = relation(
+        "Directory",
+        secondary="category_directory",
+        primaryjoin="category.c.id==category_directory.c.category_id",
+        secondaryjoin="category_directory.c.directory_id==directory.c.id",
+        backref="categories",
+    )
 
     def __repr__(self):
         ''' Return a string representation of the object. '''
