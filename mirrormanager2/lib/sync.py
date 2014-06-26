@@ -34,8 +34,15 @@ def run_rsync(rsyncpath, extra_rsync_args=None):
         cmd += ' ' + extra_rsync_args
     cmd += ' ' + rsyncpath
     devnull = open('/dev/null', 'r+')
-    p = subprocess.Popen(cmd, shell=True, stdin=devnull,
-                         stdout=tmpfile, stderr=devnull, close_fds=True, bufsize=-1)
+    p = subprocess.Popen(
+        cmd,
+        shell=True,
+        stdin=devnull,
+        stdout=tmpfile,
+        stderr=devnull,
+        close_fds=True,
+        bufsize=-1
+    )
     p.wait()
     result = p.returncode
     tmpfile.flush()
