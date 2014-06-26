@@ -60,9 +60,9 @@ def manage_pidfile(pidfile):
     # is the oldpid process still running?
     try:
         os.kill(int(oldpid), 0)
-    except ValueError: # malformed oldpid
+    except ValueError:  # malformed oldpid
         return write_pidfile(pidfile, pid)
     except OSError, err:
-        if err.errno == 3: # No such process
+        if err.errno == 3:  # No such process
             return write_pidfile(pidfile, pid)
     return 1
