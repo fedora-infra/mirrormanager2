@@ -377,7 +377,6 @@ def get_category_by_name(session, name):
     return query.first()
 
 
-
 def get_products(session):
     ''' Return the list of all the products in the database.
 

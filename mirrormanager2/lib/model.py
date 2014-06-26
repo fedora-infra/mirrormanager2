@@ -304,7 +304,6 @@ class CategoryDirectory(BASE):
             self.category_id, self.directory_id)
 
 
-
 class SiteToSite(BASE):
 
     __tablename__ = 'site_to_site'
@@ -797,8 +796,10 @@ class FileGroup(BASE):
     files = relation(
         "FileDetail",
         secondary="file_detail_file_group",
-        primaryjoin="file_detail.c.id==file_detail_file_group.c.file_detail_id",
-        secondaryjoin="file_detail_file_group.c.file_group_id==file_group.c.id",
+        primaryjoin="file_detail.c.id=="
+        "file_detail_file_group.c.file_detail_id",
+        secondaryjoin="file_detail_file_group.c.file_group_id=="
+        "file_group.c.id",
         backref="fileGroups",
     )
 
