@@ -289,6 +289,22 @@ class Category(BASE):
         return '<Category(%s - %s)>' % (self.id, self.name)
 
 
+class CategoryDirectory(BASE):
+
+    __tablename__ = 'category_directory'
+
+    category_id = sa.Column(
+        sa.Integer, sa.ForeignKey('category.id'), primary_key=True)
+    directory_id = sa.Column(
+        sa.Integer, sa.ForeignKey('directory.id'), primary_key=True)
+
+    def __repr__(self):
+        ''' Return a string representation of the object. '''
+        return '<CategoryDirectory(%s - %s)>' % (
+            self.category_id, self.directory_id)
+
+
+
 class SiteToSite(BASE):
 
     __tablename__ = 'site_to_site'
