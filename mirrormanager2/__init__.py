@@ -89,6 +89,7 @@ APP.logger.addHandler(STDERR_LOG)
 LOG = APP.logger
 
 
+import mirrormanager2
 import mirrormanager2.lib as mmlib
 import mirrormanager2.forms as forms
 import mirrormanager2.lib.model as model
