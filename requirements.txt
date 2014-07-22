@@ -2,5 +2,6 @@
 
 flask
 flask-wtf
+flask-admin
 wtforms
 SQLAlchemy>=0.7
