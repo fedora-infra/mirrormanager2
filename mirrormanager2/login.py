@@ -28,7 +28,11 @@ import datetime
 
 import flask
 from flask.ext.admin import BaseView, expose
-from flask.ext.admin.contrib.sqla import ModelView
+try:
+    from flask.ext.admin.contrib.sqla import ModelView
+except ImportError:
+    # The module was renamed in flask-admin
+    from flask.ext.admin.contrib.sqlamodel import ModelView
 from sqlalchemy.exc import SQLAlchemyError
 
 import mirrormanager2.forms
