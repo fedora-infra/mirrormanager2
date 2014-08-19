@@ -47,13 +47,6 @@ def is_number(form, field):
         raise wtf.ValidationError('Field must contain a number')
 
 
-def same_password(form, field):
-    ''' Check if the data in the field is the same as in the password field.
-    '''
-    if field.data != form.password.data:
-        raise wtf.ValidationError('Both password fields should be equal')
-
-
 class AddSiteForm(wtf.Form):
     """ Form to add or edit a site. """
     name = wtforms.TextField(
@@ -229,60 +222,4 @@ class AddHostCategoryUrlForm(wtf.Form):
     private = wtforms.BooleanField(
         'Private',
         default=False,
-    )
-
-
-class LostPasswordForm(wtf.Form):
-    """ Form to ask for a password change. """
-    username = wtforms.TextField(
-        'username  <span class="error">*</span>',
-        [wtforms.validators.Required()]
-    )
-
-
-class ResetPasswordForm(wtf.Form):
-    """ Form to reset one's password in the local database. """
-    password = wtforms.PasswordField(
-        'Password  <span class="error">*</span>',
-        [wtforms.validators.Required()]
-    )
-    confirm_password = wtforms.PasswordField(
-        'Confirm password  <span class="error">*</span>',
-        [wtforms.validators.Required(), same_password]
-    )
-
-
-class LoginForm(wtf.Form):
-    """ Form to login via the local database. """
-    username = wtforms.TextField(
-        'username  <span class="error">*</span>',
-        [wtforms.validators.Required()]
-    )
-    password = wtforms.PasswordField(
-        'Password  <span class="error">*</span>',
-        [wtforms.validators.Required()]
-    )
-
-
-class NewUserForm(wtf.Form):
-    """ Form to add a new user to the local database. """
-    user_name = wtforms.TextField(
-        'username  <span class="error">*</span>',
-        [wtforms.validators.Required()]
-    )
-    display_name = wtforms.TextField(
-        'Full name',
-        [wtforms.validators.Optional()]
-    )
-    email_address = wtforms.TextField(
-        'Email address  <span class="error">*</span>',
-        [wtforms.validators.Required(), wtforms.validators.Email()]
-    )
-    password = wtforms.PasswordField(
-        'Password  <span class="error">*</span>',
-        [wtforms.validators.Required()]
-    )
-    confirm_password = wtforms.PasswordField(
-        'Confirm password  <span class="error">*</span>',
-        [wtforms.validators.Required(), same_password]
     )
