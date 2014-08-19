@@ -671,3 +671,114 @@ def get_hostcategorydir_by_hostcategoryid_and_path(
     )
 
     return query.all()
+
+
+def uploaded_config(session, host, config):
+    ''' Update the configuration of a specific host. '''
+    message = ''
+
+    def _config_categories(config):
+        noncategories = ['version', 'global', 'site', 'host', 'stats']
+        if config is not None:
+            return [
+                key
+                for key in config.keys()
+                if key not in noncategories
+            ]
+        else:
+            return []
+
+    def compare_dir(hcdir, files):
+        if hcdir.directory is None or hcdir.directory.files is None:
+            raise Exception
+        dfiles = hcdir.directory.files
+        if len(dfiles) == 0 and len(files) == 0:
+            return True
+        for fname, fdata in dfiles.iteritems():
+            if fname not in files:
+                return False
+            if fdata['size'] != files[fname]:
+                return False
+        return True
+
+    # handle the optional arguments
+    if config['host'].has_key('user_active'):
+        if config['host']['user_active'] in ['true', '1', 't', 'y', 'yes']:
+            self.user_active = True
+        else:
+            self.user_active = False
+
+    # fill in the host category data (HostCategory and HostCategoryURL)
+    # the category names in the config have been lowercased
+    # so we have to find the matching mixed-case category name.
+
+    for cat_name in _config_categories(config):
+        hc = []
+        for cat in host.categories:
+            if cat.category.name == cat_name:
+                hc.append(cat.category)
+        if len(hc) > 0:
+            hc = hc[0]
+        else:
+            # don't let report_mirror create HostCategories
+            # it must be done through the web UI
+            continue
+
+        marked_up2date = 0
+        deleted = 0
+        added = 0
+        # and now one HostCategoryDir for each dir in the dirtree
+        if config[cat_name].has_key('dirtree'):
+            for dirname,files in config[cat_name]['dirtree'].iteritems():
+                d = strip(dirname, '/')
+                hcdir = get_hostcategorydir_by_hostcategoryid_and_path(
+                    session, host_category_id=hc.id, path=d)
+                if len(hcdir) > 0:
+                    hcdir = hcdir[0]
+                    # this is evil, but it avoids stat()s on the client
+                    # side and a lot of data uploading
+                    is_up2date = True
+                    marked_up2date += 1
+                    if hcdir.up2date != is_up2date:
+                        hcdir.up2date = is_up2date
+                        session.add(hcdir)
+                        session.commit()
+                else:
+                    if len(d) > 0:
+                        dname = "%s/%s" % (hc.category.topdir.name, d)
+                    else:
+                        dname = hc.category.topdir.name
+
+                    # Don't create an entry for a directory the database
+                    # doesn't know about and if a crawler created it so we
+                    # hit a unique violation, then we don't have to
+                    try:
+                        directory = get_directory_by_name(session, dname)
+                        hcdir = HostCategoryDir(
+                            host_category_id=hc.id,
+                            path=d,
+                            directory_id=directory.id)
+                        session.add(hcdir)
+                        session.commit()
+                        added += 1
+                    except:
+                        pass
+
+            for hcdir in hc.dirs:
+                # handle disappearing hcdirs, deleted by other processes
+                try:
+                    hcdirpath = hcdir.path
+                except: continue
+                if hcdirpath not in config[c]['dirtree'].keys():
+                    try:
+                        session.remove(hcdir)
+                        session.commit()
+                    except:
+                        pass
+                    deleted += 1
+
+            message += "Category %s directories updated: %s  added: %s  deleted %s\n" % (category.name, marked_up2date, added, deleted)
+        session.add(hc)
+        session.commit()
+
+    return message
