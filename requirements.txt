@@ -1,7 +1,8 @@
 # List of the dependencies for the mirrormanager flask server
 
 flask
-flask-wtf
 flask-admin
+flask-xml-rpc
+flask-wtf
 wtforms
 SQLAlchemy>=0.7
