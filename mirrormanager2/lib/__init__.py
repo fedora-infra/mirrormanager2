@@ -70,6 +70,21 @@ def get_site(session, site_id):
     return query.first()
 
 
+def get_site_by_name(session, site_name):
+    ''' Return a specified Site via its name.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Site
+    ).filter(
+        model.Site.name == site_name
+    )
+
+    return query.first()
+
+
 def get_siteadmin(session, admin_id):
     ''' Return a specified SiteAdmin via its identifier.
 
