@@ -35,7 +35,7 @@ except ImportError:
     from flask.ext.admin.contrib.sqlamodel import ModelView
 from sqlalchemy.exc import SQLAlchemyError
 
-import mirrormanager2.forms
+import mirrormanager2.login_forms as forms
 import mirrormanager2.lib
 import mirrormanager2.lib.notifications
 from mirrormanager2 import APP, SESSION, is_mirrormanager_admin
@@ -46,7 +46,7 @@ from mirrormanager2.lib import model
 def new_user():
     """ Create a new user.
     """
-    form = mirrormanager2.forms.NewUserForm()
+    form = forms.NewUserForm()
     if form.validate_on_submit():
 
         username = form.user_name.data
@@ -97,7 +97,7 @@ def new_user():
 def do_login():
     """ Lo the user in user.
     """
-    form = mirrormanager2.forms.LoginForm()
+    form = forms.LoginForm()
     next_url = flask.request.args.get('next_url')
     if not next_url or next_url == 'None':
         next_url = flask.url_for('index')
@@ -174,7 +174,7 @@ def lost_password():
     """ Method to allow a user to change his/her password assuming the email
     is not compromised.
     """
-    form = mirrormanager2.forms.LostPasswordForm()
+    form = forms.LostPasswordForm()
     if form.validate_on_submit():
 
         username = form.username.data
@@ -218,7 +218,7 @@ def lost_password():
 def reset_password(token):
     """ Method to allow a user to reset his/her password.
     """
-    form = mirrormanager2.forms.ResetPasswordForm()
+    form = forms.ResetPasswordForm()
 
     user_obj = mirrormanager2.lib.get_user_by_token(SESSION, token)
     if not user_obj:
