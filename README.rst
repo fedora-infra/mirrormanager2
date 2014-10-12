@@ -11,13 +11,14 @@ mirror for a given user based on a set of fallback heuristics.
 For more details `mirrormanager <https://fedorahosted.org/mirrormanager/>`_
 
 :Github mirror: https://github.com/fedora-infra/mirrormanager2
-:Mailing list: https://lists.fedorahosted.org/mailman/listinfo/packagedb
+:Mailing list for announcements: http://www.redhat.com/mailman/listinfo/mirror-list
+:Mailing list for discussions: http://www.redhat.com/mailman/listinfo/mirror-list-d
 
 Hacking
 -------
 
 Here are some preliminary instructions about how to stand up your own instance
-of mirrormanager2.  We'll use a virtualenv and a mariadb database and we'll install
+of mirrormanager2.  We'll use a virtualenv and a sqlite database and we'll install
 our dependencies from the Python Package Index (PyPI).
 
 First, set up a virtualenv::
@@ -33,7 +34,7 @@ Next, install your dependencies::
 
     (my-MirrorMan-env)$ pip install -r requirements.txt
 
-You should then create your own mariadb database for your development instance of
+You should then create your own sqlite database for your development instance of
 mirrormanager2::
 
     (my-MirrorMan-env)$ python createdb.py
