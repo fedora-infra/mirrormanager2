@@ -49,7 +49,7 @@ THEME_FOLDER = 'fedora'
 
 # Which authentication method to use, defaults to `fas` can be or `local`
 # Default: ``fas``.
-MM_AUTHENTICATION = 'local'
+MM_AUTHENTICATION = 'fas'
 
 # If the authentication method is `fas`, groups in which should be the user
 # to be recognized as an admin.
