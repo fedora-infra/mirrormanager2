@@ -5,6 +5,7 @@ DROP TABLE "group_permission";
 DROP TABLE "permission";
 DROP TABLE "tg_visit_identity";
 DROP TABLE "visit_identity";
+DROP TABLE "country_host";  -- Duplicates of host_country
 
 -- Either drop or rename/adjust (see below)
 DROP TABLE "user_group";
@@ -16,14 +17,14 @@ DROP TABLE "visit";
 -- If you fear there is some data in these table this will rename and
 -- adjust them
 
-RENAME TABLE "user_group" TO "mm_user_group";
-RENAME TABLE "tg_group" TO "mm_group";
+ALTER TABLE "user_group" RENAME TO "mm_user_group";
+ALTER TABLE "tg_group" RENAME TO "mm_group";
 
-RENAME TABLE "tg_user" TO "mm_user";
+ALTER TABLE "tg_user" RENAME TO "mm_user";
 ALTER TABLE "mm_user" ADD COLUMN token varchar(50);
-ALTER TABLE "mm_user" ADD COLUMN updated_on timestamp without time zone
+ALTER TABLE "mm_user" ADD COLUMN updated_on timestamp without time zone;
 
-RENAME TABLE "visit" TO "mm_user_visit";
+ALTER TABLE "visit" RENAME TO "mm_user_visit";
 ALTER TABLE "mm_user_visit" ADD COLUMN user_id integer;
 ALTER TABLE ONLY "mm_user_visit"
     ADD CONSTRAINT user_id_exists FOREIGN KEY (user_id) REFERENCES mm_user(id);
