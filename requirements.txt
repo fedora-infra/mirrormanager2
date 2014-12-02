@@ -6,3 +6,7 @@ flask-xml-rpc
 flask-wtf
 wtforms
 SQLAlchemy>=0.7
+python-fedora
+python-openid
+python-openid-cla
+python-openid-teams
