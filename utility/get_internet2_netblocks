@@ -1,0 +1,65 @@
+#!/bin/bash
+# get internet2 netblocks
+#
+# This file is part of MirrorManager2.
+#
+# The purpose of this script is to download a BGP table of netblocks
+# and then write out a file matching those netblocks to ASNs (autonomous system
+# numbers).  ASNs are administrative numbers designated by IAANA which define a
+# kind of boundary for a set of routers.  For instance, MIT's ASN is 3; every
+# router within MIT's sphere of influence bears that ASN.  Every ISP has their
+# own, etc.
+#
+# This script produces one of two netblocks files (along with its sister,
+# get_global_netblocks) which gets read in by the mirrorlist-server daemon and
+# used as part of the larger mirror-matching logic there.  When people query
+# the mirrorlist, we can match their IP (potentially) to an ASN to get them to
+# a mirror that's closer to them than not.
+#
+# Author: Matt Domsch <mdomsch@fedoraproject.org>
+
+if [ $# -eq 0 ]; then
+    echo "usage: get_internet2_netblocks <output_filename>" >&2
+    exit 1
+fi
+
+outfile="$1"
+tmpdir=$(mktemp -d /tmp/get_i2_netblocks.XXXXXXXX) || exit 1
+trap "rm -rf ${tmpdir}" EXIT QUIT HUP KILL TERM
+listfile=$tmpdir/list
+
+function last_rib()
+{
+    tail ${tmpdir}/index.html | grep rib\. | tail -n 1 | \
+    awk -F 'href="' '{print $2}' | \
+    sed -e 's/".*//'
+}
+
+function get_i2_netblocks()
+{
+    local YEAR=$(date +%Y)
+    local MONTH=$(date +%m)
+    local DAY=$(date +%d)
+    local ROUTERS="ATLA CHIC HOUS KANS LOSA NEWY SALT SEAT WASH"
+    local URL
+    local last
+
+    for ROUTER in ${ROUTERS}; do
+        URL="http://zebra.net.internet2.edu/bgp/RIBS/${ROUTER}/${YEAR}/${MONTH}/${DAY}"
+        wget -q -O ${tmpdir}/index.html "${URL}/"
+        last=$(last_rib)
+        wget -O ${tmpdir}/rib.gz -q "${URL}/${last}"
+        zcat ${tmpdir}/rib.gz | perl zebra-dump-parser/zebra-dump-parser.pl >> ${listfile}
+    done
+    sort ${listfile} | uniq > ${tmpdir}/list-sorted
+    mv ${tmpdir}/list-sorted ${listfile}
+}
+
+get_i2_netblocks
+if [ -s ${listfile} ]; then
+    cp -f ${listfile} "${outfile}"
+else
+    echo "unable to retrieve netblock list." >&2
+    exit 1
+fi
+exit 0
