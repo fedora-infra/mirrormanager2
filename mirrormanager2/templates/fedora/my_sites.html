@@ -6,11 +6,23 @@
 {% block content %}
 <h2>{{username}} sites</h2>
 
-{% if sites %}
+{% if not sites %}
+<p>
+  You apparently did not register any sites yet.
+</p>
+{% else %}
 <p>
   You have currently {{ sites | length }} sites listed
 </p>
+{% endif %}
 
+<p class="buttons indent">
+  <a href="{{ url_for('site_new') }}">
+    <input type="button" value="Register a new site" class="button">
+  </a>
+</p>
+
+{% if sites %}
 <table>
   <tr>
     <th>Site name</th>
@@ -97,10 +109,6 @@
   </tr>
   {% endfor %}
 </table>
-{% else %}
-<p>
-  You apparently did not register any sites yet.
-</p>
 {% endif %}
 
 {% endblock %}
