@@ -20,6 +20,7 @@ import os
 
 sys.path.append('..')
 import mirrormanager2.lib
+from mirrormanager2.lib.model import RepositoryRedirect, Repository
 from optparse import OptionParser
 
 
@@ -42,7 +43,7 @@ def fixup_repos(session, version, fromrepo, torepo):
     session.commit()
 
 
-def doit(session, category, version):
+def move_devel_repo(session, category, version):
     try:
         c = mirrormanager2.lib.get_category_by_name(session, category)
     except SQLObjectNotFound:
@@ -65,7 +66,7 @@ def doit(session, category, version):
             t = d.name.replace(oldpattern, newpattern)
             try:
                 new_d = Directory.byName(t)
-            except SQLObjectNotFound:
+            except:
                 sys.stderr.write("target Directory(%s) not found, ignoring.\n" % t)
                 sys.stderr.flush()
                 continue
@@ -78,6 +79,85 @@ def doit(session, category, version):
 
             fixup_repos(v, r, new_d.repositories[0])
             print "%s => %s" % (d.name, t)
+
+
+def move_install_repo(session, version):
+    product=mirrormanager2.lib.get_product_by_name(session, "Fedora")
+    ver = mirrormanager2.lib.get_version_by_name_version(
+            session, product.name, version)
+
+    for a in mirrormanager2.lib.get_arches(session):
+        if a.name == u'source':
+            continue
+
+        repo = mirrormanager2.lib.get_repo_prefix_arch(
+            session, prefix=u'fedora-install-%s' % ver.name, arch=a)
+        if repo:
+            print "destroying %s" % repo
+            session.delete(repo)
+            session.flush()
+        else:
+            print "Repo `%s` (%s-%s) not found -- skipping" % (
+                repo, ver.name, a.name)
+            continue
+
+        if options.version == 'development':
+            # yeah, development is ver.name, displayname is rawhide
+            # We need a RepositoryRedirect here instead, as Repositories
+            # already exist to these directories.
+            fromRepo = u'fedora-install-rawhide'
+            toRepo = u'rawhide'
+            try:
+                rr = RepositoryRedirect(fromRepo=fromRepo, toRepo=toRepo)
+                session.add(rr)
+                session.flush()
+            except:
+                print "Repository Redirect %s -> %s already exists, "\
+                    "ignoring." % (fromRepo, toRepo)
+                pass
+        else:
+            prefix=u'fedora-install-%s' % ver.name
+            if a.primaryArch:
+                d = u'pub/fedora/linux/releases/%s/Fedora/%s/os' % (
+                    ver.name, a.name)
+                category = mirrormanager2.lib.get_category_by_name(
+                    session, 'Fedora Linux')
+            else:
+                d = u'pub/fedora-secondary/releases/%s/Fedora/%s/os' % (
+                    ver.name, a.name)
+                category = mirrormanager2.lib.get_category_by_name(
+                    session, 'Fedora Secondary Arches')
+
+            repos = mirrormanager2.lib.get_repo_by_dir(session, d)
+            for r in repos:
+                print "destroying %s" % r
+                session.delete(r)
+                session.flush()
+
+            if not os.path.isdir(os.path.join('/', d)):
+                print "directory %s does not exist on disk, skipping "\
+                    "creation of a repository there" % d
+                continue
+
+            d = mirrormanager2.lib.get_directory_by_name(session, d)
+
+            if not d:
+                print "directory %s exists on disk, but not in the database"\
+                    " yet, skipping creation of a repository there until "\
+                    "after the next UMDL run."
+                continue
+
+            print "creating %s repo for arch %s" % (prefix, a.name)
+            r = Repository(
+                name=d.name,
+                prefix=prefix,
+                arch_id=a.id,
+                directory_id=d.id,
+                version_id=ver.id,
+                category_id=category.id
+            )
+            session.add(r)
+    session.commit()
 
 
 def print_categories(session, fileno):
@@ -120,9 +200,13 @@ def main():
         print_categories(session, sys.stdout)
         sys.exit(1)
 
-    doit(
+    move_devel_repo(
         session,
         options.category,
+        options.version)
+
+    move_install_repo(
+        session,
         options.version)
 
     return 0
