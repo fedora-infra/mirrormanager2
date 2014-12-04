@@ -30,6 +30,7 @@ from flaskext.xmlrpc import XMLRPCHandler, Fault
 
 from mirrormanager2 import APP, ADMIN, SESSION
 from mirrormanager2.lib import model
+#from mirrormanager2.lib.hostconfig import read_host_config
 
 
 XMLRPC = XMLRPCHandler('xmlrpc')
