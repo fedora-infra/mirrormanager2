@@ -1,4 +1,23 @@
 #!/bin/bash
+# get global netblocks
+#
+# This file is part of MirrorManager2.
+#
+# The purpose of this script is to download a BGP table of netblocks
+# and then write out a file matching those netblocks to ASNs (autonomous system
+# numbers).  ASNs are administrative numbers designated by IAANA which define a
+# kind of boundary for a set of routers.  For instance, MIT's ASN is 3; every
+# router within MIT's sphere of influence bears that ASN.  Every ISP has their
+# own, etc.
+#
+# This script produces one of two netblocks files (along with its sister,
+# get_internet2_netblocks) which gets read in by the mirrorlist-server daemon
+# and used as part of the larger mirror-matching logic there.  When people
+# query the mirrorlist, we can match their IP (potentially) to an ASN to get
+# them to a mirror that's closer to them than not.
+#
+# Author: Matt Domsch <mdomsch@fedoraproject.org>
+
 if [ $# -eq 0 ]; then
     echo "usage: get_global_netblocks <output_filename>" >&2
     exit 1
