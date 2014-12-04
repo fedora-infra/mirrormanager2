@@ -1,5 +1,28 @@
 #!/usr/bin/env python
 
+"""
+This script crawls the local copy of the master mirrors (which in our case
+is just a nfs mount of the master mirror content). According to what it
+finds, it updates the mirrormanager2 database.
+It will create new product/version if it finds them and drop directories if
+they disapeared.
+
+Basically, it checks the content of the nfs mount, if the directory
+contains a lot of files, it takes the 3 most recents ones, stores them in
+the DB and they will be used later on to check if the mirrors are up to date.
+If the directory does not contain too many files, it will register them all
+and thus will check them all on the mirrors.
+The threshold is stored in: `short_filelist` and is currently at 10.
+
+If the script finds a yum repository (finds a repo data), it will create a
+repository object (cf `make_repository`) which is basically a mapping
+between a yum repo name (ie: Fedora-20-updates) and a directory
+(/pub/fedora/linux/updates/....)
+
+
+TODO: test IRL
+"""
+
 import glob
 import logging
 import re
