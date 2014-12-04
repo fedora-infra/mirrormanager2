@@ -392,6 +392,20 @@ def get_category_by_name(session, name):
     return query.first()
 
 
+def get_category_directory(session):
+    ''' Return all the category directory present in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.CategoryDirectory
+    ).order_by(
+        model.CategoryDirectory.directory_id
+    )
+    return query.all()
+
+
 def get_product_by_name(session, p_name):
     ''' Return a product by its name.
 
