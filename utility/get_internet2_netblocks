@@ -58,8 +58,18 @@ function get_i2_netblocks()
 get_i2_netblocks
 if [ -s ${listfile} ]; then
     cp -f ${listfile} "${outfile}"
+    echo "{\"type\": \"internet2\", \"success\": true}" | fedmsg-logger \
+        --cert-prefix mirrormanager \
+        --modname mirrormanager \
+        --topic "netblocks.get" \
+        --json-input
 else
     echo "unable to retrieve netblock list." >&2
+    echo "{\"type\": \"internet2\", \"success\": false}" | fedmsg-logger \
+        --cert-prefix mirrormanager \
+        --modname mirrormanager \
+        --topic "netblocks.get" \
+        --json-input
     exit 1
 fi
 exit 0
