@@ -428,6 +428,9 @@ def add_admin_to_site(session, site, admin):
     :arg session: the session with which to connect to the database.
 
     '''
+
+    site_id = site.id
+
     query = session.query(
         model.SiteAdmin
     ).filter(

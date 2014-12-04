@@ -285,8 +285,9 @@ def site_new():
             return flask.redirect(flask.url_for('index'))
 
         try:
-            msg = add_admin_to_site(SESSION, site, flask.g.fas_user.username)
-            fask.flash(msg)
+            msg = mmlib.add_admin_to_site(
+                SESSION, site, flask.g.fas_user.username)
+            flask.flash(msg)
         except SQLAlchemyError as err:
             SESSION.rollback()
             APP.logger.debug(
