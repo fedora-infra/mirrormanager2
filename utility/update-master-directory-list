@@ -20,6 +20,7 @@ import mirrormanager2.lib
 from mirrormanager2 import APP
 from mirrormanager2.lib.model import (
     Host, Directory, Repository, Version, FileDetail)
+from mirrormanager2.lib.repomap import repo_prefix
 from mirrormanager2.lib.pid import manage_pidfile, remove_pidfile
 from mirrormanager2.lib.sync import run_rsync
 
