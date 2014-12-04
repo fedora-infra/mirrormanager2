@@ -425,6 +425,25 @@ def get_products(session):
     return query.all()
 
 
+def get_repo_prefix_arch(session, prefix, arch):
+    ''' Return a repository by its prefix and arch.
+
+    :arg session: the session with which to connect to the database.
+    :arg prefix: the prefix of the repository
+    :arg arch: the arch of the repository
+
+    '''
+    query = session.query(
+        model.Repository
+    ).filter(
+        model.Repository.prefix == prefix
+    ).filter(
+        model.Repository.arch == arch
+    )
+
+    return query.first()
+
+
 def get_arches(session):
     ''' Return the list of all the arch in the database.
 
