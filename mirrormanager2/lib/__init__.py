@@ -392,6 +392,24 @@ def get_category_by_name(session, name):
     return query.first()
 
 
+def get_product_by_name(session, p_name):
+    ''' Return a product by its name.
+
+    :arg session: the session with which to connect to the database.
+    :arg p_name: the product name to find in the database
+
+    '''
+    query = session.query(
+        model.Product
+    ).filter(
+        model.Product.name == p_name
+    ).order_by(
+        model.Product.name
+    )
+
+    return query.first()
+
+
 def get_products(session):
     ''' Return the list of all the products in the database.
 
