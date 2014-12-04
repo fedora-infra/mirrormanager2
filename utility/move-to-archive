@@ -35,7 +35,8 @@ def doit(session, original_cat, archive_cat, directory_re):
                         session, t)
                     r.directory = new_d
                     r.category = a
-                    r.sync()
+                    session.add(r)
+                    session.commit()
                     print "%s => %s" % (d.name, t)
                 except:
                     print "Unable to find a directory in [%s] for %s" % (
