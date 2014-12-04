@@ -11,9 +11,9 @@ listfile=$tmpdir/list
 
 function last_rib()
 {
-	head -n 20 ${tmpdir}/index.html | grep rib\. | head -n 1 | \
-	awk -F 'href="' '{print $2}' | \
-	sed -e 's/".*//'
+    head -n 20 ${tmpdir}/index.html | grep rib\. | head -n 1 | \
+    awk -F 'href="' '{print $2}' | \
+    sed -e 's/".*//'
 }
 
 function get_ipv6_netblocks()
