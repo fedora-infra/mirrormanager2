@@ -90,17 +90,6 @@ def move_install_repo(session, version):
         if a.name == u'source':
             continue
 
-        repo = mirrormanager2.lib.get_repo_prefix_arch(
-            session, prefix=u'fedora-install-%s' % ver.name, arch=a)
-        if repo:
-            print "destroying %s" % repo
-            session.delete(repo)
-            session.flush()
-        else:
-            print "Repo `%s` (%s-%s) not found -- skipping" % (
-                repo, ver.name, a.name)
-            continue
-
         if options.version == 'development':
             # yeah, development is ver.name, displayname is rawhide
             # We need a RepositoryRedirect here instead, as Repositories
@@ -147,16 +136,17 @@ def move_install_repo(session, version):
                     "after the next UMDL run."
                 continue
 
-            print "creating %s repo for arch %s" % (prefix, a.name)
-            r = Repository(
-                name=d.name,
-                prefix=prefix,
-                arch_id=a.id,
-                directory_id=d.id,
-                version_id=ver.id,
-                category_id=category.id
-            )
-            session.add(r)
+            print "updating %s repo for arch %s" % (prefix, a.name)
+
+            repo = mirrormanager2.lib.get_repo_prefix_arch(
+                session, prefix=u'fedora-install-%s' % ver.name, arch=a)
+
+            repo.name = d.name
+            repo.directory_id=d.id
+            repo.category_id=category.id
+            session.add(repo)
+            session.flush()
+
     session.commit()
 
 
