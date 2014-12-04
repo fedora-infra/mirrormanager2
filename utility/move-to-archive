@@ -5,6 +5,7 @@ This script changes the directory path for a release once it goes EOL.
 
 In principle it should be run about a week after the said release went EOL.
 
+TODO: test IRL
 """
 
 import sys
