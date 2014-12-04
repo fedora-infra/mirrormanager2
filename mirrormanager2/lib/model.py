@@ -235,15 +235,16 @@ class Product(BASE):
         for version in self.versions:
             if version.display:
                 versions[version.name] = version
-        if self.name == 'Fedora' and 'development' in versions:
-            rawhide = versions['development']
-            del(versions['development'])
-            keys = [int(key) for key in versions]
-            tmp = [versions[str(key)] for key in sorted(keys, reverse=True)]
-            tmp.insert(0, rawhide)
-            return tmp
-        else:
-            return [versions[key] for key in sorted(versions)]
+
+        # Try to "smartly" sort versions for display.
+        def intify(value):
+            try:
+                return int(value)
+            except ValueError:
+                return value
+
+        keys = [intify(key) for key in versions]
+        return [versions[str(key)] for key in sorted(keys, reverse=True)]
 
 
 class Category(BASE):
