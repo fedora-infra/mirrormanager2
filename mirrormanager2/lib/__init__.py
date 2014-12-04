@@ -444,6 +444,22 @@ def get_repo_prefix_arch(session, prefix, arch):
     return query.first()
 
 
+def get_repo_by_name(session, name):
+    ''' Return a repository by its name.
+
+    :arg session: the session with which to connect to the database.
+    :arg name: the name of the repository
+
+    '''
+    query = session.query(
+        model.Repository
+    ).filter(
+        model.Repository.name == name
+    )
+
+    return query.all()
+
+
 def get_arches(session):
     ''' Return the list of all the arch in the database.
 
