@@ -1,0 +1,132 @@
+#!/usr/bin/python
+
+"""
+This script changes the directory path from the development tree to the
+released tree once the release has been published.
+
+In principle it should be run about a week after the said release has been
+published.
+
+This implies that for a week, users will be actually hitting the development
+tree (which is hardlinked to the release tree and thus will have the same
+content)
+
+TODO: test IRL
+"""
+
+import sys
+import re
+import os
+
+sys.path.append('..')
+import mirrormanager2.lib
+from optparse import OptionParser
+
+
+# moving from pub/fedora/linux/development/14/x86_64/os to
+# pub/fedora/linux/releases/14/Everything/x86_64/os
+# by now, UMDL would have created a new repository object at the target
+# directory anyhow except it's version and arch values are wrong
+# and we want to zero out the values in the current repository object
+
+def fixup_repos(session, version, fromrepo, torepo):
+    fromrepo_arch = fromrepo.arch
+    fromrepo.arch = None
+    session.add(fromrepo)
+
+    torepo.prefix = fromrepo.prefix
+    torepo.arch = fromrepo_arch
+    torepo.version = version
+    session.add(torepo)
+
+    session.commit()
+
+
+def doit(session, category, version):
+    try:
+        c = mirrormanager2.lib.get_category_by_name(session, category)
+    except SQLObjectNotFound:
+        sys.stderr.write("Category '%s' not found, exiting" % category)
+        print_categories(sys.stderr)
+        sys.stderr.flush()
+        sys.exit(1)
+
+    try:
+        v = mirrormanager2.lib.get_version_by_name_version(
+            session, c.product.name, version)
+    except:
+        raise # fixme
+    oldpattern = os.path.join('development', version)
+    newpattern = os.path.join('releases', version, 'Everything')
+    oldRe = re.compile(oldpattern)
+    for r in c.repositories:
+        d = r.directory
+        if oldRe.search(d.name):
+            t = d.name.replace(oldpattern, newpattern)
+            try:
+                new_d = Directory.byName(t)
+            except SQLObjectNotFound:
+                sys.stderr.write("target Directory(%s) not found, ignoring.\n" % t)
+                sys.stderr.flush()
+                continue
+
+            l = len(new_d.repositories)
+            if l == 0:
+                continue # uh oh, umdl hasn't found this directory yet.  Pretty unlikely...
+            if l > 1:
+                raise ValueError # uh oh, how'd we wind up with 2 repos pointing at this directory?
+
+            fixup_repos(v, r, new_d.repositories[0])
+            print "%s => %s" % (d.name, t)
+
+
+def print_categories(session, fileno):
+    fileno.write("Available categories:\n")
+    for c in mirrormanager2.lib.get_categories(session):
+        fileno.write("\t%s\n" % c.name)
+        fileno.flush()
+
+
+def main():
+    global options
+    parser = OptionParser(
+        usage=sys.argv[0] + " [options]")
+    parser.add_option(
+        "-c", "--config",
+        dest="config",
+        default='/etc/mirrormanager/prod.cfg',
+        help="Configuration file to use (default=/etc/mirrormanager/prod.cfg)")
+    parser.add_option(
+        "--version",
+        dest="version",
+        type="string",
+        help="OS version to move (e.g. '14') [required]", default=None)
+    parser.add_option(
+        "--category",
+        dest="category",
+        type="string",
+        help="Category (e.g. 'Fedora Linux') [required]", default=None)
+
+    (options, args) = parser.parse_args()
+
+    d = dict()
+    with open(options.config) as config_file:
+        exec(compile(config_file.read(), options.config, 'exec'), d)
+
+    session = mirrormanager2.lib.create_session(d['DB_URL'])
+
+    if options.version is None or options.category is None:
+        parser.print_help()
+        print_categories(session, sys.stdout)
+        sys.exit(1)
+
+    doit(
+        session,
+        options.category,
+        options.version)
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
