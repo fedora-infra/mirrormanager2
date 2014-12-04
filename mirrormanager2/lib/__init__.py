@@ -460,6 +460,26 @@ def get_repo_by_name(session, name):
     return query.all()
 
 
+def get_repo_by_dir(session, path):
+    ''' Return repositories by the path of its directory.
+
+    :arg session: the session with which to connect to the database.
+    :arg path: the path of the directory linked to the repositories returned
+
+    '''
+    query = session.query(
+        model.Repository
+    ).filter(
+        model.Repository.directory_id == model.Directory.id
+    ).filter(
+        model.Directory.name == path
+    ).order_by(
+        model.Repository.id
+    )
+
+    return query.all()
+
+
 def get_arches(session):
     ''' Return the list of all the arch in the database.
 
