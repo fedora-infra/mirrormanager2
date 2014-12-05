@@ -130,6 +130,21 @@ def get_host(session, host_id):
     return query.first()
 
 
+def get_hosts(session):
+    ''' Return all Hosts in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Host
+    ).order_by(
+        model.Host.id
+    )
+
+    return query.all()
+
+
 def get_host_acl_ip(session, host_acl_ip_id):
     ''' Return a specified HostAclIp via its identifier.
 
@@ -392,6 +407,38 @@ def get_category_by_name(session, name):
     return query.first()
 
 
+def get_category_directory(session):
+    ''' Return all the category directory present in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.CategoryDirectory
+    ).order_by(
+        model.CategoryDirectory.directory_id
+    )
+    return query.all()
+
+
+def get_product_by_name(session, p_name):
+    ''' Return a product by its name.
+
+    :arg session: the session with which to connect to the database.
+    :arg p_name: the product name to find in the database
+
+    '''
+    query = session.query(
+        model.Product
+    ).filter(
+        model.Product.name == p_name
+    ).order_by(
+        model.Product.name
+    )
+
+    return query.first()
+
+
 def get_products(session):
     ''' Return the list of all the products in the database.
 
@@ -402,6 +449,91 @@ def get_products(session):
         model.Product
     ).order_by(
         model.Product.name
+    )
+
+    return query.all()
+
+
+def get_repo_prefix_arch(session, prefix, arch):
+    ''' Return a repository by its prefix and arch.
+
+    :arg session: the session with which to connect to the database.
+    :arg prefix: the prefix of the repository
+    :arg arch: the arch of the repository
+
+    '''
+    query = session.query(
+        model.Repository
+    ).filter(
+        model.Repository.prefix == prefix
+    ).filter(
+        model.Repository.arch == arch
+    )
+
+    return query.first()
+
+
+def get_repo_by_name(session, name):
+    ''' Return a repository by its name.
+
+    :arg session: the session with which to connect to the database.
+    :arg name: the name of the repository
+
+    '''
+    query = session.query(
+        model.Repository
+    ).filter(
+        model.Repository.name == name
+    )
+
+    return query.all()
+
+
+def get_repo_by_dir(session, path):
+    ''' Return repositories by the path of its directory.
+
+    :arg session: the session with which to connect to the database.
+    :arg path: the path of the directory linked to the repositories returned
+
+    '''
+    query = session.query(
+        model.Repository
+    ).filter(
+        model.Repository.directory_id == model.Directory.id
+    ).filter(
+        model.Directory.name == path
+    ).order_by(
+        model.Repository.id
+    )
+
+    return query.all()
+
+
+def get_repositories(session):
+    ''' Return all repositories in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Repository
+    ).order_by(
+        model.Repository.id
+    )
+
+    return query.all()
+
+
+def get_reporedirect(session):
+    ''' Return all reporedirect in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.RepositoryRedirect
+    ).order_by(
+        model.RepositoryRedirect.id
     )
 
     return query.all()

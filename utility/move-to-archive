@@ -44,6 +44,59 @@ def doit(session, original_cat, archive_cat, directory_re):
                     raise
 
 
+def move_install_repo(session, version):
+    product=mirrormanager2.lib.get_product_by_name(session, "Fedora")
+    ver = mirrormanager2.lib.get_version_by_name_version(
+            session, product.name, version)
+
+    for a in mirrormanager2.lib.get_arches(session):
+        if a.name == u'source':
+            continue
+
+        prefix=u'fedora-install-%s' % ver.name
+        if a.primaryArch:
+            d = u'pub/archive/fedora/linux/releases/%s/Fedora/%s/os' % (
+                ver.name, a.name)
+            category = mirrormanager2.lib.get_category_by_name(
+                session, 'Fedora Linux')
+        else:
+            d = u'pub/archive/fedora-secondary/releases/%s/Fedora/%s/os' % (
+                ver.name, a.name)
+            category = mirrormanager2.lib.get_category_by_name(
+                session, 'Fedora Secondary Arches')
+
+        repos = mirrormanager2.lib.get_repo_by_dir(session, d)
+        for r in repos:
+            print "destroying %s" % r
+            session.delete(r)
+            session.flush()
+
+        if not os.path.isdir(os.path.join('/', d)):
+            print "directory %s does not exist on disk, skipping "\
+                "creation of a repository there" % d
+            continue
+
+        d = mirrormanager2.lib.get_directory_by_name(session, d)
+
+        if not d:
+            print "directory %s exists on disk, but not in the database"\
+                " yet, skipping creation of a repository there until "\
+                "after the next UMDL run."
+            continue
+
+        print "updating %s repo for arch %s" % (prefix, a.name)
+        repo = mirrormanager2.lib.get_repo_prefix_arch(
+            session, prefix=u'fedora-install-%s' % ver.name, arch=a)
+
+        repo.name = d.name
+        repo.directory_id=d.id
+        repo.category_id=category.id
+        session.add(repo)
+        session.flush()
+
+    session.commit()
+
+
 def main():
     parser = OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option(
