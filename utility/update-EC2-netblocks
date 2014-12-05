@@ -44,7 +44,7 @@ def parse_ip_ranges(ipranges_str):
 def host_has_netblock(hosts_by_region, region, netblock):
     return netblock in hosts_by_region[region]['netblocks']
 
-def doit(session, options):
+def doit(session, dry_run):
     hosts_by_region = s3_mirrors(session)
     ipranges_str = get_ip_ranges()
     ipranges = parse_ip_ranges(ipranges_str)
@@ -63,7 +63,7 @@ def doit(session, options):
             host = h['host']
             if not host_has_netblock(hosts_by_region, region, ip_prefix):
                 print "Added host %s netblock %s" % (host.name, ip_prefix)
-                if not options.dry_run:
+                if not dry_run:
                     nb = HostNetblock(host=host, netblock=ip_prefix, name=None) # this adds the entry to the database, mark as not stale
                     session.add(nb)
                     session.flush()
@@ -81,7 +81,7 @@ def doit(session, options):
             if hosts_by_region[region]['netblocks'][netblock]['stale']: # delete this, it's no longer on Amazon's list
                 host = h['host']
                 print "Deleted host %s netblock %s" % (host.name, netblock)
-                if not options.dry_run:
+                if not dry_run:
                     nb = mirrormanager2.lib.get_host_netblock(session, hosts_by_region[region]['netblocks'][netblock]['host_netblock_id'])
                     session.delete(nb)
 
@@ -102,7 +102,7 @@ def main():
     
     session = mirrormanager2.lib.create_session(config['DB_URL'])
     
-    doit(session, options)
+    doit(session, options.dry_run)
     session.commit()
     return 0
 
