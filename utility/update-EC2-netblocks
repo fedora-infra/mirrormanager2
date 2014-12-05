@@ -14,8 +14,6 @@ sys.path.append('..')
 import mirrormanager2.lib
 from mirrormanager2.lib.model import HostNetblock
 
-options = None
-
 def parse_out_region(hostname):
     hostname = hostname.lstrip('s3-mirror-')
     hostname = hostname.rstrip('.fedoraproject.org')
@@ -46,7 +44,7 @@ def parse_ip_ranges(ipranges_str):
 def host_has_netblock(hosts_by_region, region, netblock):
     return netblock in hosts_by_region[region]['netblocks']
 
-def doit(session):
+def doit(session, options):
     hosts_by_region = s3_mirrors(session)
     ipranges_str = get_ip_ranges()
     ipranges = parse_ip_ranges(ipranges_str)
@@ -89,7 +87,6 @@ def doit(session):
 
 
 def main():
-    global options
     parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option("-c", "--config",
                       dest="config", default='dev.cfg',
@@ -105,7 +102,7 @@ def main():
     
     session = mirrormanager2.lib.create_session(config['DB_URL'])
     
-    doit(session)
+    doit(session, options)
     session.commit()
     return 0
 
