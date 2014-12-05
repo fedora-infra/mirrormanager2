@@ -118,7 +118,7 @@ def setup_arch_version_cache(session):
 def guess_ver_arch_from_path(session, category, path):
     arch = None
     if 'SRPMS' in path:
-        arch = mirrormanager2.lib.get_arch_by_name('source')
+        arch = mirrormanager2.lib.get_arch_by_name(session, 'source')
     else:
         for a in arch_cache:
             s = '.*(^|/)%s(/|$).*' % (a['name'])
