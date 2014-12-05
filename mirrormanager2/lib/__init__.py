@@ -1053,3 +1053,21 @@ def query_directories(session):
     )
 
     return q.all()
+
+
+def get_directory_exclusive_host(session):
+    ''' Return the list of Directory that are exclusive for some hosts.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Directory.name.label('dname'),
+        model.DirectoryExclusiveHost.host_id
+    ).filter(
+        model.Directory.id == model.DirectoryExclusiveHost.directory_id
+    ).order_by(
+        'dname'
+    )
+
+    return query.all()
