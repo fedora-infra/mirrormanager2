@@ -941,7 +941,8 @@ def host_category_url_delete(host_id, hc_id, host_category_url_id):
     if hcobj is None:
         flask.abort(404, 'Host/Category not found')
 
-    hostcaturlobj = mmlib.get_host_category_url(SESSION, host_category_url_id)
+    hostcaturlobj = mmlib.get_host_category_url_by_id(
+        SESSION, host_category_url_id)
 
     if hostcaturlobj is None:
         flask.abort(404, 'Host category URL not found')

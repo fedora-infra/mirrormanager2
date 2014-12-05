@@ -239,7 +239,7 @@ def get_host_category_by_hostid_category(session, host_id, category):
     return query.all()
 
 
-def get_host_category_url(session, host_category_url_id):
+def get_host_category_url_by_id(session, host_category_url_id):
     ''' Return a specified HostCategoryUrl via its identifier.
 
     :arg session: the session with which to connect to the database.
@@ -252,6 +252,21 @@ def get_host_category_url(session, host_category_url_id):
     )
 
     return query.first()
+
+
+def get_host_category_url(session):
+    ''' Return all HostCategoryUrl in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.HostCategoryUrl
+    ).order_by(
+        model.HostCategoryUrl.id
+    )
+
+    return query.all()
 
 
 def get_country_by_name(session, country_code):
@@ -268,6 +283,20 @@ def get_country_by_name(session, country_code):
 
     return query.first()
 
+
+def get_country_continent_redirect(session):
+    ''' Return all the CountryContinentRedirect present in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.CountryContinentRedirect
+    ).order_by(
+        model.CountryContinentRedirect.id
+    )
+
+    return query.all()
 
 def get_user_by_username(session, username):
     ''' Return a specified User via its username.
@@ -580,6 +609,36 @@ def add_admin_to_site(session, site, admin):
         return '%s added as an admin' % admin
 
 
+def get_locations(session):
+    ''' Return all locations in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Location
+    ).order_by(
+        model.Location.id
+    )
+
+    return query.all()
+
+
+def get_netblock_country(session):
+    ''' Return all NetblockCountry in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.NetblockCountry
+    ).order_by(
+        model.NetblockCountry.id
+    )
+
+    return query.all()
+
+
 def get_mirrors(
         session, private=None, internet2=None, internet2_clients=None,
         asn_clients=None, admin_active=None, user_active=None, urls=None,
@@ -775,6 +834,21 @@ def get_file_detail(
     return query.first()
 
 
+def get_directories(session):
+    ''' Return all Directory in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Directory
+    ).order_by(
+        model.Directory.id
+    )
+
+    return query.all()
+
+
 def get_directory_by_id(session, id):
     ''' Return a specified Directory via its identifier.
 
@@ -917,3 +991,83 @@ def uploaded_config(session, host, config):
         session.commit()
 
     return message
+
+
+def query_directories(session):
+    ''' Return the list of Directory, Host, HostCategoryUrl and Site
+    information required by `refresh_mirrorlist_cache` to build the pickle
+    file.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Directory.id.label('directory_id'),
+        model.Directory.name.label('dname'),
+        model.Host.id.label('hostid'),
+        model.Host.country,
+        model.HostCategoryUrl.id.label('id'),
+        model.Site.private.label('siteprivate'),
+        model.Host.private.label('hostprivate'),
+        model.Host.internet2,
+        model.Host.internet2_clients,
+    ).filter(
+        model.Host.user_active == True
+    ).filter(
+        model.Host.admin_active == True
+    ).filter(
+        model.Host.site_id == model.Site.id
+    ).filter(
+        model.Site.user_active == True
+    ).filter(
+        model.Site.admin_active == True
+    ).filter(
+        model.Host.id == model.HostCategory.host_id
+    ).filter(
+        model.HostCategory.category_id == model.CategoryDirectory.category_id
+    ).filter(
+        model.CategoryDirectory.directory_id == model.Directory.id
+    ).filter(
+        model.HostCategory.id == model.HostCategoryUrl.host_category_id
+    ).filter(
+        model.HostCategoryUrl.private == False
+    )
+
+    q1 = query.filter(
+        model.HostCategoryDir.host_category_id == model.HostCategory.id
+    ).filter(
+        model.HostCategoryDir.directory_id == model.Directory.id
+    ).filter(
+        model.HostCategoryDir.up2date == True
+    )
+
+    q2 = query.filter(
+        model.HostCategory.always_up2date == True
+    )
+
+    q = session.query(
+        q1.union(q2).subquery()
+    ).order_by(
+        'dname',
+        'hostid'
+    )
+
+    return q.all()
+
+
+def get_directory_exclusive_host(session):
+    ''' Return the list of Directory that are exclusive for some hosts.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Directory.name.label('dname'),
+        model.DirectoryExclusiveHost.host_id
+    ).filter(
+        model.Directory.id == model.DirectoryExclusiveHost.directory_id
+    ).order_by(
+        'dname'
+    )
+
+    return query.all()
