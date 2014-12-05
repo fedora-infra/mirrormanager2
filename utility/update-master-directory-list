@@ -133,7 +133,7 @@ def guess_ver_arch_from_path(session, category, path):
         if v['product_id'] != category.product.id: continue
         s = '.*(^|/)%s(/|$).*' % (v['name'])
         if re.compile(s).match(path):
-            ver = Version.get(v['id'])
+            ver = Version.get(session, v['id'])
             break
 
     # create Versions if we can figure it out...
