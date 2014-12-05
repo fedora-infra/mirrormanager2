@@ -221,6 +221,10 @@ class Host(BASE):
                 hcd.up2date = False
                 session.commit()
 
+    def is_active(self):
+        return self.admin_active \
+            and self.user_active \
+            and self.site.user_active
 
 
 class Directory(BASE):
