@@ -41,11 +41,9 @@ import mirrormanager2.lib
 from mirrormanager2.lib.model import (
     Arch, Directory, Repository, Version, FileDetail)
 from mirrormanager2.lib.repomap import repo_prefix
-from mirrormanager2.lib.pid import manage_pidfile, remove_pidfile
 from mirrormanager2.lib.sync import run_rsync
 
 
-pidfile='umdl.pid'
 delete_directories=False
 logger = None
 stdexcludes=['.*\.snapshot', '.*/\.~tmp~']
@@ -686,10 +684,6 @@ def main():
     if options.debug:
         logger.setLevel(logging.DEBUG)
 
-    if manage_pidfile(pidfile):
-        logger.warning("another instance is running, try again later.")
-        sys.exit(1)
-
     logger.info("Starting umdl")
     setup_arch_version_cache(session)
     for i in config.get('umdl_master_directories'):
@@ -724,7 +718,6 @@ def main():
             if options.delete_directories:
                 nuke_gone_directories(i['path'], category)
 
-    remove_pidfile(pidfile)
     logger.info("Ending umdl")
 
     return 0
