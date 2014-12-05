@@ -609,6 +609,21 @@ def add_admin_to_site(session, site, admin):
         return '%s added as an admin' % admin
 
 
+def get_locations(session):
+    ''' Return all locations in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Location
+    ).order_by(
+        model.Location.id
+    )
+
+    return query.all()
+
+
 def get_mirrors(
         session, private=None, internet2=None, internet2_clients=None,
         asn_clients=None, admin_active=None, user_active=None, urls=None,
