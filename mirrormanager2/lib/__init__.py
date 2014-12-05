@@ -130,6 +130,21 @@ def get_host(session, host_id):
     return query.first()
 
 
+def get_hosts(session):
+    ''' Return all Hosts in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Host
+    ).order_by(
+        model.Host.id
+    )
+
+    return query.all()
+
+
 def get_host_acl_ip(session, host_acl_ip_id):
     ''' Return a specified HostAclIp via its identifier.
 
