@@ -215,12 +215,35 @@ class Host(BASE):
         ''' Return a string representation of the object. '''
         return '<Host(%s - %s)>' % (self.id, self.name)
 
+    def __json__(self):
+        return dict(
+            id=self.id,
+            name=self.name,
+            site=dict(
+                id=self.site.id,
+                name=self.site.name,
+            ),
+            admin_active=self.admin_active,
+            user_active=self.user_active,
+            country=self.country,
+            bandwidth_int=self.bandwidth_int,
+            comment=self.comment,
+            last_checked_in=self.last_checked_in,
+            last_crawled=self.last_crawled,
+            private=self.private,
+            internet2=self.internet2,
+            internet2_clients=self.internet2_clients,
+            asn=self.asn,
+            asn_clients=self.asn_clients,
+            max_connections=self.max_connections,
+            last_crawl_duration=self.last_crawl_duration,
+        )
+
     def set_not_up2date(self, session):
         for hc in self.categories:
             for hcd in hc.directories:
                 hcd.up2date = False
                 session.commit()
-
 
 
 class Directory(BASE):

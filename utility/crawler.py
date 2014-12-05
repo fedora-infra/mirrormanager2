@@ -23,7 +23,9 @@ from mirrormanager2.lib.model import HostCategoryDir
 from mirrormanager2.lib.sync import run_rsync
 
 
+
 logger = logging.getLogger("crawler")
+
 
 # This is a "thread local" object that allows us to store the start time of
 # each worker thread (so they can measure and check if they should time out or
@@ -36,6 +38,23 @@ def thread_id():
     return hashlib.md5(str(threading.current_thread().ident)).hexdigest()[:7]
 
 
+def notify(options, topic, msg):
+    if not options.fedmsg:
+        return
+
+    import fedmsg
+    kwargs = dict(
+        modname='mirrormanager',
+        topic='crawler.' + topic,
+        msg=msg,
+
+        # These direct us to talk to a fedmsg-relay living somewhere.
+        active=True,
+        name="relay_inbound",
+    )
+    fedmsg.publish(**kwargs)
+
+
 def doit(options, config):
 
     session = mirrormanager2.lib.create_session(config['DB_URL'])
@@ -44,7 +63,7 @@ def doit(options, config):
     hosts = mirrormanager2.lib.get_mirrors(session, private=False)
 
     # Limit our host list down to only the ones we really want to crawl
-    hosts = (
+    hosts = [
         host for host in hosts if (
             not host.id < options.startid and
             not host.id >= options.stopid and
@@ -54,10 +73,12 @@ def doit(options, config):
                 host.site.user_active and
                 host.site.admin_active) and
             not host.site.private)
-    )
+    ]
 
     # And then, for debugging, only do one host
     #hosts = [hosts.next()]
+
+    notify(options, 'start', dict(hosts=hosts))
 
     # Before we do work, chdir to /var/tmp/.  mirrormanager1 did this and I'm
     # not totally sure why...
@@ -66,7 +87,14 @@ def doit(options, config):
     # Then create a threadpool to handle as many at a time as we like
     threadpool = multiprocessing.pool.ThreadPool(processes=options.threads)
     fn = lambda host: worker(options, config, host)
-    results = threadpool.map(fn, hosts)
+
+    # Here's the big operation
+    return_codes = threadpool.map(fn, hosts)
+
+    # Put a bow on the results for fedmsg
+    results = [dict(rc=rc, host=host) for rc, host in zip(return_codes, hosts)]
+    notify(options, 'complete', dict(results=results))
+
     return results
 
 
@@ -111,6 +139,10 @@ def main():
     parser.add_argument(
         "--category", dest="categories", action="append", default=[],
         help="Category to scan (default=all), can be repeated")
+
+    parser.add_argument(
+        "--disable-fedmsg", dest="fedmsg", action="store_false", default=True,
+        help="Disable fedmsg notifications at the beginning and end of crawl")
 
     parser.add_argument(
         "--canary", dest="canary", action="store_true", default=False,
@@ -905,9 +937,13 @@ def per_host(session, host, options, config):
                     # could be a dir with no files, or an unreadable dir.
                     # defer decision on this dir, let a child decide.
                     pass
+
+                # We succeeded, let's reduce the try_later_delay
+                if try_later_delay > 1:
+                    try_later_delay = try_later_delay >> 1
             except TryLater:
-                msg = "Server load exceeded - try later (%s seconds)" % (
-                    try_later_delay)
+                msg = "Server load exceeded on %r - try later (%s seconds)" % (
+                    host, try_later_delay)
                 logger.warning(msg)
                 if categoryUrl.startswith('http') \
                         and not hoststate.keepalives_available:
@@ -916,9 +952,8 @@ def per_host(session, host, options, config):
                         "enabled." % (host.name, host.id))
 
                 time.sleep(try_later_delay)
-                if try_later_delay < 8:
+                if try_later_delay < 60:
                     try_later_delay = try_later_delay << 1
-
             except:
                 logging.exception("Unhandled exception raised.")
                 mark_not_up2date(
@@ -940,7 +975,7 @@ def per_host(session, host, options, config):
 
 
 def worker(options, config, host):
-    logger.info("Worker %r looking at host %r" % (thread_id(), host))
+    logger.info("Worker %r starting on host %r" % (thread_id(), host))
     threadlocal.starttime = time.time()
 
     # Each worker gets its own thread
@@ -961,7 +996,7 @@ def worker(options, config, host):
         logger.exception("Failure in thread %r, host %r" % (thread_id(), host))
         rc = 3
 
-    logger.info("Ending crawl with status %r" % rc)
+    logger.info("Ending crawl of %r with status %r" % (host, rc))
     return rc
 
 
