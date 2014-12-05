@@ -257,10 +257,16 @@ def make_repomd_file_details(session, diskpath, relativeDName, D, category):
     sha256 = hashlib.sha256(repomd).hexdigest()
     sha512 = hashlib.sha512(repomd).hexdigest()
 
-    yumrepo = yum.repoMDObject.RepoMD('repoid', absolutepath)
-    if 'timestamp' not in yumrepo.__dict__:
-        set_repomd_timestamp(yumrepo)
-    timestamp = yumrepo.timestamp
+    try:
+        yumrepo = yum.repoMDObject.RepoMD('repoid', absolutepath)
+        if 'timestamp' not in yumrepo.__dict__:
+            set_repomd_timestamp(yumrepo)
+        timestamp = yumrepo.timestamp
+    except yum.Errors.RepoMDError:
+        # If the repomd.xml cannot be parsed, take the timestamp from the
+        # filesystem.  We use this in the case of atomic repos.
+        timestamp = os.path.getmtime(absolutepath)
+
     fd = mirrormanager2.lib.get_file_detail(
         session,
         directory_id=D.id,
