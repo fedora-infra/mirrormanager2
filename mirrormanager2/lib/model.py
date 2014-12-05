@@ -60,7 +60,7 @@ class MirrorManagerBaseMixin(object):
         primary_keys = [key.key for key in cls.__mapper__.primary_key]
         return session.query(cls).filter(sa.or_(
             getattr(cls, col) == pkey_value for col in primary_keys
-        ))
+        )).one()
 
 
 BASE = declarative_base(cls=MirrorManagerBaseMixin)
