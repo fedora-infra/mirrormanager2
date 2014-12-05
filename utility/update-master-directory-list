@@ -517,7 +517,7 @@ def sync_category_directories(
             make_repository(session, D, relativeDName, category)
         make_repomd_file_details(session, diskpath, relativeDName, D, category)
 
-    Directory.ageFileDetails(session)
+    Directory.age_file_details(session)
 
 
 def parse_rsync_listing(session, category, f):
