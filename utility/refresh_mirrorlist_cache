@@ -1,0 +1,54 @@
+#!/usr/bin/python
+
+"""
+This script changes the directory path from the development tree to the
+released tree once the release has been published.
+
+In principle it should be run about a week after the said release has been
+published.
+
+This implies that for a week, users will be actually hitting the development
+tree (which is hardlinked to the release tree and thus will have the same
+content)
+
+TODO: test IRL
+"""
+
+import sys
+import re
+import os
+
+from optparse import OptionParser
+
+sys.path.append('..')
+import mirrormanager2.lib.mirrorlist
+
+
+def main():
+    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option(
+        "-c", "--config",
+        dest="config",
+        default='/etc/mirrormanager/prod.cfg',
+        help="Configuration file to use (default=/etc/mirrormanager/prod.cfg)")
+    parser.add_option(
+        "-o", "--output",
+        dest="output", default='/var/lib/mirrormanager/mirrorlist_cache.pkl',
+        help="output file")
+
+    (options, args) = parser.parse_args()
+
+    d = dict()
+    with open(options.config) as config_file:
+        exec(compile(config_file.read(), options.config, 'exec'), d)
+
+    session = mirrormanager2.lib.create_session(d['DB_URL'])
+
+    mirrormanager2.lib.mirrorlist.populate_all_caches(session)
+    mirrormanager2.lib.mirrorlist.dump_caches(session, options.output)
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

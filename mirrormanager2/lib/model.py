@@ -800,6 +800,7 @@ class FileDetail(BASE):
     directory = relation(
         'Directory',
         foreign_keys=[directory_id], remote_side=[Directory.id],
+        backref="fileDetails",
     )
 
 
