@@ -524,6 +524,21 @@ def get_repositories(session):
     return query.all()
 
 
+def get_reporedirect(session):
+    ''' Return all reporedirect in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.RepositoryRedirect
+    ).order_by(
+        model.RepositoryRedirect.id
+    )
+
+    return query.all()
+
+
 def get_arches(session):
     ''' Return the list of all the arch in the database.
 
