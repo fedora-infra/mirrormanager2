@@ -46,12 +46,6 @@ if 'MM2_CONFIG' in os.environ:  # pragma: no cover
 ADMIN = Admin(APP)
 
 
-if APP.config.get('MM_AUTHENTICATION') == 'fas':
-    # Use FAS for authentication
-    from flask.ext.fas_openid import FAS
-    FAS = FAS(APP)
-
-
 # Points the template and static folders to the desired theme
 APP.template_folder = os.path.join(
     APP.template_folder, APP.config['THEME_FOLDER'])
@@ -87,6 +81,15 @@ STDERR_LOG.setLevel(logging.INFO)
 APP.logger.addHandler(STDERR_LOG)
 
 LOG = APP.logger
+
+
+if APP.config.get('MM_AUTHENTICATION') == 'fas':
+    # Use FAS for authentication
+    try:
+        from flask.ext.fas_openid import FAS
+        FAS = FAS(APP)
+    except ImportError:
+        APP.logger.exception("Couldn't import flask-fas-openid")
 
 
 import mirrormanager2
