@@ -789,6 +789,21 @@ def get_file_detail(
     return query.first()
 
 
+def get_directories(session):
+    ''' Return all Directory in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Directory
+    ).order_by(
+        model.Directory.id
+    )
+
+    return query.all()
+
+
 def get_directory_by_id(session, id):
     ''' Return a specified Directory via its identifier.
 
