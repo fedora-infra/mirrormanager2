@@ -477,7 +477,7 @@ def sync_category_directories(
             d = category.directory_cache[relativeDName]
             if d['readable'] != value['readable']: set_readable = True
             if d['ctime'] != value['ctime']:       set_ctime = True
-            D = mirrormanager2.get_directory_by_id(session, d['id'])
+            D = mirrormanager2.lib.get_directory_by_id(session, d.id)
         except KeyError:
             if relativeDName == u'':
                 D = category.topdir
