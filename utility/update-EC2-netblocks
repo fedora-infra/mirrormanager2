@@ -1,0 +1,114 @@
+#!/usr/bin/python
+"""
+Synchronize Amazon AWS-published EC2 netblock lists per region into the
+MirrorManager database for Fedora Infrastructure-managed mirrors in S3.
+"""
+
+# std imports
+import optparse
+import sys
+import json
+import urlgrabber
+
+sys.path.append('..')
+import mirrormanager2.lib
+from mirrormanager2.lib.model import HostNetblock
+
+options = None
+
+def parse_out_region(hostname):
+    hostname = hostname.lstrip('s3-mirror-')
+    hostname = hostname.rstrip('.fedoraproject.org')
+    return hostname
+
+def s3_mirrors(session):
+    hosts_by_region = {}
+    site = mirrormanager2.lib.get_site_by_name(session, "Red Hat")
+    for host in site.hosts:
+        if host.name.startswith("s3"):
+            region = parse_out_region(host.name)
+            hosts_by_region[region] = {'host': host,
+                                       'netblocks': {},
+                                   }
+            for nb in host.netblocks:
+                hosts_by_region[region]['netblocks'][nb.netblock] = {'host_netblock_id' : nb.id,
+                                                                     'stale':True,
+                }
+    return hosts_by_region
+
+
+def get_ip_ranges():
+    return urlgrabber.urlread('https://ip-ranges.amazonaws.com/ip-ranges.json')
+
+def parse_ip_ranges(ipranges_str):
+    return json.loads(ipranges_str)
+
+def host_has_netblock(hosts_by_region, region, netblock):
+    return netblock in hosts_by_region[region]['netblocks']
+
+def doit(session):
+    hosts_by_region = s3_mirrors(session)
+    ipranges_str = get_ip_ranges()
+    ipranges = parse_ip_ranges(ipranges_str)
+
+    for p in ipranges['prefixes']:
+        service = p['service']
+        region = p['region']
+        ip_prefix = p['ip_prefix']
+        if service != "EC2":
+            continue
+        if region == "GLOBAL":
+            continue
+
+        if region in hosts_by_region: # ignore regions we don't have a mirror in
+            h = hosts_by_region[region]
+            host = h['host']
+            if not host_has_netblock(hosts_by_region, region, ip_prefix):
+                print "Added host %s netblock %s" % (host.name, ip_prefix)
+                if not options.dry_run:
+                    nb = HostNetblock(host=host, netblock=ip_prefix, name=None) # this adds the entry to the database, mark as not stale
+                    session.add(nb)
+                    session.flush()
+                    hosts_by_region[region]['netblocks'][ip_prefix] = {'host_netblock_id' : nb.id,
+                                                                       'stale':False,
+                                                                       }
+            else:
+                # found the netblock in our database, mark it as not stale
+                hosts_by_region[region]['netblocks'][ip_prefix]['stale'] = False
+                
+
+    # delete stale netblock entries from the database
+    for region, h in hosts_by_region.items():
+        for netblock in hosts_by_region[region]['netblocks']:
+            if hosts_by_region[region]['netblocks'][netblock]['stale']: # delete this, it's no longer on Amazon's list
+                host = h['host']
+                print "Deleted host %s netblock %s" % (host.name, netblock)
+                if not options.dry_run:
+                    nb = mirrormanager2.lib.get_host_netblock(session, hosts_by_region[region]['netblocks'][netblock]['host_netblock_id'])
+                    session.delete(nb)
+
+
+def main():
+    global options
+    parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option("-c", "--config",
+                      dest="config", default='dev.cfg',
+                      help="Config file to use")
+    parser.add_option("-n", "--dry-run",
+                      dest="dry_run", action="store_true", default=False)
+
+
+    (options, args) = parser.parse_args()
+    config = dict()
+    with open(options.config) as config_file:
+        exec(compile(config_file.read(), options.config, 'exec'), config)
+    
+    session = mirrormanager2.lib.create_session(config['DB_URL'])
+    
+    doit(session)
+    session.commit()
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
+        
