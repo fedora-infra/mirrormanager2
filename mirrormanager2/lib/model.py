@@ -215,6 +215,13 @@ class Host(BASE):
         ''' Return a string representation of the object. '''
         return '<Host(%s - %s)>' % (self.id, self.name)
 
+    def set_not_up2date(self, session):
+        for hc in self.categories:
+            for hcd in hc.directories:
+                hcd.up2date = False
+                session.commit()
+
+
 
 class Directory(BASE):
 
