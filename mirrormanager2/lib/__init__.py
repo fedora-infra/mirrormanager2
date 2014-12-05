@@ -509,6 +509,21 @@ def get_repo_by_dir(session, path):
     return query.all()
 
 
+def get_repositories(session):
+    ''' Return all repositories in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Repository
+    ).order_by(
+        model.Repository.id
+    )
+
+    return query.all()
+
+
 def get_arches(session):
     ''' Return the list of all the arch in the database.
 
