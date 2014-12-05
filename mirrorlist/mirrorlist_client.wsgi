@@ -14,7 +14,7 @@
 import socket, select
 import cPickle as pickle
 from string import zfill, atoi, strip, replace
-from paste.wsgiwrappers import *
+from webob import Request, Response
 import gzip
 import cStringIO
 
@@ -155,8 +155,8 @@ def keep_only_http_results(input):
 
 
 def application(environ, start_response):
-    request = WSGIRequest(environ)
-    response = WSGIResponse()
+    request = Request(environ)
+    response = Response()
 
     d = request_setup(environ, request)
 
@@ -205,5 +205,7 @@ def application(environ, start_response):
 
 
 if __name__ == '__main__':
-    from paste import httpserver
-    httpserver.serve(application, host='127.0.0.1', port='8090')
+    from wsgiref import simple_server
+    httpd = simple_server.make_server('127.0.0.1', 8090, application)
+    print('Serving on http://127.0.0.1:8090')
+    httpd.serve_forever()
