@@ -624,6 +624,21 @@ def get_locations(session):
     return query.all()
 
 
+def get_netblock_country(session):
+    ''' Return all NetblockCountry in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.NetblockCountry
+    ).order_by(
+        model.NetblockCountry.id
+    )
+
+    return query.all()
+
+
 def get_mirrors(
         session, private=None, internet2=None, internet2_clients=None,
         asn_clients=None, admin_active=None, user_active=None, urls=None,
