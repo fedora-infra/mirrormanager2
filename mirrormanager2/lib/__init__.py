@@ -239,7 +239,7 @@ def get_host_category_by_hostid_category(session, host_id, category):
     return query.all()
 
 
-def get_host_category_url(session, host_category_url_id):
+def get_host_category_url_by_id(session, host_category_url_id):
     ''' Return a specified HostCategoryUrl via its identifier.
 
     :arg session: the session with which to connect to the database.
