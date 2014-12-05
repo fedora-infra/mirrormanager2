@@ -35,6 +35,7 @@ def repo_prefix(path, category, ver):
     isUpdatesReleased = False
     if not isUpdatesTesting:
         isUpdatesReleased = u'updates' in path
+    isAtomic = u'atomic' in path
     isEverything = u'Everything' in path
     isFedora = u'Fedora' in path
     
@@ -92,6 +93,9 @@ def repo_prefix(path, category, ver):
                     else:
                         # fedora-install-
                         prefix = u'fedora-install-%s' % version
+        elif isAtomic:
+            # atomic
+            prefix = u'atomic-%s' % version
         elif isUpdatesReleased:
             # updates-released-
             if isDebug:
