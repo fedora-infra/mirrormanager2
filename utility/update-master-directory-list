@@ -468,6 +468,7 @@ def short_filelist(files):
 
 def sync_category_directories(
         session, diskpath, category, category_directories):
+    logger.debug("  sync_directories_directories %r" % category)
     for relativeDName in sorted(category_directories.keys()):
         value = category_directories[relativeDName]
         set_readable = False
@@ -573,6 +574,7 @@ def cache_directories(category):
 
 
 def sync_directories_from_disk(session, diskpath, category, excludes=[]):
+    logger.debug("sync_directories_from_disk %r" % diskpath)
     category.unreadable_dirs = set()
     # drop any trailing slashes from diskpath
     diskpath = diskpath.rstrip(u'/')
@@ -581,6 +583,7 @@ def sync_directories_from_disk(session, diskpath, category, excludes=[]):
     for dirpath, dirnames, filenames in os.walk(diskpath, topdown=True):
         relativeDName = dirpath[len(diskpath) + 1:]
         relativeDName = relativeDName.strip(u'/')
+        logger.debug("  walking %r" % relativeDName)
         if is_excluded(relativeDName, stdexcludes + excludes):
             logger.info("excluding %s" % (relativeDName))
             # exclude all its subdirs too
@@ -593,6 +596,7 @@ def sync_directories_from_disk(session, diskpath, category, excludes=[]):
             s = os.stat(os.path.join(diskpath, relativeDName))
             ctime = s[stat.ST_CTIME]
         except OSError:
+            log.debug("Avoiding %r, dissappeared." % relativeDname)
             continue
 
         try:
@@ -611,8 +615,11 @@ def sync_directories_from_disk(session, diskpath, category, excludes=[]):
 
         changed = (d_ctime != ctime)
         if changed:
-            logger.info(
-                "%s has changed: %s != %s" % (relativeDName, d_ctime, ctime))
+            logger.info("%s has changed: %s != %s" % (
+                relativeDName, d_ctime, ctime))
+        else:
+            logger.debug("    %s has not changed" % relativeDName)
+
         category_directories[relativeDName] = {
             'files':{},
             'isRepository':isRepo,
