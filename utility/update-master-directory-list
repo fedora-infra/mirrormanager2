@@ -268,23 +268,23 @@ def make_repomd_file_details(session, diskpath, relativeDName, D, category):
     timestamp = yumrepo.timestamp
     fd = mirrormanager2.lib.get_file_detail(
         session,
-        directory=D.id,
+        directory_id=D.id,
         filename='repomd.xml',
         sha1=sha1,
         md5=md5,
         sha256=sha256,
         sha512=sha512,
         size=size,
-        timestamp=ctime)
+        timestamp=timestamp)
     if not fd:
         fd = FileDetail(
-            directory=D,
+            directory_id=D.id,
             filename='repomd.xml',
             sha1=sha1,
             md5=md5,
             sha256=sha256,
             sha512=sha512,
-            timestamp=ctime,
+            timestamp=timestamp,
             size=size)
         session.add(fd)
         session.commit(fd)
