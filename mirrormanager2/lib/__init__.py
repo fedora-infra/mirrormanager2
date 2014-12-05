@@ -269,6 +269,20 @@ def get_country_by_name(session, country_code):
     return query.first()
 
 
+def get_country_continent_redirect(session):
+    ''' Return all the CountryContinentRedirect present in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.CountryContinentRedirect
+    ).order_by(
+        model.CountryContinentRedirect.id
+    )
+
+    return query.all()
+
 def get_user_by_username(session, username):
     ''' Return a specified User via its username.
 
