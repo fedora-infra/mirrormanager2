@@ -991,3 +991,65 @@ def uploaded_config(session, host, config):
         session.commit()
 
     return message
+
+
+def query_directories(session):
+    ''' Return the list of Directory, Host, HostCategoryUrl and Site
+    information required by `refresh_mirrorlist_cache` to build the pickle
+    file.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Directory.id.label('directory_id'),
+        model.Directory.name.label('dname'),
+        model.Host.id.label('hostid'),
+        model.Host.country,
+        model.HostCategoryUrl.id.label('id'),
+        model.Site.private.label('siteprivate'),
+        model.Host.private.label('hostprivate'),
+        model.Host.internet2,
+        model.Host.internet2_clients,
+    ).filter(
+        model.Host.user_active == True
+    ).filter(
+        model.Host.admin_active == True
+    ).filter(
+        model.Host.site_id == model.Site.id
+    ).filter(
+        model.Site.user_active == True
+    ).filter(
+        model.Site.admin_active == True
+    ).filter(
+        model.Host.id == model.HostCategory.host_id
+    ).filter(
+        model.HostCategory.category_id == model.CategoryDirectory.category_id
+    ).filter(
+        model.CategoryDirectory.directory_id == model.Directory.id
+    ).filter(
+        model.HostCategory.id == model.HostCategoryUrl.host_category_id
+    ).filter(
+        model.HostCategoryUrl.private == False
+    )
+
+    q1 = query.filter(
+        model.HostCategoryDir.host_category_id == model.HostCategory.id
+    ).filter(
+        model.HostCategoryDir.directory_id == model.Directory.id
+    ).filter(
+        model.HostCategoryDir.up2date == True
+    )
+
+    q2 = query.filter(
+        model.HostCategory.always_up2date == True
+    )
+
+    q = session.query(
+        q1.union(q2).subquery()
+    ).order_by(
+        'dname',
+        'hostid'
+    )
+
+    return q.all()
