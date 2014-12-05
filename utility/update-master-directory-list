@@ -29,20 +29,17 @@ import re
 import optparse
 import os
 import stat
-import string
 import sys
 import yum.repoMDObject
 import datetime
 import time
 import hashlib
-import warnings
 
 
 sys.path.append('..')
 import mirrormanager2.lib
-from mirrormanager2 import APP
 from mirrormanager2.lib.model import (
-    Host, Directory, Repository, Version, FileDetail)
+    Arch, Directory, Repository, Version, FileDetail)
 from mirrormanager2.lib.repomap import repo_prefix
 from mirrormanager2.lib.pid import manage_pidfile, remove_pidfile
 from mirrormanager2.lib.sync import run_rsync
@@ -157,7 +154,7 @@ def set_repomd_timestamp(yumrepo):
     return timestamp
 
 
-def make_file_details_from_checksums(diskpath, relativeDName, D):
+def make_file_details_from_checksums(session, diskpath, relativeDName, D):
     def _parse_checksum_file(relativeDName, checksumlen):
         r = {}
         try:
@@ -376,7 +373,7 @@ def ctime_from_rsync(date, hms):
 
 def fill_category_directories_from_rsync(
         line, category, topdirName, category_directories):
-    readable=True
+    readable = True
     relativeDName = line.split()[4]
     if re.compile('^\.$').match(d):
         directoryname = topdirName
@@ -459,7 +456,7 @@ def short_filelist(files):
         # keep the most recent 3
         date_file_list = date_file_list[-3:]
 
-        for stat, k, size in date_file_list:
+        for _, k, _ in date_file_list:
             rc[k] = files[k]
         return rc
     else:
@@ -467,7 +464,7 @@ def short_filelist(files):
 
 
 def sync_category_directories(
-        session, diskpath, category, category_directories):
+        session, config, diskpath, category, category_directories):
     logger.debug("  sync_directories_directories %r" % category)
     for relativeDName in sorted(category_directories.keys()):
         value = category_directories[relativeDName]
@@ -506,7 +503,7 @@ def sync_category_directories(
                     D.files = short_filelist(value['files'])
         session.add(D)
         session.commit()
-        make_file_details_from_checksums(diskpath, relativeDName, D)
+        make_file_details_from_checksums(session, diskpath, relativeDName, D)
 
     # this has to be a second pass to be sure the child repodata/ dir is
     # created in the db first
@@ -517,10 +514,10 @@ def sync_category_directories(
             make_repository(session, D, relativeDName, category)
         make_repomd_file_details(session, diskpath, relativeDName, D, category)
 
-    Directory.age_file_details(session)
+    Directory.age_file_details(session, config)
 
 
-def parse_rsync_listing(session, category, f):
+def parse_rsync_listing(session, config, category, f):
     topdirName = category.topdir.name
     category_directories = {}
     category.unreadable_dirs = set()
@@ -540,10 +537,11 @@ def parse_rsync_listing(session, category, f):
         else:
             add_file_to_directory(line, category_directories)
 
-    sync_category_directories(session, None, category, category_directories)
+    sync_category_directories(
+        session, config, None, category, category_directories)
 
 
-def sync_directories_using_rsync(rsyncpath, category):
+def sync_directories_using_rsync(session, config, rsyncpath, category):
     try:
         result, output = run_rsync(rsyncpath, category.extra_rsync_options)
     except:
@@ -554,12 +552,12 @@ def sync_directories_using_rsync(rsyncpath, category):
             "rsync returned exit code %d for Category %s: %s"
             % (result, category.name, output))
     # still, try to use the output listing if we can
-    parse_rsync_listing(category, output)
+    parse_rsync_listing(session, config, category, output)
 
 
-def sync_directories_from_file(filename, category):
+def sync_directories_from_file(session, config, filename, category):
     f = open(filename, 'r')
-    parse_rsync_listing(None, category, f)
+    parse_rsync_listing(session, config, None, category, f)
     f.close()
 
 
@@ -573,7 +571,10 @@ def cache_directories(category):
     return cache
 
 
-def sync_directories_from_disk(session, diskpath, category, excludes=[]):
+def sync_directories_from_disk(
+    session, config, diskpath, category, excludes=None):
+
+    excludes = excludes or []
     logger.debug("sync_directories_from_disk %r" % diskpath)
     category.unreadable_dirs = set()
     # drop any trailing slashes from diskpath
@@ -596,7 +597,7 @@ def sync_directories_from_disk(session, diskpath, category, excludes=[]):
             s = os.stat(os.path.join(diskpath, relativeDName))
             ctime = s[stat.ST_CTIME]
         except OSError:
-            log.debug("Avoiding %r, dissappeared." % relativeDname)
+            logger.debug("Avoiding %r, dissappeared." % relativeDName)
             continue
 
         try:
@@ -639,7 +640,7 @@ def sync_directories_from_disk(session, diskpath, category, excludes=[]):
                     'stat':s[stat.ST_CTIME]}
 
     sync_category_directories(
-        session, diskpath, category, category_directories)
+        session, config, diskpath, category, category_directories)
 
 
 def main():
@@ -712,13 +713,13 @@ def main():
         category.directory_cache = cache_directories(category)
 
         if i['type'] == 'rsync':
-            sync_directories_using_rsync(session, i['url'], category)
+            sync_directories_using_rsync(session, config, i['url'], category)
 
         if i['type'] == 'file':
-            sync_directories_from_file(session, i['url'], category)
+            sync_directories_from_file(session, config, i['url'], category)
 
         if i['type'] == 'directory':
-            sync_directories_from_disk(session, i['path'], category)
+            sync_directories_from_disk(session, config, i['path'], category)
 
             if options.delete_directories:
                 nuke_gone_directories(i['path'], category)

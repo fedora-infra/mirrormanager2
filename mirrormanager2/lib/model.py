@@ -23,27 +23,18 @@
 MirrorManager2 database model.
 '''
 
-__requires__ = ['SQLAlchemy >= 0.7', 'jinja2 >= 2.4']
-import pkg_resources
-
 import datetime
+import collections
 import logging
 import time
 
 import sqlalchemy as sa
 from sqlalchemy import create_engine
-from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import relation
 from sqlalchemy.orm import backref
-from sqlalchemy.orm.collections import attribute_mapped_collection
-from sqlalchemy.orm.collections import mapped_collection
-from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.sql import and_
-from sqlalchemy.sql.expression import Executable, ClauseElement
 
 
 class MirrorManagerBaseMixin(object):
@@ -243,26 +234,26 @@ class Directory(BASE):
         return '<Directory(%s - %s)>' % (self.id, self.name)
 
     @classmethod
-    def age_file_details(cls, session):
-        cls._fill_file_details_cache(session)
-        cls._age_file_details(session)
+    def age_file_details(cls, session, config):
+        cls._fill_file_details_cache(session, config)
+        cls._age_file_details(session, config)
 
     @classmethod
-    def _fill_file_details_cache(cls, session):
+    def _fill_file_details_cache(cls, session, config):
 
         raise NotImplementedError("not yet ported from mirrormanager1")
 
         sql = 'SELECT id, directory_id, filename, timestamp from file_detail ORDER BY directory_id, filename, -timestamp'
         result = FileDetail._connection.queryAll(sql)
-        cache = dict()
+        cache = collections.defaultdict(list)
         for (id, directory_id, filename, timestamp) in result:
             k = (directory_id, filename)
             v = dict(file_detail_id=id, timestamp=timestamp)
-            append_value_to_cache(cache, k, v)
+            cache[k].append(v)
         Directory.file_details_cache = cache
 
     @classmethod
-    def _age_file_details(cls, session):
+    def _age_file_details(cls, session, config):
         """For each file, keep at least 1 FileDetail entry.
 
         Remove the second-most recent entry if the most recent entry is older
