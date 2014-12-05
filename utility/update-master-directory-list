@@ -244,7 +244,7 @@ def make_file_details_from_checksums(diskpath, relativeDName, D):
             session.commit(fd)
 
 
-def make_repomd_file_details(diskpath, relativeDName, D, category):
+def make_repomd_file_details(session, diskpath, relativeDName, D, category):
     if diskpath is None: return
     if not relativeDName.endswith(u'/repodata'): return
     absolutepath = os.path.join(diskpath, relativeDName, 'repomd.xml')
@@ -514,7 +514,7 @@ def sync_category_directories(
         D = mirrormanager2.lib.get_directory_by_id(session, d.id)
         if value['isRepository']:
             make_repository(session, D, relativeDName, category)
-        make_repomd_file_details(diskpath, relativeDName, D, category)
+        make_repomd_file_details(session, diskpath, relativeDName, D, category)
 
     #FIXME: We don't have this in MM2, should we have something similar?
     #Directory.ageFileDetails()
