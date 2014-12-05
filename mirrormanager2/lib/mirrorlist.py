@@ -377,5 +377,8 @@ def dump_caches(session, filename):
         f = open(filename, 'w')
         pickle.dump(data, f)
         f.close()
-    except:
+        print 'Pickle generated at %s' % filename
+    except Exception as err:
+        print 'Error generating the pickle (%s): %s' % (
+            filename, err)
         pass
