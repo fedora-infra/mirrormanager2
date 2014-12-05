@@ -10,4 +10,5 @@ python-fedora
 python-openid
 python-openid-cla
 python-openid-teams
-python-IPy
+IPy
+dnspython
