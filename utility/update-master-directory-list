@@ -516,8 +516,7 @@ def sync_category_directories(
             make_repository(session, D, relativeDName, category)
         make_repomd_file_details(session, diskpath, relativeDName, D, category)
 
-    #FIXME: We don't have this in MM2, should we have something similar?
-    #Directory.ageFileDetails()
+    Directory.ageFileDetails(session)
 
 
 def parse_rsync_listing(session, category, f):

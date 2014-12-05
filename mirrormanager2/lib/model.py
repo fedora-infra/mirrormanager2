@@ -242,6 +242,57 @@ class Directory(BASE):
         ''' Return a string representation of the object. '''
         return '<Directory(%s - %s)>' % (self.id, self.name)
 
+    @classmethod
+    def age_file_details(cls, session):
+        cls._fill_file_details_cache(session)
+        cls._age_file_details(session)
+
+    @classmethod
+    def _fill_file_details_cache(cls, session):
+
+        raise NotImplementedError("not yet ported from mirrormanager1")
+
+        sql = 'SELECT id, directory_id, filename, timestamp from file_detail ORDER BY directory_id, filename, -timestamp'
+        result = FileDetail._connection.queryAll(sql)
+        cache = dict()
+        for (id, directory_id, filename, timestamp) in result:
+            k = (directory_id, filename)
+            v = dict(file_detail_id=id, timestamp=timestamp)
+            append_value_to_cache(cache, k, v)
+        Directory.file_details_cache = cache
+
+    @classmethod
+    def _age_file_details(cls, session):
+        """For each file, keep at least 1 FileDetail entry.
+
+        Remove the second-most recent entry if the most recent entry is older
+        than max_propogation_days.  This gives mirrors time to pick up the most
+        recent change.
+
+        Remove any others that are more than max_stale_days old.
+        """
+
+        raise NotImplementedError("not yet ported from mirrormanager1")
+
+        t = int(time.time())
+        max_stale = config.get('mirrormanager.max_stale_days', 3)
+        max_propogation = config.get('mirrormanager.max_propogation_days', 2)
+        stale = t - (60*60*24*max_stale)
+        propogation = t - (60*60*24*max_propogation)
+
+        for k, fds in Directory.file_details_cache.iteritems():
+            (directory_id, filename) = k
+            if len(fds) > 1:
+                start = 2
+                # second-most recent only if most recent has had time to
+                # propogate
+                if fds[0]['timestamp'] < propogation:
+                    start = 1
+                # all others
+                for f in fds[start:]:
+                    if f['timestamp'] < stale:
+                        FileDetail.get(f['file_detail_id']).destroySelf()
+
 
 # e.g. 'fedora' and 'epel'
 class Product(BASE):
