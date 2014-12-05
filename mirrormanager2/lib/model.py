@@ -45,7 +45,34 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import and_
 from sqlalchemy.sql.expression import Executable, ClauseElement
 
-BASE = declarative_base()
+
+class MirrorManagerBaseMixin(object):
+    """ Base mixin for mirrormanager2 models.
+
+    This base class mixin grants sqlalchemy models dict-like access so that
+    they behave somewhat similarly to SQLObject models (inherited from the TG1
+    codebase of mirrormanager1).  This was added with the intent to make the
+    porting of backend scripts from mirrormanager1 to mirrormanager2 easier.
+    """
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+
+    def __contains__(self, key):
+        return hasattr(self, key)
+
+    @classmethod
+    def get(cls, session, pkey_value):
+        primary_keys = [key.key for key in cls.__mapper__.primary_key]
+        return session.query(cls).filter(sa.or_(
+            getattr(cls, col) == pkey_value for col in primary_keys
+        ))
+
+
+BASE = declarative_base(cls=MirrorManagerBaseMixin)
 
 ERROR_LOG = logging.getLogger('mirrormanager2.lib.model')
 
