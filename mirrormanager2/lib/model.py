@@ -241,16 +241,19 @@ class Directory(BASE):
     @classmethod
     def _fill_file_details_cache(cls, session, config):
 
-        raise NotImplementedError("not yet ported from mirrormanager1")
-
-        sql = 'SELECT id, directory_id, filename, timestamp from file_detail ORDER BY directory_id, filename, -timestamp'
-        result = FileDetail._connection.queryAll(sql)
         cache = collections.defaultdict(list)
-        for (id, directory_id, filename, timestamp) in result:
+
+        sql = sa.text(
+            'SELECT id, directory_id, filename, timestamp from file_detail '
+            'ORDER BY directory_id, filename, -timestamp')
+        results = session.execute(sql)
+
+        for (id, directory_id, filename, timestamp) in results:
             k = (directory_id, filename)
             v = dict(file_detail_id=id, timestamp=timestamp)
             cache[k].append(v)
-        Directory.file_details_cache = cache
+
+        cls.file_details_cache = cache
 
     @classmethod
     def _age_file_details(cls, session, config):
@@ -263,15 +266,13 @@ class Directory(BASE):
         Remove any others that are more than max_stale_days old.
         """
 
-        raise NotImplementedError("not yet ported from mirrormanager1")
-
         t = int(time.time())
         max_stale = config.get('mirrormanager.max_stale_days', 3)
         max_propogation = config.get('mirrormanager.max_propogation_days', 2)
-        stale = t - (60*60*24*max_stale)
-        propogation = t - (60*60*24*max_propogation)
+        stale = t - (60 * 60 * 24 * max_stale)
+        propogation = t - (60 * 60 * 24 * max_propogation)
 
-        for k, fds in Directory.file_details_cache.iteritems():
+        for k, fds in cls.file_details_cache.iteritems():
             (directory_id, filename) = k
             if len(fds) > 1:
                 start = 2
@@ -282,7 +283,10 @@ class Directory(BASE):
                 # all others
                 for f in fds[start:]:
                     if f['timestamp'] < stale:
-                        FileDetail.get(f['file_detail_id']).destroySelf()
+                        detail = FileDetail.get(session, f['file_detail_id'])
+                        session.delete(detail)
+
+        session.commit()
 
 
 # e.g. 'fedora' and 'epel'
