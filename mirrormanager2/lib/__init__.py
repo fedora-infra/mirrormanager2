@@ -546,8 +546,6 @@ def get_repositories(session):
     '''
     query = session.query(
         model.Repository
-    ).order_by(
-        model.Repository.id
     )
 
     return query.all()
