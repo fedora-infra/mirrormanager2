@@ -6,7 +6,7 @@
 #WSGIRestrictSignal Off
 #WSGIPythonOptimize 1
 
-#WSGIScriptAlias /mirrormanager /usr/share/mirrormanager/mirrormanager.wsgi
+#WSGIScriptAlias /mirrormanager /usr/share/mirrormanager/mirrormanager2.wsgi
 
 #<Location />
 #    WSGIProcessGroup mirrormanager
