@@ -334,7 +334,7 @@ def get_same_continent_countries(clientCountry, requested_countries):
                 c.upper() for c in continents[country_continents[r]]
                 if c != clientCountry]
             result.extend(requestedCountries)
-    uniqueify(result)
+    result = uniqueify(result)
     return result
 
 
