@@ -246,7 +246,9 @@ def populate_host_country_cache(cache, host):
 
 
 def populate_host_asn_cache(cache, host):
-    if not host.asn_clients: return cache
+    if not host.asn_clients:
+        return cache
+
     if host.asn is not None:
         append_value_to_cache(cache, host.asn, host.id)
 
