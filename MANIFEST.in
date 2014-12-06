@@ -1,0 +1,9 @@
+include LICENSE-MIT-X11 README.rst requirements.txt requirements_mirrorlist.txt
+include runtests.sh createdb.py
+recursive-include mirrormanager2 *
+recursive-include utility *
+recursive-include mirrorlist *
+recursive-include tests *
+recursive-include testdata *
+include doc/*
+
