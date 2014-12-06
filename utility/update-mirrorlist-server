@@ -32,7 +32,5 @@ mkdir -p ${CACHEDIR}/old
 cp -ar ${CACHEDIR}/*  ${CACHEDIR}/old/ 2>/dev/null
 
 ${MM_DIR}/refresh_mirrorlist_cache -c /etc/mirrormanager/prod.cfg
-${MM_DIR}/get_global_netblocks ${CACHEDIR}/i2_netblocks.txt 2>/dev/null
-${MM_DIR}/get_internet2_netblocks ${CACHEDIR}/i2_netblocks.txt 2>/dev/null
 
 exit 0
