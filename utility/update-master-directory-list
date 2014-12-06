@@ -14,11 +14,10 @@ If the directory does not contain too many files, it will register them all
 and thus will check them all on the mirrors.
 The threshold is stored in: `short_filelist` and is currently at 10.
 
-If the script finds a yum repository (finds a repo data), it will create a
-repository object (cf `make_repository`) which is basically a mapping
-between a yum repo name (ie: Fedora-20-updates) and a directory
-(/pub/fedora/linux/updates/....)
-
+If the script finds a yum or atomic repository (finds a repo data or an atomic
+summary file), it will create a repository object (cf `make_repository`) which
+is basically a mapping between a yum repo name (ie: Fedora-20-updates) and a
+directory (/pub/fedora/linux/updates/....)
 
 TODO: test IRL
 """
@@ -239,32 +238,53 @@ def make_file_details_from_checksums(session, diskpath, relativeDName, D):
             session.commit(fd)
 
 
-def make_repomd_file_details(session, diskpath, relativeDName, D, category):
-    if diskpath is None: return
-    if not relativeDName.endswith(u'/repodata'): return
-    absolutepath = os.path.join(diskpath, relativeDName, 'repomd.xml')
-    if not os.path.exists(absolutepath):
+def make_repo_file_details(session, diskpath, relativeDName, D, category, target):
+
+    warning = "Won't make repo file details"
+
+    if diskpath is None:
+        logger.warning("%s: diskpath is None" % warning)
         return
+
+    # For yum repos and ostree repos
+    allowed_targets = ['repomd.xml', 'summary']
+    if target not in allowed_targets:
+        logger.warning("%s: %r not in %r" % (warning, target, allowed_targets))
+        return
+
+    absolutepath = os.path.join(diskpath, relativeDName, target)
+
+    if not os.path.exists(absolutepath):
+        logger.warning("%s: %r does not exist" % (warning, absolutepath))
+        return
+
     try:
         f = open(absolutepath, 'r')
-        repomd = f.read()
+        contents = f.read()
         f.close()
     except:
         return
-    size = len(repomd)
-    md5 = hashlib.md5(repomd).hexdigest()
-    sha1 = hashlib.sha1(repomd).hexdigest()
-    sha256 = hashlib.sha256(repomd).hexdigest()
-    sha512 = hashlib.sha512(repomd).hexdigest()
 
-    yumrepo = yum.repoMDObject.RepoMD('repoid', absolutepath)
-    if 'timestamp' not in yumrepo.__dict__:
-        set_repomd_timestamp(yumrepo)
-    timestamp = yumrepo.timestamp
+    size = len(contents)
+    md5 = hashlib.md5(contents).hexdigest()
+    sha1 = hashlib.sha1(contents).hexdigest()
+    sha256 = hashlib.sha256(contents).hexdigest()
+    sha512 = hashlib.sha512(contents).hexdigest()
+
+    if target == 'repomd.xml':
+        yumrepo = yum.repoMDObject.RepoMD('repoid', absolutepath)
+        if 'timestamp' not in yumrepo.__dict__:
+            set_repomd_timestamp(yumrepo)
+        timestamp = yumrepo.timestamp
+    elif target == 'summary':
+        # TODO -- ostree repos may have a timestamp in their summary file
+        # someday.  for now, just use the system mtime.
+        timestamp = os.path.getmtime(absolutepath)
+
     fd = mirrormanager2.lib.get_file_detail(
         session,
         directory_id=D.id,
-        filename='repomd.xml',
+        filename=target,
         sha1=sha1,
         md5=md5,
         sha256=sha256,
@@ -274,7 +294,7 @@ def make_repomd_file_details(session, diskpath, relativeDName, D, category):
     if not fd:
         fd = FileDetail(
             directory_id=D.id,
-            filename='repomd.xml',
+            filename=target,
             sha1=sha1,
             md5=md5,
             sha256=sha256,
@@ -298,16 +318,39 @@ def move_repository_from_development(prefix, arch, newdir):
     return repo
 
 
-def make_repository(session, directory, relativeDName, category):
-    repo = None
-    (ver, arch) = guess_ver_arch_from_path(session, category, relativeDName)
-    if ver is None or arch is None:
-        return None
+def make_repository(session, directory, relativeDName, category, target):
+
+    warning = "Won't make repository object"
+
+    # For yum repos and ostree repos
+    allowed_targets = ['repomd.xml', 'summary']
+    if target not in allowed_targets:
+        logger.warning("%s: %r not in %r" % (warning, target, allowed_targets))
+        return
+
+    if target == 'repomd.xml':
+        (ver, arch) = guess_ver_arch_from_path(session, category, relativeDName)
+        if ver is None or arch is None:
+            logger.warning("%s: could not guess version and arch %r, %r" % (
+                warning, ver, arch))
+            return None
+    elif target == 'summary':
+        # For ostree, we someday need to actually extract the arch information
+        # from the ostree repo, but for now (F21 and F22) we will only be
+        # shipping x86_64, so we hardcode that.  At present, it is not possible
+        # to query an ostree repo for the arch information.  Bug walters about
+        # this.
+        arch = mirrormanager2.lib.get_arch_by_name(session, 'x86_64')
+        # Furthermore, we'll grab the version piece from the path which looks
+        # like atomic/rawhide or atomic/21.
+        ver = relativeDName.rstrip('/').split('/')[-1]
 
     # stop making duplicate Repository objects.
     if len(directory.repositories) > 0:
+        logger.warning("%s: directory already has a repository")
         return None
 
+    repo = None
     prefix = repo_prefix(relativeDName, category, ver)
     try:
         # historically, Repository.name was a longer string with
@@ -395,6 +438,7 @@ def fill_category_directories_from_rsync(
     category_directories[relativeDName] = {
         'files':{},
         'isRepository':False,
+        'isAtomic':False,
         'readable':readable,
         'ctime':ctime,
         'changed':True}
@@ -513,9 +557,20 @@ def sync_category_directories(
     for relativeDName, value in category_directories.iteritems():
         d = category.directory_cache[relativeDName]
         D = mirrormanager2.lib.get_directory_by_id(session, d.id)
-        if value['isRepository']:
-            make_repository(session, D, relativeDName, category)
-        make_repomd_file_details(session, diskpath, relativeDName, D, category)
+
+        target = None
+        if 'repomd.xml' in value['files']:
+            target = 'repomd.xml'
+        elif 'summary' in value['files']:
+            target = 'summary'
+        else:
+            continue
+
+        if value['isRepository'] or value['isAtomic']:
+            make_repository(session, D, relativeDName, category, target)
+
+        make_repo_file_details(
+            session, diskpath, relativeDName, D, category, target)
 
     Directory.age_file_details(session, config)
 
@@ -616,6 +671,7 @@ def sync_directories_from_disk(
         if not readable or parent_dir(relativeDName) in category.unreadable_dirs:
             category.unreadable_dirs.add(relativeDName)
         isRepo = u'repodata' in dirnames
+        isAtomic = u'summary' in filenames and u'objects' in dirnames
 
         changed = (d_ctime != ctime)
         if changed:
@@ -627,6 +683,7 @@ def sync_directories_from_disk(
         category_directories[relativeDName] = {
             'files':{},
             'isRepository':isRepo,
+            'isAtomic':isAtomic,
             'readable':readable,
             'ctime':ctime,
             'changed':changed}
