@@ -1,0 +1,23 @@
+# Apache configuration file for mirrormanager2
+
+#WSGIDaemonProcess mirrormanager user=apache maximum-requests=1000 display-name=mirrormanager processes=2 threads=1
+#WSGISocketPrefix run/wsgi
+#WSGIRestrictStdout On
+#WSGIRestrictSignal Off
+#WSGIPythonOptimize 1
+
+#WSGIScriptAlias /mirrormanager /usr/share/mirrormanager/mirrormanager.wsgi
+
+#<Location />
+#    WSGIProcessGroup mirrormanager
+#    <IfModule mod_authz_core.c>
+#        # Apache 2.4
+#        Require all granted
+#    </IfModule>
+#    <IfModule !mod_authz_core.c>
+#         # Apache 2.2
+#        Order deny,allow
+#        Allow from all
+#    </IfModule>
+#</Location>
+
