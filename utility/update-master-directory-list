@@ -235,7 +235,7 @@ def make_file_details_from_checksums(session, diskpath, relativeDName, D):
                 timestamp=ctime,
                 size=size)
             session.add(fd)
-            session.commit(fd)
+            session.commit()
 
 
 def make_repo_file_details(session, diskpath, relativeDName, D, category, target):
@@ -302,7 +302,7 @@ def make_repo_file_details(session, diskpath, relativeDName, D, category, target
             timestamp=timestamp,
             size=size)
         session.add(fd)
-        session.commit(fd)
+        session.commit()
 
 
 def move_repository_from_development(prefix, arch, newdir):
