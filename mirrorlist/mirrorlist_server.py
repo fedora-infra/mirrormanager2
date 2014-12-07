@@ -409,14 +409,6 @@ def do_location(kwargs, header):
     return (header, hostresults)
 
 
-def add_host_to_cache(cache, hostid, hcurl):
-    if hostid not in cache:
-        cache[hostid] = [hcurl]
-    else:
-        cache[hostid].append(hcurl)
-    return cache
-
-
 def append_path(hosts, cache, file, pathIsDirectory=False):
     """ given a list of hosts, return a list of objects:
     [(hostid, [hcurls]), ... ]
