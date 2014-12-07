@@ -174,7 +174,6 @@ def application(environ, start_response):
         response.headers['Content-Type'] = "text/plain"
 
     results = results.encode('utf-8')
-    response.headers['Content-Length'] = str(len(results))
     response.write(results)
     return response(environ, start_response)
 
