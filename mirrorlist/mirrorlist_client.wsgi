@@ -1,5 +1,6 @@
 #!/usr/bin/python
 #
+# Copyright (c) 2014 Red Hat, Inc.
 # Copyright (c) 2007-2013 Dell, Inc.
 #  by Matt Domsch <Matt_Domsch@dell.com>
 # Licensed under the MIT/X11 license
