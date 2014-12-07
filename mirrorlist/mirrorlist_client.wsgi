@@ -11,15 +11,15 @@
 #  accelerator) in front of the application server running this WSGI,
 #  to avoid looking "behind" the real client's own forward HTTP proxy.
 
-import socket, select
+import socket
+import select
 import cPickle as pickle
 from string import zfill, atoi, strip, replace
 from webob import Request, Response
-import cStringIO
 
 socketfile = '/var/run/mirrormanager/mirrorlist_server.sock'
-select_timeout = 60 # seconds
-timeout = 5 # seconds
+select_timeout = 60  # seconds
+timeout = 5  # seconds
 
 
 def get_mirrorlist(d):
@@ -39,7 +39,7 @@ def get_mirrorlist(d):
     del p
 
     # wait for other end to start writing
-    rlist, wlist, xlist = select.select([s],[],[],select_timeout)
+    rlist, wlist, xlist = select.select([s], [], [], select_timeout)
     if len(rlist) == 0:
         s.shutdown(socket.SHUT_RD)
         raise socket.timeout
@@ -111,7 +111,7 @@ def request_setup(environ, request):
         scriptname = request.environ['SCRIPT_NAME']
     if 'PATH_INFO' in request.environ:
         pathinfo = request.environ['PATH_INFO']
-    if scriptname ==  '/metalink' or pathinfo == '/metalink':
+    if scriptname == '/metalink' or pathinfo == '/metalink':
         d['metalink'] = True
 
     for k, v in d.iteritems():
@@ -138,27 +138,27 @@ def application(environ, start_response):
 
     try:
         r = get_mirrorlist(d)
-        message=r['message']
-        resulttype=r['resulttype']
+        message = r['message']
+        resulttype = r['resulttype']
         results = r['results']
-        returncode = r['returncode']
-    except: # most likely socket.error, but we'll catch everything
-        response.status_code=503
+        # returncode = r['returncode']
+    except:  # most likely socket.error, but we'll catch everything
+        response.status_code = 503
         return response(environ, start_response)
 
     if resulttype == 'mirrorlist':
         # results look like [(hostid, url), ...]
         if 'redirect' in request.GET:
             if len(results) == 0:
-                response.status_code=404
+                response.status_code = 404
             else:
                 results = keep_only_http_results(results)
                 if len(results):
                     (hostid, url) = results[0]
-                    response.status_code=302
+                    response.status_code = 302
                     response.headers['Location'] = str(url)
                 else:
-                    response.status_code=404
+                    response.status_code = 404
             return response(environ, start_response)
 
         text = ""
