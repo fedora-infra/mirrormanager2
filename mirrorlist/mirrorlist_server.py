@@ -5,6 +5,7 @@
 # Licensed under the MIT/X11 license
 
 # standard library modules in alphabetical order
+from collections import defaultdict
 import datetime
 import getopt
 import logging
@@ -288,14 +289,10 @@ def handle_country_continent_redirect():
 
 
 def setup_continents():
-    new_continents = {}
+    new_continents = defaultdict(list)
     handle_country_continent_redirect()
-    for c in country_continents.keys():
-        continent = country_continents[c]
-        if continent not in new_continents:
-            new_continents[continent] = [c]
-        else:
-            new_continents[continent].append(c)
+    for c, continent in country_continents.iteritems():
+        new_continents[continent].append(c)
     global continents
     continents = new_continents
 
