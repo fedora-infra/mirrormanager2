@@ -53,4 +53,5 @@ setup(
     include_package_data=True,
     install_requires=get_requirements() + get_requirements(
         'requirements_mirrorlist.txt'),
+    tests_require=['mock', 'webtest'],
 )
