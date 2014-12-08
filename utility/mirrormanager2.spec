@@ -89,6 +89,29 @@ Requires:  python-webob
 Sub-part of mirrormanager serving mirrors to yum/dnf
 
 
+%package crawler
+Summary:        Crawler for MirrorManager
+Group:          Development/Tools
+BuildArch:      noarch
+
+Requires:  mirrormanager-lib == %{version}
+
+%description crawler
+Install the crawler for MirrorManager, crawling all the mirrors to find out
+if they are up to date or not
+
+
+%package backend
+Summary:        Backend scripts for MirrorManager
+Group:          Development/Tools
+BuildArch:      noarch
+
+Requires:  mirrormanager-lib == %{version}
+
+%description backend
+Install a number of utility scripts to be used manually or in cron jobs to
+run MirrorManager.
+
 %prep
 %setup -q
 
@@ -161,6 +184,19 @@ mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/mirrormanager
 %{_datadir}/mirrormanager2/mirrorlist_client.wsgi
 
 
+%files crawler
+%{_bindir}/mm2_crawler
+
+
+%files backend
+%{_bindir}/mm2_get_global_netblocks
+%{_bindir}/mm2_get_internet2_netblocks
+%{_bindir}/mm2_move-devel-to-release
+%{_bindir}/mm2_move-to-archive
+%{_bindir}/mm2_refresh_mirrorlist_cache
+%{_bindir}/mm2_update-EC2-netblocks
+%{_bindir}/mm2_update-master-directory-list
+%{_bindir}/mm2_update-mirrorlist-server
 
 %changelog
 * Sat Dec 06 2014 Pierre-Yves Chibon <pingou@pingoured.fr> - 2.0.1-1
