@@ -55,6 +55,9 @@ MM_AUTHENTICATION = 'fas'
 # to be recognized as an admin.
 ADMIN_GROUP = ('sysadmin-main', )
 
+# Email of the admin to which send notification or error
+ADMIN_EMAIL = 'admin@fedoraproject.org'
+
 # Email address used in the 'From' field of the emails sent.
 # Default: ``nobody@fedoraproject.org``.
 EMAIL_FROM = 'nobody@fedoraproject.org'
