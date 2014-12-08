@@ -124,20 +124,31 @@ run MirrorManager.
 rm -rf $RPM_BUILD_ROOT
 %{__python} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
 
-# Install apache configuration file
+# Create directories needed
+# Apache configuration files
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/httpd/conf.d/
+# MirrorManager configuration file
+mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager
+# for .wsgi files mainly
+mkdir -p $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2
+# Stores temp files (.sock & co)
+mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/mirrormanager
+# Lock files
+mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/lock/mirrormanager
+# Stores lock and pid info
+mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/run/mirrormanager
+
+# Install apache configuration file
 install -m 644 mirrorlist/apache/mirrorlist-server.conf \
     $RPM_BUILD_ROOT/%{_sysconfdir}/httpd/conf.d/mirrorlist-server.conf
 install -m 644 utility/mirrormanager.conf.sample \
     $RPM_BUILD_ROOT/%{_sysconfdir}/httpd/conf.d/mirrormanager.conf
 
 # Install configuration file
-mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager
 install -m 644 utility/mirrormanager2.cfg.sample \
     $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager/mirrormanager2.cfg
 
 # Install WSGI file
-mkdir -p $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2
 install -m 644 utility/mirrormanager2.wsgi \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrormanager2.wsgi
 install -m 644 mirrorlist/mirrorlist_client.wsgi \
@@ -148,8 +159,6 @@ install -m 644 mirrorlist/mirrorlist_client.wsgi \
 install -m 644 createdb.py \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrormanager2_createdb.py
 
-# Create the directory where we store temp files (.sock & co)
-mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/mirrormanager
 
 
 %check
@@ -178,6 +187,7 @@ mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/mirrormanager
 
 %files mirrorlist
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrorlist-server.conf
+%dir %{_localstatedir}/run/mirrormanager
 %{_datadir}/mirrormanager2/mirrorlist_client.wsgi
 
 
@@ -186,6 +196,7 @@ mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/mirrormanager
 
 
 %files backend
+%dir %{_localstatedir}/lock/mirrormanager
 %{_bindir}/mm2_get_global_netblocks
 %{_bindir}/mm2_get_internet2_netblocks
 %{_bindir}/mm2_move-devel-to-release
