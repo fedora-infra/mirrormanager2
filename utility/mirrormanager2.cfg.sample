@@ -26,7 +26,7 @@ PASSWORD_SEED = "You'd better change it and keep it secret"
 
 
 ###
-# Other configuration items
+# Other configuration items for the web-app
 ###
 
 from datetime import timedelta
@@ -77,3 +77,64 @@ APPLICATION_URL = None
 # under certain setup it might not work (for example is there are proxies
 # in front of the application).
 CHECK_SESSION_IP = True
+
+
+
+###
+# Configuration options used by the crons
+###
+
+
+umdl_master_directories = [
+    {
+        'type': 'directory',
+        'path': '../testdata/pub/epel/',
+        'category': 'Fedora EPEL'
+    },
+    {
+        'type': 'directory',
+        'path': '../testdata/pub/fedora/linux/',
+        'category': 'Fedora Linux'
+    },
+    {
+        'type': 'directory',
+        'path': '../testdata/pub/fedora-secondary/',
+        'category': 'Fedora Secondary Arches'
+    },
+    {
+        'type': 'directory',
+        'path': '../testdata/pub/archive/',
+        'category': 'Fedora Archive'
+    },
+    {
+        'type': 'directory',
+        'path': '../testdata/pub/alt/',
+        'category': 'Fedora Other'
+    },
+#    {
+#        'type':'directory',
+#        'path':'../testdata/pub/fedora/linux/',
+#        'category':'Fedora Linux',
+#        'excludes':['.*/core/?.*', '.*/extras/?.*', '.*/[7-8]/?.*' ]
+#    },
+#    {
+#        'type':'rsync',
+#        'url':'rsync://archive.ubuntu.com/ubuntu/',
+#        'category':'Ubuntu Archive'
+#    },
+#    {
+#        'type':'rsync',
+#        'url':'rsync://releases.ubuntu.com/releases/',
+#        'category':'Ubuntu CD Images'
+#        },
+#    {
+#        'type':'rsync',
+#        'url':'rsync://ports.ubuntu.com/ubuntu-ports/',
+#        'category':'Ubuntu Ports Archive'
+#    },
+#    {
+#        'type':'rsync',
+#        'url':'rsync://security.ubuntu.com/ubuntu/',
+#        'category':'Ubuntu Security Archive'
+#    },
+]
