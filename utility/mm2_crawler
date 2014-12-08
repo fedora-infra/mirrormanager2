@@ -772,7 +772,7 @@ def try_per_dir(d, hoststate, url):
 
 
 def send_email(config, host, report_str, exc):
-    if not config.get('crawler.send_email', False):
+    if not config.get('CRAWLER_SEND_EMAIL', False):
         return
 
     SMTP_DATE_FORMAT = "%a, %d %b %Y %H:%M:%S %z"
@@ -781,8 +781,8 @@ To: %s
 Subject: %s MirrorManager crawler report
 Date: %s
 
-""" % (config.get('crawler.mail_from'),
-       config.get('crawler.admin_mail_to'),
+""" % (config.get('EMAIL_FROM'),
+       config.get('ADMIN_EMAIL'),
        host.name,
        time.strftime(SMTP_DATE_FORMAT))
 
@@ -792,17 +792,16 @@ Date: %s
         msg += "Exception info: type %s; value %s\n" % (exc[0], exc[1])
         msg += str(exc[2])
     try:
-        smtp = smtplib.SMTP(config.get('crawler.smtp_host'),
-                            config.get('crawler.smtp_port'))
+        smtp = smtplib.SMTP(config.get('SMTP_SERVER'))
 
-        username = config.get('crawler.smtp_username')
-        password = config.get('crawler.smtp_password')
+        username = config.get('SMTP_USERNAME')
+        password = config.get('SMTP_PASSWORD')
 
         if username and password:
             smtp.login(username, password)
 
-        smtp.sendmail(config.get('crawler.smtp_from'),
-                      config.get('crawler.admin_mail_to'),
+        smtp.sendmail(config.get('SMTP_SERVER'),
+                      config.get('ADMIN_EMAIL'),
                       msg)
     except:
         logger.exception("Error sending email")
