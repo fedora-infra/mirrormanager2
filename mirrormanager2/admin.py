@@ -31,7 +31,7 @@ except ImportError:
     # The module was renamed in flask-admin
     from flask.ext.admin.contrib.sqlamodel import ModelView
 
-from mirrormanager2 import APP, ADMIN, SESSION, is_mirrormanager_admin
+from mirrormanager2.app import APP, ADMIN, SESSION, is_mirrormanager_admin
 from mirrormanager2.lib import model
 
 

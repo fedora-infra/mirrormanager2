@@ -38,7 +38,7 @@ from sqlalchemy.exc import SQLAlchemyError
 import mirrormanager2.login_forms as forms
 import mirrormanager2.lib
 import mirrormanager2.lib.notifications
-from mirrormanager2 import APP, SESSION, is_mirrormanager_admin
+from mirrormanager2.app import APP, SESSION, is_mirrormanager_admin
 from mirrormanager2.lib import model
 
 
