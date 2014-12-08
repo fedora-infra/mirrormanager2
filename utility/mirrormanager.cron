@@ -2,17 +2,17 @@
 # adjust frequency according to how often your content changes
 #
 # refresh the mirrorlist cache at the top of the hour
-55 * * * * mirrormanager /usr/bin/mm2_update-mirrorlist-server > /dev/null 2>&1
+55 * * * * root /usr/bin/mm2_update-mirrorlist-server > /dev/null 2>&1
 
 # update master directory list
 # logs sent to /var/log/mirrormanager/umdl.log by default
-0 */2 * * * mirrormanager /usr/bin/mm2_update-master-directory-list -c /etc/mirrormanager/prod.cfg > /dev/null 2>&1
+0 */2 * * * root /usr/bin/mm2_update-master-directory-list -c /etc/mirrormanager/prod.cfg > /dev/null 2>&1
 
 # Sync netblocks list once a day
-30 0 * * * mirrormanager /usr/bin/mm2_get_global_netblocks /var/lib/mirrormanager/global_netblocks.txt > /dev/null 2>&1
-0 1 * * * mirrormanager /usr/bin/mm2_get_internet2_netblocks /var/lib/mirrormanager/internet2_netblocks.txt > /dev/null 2>&1
-30 1 * * * mirrormanager /usr/bin/mm2_update-EC2-netblocks > /dev/null 2>&1
+30 0 * * * root /usr/bin/mm2_get_global_netblocks /var/lib/mirrormanager/global_netblocks.txt > /dev/null 2>&1
+0 1 * * * root /usr/bin/mm2_get_internet2_netblocks /var/lib/mirrormanager/internet2_netblocks.txt > /dev/null 2>&1
+30 1 * * * root /usr/bin/mm2_update-EC2-netblocks > /dev/null 2>&1
 
 # run the crawler twice a day
 # logs sent to /var/log/mirrormanager/crawler.log and crawl/* by default
-0 */12 * * * mirrormanager /usr/bin/mm2_crawler.py -c /etc/mirrormanager/prod.cfg --threads 75 > /dev/null 2>&1
+0 */12 * * * root /usr/bin/mm2_crawler.py -c /etc/mirrormanager/prod.cfg --threads 75 > /dev/null 2>&1
