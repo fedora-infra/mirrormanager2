@@ -2,8 +2,8 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.0.1
-Release:        2%{?dist}
+Version:        0.0.2
+Release:        1%{?dist}
 Summary:        Mirror management application
 
 License:        MIT
@@ -183,6 +183,7 @@ install -m 644 createdb.py \
 
 %files lib
 %{python_sitelib}/%{name}/lib/
+%{python_sitelib}/%{name}/__init__.py*
 
 
 %files mirrorlist
@@ -207,6 +208,12 @@ install -m 644 createdb.py \
 %{_bindir}/mm2_update-mirrorlist-server
 
 %changelog
+* Mon Dec 08 2014 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.2-1
+- Update to 0.0.2
+- Move the flask application to mirrormanager2/app.py and put a module
+  place holder in mirrormanager2/__init__.py that we can extract when
+  splitting the module in -lib
+
 * Mon Dec 08 2014 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.1-2
 - Fix the package name in the Requires, using %%{name} fixes things
 
