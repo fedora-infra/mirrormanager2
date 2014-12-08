@@ -179,8 +179,70 @@ def application(environ, start_response):
     return response(environ, start_response)
 
 
-if __name__ == '__main__':
-    from wsgiref import simple_server
-    httpd = simple_server.make_server('127.0.0.1', 8090, application)
-    print('Serving on http://127.0.0.1:8090')
-    httpd.serve_forever()
+if __name__ == '__main__':  # pragma: no cover
+    import sys
+    import os
+
+    # Run the unit tests. You can also perform coverage analysis by running:
+    # coverage run mirrorlist_client.wsgi --test && coverage html
+    if '--test' in sys.argv:
+        # This requires the mirrorlist_server.py to be running
+        if not os.path.exists(socketfile):
+            print("You must run the mirrorlist_server.py first")
+
+        import webtest
+        import subprocess
+
+        app = webtest.TestApp(application)
+        resp = app.get('/metalink', {
+            'repo': 'updates-testing-f20', 'arch': 'x86_64'
+            }, extra_environ={'REMOTE_ADDR': '127.0.0.1'}, status=200)
+        proc = subprocess.Popen(['xmllint', '--noout', '-'],
+                                stdin=subprocess.PIPE)
+        proc.stdin.write(resp.body)
+        out, err = proc.communicate()
+        assert proc.returncode == 0, proc.returncode
+
+        # Test the mirrorlist
+        resp = app.get('/mirrorlist', {
+            'repo': 'updates-testing-f20',
+            'arch': 'x86_64',
+            }, extra_environ={'REMOTE_ADDR': '127.0.0.1'}, status=200)
+        assert '# repo = updates-testing-f20 arch = x86_64 country = global' \
+            in resp, resp
+
+        # Test mirrorlist redirection
+        resp = app.get('/mirrorlist', {
+            'repo': 'updates-testing-f20',
+            'arch': 'x86_64',
+            'redirect': '1'
+        }, extra_environ={'REMOTE_ADDR': '127.0.0.1'}, status=302)
+
+        # Test X-Forwarded-For
+        resp = app.get('/mirrorlist', {
+            'repo': 'updates-testing-f20', 'arch': 'x86_64'
+            }, headers={'X-Forwarded-For': '127.0.0.1'},
+            extra_environ={'REMOTE_ADDR': '127.0.0.1'}, status=200)
+
+        # version + repo (for centos)
+        resp = app.get('/mirrorlist', {
+            'version': 'f20', 'repo': 'updates-testing', 'arch': 'x86_64'
+            }, extra_environ={'REMOTE_ADDR': '127.0.0.1'}, status=200)
+
+        # cc instead of country
+        resp = app.get('/mirrorlist', {
+            'repo': 'updates-testing-f20', 'arch': 'x86_64', 'cc': 'US'
+            }, extra_environ={'REMOTE_ADDR': '127.0.0.1'}, status=200)
+
+        # Specify an ip
+        resp = app.get('/mirrorlist', {
+            'repo': 'updates-testing-f20',
+            'arch': 'x86_64',
+            'ip': '10.10.10.10',
+            }, extra_environ={'REMOTE_ADDR': '127.0.0.1'}, status=200)
+
+    else:
+        from wsgiref import simple_server
+        httpd = simple_server.make_server('127.0.0.1', 8090, application)
+        print('Serving on http://127.0.0.1:8090')
+        httpd.serve_forever()
