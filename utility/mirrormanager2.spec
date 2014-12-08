@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        2.0.0
+Version:        0.0.1
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -207,5 +207,5 @@ install -m 644 createdb.py \
 %{_bindir}/mm2_update-mirrorlist-server
 
 %changelog
-* Mon Dec 08 2014 Pierre-Yves Chibon <pingou@pingoured.fr> - 2.0.0-1
+* Mon Dec 08 2014 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.1-1
 - Initial packaging work for Fedora
