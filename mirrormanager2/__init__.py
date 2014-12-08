@@ -35,7 +35,7 @@ from functools import wraps
 from flask.ext.admin import Admin
 from sqlalchemy.exc import SQLAlchemyError
 
-__version__ = '2.0.1'
+__version__ = '2.0.0'
 
 APP = flask.Flask(__name__)
 
