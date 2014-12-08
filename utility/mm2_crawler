@@ -23,7 +23,6 @@ from mirrormanager2.lib.model import HostCategoryDir
 from mirrormanager2.lib.sync import run_rsync
 
 
-
 logger = logging.getLogger("crawler")
 
 
@@ -111,7 +110,7 @@ def main():
     parser = argparse.ArgumentParser(usage=sys.argv[0] + " [options]")
     parser.add_argument(
         "-c", "--config",
-        dest="config", default='/etc/mirrormanager/prod.cfg',
+        dest="config", default='/etc/mirrormanager/mirrormanager2.cfg',
         help="Configuration file to use")
 
     parser.add_argument(
