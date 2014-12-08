@@ -29,14 +29,16 @@ def s3_mirrors(session):
                                        'netblocks': {},
                                    }
             for nb in host.netblocks:
-                hosts_by_region[region]['netblocks'][nb.netblock] = {'host_netblock_id' : nb.id,
-                                                                     'stale':True,
+                hosts_by_region[region]['netblocks'][nb.netblock] = {
+                    'host_netblock_id' : nb.id,
+                    'stale':True,
                 }
     return hosts_by_region
 
 
 def get_ip_ranges():
-    return urlgrabber.urlread('https://ip-ranges.amazonaws.com/ip-ranges.json')
+    return urlgrabber.urlread(
+        'https://ip-ranges.amazonaws.com/ip-ranges.json')
 
 def parse_ip_ranges(ipranges_str):
     return json.loads(ipranges_str)
@@ -67,13 +69,14 @@ def doit(session, dry_run):
                     nb = HostNetblock(host=host, netblock=ip_prefix, name=None) # this adds the entry to the database, mark as not stale
                     session.add(nb)
                     session.flush()
-                    hosts_by_region[region]['netblocks'][ip_prefix] = {'host_netblock_id' : nb.id,
-                                                                       'stale':False,
-                                                                       }
+                    hosts_by_region[region]['netblocks'][ip_prefix] = {
+                        'host_netblock_id' : nb.id,
+                        'stale':False,
+                    }
             else:
                 # found the netblock in our database, mark it as not stale
                 hosts_by_region[region]['netblocks'][ip_prefix]['stale'] = False
-                
+
 
     # delete stale netblock entries from the database
     for region, h in hosts_by_region.items():
@@ -82,30 +85,38 @@ def doit(session, dry_run):
                 host = h['host']
                 print "Deleting host %s netblock %s" % (host.name, netblock)
                 if not dry_run:
-                    nb = mirrormanager2.lib.get_host_netblock(session, hosts_by_region[region]['netblocks'][netblock]['host_netblock_id'])
+                    nb = mirrormanager2.lib.get_host_netblock(
+                        session,
+                        hosts_by_region[region]['netblocks'][
+                            netblock]['host_netblock_id']
+                        )
                     session.delete(nb)
 
 
 def main():
     parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
-    parser.add_option("-c", "--config",
-                      dest="config", default='dev.cfg',
-                      help="Config file to use")
-    parser.add_option("-n", "--dry-run",
-                      dest="dry_run", action="store_true", default=False)
-
+    parser.add_option(
+        "-c", "--config",
+        dest="config",
+        default='/etc/mirrormanger/mirrormanger2.cfg',
+        help="Config file to use")
+    parser.add_option(
+        "-n", "--dry-run", dest="dry_run",
+        action="store_true", default=False)
 
     (options, args) = parser.parse_args()
+
     config = dict()
     with open(options.config) as config_file:
         exec(compile(config_file.read(), options.config, 'exec'), config)
-    
+
     session = mirrormanager2.lib.create_session(config['DB_URL'])
-    
+
     doit(session, options.dry_run)
     session.commit()
     return 0
 
+
 if __name__ == "__main__":
     sys.exit(main())
-        
+

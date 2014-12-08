@@ -164,8 +164,9 @@ def main():
     parser.add_option(
         "-c", "--config",
         dest="config",
-        default='/etc/mirrormanager/prod.cfg',
-        help="Configuration file to use (default=/etc/mirrormanager/prod.cfg)")
+        default='/etc/mirrormanager/mirrormanger2.cfg',
+        help="Configuration file to use "
+            "(default=/etc/mirrormanager/mirrormanger2.cfg)")
     parser.add_option(
         "--version",
         dest="version",
