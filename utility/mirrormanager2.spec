@@ -3,7 +3,7 @@
 
 Name:           mirrormanager2
 Version:        0.0.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Mirror management application
 
 License:        MIT
@@ -94,7 +94,7 @@ Summary:        Crawler for MirrorManager
 Group:          Development/Tools
 BuildArch:      noarch
 
-Requires:  mirrormanager-lib == %{version}
+Requires:  %{name}-lib == %{version}
 
 %description crawler
 Install the crawler for MirrorManager, crawling all the mirrors to find out
@@ -106,7 +106,7 @@ Summary:        Backend scripts for MirrorManager
 Group:          Development/Tools
 BuildArch:      noarch
 
-Requires:  mirrormanager-lib == %{version}
+Requires:  %{name}-lib == %{version}
 
 %description backend
 Install a number of utility scripts to be used manually or in cron jobs to
@@ -207,5 +207,8 @@ install -m 644 createdb.py \
 %{_bindir}/mm2_update-mirrorlist-server
 
 %changelog
+* Mon Dec 08 2014 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.1-2
+- Fix the package name in the Requires, using %%{name} fixes things
+
 * Mon Dec 08 2014 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.1-1
 - Initial packaging work for Fedora
