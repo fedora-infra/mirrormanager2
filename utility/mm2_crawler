@@ -815,9 +815,9 @@ Date: %s
 
 
 def mark_not_up2date(session, config, exc, host, reason="Unknown"):
-    host.set_not_up2date(session, )
+    host.set_not_up2date(session)
     host.lastCrawled = datetime.datetime.utcnow()
-    msg = "Host marked not up2date: %s" % reason
+    msg = "Host %s marked not up2date: %s" % (host.id, reason)
     logger.warning(msg)
     if exc is not None:
         logger.debug("%s %s %s" % (exc[0], exc[1], exc[2]))
@@ -985,11 +985,11 @@ def worker(options, config, host):
         session.close()
     except TimeoutException:
         rc = 2
-#        mark_not_up2date(
-#            session, config,
-#            None, host.id,
-#            "Crawler timed out before completing.  "
-#            "Host is likely overloaded.")
+        mark_not_up2date(
+            session, config,
+            None, host.id,
+            "Crawler timed out before completing.  "
+            "Host is likely overloaded.")
     except Exception:
         logger.exception("Failure in thread %r, host %r" % (thread_id(), host))
         rc = 3
