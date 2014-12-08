@@ -4,7 +4,7 @@
 __requires__ = ['SQLAlchemy >= 0.7', 'jinja2 >= 2.4']
 import pkg_resources
 
-from mirrormanager2 import APP
+from mirrormanager2.app import APP
 from mirrormanager2.lib import model
 
 model.create_tables(
