@@ -709,7 +709,7 @@ def main():
     parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option(
         "-c", "--config",
-        dest="config", default='dev.cfg',
+        dest="config", default='/etc/mirrormanager/mirrormanager2.cfg',
         help="TurboGears config file to use")
     parser.add_option(
         "--logfile",
