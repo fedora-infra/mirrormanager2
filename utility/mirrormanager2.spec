@@ -135,8 +135,6 @@ install -m 644 utility/mirrormanager.conf.sample \
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager
 install -m 644 utility/mirrormanager2.cfg.sample \
     $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager/mirrormanager2.cfg
-install -m 644 utility/test.cfg \
-    $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager/prod.cfg
 
 # Install WSGI file
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2
@@ -161,7 +159,6 @@ mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/mirrormanager
 %doc README.rst LICENSE-MIT-X11 doc/
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrormanager.conf
 %config(noreplace) %{_sysconfdir}/mirrormanager/mirrormanager2.cfg
-%config(noreplace) %{_sysconfdir}/mirrormanager/prod.cfg
 
 %dir %{_sysconfdir}/mirrormanager/
 %dir %{python_sitelib}/%{name}/
