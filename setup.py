@@ -53,4 +53,15 @@ setup(
     include_package_data=True,
     install_requires=get_requirements() + get_requirements(
         'requirements_mirrorlist.txt'),
+    scripts = [
+        'utility/mm2_crawler',
+        'utility/mm2_get_global_netblocks',
+        'utility/mm2_get_internet2_netblocks',
+        'utility/mm2_move-devel-to-release',
+        'utility/mm2_move-to-archive',
+        'utility/mm2_refresh_mirrorlist_cache',
+        'utility/mm2_update-EC2-netblocks',
+        'utility/mm2_update-master-directory-list',
+        'utility/mm2_update-mirrorlist-server',
+    ],
 )
