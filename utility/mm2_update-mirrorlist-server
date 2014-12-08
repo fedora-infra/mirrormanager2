@@ -16,8 +16,8 @@
 # knows to reload its pickle and netblocks files.
 #
 # Author: Matt Domsch <mdomsch@fedoraproject.org>
+#         Pierre-Yves Chibon <pingou@pingoured.fr>
 
-MM_DIR=/usr/share/mirrormanager/server
 LOCKFILE=/var/lock/mirrormanager/update-mirrorlist-server.lock
 CACHEDIR=/var/lib/mirrormanager
 
@@ -31,6 +31,6 @@ rm -rf ${CACHEDIR}/old
 mkdir -p ${CACHEDIR}/old
 cp -ar ${CACHEDIR}/*  ${CACHEDIR}/old/ 2>/dev/null
 
-${MM_DIR}/refresh_mirrorlist_cache -c /etc/mirrormanager/prod.cfg
+/usr/bin/mm2_refresh_mirrorlist_cache
 
 exit 0
