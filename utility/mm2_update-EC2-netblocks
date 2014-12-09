@@ -98,7 +98,7 @@ def main():
     parser.add_option(
         "-c", "--config",
         dest="config",
-        default='/etc/mirrormanger/mirrormanger2.cfg',
+        default='/etc/mirrormanager/mirrormanager2.cfg',
         help="Config file to use")
     parser.add_option(
         "-n", "--dry-run", dest="dry_run",
