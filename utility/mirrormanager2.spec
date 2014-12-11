@@ -154,6 +154,9 @@ install -m 644 utility/mirrormanager2.wsgi \
 install -m 644 mirrorlist/mirrorlist_client.wsgi \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrorlist_client.wsgi
 
+# Install the mirrorlist server
+install -m 644 mirrorlist/mirrorlist_server.py \
+    $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrorlist_server.py
 
 # Install the createdb script
 install -m 644 createdb.py \
@@ -190,6 +193,7 @@ install -m 644 createdb.py \
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrorlist-server.conf
 %dir %{_localstatedir}/run/mirrormanager
 %{_datadir}/mirrormanager2/mirrorlist_client.wsgi
+%{_datadir}/mirrormanager2/mirrorlist_server.py*
 
 
 %files crawler
