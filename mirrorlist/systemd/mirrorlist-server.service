@@ -1,0 +1,14 @@
+[Unit]
+Description=Mirrorlist Server Daemon (talks with mirrorlist over socket)
+After=network.target
+Documentation=https://github.com/fedora-infra/mirrormanager2
+
+[Service]
+ExecStart=/usr/share/mirrormanager/mirrorlist-server/mirrorlist_server.py
+Type=simple
+User=mirrormanager
+Group=mirrormanager
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

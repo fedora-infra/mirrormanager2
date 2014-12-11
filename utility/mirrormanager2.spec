@@ -29,6 +29,8 @@ BuildRequires:  python-GeoIP
 BuildRequires:  py-radix
 BuildRequires:  python-webob
 
+BuildRequires:  systemd
+
 # EPEL6
 %if ( 0%{?rhel} && 0%{?rhel} == 6 )
 BuildRequires:  python-sqlalchemy0.7
@@ -162,6 +164,10 @@ install -m 644 mirrorlist/mirrorlist_server.py \
 install -m 644 createdb.py \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrormanager2_createdb.py
 
+# Install the systemd service file
+mkdir -p $RPM_BUILD_ROOT/%{_unitdir}
+install -m 644 mirrorlist/systemd/mirrorlist-server.service \
+    $RPM_BUILD_ROOT/%{_unitdir}/mirrorlist-server.service
 
 
 %check
@@ -192,6 +198,7 @@ install -m 644 createdb.py \
 %files mirrorlist
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrorlist-server.conf
 %dir %{_localstatedir}/run/mirrormanager
+%{_unitdir}/mirrorlist-server.service
 %{_datadir}/mirrormanager2/mirrorlist_client.wsgi
 %{_datadir}/mirrormanager2/mirrorlist_server.py*
 
