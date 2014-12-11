@@ -86,6 +86,7 @@ BuildArch:      noarch
 Requires:  python-GeoIP
 Requires:  py-radix
 Requires:  python-webob
+Requires:  systemd
 
 %description mirrorlist
 Sub-part of mirrormanager serving mirrors to yum/dnf
