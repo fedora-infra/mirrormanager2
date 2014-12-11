@@ -7,3 +7,4 @@ build/
 *.pid
 *.lock
 *.egg-info
+_build/
