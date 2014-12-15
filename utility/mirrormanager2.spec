@@ -214,6 +214,7 @@ cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
 
 %files backend
 %dir %{_localstatedir}/lock/mirrormanager
+%{_datadir}/mirrormanager2/zebra-dump-parser/
 %{_bindir}/mm2_get_global_netblocks
 %{_bindir}/mm2_get_internet2_netblocks
 %{_bindir}/mm2_move-devel-to-release
@@ -222,6 +223,7 @@ cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
 %{_bindir}/mm2_update-EC2-netblocks
 %{_bindir}/mm2_update-master-directory-list
 %{_bindir}/mm2_update-mirrorlist-server
+
 
 %changelog
 * Mon Dec 15 2014 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.4-1
