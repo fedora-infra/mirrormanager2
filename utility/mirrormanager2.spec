@@ -140,6 +140,8 @@ mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/mirrormanager
 mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/lock/mirrormanager
 # Stores lock and pid info
 mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/run/mirrormanager
+# Stores the service file for systemd
+mkdir -p $RPM_BUILD_ROOT/%{_unitdir}
 
 # Install apache configuration file
 install -m 644 mirrorlist/apache/mirrorlist-server.conf \
@@ -166,7 +168,6 @@ install -m 644 createdb.py \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrormanager2_createdb.py
 
 # Install the systemd service file
-mkdir -p $RPM_BUILD_ROOT/%{_unitdir}
 install -m 644 mirrorlist/systemd/mirrorlist-server.service \
     $RPM_BUILD_ROOT/%{_unitdir}/mirrorlist-server.service
 
