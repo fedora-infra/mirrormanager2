@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.0.4
+Version:        0.0.5
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -162,6 +162,8 @@ install -m 644 mirrorlist/mirrorlist_client.wsgi \
 # Install the mirrorlist server
 install -m 644 mirrorlist/mirrorlist_server.py \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrorlist_server.py
+install -m 644 mirrorlist/weighted_shuffle.py \
+    $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/weighted_shuffle.py
 
 # Install the createdb script
 install -m 644 createdb.py \
@@ -206,6 +208,7 @@ cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
 %{_unitdir}/mirrorlist-server.service
 %{_datadir}/mirrormanager2/mirrorlist_client.wsgi
 %{_datadir}/mirrormanager2/mirrorlist_server.py*
+%{_datadir}/mirrormanager2/weighted_shuffle.py*
 
 
 %files crawler
@@ -226,6 +229,11 @@ cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
 
 
 %changelog
+* Mon Dec 15 2014 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.5-1
+- Update to 0.0.5
+- Include zebra-dump-parser in the backend sub-package
+- Install weighted_shuffle and include it in the mirrorlist sub-package
+
 * Mon Dec 15 2014 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.4-1
 - Update to 0.0.4
 - Fix  typos in the script to point them to the correct configuration file by
