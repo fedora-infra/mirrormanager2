@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.0.3
+Version:        0.0.4
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -224,6 +224,16 @@ cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
 %{_bindir}/mm2_update-mirrorlist-server
 
 %changelog
+* Mon Dec 15 2014 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.4-1
+- Update to 0.0.4
+- Fix  typos in the script to point them to the correct configuration file by
+  default
+- Install the mirrorlist_server
+- Move mirrorlist to rely on systemd instead of supervisor
+- Install zebra-dump-parser user by mm2_get_internet2_netblocks
+- Remove debugging statement for mm2_refresh_mirrorlist_cache, no need to output
+  something if everything ran fine
+
 * Mon Dec 08 2014 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.3-1
 - Update to 0.0.3
 - Fix the import in the createdb script
