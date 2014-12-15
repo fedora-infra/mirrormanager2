@@ -170,6 +170,9 @@ mkdir -p $RPM_BUILD_ROOT/%{_unitdir}
 install -m 644 mirrorlist/systemd/mirrorlist-server.service \
     $RPM_BUILD_ROOT/%{_unitdir}/mirrorlist-server.service
 
+# Install the zebra-dump-parser perl module
+cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
+
 
 %check
 # One day we will have unit-tests to run here
