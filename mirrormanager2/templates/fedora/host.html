@@ -146,29 +146,6 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
   </ul>
 {% endif %}
 
-
-<h3>
-  Locations
-</h3>
-<p>
-  Locations are ways to group hosts when netblocks are unwieldy. Examples
-  include Amazon EC2 availability zones. Mirrorlist clients append
-  location=string to their request URLs to specify a preferred location.
-  Setting up locations requires MirrorManager administrator privileges.
-</p>
-
-<a href="">[add]</a>
-{% if host.locations %}
-  <ul>
-  {% for location in host.locations %}
-    <li>
-      {{ location.location.name }} <a href="">[delete]</a>
-    </li>
-  {% endfor %}
-  </ul>
-{% endif %}
-
-
 <h3>
   Countries Allowed
 </h3>
