@@ -282,6 +282,24 @@ def create_hosts(session):
     session.commit()
 
 
+def create_hostaclip(session):
+    ''' Create some HostAclIp to play with for the tests
+    '''
+    item = model.HostAclIp(
+        ip='85.12.0.250',
+        host_id=1,
+    )
+    session.add(item)
+
+    item = model.HostAclIp(
+        ip='192.168.0.12',
+        host_id=2,
+    )
+    session.add(item)
+
+    session.commit()
+
+
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(Modeltests)
     unittest.TextTestRunner(verbosity=2).run(SUITE)
