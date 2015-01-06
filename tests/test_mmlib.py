@@ -25,17 +25,19 @@ class MMLibtests(tests.Modeltests):
         """ Test the query_directories function of mirrormanager2.lib.
         """
         results = mirrormanager2.lib.query_directories(self.session)
-        cnt = 0
-        for row in results:
-            if cnt == 0:
-                print '**', row
-                self.assertEqual(row.directory_id, 3764)
-                self.assertEqual(row.dname, 'pub/alt')
-                self.assertEqual(row.hostid, 271)
-                self.assertEqual(row.country, 'US')
-                self.assertEqual(row.id, 6817)
-            cnt += 1
-        self.assertEqual(cnt, 1693670)
+        self.assertEqual(len(results), 0)
+
+        tests.create_base_items(self.session)
+        tests.create_site(self.session)
+        tests.create_hosts(self.session)
+        tests.create_directory(self.session)
+        tests.create_category(self.session)
+        tests.create_hostcategory(self.session)
+        tests.create_hostcategoryurl(self.session)
+        tests.create_categorydirectory(self.session)
+
+        results = mirrormanager2.lib.query_directories(self.session)
+        self.assertEqual(len(results), 12)
 
     def test_get_site(self):
         """ Test the get_site function of mirrormanager2.lib. """
