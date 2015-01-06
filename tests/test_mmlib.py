@@ -148,6 +148,22 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(results[2].name, 'private.localhost')
         self.assertEqual(results[2].country, 'NL')
 
+    def test_get_host_acl_ip(self):
+        """ Test the get_host_acl_ip function of mirrormanager2.lib. """
+        results = mirrormanager2.lib.get_host_acl_ip(self.session, 1)
+        self.assertEqual(results, None)
+
+        tests.create_site(self.session)
+        tests.create_hosts(self.session)
+        tests.create_hostaclip(self.session)
+
+        results = mirrormanager2.lib.get_host_acl_ip(self.session, 1)
+        self.assertEqual(results.host.name, 'mirror.localhost')
+        self.assertEqual(results.host.country, 'US')
+        results = mirrormanager2.lib.get_host_acl_ip(self.session, 2)
+        self.assertEqual(results.host.name, 'mirror2.localhost')
+        self.assertEqual(results.host.country, 'FR')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
