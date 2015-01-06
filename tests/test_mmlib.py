@@ -37,6 +37,28 @@ class MMLibtests(tests.Modeltests):
             cnt += 1
         self.assertEqual(cnt, 1693670)
 
+    def test_get_site(self):
+        """ Test the get_site function of mirrormanager2.lib. """
+        tests.create_site(self.session)
+
+        results = mirrormanager2.lib.get_site(self.session, 0)
+        self.assertEqual(results, None)
+
+        results = mirrormanager2.lib.get_site(self.session, 1)
+        self.assertEqual(results.name, 'test-mirror')
+        self.assertEqual(results.private, False)
+        self.assertEqual(results.created_by, 'pingou')
+
+        results = mirrormanager2.lib.get_site(self.session, 2)
+        self.assertEqual(results.name, 'test-mirror2')
+        self.assertEqual(results.private, False)
+        self.assertEqual(results.created_by, 'kevin')
+
+        results = mirrormanager2.lib.get_site(self.session, 3)
+        self.assertEqual(results.name, 'test-mirror_private')
+        self.assertEqual(results.private, True)
+        self.assertEqual(results.created_by, 'skvidal')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
