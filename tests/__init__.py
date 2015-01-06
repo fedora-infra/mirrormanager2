@@ -224,6 +224,64 @@ def create_site_admin(session):
     session.commit()
 
 
+def create_hosts(session):
+    ''' Create some hosts to play with for the tests
+    '''
+    item = model.Host(
+        name='mirror.localhost',
+        site_id=1,
+        robot_email=None,
+        admin_active=True,
+        user_active=True,
+        country='US',
+        bandwidth_int=100,
+        comment=None,
+        private=False,
+        internet2=False,
+        internet2_clients=False,
+        asn=None,
+        asn_clients=False,
+        max_connections=10,
+    )
+    session.add(item)
+    item = model.Host(
+        name='mirror2.localhost',
+        site_id=2,
+        robot_email=None,
+        admin_active=True,
+        user_active=True,
+        country='FR',
+        bandwidth_int=100,
+        comment=None,
+        private=False,
+        internet2=False,
+        internet2_clients=False,
+        asn=100,
+        asn_clients=True,
+        max_connections=10,
+    )
+    session.add(item)
+    item = model.Host(
+        name='private.localhost',
+        site_id=1,
+        robot_email=None,
+        admin_active=True,
+        user_active=True,
+        country='NL',
+        bandwidth_int=100,
+        comment='My own private mirror',
+        private=True,
+        internet2=False,
+        internet2_clients=False,
+        asn=None,
+        asn_clients=False,
+        max_connections=10,
+    )
+    session.add(item)
+
+    session.commit()
+
+
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(Modeltests)
     unittest.TextTestRunner(verbosity=2).run(SUITE)
