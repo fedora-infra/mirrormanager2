@@ -161,6 +161,7 @@ def create_site(session):
         downstream_comments='Mirror available over RSYNC and HTTP.',
         email_on_drop=False,  # Default value - not changeable in the UI Oo
         email_on_add=False,  # Default value - not changeable in the UI Oo
+        created_by='pingou',
     )
     session.add(item)
     item = model.Site(
@@ -174,6 +175,7 @@ def create_site(session):
         downstream_comments='Mirror available over HTTP.',
         email_on_drop=False,
         email_on_add=False,
+        created_by='kevin',
     )
     session.add(item)
     item = model.Site(
@@ -187,6 +189,7 @@ def create_site(session):
         downstream_comments='My own mirror available over HTTP.',
         email_on_drop=False,
         email_on_add=False,
+        created_by='skvidal',
     )
     session.add(item)
 
