@@ -93,6 +93,60 @@ class Modeltests(unittest.TestCase):
                 #print req.text
 
 
+def create_base_items(session):
+    ''' Insert some base information in the database.
+    '''
+    # Insert some Arch
+    item = model.Arch(
+        name='source',
+        publiclist=False,
+        primary_arch=False,
+    )
+    session.add(item)
+    item = model.Arch(
+        name='i386',
+        publiclist=True,
+        primary_arch=True,
+    )
+    session.add(item)
+    item = model.Arch(
+        name='x86_64',
+        publiclist=True,
+        primary_arch=True,
+    )
+    session.add(item)
+    item = model.Arch(
+        name='ppc',
+        publiclist=True,
+        primary_arch=False,
+    )
+    session.add(item)
+
+    # Insert some Country
+    item = model.Country(
+        code='FR',
+    )
+    session.add(item)
+    item = model.Country(
+        code='US',
+    )
+    session.add(item)
+
+    # Insert some Product
+    item = model.Product(
+        name='EPEL',
+        publiclist=True,
+    )
+    session.add(item)
+    item = model.Product(
+        name='Fedora',
+        publiclist=True,
+    )
+    session.add(item)
+
+    session.commit()
+
+
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(Modeltests)
     unittest.TextTestRunner(verbosity=2).run(SUITE)
