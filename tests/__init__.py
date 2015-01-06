@@ -323,6 +323,7 @@ def create_directory(session):
 
     session.commit()
 
+
 def create_category(session):
     ''' Create some Category to play with for the tests
     '''
@@ -341,6 +342,26 @@ def create_category(session):
         canonicalhost='http://dl.fedoraproject.org',
         topdir_id=2,
         publiclist=True
+    )
+    session.add(item)
+
+    session.commit()
+
+
+def create_hostcategory(session):
+    ''' Create some HostCategory to play with for the tests
+    '''
+    item = model.HostCategory(
+        host_id=1,
+        category_id=1,
+        always_up2date=True,
+    )
+    session.add(item)
+
+    item = model.HostCategory(
+        host_id=1,
+        category_id=2,
+        always_up2date=True,
     )
     session.add(item)
 
