@@ -375,13 +375,26 @@ def create_hostcategory(session):
         always_up2date=True,
     )
     session.add(item)
-
     item = model.HostCategory(
         host_id=1,
         category_id=2,
         always_up2date=True,
     )
     session.add(item)
+
+    item = model.HostCategory(
+        host_id=2,
+        category_id=1,
+        always_up2date=False,
+    )
+    session.add(item)
+    item = model.HostCategory(
+        host_id=2,
+        category_id=2,
+        always_up2date=False,
+    )
+    session.add(item)
+
 
     session.commit()
 
