@@ -22,8 +22,7 @@ from mirrormanager2.lib import model
 
 #DB_PATH = 'sqlite:///:memory:'
 ## A file database is required to check the integrity, don't ask
-#DB_PATH = 'sqlite:////tmp/test.sqlite'
-DB_PATH = 'postgresql://fedora:fedora@localhost/mirrormanager'
+DB_PATH = 'sqlite:////tmp/test.sqlite'
 FAITOUT_URL = 'http://209.132.184.152/faitout/'
 
 if os.environ.get('BUILD_ID'):
