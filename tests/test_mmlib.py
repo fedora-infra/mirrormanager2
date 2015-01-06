@@ -91,6 +91,26 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(results[1].name, 'test-mirror2')
         self.assertEqual(results[2].name, 'test-mirror_private')
 
+    def test_get_siteadmin(self):
+        """ Test the get_siteadmin function of mirrormanager2.lib. """
+        results = mirrormanager2.lib.get_siteadmin(self.session, 1)
+        self.assertEqual(results, None)
+
+        tests.create_site(self.session)
+
+        results = mirrormanager2.lib.get_siteadmin(self.session, 1)
+        self.assertEqual(results, None)
+
+        tests.create_site_admin(self.session)
+
+        results = mirrormanager2.lib.get_siteadmin(self.session, 1)
+        self.assertEqual(results.site.name, 'test-mirror')
+        self.assertEqual(results.username, 'ralph')
+
+        results = mirrormanager2.lib.get_siteadmin(self.session, 4)
+        self.assertEqual(results.site.name, 'test-mirror2')
+        self.assertEqual(results.username, 'pingou')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
