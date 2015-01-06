@@ -147,6 +147,52 @@ def create_base_items(session):
     session.commit()
 
 
+def create_site(session):
+    ''' Create some site to play with for the tests
+    '''
+    item = model.Site(
+        name='test-mirror',
+        password='test_password',
+        org_url='http://fedoraproject.org',
+        private=False,
+        admin_active=True,
+        user_active=True,
+        all_sites_can_pull_from_me=True,
+        downstream_comments='Mirror available over RSYNC and HTTP.',
+        email_on_drop=False,  # Default value - not changeable in the UI Oo
+        email_on_add=False,  # Default value - not changeable in the UI Oo
+    )
+    session.add(item)
+    item = model.Site(
+        name='test-mirror2',
+        password='test_password2',
+        org_url='http://getfedora.org',
+        private=False,
+        admin_active=True,
+        user_active=True,
+        all_sites_can_pull_from_me=True,
+        downstream_comments='Mirror available over HTTP.',
+        email_on_drop=False,
+        email_on_add=False,
+    )
+    session.add(item)
+    item = model.Site(
+        name='test-mirror_private',
+        password='test_password_private',
+        org_url='http://192.168.0.15',
+        private=True,
+        admin_active=True,
+        user_active=True,
+        all_sites_can_pull_from_me=False,
+        downstream_comments='My own mirror available over HTTP.',
+        email_on_drop=False,
+        email_on_add=False,
+    )
+    session.add(item)
+
+    session.commit()
+
+
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(Modeltests)
     unittest.TextTestRunner(verbosity=2).run(SUITE)
