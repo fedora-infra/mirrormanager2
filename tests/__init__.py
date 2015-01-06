@@ -398,6 +398,37 @@ def create_hostcategory(session):
     session.commit()
 
 
+def create_hostcategoryurl(session):
+    ''' Create some HostCategoryUrl to play with for the tests
+    '''
+    item = model.HostCategoryUrl(
+        host_category_id=1,
+        url='http://infrastructure.fedoraproject.org/pub/fedora/linux',
+        private=False,
+    )
+    session.add(item)
+    item = model.HostCategoryUrl(
+        host_category_id=1,
+        url='http://infrastructure.fedoraproject.org/pub/epel',
+        private=False,
+    )
+    session.add(item)
+
+    item = model.HostCategoryUrl(
+        host_category_id=1,
+        url='http://dl.fedoraproject.org/pub/fedora/linux',
+        private=False,
+    )
+    session.add(item)
+    item = model.HostCategoryUrl(
+        host_category_id=1,
+        url='http://dl.fedoraproject.org/pub/epel',
+        private=False,
+    )
+    session.add(item)
+
+    session.commit()
+
 def create_categorydirectory(session):
     ''' Create some CategoryDirectory to play with for the tests
     '''
