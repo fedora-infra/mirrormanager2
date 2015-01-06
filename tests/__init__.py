@@ -395,6 +395,29 @@ def create_hostcategory(session):
     )
     session.add(item)
 
+    session.commit()
+
+
+def create_categorydirectory(session):
+    ''' Create some CategoryDirectory to play with for the tests
+    '''
+    item = model.CategoryDirectory(
+        directory_id=1,
+        category_id=1,
+    )
+    session.add(item)
+
+    item = model.CategoryDirectory(
+        directory_id=4,
+        category_id=1,
+    )
+    session.add(item)
+
+    item = model.CategoryDirectory(
+        directory_id=5,
+        category_id=1,
+    )
+    session.add(item)
 
     session.commit()
 
