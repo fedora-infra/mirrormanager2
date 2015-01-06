@@ -300,6 +300,30 @@ def create_hostaclip(session):
     session.commit()
 
 
+def create_directory(session):
+    ''' Create some Directory to play with for the tests
+    '''
+    item = model.Directory(
+        name='pub/fedora/linux/releases',
+        readable=True,
+    )
+    session.add(item)
+
+    item = model.Directory(
+        name='pub/fedora/linux/extras',
+        readable=True,
+    )
+    session.add(item)
+
+    item = model.Directory(
+        name='pub/epel',
+        readable=True,
+    )
+    session.add(item)
+
+    session.commit()
+
+
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(Modeltests)
     unittest.TextTestRunner(verbosity=2).run(SUITE)
