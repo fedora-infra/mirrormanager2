@@ -111,6 +111,26 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(results.site.name, 'test-mirror2')
         self.assertEqual(results.username, 'pingou')
 
+    def test_get_host(self):
+        """ Test the get_host function of mirrormanager2.lib. """
+        results = mirrormanager2.lib.get_host(self.session, 1)
+        self.assertEqual(results, None)
+
+        tests.create_site(self.session)
+        tests.create_hosts(self.session)
+
+        results = mirrormanager2.lib.get_host(self.session, 1)
+        self.assertEqual(results.name, 'mirror.localhost')
+        self.assertEqual(results.country, 'US')
+
+        results = mirrormanager2.lib.get_host(self.session, 2)
+        self.assertEqual(results.name, 'mirror2.localhost')
+        self.assertEqual(results.country, 'FR')
+
+        results = mirrormanager2.lib.get_host(self.session, 3)
+        self.assertEqual(results.name, 'private.localhost')
+        self.assertEqual(results.country, 'NL')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
