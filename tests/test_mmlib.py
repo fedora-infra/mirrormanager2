@@ -78,6 +78,19 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(results.private, False)
         self.assertEqual(results.created_by, 'kevin')
 
+    def test_get_all_sites(self):
+        """ Test the get_all_sites function of mirrormanager2.lib. """
+        results = mirrormanager2.lib.get_all_sites(self.session)
+        self.assertEqual(results, [])
+
+        tests.create_site(self.session)
+
+        results = mirrormanager2.lib.get_all_sites(self.session)
+        self.assertEqual(len(results), 3)
+        self.assertEqual(results[0].name, 'test-mirror')
+        self.assertEqual(results[1].name, 'test-mirror2')
+        self.assertEqual(results[2].name, 'test-mirror_private')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
