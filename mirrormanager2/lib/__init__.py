@@ -1003,12 +1003,12 @@ def query_directories(session):
         model.Directory.id.label('directory_id'),
         model.Directory.name.label('dname'),
         model.Host.id.label('hostid'),
-        model.Host.country,
+        model.Host.country.label('country'),
         model.HostCategoryUrl.id.label('id'),
         model.Site.private.label('siteprivate'),
         model.Host.private.label('hostprivate'),
-        model.Host.internet2,
-        model.Host.internet2_clients,
+        model.Host.internet2.label('internet2'),
+        model.Host.internet2_clients.label('internet2_clients'),
     ).filter(
         model.Host.user_active == True
     ).filter(
