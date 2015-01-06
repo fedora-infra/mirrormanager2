@@ -196,6 +196,34 @@ def create_site(session):
     session.commit()
 
 
+def create_site_admin(session):
+    ''' Create some site admins to play with for the tests
+    '''
+    item = model.SiteAdmin(
+        username='ralph',
+        site_id=1,
+    )
+    session.add(item)
+    item = model.SiteAdmin(
+        username='kevin',
+        site_id=1,
+    )
+    session.add(item)
+
+    item = model.SiteAdmin(
+        username='ralph',
+        site_id=2,
+    )
+    session.add(item)
+    item = model.SiteAdmin(
+        username='pingou',
+        site_id=2,
+    )
+    session.add(item)
+
+    session.commit()
+
+
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(Modeltests)
     unittest.TextTestRunner(verbosity=2).run(SUITE)
