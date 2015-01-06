@@ -321,6 +321,24 @@ def create_directory(session):
     )
     session.add(item)
 
+    item = model.Directory(
+        name='pub/fedora/linux/releases/20',
+        readable=True,
+    )
+    session.add(item)
+
+    item = model.Directory(
+        name='pub/fedora/linux/releases/21',
+        readable=True,
+    )
+    session.add(item)
+
+    item = model.Directory(
+        name='pub/archive/fedora/linux/releases/20/Fedora/source',
+        readable=True,
+    )
+    session.add(item)
+
     session.commit()
 
 
