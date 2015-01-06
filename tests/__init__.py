@@ -406,16 +406,20 @@ def create_categorydirectory(session):
         category_id=1,
     )
     session.add(item)
-
     item = model.CategoryDirectory(
         directory_id=4,
         category_id=1,
     )
     session.add(item)
-
     item = model.CategoryDirectory(
         directory_id=5,
         category_id=1,
+    )
+    session.add(item)
+
+    item = model.CategoryDirectory(
+        directory_id=3,
+        category_id=2,
     )
     session.add(item)
 
