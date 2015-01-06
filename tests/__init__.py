@@ -323,6 +323,29 @@ def create_directory(session):
 
     session.commit()
 
+def create_category(session):
+    ''' Create some Category to play with for the tests
+    '''
+    item = model.Category(
+        name='Fedora Linux',
+        product_id=2,
+        canonicalhost='http://download.fedora.redhat.com',
+        topdir_id=1,
+        publiclist=True
+    )
+    session.add(item)
+
+    item = model.Category(
+        name='Fedora EPEL',
+        product_id=1,
+        canonicalhost='http://dl.fedoraproject.org',
+        topdir_id=2,
+        publiclist=True
+    )
+    session.add(item)
+
+    session.commit()
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(Modeltests)
