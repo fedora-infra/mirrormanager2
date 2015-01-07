@@ -470,6 +470,19 @@ def create_hostnetblock(session):
     session.commit()
 
 
+def create_hostpeerasn(session):
+    ''' Create some HostPeerAsn to play with for the tests
+    '''
+    item = model.HostNetblock(
+        host_id=3,
+        asn='25640',
+        name='Hawaii',
+    )
+    session.add(item)
+
+    session.commit()
+
+
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(Modeltests)
     unittest.TextTestRunner(verbosity=2).run(SUITE)
