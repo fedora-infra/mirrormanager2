@@ -544,6 +544,28 @@ class MMLibtests(tests.Modeltests):
             self.session, 'foo')
         self.assertEqual(results, None)
 
+    def test_get_category_directory(self):
+        """ Test the get_category_directory function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_category_directory(self.session)
+        self.assertEqual(results, [])
+
+        tests.create_base_items(self.session)
+        tests.create_directory(self.session)
+        tests.create_category(self.session)
+        tests.create_categorydirectory(self.session)
+
+        results = mirrormanager2.lib.get_category_directory(self.session)
+        self.assertEqual(len(results), 4)
+        self.assertEqual(
+            results[0].category.name, 'Fedora Linux')
+        self.assertEqual(
+            results[0].directory.name, 'pub/fedora/linux/releases')
+        self.assertEqual(
+            results[1].category.name, 'Fedora EPEL')
+        self.assertEqual(
+            results[1].directory.name, 'pub/epel')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
