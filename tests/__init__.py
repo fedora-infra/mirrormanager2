@@ -7,6 +7,7 @@ mirrormanager2 tests.
 __requires__ = ['SQLAlchemy >= 0.7']
 import pkg_resources
 
+import datetime
 import unittest
 import sys
 import os
@@ -189,6 +190,15 @@ def create_base_items(session):
         display_name='shaiton',
         password='foo4',
         token='bar',
+    )
+    session.add(item)
+
+    # Insert some UserVisit
+    item = model.UserVisit(
+        user_id=1,
+        visit_key='foo',
+        user_ip='127.0.0.1',
+        expiry=datetime.datetime.utcnow() + datetime.timedelta(days=1)
     )
     session.add(item)
 
