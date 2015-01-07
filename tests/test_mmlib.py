@@ -242,6 +242,37 @@ class MMLibtests(tests.Modeltests):
         results = mirrormanager2.lib.get_host_category(self.session, 5)
         self.assertEqual(results, None)
 
+    def test_get_host_category_by_hostid_category(self):
+        """ Test the get_host_category_by_hostid_category function of
+        mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_host_category_by_hostid_category(
+            self.session, 1, 'Fedora Linux')
+        self.assertEqual(results, [])
+
+        tests.create_base_items(self.session)
+        tests.create_site(self.session)
+        tests.create_hosts(self.session)
+        tests.create_directory(self.session)
+        tests.create_category(self.session)
+        tests.create_hostcategory(self.session)
+
+        results = mirrormanager2.lib.get_host_category_by_hostid_category(
+            self.session, 1, 'Fedora Linux')
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].host.name, 'mirror.localhost')
+        self.assertEqual(results[0].host.country, 'US')
+
+        results = mirrormanager2.lib.get_host_category_by_hostid_category(
+            self.session, 2, 'Fedora Linux')
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].host.name, 'mirror2.localhost')
+        self.assertEqual(results[0].host.country, 'FR')
+
+        results = mirrormanager2.lib.get_host_category_by_hostid_category(
+            self.session, 3, 'Fedora Linux')
+        self.assertEqual(results, [])
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
