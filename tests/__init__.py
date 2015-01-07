@@ -429,6 +429,7 @@ def create_hostcategoryurl(session):
 
     session.commit()
 
+
 def create_categorydirectory(session):
     ''' Create some CategoryDirectory to play with for the tests
     '''
@@ -473,7 +474,7 @@ def create_hostnetblock(session):
 def create_hostpeerasn(session):
     ''' Create some HostPeerAsn to play with for the tests
     '''
-    item = model.HostNetblock(
+    item = model.HostPeerAsn(
         host_id=3,
         asn='25640',
         name='Hawaii',
