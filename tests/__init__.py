@@ -760,6 +760,47 @@ def create_directoryexclusivehost(session):
     session.commit()
 
 
+def create_filedetail(session):
+    ''' Create some FileDetail to play with for the tests
+    '''
+    item = model.FileDetail(
+        filename='repomd.xml',
+        directory_id=7,
+        timestamp=1357758825,
+        size=2971,
+        sha1='foo_sha1',
+        md5='foo_md5',
+        sha256='foo_sha256',
+        sha512='foo_sha512',
+    )
+    session.add(item)
+    item = model.FileDetail(
+        filename='repomd.xml',
+        directory_id=8,
+        timestamp=1357758826,
+        size=2972,
+        sha1='foo2_sha1',
+        md5='foo2_md5',
+        sha256='foo2_sha256',
+        sha512='foo2_sha512',
+    )
+    session.add(item)
+    item = model.FileDetail(
+        filename='repomd.xml',
+        directory_id=9,
+        timestamp=1357758827,
+        size=2973,
+        sha1='foo3_sha1',
+        md5='foo3_md5',
+        sha256='foo3_sha256',
+        sha512='foo3_sha512',
+    )
+    session.add(item)
+
+    session.commit()
+
+
+
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(Modeltests)
     unittest.TextTestRunner(verbosity=2).run(SUITE)
