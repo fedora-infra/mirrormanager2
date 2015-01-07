@@ -483,6 +483,23 @@ def create_hostpeerasn(session):
     session.commit()
 
 
+def create_hostcountry(session):
+    ''' Create some HostCountry to play with for the tests
+    '''
+    item = model.HostCountry(
+        host_id=1,
+        country_id=2,
+    )
+    session.add(item)
+    item = model.HostCountry(
+        host_id=2,
+        country_id=1,
+    )
+    session.add(item)
+
+    session.commit()
+
+
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(Modeltests)
     unittest.TextTestRunner(verbosity=2).run(SUITE)
