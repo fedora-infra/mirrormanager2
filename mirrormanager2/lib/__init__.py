@@ -1064,7 +1064,7 @@ def get_directory_exclusive_host(session):
     '''
     query = session.query(
         model.Directory.name.label('dname'),
-        model.DirectoryExclusiveHost.host_id
+        model.DirectoryExclusiveHost.host_id.label('host_id')
     ).filter(
         model.Directory.id == model.DirectoryExclusiveHost.directory_id
     ).order_by(
