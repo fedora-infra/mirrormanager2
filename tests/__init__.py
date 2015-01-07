@@ -574,6 +574,7 @@ def create_hostcountry(session):
 
     session.commit()
 
+
 def create_version(session):
     ''' Create some Version to play with for the tests
     '''
@@ -607,6 +608,14 @@ def create_version(session):
         is_test=False,
         display=True,
         display_name='rawhide',
+        ordered_mirrorlist=True,
+    )
+    session.add(item)
+    item = model.Version(
+        name=19,
+        product_id=2,
+        is_test=False,
+        display=True,
         ordered_mirrorlist=True,
     )
     session.add(item)
