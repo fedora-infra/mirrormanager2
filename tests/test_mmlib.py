@@ -777,6 +777,180 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(results[0].netblock, '127.0.0.0/24')
         self.assertEqual(results[0].country, 'AU')
 
+    def test_get_mirrors(self):
+        """ Test the get_mirrors function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_mirrors(self.session)
+        self.assertEqual(results, [])
+
+        tests.create_base_items(self.session)
+        tests.create_site(self.session)
+        tests.create_hosts(self.session)
+        tests.create_directory(self.session)
+        tests.create_category(self.session)
+        tests.create_hostcategory(self.session)
+        tests.create_hostcategoryurl(self.session)
+        tests.create_categorydirectory(self.session)
+        tests.create_netblockcountry(self.session)
+
+        results = mirrormanager2.lib.get_mirrors(self.session)
+        self.assertEqual(len(results), 3)
+        self.assertEqual(results[0].name, 'mirror2.localhost')
+        self.assertEqual(results[1].name, 'private.localhost')
+        self.assertEqual(results[2].name, 'mirror.localhost')
+
+        results = mirrormanager2.lib.get_mirrors(self.session, private=True)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].name, 'private.localhost')
+
+        results = mirrormanager2.lib.get_mirrors(self.session, internet2=True)
+        self.assertEqual(len(results), 0)
+
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, internet2_clients=True)
+        self.assertEqual(len(results), 0)
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, internet2_clients=False)
+        self.assertEqual(len(results), 3)
+        self.assertEqual(results[0].name, 'mirror2.localhost')
+        self.assertEqual(results[1].name, 'private.localhost')
+        self.assertEqual(results[2].name, 'mirror.localhost')
+
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, asn_clients=True)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].name, 'mirror2.localhost')
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, asn_clients=False)
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results[0].name, 'private.localhost')
+        self.assertEqual(results[1].name, 'mirror.localhost')
+
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, admin_active=False)
+        self.assertEqual(len(results), 0)
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, admin_active=True)
+        self.assertEqual(len(results), 3)
+        self.assertEqual(results[0].name, 'mirror2.localhost')
+        self.assertEqual(results[1].name, 'private.localhost')
+        self.assertEqual(results[2].name, 'mirror.localhost')
+
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, user_active=False)
+        self.assertEqual(len(results), 0)
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, user_active=True)
+        self.assertEqual(len(results), 3)
+        self.assertEqual(results[0].name, 'mirror2.localhost')
+        self.assertEqual(results[1].name, 'private.localhost')
+        self.assertEqual(results[2].name, 'mirror.localhost')
+
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, host_category_url_private=True)
+        self.assertEqual(len(results), 0)
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, host_category_url_private=False)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].name, 'mirror.localhost')
+
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, last_crawl_duration=True)
+        self.assertEqual(len(results), 0)
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, last_crawl_duration=False)
+        self.assertEqual(len(results), 3)
+        self.assertEqual(results[0].name, 'mirror2.localhost')
+        self.assertEqual(results[1].name, 'private.localhost')
+        self.assertEqual(results[2].name, 'mirror.localhost')
+
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, last_crawled=True)
+        self.assertEqual(len(results), 0)
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, last_crawled=False)
+        self.assertEqual(len(results), 3)
+        self.assertEqual(results[0].name, 'mirror2.localhost')
+        self.assertEqual(results[1].name, 'private.localhost')
+        self.assertEqual(results[2].name, 'mirror.localhost')
+
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, last_checked_in=True)
+        self.assertEqual(len(results), 0)
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, last_checked_in=False)
+        self.assertEqual(len(results), 3)
+        self.assertEqual(results[0].name, 'mirror2.localhost')
+        self.assertEqual(results[1].name, 'private.localhost')
+        self.assertEqual(results[2].name, 'mirror.localhost')
+
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, site_private=True)
+        self.assertEqual(len(results), 0)
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, site_private=False)
+        self.assertEqual(len(results), 3)
+        self.assertEqual(results[0].name, 'mirror2.localhost')
+        self.assertEqual(results[1].name, 'private.localhost')
+        self.assertEqual(results[2].name, 'mirror.localhost')
+
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, site_user_active=False)
+        self.assertEqual(len(results), 0)
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, site_user_active=True)
+        self.assertEqual(len(results), 3)
+        self.assertEqual(results[0].name, 'mirror2.localhost')
+        self.assertEqual(results[1].name, 'private.localhost')
+        self.assertEqual(results[2].name, 'mirror.localhost')
+
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, site_admin_active=False)
+        self.assertEqual(len(results), 0)
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, site_admin_active=True)
+        self.assertEqual(len(results), 3)
+        self.assertEqual(results[0].name, 'mirror2.localhost')
+        self.assertEqual(results[1].name, 'private.localhost')
+        self.assertEqual(results[2].name, 'mirror.localhost')
+
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, up2date=True)
+        self.assertEqual(len(results), 0)
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, up2date=False)
+        self.assertEqual(len(results), 0)
+
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, version_id=1)
+        self.assertEqual(len(results), 0)
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, version_id=3)
+
+        tests.create_version(self.session)
+        tests.create_repository(self.session)
+
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, version_id=1)
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results[0].name, 'mirror2.localhost')
+        self.assertEqual(results[1].name, 'mirror.localhost')
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, version_id=3)
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results[0].name, 'mirror2.localhost')
+        self.assertEqual(results[1].name, 'mirror.localhost')
+
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, arch_id=1)
+        self.assertEqual(len(results), 0)
+        results = mirrormanager2.lib.get_mirrors(
+            self.session, arch_id=3)
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results[0].name, 'mirror2.localhost')
+        self.assertEqual(results[1].name, 'mirror.localhost')
+
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
