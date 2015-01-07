@@ -952,7 +952,7 @@ class MMLibtests(tests.Modeltests):
 
 
     def test_get_user_sites(self):
-        """ Test the get_user_sites function or mirrormanager2.lib.
+        """ Test the get_user_sites function of mirrormanager2.lib.
         """
         results = mirrormanager2.lib.get_user_sites(self.session, 'pingou')
         self.assertEqual(results, [])
@@ -962,6 +962,15 @@ class MMLibtests(tests.Modeltests):
         results = mirrormanager2.lib.get_user_sites(self.session, 'pingou')
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].name, 'test-mirror')
+
+    def test_id_generator(self):
+        """ Test the id_generator function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.id_generator(size=5, chars=['a'])
+        self.assertEqual(results, 'aaaaa')
+
+        results = mirrormanager2.lib.id_generator(size=5, chars=['1'])
+        self.assertEqual(results, '11111')
 
 
 if __name__ == '__main__':
