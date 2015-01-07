@@ -1082,6 +1082,63 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(
             results[1].host_id, 3)
 
+    def test_get_file_detail(self):
+        """ Test the get_file_detail function of
+        mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_file_detail(
+            self.session, 'repomd.xml', 7)
+        self.assertEqual(results, None)
+
+        tests.create_directory(self.session)
+        tests.create_filedetail(self.session)
+
+        results = mirrormanager2.lib.get_file_detail(
+            self.session, 'repomd.xml', 7)
+        self.assertEqual(results.md5, 'foo_md5')
+        self.assertEqual(
+            results.directory.name,
+            'pub/fedora/linux/updates/testing/19/x86_64')
+
+        results = mirrormanager2.lib.get_file_detail(
+            self.session, 'repomd.xml', 7, md5='foo_md5')
+        self.assertEqual(results.md5, 'foo_md5')
+        self.assertEqual(
+            results.directory.name,
+            'pub/fedora/linux/updates/testing/19/x86_64')
+
+        results = mirrormanager2.lib.get_file_detail(
+            self.session, 'repomd.xml', 7, sha1='foo_sha1')
+        self.assertEqual(results.md5, 'foo_md5')
+        self.assertEqual(
+            results.directory.name,
+            'pub/fedora/linux/updates/testing/19/x86_64')
+
+        results = mirrormanager2.lib.get_file_detail(
+            self.session, 'repomd.xml', 7, sha256='foo_sha256')
+        self.assertEqual(results.md5, 'foo_md5')
+        self.assertEqual(
+            results.directory.name,
+            'pub/fedora/linux/updates/testing/19/x86_64')
+
+        results = mirrormanager2.lib.get_file_detail(
+            self.session, 'repomd.xml', 7, sha512='foo_sha512')
+        self.assertEqual(results.md5, 'foo_md5')
+        self.assertEqual(
+            results.directory.name,
+            'pub/fedora/linux/updates/testing/19/x86_64')
+
+        results = mirrormanager2.lib.get_file_detail(
+            self.session, 'repomd.xml', 7, size=2973)
+        self.assertEqual(results, None)
+
+        results = mirrormanager2.lib.get_file_detail(
+            self.session, 'repomd.xml', 7, timestamp=1357758825)
+        self.assertEqual(results.md5, 'foo_md5')
+        self.assertEqual(
+            results.directory.name,
+            'pub/fedora/linux/updates/testing/19/x86_64')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
