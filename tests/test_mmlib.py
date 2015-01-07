@@ -1056,6 +1056,32 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(
             results[0].host_category.category.name, 'Fedora Linux')
 
+    def test_get_directory_exclusive_host(self):
+        """ Test the get_directory_exclusive_host function of
+        mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_directory_exclusive_host(
+            self.session)
+        self.assertEqual(results, [])
+
+        tests.create_base_items(self.session)
+        tests.create_site(self.session)
+        tests.create_hosts(self.session)
+        tests.create_directory(self.session)
+        tests.create_directoryexclusivehost(self.session)
+
+        results = mirrormanager2.lib.get_directory_exclusive_host(
+            self.session)
+        self.assertEqual(len(results), 2)
+        self.assertEqual(
+            results[0].dname, 'pub/fedora/linux/releases/20')
+        self.assertEqual(
+            results[0].host_id, 1)
+        self.assertEqual(
+            results[1].dname, 'pub/fedora/linux/releases/21')
+        self.assertEqual(
+            results[1].host_id, 3)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
