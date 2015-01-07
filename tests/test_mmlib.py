@@ -324,6 +324,23 @@ class MMLibtests(tests.Modeltests):
             self.assertEqual(
                 results[i].host_category.host.country, 'US')
 
+    def test_get_country_by_name(self):
+        """ Test the get_country_by_name function of
+        mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_country_by_name(self.session, 'FR')
+        self.assertEqual(results, None)
+
+        tests.create_base_items(self.session)
+
+        for i in ['FR', 'US']:
+            results = mirrormanager2.lib.get_country_by_name(
+                self.session, i)
+            self.assertEqual(results.code, i)
+
+        results = mirrormanager2.lib.get_country_by_name(self.session, 'BE')
+        self.assertEqual(results, None)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
