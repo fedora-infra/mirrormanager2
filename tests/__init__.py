@@ -722,6 +722,28 @@ def create_netblockcountry(session):
     session.commit()
 
 
+def create_hostcategorydir(session):
+    ''' Create some HostCategoryDir to play with for the tests
+    '''
+    item = model.HostCategoryDir(
+        host_category_id=1,
+        directory_id=4,
+        path='pub/fedora/linux/releases/20',
+        up2date=True,
+    )
+    session.add(item)
+    item = model.HostCategoryDir(
+        host_category_id=3,
+        directory_id=5,
+        path='pub/fedora/linux/releases/21',
+        up2date=True,
+    )
+    session.add(item)
+
+    session.commit()
+
+
+
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(Modeltests)
     unittest.TextTestRunner(verbosity=2).run(SUITE)
