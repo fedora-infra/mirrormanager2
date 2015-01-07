@@ -301,6 +301,29 @@ class MMLibtests(tests.Modeltests):
             self.session, 5)
         self.assertEqual(results, None)
 
+    def test_get_host_category_url(self):
+        """ Test the get_host_category_url function of
+        mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_host_category_url(self.session)
+        self.assertEqual(results, [])
+
+        tests.create_base_items(self.session)
+        tests.create_site(self.session)
+        tests.create_hosts(self.session)
+        tests.create_directory(self.session)
+        tests.create_category(self.session)
+        tests.create_hostcategory(self.session)
+        tests.create_hostcategoryurl(self.session)
+
+        results = mirrormanager2.lib.get_host_category_url(self.session)
+        self.assertEqual(len(results), 4)
+        for i in range(4):
+            self.assertEqual(
+                results[i].host_category.host.name, 'mirror.localhost')
+            self.assertEqual(
+                results[i].host_category.host.country, 'US')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
