@@ -629,6 +629,33 @@ class MMLibtests(tests.Modeltests):
             self.session, 'updates-testing-f20', 'i386')
         self.assertEqual(results, None)
 
+    def test_get_repo_by_name(self):
+        """ Test the get_repo_by_name function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_repo_by_name(
+            self.session, 'pub/fedora/linux/updates/testing/19/x86_64')
+        self.assertEqual(results, None)
+
+        tests.create_base_items(self.session)
+        tests.create_version(self.session)
+        tests.create_directory(self.session)
+        tests.create_category(self.session)
+        tests.create_repository(self.session)
+
+        results = mirrormanager2.lib.get_repo_by_name(
+            self.session, 'pub/fedora/linux/updates/testing/19/x86_64')
+        self.assertEqual(
+            results.name, 'pub/fedora/linux/updates/testing/19/x86_64')
+
+        results = mirrormanager2.lib.get_repo_by_name(
+            self.session, 'pub/fedora/linux/updates/testing/20/x86_64')
+        self.assertEqual(
+            results.name, 'pub/fedora/linux/updates/testing/20/x86_64')
+
+        results = mirrormanager2.lib.get_repo_by_name(
+            self.session, 'pub/fedora/linux/updates/testing/19/i386')
+        self.assertEqual(results, None)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
