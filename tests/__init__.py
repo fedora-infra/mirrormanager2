@@ -743,6 +743,22 @@ def create_hostcategorydir(session):
     session.commit()
 
 
+def create_directoryexclusivehost(session):
+    ''' Create some DirectoryExclusiveHost to play with for the tests
+    '''
+    item = model.DirectoryExclusiveHost(
+        host_id=1,
+        directory_id=4,
+    )
+    session.add(item)
+    item = model.DirectoryExclusiveHost(
+        host_id=3,
+        directory_id=5,
+    )
+    session.add(item)
+
+    session.commit()
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(Modeltests)
