@@ -147,6 +147,18 @@ class MMLibModeltests(tests.Modeltests):
         item = model.Host.get(self.session, 1)
         self.assertFalse(item.is_active())
 
+    def test_directory_repr(self):
+        """ Test the Directory.__repr__ object of mirrormanager2.lib.model.
+        """
+        tests.create_base_items(self.session)
+        tests.create_directory(self.session)
+
+        item = model.Directory.get(self.session, 1)
+        self.assertEqual(
+            str(item), '<Directory(1 - pub/fedora/linux/releases)>')
+        item = model.Directory.get(self.session, 3)
+        self.assertEqual(str(item), '<Directory(3 - pub/epel)>')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibModeltests)
