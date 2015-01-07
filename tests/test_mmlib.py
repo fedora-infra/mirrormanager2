@@ -362,8 +362,7 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(results[2].continent, 'EU')
 
     def test_get_user_by_username(self):
-        """ Test the get_user_by_username function of
-        mirrormanager2.lib.
+        """ Test the get_user_by_username function of mirrormanager2.lib.
         """
         results = mirrormanager2.lib.get_user_by_username(
             self.session, 'pingou')
@@ -382,6 +381,29 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(results.email_address, 'ralph@fp.o')
 
         results = mirrormanager2.lib.get_user_by_username(
+                self.session, 'foo')
+        self.assertEqual(results, None)
+
+    def test_get_user_by_email(self):
+        """ Test the get_user_by_email function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_user_by_email(
+            self.session, 'pingou@fp.o')
+        self.assertEqual(results, None)
+
+        tests.create_base_items(self.session)
+
+        results = mirrormanager2.lib.get_user_by_email(
+                self.session, 'pingou@fp.o')
+        self.assertEqual(results.user_name, 'pingou')
+        self.assertEqual(results.email_address, 'pingou@fp.o')
+
+        results = mirrormanager2.lib.get_user_by_email(
+                self.session, 'ralph@fp.o')
+        self.assertEqual(results.user_name, 'ralph')
+        self.assertEqual(results.email_address, 'ralph@fp.o')
+
+        results = mirrormanager2.lib.get_user_by_email(
                 self.session, 'foo')
         self.assertEqual(results, None)
 
