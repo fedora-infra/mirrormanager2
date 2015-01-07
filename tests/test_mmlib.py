@@ -273,6 +273,34 @@ class MMLibtests(tests.Modeltests):
             self.session, 3, 'Fedora Linux')
         self.assertEqual(results, [])
 
+    def test_get_host_category_url_by_id(self):
+        """ Test the get_host_category_url_by_id function of
+        mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_host_category_url_by_id(
+            self.session, 1)
+        self.assertEqual(results, None)
+
+        tests.create_base_items(self.session)
+        tests.create_site(self.session)
+        tests.create_hosts(self.session)
+        tests.create_directory(self.session)
+        tests.create_category(self.session)
+        tests.create_hostcategory(self.session)
+        tests.create_hostcategoryurl(self.session)
+
+        for i in range(4):
+            results = mirrormanager2.lib.get_host_category_url_by_id(
+                self.session, i+1)
+            self.assertEqual(
+                results.host_category.host.name, 'mirror.localhost')
+            self.assertEqual(
+                results.host_category.host.country, 'US')
+
+        results = mirrormanager2.lib.get_host_category_url_by_id(
+            self.session, 5)
+        self.assertEqual(results, None)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
