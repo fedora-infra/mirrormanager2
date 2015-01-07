@@ -566,6 +566,27 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(
             results[1].directory.name, 'pub/epel')
 
+    def test_get_product_by_name(self):
+        """ Test the get_product_by_name function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_product_by_name(
+            self.session, 'Fedora')
+        self.assertEqual(results, None)
+
+        tests.create_base_items(self.session)
+
+        results = mirrormanager2.lib.get_product_by_name(
+            self.session, 'Fedora')
+        self.assertEqual(results.name, 'Fedora')
+
+        results = mirrormanager2.lib.get_product_by_name(
+            self.session, 'EPEL')
+        self.assertEqual(results.name, 'EPEL')
+
+        results = mirrormanager2.lib.get_product_by_name(
+            self.session, 'foo')
+        self.assertEqual(results, None)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
