@@ -710,6 +710,18 @@ def create_location(session):
     session.commit()
 
 
+def create_netblockcountry(session):
+    ''' Create some NetblockCountry to play with for the tests
+    '''
+    item = model.NetblockCountry(
+        netblock='127.0.0.0/24',
+        country='AU',
+    )
+    session.add(item)
+
+    session.commit()
+
+
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(Modeltests)
     unittest.TextTestRunner(verbosity=2).run(SUITE)
