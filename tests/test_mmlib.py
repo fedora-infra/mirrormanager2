@@ -702,6 +702,23 @@ class MMLibtests(tests.Modeltests):
             results[2].name, 'pub/fedora/linux/updates/testing/21/x86_64')
         self.assertEqual(results[2].arch.name, 'x86_64')
 
+    def test_get_reporedirect(self):
+        """ Test the get_reporedirect function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_reporedirect(self.session)
+        self.assertEqual(results, [])
+
+        tests.create_repositoryredirect(self.session)
+
+        results = mirrormanager2.lib.get_reporedirect(self.session)
+        self.assertEqual(len(results), 3)
+        self.assertEqual(results[0].from_repo, 'fedora-rawhide')
+        self.assertEqual(results[0].to_repo, 'rawhide')
+        self.assertEqual(results[1].from_repo, 'fedora-install-rawhide')
+        self.assertEqual(results[1].to_repo, 'rawhide')
+        self.assertEqual(results[2].from_repo, 'epel-6.0')
+        self.assertEqual(results[2].to_repo, 'epel-6')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
