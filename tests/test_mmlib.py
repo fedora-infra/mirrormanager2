@@ -750,6 +750,20 @@ class MMLibtests(tests.Modeltests):
             self.session, site, 'pingou')
         self.assertEqual(results, 'pingou was already listed as an admin')
 
+    def test_get_locations(self):
+        """ Test the get_locations function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_locations(self.session)
+        self.assertEqual(results, [])
+
+        tests.create_location(self.session)
+
+        results = mirrormanager2.lib.get_locations(self.session)
+        self.assertEqual(len(results), 3)
+        self.assertEqual(results[0].name, 'foo')
+        self.assertEqual(results[1].name, 'bar')
+        self.assertEqual(results[2].name, 'foobar')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
