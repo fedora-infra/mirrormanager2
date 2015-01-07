@@ -298,6 +298,7 @@ def get_country_continent_redirect(session):
 
     return query.all()
 
+
 def get_user_by_username(session, username):
     ''' Return a specified User via its username.
 
@@ -496,7 +497,9 @@ def get_repo_prefix_arch(session, prefix, arch):
     ).filter(
         model.Repository.prefix == prefix
     ).filter(
-        model.Repository.arch == arch
+        model.Repository.arch_id == model.Arch.id
+    ).filter(
+        model.Arch.name == arch
     )
 
     return query.first()
