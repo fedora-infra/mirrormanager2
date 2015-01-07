@@ -457,6 +457,19 @@ def create_categorydirectory(session):
     session.commit()
 
 
+def create_hostnetblock(session):
+    ''' Create some HostNetblock to play with for the tests
+    '''
+    item = model.HostNetblock(
+        host_id=3,
+        netblock='192.168.0.0/24',
+        name='home',
+    )
+    session.add(item)
+
+    session.commit()
+
+
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(Modeltests)
     unittest.TextTestRunner(verbosity=2).run(SUITE)
