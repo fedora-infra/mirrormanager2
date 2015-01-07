@@ -950,7 +950,6 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(results[0].name, 'mirror2.localhost')
         self.assertEqual(results[1].name, 'mirror.localhost')
 
-
     def test_get_user_sites(self):
         """ Test the get_user_sites function of mirrormanager2.lib.
         """
@@ -996,6 +995,20 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(
             results.name, 'pub/fedora/linux/updates/testing/19/x86_64')
         self.assertEqual(results.readable, True)
+
+    def test_get_directories(self):
+        """ Test the get_directories function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_directories(self.session)
+        self.assertEqual(results, [])
+
+        tests.create_directory(self.session)
+
+        results = mirrormanager2.lib.get_directories(self.session)
+        self.assertEqual(len(results), 9)
+        self.assertEqual(results[0].name, 'pub/fedora/linux/releases')
+        self.assertEqual(results[1].name, 'pub/fedora/linux/extras')
+        self.assertEqual(results[2].name, 'pub/epel')
 
 
 if __name__ == '__main__':
