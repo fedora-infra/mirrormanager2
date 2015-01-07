@@ -54,6 +54,59 @@ class MMLibModeltests(tests.Modeltests):
         item = model.Host.get(self.session, 3)
         self.assertEqual(str(item), '<Host(3 - private.localhost)>')
 
+    def test_host_json(self):
+        """ Test the Host.__json__ object of mirrormanager2.lib.model.
+        """
+        tests.create_site(self.session)
+        tests.create_hosts(self.session)
+
+        item = model.Host.get(self.session, 1)
+        self.assertEqual(
+            item.__json__(),
+            {
+                'admin_active': True,
+                'asn': None,
+                'asn_clients': False,
+                'bandwidth_int': 100,
+                'comment': None,
+                'country': u'US',
+                'id': 1,
+                'internet2': False,
+                'internet2_clients': False,
+                'last_checked_in': None,
+                'last_crawl_duration': 0,
+                'last_crawled': None,
+                'max_connections': 10,
+                'name': u'mirror.localhost',
+                'private': False,
+                'site': {'id': 1, 'name': u'test-mirror'},
+                'user_active': True
+            }
+        )
+        item = model.Host.get(self.session, 3)
+        self.assertEqual(
+            item.__json__(),
+            {
+                'admin_active': True,
+                'asn': None,
+                'asn_clients': False,
+                'bandwidth_int': 100,
+                'comment': 'My own private mirror',
+                'country': u'NL',
+                'id': 3,
+                'internet2': False,
+                'internet2_clients': False,
+                'last_checked_in': None,
+                'last_crawl_duration': 0,
+                'last_crawled': None,
+                'max_connections': 10,
+                'name': u'private.localhost',
+                'private': True,
+                'site': {'id': 1, 'name': u'test-mirror'},
+                'user_active': True
+            }
+        )
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibModeltests)
