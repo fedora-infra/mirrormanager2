@@ -480,7 +480,7 @@ class MMLibtests(tests.Modeltests):
         tests.create_version(self.session)
 
         results = mirrormanager2.lib.get_versions(self.session)
-        self.assertEqual(len(results), 5)
+        self.assertEqual(len(results), 6)
         self.assertEqual(results[0].product.name, 'Fedora')
         self.assertEqual(results[0].name, '20')
         self.assertEqual(results[1].product.name, 'Fedora')
