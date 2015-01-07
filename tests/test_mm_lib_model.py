@@ -43,6 +43,17 @@ class MMLibModeltests(tests.Modeltests):
         item = model.Site.get(self.session, 3)
         self.assertEqual(str(item), '<Site(3 - test-mirror_private)>')
 
+    def test_host_repr(self):
+        """ Test the Host.__repr__ object of mirrormanager2.lib.model.
+        """
+        tests.create_site(self.session)
+        tests.create_hosts(self.session)
+
+        item = model.Host.get(self.session, 1)
+        self.assertEqual(str(item), '<Host(1 - mirror.localhost)>')
+        item = model.Host.get(self.session, 3)
+        self.assertEqual(str(item), '<Host(3 - private.localhost)>')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibModeltests)
