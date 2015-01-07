@@ -231,7 +231,7 @@ def get_host_category_by_hostid_category(session, host_id, category):
     ).filter(
         model.HostCategory.host_id == host_id
     ).filter(
-        model.HostCategory.category_id == Category.id
+        model.HostCategory.category_id == model.Category.id
     ).filter(
         model.Category.name == category
     )
