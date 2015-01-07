@@ -587,6 +587,21 @@ class MMLibtests(tests.Modeltests):
             self.session, 'foo')
         self.assertEqual(results, None)
 
+    def test_get_products(self):
+        """ Test the get_products function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_products(self.session)
+        self.assertEqual(results, [])
+
+        tests.create_base_items(self.session)
+
+        results = mirrormanager2.lib.get_products(self.session)
+        self.assertEqual(len(results), 2)
+        self.assertEqual(
+            results[0].name, 'EPEL')
+        self.assertEqual(
+            results[1].name, 'Fedora')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
