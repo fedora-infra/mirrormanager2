@@ -558,6 +558,54 @@ def create_hostcountry(session):
 
     session.commit()
 
+def create_version(session):
+    ''' Create some Version to play with for the tests
+    '''
+    item = model.Version(
+        name=20,
+        product_id=2,
+        is_test=False,
+        display=True,
+        ordered_mirrorlist=True,
+    )
+    session.add(item)
+    item = model.Version(
+        name='21-alpha',
+        product_id=2,
+        is_test=True,
+        display=False,
+        ordered_mirrorlist=True,
+    )
+    session.add(item)
+    item = model.Version(
+        name=21,
+        product_id=2,
+        is_test=False,
+        display=True,
+        ordered_mirrorlist=True,
+    )
+    session.add(item)
+    item = model.Version(
+        name='development',
+        product_id=2,
+        is_test=False,
+        display=True,
+        display_name='rawhide',
+        ordered_mirrorlist=True,
+    )
+    session.add(item)
+
+    item = model.Version(
+        name=7,
+        product_id=1,
+        is_test=False,
+        display=True,
+        ordered_mirrorlist=True,
+    )
+    session.add(item)
+
+    session.commit()
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(Modeltests)
