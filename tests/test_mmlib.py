@@ -166,6 +166,21 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(results.host.name, 'mirror2.localhost')
         self.assertEqual(results.host.country, 'FR')
 
+    def test_get_host_netblock(self):
+        """ Test the get_host_netblock function of mirrormanager2.lib. """
+        results = mirrormanager2.lib.get_host_netblock(self.session, 1)
+        self.assertEqual(results, None)
+
+        tests.create_site(self.session)
+        tests.create_hosts(self.session)
+        tests.create_hostnetblock(self.session)
+
+        results = mirrormanager2.lib.get_host_netblock(self.session, 1)
+        self.assertEqual(results.host.name, 'private.localhost')
+        self.assertEqual(results.host.country, 'NL')
+        results = mirrormanager2.lib.get_host_netblock(self.session, 2)
+        self.assertEqual(results, None)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
