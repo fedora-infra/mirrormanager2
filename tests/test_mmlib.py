@@ -676,6 +676,32 @@ class MMLibtests(tests.Modeltests):
             results[0].name, 'pub/fedora/linux/updates/testing/21/x86_64')
         self.assertEqual(results[0].arch.name, 'x86_64')
 
+    def test_get_repositories(self):
+        """ Test the get_repositories function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_repositories(self.session)
+        self.assertEqual(results, [])
+
+        tests.create_base_items(self.session)
+        tests.create_version(self.session)
+        tests.create_directory(self.session)
+        tests.create_category(self.session)
+        tests.create_repository(self.session)
+
+        results = mirrormanager2.lib.get_repositories(self.session)
+        self.assertEqual(len(results), 3)
+        self.assertEqual(
+            results[0].name, 'pub/fedora/linux/updates/testing/19/x86_64')
+        self.assertEqual(results[0].arch.name, 'x86_64')
+
+        self.assertEqual(
+            results[1].name, 'pub/fedora/linux/updates/testing/20/x86_64')
+        self.assertEqual(results[1].arch.name, 'x86_64')
+
+        self.assertEqual(
+            results[2].name, 'pub/fedora/linux/updates/testing/21/x86_64')
+        self.assertEqual(results[2].arch.name, 'x86_64')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
