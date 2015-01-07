@@ -719,6 +719,21 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(results[2].from_repo, 'epel-6.0')
         self.assertEqual(results[2].to_repo, 'epel-6')
 
+    def test_get_arches(self):
+        """ Test the get_arches function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_arches(self.session)
+        self.assertEqual(results, [])
+
+        tests.create_base_items(self.session)
+
+        results = mirrormanager2.lib.get_arches(self.session)
+        self.assertEqual(len(results), 4)
+        self.assertEqual(results[0].name, 'i386')
+        self.assertEqual(results[1].name, 'ppc')
+        self.assertEqual(results[2].name, 'source')
+        self.assertEqual(results[3].name, 'x86_64')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
