@@ -632,6 +632,43 @@ def create_version(session):
     session.commit()
 
 
+def create_repository(session):
+    ''' Create some Repository to play with for the tests
+    '''
+    item = model.Repository(
+        name='pub/fedora/linux/updates/testing/19/x86_64',
+        prefix='updates-testing-f19',
+        category_id=2,
+        version_id=5,
+        arch_id=3,
+        directory_id=7,
+        disabled=True
+    )
+    session.add(item)
+    item = model.Repository(
+        name='pub/fedora/linux/updates/testing/20/x86_64',
+        prefix='updates-testing-f20',
+        category_id=2,
+        version_id=1,
+        arch_id=3,
+        directory_id=8,
+        disabled=False
+    )
+    session.add(item)
+    item = model.Repository(
+        name='pub/fedora/linux/updates/testing/21/x86_64',
+        prefix='updates-testing-f21',
+        category_id=2,
+        version_id=3,
+        arch_id=3,
+        directory_id=9,
+        disabled=False
+    )
+    session.add(item)
+
+    session.commit()
+
+
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(Modeltests)
     unittest.TextTestRunner(verbosity=2).run(SUITE)
