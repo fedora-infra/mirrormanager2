@@ -951,6 +951,18 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(results[1].name, 'mirror.localhost')
 
 
+    def test_get_user_sites(self):
+        """ Test the get_user_sites function or mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_user_sites(self.session, 'pingou')
+        self.assertEqual(results, [])
+
+        self.test_add_admin_to_site()
+
+        results = mirrormanager2.lib.get_user_sites(self.session, 'pingou')
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].name, 'test-mirror')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
