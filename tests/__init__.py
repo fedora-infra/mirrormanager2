@@ -669,6 +669,29 @@ def create_repository(session):
     session.commit()
 
 
+def create_repositoryredirect(session):
+    ''' Create some RepositoryRedirect to play with for the tests
+    '''
+    item = model.RepositoryRedirect(
+        from_repo='fedora-rawhide',
+        to_repo='rawhide',
+    )
+    session.add(item)
+    item = model.RepositoryRedirect(
+        from_repo='fedora-install-rawhide',
+        to_repo='rawhide',
+    )
+    session.add(item)
+    item = model.RepositoryRedirect(
+        from_repo='epel-6.0',
+        to_repo='epel-6',
+    )
+    session.add(item)
+
+
+    session.commit()
+
+
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(Modeltests)
     unittest.TextTestRunner(verbosity=2).run(SUITE)
