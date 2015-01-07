@@ -764,6 +764,19 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(results[1].name, 'bar')
         self.assertEqual(results[2].name, 'foobar')
 
+    def test_get_netblock_country(self):
+        """ Test the get_netblock_country function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_netblock_country(self.session)
+        self.assertEqual(results, [])
+
+        tests.create_netblockcountry(self.session)
+
+        results = mirrormanager2.lib.get_netblock_country(self.session)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].netblock, '127.0.0.0/24')
+        self.assertEqual(results[0].country, 'AU')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
