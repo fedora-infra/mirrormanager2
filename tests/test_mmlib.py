@@ -425,6 +425,25 @@ class MMLibtests(tests.Modeltests):
                 self.session, 'foo')
         self.assertEqual(results, None)
 
+    def test_get_session_by_visitkey(self):
+        """ Test the get_session_by_visitkey function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_session_by_visitkey(
+            self.session, 'foo')
+        self.assertEqual(results, None)
+
+        tests.create_base_items(self.session)
+
+        results = mirrormanager2.lib.get_session_by_visitkey(
+                self.session, 'foo')
+        self.assertEqual(results.user.user_name, 'pingou')
+        self.assertEqual(results.user.email_address, 'pingou@fp.o')
+        self.assertEqual(results.user_ip, '127.0.0.1')
+
+        results = mirrormanager2.lib.get_session_by_visitkey(
+                self.session, 'bar')
+        self.assertEqual(results, None)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
