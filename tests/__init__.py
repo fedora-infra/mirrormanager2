@@ -144,6 +144,23 @@ def create_base_items(session):
     )
     session.add(item)
 
+    # Insert some CountryContinentRedirect
+    item = model.CountryContinentRedirect(
+        country='IL',
+        continent='EU',
+    )
+    session.add(item)
+    item = model.CountryContinentRedirect(
+        country='AM',
+        continent='EU',
+    )
+    session.add(item)
+    item = model.CountryContinentRedirect(
+        country='JO',
+        continent='EU',
+    )
+    session.add(item)
+
     session.commit()
 
 
