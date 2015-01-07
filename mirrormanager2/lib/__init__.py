@@ -518,7 +518,7 @@ def get_repo_by_name(session, name):
         model.Repository.name == name
     )
 
-    return query.all()
+    return query.first()
 
 
 def get_repo_by_dir(session, path):
