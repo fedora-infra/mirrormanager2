@@ -196,6 +196,25 @@ class MMLibtests(tests.Modeltests):
         results = mirrormanager2.lib.get_host_peer_asn(self.session, 2)
         self.assertEqual(results, None)
 
+    def test_get_host_country(self):
+        """ Test the get_host_country function of mirrormanager2.lib. """
+        results = mirrormanager2.lib.get_host_country(self.session, 1)
+        self.assertEqual(results, None)
+
+        tests.create_base_items(self.session)
+        tests.create_site(self.session)
+        tests.create_hosts(self.session)
+        tests.create_hostcountry(self.session)
+
+        results = mirrormanager2.lib.get_host_country(self.session, 1)
+        self.assertEqual(results.host.name, 'mirror.localhost')
+        self.assertEqual(results.host.country, 'US')
+        results = mirrormanager2.lib.get_host_country(self.session, 2)
+        self.assertEqual(results.host.name, 'mirror2.localhost')
+        self.assertEqual(results.host.country, 'FR')
+        results = mirrormanager2.lib.get_host_country(self.session, 3)
+        self.assertEqual(results, None)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
