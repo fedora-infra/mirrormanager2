@@ -1032,6 +1032,30 @@ class MMLibtests(tests.Modeltests):
             results.name, 'pub/fedora/linux/releases/20')
         self.assertEqual(results.readable, True)
 
+    def test_get_hostcategorydir_by_hostcategoryid_and_path(self):
+        """ Test the get_hostcategorydir_by_hostcategoryid_and_path
+        function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_hostcategorydir_by_hostcategoryid_and_path(
+            self.session, 2, 'pub/fedora/linux/releases/21')
+        self.assertEqual(results, [])
+
+        tests.create_base_items(self.session)
+        tests.create_site(self.session)
+        tests.create_hosts(self.session)
+        tests.create_directory(self.session)
+        tests.create_category(self.session)
+        tests.create_hostcategory(self.session)
+        tests.create_hostcategorydir(self.session)
+
+        results = mirrormanager2.lib.get_hostcategorydir_by_hostcategoryid_and_path(
+            self.session, 3, 'pub/fedora/linux/releases/21')
+        self.assertEqual(len(results), 1)
+        self.assertEqual(
+            results[0].directory.name, 'pub/fedora/linux/releases/21')
+        self.assertEqual(
+            results[0].host_category.category.name, 'Fedora Linux')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
