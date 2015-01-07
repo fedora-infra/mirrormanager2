@@ -972,6 +972,31 @@ class MMLibtests(tests.Modeltests):
         results = mirrormanager2.lib.id_generator(size=5, chars=['1'])
         self.assertEqual(results, '11111')
 
+    def test_get_directory_by_name(self):
+        """ Test the get_directory_by_name function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_directory_by_name(
+            self.session, 'pub/epel')
+        self.assertEqual(results, None)
+
+        tests.create_directory(self.session)
+
+        results = mirrormanager2.lib.get_directory_by_name(
+            self.session, 'pub/epel')
+        self.assertEqual(results.name, 'pub/epel')
+        self.assertEqual(results.readable, True)
+
+        results = mirrormanager2.lib.get_directory_by_name(
+            self.session, 'pub/fedora/linux/extras')
+        self.assertEqual(results.name, 'pub/fedora/linux/extras')
+        self.assertEqual(results.readable, True)
+
+        results = mirrormanager2.lib.get_directory_by_name(
+            self.session, 'pub/fedora/linux/updates/testing/19/x86_64')
+        self.assertEqual(
+            results.name, 'pub/fedora/linux/updates/testing/19/x86_64')
+        self.assertEqual(results.readable, True)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
