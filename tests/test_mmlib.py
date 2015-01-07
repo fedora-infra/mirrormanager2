@@ -734,6 +734,22 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(results[2].name, 'source')
         self.assertEqual(results[3].name, 'x86_64')
 
+    def test_add_admin_to_site(self):
+        """ Test the add_admin_to_site function of mirrormanager2.lib.
+        """
+        tests.create_base_items(self.session)
+        tests.create_site(self.session)
+
+        site = mirrormanager2.lib.get_site(self.session, 1)
+
+        results = mirrormanager2.lib.add_admin_to_site(
+            self.session, site, 'pingou')
+        self.assertEqual(results, 'pingou added as an admin')
+
+        results = mirrormanager2.lib.add_admin_to_site(
+            self.session, site, 'pingou')
+        self.assertEqual(results, 'pingou was already listed as an admin')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
