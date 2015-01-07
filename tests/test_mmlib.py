@@ -602,6 +602,33 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(
             results[1].name, 'Fedora')
 
+    def test_get_repo_prefix_arch(self):
+        """ Test the get_repo_prefix_arch function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_repo_prefix_arch(
+            self.session, 'updates-testing-f20', 'x86_64')
+        self.assertEqual(results, None)
+
+        tests.create_base_items(self.session)
+        tests.create_version(self.session)
+        tests.create_directory(self.session)
+        tests.create_category(self.session)
+        tests.create_repository(self.session)
+
+        results = mirrormanager2.lib.get_repo_prefix_arch(
+            self.session, 'updates-testing-f20', 'x86_64')
+        self.assertEqual(
+            results.name, 'pub/fedora/linux/updates/testing/20/x86_64')
+
+        results = mirrormanager2.lib.get_repo_prefix_arch(
+            self.session, 'updates-testing-f21', 'x86_64')
+        self.assertEqual(
+            results.name, 'pub/fedora/linux/updates/testing/21/x86_64')
+
+        results = mirrormanager2.lib.get_repo_prefix_arch(
+            self.session, 'updates-testing-f20', 'i386')
+        self.assertEqual(results, None)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
