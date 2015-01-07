@@ -688,6 +688,24 @@ def create_repositoryredirect(session):
     )
     session.add(item)
 
+    session.commit()
+
+
+def create_location(session):
+    ''' Create some Location to play with for the tests
+    '''
+    item = model.Location(
+        name='foo',
+    )
+    session.add(item)
+    item = model.Location(
+        name='bar',
+    )
+    session.add(item)
+    item = model.Location(
+        name='foobar',
+    )
+    session.add(item)
 
     session.commit()
 
