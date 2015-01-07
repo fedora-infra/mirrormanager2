@@ -183,6 +183,14 @@ def create_base_items(session):
         password='foo3',
     )
     session.add(item)
+    item = model.User(
+        user_name='shaiton',
+        email_address='shaiton@fp.o',
+        display_name='shaiton',
+        password='foo4',
+        token='bar',
+    )
+    session.add(item)
 
     session.commit()
 
