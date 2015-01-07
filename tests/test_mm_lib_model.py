@@ -107,6 +107,30 @@ class MMLibModeltests(tests.Modeltests):
             }
         )
 
+    def test_host_set_not_up2date(self):
+        """ Test the Host.set_not_up2date object of mirrormanager2.lib.model.
+        """
+        tests.create_site(self.session)
+        tests.create_hosts(self.session)
+        tests.create_base_items(self.session)
+        tests.create_directory(self.session)
+        tests.create_category(self.session)
+        tests.create_hostcategory(self.session)
+        tests.create_hostcategorydir(self.session)
+
+        item = model.Host.get(self.session, 1)
+        # Before change, all is up2date
+        for hc in item.categories:
+            for hcd in hc.directories:
+               self.assertTrue(hcd.up2date)
+
+        item.set_not_up2date(self.session)
+
+        # After change, all is *not* up2date
+        for hc in item.categories:
+            for hcd in hc.directories:
+               self.assertFalse(hcd.up2date)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibModeltests)
