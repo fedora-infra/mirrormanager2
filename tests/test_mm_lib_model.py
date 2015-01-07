@@ -33,6 +33,16 @@ class MMLibModeltests(tests.Modeltests):
         item = model.Arch.get(self.session, 3)
         self.assertEqual(item.name, 'x86_64')
 
+    def test_site_repr(self):
+        """ Test the Site.__repr__ object of mirrormanager2.lib.model.
+        """
+        tests.create_site(self.session)
+
+        item = model.Site.get(self.session, 1)
+        self.assertEqual(str(item), '<Site(1 - test-mirror)>')
+        item = model.Site.get(self.session, 3)
+        self.assertEqual(str(item), '<Site(3 - test-mirror_private)>')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibModeltests)
