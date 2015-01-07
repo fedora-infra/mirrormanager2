@@ -341,6 +341,26 @@ class MMLibtests(tests.Modeltests):
         results = mirrormanager2.lib.get_country_by_name(self.session, 'BE')
         self.assertEqual(results, None)
 
+    def test_get_country_continent_redirect(self):
+        """ Test the get_country_continent_redirect function of
+        mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_country_continent_redirect(
+            self.session)
+        self.assertEqual(results, [])
+
+        tests.create_base_items(self.session)
+
+        results = mirrormanager2.lib.get_country_continent_redirect(
+                self.session)
+        self.assertEqual(len(results), 3)
+        self.assertEqual(results[0].country, 'IL')
+        self.assertEqual(results[0].continent, 'EU')
+        self.assertEqual(results[1].country, 'AM')
+        self.assertEqual(results[1].continent, 'EU')
+        self.assertEqual(results[2].country, 'JO')
+        self.assertEqual(results[2].continent, 'EU')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
