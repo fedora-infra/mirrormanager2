@@ -444,6 +444,32 @@ class MMLibtests(tests.Modeltests):
                 self.session, 'bar')
         self.assertEqual(results, None)
 
+    def test_get_version_by_name_version(self):
+        """ Test the get_version_by_name_version function of
+        mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_version_by_name_version(
+            self.session, 'Fedora', '21')
+        self.assertEqual(results, None)
+
+        tests.create_base_items(self.session)
+        tests.create_version(self.session)
+
+        results = mirrormanager2.lib.get_version_by_name_version(
+            self.session, 'Fedora', 21)
+        self.assertEqual(results.product.name, 'Fedora')
+        self.assertEqual(results.name, '21')
+
+        results = mirrormanager2.lib.get_version_by_name_version(
+            self.session, 'Fedora', '21-alpha')
+        self.assertEqual(results.product.name, 'Fedora')
+        self.assertEqual(results.name, '21-alpha')
+        self.assertEqual(results.is_test, True)
+
+        results = mirrormanager2.lib.get_session_by_visitkey(
+                self.session, 'bar')
+        self.assertEqual(results, None)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
