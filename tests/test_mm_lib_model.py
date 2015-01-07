@@ -131,6 +131,22 @@ class MMLibModeltests(tests.Modeltests):
             for hcd in hc.directories:
                self.assertFalse(hcd.up2date)
 
+    def test_host_is_active(self):
+        """ Test the Host.is_active object of mirrormanager2.lib.model.
+        """
+        tests.create_site(self.session)
+        tests.create_hosts(self.session)
+
+        item = model.Host.get(self.session, 1)
+        self.assertTrue(item.is_active())
+
+        item.admin_active = False
+        self.session.add(item)
+        self.session.commit()
+
+        item = model.Host.get(self.session, 1)
+        self.assertFalse(item.is_active())
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibModeltests)
