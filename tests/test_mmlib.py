@@ -181,6 +181,21 @@ class MMLibtests(tests.Modeltests):
         results = mirrormanager2.lib.get_host_netblock(self.session, 2)
         self.assertEqual(results, None)
 
+    def test_get_host_peer_asn(self):
+        """ Test the get_host_peer_asn function of mirrormanager2.lib. """
+        results = mirrormanager2.lib.get_host_peer_asn(self.session, 1)
+        self.assertEqual(results, None)
+
+        tests.create_site(self.session)
+        tests.create_hosts(self.session)
+        tests.create_hostpeerasn(self.session)
+
+        results = mirrormanager2.lib.get_host_peer_asn(self.session, 1)
+        self.assertEqual(results.host.name, 'private.localhost')
+        self.assertEqual(results.host.country, 'NL')
+        results = mirrormanager2.lib.get_host_peer_asn(self.session, 2)
+        self.assertEqual(results, None)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
