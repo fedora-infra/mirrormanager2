@@ -519,6 +519,31 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(results[1].name, 'Fedora EPEL')
         self.assertEqual(results[1].product.name, 'EPEL')
 
+    def test_get_category_by_name(self):
+        """ Test the get_category_by_name function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_category_by_name(
+            self.session, 'Fedora EPEL')
+        self.assertEqual(results, None)
+
+        tests.create_base_items(self.session)
+        tests.create_directory(self.session)
+        tests.create_category(self.session)
+
+        results = mirrormanager2.lib.get_category_by_name(
+            self.session, 'Fedora EPEL')
+        self.assertEqual(results.name, 'Fedora EPEL')
+        self.assertEqual(results.product.name, 'EPEL')
+
+        results = mirrormanager2.lib.get_category_by_name(
+            self.session, 'Fedora Linux')
+        self.assertEqual(results.name, 'Fedora Linux')
+        self.assertEqual(results.product.name, 'Fedora')
+
+        results = mirrormanager2.lib.get_category_by_name(
+            self.session, 'foo')
+        self.assertEqual(results, None)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
