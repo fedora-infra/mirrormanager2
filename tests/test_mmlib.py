@@ -502,6 +502,23 @@ class MMLibtests(tests.Modeltests):
         results = mirrormanager2.lib.get_arch_by_name(self.session, 'i686')
         self.assertEqual(results, None)
 
+    def test_get_categories(self):
+        """ Test the get_categories function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_categories(self.session)
+        self.assertEqual(results, [])
+
+        tests.create_base_items(self.session)
+        tests.create_directory(self.session)
+        tests.create_category(self.session)
+
+        results = mirrormanager2.lib.get_categories(self.session)
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results[0].name, 'Fedora Linux')
+        self.assertEqual(results[0].product.name, 'Fedora')
+        self.assertEqual(results[1].name, 'Fedora EPEL')
+        self.assertEqual(results[1].product.name, 'EPEL')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
