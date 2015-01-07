@@ -488,6 +488,20 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(results[2].product.name, 'Fedora')
         self.assertEqual(results[2].name, '21')
 
+    def test_get_arch_by_name(self):
+        """ Test the get_arch_by_name function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_arch_by_name(self.session, 'i386')
+        self.assertEqual(results, None)
+
+        tests.create_base_items(self.session)
+
+        results = mirrormanager2.lib.get_arch_by_name(self.session, 'i386')
+        self.assertEqual(results.name, 'i386')
+
+        results = mirrormanager2.lib.get_arch_by_name(self.session, 'i686')
+        self.assertEqual(results, None)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
