@@ -407,6 +407,24 @@ class MMLibtests(tests.Modeltests):
                 self.session, 'foo')
         self.assertEqual(results, None)
 
+    def test_get_user_by_token(self):
+        """ Test the get_user_by_token function of mirrormanager2.lib.
+        """
+        results = mirrormanager2.lib.get_user_by_token(
+            self.session, 'bar')
+        self.assertEqual(results, None)
+
+        tests.create_base_items(self.session)
+
+        results = mirrormanager2.lib.get_user_by_token(
+                self.session, 'bar')
+        self.assertEqual(results.user_name, 'shaiton')
+        self.assertEqual(results.email_address, 'shaiton@fp.o')
+
+        results = mirrormanager2.lib.get_user_by_token(
+                self.session, 'foo')
+        self.assertEqual(results, None)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibtests)
