@@ -237,6 +237,84 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue(
                 'You have currently 2 sites listed' in output.data)
 
+    def test_site_view(self):
+        """ Test the site_view endpoint. """
+        output = self.app.get('/site/2')
+        self.assertEqual(output.status_code, 302)
+        output = self.app.get('/site/2', follow_redirects=True)
+
+        self.assertEqual(output.status_code, 200)
+        self.assertTrue(
+            '<title>OpenID transaction in progress</title>' in output.data)
+
+        user = tests.FakeFasUser()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/site/5')
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue('<p>Site not found</p>' in output.data)
+
+            output = self.app.get('/site/2')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Information site: test-mirror2</h2>' in output.data)
+            self.assertTrue('Created by: kevin' in output.data)
+
+            csrf_token = output.data.split(
+                'name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+            # Incomplete input
+            data = {
+                'name': 'test-mirror2.1',
+
+            }
+
+            output = self.app.post('/site/2', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Information site: test-mirror2</h2>' in output.data)
+            self.assertTrue('Created by: kevin' in output.data)
+            self.assertEqual(output.data.count('field is required.'), 2)
+
+
+            data = {
+                'name': 'test-mirror2.1',
+                'password': 'test_password2',
+                'org_url': 'http://getfedora.org',
+                'admin_active': True,
+                'user_active': True,
+                'downstream_comments': 'Mirror available over HTTP.',
+            }
+
+            # Check CSRF protection
+
+            output = self.app.post('/site/2', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Information site: test-mirror2</h2>' in output.data)
+            self.assertTrue('Created by: kevin' in output.data)
+
+            # Update site
+
+            data['csrf_token'] = csrf_token
+
+            output = self.app.post('/site/2', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Fedora Public Active Mirrors</h2>' in output.data)
+            self.assertTrue(
+                '<li class="message">Site Updated</li>' in output.data)
+
+            # Check after the edit
+            output = self.app.get('/site/2')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Information site: test-mirror2.1</h2>' in output.data)
+            self.assertTrue('Created by: kevin' in output.data)
+
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(FlaskUiAppTest)
