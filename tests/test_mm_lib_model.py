@@ -298,6 +298,21 @@ class MMLibModeltests(tests.Modeltests):
             item = model.User.get(self.session, index + 1)
             self.assertEqual(item.username, string)
 
+    def test_user_groups(self):
+        """ Test the User.groups object of mirrormanager2.lib.model.
+        """
+        tests.create_base_items(self.session)
+        tests.create_user_groups(self.session)
+
+        item = model.User.get(self.session, 1)
+        self.assertEqual(item.groups, ['fpca', 'packager'])
+        item = model.User.get(self.session, 2)
+        self.assertEqual(item.groups, ['fpca', 'packager'])
+        item = model.User.get(self.session, 3)
+        self.assertEqual(item.groups, ['fpca'])
+        item = model.User.get(self.session, 4)
+        self.assertEqual(item.groups, ['fpca', 'packager'])
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibModeltests)
