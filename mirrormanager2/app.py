@@ -340,7 +340,7 @@ def site_view(site_id):
     )
 
 
-@APP.route('/host/<site_id>/new', methods=['GET', 'POST'])
+@APP.route('/host/<int:site_id>/new', methods=['GET', 'POST'])
 @login_required
 def host_new(site_id):
     """ Create a new host.
@@ -378,7 +378,7 @@ def host_new(site_id):
     )
 
 
-@APP.route('/site/<site_id>/admin/new', methods=['GET', 'POST'])
+@APP.route('/site/<int:site_id>/admin/new', methods=['GET', 'POST'])
 @login_required
 def siteadmin_new(site_id):
     """ Create a new site_admin.
@@ -417,7 +417,7 @@ def siteadmin_new(site_id):
     )
 
 
-@APP.route('/site/<site_id>/admin/<admin_id>/delete', methods=['POST'])
+@APP.route('/site/<int:site_id>/admin/<int:admin_id>/delete', methods=['POST'])
 @login_required
 def siteadmin_delete(site_id, admin_id):
     """ Delete a site_admin.
