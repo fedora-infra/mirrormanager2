@@ -59,7 +59,6 @@ class FlaskUiAdminTest(tests.Modeltests):
         user = tests.FakeFasUserAdmin()
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.app.get('/admin/')
-            #print output.data
             self.assertEqual(output.status_code, 200)
             self.assertTrue('<title>Home - Admin</title>' in output.data)
             self.assertTrue(
@@ -75,7 +74,6 @@ class FlaskUiAdminTest(tests.Modeltests):
         user = tests.FakeFasUserAdmin()
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.app.get('/admin/archview/')
-            print output.data
             self.assertEqual(output.status_code, 200)
             self.assertTrue('<title>Arch - Admin</title>' in output.data)
             self.assertTrue(
