@@ -315,7 +315,7 @@ def site_new():
     )
 
 
-@APP.route('/site/<site_id>', methods=['GET', 'POST'])
+@APP.route('/site/<int:site_id>', methods=['GET', 'POST'])
 @login_required
 def site_view(site_id):
     """ View information about a given site.
