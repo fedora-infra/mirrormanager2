@@ -446,7 +446,7 @@ class FlaskUiAppTest(tests.Modeltests):
                 '<h2>Add Site admin to site: test-mirror2</h2>'
                 in output.data)
 
-            # Create Host
+            # Create Admin
 
             data['csrf_token'] = csrf_token
 
@@ -460,6 +460,89 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue('Created by: kevin' in output.data)
             self.assertTrue('action="/site/2/admin/3/delete">' in output.data)
             self.assertTrue('skvidal' in output.data)
+
+    def test_siteadmin_delete(self):
+        """ Test the siteadmin_delete endpoint. """
+        output = self.app.post('/site/2/admin/3/delete')
+        self.assertEqual(output.status_code, 302)
+        output = self.app.post('/site/2/admin/3/delete', follow_redirects=True)
+        self.assertEqual(output.status_code, 200)
+        self.assertTrue(
+            '<title>OpenID transaction in progress</title>' in output.data)
+
+        user = tests.FakeFasUser()
+        with tests.user_set(mirrormanager2.app.APP, user):
+
+            # Check before adding the host
+            output = self.app.get('/site/2')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Information site: test-mirror2</h2>' in output.data)
+            self.assertTrue('Created by: kevin' in output.data)
+            self.assertTrue(
+                'action="/site/2/admin/3/delete">' in output.data)
+            self.assertEqual(output.data.count('ralph'), 1)
+
+            csrf_token = output.data.split(
+                'name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+            data = {}
+
+            # Check CSRF protection
+
+            output = self.app.post('/site/2/admin/3/delete', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Information site: test-mirror2</h2>' in output.data)
+            self.assertTrue('Created by: kevin' in output.data)
+            self.assertTrue(
+                'action="/site/2/admin/3/delete">' in output.data)
+            self.assertEqual(output.data.count('ralph'), 1)
+
+            # Delete Site Admin
+
+            data['csrf_token'] = csrf_token
+
+            # Invalid site identifier
+            output = self.app.post('/site/5/admin/3/delete', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue('<p>Site not found</p>' in output.data)
+
+            # Invalid site admin identifier
+            output = self.app.post('/site/2/admin/9/delete', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue('<p>Site Admin not found</p>' in output.data)
+
+            # Valid site admin but not for this site
+            output = self.app.post('/site/2/admin/1/delete', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue(
+                '<p>Site Admin not related to this Site</p>' in output.data)
+
+            # Trying to delete the only admin
+            output = self.app.post('/site/3/admin/5/delete', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<li class="error">There is only one admin set, you cannot '
+                'delete it.</li>' in output.data)
+
+            # Delete Site Admin
+            output = self.app.post('/site/2/admin/3/delete', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Information site: test-mirror2</h2>' in output.data)
+            self.assertTrue('Created by: kevin' in output.data)
+            self.assertFalse(
+                'action="/site/2/admin/3/delete">' in output.data)
+            self.assertEqual(output.data.count('ralph'), 0)
+
+
 
 
 if __name__ == '__main__':
