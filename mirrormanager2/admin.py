@@ -27,7 +27,7 @@ import flask
 from flask.ext.admin import BaseView, expose
 try:
     from flask.ext.admin.contrib.sqla import ModelView
-except ImportError:
+except ImportError:  # pragma: no cover
     # The module was renamed in flask-admin
     from flask.ext.admin.contrib.sqlamodel import ModelView
 
