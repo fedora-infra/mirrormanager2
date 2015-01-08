@@ -169,6 +169,23 @@ class MMLibModeltests(tests.Modeltests):
         item = model.Product.get(self.session, 2)
         self.assertEqual(str(item), '<Product(2 - Fedora)>')
 
+    def test_product_displayed_versions(self):
+        """ Test the Product.displayed_versions object of mirrormanager2.lib.model.
+        """
+        tests.create_base_items(self.session)
+
+        item = model.Product.get(self.session, 1)
+        self.assertEqual(item.displayed_versions, [])
+
+        tests.create_version(self.session)
+
+        item = model.Product.get(self.session, 1)
+        self.assertEqual(item.displayed_versions[0].name, '7')
+
+        item = model.Product.get(self.session, 2)
+        for index, string in enumerate(['development', '21', '20', '19']):
+            self.assertEqual(item.displayed_versions[index].name, string)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibModeltests)
