@@ -47,6 +47,11 @@ def is_number(form, field):
         raise wtf.ValidationError('Field must contain a number')
 
 
+class ConfirmationForm(wtf.Form):
+    """ Simple form, just used for CSRF protection. """
+    pass
+
+
 class AddSiteForm(wtf.Form):
     """ Form to add or edit a site. """
     name = wtforms.TextField(
