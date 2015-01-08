@@ -800,6 +800,61 @@ def create_filedetail(session):
     session.commit()
 
 
+def create_user_groups(session):
+    ''' Create some Grouip and UserGroup to play with for the tests
+    '''
+    item = model.Group(
+        group_name='fpca',
+        display_name='Fedora Project Contributor Agreement',
+    )
+    session.add(item)
+    item = model.Group(
+        group_name='packager',
+        display_name='Fedora Packagers',
+    )
+    session.add(item)
+
+    session.commit()
+
+    item = model.UserGroup(
+        user_id=1,
+        group_id=1,
+    )
+    session.add(item)
+    item = model.UserGroup(
+        user_id=2,
+        group_id=1,
+    )
+    session.add(item)
+    item = model.UserGroup(
+        user_id=3,
+        group_id=1,
+    )
+    session.add(item)
+    item = model.UserGroup(
+        user_id=4,
+        group_id=1,
+    )
+    session.add(item)
+
+    item = model.UserGroup(
+        user_id=1,
+        group_id=2,
+    )
+    session.add(item)
+    item = model.UserGroup(
+        user_id=2,
+        group_id=2,
+    )
+    session.add(item)
+    item = model.UserGroup(
+        user_id=4,
+        group_id=2,
+    )
+    session.add(item)
+
+    session.commit()
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(Modeltests)
