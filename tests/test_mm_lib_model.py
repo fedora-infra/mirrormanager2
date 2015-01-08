@@ -237,6 +237,17 @@ class MMLibModeltests(tests.Modeltests):
         item = model.Arch.get(self.session, 2)
         self.assertEqual(str(item), '<Arch(2 - i386)>')
 
+    def test_version_repr(self):
+        """ Test the Version.__repr__ object of mirrormanager2.lib.model.
+        """
+        tests.create_base_items(self.session)
+        tests.create_version(self.session)
+
+        item = model.Version.get(self.session, 1)
+        self.assertEqual(str(item), '<Version(1 - 20)>')
+        item = model.Version.get(self.session, 2)
+        self.assertEqual(str(item), '<Version(2 - 21-alpha)>')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibModeltests)
