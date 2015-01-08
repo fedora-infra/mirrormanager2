@@ -72,6 +72,7 @@ Created by: {{ site.created_by }}
       <form class="icon" method="POST"
         action="{{ url_for('siteadmin_delete', site_id=site.id, admin_id=admin.id) }}">
           {{ admin.username }}
+          {{ form.csrf_token }}
           <button
             onclick="return confirm('You sure you want to delete this admin?');"
             title="Delete Site Admin">
