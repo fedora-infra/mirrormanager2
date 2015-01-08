@@ -68,18 +68,18 @@ class FlaskUiAppTest(tests.Modeltests):
         user = tests.FakeFasUser()
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.app.get('/')
-        self.assertEqual(output.status_code, 200)
-        self.assertTrue('<title>Home - MirrorManager</title>' in output.data)
-        self.assertTrue('<li id="homeTab">' in output.data)
-        self.assertTrue('<li id="mirrorsTab">' in output.data)
-        self.assertFalse(
-            '<a href="/login?next=http://127.0.0.1:5000/">login/a>'
-            in output.data)
-        self.assertTrue(
-            '<span class="text">logged in as </span>' in output.data)
-        self.assertTrue(
-            '<a href="/logout?next=http://localhost/">log out</a>'
-            in output.data)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue('<title>Home - MirrorManager</title>' in output.data)
+            self.assertTrue('<li id="homeTab">' in output.data)
+            self.assertTrue('<li id="mirrorsTab">' in output.data)
+            self.assertFalse(
+                '<a href="/login?next=http://127.0.0.1:5000/">login/a>'
+                in output.data)
+            self.assertTrue(
+                '<span class="text">logged in as </span>' in output.data)
+            self.assertTrue(
+                '<a href="/logout?next=http://localhost/">log out</a>'
+                in output.data)
 
     def test_list_mirrors(self):
         """ Test the list_mirrors endpoint. """
