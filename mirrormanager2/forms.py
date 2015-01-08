@@ -130,7 +130,7 @@ class AddHostForm(wtf.Form):
         [wtforms.validators.Optional()],
     )
     comment = wtforms.TextField(
-        'Bandwidth',
+        'Comment',
         [wtforms.validators.Optional()],
     )
     max_connections = wtforms.TextField(
