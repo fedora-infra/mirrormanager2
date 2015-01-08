@@ -679,6 +679,28 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(
                 '<a href="javascript:void(0)">List (4)</a>' in output.data)
 
+    @patch('mirrormanager2.app.is_mirrormanager_admin')
+    def test_admin_sitetositeview(self, login_func):
+        """ Test the admin Site To Site view. """
+        login_func.return_value = None
+
+        user = tests.FakeFasUserAdmin()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/admin/sitetositeview/')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<title>Site - Site To Site - Admin'
+                '</title>' in output.data)
+            self.assertTrue(
+                '<a href="/admin/archview/">Arch</a>' in output.data)
+            self.assertTrue(
+                '<a href="/admin/categoryview/">Category</a>' in output.data)
+            self.assertTrue(
+                '<a href="/admin/sitetositeview/?sort=2" '
+                'title="Sort by Username">Username</a>' in output.data)
+            self.assertTrue(
+                '<a href="javascript:void(0)">List (0)</a>' in output.data)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(FlaskUiAdminTest)
