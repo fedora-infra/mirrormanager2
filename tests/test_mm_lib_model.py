@@ -227,6 +227,16 @@ class MMLibModeltests(tests.Modeltests):
         self.assertEqual(str(item[0]), '<CategoryDirectory(1 - 1)>')
         self.assertEqual(str(item[1]), '<CategoryDirectory(2 - 3)>')
 
+    def test_arch_repr(self):
+        """ Test the Arch.__repr__ object of mirrormanager2.lib.model.
+        """
+        tests.create_base_items(self.session)
+
+        item = model.Arch.get(self.session, 1)
+        self.assertEqual(str(item), '<Arch(1 - source)>')
+        item = model.Arch.get(self.session, 2)
+        self.assertEqual(str(item), '<Arch(2 - i386)>')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibModeltests)
