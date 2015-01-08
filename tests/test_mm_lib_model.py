@@ -186,6 +186,18 @@ class MMLibModeltests(tests.Modeltests):
         for index, string in enumerate(['development', '21', '20', '19']):
             self.assertEqual(item.displayed_versions[index].name, string)
 
+    def test_category_repr(self):
+        """ Test the Category.__repr__ object of mirrormanager2.lib.model.
+        """
+        tests.create_base_items(self.session)
+        tests.create_directory(self.session)
+        tests.create_category(self.session)
+
+        item = model.Category.get(self.session, 1)
+        self.assertEqual(str(item), '<Category(1 - Fedora Linux)>')
+        item = model.Category.get(self.session, 2)
+        self.assertEqual(str(item), '<Category(2 - Fedora EPEL)>')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibModeltests)
