@@ -282,7 +282,10 @@ def site_new():
         try:
             SESSION.flush()
             flask.flash('Site added')
-        except SQLAlchemyError as err:
+        except SQLAlchemyError as err:  # pragma: no cover
+            # We cannot check this as there is no unique constraint in the
+            # Site table. So the only situation where it could fail is a
+            # failure at the DB server level itself.
             SESSION.rollback()
             flask.flash('Could not create the new site')
             APP.logger.debug('Could not create the new site')
@@ -293,7 +296,10 @@ def site_new():
             msg = mmlib.add_admin_to_site(
                 SESSION, site, flask.g.fas_user.username)
             flask.flash(msg)
-        except SQLAlchemyError as err:
+        except SQLAlchemyError as err:  # pragma: no cover
+            # We cannot check this because the code check before adding the
+            # new SiteAdmin and therefore the only situation where it could
+            # fail is a failure at the DB server level itself.
             SESSION.rollback()
             APP.logger.debug(
                 'Could not add admin "%s" to site "%s"' % (
