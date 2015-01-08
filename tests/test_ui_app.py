@@ -135,6 +135,40 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue(
                 'You have currently 1 sites listed' in output.data)
 
+    def test_all_sites(self):
+        """ Test the all_sites endpoint. """
+        output = self.app.get('/admin/all_sites')
+        self.assertEqual(output.status_code, 302)
+        output = self.app.get('/admin/all_sites', follow_redirects=True)
+        self.assertEqual(output.status_code, 200)
+        self.assertTrue(
+            '<title>OpenID transaction in progress</title>' in output.data)
+
+        user = tests.FakeFasUser()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/admin/all_sites')
+            self.assertEqual(output.status_code, 302)
+            output = self.app.get('/admin/all_sites', follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<li class="error">You are not an admin</li>' in output.data)
+            self.assertTrue(
+                '<title>Home - MirrorManager</title>' in output.data)
+            self.assertTrue('<li id="homeTab">' in output.data)
+            self.assertTrue('<li id="mirrorsTab">' in output.data)
+
+        user = tests.FakeFasUserAdmin()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/admin/all_sites')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<title>Home - MirrorManager</title>' in output.data)
+            self.assertTrue('<li id="homeTab">' in output.data)
+            self.assertTrue('<li id="mirrorsTab">' in output.data)
+            self.assertTrue(
+                '<h2>Admin - List all sites</h2>' in output.data)
+            self.assertTrue(
+                'You have currently 3 sites listed' in output.data)
 
 
 if __name__ == '__main__':
