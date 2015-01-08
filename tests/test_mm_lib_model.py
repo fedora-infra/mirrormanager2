@@ -159,6 +159,16 @@ class MMLibModeltests(tests.Modeltests):
         item = model.Directory.get(self.session, 3)
         self.assertEqual(str(item), '<Directory(3 - pub/epel)>')
 
+    def test_product_repr(self):
+        """ Test the Product.__repr__ object of mirrormanager2.lib.model.
+        """
+        tests.create_base_items(self.session)
+
+        item = model.Product.get(self.session, 1)
+        self.assertEqual(str(item), '<Product(1 - EPEL)>')
+        item = model.Product.get(self.session, 2)
+        self.assertEqual(str(item), '<Product(2 - Fedora)>')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibModeltests)
