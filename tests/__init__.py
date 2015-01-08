@@ -655,7 +655,7 @@ def create_repository(session):
     item = model.Repository(
         name='pub/fedora/linux/updates/testing/19/x86_64',
         prefix='updates-testing-f19',
-        category_id=2,
+        category_id=1,
         version_id=5,
         arch_id=3,
         directory_id=7,
@@ -665,7 +665,7 @@ def create_repository(session):
     item = model.Repository(
         name='pub/fedora/linux/updates/testing/20/x86_64',
         prefix='updates-testing-f20',
-        category_id=2,
+        category_id=1,
         version_id=1,
         arch_id=3,
         directory_id=8,
@@ -675,7 +675,7 @@ def create_repository(session):
     item = model.Repository(
         name='pub/fedora/linux/updates/testing/21/x86_64',
         prefix='updates-testing-f21',
-        category_id=2,
+        category_id=1,
         version_id=3,
         arch_id=3,
         directory_id=9,
