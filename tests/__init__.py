@@ -296,6 +296,12 @@ def create_site_admin(session):
     )
     session.add(item)
 
+    item = model.SiteAdmin(
+        username='shaiton',
+        site_id=3,
+    )
+    session.add(item)
+
     session.commit()
 
 
