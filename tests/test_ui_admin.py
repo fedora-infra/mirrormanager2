@@ -687,7 +687,7 @@ class FlaskUiAdminTest(tests.Modeltests):
                 '<a href="/admin/siteadminview/?sort=1" '
                 'title="Sort by Username">Username</a>' in output.data)
             self.assertTrue(
-                '<a href="javascript:void(0)">List (4)</a>' in output.data)
+                '<a href="javascript:void(0)">List (5)</a>' in output.data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_sitetositeview(self, login_func):
