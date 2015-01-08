@@ -215,6 +215,18 @@ class MMLibModeltests(tests.Modeltests):
         self.assertEqual(
             str(item), '<HostCategory(2 - <Category(2 - Fedora EPEL)>)>')
 
+    def test_categorydirectory_repr(self):
+        """ Test the CategoryDirectory.__repr__ object of mirrormanager2.lib.model.
+        """
+        tests.create_base_items(self.session)
+        tests.create_directory(self.session)
+        tests.create_category(self.session)
+        tests.create_categorydirectory(self.session)
+
+        item = mirrormanager2.lib.get_category_directory(self.session)
+        self.assertEqual(str(item[0]), '<CategoryDirectory(1 - 1)>')
+        self.assertEqual(str(item[1]), '<CategoryDirectory(2 - 3)>')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibModeltests)
