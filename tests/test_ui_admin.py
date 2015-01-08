@@ -84,8 +84,6 @@ class FlaskUiAdminTest(tests.Modeltests):
                 '<a href="/admin/archview/?sort=0" '
                 'title="Sort by Name">Name</a>' in output.data)
             self.assertTrue(
-                '<a href="/admin/categoryview/">Category</a>' in output.data)
-            self.assertTrue(
                 '<a href="javascript:void(0)">List (4)</a>' in output.data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
@@ -106,8 +104,6 @@ class FlaskUiAdminTest(tests.Modeltests):
                 '<a href="/admin/categoryview/?sort=2" '
                 'title="Sort by Name">Name</a>' in output.data)
             self.assertTrue(
-                '<a href="/admin/categoryview/">Category</a>' in output.data)
-            self.assertTrue(
                 '<a href="javascript:void(0)">List (2)</a>' in output.data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
@@ -127,8 +123,6 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(
                 '<a href="/admin/countryview/?sort=0" '
                 'title="Sort by Code">Code</a>' in output.data)
-            self.assertTrue(
-                '<a href="/admin/categoryview/">Category</a>' in output.data)
             self.assertTrue(
                 '<a href="javascript:void(0)">List (2)</a>' in output.data)
 
@@ -152,8 +146,6 @@ class FlaskUiAdminTest(tests.Modeltests):
                 '<a href="/admin/countrycontinentredirectview/?sort=0" '
                 'title="Sort by Country">Country</a>' in output.data)
             self.assertTrue(
-                '<a href="/admin/categoryview/">Category</a>' in output.data)
-            self.assertTrue(
                 '<a href="javascript:void(0)">List (3)</a>' in output.data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
@@ -175,8 +167,6 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(
                 '<a href="/admin/embargoedcountryview/?sort=0" '
                 'title="Sort by Country Code">Country Code</a>' in output.data)
-            self.assertTrue(
-                '<a href="/admin/categoryview/">Category</a>' in output.data)
             self.assertTrue(
                 '<a href="javascript:void(0)">List (0)</a>' in output.data)
 
