@@ -398,7 +398,10 @@ def siteadmin_new(site_id):
         try:
             SESSION.flush()
             flask.flash('Site Admin added')
-        except SQLAlchemyError as err:
+        except SQLAlchemyError as err:  # pragma: no cover
+            # We cannot check this as there is no unique constraint in the
+            # Site table. So the only situation where it could fail is a
+            # failure at the DB server level itself.
             SESSION.rollback()
             flask.flash('Could not add Site Admin')
             APP.logger.debug('Could not add Site Admin')
