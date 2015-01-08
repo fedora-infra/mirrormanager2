@@ -63,6 +63,16 @@ class FlaskUiAdminTest(tests.Modeltests):
         """ Test the admin function. """
         login_func.return_value = None
 
+        user = tests.FakeFasUser()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/admin/')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue('<title>Home - Admin</title>' in output.data)
+            self.assertFalse(
+                '<a href="/admin/archview/">Arch</a>' in output.data)
+            self.assertFalse(
+                '<a href="/admin/categoryview/">Category</a>' in output.data)
+
         user = tests.FakeFasUserAdmin()
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.app.get('/admin/')
