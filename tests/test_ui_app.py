@@ -81,6 +81,44 @@ class FlaskUiAppTest(tests.Modeltests):
             '<a href="/logout?next=http://localhost/">log out</a>'
             in output.data)
 
+    def test_list_mirrors(self):
+        """ Test the list_mirrors endpoint. """
+        output = self.app.get('/mirrors')
+        self.assertEqual(output.status_code, 200)
+        self.assertTrue('<title>Home - MirrorManager</title>' in output.data)
+        self.assertTrue('<li id="homeTab">' in output.data)
+        self.assertTrue('<li id="mirrorsTab">' in output.data)
+        self.assertTrue('We have currently 1 active mirrors' in output.data)
+
+        for i in [21, 20, 19]:
+            output = self.app.get('/mirrors/Fedora/%s' % i)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<title>Home - MirrorManager</title>' in output.data)
+            self.assertTrue('<li id="homeTab">' in output.data)
+            self.assertTrue('<li id="mirrorsTab">' in output.data)
+            self.assertTrue(
+                'We have currently 1 active mirrors' in output.data)
+
+            output = self.app.get('/mirrors/Fedora Linux/%s/x86_64' % i)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<title>Home - MirrorManager</title>' in output.data)
+            self.assertTrue('<li id="homeTab">' in output.data)
+            self.assertTrue('<li id="mirrorsTab">' in output.data)
+            self.assertTrue(
+                'We have currently 1 active mirrors' in output.data)
+
+            output = self.app.get('/mirrors/Fedora Linux/20/i386')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<title>Home - MirrorManager</title>' in output.data)
+            self.assertTrue('<li id="homeTab">' in output.data)
+            self.assertTrue('<li id="mirrorsTab">' in output.data)
+            self.assertTrue(
+                'There are currently no active mirrors registered.'
+                in output.data)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(FlaskUiAppTest)
