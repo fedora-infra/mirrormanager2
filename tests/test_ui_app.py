@@ -237,18 +237,6 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue(
                 'You have currently 2 sites listed' in output.data)
 
-            # Check Errors
-
-            output = self.app.post('/site/new', data=data,
-                                   follow_redirects=True)
-            #print output.data
-            self.assertEqual(output.status_code, 200)
-            self.assertTrue(
-                '<li class="message">Site added</li>' in output.data)
-            output = self.app.get('/site/mine')
-            self.assertTrue(
-                'You have currently 2 sites listed' in output.data)
-
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(FlaskUiAppTest)
