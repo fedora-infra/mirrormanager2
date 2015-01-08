@@ -248,6 +248,22 @@ class MMLibModeltests(tests.Modeltests):
         item = model.Version.get(self.session, 2)
         self.assertEqual(str(item), '<Version(2 - 21-alpha)>')
 
+    def test_version_arches(self):
+        """ Test the Version.arches object of mirrormanager2.lib.model.
+        """
+        tests.create_base_items(self.session)
+        tests.create_version(self.session)
+        tests.create_directory(self.session)
+        tests.create_category(self.session)
+        tests.create_repository(self.session)
+
+        item = model.Version.get(self.session, 1)
+        self.assertEqual(item.arches, set([u'x86_64']))
+        item = model.Version.get(self.session, 2)
+        self.assertEqual(item.arches, set([]))
+        item = model.Version.get(self.session, 3)
+        self.assertEqual(item.arches, set([u'x86_64']))
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibModeltests)
