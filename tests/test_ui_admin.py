@@ -192,6 +192,27 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(
                 '<a href="javascript:void(0)">List (9)</a>' in output.data)
 
+    @patch('mirrormanager2.app.is_mirrormanager_admin')
+    def test_admin_directoryexclusivehostview(self, login_func):
+        """ Test the admin DirectoryExclusiveHost view. """
+        login_func.return_value = None
+
+        user = tests.FakeFasUserAdmin()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/admin/directoryexclusivehostview/')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<title>Directory - Directory Exclusive Host - Admin'
+                '</title>' in output.data)
+            self.assertTrue(
+                '<a href="/admin/archview/">Arch</a>' in output.data)
+            self.assertTrue(
+                '<a href="/admin/categoryview/">Category</a>' in output.data)
+            self.assertEqual(
+                output.data.count('<th class="column-header">'), 3)
+            self.assertTrue(
+                '<a href="javascript:void(0)">List (0)</a>' in output.data)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(FlaskUiAdminTest)
