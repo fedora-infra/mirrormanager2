@@ -49,6 +49,7 @@ class FlaskUiAdminTest(tests.Modeltests):
         tests.create_category(self.session)
         tests.create_hostcategory(self.session)
         tests.create_hostcategoryurl(self.session)
+        tests.create_hostcategorydir(self.session)
         tests.create_categorydirectory(self.session)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
@@ -343,6 +344,28 @@ class FlaskUiAdminTest(tests.Modeltests):
                 'title="Sort by Always Up2Date">Always Up2Date</a>' in output.data)
             self.assertTrue(
                 '<a href="javascript:void(0)">List (4)</a>' in output.data)
+
+    @patch('mirrormanager2.app.is_mirrormanager_admin')
+    def test_admin_hostcategorydirview(self, login_func):
+        """ Test the admin Host Category view. """
+        login_func.return_value = None
+
+        user = tests.FakeFasUserAdmin()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/admin/hostcategorydirview/')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<title>Host - Host Category Dir - Admin'
+                '</title>' in output.data)
+            self.assertTrue(
+                '<a href="/admin/archview/">Arch</a>' in output.data)
+            self.assertTrue(
+                '<a href="/admin/categoryview/">Category</a>' in output.data)
+            self.assertTrue(
+                '<a href="/admin/hostcategorydirview/?sort=2" '
+                'title="Sort by Path">Path</a>' in output.data)
+            self.assertTrue(
+                '<a href="javascript:void(0)">List (2)</a>' in output.data)
 
 
 if __name__ == '__main__':
