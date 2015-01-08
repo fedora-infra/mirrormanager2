@@ -314,6 +314,85 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue('Created by: kevin' in output.data)
             self.assertTrue('mirror2.localhost</a> <br />' in output.data)
 
+    def test_host_new(self):
+        """ Test the host_new endpoint. """
+        output = self.app.get('/host/2/new')
+        self.assertEqual(output.status_code, 302)
+        output = self.app.get('/host/2/new', follow_redirects=True)
+        self.assertEqual(output.status_code, 200)
+        self.assertTrue(
+            '<title>OpenID transaction in progress</title>' in output.data)
+
+        user = tests.FakeFasUser()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            # Invalid site identifier
+            output = self.app.get('/host/5/new')
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue('<p>Site not found</p>' in output.data)
+
+            # Check before adding the host
+            output = self.app.get('/site/2')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Information site: test-mirror2</h2>' in output.data)
+            self.assertTrue('Created by: kevin' in output.data)
+            self.assertTrue('mirror2.localhost</a> <br />' in output.data)
+            self.assertFalse('pingoured.fr</a> <br />' in output.data)
+
+            # Test host_new
+            output = self.app.get('/host/2/new')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<title>New Host - MirrorManager</title>' in output.data)
+            self.assertTrue(
+                '<h2>Create new host</h2>' in output.data)
+
+            csrf_token = output.data.split(
+                'name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+            data = {
+                'name': 'pingoured.fr',
+                'admin_active': True,
+                'user_active': True,
+                'country': 'FR',
+                'bandwidth_int': 100,
+                'asn_clients': True,
+                'max_connections': 3,
+            }
+
+            # Check CSRF protection
+
+            output = self.app.post('/host/2/new', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<title>New Host - MirrorManager</title>' in output.data)
+            self.assertTrue(
+                '<h2>Create new host</h2>' in output.data)
+
+            # Create Host
+
+            data['csrf_token'] = csrf_token
+
+            output = self.app.post('/host/2/new', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<li class="message">Host added</li>' in output.data)
+            self.assertTrue(
+                '<h2>Information site: test-mirror2</h2>' in output.data)
+            self.assertTrue('Created by: kevin' in output.data)
+            self.assertTrue('mirror2.localhost</a> <br />' in output.data)
+            self.assertTrue('pingoured.fr</a> <br />' in output.data)
+
+            # Try creating the same host -- will fail
+            output = self.app.post('/host/2/new', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<li class="message">Could not create the new host</li>'
+                in output.data)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(FlaskUiAppTest)
