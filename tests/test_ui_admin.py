@@ -68,7 +68,7 @@ class FlaskUiAdminTest(tests.Modeltests):
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_arch(self, login_func):
-        """ Test the admin function. """
+        """ Test the admin Arch view. """
         login_func.return_value = None
 
         user = tests.FakeFasUserAdmin()
