@@ -44,6 +44,7 @@ class FlaskUiAdminTest(tests.Modeltests):
         # Fill the DB a little bit
         tests.create_base_items(self.session)
         tests.create_site(self.session)
+        tests.create_site_admin(self.session)
         tests.create_hosts(self.session)
         tests.create_location(self.session)
         tests.create_netblockcountry(self.session)
@@ -655,6 +656,28 @@ class FlaskUiAdminTest(tests.Modeltests):
                 'title="Sort by Name">Name</a>' in output.data)
             self.assertTrue(
                 '<a href="javascript:void(0)">List (3)</a>' in output.data)
+
+    @patch('mirrormanager2.app.is_mirrormanager_admin')
+    def test_admin_siteadminview(self, login_func):
+        """ Test the admin Site Admin view. """
+        login_func.return_value = None
+
+        user = tests.FakeFasUserAdmin()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/admin/siteadminview/')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<title>Site - Site Admin - Admin'
+                '</title>' in output.data)
+            self.assertTrue(
+                '<a href="/admin/archview/">Arch</a>' in output.data)
+            self.assertTrue(
+                '<a href="/admin/categoryview/">Category</a>' in output.data)
+            self.assertTrue(
+                '<a href="/admin/siteadminview/?sort=1" '
+                'title="Sort by Username">Username</a>' in output.data)
+            self.assertTrue(
+                '<a href="javascript:void(0)">List (4)</a>' in output.data)
 
 
 if __name__ == '__main__':
