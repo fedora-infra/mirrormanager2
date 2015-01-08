@@ -258,6 +258,7 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue(
                 '<h2>Information site: test-mirror2</h2>' in output.data)
             self.assertTrue('Created by: kevin' in output.data)
+            self.assertTrue('mirror2.localhost</a> <br />' in output.data)
 
             csrf_token = output.data.split(
                 'name="csrf_token" type="hidden" value="')[1].split('">')[0]
@@ -265,7 +266,6 @@ class FlaskUiAppTest(tests.Modeltests):
             # Incomplete input
             data = {
                 'name': 'test-mirror2.1',
-
             }
 
             output = self.app.post('/site/2', data=data,
@@ -275,7 +275,6 @@ class FlaskUiAppTest(tests.Modeltests):
                 '<h2>Information site: test-mirror2</h2>' in output.data)
             self.assertTrue('Created by: kevin' in output.data)
             self.assertEqual(output.data.count('field is required.'), 2)
-
 
             data = {
                 'name': 'test-mirror2.1',
@@ -313,7 +312,7 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue(
                 '<h2>Information site: test-mirror2.1</h2>' in output.data)
             self.assertTrue('Created by: kevin' in output.data)
-
+            self.assertTrue('mirror2.localhost</a> <br />' in output.data)
 
 
 if __name__ == '__main__':
