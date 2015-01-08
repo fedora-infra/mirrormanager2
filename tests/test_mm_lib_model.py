@@ -198,6 +198,23 @@ class MMLibModeltests(tests.Modeltests):
         item = model.Category.get(self.session, 2)
         self.assertEqual(str(item), '<Category(2 - Fedora EPEL)>')
 
+    def test_hostcategory_repr(self):
+        """ Test the HostCategory.__repr__ object of mirrormanager2.lib.model.
+        """
+        tests.create_base_items(self.session)
+        tests.create_directory(self.session)
+        tests.create_category(self.session)
+        tests.create_site(self.session)
+        tests.create_hosts(self.session)
+        tests.create_hostcategory(self.session)
+
+        item = model.HostCategory.get(self.session, 1)
+        self.assertEqual(
+            str(item), '<HostCategory(1 - <Category(1 - Fedora Linux)>)>')
+        item = model.HostCategory.get(self.session, 2)
+        self.assertEqual(
+            str(item), '<HostCategory(2 - <Category(2 - Fedora EPEL)>)>')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibModeltests)
