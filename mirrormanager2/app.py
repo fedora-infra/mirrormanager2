@@ -449,7 +449,10 @@ def siteadmin_delete(site_id, admin_id):
         try:
             SESSION.commit()
             flask.flash('Site Admin deleted')
-        except SQLAlchemyError as err:
+        except SQLAlchemyError as err:  # pragma: no cover
+            # We check everything before deleting so the only error we could
+            # run in is DB server related, and that we can't fake in our
+            # tests
             SESSION.rollback()
             flask.flash('Could not delete Site Admin', 'error')
             APP.logger.debug('Could not delete Site Admin')
