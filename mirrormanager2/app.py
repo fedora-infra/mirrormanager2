@@ -977,7 +977,9 @@ def auth_login():  # pragma: no cover
         if hasattr(flask.g, 'fas_user') and flask.g.fas_user is not None:
             return flask.redirect(next_url)
         else:
-            return FAS.login(return_url=next_url)
+            return FAS.login(
+                return_url=next_url,
+                groups=APP.config['ADMIN_GROUP'])
     elif APP.config.get('MM_AUTHENTICATION', None) == 'local':
         form = forms.LoginForm()
         return flask.render_template(
