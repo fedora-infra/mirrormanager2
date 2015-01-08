@@ -95,6 +95,7 @@ if APP.config.get('MM_AUTHENTICATION') == 'fas':
 import mirrormanager2
 import mirrormanager2.lib as mmlib
 import mirrormanager2.forms as forms
+import mirrormanager2.login_forms as login_forms
 import mirrormanager2.lib.model as model
 
 
@@ -387,7 +388,7 @@ def siteadmin_new(site_id):
     if siteobj is None:
         flask.abort(404, 'Site not found')
 
-    form = forms.LostPasswordForm()
+    form = login_forms.LostPasswordForm()
     if form.validate_on_submit():
         site_admin = model.SiteAdmin()
         SESSION.add(site_admin)
