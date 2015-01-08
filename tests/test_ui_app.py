@@ -119,6 +119,23 @@ class FlaskUiAppTest(tests.Modeltests):
                 'There are currently no active mirrors registered.'
                 in output.data)
 
+    def test_mysite(self):
+        """ Test the mysite endpoint. """
+        output = self.app.get('/site/mine')
+        self.assertEqual(output.status_code, 302)
+        output = self.app.get('/site/mine', follow_redirects=True)
+        self.assertEqual(output.status_code, 200)
+        self.assertTrue(
+            '<title>OpenID transaction in progress</title>' in output.data)
+
+        user = tests.FakeFasUser()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/site/mine')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                'You have currently 1 sites listed' in output.data)
+
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(FlaskUiAppTest)
