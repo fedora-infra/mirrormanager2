@@ -55,6 +55,23 @@ def user_set(APP, user):
         yield
 
 
+class FakeFasUser(object):
+    """ Fake FAS user used for the tests. """
+    id = 100
+    username = 'pingou'
+    cla_done = True
+    groups = ['packager', 'cla_done']
+    bugzilla_email = 'pingou@fp.o'
+
+
+class FakeFasUserAdmin(object):
+    """ Fake FAS user used for the tests. """
+    id = 1000
+    username = 'admin'
+    cla_done = True
+    groups = ['packager', 'cla_done', 'sysadmin-main']
+
+
 class Modeltests(unittest.TestCase):
     """ Model tests. """
 
