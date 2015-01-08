@@ -288,6 +288,16 @@ class MMLibModeltests(tests.Modeltests):
         item = model.User.get(self.session, 4)
         self.assertEqual(str(item), 'User: 4 - name shaiton')
 
+    def test_user_username(self):
+        """ Test the User.username object of mirrormanager2.lib.model.
+        """
+        tests.create_base_items(self.session)
+        tests.create_user_groups(self.session)
+
+        for index, string in enumerate(['pingou', 'kevin', 'ralph', 'shaiton']):
+            item = model.User.get(self.session, index + 1)
+            self.assertEqual(item.username, string)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibModeltests)
