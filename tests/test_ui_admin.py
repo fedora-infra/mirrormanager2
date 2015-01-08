@@ -347,7 +347,7 @@ class FlaskUiAdminTest(tests.Modeltests):
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_hostcategorydirview(self, login_func):
-        """ Test the admin Host Category view. """
+        """ Test the admin Host Category Dir view. """
         login_func.return_value = None
 
         user = tests.FakeFasUserAdmin()
