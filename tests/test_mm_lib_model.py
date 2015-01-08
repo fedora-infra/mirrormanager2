@@ -264,6 +264,17 @@ class MMLibModeltests(tests.Modeltests):
         item = model.Version.get(self.session, 3)
         self.assertEqual(item.arches, set([u'x86_64']))
 
+    def test_group_repr(self):
+        """ Test the Group.__repr__ object of mirrormanager2.lib.model.
+        """
+        tests.create_base_items(self.session)
+        tests.create_user_groups(self.session)
+
+        item = model.Group.get(self.session, 1)
+        self.assertEqual(str(item), 'Group: 1 - name fpca')
+        item = model.Group.get(self.session, 2)
+        self.assertEqual(str(item), 'Group: 2 - name packager')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MMLibModeltests)
