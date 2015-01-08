@@ -210,11 +210,13 @@ def list_mirrors(p_name=None, p_version=None, p_arch=None):
     if p_name and p_version:
         version = mmlib.get_version_by_name_version(
             SESSION, p_name, p_version)
-        version_id = version.id
+        if version:
+            version_id = version.id
 
     if p_arch:
         arch = mmlib.get_arch_by_name(SESSION, p_arch)
-        arch_id = arch.id
+        if arch:
+            arch_id = arch.id
 
     mirrors = mmlib.get_mirrors(
         SESSION,
