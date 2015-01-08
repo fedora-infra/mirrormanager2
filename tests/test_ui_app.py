@@ -170,6 +170,85 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue(
                 'You have currently 3 sites listed' in output.data)
 
+    def test_site_new(self):
+        """ Test the site_new endpoint. """
+        output = self.app.get('/site/new')
+        self.assertEqual(output.status_code, 302)
+        output = self.app.get('/site/new', follow_redirects=True)
+        self.assertEqual(output.status_code, 200)
+        self.assertTrue(
+            '<title>OpenID transaction in progress</title>' in output.data)
+
+        user = tests.FakeFasUser()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/site/new')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<title>New Site - MirrorManager</title>' in output.data)
+            self.assertTrue(
+                '<h2>Export Compliance</h2>' in output.data)
+            self.assertTrue(
+                'td><label for="name">Site name</label></td>' in output.data)
+            self.assertTrue('<li id="homeTab">' in output.data)
+            self.assertTrue('<li id="mirrorsTab">' in output.data)
+
+            csrf_token = output.data.split(
+                'name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+            data = {
+                'name': 'pingoured.fr',
+                'password': 'foobar',
+                'org_url': 'http://pingoured.fr',
+                'admin_active': True,
+                'user_active': True,
+            }
+
+            # Check CSRF protection
+
+            output = self.app.post('/site/new', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<title>New Site - MirrorManager</title>' in output.data)
+            self.assertTrue(
+                '<h2>Export Compliance</h2>' in output.data)
+            self.assertTrue(
+                'td><label for="name">Site name</label></td>' in output.data)
+            self.assertTrue('<li id="homeTab">' in output.data)
+            self.assertTrue('<li id="mirrorsTab">' in output.data)
+
+            # Create the new site
+
+            data['csrf_token'] = csrf_token
+
+            output = self.app.post('/site/new', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<li class="message">Site added</li>' in output.data)
+            self.assertTrue(
+                '<li class="message">pingou added as an admin</li>'
+                in output.data)
+            self.assertTrue(
+                '<h2>Fedora Public Active Mirrors</h2>' in output.data)
+
+            output = self.app.get('/site/mine')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                'You have currently 2 sites listed' in output.data)
+
+            # Check Errors
+
+            output = self.app.post('/site/new', data=data,
+                                   follow_redirects=True)
+            #print output.data
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<li class="message">Site added</li>' in output.data)
+            output = self.app.get('/site/mine')
+            self.assertTrue(
+                'You have currently 2 sites listed' in output.data)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(FlaskUiAppTest)
