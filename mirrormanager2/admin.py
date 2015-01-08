@@ -56,43 +56,45 @@ class DirectoryView(MMModelView):
     column_list = ('name', 'readable', 'ctime')
 
 
-ADMIN.add_view(MMModelView(model.Arch, SESSION))
-ADMIN.add_view(MMModelView(model.Category, SESSION))
-ADMIN.add_view(MMModelView(model.Country, SESSION, category='Country'))
-ADMIN.add_view(
-    MMModelView(model.CountryContinentRedirect, SESSION, category='Country'))
-ADMIN.add_view(
-    MMModelView(model.EmbargoedCountry, SESSION, category='Country'))
-ADMIN.add_view(DirectoryView(model.Directory, SESSION, category='Directory'))
-ADMIN.add_view(
-    DirectoryView(
-        model.DirectoryExclusiveHost, SESSION, category='Directory'))
-ADMIN.add_view(MMModelView(model.FileDetail, SESSION, category='File'))
-ADMIN.add_view(
-    MMModelView(model.FileDetailFileGroup, SESSION, category='File'))
-ADMIN.add_view(MMModelView(model.FileGroup, SESSION, category='File'))
-ADMIN.add_view(MMModelView(model.Host, SESSION, category='Host'))
-ADMIN.add_view(MMModelView(model.HostAclIp, SESSION, category='Host'))
-ADMIN.add_view(MMModelView(model.HostCategory, SESSION, category='Host'))
-ADMIN.add_view(MMModelView(model.HostCategoryDir, SESSION, category='Host'))
-ADMIN.add_view(MMModelView(model.HostCategoryUrl, SESSION, category='Host'))
-ADMIN.add_view(MMModelView(model.HostCountry, SESSION, category='Host'))
-ADMIN.add_view(MMModelView(model.HostCountryAllowed, SESSION, category='Host'))
-ADMIN.add_view(MMModelView(model.HostLocation, SESSION, category='Host'))
-ADMIN.add_view(MMModelView(model.HostNetblock, SESSION, category='Host'))
-ADMIN.add_view(MMModelView(model.HostPeerAsn, SESSION, category='Host'))
-ADMIN.add_view(MMModelView(model.HostStats, SESSION, category='Host'))
-ADMIN.add_view(MMModelView(model.Location, SESSION))
-ADMIN.add_view(MMModelView(model.NetblockCountry, SESSION))
-ADMIN.add_view(MMModelView(model.Product, SESSION))
-ADMIN.add_view(MMModelView(model.Repository, SESSION, category='Repository'))
-ADMIN.add_view(
-    MMModelView(model.RepositoryRedirect, SESSION, category='Repository'))
-ADMIN.add_view(MMModelView(model.Site, SESSION, category='Site'))
-ADMIN.add_view(MMModelView(model.SiteAdmin, SESSION, category='Site'))
-ADMIN.add_view(MMModelView(model.SiteToSite, SESSION, category='Site'))
-ADMIN.add_view(MMModelView(model.Version, SESSION))
+VIEWS = [
+    MMModelView(model.Arch, SESSION),
+    MMModelView(model.Category, SESSION),
+    MMModelView(model.Country, SESSION, category='Country'),
+    MMModelView(model.CountryContinentRedirect, SESSION, category='Country'),
+    MMModelView(model.EmbargoedCountry, SESSION, category='Country'),
+    DirectoryView(model.Directory, SESSION, category='Directory'),
+    DirectoryView(model.DirectoryExclusiveHost, SESSION, category='Directory'),
+    MMModelView(model.FileDetail, SESSION, category='File'),
+    MMModelView(model.FileDetailFileGroup, SESSION, category='File'),
+    MMModelView(model.FileGroup, SESSION, category='File'),
+    MMModelView(model.Host, SESSION, category='Host'),
+    MMModelView(model.HostAclIp, SESSION, category='Host'),
+    MMModelView(model.HostCategory, SESSION, category='Host'),
+    MMModelView(model.HostCategoryDir, SESSION, category='Host'),
+    MMModelView(model.HostCategoryUrl, SESSION, category='Host'),
+    MMModelView(model.HostCountry, SESSION, category='Host'),
+    MMModelView(model.HostCountryAllowed, SESSION, category='Host'),
+    MMModelView(model.HostLocation, SESSION, category='Host'),
+    MMModelView(model.HostNetblock, SESSION, category='Host'),
+    MMModelView(model.HostPeerAsn, SESSION, category='Host'),
+    MMModelView(model.HostStats, SESSION, category='Host'),
+    MMModelView(model.Location, SESSION),
+    MMModelView(model.NetblockCountry, SESSION),
+    MMModelView(model.Product, SESSION),
+    MMModelView(model.Repository, SESSION, category='Repository'),
+    MMModelView(model.RepositoryRedirect, SESSION, category='Repository'),
+    MMModelView(model.Site, SESSION, category='Site'),
+    MMModelView(model.SiteAdmin, SESSION, category='Site'),
+    MMModelView(model.SiteToSite, SESSION, category='Site'),
+    MMModelView(model.Version, SESSION),
+]
+
+
 if APP.config.get('MM_AUTHENTICATION', None) == 'local':
-    ADMIN.add_view(MMModelView(model.User, SESSION))
-    ADMIN.add_view(MMModelView(model.Group, SESSION))
-    ADMIN.add_view(MMModelView(model.UserVisit, SESSION))
+    VIEWS.append(MMModelView(model.User, SESSION))
+    VIEWS.append(MMModelView(model.Group, SESSION))
+    VIEWS.append(MMModelView(model.UserVisit, SESSION))
+
+
+for view in VIEWS:
+    ADMIN.add_view(view)
