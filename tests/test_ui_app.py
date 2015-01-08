@@ -393,6 +393,74 @@ class FlaskUiAppTest(tests.Modeltests):
                 '<li class="message">Could not create the new host</li>'
                 in output.data)
 
+    def test_siteadmin_new(self):
+        """ Test the siteadmin_new endpoint. """
+        output = self.app.get('/site/2/admin/new')
+        self.assertEqual(output.status_code, 302)
+        output = self.app.get('/site/2/admin/new', follow_redirects=True)
+        self.assertEqual(output.status_code, 200)
+        self.assertTrue(
+            '<title>OpenID transaction in progress</title>' in output.data)
+
+        user = tests.FakeFasUser()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            # Invalid site identifier
+            output = self.app.get('/site/5/admin/new')
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue('<p>Site not found</p>' in output.data)
+
+            # Check before adding the host
+            output = self.app.get('/site/2')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Information site: test-mirror2</h2>' in output.data)
+            self.assertTrue('Created by: kevin' in output.data)
+            self.assertFalse(
+                'action="/site/2/admin/5/delete">' in output.data)
+            self.assertFalse('skvidal' in output.data)
+
+            # Test host_new
+            output = self.app.get('/site/2/admin/new')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<title>New Site Admin - MirrorManager</title>' in output.data)
+            self.assertTrue(
+                '<h2>Add Site admin to site: test-mirror2</h2>'
+                in output.data)
+
+            csrf_token = output.data.split(
+                'name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+            data = {
+                'username': 'skvidal',
+            }
+
+            # Check CSRF protection
+
+            output = self.app.post('/site/2/admin/new', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<title>New Site Admin - MirrorManager</title>' in output.data)
+            self.assertTrue(
+                '<h2>Add Site admin to site: test-mirror2</h2>'
+                in output.data)
+
+            # Create Host
+
+            data['csrf_token'] = csrf_token
+
+            output = self.app.post('/site/2/admin/new', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<li class="message">Site Admin added</li>' in output.data)
+            self.assertTrue(
+                '<h2>Information site: test-mirror2</h2>' in output.data)
+            self.assertTrue('Created by: kevin' in output.data)
+            self.assertTrue('action="/site/2/admin/3/delete">' in output.data)
+            self.assertTrue('skvidal' in output.data)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(FlaskUiAppTest)
