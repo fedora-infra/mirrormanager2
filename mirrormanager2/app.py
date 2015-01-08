@@ -438,7 +438,6 @@ def siteadmin_delete(site_id, admin_id):
         if siteadminobj not in siteobj.admins:
             flask.abort(404, 'Site Admin not related to this Site')
 
-        print site_id, admin_id, siteobj.admins
         if len(siteobj.admins) <= 1:
             flask.flash(
                 'There is only one admin set, you cannot delete it.', 'error')
