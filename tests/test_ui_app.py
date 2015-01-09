@@ -542,7 +542,74 @@ class FlaskUiAppTest(tests.Modeltests):
                 'action="/site/2/admin/3/delete">' in output.data)
             self.assertEqual(output.data.count('ralph'), 0)
 
+    def test_host_view(self):
+        """ Test the host_view endpoint. """
+        output = self.app.get('/host/5')
+        self.assertEqual(output.status_code, 302)
+        output = self.app.get('/host/5', follow_redirects=True)
 
+        self.assertEqual(output.status_code, 200)
+        self.assertTrue(
+            '<title>OpenID transaction in progress</title>' in output.data)
+
+        user = tests.FakeFasUser()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/host/50')
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue('<p>Host not found</p>' in output.data)
+
+            output = self.app.get('/host/3')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Host private.localhost</h2>' in output.data)
+            self.assertTrue('Back to <a href="/site/1">' in output.data)
+
+            csrf_token = output.data.split(
+                'name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+            # Incomplete input
+            data = {
+                'name': 'private.localhost.1',
+            }
+
+            output = self.app.post('/host/3', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Host private.localhost</h2>' in output.data)
+            self.assertTrue('Back to <a href="/site/1">' in output.data)
+            self.assertEqual(output.data.count('field is required.'), 3)
+
+            data = {
+                'name': 'private.localhost.1',
+                'admin_active': True,
+                'user_active': True,
+                'country': 'NL',
+                'bandwidth_int': 100,
+                'asn_clients': True,
+                'max_connections': 10,
+                'comment': 'My own private mirror',
+            }
+
+            # Check CSRF protection
+
+            output = self.app.post('/host/3', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Host private.localhost</h2>' in output.data)
+            self.assertTrue('Back to <a href="/site/1">' in output.data)
+
+            # Update site
+
+            data['csrf_token'] = csrf_token
+
+            output = self.app.post('/host/3', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Host private.localhost.1</h2>' in output.data)
+            self.assertTrue('Back to <a href="/site/1">' in output.data)
 
 
 if __name__ == '__main__':
