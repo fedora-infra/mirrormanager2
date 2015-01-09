@@ -1208,6 +1208,114 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertFalse(
                 'action="/host/3/host_country/1/delete">' in output.data)
 
+    def test_host_category_new(self):
+        """ Test the host_category_new endpoint. """
+        output = self.app.get('/host/5/category/new')
+        self.assertEqual(output.status_code, 302)
+        output = self.app.get('/host/5/category/new', follow_redirects=True)
+
+        self.assertEqual(output.status_code, 200)
+        self.assertTrue(
+            '<title>OpenID transaction in progress</title>' in output.data)
+
+        user = tests.FakeFasUser()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/host/50/category/new')
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue('<p>Host not found</p>' in output.data)
+
+            output = self.app.get('/host/3/category/new')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Add host category</h2>' in output.data)
+            self.assertTrue('Back to <a href="/host/3">' in output.data)
+            self.assertTrue(
+                '<title>New Host Category - MirrorManager</title>'
+                in output.data)
+            self.assertFalse(
+                'action="/host/3/category/1/delete">' in output.data)
+
+            csrf_token = output.data.split(
+                'name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+            data = {
+                'category_id': 'Fedora Linux',
+            }
+
+            # Invalid input
+
+            output = self.app.post('/host/3/category/new', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Add host category</h2>' in output.data)
+            self.assertTrue('Back to <a href="/host/3">' in output.data)
+            self.assertTrue(
+                '<title>New Host Category - MirrorManager</title>'
+                in output.data)
+            self.assertFalse(
+                'action="/host/3/category/1/delete">' in output.data)
+            self.assertTrue(
+                'Not a valid choice<br />Field must contain a number'
+                in output.data)
+
+            # Check CSRF protection
+
+            output = self.app.post('/host/3/category/new', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Add host category</h2>' in output.data)
+            self.assertTrue('Back to <a href="/host/3">' in output.data)
+            self.assertTrue(
+                '<title>New Host Category - MirrorManager</title>'
+                in output.data)
+            self.assertFalse(
+                'action="/host/3/category/1/delete">' in output.data)
+
+            # Add Category
+
+            data['csrf_token'] = csrf_token
+            data['category_id'] = '1'
+
+            output = self.app.post('/host/3/category/new', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<li class="message">Host Category added</li>' in output.data)
+            self.assertTrue('<h2>Host category</h2>' in output.data)
+            self.assertTrue('Back to <a href="/site/1">' in output.data)
+            self.assertTrue(
+                '<title>Host Category - MirrorManager</title>' in output.data)
+
+            #Try adding the same Category -- fails
+
+            output = self.app.post('/host/3/category/new', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<li class="message">Could not add Category to the host</li>'
+                in output.data)
+            self.assertTrue(
+                '<h2>Add host category</h2>' in output.data)
+            self.assertTrue('Back to <a href="/host/3">' in output.data)
+            self.assertTrue(
+                '<title>New Host Category - MirrorManager</title>'
+                in output.data)
+            self.assertFalse(
+                'action="/host/3/category/1/delete">' in output.data)
+
+            # Check host after adding the category
+            output = self.app.get('/host/3')
+            self.assertEqual(output.status_code, 200)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue('<h2>Host private.localhost</h2>' in output.data)
+            self.assertTrue('Back to <a href="/site/1">' in output.data)
+            self.assertTrue(
+                '<title>Host - MirrorManager</title>' in output.data)
+            self.assertTrue(
+                'action="/host/3/category/5/delete">' in output.data)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(FlaskUiAppTest)
