@@ -717,7 +717,10 @@ def host_asn_delete(host_id, host_asn_id):
         try:
             SESSION.commit()
             flask.flash('Host Peer ASN deleted')
-        except SQLAlchemyError as err:
+        except SQLAlchemyError as err:  # pragma: no cover
+            # We check everything before deleting so the only error we could
+            # run in is DB server related, and that we can't fake in our
+            # tests
             SESSION.rollback()
             flask.flash('Could not delete Peer ASN of the host')
             APP.logger.debug('Could not delete Peer ASN of the host')
