@@ -842,18 +842,18 @@ def host_category_new(host_id):
         SESSION.add(host_category)
 
         try:
-            SESSION.flush()
+            SESSION.commit()
             flask.flash('Host Category added')
+            return flask.redirect(
+                flask.url_for(
+                    'host_category',
+                    host_id=hostobj.id,
+                    hc_id=host_category.id))
         except SQLAlchemyError as err:
             SESSION.rollback()
             flask.flash('Could not add Category to the host')
             APP.logger.debug('Could not add Category to the host')
             APP.logger.exception(err)
-
-        SESSION.commit()
-        return flask.redirect(
-            flask.url_for(
-                'host_category', host_id=hostobj.id, hc_id=host_category.id))
 
     return flask.render_template(
         'host_category_new.html',
