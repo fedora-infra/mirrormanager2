@@ -767,6 +767,71 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertFalse(
                 'action="/host/3/host_acl_ip/1/delete">' in output.data)
 
+    def test_host_netblock_new(self):
+        """ Test the host_netblock_new endpoint. """
+        output = self.app.get('/host/5/netblock/new')
+        self.assertEqual(output.status_code, 302)
+        output = self.app.get('/host/5/netblock/new', follow_redirects=True)
+
+        self.assertEqual(output.status_code, 200)
+        self.assertTrue(
+            '<title>OpenID transaction in progress</title>' in output.data)
+
+        user = tests.FakeFasUser()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/host/50/netblock/new')
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue('<p>Host not found</p>' in output.data)
+
+            output = self.app.get('/host/3/netblock/new')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Add host netblock</h2>' in output.data)
+            self.assertTrue('Back to <a href="/host/3">' in output.data)
+            self.assertTrue(
+                '<title>New Host netblock - MirrorManager</title>'
+                in output.data)
+            self.assertFalse(
+                'action="/host/3/host_netblock/1/delete">' in output.data)
+
+            csrf_token = output.data.split(
+                'name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+            data = {
+                'netblock': '192.168.0.0/24',
+                'name': 'home network',
+            }
+
+            # Check CSRF protection
+
+            output = self.app.post('/host/3/netblock/new', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Add host netblock</h2>' in output.data)
+            self.assertTrue('Back to <a href="/host/3">' in output.data)
+            self.assertTrue(
+                '<title>New Host netblock - MirrorManager</title>'
+                in output.data)
+            self.assertFalse(
+                'action="/host/3/host_netblock/1/delete">' in output.data)
+
+            # Update site
+
+            data['csrf_token'] = csrf_token
+
+            output = self.app.post('/host/3/netblock/new', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<li class="message">Host netblock added</li>' in output.data)
+            self.assertTrue('<h2>Host private.localhost</h2>' in output.data)
+            self.assertTrue('Back to <a href="/site/1">' in output.data)
+            self.assertTrue(
+                '<title>Host - MirrorManager</title>' in output.data)
+            self.assertTrue(
+                'action="/host/3/host_netblock/1/delete">' in output.data)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(FlaskUiAppTest)
