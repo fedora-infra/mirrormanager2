@@ -919,6 +919,11 @@ def host_category(host_id, hc_id):
     if hcobj is None:
         flask.abort(404, 'Host/Category not found')
 
+    host_cat_ids = [cat.id for cat in hostobj.categories]
+
+    if hcobj.id not in host_cat_ids:
+        flask.abort(404, 'Category not associated with this host')
+
     categories = mmlib.get_categories(SESSION)
 
     form = forms.EditHostCategoryForm(obj=hcobj)
@@ -962,6 +967,11 @@ def host_category_url_new(host_id, hc_id):
 
     if hcobj is None:
         flask.abort(404, 'Host/Category not found')
+
+    host_cat_ids = [cat.id for cat in hostobj.categories]
+
+    if hcobj.id not in host_cat_ids:
+        flask.abort(404, 'Category not associated with this host')
 
     categories = mmlib.get_categories(SESSION)
 
