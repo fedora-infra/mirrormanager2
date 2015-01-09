@@ -611,6 +611,76 @@ class FlaskUiAppTest(tests.Modeltests):
                 '<h2>Host private.localhost.1</h2>' in output.data)
             self.assertTrue('Back to <a href="/site/1">' in output.data)
 
+    def test_host_acl_ip_new(self):
+        """ Test the host_acl_ip_new endpoint. """
+        output = self.app.get('/host/5/host_acl_ip/new')
+        self.assertEqual(output.status_code, 302)
+        output = self.app.get('/host/5/host_acl_ip/new', follow_redirects=True)
+
+        self.assertEqual(output.status_code, 200)
+        self.assertTrue(
+            '<title>OpenID transaction in progress</title>' in output.data)
+
+        user = tests.FakeFasUser()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/host/50/host_acl_ip/new')
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue('<p>Host not found</p>' in output.data)
+
+            output = self.app.get('/host/3/host_acl_ip/new')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Add host ACL IP</h2>' in output.data)
+            self.assertTrue('Back to <a href="/host/3">' in output.data)
+            self.assertTrue(
+                '<title>New Host ACL IP - MirrorManager</title>'
+                in output.data)
+
+            csrf_token = output.data.split(
+                'name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+            data = {
+                'ip': '127.0.0.1',
+            }
+
+            # Check CSRF protection
+
+            output = self.app.post('/host/3/host_acl_ip/new', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Add host ACL IP</h2>' in output.data)
+            self.assertTrue('Back to <a href="/host/3">' in output.data)
+            self.assertTrue(
+                '<title>New Host ACL IP - MirrorManager</title>'
+                in output.data)
+
+            # Update site
+
+            data['csrf_token'] = csrf_token
+
+            output = self.app.post('/host/3/host_acl_ip/new', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<li class="message">Host ACL IP added</li>' in output.data)
+            self.assertTrue('<h2>Host private.localhost</h2>' in output.data)
+            self.assertTrue('Back to <a href="/site/1">' in output.data)
+            self.assertTrue(
+                '<title>Host - MirrorManager</title>' in output.data)
+
+            # Error adding this IP again
+            output = self.app.post('/host/3/host_acl_ip/new', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<li class="message">Could not add ACL IP to the host</li>'
+                in output.data)
+            self.assertTrue('<h2>Host private.localhost</h2>' in output.data)
+            self.assertTrue('Back to <a href="/site/1">' in output.data)
+            self.assertTrue(
+                '<title>Host - MirrorManager</title>' in output.data)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(FlaskUiAppTest)
