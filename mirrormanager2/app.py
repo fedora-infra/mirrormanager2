@@ -484,9 +484,9 @@ def host_view(host_id):
 
     form = forms.AddHostForm(obj=hostobj)
     if form.validate_on_submit():
-        form.populate_obj(obj=host)
-        host.bandwidth_int = int(host.bandwidth_int)
-        host.asn = None if not host.asn else int(host.asn)
+        form.populate_obj(obj=hostobj)
+        hostobj.bandwidth_int = int(hostobj.bandwidth_int)
+        hostobj.asn = None if not hostobj.asn else int(hostobj.asn)
 
         try:
             SESSION.flush()
