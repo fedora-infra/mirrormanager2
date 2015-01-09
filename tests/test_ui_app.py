@@ -1602,6 +1602,78 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertFalse(
                 'action="/host/3/category/5/url/5/delete">' in output.data)
 
+    def test_host_category(self):
+        """ Test the host_category endpoint. """
+
+        output = self.app.post('/host/2/category/5')
+        self.assertEqual(output.status_code, 302)
+        output = self.app.post('/host/2/category/5', follow_redirects=True)
+        self.assertEqual(output.status_code, 200)
+        self.assertTrue(
+            '<title>OpenID transaction in progress</title>' in output.data)
+
+        user = tests.FakeFasUser()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/host/50/category/5')
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue('<p>Host not found</p>' in output.data)
+
+            output = self.app.get('/host/3/category/50')
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue('<p>Host/Category not found</p>' in output.data)
+
+            output = self.app.get('/host/3/category/2')
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue(
+                '<p>Category not associated with this host</p>'
+                in output.data)
+
+            output = self.app.get('/host/2/category/3')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<input id="always_up2date" name="always_up2date" '
+                'type="checkbox" value="y">' in output.data)
+
+            csrf_token = output.data.split(
+                'name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+            data = {'always_up2date': ''}
+
+            # Check CSRF protection
+
+            output = self.app.post('/host/2/category/3', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Host category</h2>' in output.data)
+            self.assertTrue('Back to <a href="/site/2">' in output.data)
+            self.assertTrue(
+                '<title>Host Category - MirrorManager</title>'
+                in output.data)
+            self.assertTrue(
+                '<input id="always_up2date" name="always_up2date" '
+                'type="checkbox" value="">' in output.data)
+
+            # Update Host Category
+
+            data['csrf_token'] = csrf_token
+
+            output = self.app.post('/host/2/category/3', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Host category</h2>' in output.data)
+            self.assertTrue('Back to <a href="/site/2">' in output.data)
+            self.assertTrue(
+                '<title>Host Category - MirrorManager</title>'
+                in output.data)
+            self.assertTrue(
+                '<input id="always_up2date" name="always_up2date" '
+                'type="checkbox" value="y">' in output.data)
+            self.assertTrue(
+                '<li class="message">Host Category updated</li>'
+                in output.data)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(FlaskUiAppTest)
