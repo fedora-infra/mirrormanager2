@@ -700,26 +700,28 @@ def host_asn_new(host_id):
 def host_asn_delete(host_id, host_asn_id):
     """ Delete a host_peer_asn.
     """
-    hostobj = mmlib.get_host(SESSION, host_id)
+    form = forms.ConfirmationForm()
+    if form.validate_on_submit():
+        hostobj = mmlib.get_host(SESSION, host_id)
 
-    if hostobj is None:
-        flask.abort(404, 'Host not found')
+        if hostobj is None:
+            flask.abort(404, 'Host not found')
 
-    hostasnobj = mmlib.get_host_peer_asn(SESSION, host_asn_id)
+        hostasnobj = mmlib.get_host_peer_asn(SESSION, host_asn_id)
 
-    if hostasnobj is None:
-        flask.abort(404, 'Host Peer ASN not found')
-    else:
-        SESSION.delete(hostasnobj)
+        if hostasnobj is None:
+            flask.abort(404, 'Host Peer ASN not found')
+        else:
+            SESSION.delete(hostasnobj)
 
-    try:
-        SESSION.commit()
-        flask.flash('Host Peer ASN deleted')
-    except SQLAlchemyError as err:
-        SESSION.rollback()
-        flask.flash('Could not delete Peer ASN of the host')
-        APP.logger.debug('Could not delete Peer ASN of the host')
-        APP.logger.exception(err)
+        try:
+            SESSION.commit()
+            flask.flash('Host Peer ASN deleted')
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            flask.flash('Could not delete Peer ASN of the host')
+            APP.logger.debug('Could not delete Peer ASN of the host')
+            APP.logger.exception(err)
 
     return flask.redirect(flask.url_for('host_view', host_id=host_id))
 
