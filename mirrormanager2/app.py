@@ -626,25 +626,27 @@ def host_netblock_new(host_id):
 def host_netblock_delete(host_id, host_netblock_id):
     """ Delete a host_netblock.
     """
-    hostobj = mmlib.get_host(SESSION, host_id)
+    form = forms.ConfirmationForm()
+    if form.validate_on_submit():
+        hostobj = mmlib.get_host(SESSION, host_id)
 
-    if hostobj is None:
-        flask.abort(404, 'Host not found')
+        if hostobj is None:
+            flask.abort(404, 'Host not found')
 
-    hostnetbobj = mmlib.get_host_netblock(SESSION, host_netblock_id)
+        hostnetbobj = mmlib.get_host_netblock(SESSION, host_netblock_id)
 
-    if hostnetbobj is None:
-        flask.abort(404, 'Host netblock not found')
-    else:
-        SESSION.delete(hostnetbobj)
-    try:
-        SESSION.commit()
-        flask.flash('Host netblock deleted')
-    except SQLAlchemyError as err:
-        SESSION.rollback()
-        flask.flash('Could not delete netblock of the host')
-        APP.logger.debug('Could not delete netblock of the host')
-        APP.logger.exception(err)
+        if hostnetbobj is None:
+            flask.abort(404, 'Host netblock not found')
+        else:
+            SESSION.delete(hostnetbobj)
+        try:
+            SESSION.commit()
+            flask.flash('Host netblock deleted')
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            flask.flash('Could not delete netblock of the host')
+            APP.logger.debug('Could not delete netblock of the host')
+            APP.logger.exception(err)
 
     return flask.redirect(flask.url_for('host_view', host_id=host_id))
 
