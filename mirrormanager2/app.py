@@ -675,7 +675,10 @@ def host_asn_new(host_id):
         try:
             SESSION.flush()
             flask.flash('Host Peer ASN added')
-        except SQLAlchemyError as err:
+        except SQLAlchemyError as err:  # pragma: no cover
+            # We cannot check this as there is no unique constraint in the
+            # table. So the only situation where it could fail is a failure
+            # at the DB server level itself.
             SESSION.rollback()
             flask.flash('Could not add Peer ASN to the host')
             APP.logger.debug('Could not add Peer ASN to the host')
