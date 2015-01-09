@@ -44,7 +44,7 @@ def is_number(form, field):
     try:
         float(field.data)
     except ValueError:
-        raise wtf.ValidationError('Field must contain a number')
+        raise wtforms.ValidationError('Field must contain a number')
 
 
 class ConfirmationForm(wtf.Form):
