@@ -1024,11 +1024,21 @@ def host_category_url_delete(host_id, hc_id, host_category_url_id):
         if hcobj is None:
             flask.abort(404, 'Host/Category not found')
 
+        host_cat_ids = [cat.id for cat in hostobj.categories]
+
+        if hcobj.id not in host_cat_ids:
+            flask.abort(404, 'Category not associated with this host')
+
         hostcaturlobj = mmlib.get_host_category_url_by_id(
             SESSION, host_category_url_id)
 
         if hostcaturlobj is None:
             flask.abort(404, 'Host category URL not found')
+
+        host_cat_url_ids = [url.id for url in hcobj.urls]
+
+        if hostcaturlobj.id not in host_cat_url_ids:
+            flask.abort(404, 'Category URL not associated with this host')
         else:
             SESSION.delete(hostcaturlobj)
 
