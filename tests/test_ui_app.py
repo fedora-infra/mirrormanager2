@@ -1569,11 +1569,28 @@ class FlaskUiAppTest(tests.Modeltests):
                 '<p>Category not associated with this host</p>'
                 in output.data)
 
+            # Invalid Category/URL
+            output = self.app.post(
+                '/host/3/category/5/url/50/delete', data=data,
+                follow_redirects=True)
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue(
+                '<p>Host category URL not found</p>'
+                in output.data)
+
+            # Invalid Category/URL association
+            output = self.app.post(
+                '/host/3/category/5/url/4/delete', data=data,
+                follow_redirects=True)
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue(
+                '<p>Category URL not associated with this host</p>'
+                in output.data)
+
             # Delete Host Category URL
             output = self.app.post(
                 '/host/3/category/5/url/5/delete', data=data,
                 follow_redirects=True)
-            #print output.data
             self.assertEqual(output.status_code, 200)
             self.assertTrue(
                 '<li class="message">Host category URL deleted</li>'
