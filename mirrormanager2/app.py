@@ -892,7 +892,10 @@ def host_category_delete(host_id, hc_id):
         try:
             SESSION.commit()
             flask.flash('Host Category deleted')
-        except SQLAlchemyError as err:
+        except SQLAlchemyError as err:  # pragma: no cover
+            # We check everything before deleting so the only error we could
+            # run in is DB server related, and that we can't fake in our
+            # tests
             SESSION.rollback()
             flask.flash('Could not delete Category of the host')
             APP.logger.debug('Could not delete Category of the host')
