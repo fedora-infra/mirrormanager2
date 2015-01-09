@@ -49,6 +49,7 @@ class FlaskUiAppTest(tests.Modeltests):
         tests.create_hostcategoryurl(self.session)
         tests.create_hostcategorydir(self.session)
         tests.create_hostcountry(self.session)
+        tests.create_hostpeerasn(self.session)
         tests.create_categorydirectory(self.session)
         tests.create_version(self.session)
         tests.create_repository(self.session)
@@ -913,9 +914,9 @@ class FlaskUiAppTest(tests.Modeltests):
 
     def test_host_asn_new(self):
         """ Test the host_asn_new endpoint. """
-        output = self.app.get('/host/5/asn/new')
+        output = self.app.get('/host/3/asn/new')
         self.assertEqual(output.status_code, 302)
-        output = self.app.get('/host/5/asn/new', follow_redirects=True)
+        output = self.app.get('/host/3/asn/new', follow_redirects=True)
 
         self.assertEqual(output.status_code, 200)
         self.assertTrue(
@@ -936,7 +937,7 @@ class FlaskUiAppTest(tests.Modeltests):
                 '<title>New Host Peer ASN - MirrorManager</title>'
                 in output.data)
             self.assertFalse(
-                'action="/host/3/host_asn/1/delete">' in output.data)
+                'action="/host/3/host_asn/2/delete">' in output.data)
 
             csrf_token = output.data.split(
                 'name="csrf_token" type="hidden" value="')[1].split('">')[0]
@@ -958,7 +959,7 @@ class FlaskUiAppTest(tests.Modeltests):
                 '<title>New Host Peer ASN - MirrorManager</title>'
                 in output.data)
             self.assertFalse(
-                'action="/host/3/host_asn/1/delete">' in output.data)
+                'action="/host/3/host_asn/2/delete">' in output.data)
 
             # Update site
 
@@ -974,13 +975,10 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue(
                 '<title>Host - MirrorManager</title>' in output.data)
             self.assertTrue(
-                'action="/host/3/host_asn/1/delete">' in output.data)
+                'action="/host/3/host_asn/2/delete">' in output.data)
 
     def test_host_asn_delete(self):
         """ Test the host_asn_delete endpoint. """
-        # Create an Host ASN to delete
-        self.test_host_asn_new()
-
         output = self.app.post('/host/3/host_asn/1/delete')
         self.assertEqual(output.status_code, 302)
         output = self.app.post(
