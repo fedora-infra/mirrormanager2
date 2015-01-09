@@ -1498,6 +1498,93 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue(
                 'action="/host/3/category/5/url/5/delete">' in output.data)
 
+    def test_host_category_url_delete(self):
+        """ Test the host_category_url_delete endpoint. """
+        # Create an Host category URL to delete
+        self.test_host_category_url_new()
+
+        output = self.app.post('/host/3/category/5/url/5/delete')
+        self.assertEqual(output.status_code, 302)
+        output = self.app.post(
+            '/host/3/category/5/delete', follow_redirects=True)
+        self.assertEqual(output.status_code, 200)
+        self.assertTrue(
+            '<title>OpenID transaction in progress</title>' in output.data)
+
+        user = tests.FakeFasUser()
+        with tests.user_set(mirrormanager2.app.APP, user):
+
+            # Check before deleting the category URL
+            output = self.app.get('/host/3/category/5')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue('<h2>Host category</h2>' in output.data)
+            self.assertTrue('Back to <a href="/site/1">' in output.data)
+            self.assertTrue(
+                '<title>Host Category - MirrorManager</title>' in output.data)
+            self.assertTrue(
+                'action="/host/3/category/5/url/5/delete">' in output.data)
+
+            csrf_token = output.data.split(
+                'name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+            data = {}
+
+            # Check CSRF protection
+
+            output = self.app.post(
+                '/host/3/category/5/url/5/delete', data=data,
+                follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue('<h2>Host category</h2>' in output.data)
+            self.assertTrue('Back to <a href="/site/1">' in output.data)
+            self.assertTrue(
+                '<title>Host Category - MirrorManager</title>' in output.data)
+            self.assertTrue(
+                'action="/host/3/category/5/url/5/delete">' in output.data)
+
+            # Delete Host Category URL
+
+            data['csrf_token'] = csrf_token
+
+            # Invalid site identifier
+            output = self.app.post(
+                '/host/5/category/5/url/5/delete', data=data,
+                follow_redirects=True)
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue('<p>Host not found</p>' in output.data)
+
+            # Invalid Host Category identifier
+            output = self.app.post(
+                '/host/3/category/50/url/5/delete', data=data,
+                follow_redirects=True)
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue('<p>Host/Category not found</p>' in output.data)
+
+            # Invalid Host/Category association
+            output = self.app.post(
+                '/host/3/category/2/url/5/delete', data=data,
+                follow_redirects=True)
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue(
+                '<p>Category not associated with this host</p>'
+                in output.data)
+
+            # Delete Host Category URL
+            output = self.app.post(
+                '/host/3/category/5/url/5/delete', data=data,
+                follow_redirects=True)
+            #print output.data
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<li class="message">Host category URL deleted</li>'
+                in output.data)
+            self.assertTrue('<h2>Host category</h2>' in output.data)
+            self.assertTrue('Back to <a href="/site/1">' in output.data)
+            self.assertTrue(
+                '<title>Host Category - MirrorManager</title>' in output.data)
+            self.assertFalse(
+                'action="/host/3/category/5/url/5/delete">' in output.data)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(FlaskUiAppTest)
