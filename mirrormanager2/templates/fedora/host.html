@@ -204,6 +204,7 @@ Categories Carried
                     hc_id=category.id) }}">
         {{ category.category.name }}
         </a>
+        {{ form.csrf_token }}
         <button
           onclick="return confirm('You sure you want to delete this category?');"
           title="Delete category">
