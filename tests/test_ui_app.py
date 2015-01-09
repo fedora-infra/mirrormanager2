@@ -48,6 +48,7 @@ class FlaskUiAppTest(tests.Modeltests):
         tests.create_hostcategory(self.session)
         tests.create_hostcategoryurl(self.session)
         tests.create_hostcategorydir(self.session)
+        tests.create_hostcountry(self.session)
         tests.create_categorydirectory(self.session)
         tests.create_version(self.session)
         tests.create_repository(self.session)
@@ -1075,7 +1076,7 @@ class FlaskUiAppTest(tests.Modeltests):
                 '<title>New Host Country - MirrorManager</title>'
                 in output.data)
             self.assertFalse(
-                'action="/host/3/host_country/1/delete">' in output.data)
+                'action="/host/3/host_country/3/delete">' in output.data)
 
             csrf_token = output.data.split(
                 'name="csrf_token" type="hidden" value="')[1].split('">')[0]
@@ -1096,7 +1097,7 @@ class FlaskUiAppTest(tests.Modeltests):
                 '<title>New Host Country - MirrorManager</title>'
                 in output.data)
             self.assertFalse(
-                'action="/host/3/host_country/1/delete">' in output.data)
+                'action="/host/3/host_country/3/delete">' in output.data)
 
             # Invalid Country code
 
@@ -1115,7 +1116,7 @@ class FlaskUiAppTest(tests.Modeltests):
                 '<title>New Host Country - MirrorManager</title>'
                 in output.data)
             self.assertFalse(
-                'action="/host/3/host_country/1/delete">' in output.data)
+                'action="/host/3/host_country/3/delete">' in output.data)
 
             # Create Country
 
@@ -1131,17 +1132,14 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue(
                 '<title>Host - MirrorManager</title>' in output.data)
             self.assertTrue(
-                'action="/host/3/host_country/1/delete">' in output.data)
+                'action="/host/3/host_country/3/delete">' in output.data)
 
     def test_host_country_delete(self):
         """ Test the host_country_delete endpoint. """
-        # Create an Host country to delete
-        self.test_host_country_new()
-
-        output = self.app.post('/host/3/host_country/1/delete')
+        output = self.app.post('/host/1/host_country/1/delete')
         self.assertEqual(output.status_code, 302)
         output = self.app.post(
-            '/host/3/host_country/1/delete', follow_redirects=True)
+            '/host/1/host_country/2/delete', follow_redirects=True)
         self.assertEqual(output.status_code, 200)
         self.assertTrue(
             '<title>OpenID transaction in progress</title>' in output.data)
@@ -1150,15 +1148,16 @@ class FlaskUiAppTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
 
             # Check before adding the host
-            output = self.app.get('/host/3')
+            output = self.app.get('/host/1')
             self.assertEqual(output.status_code, 200)
             self.assertEqual(output.status_code, 200)
-            self.assertTrue('<h2>Host private.localhost</h2>' in output.data)
+            self.assertTrue('<h2>Host mirror.localhost</h2>' in output.data)
             self.assertTrue('Back to <a href="/site/1">' in output.data)
             self.assertTrue(
                 '<title>Host - MirrorManager</title>' in output.data)
+            #print output.data
             self.assertTrue(
-                'action="/host/3/host_country/1/delete">' in output.data)
+                'action="/host/1/host_country/1/delete">' in output.data)
 
             csrf_token = output.data.split(
                 'name="csrf_token" type="hidden" value="')[1].split('">')[0]
@@ -1167,15 +1166,15 @@ class FlaskUiAppTest(tests.Modeltests):
 
             # Check CSRF protection
 
-            output = self.app.post('/host/3/host_country/1/delete', data=data,
+            output = self.app.post('/host/1/host_country/1/delete', data=data,
                                    follow_redirects=True)
             self.assertEqual(output.status_code, 200)
-            self.assertTrue('<h2>Host private.localhost</h2>' in output.data)
+            self.assertTrue('<h2>Host mirror.localhost</h2>' in output.data)
             self.assertTrue('Back to <a href="/site/1">' in output.data)
             self.assertTrue(
                 '<title>Host - MirrorManager</title>' in output.data)
             self.assertTrue(
-                'action="/host/3/host_country/1/delete">' in output.data)
+                'action="/host/1/host_country/1/delete">' in output.data)
 
             # Delete Host Country
 
@@ -1188,25 +1187,25 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue('<p>Host not found</p>' in output.data)
 
             # Invalid Host Country identifier
-            output = self.app.post('/host/3/host_country/2/delete', data=data,
+            output = self.app.post('/host/1/host_country/5/delete', data=data,
                                    follow_redirects=True)
             self.assertEqual(output.status_code, 404)
             self.assertTrue('<p>Host Country not found</p>' in output.data)
 
             # Delete Host Country
             output = self.app.post(
-                '/host/3/host_country/1/delete', data=data,
+                '/host/1/host_country/1/delete', data=data,
                 follow_redirects=True)
             self.assertEqual(output.status_code, 200)
             self.assertTrue(
                 '<li class="message">Host Country deleted</li>'
                 in output.data)
-            self.assertTrue('<h2>Host private.localhost</h2>' in output.data)
+            self.assertTrue('<h2>Host mirror.localhost</h2>' in output.data)
             self.assertTrue('Back to <a href="/site/1">' in output.data)
             self.assertTrue(
                 '<title>Host - MirrorManager</title>' in output.data)
             self.assertFalse(
-                'action="/host/3/host_country/1/delete">' in output.data)
+                'action="/host/1/host_country/1/delete">' in output.data)
 
     def test_host_category_new(self):
         """ Test the host_category_new endpoint. """
