@@ -642,7 +642,10 @@ def host_netblock_delete(host_id, host_netblock_id):
         try:
             SESSION.commit()
             flask.flash('Host netblock deleted')
-        except SQLAlchemyError as err:
+        except SQLAlchemyError as err:  # pragma: no cover
+            # We check everything before deleting so the only error we could
+            # run in is DB server related, and that we can't fake in our
+            # tests
             SESSION.rollback()
             flask.flash('Could not delete netblock of the host')
             APP.logger.debug('Could not delete netblock of the host')
