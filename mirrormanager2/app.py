@@ -784,26 +784,28 @@ def host_country_new(host_id):
 def host_country_delete(host_id, host_country_id):
     """ Delete a host_country.
     """
-    hostobj = mmlib.get_host(SESSION, host_id)
+    form = forms.ConfirmationForm()
+    if form.validate_on_submit():
+        hostobj = mmlib.get_host(SESSION, host_id)
 
-    if hostobj is None:
-        flask.abort(404, 'Host not found')
+        if hostobj is None:
+            flask.abort(404, 'Host not found')
 
-    hostcntobj = mmlib.get_host_country(SESSION, host_country_id)
+        hostcntobj = mmlib.get_host_country(SESSION, host_country_id)
 
-    if hostcntobj is None:
-        flask.abort(404, 'Host Country not found')
-    else:
-        SESSION.delete(hostcntobj)
+        if hostcntobj is None:
+            flask.abort(404, 'Host Country not found')
+        else:
+            SESSION.delete(hostcntobj)
 
-    try:
-        SESSION.commit()
-        flask.flash('Host Country deleted')
-    except SQLAlchemyError as err:
-        SESSION.rollback()
-        flask.flash('Could not delete Country of the host')
-        APP.logger.debug('Could not delete Country of the host')
-        APP.logger.exception(err)
+        try:
+            SESSION.commit()
+            flask.flash('Host Country deleted')
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            flask.flash('Could not delete Country of the host')
+            APP.logger.debug('Could not delete Country of the host')
+            APP.logger.exception(err)
 
     return flask.redirect(flask.url_for('host_view', host_id=host_id))
 
