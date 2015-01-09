@@ -491,7 +491,10 @@ def host_view(host_id):
         try:
             SESSION.flush()
             flask.flash('Host updated')
-        except SQLAlchemyError as err:
+        except SQLAlchemyError as err:  # pragma: no cover
+            # We cannot check this because the code updates data therefore
+            # the only situation where it could fail is a failure at the
+            # DB server level itself.
             SESSION.rollback()
             flask.flash('Could not update the host')
             APP.logger.debug('Could not update the host')
