@@ -635,6 +635,8 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue(
                 '<title>New Host ACL IP - MirrorManager</title>'
                 in output.data)
+            self.assertFalse(
+                'action="/host/3/host_acl_ip/1/delete">' in output.data)
 
             csrf_token = output.data.split(
                 'name="csrf_token" type="hidden" value="')[1].split('">')[0]
@@ -654,6 +656,8 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue(
                 '<title>New Host ACL IP - MirrorManager</title>'
                 in output.data)
+            self.assertFalse(
+                'action="/host/3/host_acl_ip/1/delete">' in output.data)
 
             # Update site
 
@@ -668,6 +672,8 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue('Back to <a href="/site/1">' in output.data)
             self.assertTrue(
                 '<title>Host - MirrorManager</title>' in output.data)
+            self.assertTrue(
+                'action="/host/3/host_acl_ip/1/delete">' in output.data)
 
             # Error adding this IP again
             output = self.app.post('/host/3/host_acl_ip/new', data=data,
@@ -680,6 +686,8 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue('Back to <a href="/site/1">' in output.data)
             self.assertTrue(
                 '<title>Host - MirrorManager</title>' in output.data)
+            self.assertTrue(
+                'action="/host/3/host_acl_ip/1/delete">' in output.data)
 
 
 if __name__ == '__main__':
