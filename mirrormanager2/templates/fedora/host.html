@@ -68,6 +68,7 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
       <form class="icon" method="POST"
         action="{{ url_for('host_acl_ip_delete', host_id=host.id, host_acl_ip_id=acl.id) }}">
       {{ acl.ip }}
+      {{ form.csrf_token }}
         <button
           onclick="return confirm('You sure you want to delete this ACL?');"
           title="Delete ACL IP">
