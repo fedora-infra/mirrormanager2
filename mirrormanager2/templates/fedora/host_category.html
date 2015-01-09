@@ -56,6 +56,7 @@
         action="{{ url_for('host_category_url_delete', host_id=host.id,
                    hc_id=hostcategory.id, host_category_url_id=urls.id) }}">
       {{ urls.url }}
+      {{ form.csrf_token }}
         <button
           onclick="return confirm('You sure you want to delete this url?');"
           title="Delete url">

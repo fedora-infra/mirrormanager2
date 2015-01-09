@@ -1012,35 +1012,37 @@ def host_category_url_new(host_id, hc_id):
 def host_category_url_delete(host_id, hc_id, host_category_url_id):
     """ Delete a host_category_url.
     """
-    hostobj = mmlib.get_host(SESSION, host_id)
+    form = forms.ConfirmationForm()
+    if form.validate_on_submit():
+        hostobj = mmlib.get_host(SESSION, host_id)
 
-    if hostobj is None:
-        flask.abort(404, 'Host not found')
+        if hostobj is None:
+            flask.abort(404, 'Host not found')
 
-    hcobj = mmlib.get_host_category(SESSION, hc_id)
+        hcobj = mmlib.get_host_category(SESSION, hc_id)
 
-    if hcobj is None:
-        flask.abort(404, 'Host/Category not found')
+        if hcobj is None:
+            flask.abort(404, 'Host/Category not found')
 
-    hostcaturlobj = mmlib.get_host_category_url_by_id(
-        SESSION, host_category_url_id)
+        hostcaturlobj = mmlib.get_host_category_url_by_id(
+            SESSION, host_category_url_id)
 
-    if hostcaturlobj is None:
-        flask.abort(404, 'Host category URL not found')
-    else:
-        SESSION.delete(hostcaturlobj)
+        if hostcaturlobj is None:
+            flask.abort(404, 'Host category URL not found')
+        else:
+            SESSION.delete(hostcaturlobj)
 
-    try:
-        SESSION.commit()
-        flask.flash('Host category URL deleted')
-    except SQLAlchemyError as err:
-        SESSION.rollback()
-        flask.flash('Could not delete category URL of the host')
-        APP.logger.debug('Could not delete category URL of the host')
-        APP.logger.exception(err)
+        try:
+            SESSION.commit()
+            flask.flash('Host category URL deleted')
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            flask.flash('Could not delete category URL of the host')
+            APP.logger.debug('Could not delete category URL of the host')
+            APP.logger.exception(err)
 
     return flask.redirect(
-        flask.url_for('host_category', host_id=hostobj.id, hc_id=hcobj.id))
+        flask.url_for('host_category', host_id=host_id, hc_id=hc_id))
 
 
 @APP.route('/login', methods=['GET', 'POST'])
