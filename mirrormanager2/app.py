@@ -935,7 +935,10 @@ def host_category(host_id, hc_id):
         try:
             SESSION.flush()
             flask.flash('Host Category updated')
-        except SQLAlchemyError as err:
+        except SQLAlchemyError as err:  # pragma: no cover
+            # We cannot check this because the code check before updating
+            # and therefore the only situation where it could fail is a
+            # failure at the DB server level itself.
             SESSION.rollback()
             flask.flash('Could not update Category to the host')
             APP.logger.debug('Could not update Category to the host')
