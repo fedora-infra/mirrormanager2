@@ -8,6 +8,7 @@ __requires__ = ['SQLAlchemy >= 0.7']
 import pkg_resources
 
 import datetime
+import logging
 import unittest
 import sys
 import os
@@ -88,6 +89,8 @@ class Modeltests(unittest.TestCase):
             if os.path.exists(dbfile):
                 os.unlink(dbfile)
         self.session = model.create_tables(DB_PATH, debug=False)
+        APP.logger.handlers = []
+        APP.logger.setLevel(logging.CRITICAL)
         APP.before_request(FAS._check_session)
 
     # pylint: disable=C0103
