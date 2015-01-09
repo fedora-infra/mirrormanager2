@@ -1659,6 +1659,26 @@ class FlaskUiAppTest(tests.Modeltests):
                 '<li class="message">Host Category updated</li>'
                 in output.data)
 
+    def test_auth_logout(self):
+        """ Test the auth_logout endpoint. """
+        output = self.app.get('/logout')
+        self.assertEqual(output.status_code, 302)
+        output = self.app.get('/logout', follow_redirects=True)
+        self.assertEqual(output.status_code, 200)
+        self.assertTrue(
+            '<h2>Fedora Public Active Mirrors</h2>' in output.data)
+
+        user = tests.FakeFasUser()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/logout')
+            self.assertEqual(output.status_code, 302)
+            output = self.app.get('/logout', follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<li class="message">You are no longer logged-in</li>'
+                in output.data)
+            self.assertTrue(
+                '<h2>Fedora Public Active Mirrors</h2>' in output.data)
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(FlaskUiAppTest)
