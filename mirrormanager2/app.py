@@ -329,8 +329,20 @@ def site_view(site_id):
     form = forms.AddSiteForm(obj=siteobj)
     if form.validate_on_submit():
         obj = form.populate_obj(obj=siteobj)
+
+        try:
+            SESSION.flush()
+            flask.flash('Site Updated')
+        except SQLAlchemyError as err:  # pragma: no cover
+            # We cannot check this because the code check before adding the
+            # new SiteAdmin and therefore the only situation where it could
+            # fail is a failure at the DB server level itself.
+            SESSION.rollback()
+            flask.flash('Could not update the Site')
+            APP.logger.debug('Could not update the Site')
+            APP.logger.exception(err)
+
         SESSION.commit()
-        flask.flash('Site Updated')
         return flask.redirect(flask.url_for('index'))
 
     return flask.render_template(
