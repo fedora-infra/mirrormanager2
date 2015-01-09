@@ -1050,6 +1050,89 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertFalse(
                 'action="/host/3/host_asn/1/delete">' in output.data)
 
+    def test_host_country_new(self):
+        """ Test the host_country_new endpoint. """
+        output = self.app.get('/host/5/country/new')
+        self.assertEqual(output.status_code, 302)
+        output = self.app.get('/host/5/country/new', follow_redirects=True)
+
+        self.assertEqual(output.status_code, 200)
+        self.assertTrue(
+            '<title>OpenID transaction in progress</title>' in output.data)
+
+        user = tests.FakeFasUser()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/host/50/country/new')
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue('<p>Host not found</p>' in output.data)
+
+            output = self.app.get('/host/3/country/new')
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Add host country allowed</h2>' in output.data)
+            self.assertTrue('Back to <a href="/host/3">' in output.data)
+            self.assertTrue(
+                '<title>New Host Country - MirrorManager</title>'
+                in output.data)
+            self.assertFalse(
+                'action="/host/3/host_country/1/delete">' in output.data)
+
+            csrf_token = output.data.split(
+                'name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+            data = {
+                'country': 'GB',
+            }
+
+            # Check CSRF protection
+
+            output = self.app.post('/host/3/country/new', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<h2>Add host country allowed</h2>' in output.data)
+            self.assertTrue('Back to <a href="/host/3">' in output.data)
+            self.assertTrue(
+                '<title>New Host Country - MirrorManager</title>'
+                in output.data)
+            self.assertFalse(
+                'action="/host/3/host_country/1/delete">' in output.data)
+
+            # Invalid Country code
+
+            data['csrf_token'] = csrf_token
+
+            output = self.app.post('/host/3/country/new', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<li class="message">Invalid country code</li>'
+                in output.data)
+            self.assertTrue(
+                '<h2>Add host country allowed</h2>' in output.data)
+            self.assertTrue('Back to <a href="/host/3">' in output.data)
+            self.assertTrue(
+                '<title>New Host Country - MirrorManager</title>'
+                in output.data)
+            self.assertFalse(
+                'action="/host/3/host_country/1/delete">' in output.data)
+
+            # Create Country
+
+            data['country'] = 'FR'
+
+            output = self.app.post('/host/3/country/new', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<li class="message">Host Country added</li>' in output.data)
+            self.assertTrue('<h2>Host private.localhost</h2>' in output.data)
+            self.assertTrue('Back to <a href="/site/1">' in output.data)
+            self.assertTrue(
+                '<title>Host - MirrorManager</title>' in output.data)
+            self.assertTrue(
+                'action="/host/3/host_country/1/delete">' in output.data)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(FlaskUiAppTest)
