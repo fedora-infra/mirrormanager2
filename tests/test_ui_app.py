@@ -1133,6 +1133,81 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue(
                 'action="/host/3/host_country/1/delete">' in output.data)
 
+    def test_host_country_delete(self):
+        """ Test the host_country_delete endpoint. """
+        # Create an Host country to delete
+        self.test_host_country_new()
+
+        output = self.app.post('/host/3/host_country/1/delete')
+        self.assertEqual(output.status_code, 302)
+        output = self.app.post(
+            '/host/3/host_country/1/delete', follow_redirects=True)
+        self.assertEqual(output.status_code, 200)
+        self.assertTrue(
+            '<title>OpenID transaction in progress</title>' in output.data)
+
+        user = tests.FakeFasUser()
+        with tests.user_set(mirrormanager2.app.APP, user):
+
+            # Check before adding the host
+            output = self.app.get('/host/3')
+            self.assertEqual(output.status_code, 200)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue('<h2>Host private.localhost</h2>' in output.data)
+            self.assertTrue('Back to <a href="/site/1">' in output.data)
+            self.assertTrue(
+                '<title>Host - MirrorManager</title>' in output.data)
+            self.assertTrue(
+                'action="/host/3/host_country/1/delete">' in output.data)
+
+            csrf_token = output.data.split(
+                'name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+            data = {}
+
+            # Check CSRF protection
+
+            output = self.app.post('/host/3/host_country/1/delete', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue('<h2>Host private.localhost</h2>' in output.data)
+            self.assertTrue('Back to <a href="/site/1">' in output.data)
+            self.assertTrue(
+                '<title>Host - MirrorManager</title>' in output.data)
+            self.assertTrue(
+                'action="/host/3/host_country/1/delete">' in output.data)
+
+            # Delete Host Country
+
+            data['csrf_token'] = csrf_token
+
+            # Invalid site identifier
+            output = self.app.post('/host/5/host_country/1/delete', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue('<p>Host not found</p>' in output.data)
+
+            # Invalid Host Country identifier
+            output = self.app.post('/host/3/host_country/2/delete', data=data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 404)
+            self.assertTrue('<p>Host Country not found</p>' in output.data)
+
+            # Delete Host Country
+            output = self.app.post(
+                '/host/3/host_country/1/delete', data=data,
+                follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            self.assertTrue(
+                '<li class="message">Host Country deleted</li>'
+                in output.data)
+            self.assertTrue('<h2>Host private.localhost</h2>' in output.data)
+            self.assertTrue('Back to <a href="/site/1">' in output.data)
+            self.assertTrue(
+                '<title>Host - MirrorManager</title>' in output.data)
+            self.assertFalse(
+                'action="/host/3/host_country/1/delete">' in output.data)
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(FlaskUiAppTest)
