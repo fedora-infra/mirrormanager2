@@ -86,6 +86,7 @@ BuildArch:      noarch
 Requires:  python-GeoIP
 Requires:  py-radix
 Requires:  python-webob
+Requires:  python-IPy
 Requires:  systemd
 
 %description mirrorlist
