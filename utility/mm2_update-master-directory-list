@@ -545,12 +545,13 @@ def sync_category_directories(
                 logger.debug(
                     u'Created Directory(%s, readable=%s, ctime=%s)'
                     % (dname, value['readable'], value['ctime']))
-                D.categories.append(category)
-                session.add(D)
-                # And flush so that we can already start using it
-                session.flush()
-                category.directory_cache = cache_directories(category)
-
+            # Add this category to the directory
+            D.categories.append(category)
+            session.add(D)
+            # And flush so that we can already start using it
+            session.flush()
+            # Refresh the cache
+            category.directory_cache = cache_directories(category)
             d = category.directory_cache[relativeDName]
 
         if value['changed']:
