@@ -182,7 +182,8 @@ def make_file_details_from_checksums(session, diskpath, relativeDName, D):
             d.update(_parse_checksum_file(f, checksumlen))
         return d
 
-    if diskpath is None: return
+    if diskpath is None:
+        return
 
     sha1_globs = ['*.sha1sum', 'SHA1SUM', 'sha1sum.txt']
     md5_globs = ['*.md5sum', 'MD5SUM', 'md5sum.txt']
@@ -217,7 +218,7 @@ def make_file_details_from_checksums(session, diskpath, relativeDName, D):
         ctime = s[stat.ST_CTIME]
         fd = mirrormanager2.lib.get_file_detail(
             session,
-            directory=D.id,
+            directory_id=D.id,
             filename=f,
             sha1=sha1,
             md5=md5,
@@ -382,8 +383,8 @@ def make_repository(session, directory, relativeDName, category, target):
             % (prefix, ver.name, arch.name, category.name, directory.name))
         session.add(repo)
         session.commit()
-    except:
-        pass
+    except Exception, err:
+        print err
 
     return repo
 
