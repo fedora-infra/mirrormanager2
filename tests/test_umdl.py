@@ -140,9 +140,11 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(len(results), 0)
 
         results = mirrormanager2.lib.get_versions(self.session)
-        self.assertEqual(len(results), 1)
-        self.assertEqual(results[0].name, '21')
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results[0].name, 'development')
         self.assertEqual(results[0].product.name, 'Fedora')
+        self.assertEqual(results[1].name, '21')
+        self.assertEqual(results[1].product.name, 'Fedora')
 
         results = mirrormanager2.lib.get_categories(self.session)
         self.assertEqual(len(results), 2)
@@ -157,14 +159,22 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
             results[1].name, 'Fedora')
 
         results = sorted(mirrormanager2.lib.get_repositories(self.session))
-        self.assertEqual(len(results), 1)
+        self.assertEqual(len(results), 2)
         self.assertEqual(
-            results[0].name, 'pub/fedora/linux/releases/atomic/21')
+            results[0].name, 'pub/fedora/linux/releases/atomic/rawhide')
         self.assertEqual(results[0].category.name, 'Fedora Linux')
-        self.assertEqual(results[0].version.name, '21')
+        self.assertEqual(results[0].version.name, 'development')
         self.assertEqual(results[0].arch.name, 'x86_64')
         self.assertEqual(
-            results[0].directory.name, 'pub/fedora/linux/releases/atomic/21')
+            results[0].directory.name,
+            'pub/fedora/linux/releases/atomic/rawhide')
+        self.assertEqual(
+            results[1].name, 'pub/fedora/linux/releases/atomic/21')
+        self.assertEqual(results[1].category.name, 'Fedora Linux')
+        self.assertEqual(results[1].version.name, '21')
+        self.assertEqual(results[1].arch.name, 'x86_64')
+        self.assertEqual(
+            results[1].directory.name, 'pub/fedora/linux/releases/atomic/21')
 
         results = mirrormanager2.lib.get_arches(self.session)
         self.assertEqual(len(results), 4)
@@ -174,10 +184,10 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(results[3].name, 'x86_64')
 
         results = mirrormanager2.lib.get_directories(self.session)
-        # tree testdata/pub says there are 62 directories and 108 files
+        # tree testdata/pub says there are 79 directories and 136 files
         # There are 7 directories added by create_directory which are not
-        # present on the FS, 62 + 7 = 69, so we are good \ó/
-        self.assertEqual(len(results), 69)
+        # present on the FS, 79 + 7 = 86, so we are good \ó/
+        self.assertEqual(len(results), 86)
         self.assertEqual(results[0].name, 'pub/fedora/linux/releases')
         self.assertEqual(results[1].name, 'pub/fedora/linux/extras')
         self.assertEqual(results[2].name, 'pub/epel')
@@ -209,7 +219,7 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(results, None)
 
         results = mirrormanager2.lib.get_file_details(self.session)
-        self.assertEqual(len(results), 7)
+        self.assertEqual(len(results), 8)
 
         self.assertEqual(results[0].filename, 'Fedora-20-x86_64-DVD.iso')
         self.assertEqual(
@@ -252,7 +262,7 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(results[4].filename, 'summary')
         self.assertEqual(
             results[4].directory.name,
-            'pub/fedora/linux/releases/atomic/21')
+            'pub/fedora/linux/releases/atomic/rawhide')
         self.assertEqual(
             results[4].sha256,
             '6b439b70ecb1941e0e2e0ea0817a66715067cbd96d4367f4cd23ca287aeb14cb')
@@ -262,28 +272,41 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
             'b602c2389e4a40fe3b1aeac6f853b4c6d2d6c863e3649f567bd1af2aea502f'
             'd9e8')
 
-        self.assertEqual(results[5].filename, 'repomd.xml')
+        self.assertEqual(results[5].filename, 'summary')
         self.assertEqual(
             results[5].directory.name,
-            'pub/fedora/linux/releases/releases/20/Fedora/source/SRPMS/repodata')
+            'pub/fedora/linux/releases/atomic/21')
         self.assertEqual(
             results[5].sha256,
-            '9a4738934092cf17e4540ee9cab741e922eb8306875ae5621feb01ebeb1f67f2')
+            '6b439b70ecb1941e0e2e0ea0817a66715067cbd96d4367f4cd23ca287aeb14cb')
         self.assertEqual(
             results[5].sha512,
-            '3351c7a6b1d2bd94e375d09324a9280b8becfe4dea40a227c3b270ddcedb19'
-            'f420eec3f2c6a39a1edcdf52f80d31eb47a0ba25057ced2e3182dd212bc746'
-            '6ba2')
+            '6f3cafa7f16b796a6051f740de17344542feb8b2285e3ccd9b141217fbb5f0'
+            'b602c2389e4a40fe3b1aeac6f853b4c6d2d6c863e3649f567bd1af2aea502f'
+            'd9e8')
 
         self.assertEqual(results[6].filename, 'repomd.xml')
         self.assertEqual(
             results[6].directory.name,
-            'pub/fedora/linux/releases/releases/20/Fedora/x86_64/os/repodata')
+            'pub/fedora/linux/releases/releases/20/Fedora/source/SRPMS/repodata')
         self.assertEqual(
             results[6].sha256,
-            '108b4102829c0839c7712832577fe7da24f0a9491f4dc25d4145efe6aced2ebf')
+            '9a4738934092cf17e4540ee9cab741e922eb8306875ae5621feb01ebeb1f67f2')
         self.assertEqual(
             results[6].sha512,
+            '3351c7a6b1d2bd94e375d09324a9280b8becfe4dea40a227c3b270ddcedb19'
+            'f420eec3f2c6a39a1edcdf52f80d31eb47a0ba25057ced2e3182dd212bc746'
+            '6ba2')
+
+        self.assertEqual(results[7].filename, 'repomd.xml')
+        self.assertEqual(
+            results[7].directory.name,
+            'pub/fedora/linux/releases/releases/20/Fedora/x86_64/os/repodata')
+        self.assertEqual(
+            results[7].sha256,
+            '108b4102829c0839c7712832577fe7da24f0a9491f4dc25d4145efe6aced2ebf')
+        self.assertEqual(
+            results[7].sha512,
             '50ed8cb8f4daf8bcd1d0ccee1710b8a87ee8de5861fb15a1023d6558328795'
             'f42dade3e025c09c20ade36c77a3a82d9cdce1a2e2ad171f9974bc1889b591'
             '8020')
