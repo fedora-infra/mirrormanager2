@@ -850,6 +850,21 @@ def get_file_detail(
     return query.first()
 
 
+def get_file_details(session):
+    ''' Return all the FileDetail object in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.FileDetail
+    ).order_by(
+        model.FileDetail.id
+    )
+
+    return query.all()
+
+
 def get_directories(session):
     ''' Return all Directory in the database.
 
