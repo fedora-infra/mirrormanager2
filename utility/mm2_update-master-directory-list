@@ -75,6 +75,9 @@ def _get_version_from_path(path):
     m = re.search(re.compile(s), path)
     if m is not None:
         return m.group(1)
+    # Rawhide, development
+    if 'rawhide' in path:
+        return 'development'
     return None
 
 
