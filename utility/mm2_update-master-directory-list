@@ -117,17 +117,17 @@ def guess_ver_arch_from_path(session, category, path):
         for a in arch_cache:
             s = '.*(^|/)%s(/|$).*' % (a['name'])
             if re.compile(s).match(path):
-                arch = Arch.get(a['id'])
+                arch = mirrormanager2.lib.get_arch_by_name(session, a['id'])
                 break
-
 
     ver = None
     # newest versions/IDs first, also handles stupid Fedora 9.newkey hack.
     for v in version_cache:
-        if v['product_id'] != category.product.id: continue
+        if v['product_id'] != category.product.id:
+            continue
         s = '.*(^|/)%s(/|$).*' % (v['name'])
         if re.compile(s).match(path):
-            ver = Version.get(session, v['id'])
+            ver = mirrormanager2.lib.get_version_by_id(session, v['id'])
             break
 
     # create Versions if we can figure it out...
