@@ -23,7 +23,7 @@ import tests
 FOLDER = os.path.dirname(os.path.abspath(__file__))
 
 CONFIG = """
-DB_URL = '%s'
+DB_URL = '%(db_path)s'
 
 
 # Specify whether the crawler should send a report by email
@@ -32,31 +32,31 @@ CRAWLER_SEND_EMAIL =  False
 umdl_master_directories = [
     {
         'type': 'directory',
-        'path': '../testdata/pub/epel/',
+        'path': '%(folder)s/../testdata/pub/epel/',
         'category': 'Fedora EPEL'
     },
     {
         'type': 'directory',
-        'path': '../testdata/pub/fedora/linux/',
+        'path': '%(folder)s/../testdata/pub/fedora/linux/',
         'category': 'Fedora Linux'
     },
     {
         'type': 'directory',
-        'path': '../testdata/pub/fedora-secondary/',
+        'path': '%(folder)s/../testdata/pub/fedora-secondary/',
         'category': 'Fedora Secondary Arches'
     },
     {
         'type': 'directory',
-        'path': '../testdata/pub/archive/',
+        'path': '%(folder)s/../testdata/pub/archive/',
         'category': 'Fedora Archive'
     },
     {
         'type': 'directory',
-        'path': '../testdata/pub/alt/',
+        'path': '%(folder)s/../testdata/pub/alt/',
         'category': 'Fedora Other'
     }
 ]
-""" % tests.DB_PATH
+""" % {'db_path': tests.DB_PATH, 'folder': FOLDER}
 
 
 class UMDLTest(tests.Modeltests):
