@@ -158,7 +158,7 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(
             results[1].name, 'Fedora')
 
-        results = sorted(mirrormanager2.lib.get_repositories(self.session))
+        results = mirrormanager2.lib.get_repositories(self.session)
         self.assertEqual(len(results), 2)
         self.assertEqual(
             results[0].name, 'pub/fedora/linux/releases/atomic/rawhide')
