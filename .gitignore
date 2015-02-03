@@ -9,3 +9,4 @@ build/
 *.egg-info
 .coverage
 _build/
+mirrormanager2_tests.cfg
