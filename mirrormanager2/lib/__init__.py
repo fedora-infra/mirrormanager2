@@ -379,6 +379,21 @@ def get_version_by_name_version(session, p_name, p_version):
     return query.first()
 
 
+def get_version_by_id(session, v_id):
+    ''' Return a specified Version given its identifier in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Version
+    ).filter(
+        model.Version.id == v_id
+    )
+
+    return query.first()
+
+
 def get_versions(session):
     ''' Return the list of all versions in the database.
 
