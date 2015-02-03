@@ -89,9 +89,9 @@ def create_version_from_path(category, path):
             ver = Version(
                 product=category.product,
                 name=vname,
-                isTest=isTest)
-        except:
-            pass
+                is_test=isTest)
+        except Exception, err:
+            print err
 
     return ver
 
