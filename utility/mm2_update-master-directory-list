@@ -344,6 +344,15 @@ def make_repository(session, directory, relativeDName, category, target):
         # Furthermore, we'll grab the version piece from the path which looks
         # like atomic/rawhide or atomic/21.
         ver = relativeDName.rstrip('/').split('/')[-1]
+        ver = mirrormanager2.lib.get_version_by_name_version(
+            session, category.product.name, ver)
+        if ver is None:
+            if not relativeDName.endswith('/'):
+                relativeDName += '/'
+            ver = create_version_from_path(category, relativeDName)
+            session.add(ver)
+            session.commit()
+            version_cache.append(ver)
 
     # stop making duplicate Repository objects.
     if len(directory.repositories) > 0:
