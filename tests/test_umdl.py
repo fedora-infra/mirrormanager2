@@ -16,8 +16,9 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(
     os.path.abspath(__file__)), '..'))
 
-from mirrormanager2.lib import model
+import mirrormanager2.lib
 import tests
+
 
 FOLDER = os.path.dirname(os.path.abspath(__file__))
 
@@ -133,6 +134,76 @@ umdl_master_directories Category Fedora Archive does not exist in the database, 
 umdl_master_directories Category Fedora Other does not exist in the database, skipping
 """
         self.assertEqual(logs, exp)
+
+        # The DB should now be filled with what UMDL added, so let's check it
+        results = mirrormanager2.lib.query_directories(self.session)
+        self.assertEqual(len(results), 0)
+
+        results = mirrormanager2.lib.get_versions(self.session)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].name, '21')
+        self.assertEqual(results[0].product.name, 'Fedora')
+
+        results = mirrormanager2.lib.get_categories(self.session)
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results[0].name, 'Fedora Linux')
+        self.assertEqual(results[1].name, 'Fedora EPEL')
+
+        results = mirrormanager2.lib.get_products(self.session)
+        self.assertEqual(len(results), 2)
+        self.assertEqual(
+            results[0].name, 'EPEL')
+        self.assertEqual(
+            results[1].name, 'Fedora')
+
+        results = sorted(mirrormanager2.lib.get_repositories(self.session))
+        self.assertEqual(len(results), 1)
+        self.assertEqual(
+            results[0].name, 'pub/fedora/linux/releases/atomic/21')
+        self.assertEqual(results[0].category.name, 'Fedora Linux')
+        self.assertEqual(results[0].version.name, '21')
+        self.assertEqual(results[0].arch.name, 'x86_64')
+        self.assertEqual(
+            results[0].directory.name, 'pub/fedora/linux/releases/atomic/21')
+
+        results = mirrormanager2.lib.get_arches(self.session)
+        self.assertEqual(len(results), 4)
+        self.assertEqual(results[0].name, 'i386')
+        self.assertEqual(results[1].name, 'ppc')
+        self.assertEqual(results[2].name, 'source')
+        self.assertEqual(results[3].name, 'x86_64')
+
+        results = mirrormanager2.lib.get_directories(self.session)
+        self.assertEqual(len(results), 61)
+        self.assertEqual(results[0].name, 'pub/fedora/linux/releases')
+        self.assertEqual(results[1].name, 'pub/fedora/linux/extras')
+        self.assertEqual(results[2].name, 'pub/epel')
+        self.assertEqual(results[3].name, 'pub/fedora/linux/releases/20')
+        self.assertEqual(results[4].name, 'pub/fedora/linux/releases/21')
+        self.assertEqual(
+            results[5].name,
+            'pub/archive/fedora/linux/releases/20/Fedora/source')
+        self.assertEqual(
+            results[20].name,
+            'pub/fedora/linux/releases/atomic/21/refs/heads/fedora-atomic/f21')
+        self.assertEqual(
+            results[21].name,
+            'pub/fedora/linux/releases/atomic/21/refs/heads/'
+            'fedora-atomic/f21/x86_64')
+        self.assertEqual(
+            results[22].name,
+            'pub/fedora/linux/releases/atomic/21/refs/heads/'
+            'fedora-atomic/f21/x86_64/updates')
+        self.assertEqual(
+            results[23].name,
+            'pub/fedora/linux/releases/atomic/21/refs/remotes')
+        self.assertEqual(
+            results[24].name,
+            'pub/fedora/linux/releases/atomic/21/remote-cache')
+
+        results = mirrormanager2.lib.get_file_detail(
+            self.session, 'repomd.xml', 7)
+        self.assertEqual(results, None)
 
 
 if __name__ == '__main__':
