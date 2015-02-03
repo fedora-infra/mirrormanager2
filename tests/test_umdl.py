@@ -174,10 +174,10 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(results[3].name, 'x86_64')
 
         results = mirrormanager2.lib.get_directories(self.session)
-        # tree testdata/pub says there are 54 directories and 103 files
+        # tree testdata/pub says there are 62 directories and 108 files
         # There are 7 directories added by create_directory which are not
-        # present on the FS, 54 + 7 = 61, so we are good \ó/
-        self.assertEqual(len(results), 61)
+        # present on the FS, 62 + 7 = 69, so we are good \ó/
+        self.assertEqual(len(results), 69)
         self.assertEqual(results[0].name, 'pub/fedora/linux/releases')
         self.assertEqual(results[1].name, 'pub/fedora/linux/extras')
         self.assertEqual(results[2].name, 'pub/epel')
@@ -209,19 +209,37 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(results, None)
 
         results = mirrormanager2.lib.get_file_details(self.session)
-        self.assertEqual(len(results), 2)
+        self.assertEqual(len(results), 3)
+
         self.assertEqual(results[0].filename, 'summary')
+        self.assertEqual(
+            results[0].directory.name,
+            'pub/fedora/linux/releases/atomic/21')
         self.assertEqual(
             results[0].sha512,
             '6f3cafa7f16b796a6051f740de17344542feb8b2285e3ccd9b141217fbb5f0'
             'b602c2389e4a40fe3b1aeac6f853b4c6d2d6c863e3649f567bd1af2aea502f'
             'd9e8')
+
         self.assertEqual(results[1].filename, 'repomd.xml')
+        self.assertEqual(
+            results[1].directory.name,
+            'pub/fedora/linux/releases/releases/20/Fedora/source/SRPMS/repodata')
         self.assertEqual(
             results[1].sha512,
             '3351c7a6b1d2bd94e375d09324a9280b8becfe4dea40a227c3b270ddcedb19'
             'f420eec3f2c6a39a1edcdf52f80d31eb47a0ba25057ced2e3182dd212bc746'
             '6ba2')
+
+        self.assertEqual(results[2].filename, 'repomd.xml')
+        self.assertEqual(
+            results[2].directory.name,
+            'pub/fedora/linux/releases/releases/20/Fedora/x86_64/os/repodata')
+        self.assertEqual(
+            results[2].sha512,
+            '50ed8cb8f4daf8bcd1d0ccee1710b8a87ee8de5861fb15a1023d6558328795'
+            'f42dade3e025c09c20ade36c77a3a82d9cdce1a2e2ad171f9974bc1889b591'
+            '8020')
 
         results = mirrormanager2.lib.get_host_category_dirs(self.session)
         self.assertEqual(len(results), 0)
