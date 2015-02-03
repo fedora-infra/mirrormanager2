@@ -220,6 +220,21 @@ def get_host_category(session, host_category_id):
     return query.first()
 
 
+def get_host_category_dirs(session):
+    ''' Return all the HostCategoryDir objects in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.HostCategoryDir
+    ).order_by(
+        model.HostCategoryDir.id
+    )
+
+    return query.all()
+
+
 def get_host_category_by_hostid_category(session, host_id, category):
     ''' Return all HostCategory having the specified host_id and category.
 
