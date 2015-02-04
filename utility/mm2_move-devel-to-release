@@ -109,7 +109,7 @@ def move_install_repo(session, version):
                 pass
         else:
             prefix=u'fedora-install-%s' % ver.name
-            if a.primaryArch:
+            if a.primary_arch:
                 d = u'pub/fedora/linux/releases/%s/Fedora/%s/os' % (
                     ver.name, a.name)
                 category = mirrormanager2.lib.get_category_by_name(
