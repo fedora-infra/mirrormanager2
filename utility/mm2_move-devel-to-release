@@ -84,7 +84,7 @@ def move_devel_repo(session, category, version):
             print "%s => %s" % (d.name, t)
 
 
-def move_install_repo(session, version):
+def move_install_repo(session, version, test=False):
     product=mirrormanager2.lib.get_product_by_name(session, "Fedora")
     ver = mirrormanager2.lib.get_version_by_name_version(
             session, product.name, version)
@@ -126,10 +126,11 @@ def move_install_repo(session, version):
                 session.delete(r)
                 session.flush()
 
-            if not os.path.isdir(os.path.join('/', d)):
-                print "directory %s does not exist on disk, skipping "\
-                    "creation of a repository there" % d
-                continue
+            if not test:
+                if not os.path.isdir(os.path.join('/', d)):
+                    print "directory %s does not exist on disk, skipping "\
+                        "creation of a repository there" % d
+                    continue
 
             dobj = mirrormanager2.lib.get_directory_by_name(session, d)
 
@@ -167,21 +168,20 @@ def main():
     parser = OptionParser(
         usage=sys.argv[0] + " [options]")
     parser.add_option(
-        "-c", "--config",
-        dest="config",
+        "-c", "--config", dest="config",
         default='/etc/mirrormanager/mirrormanager2.cfg',
         help="Configuration file to use "
             "(default=/etc/mirrormanager/mirrormanager2.cfg)")
     parser.add_option(
-        "--version",
-        dest="version",
-        type="string",
+        "--version", dest="version", type="string",
         help="OS version to move (e.g. '14') [required]", default=None)
     parser.add_option(
-        "--category",
-        dest="category",
-        type="string",
+        "--category", dest="category", type="string",
         help="Category (e.g. 'Fedora Linux') [required]", default=None)
+
+    parser.add_option(
+        "--test", dest="test", default=False, action="store_true",
+        help="Small flag used for the unit-tests to avoid one check")
 
     (options, args) = parser.parse_args()
 
@@ -203,7 +203,8 @@ def main():
 
     move_install_repo(
         session,
-        options.version)
+        options.version,
+        test=options.test)
 
     return 0
 
