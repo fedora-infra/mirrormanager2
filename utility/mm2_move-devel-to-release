@@ -144,6 +144,9 @@ def move_install_repo(session, version):
             repo = mirrormanager2.lib.get_repo_prefix_arch(
                 session, prefix=u'fedora-install-%s' % ver.name, arch=a.name)
 
+            if not repo:
+                repo = Repository()
+
             repo.name = dobj.name
             repo.directory_id=dobj.id
             repo.category_id=category.id
