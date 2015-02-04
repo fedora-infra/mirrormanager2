@@ -142,11 +142,15 @@ def move_install_repo(session, version, test=False):
 
             print "updating %s repo for arch %s" % (prefix, a.name)
 
+            prefix = u'fedora-install-%s' % ver.name
             repo = mirrormanager2.lib.get_repo_prefix_arch(
-                session, prefix=u'fedora-install-%s' % ver.name, arch=a.name)
+                session, prefix=prefix, arch=a.name)
 
             if not repo:
                 repo = Repository()
+                repo.version_id = ver.id
+                repo.arch_id = a.id
+                repo.prefix = prefix
 
             repo.name = dobj.name
             repo.directory_id=dobj.id
