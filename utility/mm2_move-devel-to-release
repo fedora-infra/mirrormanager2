@@ -62,6 +62,8 @@ def move_devel_repo(session, category, version):
     newpattern = os.path.join('releases', version, 'Everything')
     oldRe = re.compile(oldpattern)
     for r in c.repositories:
+        if r.version_id != v.id:
+            continue
         d = r.directory
         if oldRe.search(d.name):
             t = d.name.replace(oldpattern, newpattern)
