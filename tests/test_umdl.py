@@ -86,11 +86,12 @@ class UMDLTest(tests.Modeltests):
     def test_0_umdl_empty_db(self):
         """ Test the umdl cron against an empty database. """
 
-        process = subprocess.Popen(args=self.umdl_command.split())
+        process = subprocess.Popen(args=self.umdl_command.split(),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
 
-        self.assertEqual(stdout, None)
-        self.assertEqual(stderr, None)
+        self.assertEqual(stdout, '')
+        self.assertEqual(stderr, '')
 
         with open(self.logfile) as stream:
             logs = stream.readlines()
@@ -116,11 +117,12 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         tests.create_category(self.session)
         tests.create_categorydirectory(self.session)
 
-        process = subprocess.Popen(args=self.umdl_command.split())
+        process = subprocess.Popen(args=self.umdl_command.split(),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
 
-        self.assertEqual(stdout, None)
-        self.assertEqual(stderr, None)
+        self.assertEqual(stdout, '')
+        self.assertEqual(stderr, '')
 
         with open(self.logfile) as stream:
             logs = stream.readlines()
