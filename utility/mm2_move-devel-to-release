@@ -82,7 +82,7 @@ def move_devel_repo(session, category, version):
                 # how'd we wind up with 2 repos pointing at this directory?
                 raise ValueError
 
-            fixup_repos(v, r, new_d.repositories[0])
+            fixup_repos(session, v, r, new_d.repositories[0])
             print "%s => %s" % (d.name, t)
 
 
