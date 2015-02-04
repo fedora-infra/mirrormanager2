@@ -119,6 +119,138 @@ class MDTLTest(tests.Modeltests):
             'repository there until after the next UMDL run.\n')
         self.assertEqual(stderr, '')
 
+    def test_mdtr(self):
+        """ Test the mdtr script. """
+        command = self.command[:]
+
+        # Fill the DB a little bit
+        tests.create_base_items(self.session)
+        tests.create_directory(self.session)
+        tests.create_category(self.session)
+        tests.create_categorydirectory(self.session)
+        tests.create_version(self.session)
+
+        item = model.Directory(
+            name='pub/fedora/linux/releases/20/Fedora/x86_64/os',
+            readable=True,
+        )
+        self.session.add(item)
+        item = model.Directory(
+            name='pub/fedora/linux/releases/20/Fedora/i386/os',
+            readable=True,
+        )
+        self.session.add(item)
+        item = model.Directory(
+            name='pub/fedora-secondary/releases/20/Fedora/ppc/os',
+            readable=True,
+        )
+        self.session.add(item)
+        item = model.Directory(
+            name='pub/fedora-secondary/releases/20/Fedora/sources/os',
+            readable=True,
+        )
+        self.session.add(item)
+
+        item = model.Category(
+            name='Fedora Secondary Arches',
+            product_id=2,
+            canonicalhost='http://download.fedora.redhat.com',
+            topdir_id=1,
+            publiclist=True
+        )
+        self.session.add(item)
+
+        self.session.commit()
+
+        # Check before running the script
+
+        results = mirrormanager2.lib.get_repositories(self.session)
+        self.assertEqual(len(results), 0)
+
+        results = mirrormanager2.lib.get_directories(self.session)
+        # create_directory creates 9 directories
+        # we create 4 more here, 9+4=13
+        self.assertEqual(len(results), 13)
+        self.assertEqual(
+            results[9].name,
+            'pub/fedora/linux/releases/20/Fedora/x86_64/os')
+        self.assertEqual(
+            results[10].name,
+            'pub/fedora/linux/releases/20/Fedora/i386/os')
+        self.assertEqual(
+            results[11].name,
+            'pub/fedora-secondary/releases/20/Fedora/ppc/os')
+        self.assertEqual(
+            results[12].name,
+            'pub/fedora-secondary/releases/20/Fedora/sources/os')
+
+        # Run the script
+
+        process = subprocess.Popen(
+            args=command[:] + ['--test'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+
+        self.assertEqual(
+            stdout,
+            'updating fedora-install-20 repo for arch i386\n'
+            'updating fedora-install-20 repo for arch ppc\n'
+            'updating fedora-install-20 repo for arch x86_64\n'
+        )
+        self.assertEqual(stderr, '')
+
+        # Check after running the script
+
+        results = mirrormanager2.lib.get_repositories(self.session)
+        self.assertEqual(len(results), 3)
+
+        self.assertEqual(results[0].prefix, 'fedora-install-20')
+        self.assertEqual(
+            results[0].name, 'pub/fedora/linux/releases/20/Fedora/i386/os')
+        self.assertEqual(results[0].category.name, 'Fedora Linux')
+        self.assertEqual(results[0].version.name, '20')
+        self.assertEqual(results[0].arch.name, 'i386')
+        self.assertEqual(
+            results[0].directory.name,
+            'pub/fedora/linux/releases/20/Fedora/i386/os')
+
+        self.assertEqual(results[1].prefix, 'fedora-install-20')
+        self.assertEqual(
+            results[1].name, 'pub/fedora-secondary/releases/20/Fedora/ppc/os')
+        self.assertEqual(results[1].category.name, 'Fedora Secondary Arches')
+        self.assertEqual(results[1].version.name, '20')
+        self.assertEqual(results[1].arch.name, 'ppc')
+        self.assertEqual(
+            results[1].directory.name,
+            'pub/fedora-secondary/releases/20/Fedora/ppc/os')
+
+        self.assertEqual(results[2].prefix, 'fedora-install-20')
+        self.assertEqual(
+            results[2].name, 'pub/fedora/linux/releases/20/Fedora/x86_64/os')
+        self.assertEqual(results[2].category.name, 'Fedora Linux')
+        self.assertEqual(results[2].version.name, '20')
+        self.assertEqual(results[2].arch.name, 'x86_64')
+        self.assertEqual(
+            results[2].directory.name,
+            'pub/fedora/linux/releases/20/Fedora/x86_64/os')
+
+        results = mirrormanager2.lib.get_directories(self.session)
+        # create_directory creates 9 directories
+        # we create 4 more here, 9+4=13
+        self.assertEqual(len(results), 13)
+        self.assertEqual(
+            results[9].name,
+            'pub/fedora/linux/releases/20/Fedora/x86_64/os')
+        self.assertEqual(
+            results[10].name,
+            'pub/fedora/linux/releases/20/Fedora/i386/os')
+        self.assertEqual(
+            results[11].name,
+            'pub/fedora-secondary/releases/20/Fedora/ppc/os')
+        self.assertEqual(
+            results[12].name,
+            'pub/fedora-secondary/releases/20/Fedora/sources/os')
+
 
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(MDTLTest)
