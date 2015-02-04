@@ -44,19 +44,17 @@ def fixup_repos(session, version, fromrepo, torepo):
 
 
 def move_devel_repo(session, category, version):
-    try:
-        c = mirrormanager2.lib.get_category_by_name(session, category)
-    except SQLObjectNotFound:
+    c = mirrormanager2.lib.get_category_by_name(session, category)
+    if c is None:
         sys.stderr.write("Category '%s' not found, exiting" % category)
         print_categories(sys.stderr)
         sys.stderr.flush()
         sys.exit(1)
 
-    try:
-        v = mirrormanager2.lib.get_version_by_name_version(
-            session, c.product.name, version)
-    except:
-        raise # fixme
+    v = mirrormanager2.lib.get_version_by_name_version(
+        session, c.product.name, version)
+    if not v:
+        raise  # fixme
     oldpattern = os.path.join('development', version)
     newpattern = os.path.join('releases', version, 'Everything')
     oldRe = re.compile(oldpattern)
@@ -64,18 +62,20 @@ def move_devel_repo(session, category, version):
         d = r.directory
         if oldRe.search(d.name):
             t = d.name.replace(oldpattern, newpattern)
-            try:
-                new_d = Directory.byName(t)
-            except:
-                sys.stderr.write("target Directory(%s) not found, ignoring.\n" % t)
+            new_d = mirrormanager2.lib.get_directory_by_name(session, t)
+            if new_d is None:
+                sys.stderr.write(
+                    "target Directory(%s) not found, ignoring.\n" % t)
                 sys.stderr.flush()
                 continue
 
             l = len(new_d.repositories)
             if l == 0:
-                continue # uh oh, umdl hasn't found this directory yet.  Pretty unlikely...
+                continue  # umdl hasn't found this directory yet.
+                          # Pretty unlikely...
             if l > 1:
-                raise ValueError # uh oh, how'd we wind up with 2 repos pointing at this directory?
+                # how'd we wind up with 2 repos pointing at this directory?
+                raise ValueError
 
             fixup_repos(v, r, new_d.repositories[0])
             print "%s => %s" % (d.name, t)
