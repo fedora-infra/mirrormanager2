@@ -48,33 +48,23 @@ def doit(session, original_cat, archive_cat, directory_re):
 def main():
     parser = OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option(
-        "-c", "--config",
-        dest="config",
+        "-c", "--config", dest="config",
         default='/etc/mirrormanager/mirrormanager2.cfg',
         help="Configuration file to use (defaults to "
         "/etc/mirrormanager/mirrormanager2.cfg)")
     parser.add_option(
-        "--originalCategory",
-        metavar="CATEGORY",
-        dest="originalCategory",
-        type="string",
-        help="original Category (default=%s)" %
+        "--originalCategory", metavar="CATEGORY", dest="originalCategory",
+        type="string", help="original Category (default=%s)" %
             originalCategory, default=originalCategory)
     parser.add_option(
-        "--archiveCategory",
-        metavar="CATEGORY",
-        dest="archiveCategory",
-        type="string",
-        help="archive Category (default=%s)" %
+        "--archiveCategory", metavar="CATEGORY", dest="archiveCategory",
+        type="string", help="archive Category (default=%s)" %
             archiveCategory, default=archiveCategory)
     parser.add_option(
-        "--directoryRe",
-        metavar="RE",
-        dest="directoryRe",
-        type="string",
+        "--directoryRe", metavar="RE", dest="directoryRe",
+        type="string", default=None,
         help="subdirectory regular expression to move (e.g. '/7/') "
-        "[required]",
-        default=None)
+        "[required]")
 
     (options, args) = parser.parse_args()
     if options.directoryRe is None:
