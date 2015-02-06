@@ -38,18 +38,16 @@ def doit(session, original_cat, archive_cat, directory_re):
             for r in d.repositories:
                 t = os.path.join(archiveTopdir, d.name[len(originalTopdir):])
                 print "trying to find %s" % t
-                try:
-                    new_d = mirrormanager2.lib.get_directory_by_name(
-                        session, t)
-                    r.directory = new_d
-                    r.category = a
-                    session.add(r)
-                    session.commit()
-                    print "%s => %s" % (d.name, t)
-                except:
-                    print "Unable to find a directory in [%s] for %s" % (
-                        archive_cat, d.name)
-                    raise
+                new_d = mirrormanager2.lib.get_directory_by_name(session, t)
+                if new_d is None:
+                    raise Exception(
+                        "Unable to find a directory in [%s] for %s" % (
+                            archive_cat, d.name))
+                r.directory = new_d
+                r.category = a
+                session.add(r)
+                session.commit()
+                print "%s => %s" % (d.name, t)
 
 
 def main():
