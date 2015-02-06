@@ -84,12 +84,16 @@ def main():
 
     session = mirrormanager2.lib.create_session(d['DB_URL'])
 
-    doit(
-        session,
-        options.originalCategory,
-        options.archiveCategory,
-        options.directoryRe)
-    return 0
+    try:
+        doit(
+            session,
+            options.originalCategory,
+            options.archiveCategory,
+            options.directoryRe)
+        return 0
+    except Exception, err:
+        print err
+        return 1
 
 
 if __name__ == "__main__":
