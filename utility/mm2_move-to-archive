@@ -23,7 +23,13 @@ originalCategory = 'Fedora Linux'
 
 def doit(session, original_cat, archive_cat, directory_re):
     c = mirrormanager2.lib.get_category_by_name(session, original_cat)
+    if c is None:
+        raise Exception(
+            "No category could be found by the name: %s" % original_cat)
     a = mirrormanager2.lib.get_category_by_name(session, archive_cat)
+    if a is None:
+        raise Exception(
+            "No category could be found by the name: %s" % archive_cat)
     originalTopdir = c.topdir.name
     archiveTopdir = a.topdir.name + '/fedora/linux'
     dirRe = re.compile(directory_re)
