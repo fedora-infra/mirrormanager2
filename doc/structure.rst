@@ -95,18 +95,23 @@ These scripts rely on the data present on the database and either create or
 update it.
 
 * **mm2_update-master-directory-list** (UMDL)
-This script browse the local copy of the mirror content and updates the
-database for each file and folder found in it.
-This information is crucial as it is what will be used by the crawler to
-determine if a mirror is up to date or not.
-In addition, if mirrormanager presents some invalid version number of
-architecture this script will likely be the culprit.
+In short, this script calculates and stores what content the mirrors *should*
+have, by inspecting the master mirror.
+
+It browses the local copy of the mirror content and updates the database for
+each file and folder found in it. This information is crucial as it is what
+will be used by the crawler to determine if a mirror is up to date or not. In
+addition, if mirrormanager presents some invalid version number of architecture
+this script will likely be the culprit.
 
 * **mm2_crawler**
-This script is the crawler, going through all the mirrors listed in the
-database (that are a/ active and b/ public) and crawls through their content
-to determine using the information in the database (filled in by the UMDL
-script) if the mirror is up to date or not (and mark it as such).
+In short, this script calculates and stores what the mirrors *do* have (and
+compares that to what they should have).
+
+The crawler goes through all the mirrors listed in the database (that are a/
+active and b/ public) and crawls through their content to determine using the
+information in the database (filled in by the UMDL script) if the mirror is up
+to date or not (and mark it as such).
 
 * **refresh_mirrorlist_cache**
 This script generates a pickle file (with only basic python object) containing
