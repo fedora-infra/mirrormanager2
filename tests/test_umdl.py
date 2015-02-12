@@ -179,6 +179,7 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(results[1].arch.name, 'x86_64')
         self.assertEqual(
             results[1].directory.name, 'pub/fedora/linux/releases/atomic/21')
+        self.assertEqual(results[1].prefix, 'atomic-21')
 
         results = mirrormanager2.lib.get_arches(self.session)
         self.assertEqual(len(results), 4)
@@ -188,10 +189,10 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(results[3].name, 'x86_64')
 
         results = mirrormanager2.lib.get_directories(self.session)
-        # tree testdata/pub says there are 79 directories and 136 files
+        # tree testdata/pub says there are 84 directories and 150 files
         # There are 7 directories added by create_directory which are not
-        # present on the FS, 79 + 7 = 86, so we are good \ó/
-        self.assertEqual(len(results), 86)
+        # present on the FS, 84 + 7 = 91, so we are good \ó/
+        self.assertEqual(len(results), 91)
         self.assertEqual(results[0].name, 'pub/fedora/linux/releases')
         self.assertEqual(results[1].name, 'pub/fedora/linux/extras')
         self.assertEqual(results[2].name, 'pub/epel')
@@ -223,94 +224,116 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(results, None)
 
         results = mirrormanager2.lib.get_file_details(self.session)
-        self.assertEqual(len(results), 8)
+        self.assertEqual(len(results), 9)
 
-        self.assertEqual(results[0].filename, 'Fedora-20-x86_64-DVD.iso')
+        cnt = 0
+        self.assertEqual(results[cnt].filename, 'Fedora-20-x86_64-DVD.iso')
         self.assertEqual(
-            results[0].directory.name,
+            results[cnt].directory.name,
             'pub/fedora/linux/releases/releases/20/Fedora/x86_64/iso')
-        self.assertEqual(results[0].sha512, None)
+        self.assertEqual(results[cnt].sha512, None)
         self.assertEqual(
-            results[0].sha256,
+            results[cnt].sha256,
             'f2eeed5102b8890e9e6f4b9053717fe73031e699c4b76dc7028749ab66e7f917')
 
-        self.assertEqual(results[1].filename, 'Fedora-20-x86_64-netinst.iso')
+        cnt = 1
+        self.assertEqual(results[cnt].filename, 'Fedora-20-x86_64-netinst.iso')
         self.assertEqual(
-            results[1].directory.name,
+            results[cnt].directory.name,
             'pub/fedora/linux/releases/releases/20/Fedora/x86_64/iso')
-        self.assertEqual(results[1].sha512, None)
+        self.assertEqual(results[cnt].sha512, None)
         self.assertEqual(
-            results[1].sha256,
+            results[cnt].sha256,
             '376be7d4855ad6281cb139430606a782fd6189dcb01d7b61448e915802cc350f')
 
+        cnt = 2
         self.assertEqual(
-            results[2].filename, 'Fedora-Live-Desktop-x86_64-20-1.iso')
+            results[cnt].filename, 'Fedora-Live-Desktop-x86_64-20-1.iso')
         self.assertEqual(
-            results[2].directory.name,
+            results[cnt].directory.name,
             'pub/fedora/linux/releases/releases/20/Live/x86_64')
-        self.assertEqual(results[2].sha512, None)
+        self.assertEqual(results[cnt].sha512, None)
         self.assertEqual(
-            results[2].sha256,
+            results[cnt].sha256,
             'cc0333be93c7ff2fb3148cb29360d2453f78913cc8aa6c6289ae6823372a77d2')
 
+        cnt = 3
         self.assertEqual(
-            results[3].filename, 'Fedora-Live-KDE-x86_64-20-1.iso')
+            results[cnt].filename, 'Fedora-Live-KDE-x86_64-20-1.iso')
         self.assertEqual(
-            results[3].directory.name,
+            results[cnt].directory.name,
             'pub/fedora/linux/releases/releases/20/Live/x86_64')
-        self.assertEqual(results[3].sha512, None)
+        self.assertEqual(results[cnt].sha512, None)
         self.assertEqual(
-            results[3].sha256,
+            results[cnt].sha256,
             '08360a253b4a40dff948e568dba1d2ae9d931797f57aa08576b8b9f1ef7e4745')
 
-        self.assertEqual(results[4].filename, 'summary')
+        cnt = 4
+        self.assertEqual(results[cnt].filename, 'repomd.xml')
         self.assertEqual(
-            results[4].directory.name,
+            results[cnt].directory.name,
+            'pub/fedora/linux/releases/development/22/x86_64/os/repodata')
+        self.assertEqual(
+            results[cnt].sha256,
+            '108b4102829c0839c7712832577fe7da24f0a9491f4dc25d4145efe6aced2ebf')
+        self.assertEqual(
+            results[cnt].sha512,
+            '50ed8cb8f4daf8bcd1d0ccee1710b8a87ee8de5861fb15a1023d6558328795'
+            'f42dade3e025c09c20ade36c77a3a82d9cdce1a2e2ad171f9974bc1889b591'
+            '8020')
+
+        cnt = 5
+        self.assertEqual(results[cnt].filename, 'summary')
+        self.assertEqual(
+            results[cnt].directory.name,
             'pub/fedora/linux/releases/atomic/rawhide')
         self.assertEqual(
-            results[4].sha256,
+            results[cnt].sha256,
             '6b439b70ecb1941e0e2e0ea0817a66715067cbd96d4367f4cd23ca287aeb14cb')
         self.assertEqual(
-            results[4].sha512,
+            results[cnt].sha512,
             '6f3cafa7f16b796a6051f740de17344542feb8b2285e3ccd9b141217fbb5f0'
             'b602c2389e4a40fe3b1aeac6f853b4c6d2d6c863e3649f567bd1af2aea502f'
             'd9e8')
 
-        self.assertEqual(results[5].filename, 'summary')
+        cnt = 6
+        self.assertEqual(results[cnt].filename, 'summary')
         self.assertEqual(
-            results[5].directory.name,
+            results[cnt].directory.name,
             'pub/fedora/linux/releases/atomic/21')
         self.assertEqual(
-            results[5].sha256,
+            results[cnt].sha256,
             '6b439b70ecb1941e0e2e0ea0817a66715067cbd96d4367f4cd23ca287aeb14cb')
         self.assertEqual(
-            results[5].sha512,
+            results[cnt].sha512,
             '6f3cafa7f16b796a6051f740de17344542feb8b2285e3ccd9b141217fbb5f0'
             'b602c2389e4a40fe3b1aeac6f853b4c6d2d6c863e3649f567bd1af2aea502f'
             'd9e8')
 
-        self.assertEqual(results[6].filename, 'repomd.xml')
+        cnt = 7
+        self.assertEqual(results[cnt].filename, 'repomd.xml')
         self.assertEqual(
-            results[6].directory.name,
+            results[cnt].directory.name,
             'pub/fedora/linux/releases/releases/20/Fedora/source/SRPMS/repodata')
         self.assertEqual(
-            results[6].sha256,
+            results[cnt].sha256,
             '9a4738934092cf17e4540ee9cab741e922eb8306875ae5621feb01ebeb1f67f2')
         self.assertEqual(
-            results[6].sha512,
+            results[cnt].sha512,
             '3351c7a6b1d2bd94e375d09324a9280b8becfe4dea40a227c3b270ddcedb19'
             'f420eec3f2c6a39a1edcdf52f80d31eb47a0ba25057ced2e3182dd212bc746'
             '6ba2')
 
-        self.assertEqual(results[7].filename, 'repomd.xml')
+        cnt = 8
+        self.assertEqual(results[cnt].filename, 'repomd.xml')
         self.assertEqual(
-            results[7].directory.name,
+            results[cnt].directory.name,
             'pub/fedora/linux/releases/releases/20/Fedora/x86_64/os/repodata')
         self.assertEqual(
-            results[7].sha256,
+            results[cnt].sha256,
             '108b4102829c0839c7712832577fe7da24f0a9491f4dc25d4145efe6aced2ebf')
         self.assertEqual(
-            results[7].sha512,
+            results[cnt].sha512,
             '50ed8cb8f4daf8bcd1d0ccee1710b8a87ee8de5861fb15a1023d6558328795'
             'f42dade3e025c09c20ade36c77a3a82d9cdce1a2e2ad171f9974bc1889b591'
             '8020')
