@@ -117,6 +117,8 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         tests.create_category(self.session)
         tests.create_categorydirectory(self.session)
 
+        # Run the UDML
+
         process = subprocess.Popen(args=self.umdl_command.split(),
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
@@ -168,6 +170,8 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(
             results[0].directory.name,
             'pub/fedora/linux/releases/atomic/rawhide')
+        self.assertEqual(results[0].prefix, 'atomic-unknown')
+
         self.assertEqual(
             results[1].name, 'pub/fedora/linux/releases/atomic/21')
         self.assertEqual(results[1].category.name, 'Fedora Linux')
