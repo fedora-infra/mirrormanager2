@@ -37,7 +37,7 @@ class MTATest(tests.Modeltests):
     """ MTA tests. """
 
     def setUp(self):
-        """ Set up the environnment, ran before every tests. """
+        """ Set up the environnment, ran before every test. """
         super(MTATest, self).setUp()
 
         self.configfile = os.path.join(

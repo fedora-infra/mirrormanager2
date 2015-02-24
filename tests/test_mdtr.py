@@ -37,7 +37,7 @@ class MDTLTest(tests.Modeltests):
     """ MDTL tests. """
 
     def setUp(self):
-        """ Set up the environnment, ran before every tests. """
+        """ Set up the environnment, ran before every test. """
         super(MDTLTest, self).setUp()
 
         self.configfile = os.path.join(

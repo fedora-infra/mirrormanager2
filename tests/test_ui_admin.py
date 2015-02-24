@@ -27,7 +27,7 @@ class FlaskUiAdminTest(tests.Modeltests):
     """ Flask tests. """
 
     def setUp(self):
-        """ Set up the environnment, ran before every tests. """
+        """ Set up the environnment, ran before every test. """
         super(FlaskUiAdminTest, self).setUp()
 
         mirrormanager2.app.APP.config['TESTING'] = True

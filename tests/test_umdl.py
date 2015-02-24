@@ -63,7 +63,7 @@ class UMDLTest(tests.Modeltests):
     """ UMDL tests. """
 
     def setUp(self):
-        """ Set up the environnment, ran before every tests. """
+        """ Set up the environnment, ran before every test. """
         super(UMDLTest, self).setUp()
 
         self.logfile = os.path.join(FOLDER, 'umdl.log')
