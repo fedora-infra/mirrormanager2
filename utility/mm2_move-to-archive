@@ -30,13 +30,13 @@ def doit(session, original_cat, archive_cat, directory_re):
     if a is None:
         raise Exception(
             "No category could be found by the name: %s" % archive_cat)
-    originalTopdir = c.topdir.name
-    archiveTopdir = os.path.join(a.topdir.name, 'fedora', 'linux')
+    originaltopdir = c.topdir.name
+    archivetopdir = os.path.join(a.topdir.name, 'fedora', 'linux')
     dirRe = re.compile(directory_re)
     for d in c.directories:
         if dirRe.search(d.name):
             for r in d.repositories:
-                t = os.path.join(archiveTopdir, d.name[len(originalTopdir):])
+                t = os.path.join(archivetopdir, d.name[len(originaltopdir):])
                 print "trying to find %s" % t
                 new_d = mirrormanager2.lib.get_directory_by_name(session, t)
                 if new_d is None:
