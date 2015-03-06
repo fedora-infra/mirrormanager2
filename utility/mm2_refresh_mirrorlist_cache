@@ -20,7 +20,8 @@ import os
 
 from optparse import OptionParser
 
-sys.path.append('..')
+sys.path.insert(0, os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), '..'))
 import mirrormanager2.lib.mirrorlist
 
 

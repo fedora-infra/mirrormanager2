@@ -220,6 +220,21 @@ def get_host_category(session, host_category_id):
     return query.first()
 
 
+def get_host_category_dirs(session):
+    ''' Return all the HostCategoryDir objects in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.HostCategoryDir
+    ).order_by(
+        model.HostCategoryDir.id
+    )
+
+    return query.all()
+
+
 def get_host_category_by_hostid_category(session, host_id, category):
     ''' Return all HostCategory having the specified host_id and category.
 
@@ -374,6 +389,21 @@ def get_version_by_name_version(session, p_name, p_version):
         model.Product.name == p_name
     ).filter(
         model.Version.name == p_version
+    )
+
+    return query.first()
+
+
+def get_version_by_id(session, v_id):
+    ''' Return a specified Version given its identifier in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Version
+    ).filter(
+        model.Version.id == v_id
     )
 
     return query.first()
@@ -549,6 +579,8 @@ def get_repositories(session):
     '''
     query = session.query(
         model.Repository
+    ).order_by(
+        model.Repository.id
     )
 
     return query.all()
@@ -833,6 +865,21 @@ def get_file_detail(
         query = query.filter(model.FileDetail.timestamp == timestamp)
 
     return query.first()
+
+
+def get_file_details(session):
+    ''' Return all the FileDetail object in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.FileDetail
+    ).order_by(
+        model.FileDetail.id
+    )
+
+    return query.all()
 
 
 def get_directories(session):

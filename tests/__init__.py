@@ -83,7 +83,7 @@ class Modeltests(unittest.TestCase):
 
     # pylint: disable=C0103
     def setUp(self):
-        """ Set up the environnment, ran before every tests. """
+        """ Set up the environnment, ran before every test. """
         if '///' in DB_PATH:
             dbfile = DB_PATH.split('///')[1]
             if os.path.exists(dbfile):

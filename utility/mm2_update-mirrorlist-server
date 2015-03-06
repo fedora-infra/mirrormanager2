@@ -5,10 +5,8 @@
 #
 # This is a kind of 'master script' that kicks of many (but not all) others.
 #
-# It does four things:
-# - It calls refresh_mirrorlist_cache which rebuilds the lookup pickle
-# - It calls get_global_netblocks which builds the global ASN file
-# - It calls get_internet2_netblocks which builds the i2 ASN file
+# It calls refresh_mirrorlist_cache which rebuilds the lookup pickle and kill
+# any instances that would still be running before doing so.
 #
 # After all this is done, those three files need to be copied remotely to the
 # app servers which actually run the mirrorlist wsgi app and the mirrorlist
