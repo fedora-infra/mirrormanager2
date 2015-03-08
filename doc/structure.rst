@@ -41,13 +41,13 @@ The Frontend
 
 The frontend is a flask application which is one of the user interface.
 Via the frontend, user can register their own public or private mirror.
-They can specify the where the mirror is and what it is mirroring (everything
+They can specify where the mirror is and what it is mirroring (everything
 or just a part of it).
 
 In the frontend the admins can mark a mirror as inactive which will remove
 the mirror from the list of mirrors available.
 
-Finally, the list of up to date and available mirror is presented by this
+Finally, the list of up to date and available mirrors is presented by this
 application for each product, version and architecture.
 
 MirrorList
