@@ -10,8 +10,10 @@ TODO: test IRL
 
 import sys
 import re
+import os
 
-sys.path.append('..')
+sys.path.insert(0, os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), '..'))
 import mirrormanager2.lib
 from optparse import OptionParser
 
@@ -21,112 +23,53 @@ originalCategory = 'Fedora Linux'
 
 def doit(session, original_cat, archive_cat, directory_re):
     c = mirrormanager2.lib.get_category_by_name(session, original_cat)
+    if c is None:
+        raise Exception(
+            "No category could be found by the name: %s" % original_cat)
     a = mirrormanager2.lib.get_category_by_name(session, archive_cat)
-    originalTopdir = c.topdir.name
-    archiveTopdir = a.topdir.name + '/fedora/linux'
+    if a is None:
+        raise Exception(
+            "No category could be found by the name: %s" % archive_cat)
+    originaltopdir = c.topdir.name
+    archivetopdir = os.path.join(a.topdir.name, 'fedora', 'linux')
     dirRe = re.compile(directory_re)
     for d in c.directories:
         if dirRe.search(d.name):
             for r in d.repositories:
-                t = archiveTopdir + d.name[len(originalTopdir):]
+                t = os.path.join(archivetopdir, d.name[len(originaltopdir):])
                 print "trying to find %s" % t
-                try:
-                    new_d = mirrormanager2.lib.get_directory_by_name(
-                        session, t)
-                    r.directory = new_d
-                    r.category = a
-                    session.add(r)
-                    session.commit()
-                    print "%s => %s" % (d.name, t)
-                except:
-                    print "Unable to find a directory in [%s] for %s" % (
-                        archive_cat, d.name)
-                    raise
-
-
-def move_install_repo(session, version):
-    product=mirrormanager2.lib.get_product_by_name(session, "Fedora")
-    ver = mirrormanager2.lib.get_version_by_name_version(
-            session, product.name, version)
-
-    for a in mirrormanager2.lib.get_arches(session):
-        if a.name == u'source':
-            continue
-
-        prefix=u'fedora-install-%s' % ver.name
-        if a.primaryArch:
-            d = u'pub/archive/fedora/linux/releases/%s/Fedora/%s/os' % (
-                ver.name, a.name)
-            category = mirrormanager2.lib.get_category_by_name(
-                session, 'Fedora Linux')
-        else:
-            d = u'pub/archive/fedora-secondary/releases/%s/Fedora/%s/os' % (
-                ver.name, a.name)
-            category = mirrormanager2.lib.get_category_by_name(
-                session, 'Fedora Secondary Arches')
-
-        repos = mirrormanager2.lib.get_repo_by_dir(session, d)
-        for r in repos:
-            print "destroying %s" % r
-            session.delete(r)
-            session.flush()
-
-        if not os.path.isdir(os.path.join('/', d)):
-            print "directory %s does not exist on disk, skipping "\
-                "creation of a repository there" % d
-            continue
-
-        d = mirrormanager2.lib.get_directory_by_name(session, d)
-
-        if not d:
-            print "directory %s exists on disk, but not in the database"\
-                " yet, skipping creation of a repository there until "\
-                "after the next UMDL run."
-            continue
-
-        print "updating %s repo for arch %s" % (prefix, a.name)
-        repo = mirrormanager2.lib.get_repo_prefix_arch(
-            session, prefix=u'fedora-install-%s' % ver.name, arch=a)
-
-        repo.name = d.name
-        repo.directory_id=d.id
-        repo.category_id=category.id
-        session.add(repo)
-        session.flush()
-
-    session.commit()
+                new_d = mirrormanager2.lib.get_directory_by_name(session, t)
+                if new_d is None:
+                    raise Exception(
+                        "Unable to find a directory in [%s] for %s" % (
+                            archive_cat, d.name))
+                r.directory = new_d
+                r.category = a
+                session.add(r)
+                session.commit()
+                print "%s => %s" % (d.name, t)
 
 
 def main():
     parser = OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option(
-        "-c", "--config",
-        dest="config",
+        "-c", "--config", dest="config",
         default='/etc/mirrormanager/mirrormanager2.cfg',
         help="Configuration file to use (defaults to "
         "/etc/mirrormanager/mirrormanager2.cfg)")
     parser.add_option(
-        "--originalCategory",
-        metavar="CATEGORY",
-        dest="originalCategory",
-        type="string",
-        help="original Category (default=%s)" %
+        "--originalCategory", metavar="CATEGORY", dest="originalCategory",
+        type="string", help="original Category (default=%s)" %
             originalCategory, default=originalCategory)
     parser.add_option(
-        "--archiveCategory",
-        metavar="CATEGORY",
-        dest="archiveCategory",
-        type="string",
-        help="archive Category (default=%s)" %
+        "--archiveCategory", metavar="CATEGORY", dest="archiveCategory",
+        type="string", help="archive Category (default=%s)" %
             archiveCategory, default=archiveCategory)
     parser.add_option(
-        "--directoryRe",
-        metavar="RE",
-        dest="directoryRe",
-        type="string",
+        "--directoryRe", metavar="RE", dest="directoryRe",
+        type="string", default=None,
         help="subdirectory regular expression to move (e.g. '/7/') "
-        "[required]",
-        default=None)
+        "[required]")
 
     (options, args) = parser.parse_args()
     if options.directoryRe is None:
@@ -139,12 +82,16 @@ def main():
 
     session = mirrormanager2.lib.create_session(d['DB_URL'])
 
-    doit(
-        session,
-        options.originalCategory,
-        options.archiveCategory,
-        options.directoryRe)
-    return 0
+    try:
+        doit(
+            session,
+            options.originalCategory,
+            options.archiveCategory,
+            options.directoryRe)
+        return 0
+    except Exception, err:
+        print err
+        return 1
 
 
 if __name__ == "__main__":

@@ -35,7 +35,8 @@ import time
 import hashlib
 
 
-sys.path.append('..')
+sys.path.insert(0, os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), '..'))
 import mirrormanager2.lib
 from mirrormanager2.lib.model import (
     Arch, Directory, Repository, Version, FileDetail)
@@ -74,6 +75,9 @@ def _get_version_from_path(path):
     m = re.search(re.compile(s), path)
     if m is not None:
         return m.group(1)
+    # Rawhide, development
+    if 'rawhide' in path:
+        return 'development'
     return None
 
 
@@ -89,9 +93,9 @@ def create_version_from_path(category, path):
             ver = Version(
                 product=category.product,
                 name=vname,
-                isTest=isTest)
-        except:
-            pass
+                is_test=isTest)
+        except Exception, err:
+            print err
 
     return ver
 
@@ -117,17 +121,17 @@ def guess_ver_arch_from_path(session, category, path):
         for a in arch_cache:
             s = '.*(^|/)%s(/|$).*' % (a['name'])
             if re.compile(s).match(path):
-                arch = Arch.get(a['id'])
+                arch = mirrormanager2.lib.get_arch_by_name(session, a['id'])
                 break
-
 
     ver = None
     # newest versions/IDs first, also handles stupid Fedora 9.newkey hack.
     for v in version_cache:
-        if v['product_id'] != category.product.id: continue
+        if v['product_id'] != category.product.id:
+            continue
         s = '.*(^|/)%s(/|$).*' % (v['name'])
         if re.compile(s).match(path):
-            ver = Version.get(session, v['id'])
+            ver = mirrormanager2.lib.get_version_by_id(session, v['id'])
             break
 
     # create Versions if we can figure it out...
@@ -181,7 +185,8 @@ def make_file_details_from_checksums(session, diskpath, relativeDName, D):
             d.update(_parse_checksum_file(f, checksumlen))
         return d
 
-    if diskpath is None: return
+    if diskpath is None:
+        return
 
     sha1_globs = ['*.sha1sum', 'SHA1SUM', 'sha1sum.txt']
     md5_globs = ['*.md5sum', 'MD5SUM', 'md5sum.txt']
@@ -216,7 +221,7 @@ def make_file_details_from_checksums(session, diskpath, relativeDName, D):
         ctime = s[stat.ST_CTIME]
         fd = mirrormanager2.lib.get_file_detail(
             session,
-            directory=D.id,
+            directory_id=D.id,
             filename=f,
             sha1=sha1,
             md5=md5,
@@ -344,6 +349,15 @@ def make_repository(session, directory, relativeDName, category, target):
         # Furthermore, we'll grab the version piece from the path which looks
         # like atomic/rawhide or atomic/21.
         ver = relativeDName.rstrip('/').split('/')[-1]
+        ver = mirrormanager2.lib.get_version_by_name_version(
+            session, category.product.name, ver)
+        if ver is None:
+            if not relativeDName.endswith('/'):
+                relativeDName += '/'
+            ver = create_version_from_path(category, relativeDName)
+            session.add(ver)
+            session.commit()
+            version_cache.append(ver)
 
     # stop making duplicate Repository objects.
     if len(directory.repositories) > 0:
@@ -372,8 +386,8 @@ def make_repository(session, directory, relativeDName, category, target):
             % (prefix, ver.name, arch.name, category.name, directory.name))
         session.add(repo)
         session.commit()
-    except:
-        pass
+    except Exception, err:
+        print err
 
     return repo
 
@@ -515,17 +529,19 @@ def sync_category_directories(
         set_readable = False
         set_ctime = False
         set_files = False
-        try:
+
+        if relativeDName in category.directory_cache:
             d = category.directory_cache[relativeDName]
             if d['readable'] != value['readable']:
                 set_readable = True
             if d['ctime'] != value['ctime']:
                 set_ctime = True
             D = mirrormanager2.lib.get_directory_by_id(session, d.id)
-        except KeyError:
+        else:
             if relativeDName == u'':
                 D = category.topdir
             else:
+                # Can't find the new directory, just add it
                 dname = os.path.join(category.topdir.name, relativeDName)
                 D = Directory(
                     name=dname,
@@ -534,7 +550,13 @@ def sync_category_directories(
                 logger.debug(
                     u'Created Directory(%s, readable=%s, ctime=%s)'
                     % (dname, value['readable'], value['ctime']))
-                D.categories.append(category)
+            # Add this category to the directory
+            D.categories.append(category)
+            session.add(D)
+            # And flush so that we can already start using it
+            session.flush()
+            # Refresh the cache
+            category.directory_cache = cache_directories(category)
             d = category.directory_cache[relativeDName]
 
         if value['changed']:

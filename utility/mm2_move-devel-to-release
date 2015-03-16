@@ -18,7 +18,8 @@ import sys
 import re
 import os
 
-sys.path.append('..')
+sys.path.insert(0, os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), '..'))
 import mirrormanager2.lib
 from mirrormanager2.lib.model import RepositoryRedirect, Repository
 from optparse import OptionParser
@@ -44,44 +45,48 @@ def fixup_repos(session, version, fromrepo, torepo):
 
 
 def move_devel_repo(session, category, version):
-    try:
-        c = mirrormanager2.lib.get_category_by_name(session, category)
-    except SQLObjectNotFound:
-        sys.stderr.write("Category '%s' not found, exiting" % category)
-        print_categories(sys.stderr)
-        sys.stderr.flush()
+    c = mirrormanager2.lib.get_category_by_name(session, category)
+    if c is None:
+        print "Category '%s' not found, exiting" % category
+        print_categories(session)
         sys.exit(1)
 
-    try:
-        v = mirrormanager2.lib.get_version_by_name_version(
-            session, c.product.name, version)
-    except:
-        raise # fixme
+    v = mirrormanager2.lib.get_version_by_name_version(
+        session, c.product.name, version)
+    if not v:
+        print 'Version %s not found for product %s' % (
+            version, c.product.name)
+        sys.exit(1)
+
     oldpattern = os.path.join('development', version)
     newpattern = os.path.join('releases', version, 'Everything')
     oldRe = re.compile(oldpattern)
     for r in c.repositories:
+        if r.version_id != v.id:
+            continue
         d = r.directory
         if oldRe.search(d.name):
             t = d.name.replace(oldpattern, newpattern)
-            try:
-                new_d = Directory.byName(t)
-            except:
-                sys.stderr.write("target Directory(%s) not found, ignoring.\n" % t)
+            new_d = mirrormanager2.lib.get_directory_by_name(session, t)
+            if new_d is None:
+                sys.stderr.write(
+                    "target Directory(%s) not found, ignoring.\n" % t)
                 sys.stderr.flush()
                 continue
 
             l = len(new_d.repositories)
             if l == 0:
-                continue # uh oh, umdl hasn't found this directory yet.  Pretty unlikely...
+                continue  # umdl hasn't found this directory yet.
+                          # Pretty unlikely...
             if l > 1:
-                raise ValueError # uh oh, how'd we wind up with 2 repos pointing at this directory?
+                # how'd we wind up with 2 repos pointing at this directory?
+                raise ValueError
 
-            fixup_repos(v, r, new_d.repositories[0])
+            fixup_repos(session, v, r, new_d.repositories[0])
             print "%s => %s" % (d.name, t)
 
 
-def move_install_repo(session, version):
+def move_install_repo(session, version, test=False):
     product=mirrormanager2.lib.get_product_by_name(session, "Fedora")
     ver = mirrormanager2.lib.get_version_by_name_version(
             session, product.name, version)
@@ -106,7 +111,7 @@ def move_install_repo(session, version):
                 pass
         else:
             prefix=u'fedora-install-%s' % ver.name
-            if a.primaryArch:
+            if a.primary_arch:
                 d = u'pub/fedora/linux/releases/%s/Fedora/%s/os' % (
                     ver.name, a.name)
                 category = mirrormanager2.lib.get_category_by_name(
@@ -123,26 +128,34 @@ def move_install_repo(session, version):
                 session.delete(r)
                 session.flush()
 
-            if not os.path.isdir(os.path.join('/', d)):
-                print "directory %s does not exist on disk, skipping "\
-                    "creation of a repository there" % d
-                continue
+            if not test:
+                if not os.path.isdir(os.path.join('/', d)):
+                    print "directory %s does not exist on disk, skipping "\
+                        "creation of a repository there" % d
+                    continue
 
-            d = mirrormanager2.lib.get_directory_by_name(session, d)
+            dobj = mirrormanager2.lib.get_directory_by_name(session, d)
 
-            if not d:
+            if not dobj:
                 print "directory %s exists on disk, but not in the database"\
                     " yet, skipping creation of a repository there until "\
-                    "after the next UMDL run."
+                    "after the next UMDL run." % d
                 continue
 
             print "updating %s repo for arch %s" % (prefix, a.name)
 
+            prefix = u'fedora-install-%s' % ver.name
             repo = mirrormanager2.lib.get_repo_prefix_arch(
-                session, prefix=u'fedora-install-%s' % ver.name, arch=a)
+                session, prefix=prefix, arch=a.name)
 
-            repo.name = d.name
-            repo.directory_id=d.id
+            if not repo:
+                repo = Repository()
+                repo.version_id = ver.id
+                repo.arch_id = a.id
+                repo.prefix = prefix
+
+            repo.name = dobj.name
+            repo.directory_id=dobj.id
             repo.category_id=category.id
             session.add(repo)
             session.flush()
@@ -150,11 +163,10 @@ def move_install_repo(session, version):
     session.commit()
 
 
-def print_categories(session, fileno):
-    fileno.write("Available categories:\n")
+def print_categories(session):
+    print "Available categories:"
     for c in mirrormanager2.lib.get_categories(session):
-        fileno.write("\t%s\n" % c.name)
-        fileno.flush()
+        print "\t%s" % c.name
 
 
 def main():
@@ -162,21 +174,20 @@ def main():
     parser = OptionParser(
         usage=sys.argv[0] + " [options]")
     parser.add_option(
-        "-c", "--config",
-        dest="config",
+        "-c", "--config", dest="config",
         default='/etc/mirrormanager/mirrormanager2.cfg',
         help="Configuration file to use "
             "(default=/etc/mirrormanager/mirrormanager2.cfg)")
     parser.add_option(
-        "--version",
-        dest="version",
-        type="string",
+        "--version", dest="version", type="string",
         help="OS version to move (e.g. '14') [required]", default=None)
     parser.add_option(
-        "--category",
-        dest="category",
-        type="string",
+        "--category", dest="category", type="string",
         help="Category (e.g. 'Fedora Linux') [required]", default=None)
+
+    parser.add_option(
+        "--test", dest="test", default=False, action="store_true",
+        help="Small flag used for the unit-tests to avoid one check")
 
     (options, args) = parser.parse_args()
 
@@ -188,7 +199,7 @@ def main():
 
     if options.version is None or options.category is None:
         parser.print_help()
-        print_categories(session, sys.stdout)
+        print_categories(session)
         sys.exit(1)
 
     move_devel_repo(
@@ -198,7 +209,8 @@ def main():
 
     move_install_repo(
         session,
-        options.version)
+        options.version,
+        test=options.test)
 
     return 0
 
