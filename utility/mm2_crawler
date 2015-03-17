@@ -66,11 +66,10 @@ def doit(options, config):
         host for host in hosts if (
             not host.id < options.startid and
             not host.id >= options.stopid and
-            not (
-                host.admin_active and
-                host.user_active and
-                host.site.user_active and
-                host.site.admin_active) and
+            ( host.admin_active and
+              host.user_active and
+              host.site.user_active and
+              host.site.admin_active) and
             not host.site.private)
     ]
 
