@@ -623,7 +623,7 @@ def parse_rsync_listing(session, config, category, f):
 
 def sync_directories_using_rsync(session, config, rsyncpath, category):
     try:
-        result, output = run_rsync(rsyncpath, category.extra_rsync_options)
+        result, output = run_rsync(rsyncpath, category.extra_rsync_options, logger)
     except:
         logger.warning('Failed to run rsync.', exc_info = True)
         return

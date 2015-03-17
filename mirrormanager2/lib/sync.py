@@ -27,12 +27,14 @@ import subprocess
 import tempfile
 
 
-def run_rsync(rsyncpath, extra_rsync_args=None):
+def run_rsync(rsyncpath, extra_rsync_args=None, logger=None):
     tmpfile = tempfile.SpooledTemporaryFile()
     cmd = "rsync --temp-dir=/tmp -r --exclude=.snapshot --exclude='*.~tmp~'"
     if extra_rsync_args is not None:
         cmd += ' ' + extra_rsync_args
     cmd += ' ' + rsyncpath
+    if logger is not None:
+        logger.info("About to run following rsync command: " + cmd)
     devnull = open('/dev/null', 'r+')
     p = subprocess.Popen(
         cmd,
