@@ -94,6 +94,9 @@ CHECK_SESSION_IP = True
 # Specify whether the crawler should send a report by email
 CRAWLER_SEND_EMAIL =  True
 
+# Specify additional rsync parameters for the crawler
+# # --timeout 14400: abort rsync crawl after 4 hours
+CRAWLER_RSYNC_PARAMETERS = '--no-motd --timeout 14400'
 
 umdl_master_directories = [
     {
