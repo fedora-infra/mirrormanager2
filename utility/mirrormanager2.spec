@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.0.5
+Version:        0.0.6
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -246,6 +246,22 @@ cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
 
 
 %changelog
+* Wed Mar 18 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.6-1
+- Update to 0.0.6
+- Drop the Locations in the hosts (no longer used)
+- Add unit-tests
+  - To the frontend
+  - To some of the backend scripts
+- Add dependency to python-IPy
+- Fix ExecStart instruction for systemd
+- Fix apache configuration file for mirrorlist
+- Fix host selection logic in the crawler (Adrian Reber)
+- Log the rsync command (Adrian Reber)
+- Add the possibility to specify the rsync argument via the configuration file
+  (Adrian Reber)
+- Add and install a tempfile.d file for systemd to re-create
+  /var/run/mirrormanager upon reboot
+
 * Mon Dec 15 2014 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.5-1
 - Update to 0.0.5
 - Include zebra-dump-parser in the backend sub-package
