@@ -646,7 +646,7 @@ def try_per_category(
 
     rsync_start_time = datetime.datetime.utcnow()
     try:
-        result, listing = run_rsync(url, '--no-motd')
+        result, listing = run_rsync(url, '--no-motd', logger)
     except:
         logger.warning('Failed to run rsync.', exc_info = True)
         return False
