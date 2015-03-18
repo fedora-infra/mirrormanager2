@@ -645,8 +645,9 @@ def try_per_category(
         url += '/'
 
     rsync_start_time = datetime.datetime.utcnow()
+    params = config.get('CRAWLER_RSYNC_PARAMETERS', '--no-motd')
     try:
-        result, listing = run_rsync(url, '--no-motd', logger)
+        result, listing = run_rsync(url, params, logger)
     except:
         logger.warning('Failed to run rsync.', exc_info = True)
         return False
