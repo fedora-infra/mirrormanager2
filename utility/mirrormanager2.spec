@@ -170,6 +170,11 @@ install -m 644 mirrorlist/weighted_shuffle.py \
 install -m 644 createdb.py \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrormanager2_createdb.py
 
+# Install the tmpfile creating the /run/mirrormanager folder upon reboot
+mkdir -p %{buildroot}%{_tmpfilesdir}
+install -m 0644 mirrorlist/systemd/mirrormanager_tempfile.conf \
+    $RPM_BUILD_ROOT/%{_tmpfilesdir}/%{name}-mirrorlist.conf
+
 # Install the systemd service file
 install -m 644 mirrorlist/systemd/mirrorlist-server.service \
     $RPM_BUILD_ROOT/%{_unitdir}/mirrorlist-server.service
@@ -206,6 +211,7 @@ cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
 %files mirrorlist
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrorlist-server.conf
 %dir %{_localstatedir}/run/mirrormanager
+%{_tmpfilesdir}/%{name}-mirrorlist.conf
 %{_unitdir}/mirrorlist-server.service
 %{_datadir}/mirrormanager2/mirrorlist_client.wsgi
 %{_datadir}/mirrormanager2/mirrorlist_server.py*
