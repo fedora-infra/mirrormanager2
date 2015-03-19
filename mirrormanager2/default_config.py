@@ -94,3 +94,8 @@ CHECK_SESSION_IP = True
 # Depending on the setup and the crawler frequency rsync's timeout option
 # can be used decrease the probability of stale rsync processes
 CRAWLER_RSYNC_PARAMETERS = '--no-motd --timeout 14400'
+
+# If this variable is set (and the directory exists)
+# the crawler will create per host log files with <hostid>.log
+# which can the be used in the web interface by the mirror admins
+CRAWLER_LOG_DIR = '/var/log/mirrormanager/crawler'

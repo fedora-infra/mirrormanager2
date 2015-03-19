@@ -24,6 +24,7 @@ from mirrormanager2.lib.sync import run_rsync
 
 
 logger = logging.getLogger("crawler")
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 
 
 # This is a "thread local" object that allows us to store the start time of
@@ -31,6 +32,14 @@ logger = logging.getLogger("crawler")
 # not...)
 threadlocal = threading.local()
 
+# This filter is necessary to enable logging per thread into a separate file
+# Based on http://plumberjack.blogspot.de/2010/09/configuring-logging-for-web.html
+class InjectingFilter(logging.Filter):
+    def __init__(self, thread_id):
+        self.thread_id = thread_id
+
+    def filter(self, record):
+        return threadlocal.thread_id == self.thread_id
 
 def thread_id():
     """ Silly util that returns a git-style short-hash id of the thread. """
@@ -973,6 +982,30 @@ def per_host(session, host, options, config):
 
 
 def worker(options, config, host):
+    # setup per thread file logger
+    log_dir = config.get('CRAWLER_LOG_DIR', None)
+    # check if the directory exists
+    if log_dir is not None:
+        if not os.path.isdir(log_dir):
+            # CRAWLER_LOG_DIR seems to be configured but does not exist
+            # not logging
+            logger.warning("Directory " + log_dir + " does not exists."
+                           " Not logging per host")
+            log_dir = None
+
+    if log_dir is not None:
+        fh = logging.FileHandler(log_dir + "/" + str(host.id) + '.log')
+        threadlocal.thread_id = thread_id()
+        f = InjectingFilter(thread_id())
+        fh.addFilter(f)
+
+        if options.debug:
+            fh.setLevel(logging.DEBUG)
+        else:
+            fh.setLevel(logging.INFO)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+
     logger.info("Worker %r starting on host %r" % (thread_id(), host))
     threadlocal.starttime = time.time()
 
