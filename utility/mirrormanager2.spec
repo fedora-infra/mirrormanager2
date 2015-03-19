@@ -88,6 +88,7 @@ Requires:  py-radix
 Requires:  python-webob
 Requires:  python-IPy
 Requires:  systemd
+Requires(pre):  shadow-utils
 
 %description mirrorlist
 Sub-part of mirrormanager serving mirrors to yum/dnf
@@ -99,6 +100,7 @@ Group:          Development/Tools
 BuildArch:      noarch
 
 Requires:  %{name}-lib == %{version}
+Requires(pre):  shadow-utils
 
 %description crawler
 Install the crawler for MirrorManager, crawling all the mirrors to find out
@@ -111,6 +113,7 @@ Group:          Development/Tools
 BuildArch:      noarch
 
 Requires:  %{name}-lib == %{version}
+Requires(pre):  shadow-utils
 
 %description backend
 Install a number of utility scripts to be used manually or in cron jobs to
@@ -139,6 +142,8 @@ mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/logrotate.d
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2
 # Stores temp files (.sock & co)
 mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/mirrormanager
+# Results and homedir
+mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/lib/mirrormanager
 # Lock files
 mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/lock/mirrormanager
 # Stores lock and pid info
@@ -190,6 +195,26 @@ install -m 644 mirrorlist/systemd/mirrorlist-server.service \
 # Install the zebra-dump-parser perl module
 cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
 
+%pre mirrorlist
+getent group mirrormanager >/dev/null || groupadd -r mirrormanager
+getent passwd mirrormanager >/dev/null || \
+    useradd -r -g mirrormanager -d %{_localstatedir}/lib/mirrormanager -s /sbin/nologin \
+    -c "MirrorManager" mirrormanager
+exit 0
+
+%pre crawler
+getent group mirrormanager >/dev/null || groupadd -r mirrormanager
+getent passwd mirrormanager >/dev/null || \
+    useradd -r -g mirrormanager -d %{_localstatedir}/lib/mirrormanager -s /sbin/nologin \
+    -c "MirrorManager" mirrormanager
+exit 0
+
+%pre backend
+getent group mirrormanager >/dev/null || groupadd -r mirrormanager
+getent passwd mirrormanager >/dev/null || \
+    useradd -r -g mirrormanager -d %{_localstatedir}/lib/mirrormanager -s /sbin/nologin \
+    -c "MirrorManager" mirrormanager
+exit 0
 
 %check
 # One day we will have unit-tests to run here
@@ -218,7 +243,8 @@ cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
 
 %files mirrorlist
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrorlist-server.conf
-%dir %{_localstatedir}/run/mirrormanager
+%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/run/mirrormanager
+%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/mirrormanager/
 %{_tmpfilesdir}/%{name}-mirrorlist.conf
 %{_unitdir}/mirrorlist-server.service
 %{_datadir}/mirrormanager2/mirrorlist_client.wsgi
@@ -228,12 +254,15 @@ cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
 
 %files crawler
 %config(noreplace) %{_sysconfdir}/logrotate.d/mm2_crawler
-%{_localstatedir}/log/mirrormanager/
+%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/mirrormanager
+%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/log/mirrormanager
+%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/log/mirrormanager/crawler
 %{_bindir}/mm2_crawler
 
 
 %files backend
-%dir %{_localstatedir}/lock/mirrormanager
+%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lock/mirrormanager
+%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/mirrormanager
 %{_datadir}/mirrormanager2/zebra-dump-parser/
 %{_bindir}/mm2_get_global_netblocks
 %{_bindir}/mm2_get_internet2_netblocks
