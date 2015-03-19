@@ -1,0 +1,9 @@
+/var/log/mirrormanager/crawler/*log {
+    missingok
+    notifempty
+    daily
+    dateext
+    rotate 15
+    postrotate
+    endscript
+}

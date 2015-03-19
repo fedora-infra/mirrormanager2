@@ -133,6 +133,8 @@ rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/httpd/conf.d/
 # MirrorManager configuration file
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager
+# MirrorManager crawler log rotation
+mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/logrotate.d
 # for .wsgi files mainly
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2
 # Stores temp files (.sock & co)
@@ -141,6 +143,8 @@ mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/mirrormanager
 mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/lock/mirrormanager
 # Stores lock and pid info
 mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/run/mirrormanager
+# Log files
+mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/log/mirrormanager/crawler
 # Stores the service file for systemd
 mkdir -p $RPM_BUILD_ROOT/%{_unitdir}
 
@@ -153,6 +157,10 @@ install -m 644 utility/mirrormanager.conf.sample \
 # Install configuration file
 install -m 644 utility/mirrormanager2.cfg.sample \
     $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager/mirrormanager2.cfg
+
+# Install crawler logrotate definition
+install -m 644 utility/mm2_crawler.logrotate \
+    $RPM_BUILD_ROOT/%{_sysconfdir}/logrotate.d/mm2_crawler
 
 # Install WSGI file
 install -m 644 utility/mirrormanager2.wsgi \
@@ -219,6 +227,8 @@ cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
 
 
 %files crawler
+%config(noreplace) %{_sysconfdir}/logrotate.d/mm2_crawler
+%{_localstatedir}/log/mirrormanager/
 %{_bindir}/mm2_crawler
 
 
