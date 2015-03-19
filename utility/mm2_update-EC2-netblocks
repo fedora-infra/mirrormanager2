@@ -5,9 +5,10 @@ MirrorManager database for Fedora Infrastructure-managed mirrors in S3.
 """
 
 # std imports
-import optparse
-import sys
 import json
+import optparse
+import os
+import sys
 import urlgrabber
 
 sys.path.insert(0, os.path.join(os.path.dirname(
