@@ -987,7 +987,7 @@ def worker(options, config, host):
         rc = 2
         mark_not_up2date(
             session, config,
-            None, host.id,
+            None, host,
             "Crawler timed out before completing.  "
             "Host is likely overloaded.")
     except Exception:
