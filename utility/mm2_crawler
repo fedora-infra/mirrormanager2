@@ -102,6 +102,9 @@ def doit(options, config):
     results = [dict(rc=rc, host=host) for rc, host in zip(return_codes, hosts)]
     notify(options, 'complete', dict(results=results))
 
+    session.commit()
+    session.close()
+
     return results
 
 
@@ -487,8 +490,8 @@ def sync_hcds(session, host, host_category_dirs):
     stats = dict(up2date = 0, not_up2date = 0, unchanged = 0,
                  unknown = 0, newdir = 0, deleted_on_master = 0)
     current_hcds = {}
-    now = datetime.datetime.utcnow()
-    host.lastCrawled = now
+    host.last_crawled = datetime.datetime.utcnow()
+    host.last_crawl_duration = time.time() -  threadlocal.starttime
     keys = host_category_dirs.keys()
     keys = sorted(keys, key = lambda t: t[1].name)
     stats['numkeys'] = len(keys)
