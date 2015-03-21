@@ -46,7 +46,7 @@
 <p>
 Last Checked In: {{ host.last_checked_in or '-' }} <br />
 Last Crawled: {% if host.last_crawled %} {{ host.last_crawled
-  }} <a href="">[Log]</a> {% else %} - {% endif %} <br />
+  }} <a href="{{url_for('index')}}crawler/{{host.id}}.log">[Log]</a> {% else %} - {% endif %} <br />
 Last Crawl Duration: {{ host.last_crawl_duration }} seconds
 </p>
 
