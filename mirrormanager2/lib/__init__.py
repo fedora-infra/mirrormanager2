@@ -678,7 +678,7 @@ def get_mirrors(
         last_crawl_duration=False, last_checked_in=False, last_crawled=False,
         site_private=None, site_admin_active=None, site_user_active=None,
         up2date=None, host_category_url_private=None,
-        version_id=None, arch_id=None):
+        version_id=None, arch_id=None, order_by_crawl_duration=False):
     ''' Retrieve the mirrors based on the criteria specified.
 
     :arg session: the session with which to connect to the database.
@@ -771,9 +771,14 @@ def get_mirrors(
         model.Host
     ).filter(
         model.Host.id.in_(query.subquery())
-    ).order_by(
-        model.Host.country, model.Host.name
     )
+
+    if order_by_crawl_duration is True:
+        # for best crawling results, start with the slowest mirrors
+        final_query = final_query.order_by(model.Host.last_crawl_duration.desc())
+    else:
+        # default order
+        final_query = final_query.order_by(model.Host.country, model.Host.name)
 
     return final_query.all()
 
