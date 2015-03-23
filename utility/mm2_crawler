@@ -1031,6 +1031,8 @@ def worker(options, config, host):
         rc = 3
 
     logger.info("Ending crawl of %r with status %r" % (host, rc))
+    logger.removeHandler(fh)
+    fh.close()
     return rc
 
 
