@@ -33,6 +33,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import desc
 
 from mirrormanager2.lib import model
 
@@ -678,7 +679,7 @@ def get_mirrors(
         last_crawl_duration=False, last_checked_in=False, last_crawled=False,
         site_private=None, site_admin_active=None, site_user_active=None,
         up2date=None, host_category_url_private=None,
-        version_id=None, arch_id=None):
+        version_id=None, arch_id=None, order_by_crawl_duration=False):
     ''' Retrieve the mirrors based on the criteria specified.
 
     :arg session: the session with which to connect to the database.
@@ -774,6 +775,9 @@ def get_mirrors(
     ).order_by(
         model.Host.country, model.Host.name
     )
+
+    if order_by_crawl_duration is True:
+        final_query = final_query.order_by(desc(model.Host.last_crawl_duration))
 
     return final_query.all()
 
