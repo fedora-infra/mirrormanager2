@@ -68,7 +68,7 @@ def doit(options, config):
     session = mirrormanager2.lib.create_session(config['DB_URL'])
 
     # Get *all* of the mirrors
-    hosts = mirrormanager2.lib.get_mirrors(session, private=False)
+    hosts = mirrormanager2.lib.get_mirrors(session, private=False, order_by_crawl_duration=True)
 
     # Limit our host list down to only the ones we really want to crawl
     hosts = [
