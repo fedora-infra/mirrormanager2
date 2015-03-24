@@ -516,9 +516,8 @@ def report_stats(stats):
 
 def sync_hcds(session, host, host_category_dirs):
     stats = dict(up2date = 0, not_up2date = 0, unchanged = 0,
-                 unknown = 0, newdir = 0, deleted_on_master = 0)
+                 unknown = 0, newdir = 0, deleted_on_master = 0, duration = 0)
     current_hcds = {}
-    host.last_crawled = datetime.datetime.utcnow()
     host.last_crawl_duration = time.time() -  threadlocal.starttime
     stats['duration'] = host.last_crawl_duration
     keys = host_category_dirs.keys()
@@ -857,7 +856,6 @@ Date: %s
 
 def mark_not_up2date(session, config, exc, host, reason="Unknown"):
     host.set_not_up2date(session)
-    host.lastCrawled = datetime.datetime.utcnow()
     msg = "Host %s marked not up2date: %s" % (host.id, reason)
     logger.warning(msg)
     if exc is not None:
@@ -1053,8 +1051,8 @@ def worker(options, config, host):
 
     try:
         rc = per_host(session, host.id, options, config)
+        host.last_crawled = datetime.datetime.utcnow()
         session.commit()
-        session.close()
     except TimeoutException:
         rc = 2
         mark_not_up2date(
@@ -1062,6 +1060,8 @@ def worker(options, config, host):
             None, host,
             "Crawler timed out before completing.  "
             "Host is likely overloaded.")
+        host.last_crawled = datetime.datetime.utcnow()
+        session.commit()
     except Exception:
         logger.exception("Failure in thread %r, host %r" % (thread_id(), host))
         rc = 3
@@ -1069,6 +1069,7 @@ def worker(options, config, host):
     logger.info("Ending crawl of %r with status %r" % (host, rc))
     logger.removeHandler(fh)
     fh.close()
+    session.close()
     threads_active = threads_active - 1
     return rc
 
