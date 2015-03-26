@@ -917,6 +917,21 @@ def get_directory_by_id(session, id):
     return query.first()
 
 
+def get_hostcategorydir_by_hostcategoryid(session, host_category_id):
+    ''' Return all HostCategoryDir via its host_category_id.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.HostCategoryDir
+    ).filter(
+        model.HostCategoryDir.host_category_id == host_category_id
+    )
+
+    return query.all()
+
+
 def get_hostcategorydir_by_hostcategoryid_and_path(
         session, host_category_id, path):
     ''' Return all HostCategoryDir via its host_category_id and path.
@@ -977,8 +992,8 @@ def uploaded_config(session, host, config):
     for cat_name in _config_categories(config):
         hc = []
         for cat in host.categories:
-            if cat.category.name == cat_name:
-                hc.append(cat.category)
+            if cat.category.name.lower() == cat_name.lower():
+                hc.append(cat)
         if len(hc) > 0:
             hc = hc[0]
         else:
@@ -992,7 +1007,7 @@ def uploaded_config(session, host, config):
         # and now one HostCategoryDir for each dir in the dirtree
         if config[cat_name].has_key('dirtree'):
             for dirname,files in config[cat_name]['dirtree'].iteritems():
-                d = strip(dirname, '/')
+                d = dirname.strip('/')
                 hcdir = get_hostcategorydir_by_hostcategoryid_and_path(
                     session, host_category_id=hc.id, path=d)
                 if len(hcdir) > 0:
@@ -1016,7 +1031,7 @@ def uploaded_config(session, host, config):
                     # hit a unique violation, then we don't have to
                     try:
                         directory = get_directory_by_name(session, dname)
-                        hcdir = HostCategoryDir(
+                        hcdir = model.HostCategoryDir(
                             host_category_id=hc.id,
                             path=d,
                             directory_id=directory.id)
@@ -1026,20 +1041,21 @@ def uploaded_config(session, host, config):
                     except:
                         pass
 
-            for hcdir in hc.dirs:
+            for hcdir in get_hostcategorydir_by_hostcategoryid(session, hc.id):
                 # handle disappearing hcdirs, deleted by other processes
                 try:
                     hcdirpath = hcdir.path
                 except: continue
-                if hcdirpath not in config[c]['dirtree'].keys():
+                if hcdirpath not in config[cat_name]['dirtree'].keys():
                     try:
-                        session.remove(hcdir)
+                        session.delete(hcdir)
                         session.commit()
                     except:
                         pass
                     deleted += 1
 
-            message += "Category %s directories updated: %s  added: %s  deleted %s\n" % (category.name, marked_up2date, added, deleted)
+            message += "Category %s directories updated: %s  added: %s  deleted %s\n" % (cat.category.name, marked_up2date, added, deleted)
+        host.last_checked_in = datetime.datetime.utcnow()
         session.add(hc)
         session.commit()
 

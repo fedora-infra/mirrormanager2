@@ -24,13 +24,15 @@ MirrorManager2 xmlrpc controller.
 '''
 
 import base64
+import pickle
+import bz2
 
 import flask
 from flaskext.xmlrpc import XMLRPCHandler, Fault
 
 from mirrormanager2.app import APP, ADMIN, SESSION
 from mirrormanager2.lib import model
-#from mirrormanager2.lib.hostconfig import read_host_config
+from mirrormanager2.lib.hostconfig import read_host_config
 
 
 XMLRPC = XMLRPCHandler('xmlrpc')
@@ -39,7 +41,7 @@ XMLRPC.connect(APP, '/xmlrpc')
 
 @XMLRPC.register
 def checkin(pickledata):
-    config = pickle.loads(bz2.decompress(base64.urlsafe_b64decode(p)))
+    config = pickle.loads(bz2.decompress(base64.urlsafe_b64decode(pickledata)))
     r, message = read_host_config(SESSION, config)
     if r is not None:
         return message + 'checked in successful'

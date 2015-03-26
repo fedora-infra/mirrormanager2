@@ -102,7 +102,7 @@ def read_host_config(session, config):
     if not host:
         return (None, 'Config file host name for site not found.\n')
 
-    message = mirrormanager2.lib._uploaded_config(session, host, config)
+    message = mirrormanager2.lib.uploaded_config(session, host, config)
     host.config = config
     session.add(host)
     session.commit()
