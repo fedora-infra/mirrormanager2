@@ -990,15 +990,16 @@ def uploaded_config(session, host, config):
     # so we have to find the matching mixed-case category name.
 
     for cat_name in _config_categories(config):
-        hc = []
+        hc = None
         for cat in host.categories:
             if cat.category.name.lower() == cat_name.lower():
-                hc.append(cat)
-        if len(hc) > 0:
-            hc = hc[0]
-        else:
-            # don't let report_mirror create HostCategories
-            # it must be done through the web UI
+                hc = cat
+                break
+
+        if hc is None:
+            # Only accept entries for existing HostCategories.
+            # Don't let report_mirror create HostCategories
+            # it must be done through the web UI.
             continue
 
         marked_up2date = 0
@@ -1010,14 +1011,17 @@ def uploaded_config(session, host, config):
                 d = dirname.strip('/')
                 hcdir = get_hostcategorydir_by_hostcategoryid_and_path(
                     session, host_category_id=hc.id, path=d)
-                if len(hcdir) > 0:
+                if hcdir:
                     hcdir = hcdir[0]
-                    # this is evil, but it avoids stat()s on the client
-                    # side and a lot of data uploading
-                    is_up2date = True
+                    # This is evil, but it avoids stat()s on the client
+                    # side and a lot of data uploading.
+                    # A directory is considered up to date if it exists
+                    # on the client and in the database.
+                    # In contrast to report_mirror the crawler also
+                    # checks for the actual files in the directory.
                     marked_up2date += 1
-                    if hcdir.up2date != is_up2date:
-                        hcdir.up2date = is_up2date
+                    if hcdir.up2date != True:
+                        hcdir.up2date = True
                         session.add(hcdir)
                         session.commit()
                 else:
