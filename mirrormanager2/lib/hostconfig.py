@@ -102,6 +102,13 @@ def read_host_config(session, config):
     if not host:
         return (None, 'Config file host name for site not found.\n')
 
+    # handle the optional arguments
+    if config['host'].has_key('user_active'):
+        if config['host']['user_active'] in ['true', '1', 't', 'y', 'yes']:
+            host.user_active = True
+        else:
+            host.user_active = False
+
     message = mirrormanager2.lib.uploaded_config(session, host, config)
     host.config = config
     session.add(host)

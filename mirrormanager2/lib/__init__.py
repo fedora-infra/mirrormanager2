@@ -978,13 +978,6 @@ def uploaded_config(session, host, config):
                 return False
         return True
 
-    # handle the optional arguments
-    if config['host'].has_key('user_active'):
-        if config['host']['user_active'] in ['true', '1', 't', 'y', 'yes']:
-            self.user_active = True
-        else:
-            self.user_active = False
-
     # fill in the host category data (HostCategory and HostCategoryURL)
     # the category names in the config have been lowercased
     # so we have to find the matching mixed-case category name.
