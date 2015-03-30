@@ -26,3 +26,8 @@ with open(pickle_file) as stream:
 
 if data:
     print 'Pickle loaded. (length {0})'.format(len(data))
+else:
+    raise Exception('Failed to load pickle')
+
+if len(data) < 1:
+    raise Exception('Empty pickle')
