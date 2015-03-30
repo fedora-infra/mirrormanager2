@@ -126,8 +126,9 @@ present there.
 
 * **get_global_netblocks**
 This script gets global IPv4 and IPv6 netblocks from
-`routeviews.org<http://routeviews.org>`_ allowing to compartimentate the web
-and thus find to which bock an IP belongs and to which mirror it should go.
+`routeviews.org<http://routeviews.org>`_ allowing mirrorlist to look up both a
+server and a client's network in the internet routing tables to determine
+"closest" mirror network-wise rather than geography-wise.
 
 * **get_internet2_netblocks**
 This script has the same logic as ``get_global_netblocks`` but for internet2.
