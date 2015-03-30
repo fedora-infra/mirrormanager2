@@ -25,4 +25,4 @@ with open(pickle_file) as stream:
     data = cPickle.load(stream)
 
 if data:
-    print 'Pickle loaded with length {0}'.format(len(data))
+    print 'Pickle loaded. (length {0})'.format(len(data))
