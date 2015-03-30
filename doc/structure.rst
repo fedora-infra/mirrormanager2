@@ -132,7 +132,7 @@ and thus find to which bock an IP belongs and to which mirror it should go.
 * **get_internet2_netblocks**
 This script has the same logic as ``get_global_netblocks`` but for internet2.
 
-* **get-devel-to-release**
+* **move-devel-to-release**
 This script points the development tree of a released product to its release
 tree.
 At release day, more mirrors will be shipping the devel branch than the
