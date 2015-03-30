@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.0.5
+Version:        0.0.6
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -88,6 +88,7 @@ Requires:  py-radix
 Requires:  python-webob
 Requires:  python-IPy
 Requires:  systemd
+Requires(pre):  shadow-utils
 
 %description mirrorlist
 Sub-part of mirrormanager serving mirrors to yum/dnf
@@ -99,6 +100,7 @@ Group:          Development/Tools
 BuildArch:      noarch
 
 Requires:  %{name}-lib == %{version}
+Requires(pre):  shadow-utils
 
 %description crawler
 Install the crawler for MirrorManager, crawling all the mirrors to find out
@@ -111,6 +113,7 @@ Group:          Development/Tools
 BuildArch:      noarch
 
 Requires:  %{name}-lib == %{version}
+Requires(pre):  shadow-utils
 
 %description backend
 Install a number of utility scripts to be used manually or in cron jobs to
@@ -133,14 +136,20 @@ rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/httpd/conf.d/
 # MirrorManager configuration file
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager
+# MirrorManager crawler log rotation
+mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/logrotate.d
 # for .wsgi files mainly
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2
 # Stores temp files (.sock & co)
 mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/mirrormanager
+# Results and homedir
+mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/lib/mirrormanager
 # Lock files
 mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/lock/mirrormanager
 # Stores lock and pid info
 mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/run/mirrormanager
+# Log files
+mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/log/mirrormanager/crawler
 # Stores the service file for systemd
 mkdir -p $RPM_BUILD_ROOT/%{_unitdir}
 
@@ -153,6 +162,10 @@ install -m 644 utility/mirrormanager.conf.sample \
 # Install configuration file
 install -m 644 utility/mirrormanager2.cfg.sample \
     $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager/mirrormanager2.cfg
+
+# Install crawler logrotate definition
+install -m 644 utility/mm2_crawler.logrotate \
+    $RPM_BUILD_ROOT/%{_sysconfdir}/logrotate.d/mm2_crawler
 
 # Install WSGI file
 install -m 644 utility/mirrormanager2.wsgi \
@@ -170,6 +183,11 @@ install -m 644 mirrorlist/weighted_shuffle.py \
 install -m 644 createdb.py \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrormanager2_createdb.py
 
+# Install the tmpfile creating the /run/mirrormanager folder upon reboot
+mkdir -p %{buildroot}%{_tmpfilesdir}
+install -m 0644 mirrorlist/systemd/mirrormanager_tempfile.conf \
+    $RPM_BUILD_ROOT/%{_tmpfilesdir}/%{name}-mirrorlist.conf
+
 # Install the systemd service file
 install -m 644 mirrorlist/systemd/mirrorlist-server.service \
     $RPM_BUILD_ROOT/%{_unitdir}/mirrorlist-server.service
@@ -177,6 +195,26 @@ install -m 644 mirrorlist/systemd/mirrorlist-server.service \
 # Install the zebra-dump-parser perl module
 cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
 
+%pre mirrorlist
+getent group mirrormanager >/dev/null || groupadd -r mirrormanager
+getent passwd mirrormanager >/dev/null || \
+    useradd -r -g mirrormanager -d %{_localstatedir}/lib/mirrormanager -s /sbin/nologin \
+    -c "MirrorManager" mirrormanager
+exit 0
+
+%pre crawler
+getent group mirrormanager >/dev/null || groupadd -r mirrormanager
+getent passwd mirrormanager >/dev/null || \
+    useradd -r -g mirrormanager -d %{_localstatedir}/lib/mirrormanager -s /sbin/nologin \
+    -c "MirrorManager" mirrormanager
+exit 0
+
+%pre backend
+getent group mirrormanager >/dev/null || groupadd -r mirrormanager
+getent passwd mirrormanager >/dev/null || \
+    useradd -r -g mirrormanager -d %{_localstatedir}/lib/mirrormanager -s /sbin/nologin \
+    -c "MirrorManager" mirrormanager
+exit 0
 
 %check
 # One day we will have unit-tests to run here
@@ -205,7 +243,9 @@ cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
 
 %files mirrorlist
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrorlist-server.conf
-%dir %{_localstatedir}/run/mirrormanager
+%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/run/mirrormanager
+%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/mirrormanager/
+%{_tmpfilesdir}/%{name}-mirrorlist.conf
 %{_unitdir}/mirrorlist-server.service
 %{_datadir}/mirrormanager2/mirrorlist_client.wsgi
 %{_datadir}/mirrormanager2/mirrorlist_server.py*
@@ -213,11 +253,16 @@ cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
 
 
 %files crawler
+%config(noreplace) %{_sysconfdir}/logrotate.d/mm2_crawler
+%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/mirrormanager
+%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/log/mirrormanager
+%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/log/mirrormanager/crawler
 %{_bindir}/mm2_crawler
 
 
 %files backend
-%dir %{_localstatedir}/lock/mirrormanager
+%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lock/mirrormanager
+%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/mirrormanager
 %{_datadir}/mirrormanager2/zebra-dump-parser/
 %{_bindir}/mm2_get_global_netblocks
 %{_bindir}/mm2_get_internet2_netblocks
@@ -230,6 +275,22 @@ cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
 
 
 %changelog
+* Wed Mar 18 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.6-1
+- Update to 0.0.6
+- Drop the Locations in the hosts (no longer used)
+- Add unit-tests
+  - To the frontend
+  - To some of the backend scripts
+- Add dependency to python-IPy
+- Fix ExecStart instruction for systemd
+- Fix apache configuration file for mirrorlist
+- Fix host selection logic in the crawler (Adrian Reber)
+- Log the rsync command (Adrian Reber)
+- Add the possibility to specify the rsync argument via the configuration file
+  (Adrian Reber)
+- Add and install a tempfile.d file for systemd to re-create
+  /var/run/mirrormanager upon reboot
+
 * Mon Dec 15 2014 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.5-1
 - Update to 0.0.5
 - Include zebra-dump-parser in the backend sub-package

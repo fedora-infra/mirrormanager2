@@ -24,6 +24,12 @@ from mirrormanager2.lib.sync import run_rsync
 
 
 logger = logging.getLogger("crawler")
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+master_formatter = "%(levelname)s:%(name)s:%(hosts)s:%(threads)s:%(hostid)s:%(hostname)s:%(message)s"
+current_host = 0
+all_hosts = 0
+threads = 0
+threads_active = 0
 
 
 # This is a "thread local" object that allows us to store the start time of
@@ -31,6 +37,28 @@ logger = logging.getLogger("crawler")
 # not...)
 threadlocal = threading.local()
 
+# To insert information about the number of hosts and threads in each master
+# log message this filter is necessary
+class MasterFilter(logging.Filter):
+    def filter(self, record):
+        record.hosts = "Hosts(%d/%d)" % (current_host, all_hosts)
+        record.threads = "Threads(%d/%d)" % (threads_active, threads)
+        try:
+            record.hostid = threadlocal.hostid
+            record.hostname = threadlocal.hostname
+        except:
+            record.hostid = 0
+            record.hostname = 'master'
+        return True
+
+# This filter is necessary to enable logging per thread into a separate file
+# Based on http://plumberjack.blogspot.de/2010/09/configuring-logging-for-web.html
+class InjectingFilter(logging.Filter):
+    def __init__(self, thread_id):
+        self.thread_id = thread_id
+
+    def filter(self, record):
+        return threadlocal.thread_id == self.thread_id
 
 def thread_id():
     """ Silly util that returns a git-style short-hash id of the thread. """
@@ -55,24 +83,26 @@ def notify(options, topic, msg):
 
 
 def doit(options, config):
+    global all_hosts
+    global threads
 
     session = mirrormanager2.lib.create_session(config['DB_URL'])
 
     # Get *all* of the mirrors
-    hosts = mirrormanager2.lib.get_mirrors(session, private=False)
+    hosts = mirrormanager2.lib.get_mirrors(
+        session, private=False, order_by_crawl_duration=True,
+        admin_active=True, user_active=True, site_private=False,
+        site_user_active=True, site_admin_active=True)
 
     # Limit our host list down to only the ones we really want to crawl
     hosts = [
         host for host in hosts if (
             not host.id < options.startid and
-            not host.id >= options.stopid and
-            not (
-                host.admin_active and
-                host.user_active and
-                host.site.user_active and
-                host.site.admin_active) and
-            not host.site.private)
+            not host.id >= options.stopid)
     ]
+
+    all_hosts = len(hosts)
+    threads = options.threads
 
     # And then, for debugging, only do one host
     #hosts = [hosts.next()]
@@ -94,11 +124,16 @@ def doit(options, config):
     results = [dict(rc=rc, host=host) for rc, host in zip(return_codes, hosts)]
     notify(options, 'complete', dict(results=results))
 
+    session.commit()
+    session.close()
+
     return results
 
 
 def setup_logging(debug):
-    logging.basicConfig()
+    logging.basicConfig(format=master_formatter)
+    f = MasterFilter()
+    logger.addFilter(f)
     if debug:
         logger.setLevel(logging.DEBUG)
     else:
@@ -107,6 +142,7 @@ def setup_logging(debug):
 
 
 def main():
+    starttime = time.time()
     parser = argparse.ArgumentParser(usage=sys.argv[0] + " [options]")
     parser.add_argument(
         "-c", "--config",
@@ -163,6 +199,7 @@ def main():
         exec(compile(config_file.read(), options.config, 'exec'), config)
 
     doit(options, config)
+    logger.info("Crawler finished after %d seconds" % (time.time() - starttime))
     return 0
 
 
@@ -458,6 +495,8 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
 
 
 def report_stats(stats):
+    msg = "Crawl duration: %d seconds" % stats['duration']
+    logger.info(msg)
     msg = "Total directories: %d" % stats['numkeys']
     logger.info(msg)
     msg = "Changed to up2date: %d" % stats['up2date']
@@ -477,10 +516,10 @@ def report_stats(stats):
 
 def sync_hcds(session, host, host_category_dirs):
     stats = dict(up2date = 0, not_up2date = 0, unchanged = 0,
-                 unknown = 0, newdir = 0, deleted_on_master = 0)
+                 unknown = 0, newdir = 0, deleted_on_master = 0, duration = 0)
     current_hcds = {}
-    now = datetime.datetime.utcnow()
-    host.lastCrawled = now
+    host.last_crawl_duration = time.time() -  threadlocal.starttime
+    stats['duration'] = host.last_crawl_duration
     keys = host_category_dirs.keys()
     keys = sorted(keys, key = lambda t: t[1].name)
     stats['numkeys'] = len(keys)
@@ -646,8 +685,9 @@ def try_per_category(
         url += '/'
 
     rsync_start_time = datetime.datetime.utcnow()
+    params = config.get('CRAWLER_RSYNC_PARAMETERS', '--no-motd')
     try:
-        result, listing = run_rsync(url, '--no-motd')
+        result, listing = run_rsync(url, params, logger)
     except:
         logger.warning('Failed to run rsync.', exc_info = True)
         return False
@@ -816,7 +856,6 @@ Date: %s
 
 def mark_not_up2date(session, config, exc, host, reason="Unknown"):
     host.set_not_up2date(session)
-    host.lastCrawled = datetime.datetime.utcnow()
     msg = "Host %s marked not up2date: %s" % (host.id, reason)
     logger.warning(msg)
     if exc is not None:
@@ -973,28 +1012,65 @@ def per_host(session, host, options, config):
 
 
 def worker(options, config, host):
-    logger.info("Worker %r starting on host %r" % (thread_id(), host))
+    global current_host
+    global threads_active
+    threads_active = threads_active + 1
+    current_host = current_host + 1
     threadlocal.starttime = time.time()
+    threadlocal.hostid = host.id
+    threadlocal.hostname = host.name
+
+    # setup per thread file logger
+    log_dir = config.get('CRAWLER_LOG_DIR', None)
+    # check if the directory exists
+    if log_dir is not None:
+        if not os.path.isdir(log_dir):
+            # CRAWLER_LOG_DIR seems to be configured but does not exist
+            # not logging
+            logger.warning("Directory " + log_dir + " does not exists."
+                           " Not logging per host")
+            log_dir = None
+
+    if log_dir is not None:
+        fh = logging.FileHandler(log_dir + "/" + str(host.id) + '.log')
+        threadlocal.thread_id = thread_id()
+        f = InjectingFilter(thread_id())
+        fh.addFilter(f)
+
+        if options.debug:
+            fh.setLevel(logging.DEBUG)
+        else:
+            fh.setLevel(logging.INFO)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+
+    logger.info("Worker %r starting on host %r" % (thread_id(), host))
 
     # Each worker gets its own thread
     session = mirrormanager2.lib.create_session(config['DB_URL'])
 
     try:
         rc = per_host(session, host.id, options, config)
+        host.last_crawled = datetime.datetime.utcnow()
         session.commit()
-        session.close()
     except TimeoutException:
         rc = 2
         mark_not_up2date(
             session, config,
-            None, host.id,
+            None, host,
             "Crawler timed out before completing.  "
             "Host is likely overloaded.")
+        host.last_crawled = datetime.datetime.utcnow()
+        session.commit()
     except Exception:
         logger.exception("Failure in thread %r, host %r" % (thread_id(), host))
         rc = 3
 
     logger.info("Ending crawl of %r with status %r" % (host, rc))
+    logger.removeHandler(fh)
+    fh.close()
+    session.close()
+    threads_active = threads_active - 1
     return rc
 
 
