@@ -19,6 +19,8 @@ pickle_file = sys.argv[1]
 
 data = {}
 
+print "Validating pickle {0}".format(pickle_file)
+
 with open(pickle_file) as stream:
     data = cPickle.load(stream)
 
