@@ -29,7 +29,7 @@ BuildRequires:  python-GeoIP
 BuildRequires:  py-radix
 BuildRequires:  python-webob
 
-BuildRequires:  systemd
+BuildRequires:  systemd-devel
 
 # EPEL6
 %if ( 0%{?rhel} && 0%{?rhel} == 6 )
