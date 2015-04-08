@@ -500,7 +500,7 @@ def host_view(host_id):
             host_id=host_id,
             bandwidth=hostobj.bandwidth_int,
             asn=hostobj.asn)
-        
+
         try:
             SESSION.flush()
             flask.flash('Host updated')
@@ -1125,3 +1125,16 @@ if APP.config.get('MM_AUTHENTICATION', None) == 'local':
     import mirrormanager2.login
     APP.before_request(login._check_session_cookie)
     APP.after_request(login._send_session_cookie)
+
+
+# pylint: disable=W0613
+@APP.teardown_request
+def shutdown_session(exception=None):
+    """ Remove the DB session at the end of each request. """
+    SESSION.remove()
+
+# pylint: disable=W0613
+@APP.before_request
+def set_session():
+    """ Set the flask session as permanent. """
+    flask.session.permanent = True
