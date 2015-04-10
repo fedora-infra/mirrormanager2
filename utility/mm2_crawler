@@ -14,7 +14,7 @@ import socket
 import sys
 import threading
 import time
-import urlgrabber
+import urllib2
 import urlparse
 
 sys.path.append('..')
@@ -622,8 +622,8 @@ def add_parents(session, host_category_dirs, hc, d):
 def compare_sha256(d, filename, graburl):
     """ looks for a FileDetails object that matches the given URL """
     found = False
-    s = urlgrabber.urlread(graburl)
-    sha256 = hashlib.sha256(s).hexdigest()
+    s = urllib2.urlopen(graburl)
+    sha256 = hashlib.sha256(s.read()).hexdigest()
     for fd in list(d.fileDetails):
         if fd.filename == filename and fd.sha256 is not None:
             if fd.sha256 == sha256:
