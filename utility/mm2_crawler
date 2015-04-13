@@ -718,6 +718,9 @@ def try_per_category(
         except IndexError:
             logger.debug("invalid rsync line: %s\n" % line)
 
+    # run_rsync() returns a temporary file which needs to be closed
+    listing.close()
+
     logger.debug("rsync listing has %d lines" % len(rsync))
     if len(rsync) == 0:
         # no rsync content, fail!
