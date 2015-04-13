@@ -259,9 +259,9 @@ class myHTTPConnection(httplib.HTTPConnection):
 # the magic begins
 
 
-def timeout_check(options):
+def timeout_check(timeout):
     delta = time.time() - threadlocal.starttime
-    if delta > (options.timeout_minutes * 60):
+    if delta > (timeout * 60):
         raise TimeoutException("Timed out after %rs" % delta)
 
 
@@ -632,11 +632,13 @@ def compare_sha256(d, filename, graburl):
     return found
 
 
-def try_per_file(d, hoststate, url):
+def try_per_file(d, hoststate, url, timeout):
     if d.files is None:
         return None
     exists = None
     for filename in d.files.keys():
+        # Check if maximum crawl time for this host has been reached
+        timeout_check(timeout)
         exists = None
         graburl = "%s/%s" % (url, filename)
         try:
@@ -670,7 +672,7 @@ def try_per_file(d, hoststate, url):
 
 def try_per_category(
         session, trydirs, url, host_category_dirs, hc, host,
-        categoryPrefixLen, options, config):
+        categoryPrefixLen, timeout, config):
     """ In addition to the crawls using http and ftp, this rsync crawl
     scans the complete category with one connection instead perdir (ftp)
     or perfile(http). """
@@ -723,7 +725,8 @@ def try_per_category(
     # for all directories in this category
     for d in trydirs:
         d = d.directory
-        timeout_check(options)
+        # Check if maximum crawl time for this host has been reached
+        timeout_check(timeout)
 
         # ignore unreadable directories - we can't really know about them
         if not d.readable:
@@ -778,7 +781,7 @@ def try_per_category(
     return False
 
 
-def try_per_dir(d, hoststate, url):
+def try_per_dir(d, hoststate, url, timeout):
     if d.files is None:
         return None
     if not url.startswith('ftp'):
@@ -792,6 +795,9 @@ def try_per_dir(d, hoststate, url):
 
     if len(listing) == 0:
         return False
+
+    # Check if maximum crawl time for this host has been reached
+    timeout_check(timeout)
 
     for line in listing:
         if line.startswith('total'): # some servers first include a line starting with the word 'total' that we can ignore
@@ -855,7 +861,12 @@ Date: %s
 
 
 def mark_not_up2date(session, config, exc, host, reason="Unknown"):
+    """This function marks a complete host as not being up to date.
+    It usually is called if the scan of a single category has failed.
+    This is something the crawler does at multiple places: Failure
+    in the scan of a single category disables the complete host."""
     host.set_not_up2date(session)
+    host.last_crawl_duration = time.time() -  threadlocal.starttime
     msg = "Host %s marked not up2date: %s" % (host.id, reason)
     logger.warning(msg)
     if exc is not None:
@@ -925,8 +936,10 @@ def per_host(session, host, options, config):
         try:
             has_all_files = try_per_category(
                 session, trydirs, categoryUrl, host_category_dirs, hc,
-                host, categoryPrefixLen, options, config)
+                host, categoryPrefixLen, options.timeout_minutes, config)
         except TimeoutException:
+            # If the crawl of only one category fails, the host
+            # is completely marked as not being up to date.
             raise
 
         if type(has_all_files) == type(True):
@@ -941,7 +954,7 @@ def per_host(session, host, options, config):
 
         try_later_delay = 1
         for d in trydirs:
-            timeout_check(options)
+            timeout_check(options.timeout_minutes)
 
             d = d.directory
 
@@ -957,9 +970,9 @@ def per_host(session, host, options, config):
             url = '%s/%s' % (categoryUrl, dirname)
 
             try:
-                has_all_files = try_per_dir(d, hoststate, url)
+                has_all_files = try_per_dir(d, hoststate, url, options.timeout_minutes)
                 if has_all_files is None:
-                    has_all_files = try_per_file(d, hoststate, url)
+                    has_all_files = try_per_file(d, hoststate, url, options.timeout_minutes)
 
                 if has_all_files == False:
                     logger.warning("Not up2date: %s" % (d.name))
@@ -991,8 +1004,12 @@ def per_host(session, host, options, config):
                 time.sleep(try_later_delay)
                 if try_later_delay < 60:
                     try_later_delay = try_later_delay << 1
+            except TimeoutException:
+                # If the crawl of only one category fails, the host
+                # is completely marked as not being up to date.
+                raise
             except:
-                logging.exception("Unhandled exception raised.")
+                logger.exception("Unhandled exception raised.")
                 mark_not_up2date(
                     session, config,
                     sys.exc_info(), host, "Unhandled exception raised.  "
