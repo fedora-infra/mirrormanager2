@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.0.6
+Version:        0.0.7
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -275,6 +275,26 @@ exit 0
 
 
 %changelog
+* Mon Apr 13 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.7-1
+- Update to 0.0.7
+- Add missing import on mm2_update-EC2-netblocks
+- Have the cron jobs running under a ``mirrormanager`` user (Adrian Reber)
+- Update the last_crawled and last_crawled_duration correctly (Adrian Reber)
+- Fix systemd's tempfile.conf for mirrormanager2
+- Fix link to the crawler log file (Adrian Reber)
+- Close per thread logging correctly (Adrian Reber)
+- Add more informations to the log output (Adrian Reber)
+- Start crawling the hosts which require the most time (Adrian Reber)
+- Filters the hosts to crawl at the DB level to save time and memory (Adrian
+  Reber)
+- Fix the xmlrpc endpoint (Adrian Reber)
+- Adjust Build Requires to include systemd-devel instead of just systemd
+- Close session at the end and make the session permanent
+- Add new columns to the host table to store extra infos (Adrian Reber)
+- Use urllib2 instead of urlgrabber in the crawler (Adrian Reber)
+- Fix crawler timeout (Adrian Reber)
+- run_rsync() returns a temporary file which needs to be closed (Adrian Reber)
+
 * Wed Mar 18 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.6-1
 - Update to 0.0.6
 - Drop the Locations in the hosts (no longer used)
