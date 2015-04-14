@@ -262,7 +262,7 @@ class Host(BASE):
         for hc in self.categories:
             for hcd in hc.directories:
                 hcd.up2date = False
-                session.commit()
+        session.commit()
 
     def is_active(self):
         return self.admin_active \

@@ -867,8 +867,10 @@ def mark_not_up2date(session, config, exc, host, reason="Unknown"):
     It usually is called if the scan of a single category has failed.
     This is something the crawler does at multiple places: Failure
     in the scan of a single category disables the complete host."""
-    host.set_not_up2date(session)
     host.last_crawl_duration = time.time() -  threadlocal.starttime
+    # Watch out: set_not_up2date(session) is commiting all changes
+    # in this thread to the database
+    host.set_not_up2date(session)
     msg = "Host %s marked not up2date: %s" % (host.id, reason)
     logger.warning(msg)
     if exc is not None:
