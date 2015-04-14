@@ -96,11 +96,12 @@ def doit(options, config):
 
     # Limit our host list down to only the ones we really want to crawl
     hosts = [
-        host for host in hosts if (
+        host.id for host in hosts if (
             not host.id < options.startid and
             not host.id >= options.stopid)
     ]
 
+    session.close()
     all_hosts = len(hosts)
     threads = options.threads
 
@@ -115,7 +116,7 @@ def doit(options, config):
 
     # Then create a threadpool to handle as many at a time as we like
     threadpool = multiprocessing.pool.ThreadPool(processes=options.threads)
-    fn = lambda host: worker(options, config, host)
+    fn = lambda host_id: worker(options, config, host_id)
 
     # Here's the big operation
     return_codes = threadpool.map(fn, hosts)
@@ -123,9 +124,6 @@ def doit(options, config):
     # Put a bow on the results for fedmsg
     results = [dict(rc=rc, host=host) for rc, host in zip(return_codes, hosts)]
     notify(options, 'complete', dict(results=results))
-
-    session.commit()
-    session.close()
 
     return results
 
@@ -595,6 +593,7 @@ def method_pref(urls, prev=""):
             if u.startswith('ftp:'):
                 pref = u
                 break
+    logger.info("Crawling with URL %s" % pref)
     return pref
 
 
@@ -1031,9 +1030,13 @@ def per_host(session, host, options, config):
     return rc
 
 
-def worker(options, config, host):
+def worker(options, config, host_id):
     global current_host
     global threads_active
+
+    session = mirrormanager2.lib.create_session(config['DB_URL'])
+    host = mirrormanager2.lib.get_host(session, host_id)
+
     threads_active = threads_active + 1
     current_host = current_host + 1
     threadlocal.starttime = time.time()
@@ -1066,8 +1069,6 @@ def worker(options, config, host):
 
     logger.info("Worker %r starting on host %r" % (thread_id(), host))
 
-    # Each worker gets its own thread
-    session = mirrormanager2.lib.create_session(config['DB_URL'])
 
     try:
         rc = per_host(session, host.id, options, config)
