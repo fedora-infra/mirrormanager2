@@ -1,7 +1,21 @@
 /*
  * Mirrormanager2 specific CSS
  */
+input {
+    font-size: 100%;
+}
 
+textarea {
+    font-size: 100%;
+}
+
+button {
+    font-size: 100%;
+}
+
+select {
+    font-size: 100%;
+}
 
 /* Stealed this from flask-admin */
 form.icon button {
