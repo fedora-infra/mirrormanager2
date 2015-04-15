@@ -1075,6 +1075,7 @@ def worker(options, config, host_id):
     try:
         rc = per_host(session, host.id, options, config)
         host.last_crawled = datetime.datetime.utcnow()
+        host.crawl_failures = 0
         session.commit()
     except TimeoutException:
         rc = 2
@@ -1084,6 +1085,16 @@ def worker(options, config, host_id):
             "Crawler timed out before completing.  "
             "Host is likely overloaded.")
         host.last_crawled = datetime.datetime.utcnow()
+        try:
+            host.crawl_failures += 1
+        except TypeError:
+            host.crawl_failures = 1
+        auto_disable = config.get('CRAWLER_AUTO_DISABLE', 4)
+        if host.crawl_failures >= auto_disable:
+            host.disable_reason = "Host has been disabled (user_active) after %d "
+                                  "crawl consecutive crawlfailures" % auto_disable
+            host.user_active = False
+            
         session.commit()
     except Exception:
         logger.exception("Failure in thread %r, host %r" % (thread_id(), host))

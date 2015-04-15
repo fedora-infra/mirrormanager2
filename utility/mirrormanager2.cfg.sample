@@ -95,13 +95,17 @@ CHECK_SESSION_IP = True
 CRAWLER_SEND_EMAIL =  True
 
 # Specify additional rsync parameters for the crawler
-# # --timeout 14400: abort rsync crawl after 4 hours
+# --timeout 14400: abort rsync crawl after 4 hours
 CRAWLER_RSYNC_PARAMETERS = '--no-motd --timeout 14400'
 
 # If this variable is set (and the directory exists)
-# # the crawler will create per host log files with <hostid>.log
-# # which can the be used in the web interface by the mirror admins
+# the crawler will create per host log files with <hostid>.log
+# which can the be used in the web interface by the mirror admins
 CRAWLER_LOG_DIR = '/var/log/mirrormanager/crawler'
+
+# If a host fails for CRAWLER_AUTO_DISABLE times in a row
+# the host will be disable automatically (user_active)
+CRAWLER_AUTO_DISABLE = 4
 
 umdl_master_directories = [
     {

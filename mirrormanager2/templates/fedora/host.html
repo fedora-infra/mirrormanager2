@@ -23,6 +23,7 @@
     {{ render_field_in_row(form.name) }}
     {{ render_field_in_row(form.admin_active) }}
     {{ render_field_in_row(form.user_active) }}
+    {{ render_field_in_row(form.disable_reason) }}
     {{ render_field_in_row(form.country) }}
     {{ render_field_in_row(form.bandwidth_int) }}
     {{ render_field_in_row(form.private) }}
@@ -48,6 +49,7 @@ Last Checked In: {{ host.last_checked_in or '-' }} <br />
 Last Crawled: {% if host.last_crawled %} {{ host.last_crawled
   }} <a href="{{url_for('index')}}crawler/{{host.id}}.log">[Log]</a> {% else %} - {% endif %} <br />
 Last Crawl Duration: {{ host.last_crawl_duration }} seconds
+{% if host.crawl_failures > 0 %}<br/>Number of consecutive crawl failures: {{ host.crawl_failures }} {% endif %}
 </p>
 
 <h3>

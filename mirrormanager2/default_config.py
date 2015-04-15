@@ -99,3 +99,7 @@ CRAWLER_RSYNC_PARAMETERS = '--no-motd --timeout 14400'
 # the crawler will create per host log files with <hostid>.log
 # which can the be used in the web interface by the mirror admins
 CRAWLER_LOG_DIR = '/var/log/mirrormanager/crawler'
+
+# If a host fails for CRAWLER_AUTO_DISABLE times in a row
+# the host will be disable automatically (user_active)
+CRAWLER_AUTO_DISABLE = 4
