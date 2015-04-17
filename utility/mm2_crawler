@@ -890,6 +890,43 @@ def select_host_categories_to_scan(session, options, host):
         result = list(host.categories)
     return result
 
+def check_for_base_dir(hoststate, urls):
+    """Check if at least one of the given URL exists on the remote host.
+    This is used to detect mirrors which have completely dropped our content.
+    This is only looking at http and ftp URLs as those URLs are actually
+    relevant for normal access. If both tests fail the mirror will be marked
+    as failed during crawl.
+    """
+    filedata = { 'size' : 0 }
+    exists = False
+    for u in urls:
+        if u.startswith('http:'):
+            try:
+                exists = check_head(hoststate, u, filedata, False, True)
+            except:
+                exists = False
+            if not exists:
+                logger.warning("Base URL %s does not exist." % u)
+                continue
+            # The base http URL seems to work. Good!
+            return True
+        if u.startswith('ftp:'):
+            try:
+                exists = get_ftp_dir(hoststate, u, True)
+            except TryLater:
+                # Some temporary difficulties on the mirror
+                exists = False
+            # exists is an empty list if that directory does not exist
+            if not exists:
+                logger.warning("Base URL %s does not exist." % u)
+                continue
+            # The base ftp URL seems to work. Good!
+            return True
+
+    # Reaching this point means that no functional http/ftp has been
+    # found. This means that the mirror will not work for normal http
+    # and ftp users.
+    return False
 
 def per_host(session, host, options, config):
     """Canary mode looks for 2 things:
@@ -898,6 +935,7 @@ def per_host(session, host, options, config):
     directories.
     """
     rc = 0
+    successful_categories = 0
     host = mirrormanager2.lib.get_host(session, host)
     host_category_dirs = {}
     if host.private and not options.include_private:
@@ -934,6 +972,19 @@ def per_host(session, host, options, config):
         if categoryUrl is None:
             continue
         categoryPrefixLen = len(category.topdir.name)+1
+
+        # Check if either the http or ftp URL of the host point
+        # to an existing and readable URL
+        exists = check_for_base_dir(hoststate, host_category_urls)
+
+        if not exists:
+            # Base categoryURL for the current host was not found.
+            # Skipping this category.
+            continue
+
+        # Record that this host has at least one (or more) categories
+        # which is accessible via http or ftp
+        successful_categories += 1
 
         trydirs = list(hc.directories)
         # check the complete category in one go with rsync
@@ -1026,12 +1077,29 @@ def per_host(session, host, options, config):
                 % (host.name, host.id))
     hoststate.close()
 
+    if successful_categories == 0:
+        # Let's say that '5' is the signal for the calling function
+        # that all categories have failed due to broken base URLs
+        # and that this host should me marked as failed during crawl
+        return 5
+
     if rc == 0:
         if len(host_category_dirs) > 0:
             sync_hcds(session, host, host_category_dirs)
     return rc
 
+def count_crawl_failures(host, config):
+   try:
+       host.crawl_failures += 1
+   except TypeError:
+       host.crawl_failures = 1
 
+   auto_disable = config.get('CRAWLER_AUTO_DISABLE', 4)
+   if host.crawl_failures >= auto_disable:
+       host.disable_reason = ("Host has been disabled (user_active) after %d"
+                              " consecutive crawl failures" % auto_disable )
+       host.user_active = False
+            
 def worker(options, config, host_id):
     global current_host
     global threads_active
@@ -1075,7 +1143,12 @@ def worker(options, config, host_id):
     try:
         rc = per_host(session, host.id, options, config)
         host.last_crawled = datetime.datetime.utcnow()
-        host.crawl_failures = 0
+        if rc == 5:
+            # rc == 5 has been define as a problem with all categories
+            count_crawl_failures(host, config)
+        else:
+            # Resetting as this only counts consecutive crawl failures
+            host.crawl_failures = 0
         session.commit()
     except TimeoutException:
         rc = 2
@@ -1085,16 +1158,7 @@ def worker(options, config, host_id):
             "Crawler timed out before completing.  "
             "Host is likely overloaded.")
         host.last_crawled = datetime.datetime.utcnow()
-        try:
-            host.crawl_failures += 1
-        except TypeError:
-            host.crawl_failures = 1
-        auto_disable = config.get('CRAWLER_AUTO_DISABLE', 4)
-        if host.crawl_failures >= auto_disable:
-            host.disable_reason = "Host has been disabled (user_active) after %d "
-                                  "crawl consecutive crawlfailures" % auto_disable
-            host.user_active = False
-            
+        count_crawl_failures(host, config)
         session.commit()
     except Exception:
         logger.exception("Failure in thread %r, host %r" % (thread_id(), host))
