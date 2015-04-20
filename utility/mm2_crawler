@@ -400,6 +400,12 @@ def check_ftp_file(hoststate, url, filedata, readable):
         return None
     if len(results) == 1:
         line = results[0].split()
+        # For the basic check in check_for_base_dir() it is only
+        # relevant if the directory exists or not. Therefore
+        # passing None as filedata[]. This needs to be handled here.
+        if filedata is None:
+            # The file/directory seems to exist
+            return True
         if line[4] == filedata['size']:
             return True
     return False
@@ -467,6 +473,14 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
     #last_modified  = r.getheader('Last-Modified')
 
     if status >= 200 and status < 300:
+        # lighttpd returns a Content-Length for directories
+        # apache and nginx do not
+        # For the basic check in check_for_base_dir() it is only
+        # relevant if the directory exists or not. Therefore
+        # passing None as filedata[]. This needs to be handled here.
+        if filedata is None:
+            # The file/directory seems to exist
+            return True
         # fixme should check last_modified too
         if filedata['size'] == content_length or content_length is None: # handle no content-length header, streaming/chunked return or zero-length file
             return True
@@ -897,12 +911,13 @@ def check_for_base_dir(hoststate, urls):
     relevant for normal access. If both tests fail the mirror will be marked
     as failed during crawl.
     """
-    filedata = { 'size' : 0 }
     exists = False
     for u in urls:
+        if not u.endswith('/'):
+            u += '/'
         if u.startswith('http:'):
             try:
-                exists = check_head(hoststate, u, filedata, False, True)
+                exists = check_head(hoststate, u, None, False, True)
             except:
                 exists = False
             if not exists:
