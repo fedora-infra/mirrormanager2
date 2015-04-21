@@ -516,8 +516,7 @@ def sync_hcds(session, host, host_category_dirs):
     stats = dict(up2date = 0, not_up2date = 0, unchanged = 0,
                  unknown = 0, newdir = 0, deleted_on_master = 0, duration = 0)
     current_hcds = {}
-    host.last_crawl_duration = time.time() -  threadlocal.starttime
-    stats['duration'] = host.last_crawl_duration
+    stats['duration'] = time.time() -  threadlocal.starttime
     keys = host_category_dirs.keys()
     keys = sorted(keys, key = lambda t: t[1].name)
     stats['numkeys'] = len(keys)
@@ -867,7 +866,6 @@ def mark_not_up2date(session, config, exc, host, reason="Unknown"):
     It usually is called if the scan of a single category has failed.
     This is something the crawler does at multiple places: Failure
     in the scan of a single category disables the complete host."""
-    host.last_crawl_duration = time.time() -  threadlocal.starttime
     # Watch out: set_not_up2date(session) is commiting all changes
     # in this thread to the database
     host.set_not_up2date(session)
@@ -1143,6 +1141,7 @@ def worker(options, config, host_id):
     try:
         rc = per_host(session, host.id, options, config)
         host.last_crawled = datetime.datetime.utcnow()
+        host.last_crawl_duration = time.time() -  threadlocal.starttime
         if rc == 5:
             # rc == 5 has been define as a problem with all categories
             count_crawl_failures(host, config)
@@ -1158,6 +1157,7 @@ def worker(options, config, host_id):
             "Crawler timed out before completing.  "
             "Host is likely overloaded.")
         host.last_crawled = datetime.datetime.utcnow()
+        host.last_crawl_duration = time.time() -  threadlocal.starttime
         count_crawl_failures(host, config)
         session.commit()
     except Exception:
