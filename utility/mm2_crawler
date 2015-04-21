@@ -739,7 +739,6 @@ def try_per_category(
         return False
     # for all directories in this category
     for d in trydirs:
-        d = d.directory
         # Check if maximum crawl time for this host has been reached
         timeout_check(timeout)
 
@@ -999,7 +998,7 @@ def per_host(session, host, options, config):
         # which is accessible via http or ftp
         successful_categories += 1
 
-        trydirs = list(hc.directories)
+        trydirs = list(hc.category.directories)
         # check the complete category in one go with rsync
         try:
             has_all_files = try_per_category(
@@ -1023,8 +1022,6 @@ def per_host(session, host, options, config):
         try_later_delay = 1
         for d in trydirs:
             timeout_check(options.timeout_minutes)
-
-            d = d.directory
 
             if not d.readable:
                 continue
