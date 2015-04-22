@@ -78,6 +78,13 @@ MM_COOKIE_REQUIRES_HTTPS = True
 # Default: ``.MirrorManager``.
 MM_COOKIE_NAME = 'MirrorManager'
 
+# If this variable is set (and the directory exists) the crawler
+# will create per host log files in MM_LOG_DIR/crawler/<hostid>.log
+# which can the be used in the web interface by the mirror admins.
+# Other parts besides the crawler are also using this variable to
+# decide where to store log files.
+MM_LOG_DIR = '/var/log/mirrormanager'
+
 # If not specified the application will rely on the root_url when sending
 # emails, otherwise it will use this URL
 # Default: ``None``.
@@ -94,11 +101,6 @@ CHECK_SESSION_IP = True
 # Depending on the setup and the crawler frequency rsync's timeout option
 # can be used decrease the probability of stale rsync processes
 CRAWLER_RSYNC_PARAMETERS = '--no-motd --timeout 14400'
-
-# If this variable is set (and the directory exists)
-# the crawler will create per host log files with <hostid>.log
-# which can the be used in the web interface by the mirror admins
-CRAWLER_LOG_DIR = '/var/log/mirrormanager/crawler'
 
 # If a host fails for CRAWLER_AUTO_DISABLE times in a row
 # the host will be disable automatically (user_active)

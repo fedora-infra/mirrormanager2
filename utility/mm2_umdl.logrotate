@@ -1,0 +1,9 @@
+/var/log/mirrormanager/umdl.log {
+    missingok
+    notifempty
+    daily
+    dateext
+    rotate 15
+    postrotate
+    endscript
+}

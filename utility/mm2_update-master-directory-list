@@ -758,15 +758,35 @@ def main():
 
     delete_directories = options.delete_directories
 
+    log_dir = config.get('MM_LOG_DIR', None)
+    # check if the directory exists
+    if log_dir is not None:
+        if not os.path.isdir(log_dir):
+            # MM_LOG_DIR seems to be configured but does not exist
+            # Logging into cwd.
+            logger.warning("Directory " + log_dir + " does not exists."
+                           " Logging into CWD.")
+            log_dir = None
+
+    if log_dir is not None:
+        log_file = log_dir + "/" + options.logfile
+    else:
+        log_file = options.logfile
+
     fmt = '%(asctime)s %(message)s'
     datefmt = '%m/%d/%Y %I:%M:%S %p'
     formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
     logger = logging.getLogger('umdl')
-    handler = logging.handlers.WatchedFileHandler(options.logfile, "a+b")
+    handler = logging.handlers.WatchedFileHandler(log_file, "a+b")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     if options.debug:
+        sh = logging.StreamHandler()
+        sh.setFormatter(formatter)
+        logger.addHandler(sh)
         logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
 
     logger.info("Starting umdl")
     setup_arch_version_cache(session)

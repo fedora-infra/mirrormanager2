@@ -167,6 +167,10 @@ install -m 644 utility/mirrormanager2.cfg.sample \
 install -m 644 utility/mm2_crawler.logrotate \
     $RPM_BUILD_ROOT/%{_sysconfdir}/logrotate.d/mm2_crawler
 
+# Install umdl logrotate definition
+install -m 644 utility/mm2_umdl.logrotate \
+    $RPM_BUILD_ROOT/%{_sysconfdir}/logrotate.d/mm2_umdl
+
 # Install WSGI file
 install -m 644 utility/mirrormanager2.wsgi \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrormanager2.wsgi
@@ -261,6 +265,7 @@ exit 0
 
 
 %files backend
+%config(noreplace) %{_sysconfdir}/logrotate.d/mm2_umdl
 %attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lock/mirrormanager
 %attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/mirrormanager
 %{_datadir}/mirrormanager2/zebra-dump-parser/
