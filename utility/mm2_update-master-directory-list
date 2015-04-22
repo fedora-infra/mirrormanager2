@@ -724,40 +724,8 @@ def sync_directories_from_disk(
     sync_category_directories(
         session, config, diskpath, category, category_directories)
 
-
-def main():
-    global delete_directories
+def setup_logging(config, options):
     global logger
-    parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
-    parser.add_option(
-        "-c", "--config",
-        dest="config", default='/etc/mirrormanager/mirrormanager2.cfg',
-        help="Configuration file to use")
-    parser.add_option(
-        "--logfile",
-        dest="logfile", default='umdl.log',
-        metavar="FILE", help="write logs to FILE")
-    parser.add_option(
-        "--debug",
-        dest="debug", default=False, action="store_true",
-        help="enable debugging")
-    parser.add_option(
-        "--delete-directories",
-        dest="delete_directories",
-        default=delete_directories,
-        action="store_true",
-        help="delete directories from the database that are no longer "
-            "on disk")
-
-    (options, args) = parser.parse_args()
-    config = dict()
-    with open(options.config) as config_file:
-        exec(compile(config_file.read(), options.config, 'exec'), config)
-
-    session = mirrormanager2.lib.create_session(config['DB_URL'])
-
-    delete_directories = options.delete_directories
-
     log_dir = config.get('MM_LOG_DIR', None)
     # check if the directory exists
     if log_dir is not None:
@@ -780,7 +748,9 @@ def main():
     handler = logging.handlers.WatchedFileHandler(log_file, "a+b")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
-    if options.debug:
+    # list_categories is a special case where the user wants to see something
+    # on the console and not only in the log file
+    if options.debug or options.list_categories:
         sh = logging.StreamHandler()
         sh.setFormatter(formatter)
         logger.addHandler(sh)
@@ -788,9 +758,70 @@ def main():
     else:
         logger.setLevel(logging.INFO)
 
+
+def main():
+    global delete_directories
+    global logger
+    parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option(
+        "-c", "--config",
+        dest="config", default='/etc/mirrormanager/mirrormanager2.cfg',
+        help="Configuration file to use")
+    parser.add_option(
+        "--logfile",
+        dest="logfile", default='umdl.log',
+        metavar="FILE", help="write logs to FILE")
+    parser.add_option(
+        "--list",
+        dest="list_categories", default=False, action="store_true",
+        help="list existing categories and exit")
+    parser.add_option(
+        "--category", metavar="CATEGORY",
+        dest="categories", default=None,
+        help="only scan category CATEGORY")
+    parser.add_option(
+        "--debug",
+        dest="debug", default=False, action="store_true",
+        help="enable debugging")
+    parser.add_option(
+        "--delete-directories",
+        dest="delete_directories",
+        default=delete_directories,
+        action="store_true",
+        help="delete directories from the database that are no longer "
+            "on disk")
+
+    (options, args) = parser.parse_args()
+    config = dict()
+    with open(options.config) as config_file:
+        exec(compile(config_file.read(), options.config, 'exec'), config)
+
+    session = mirrormanager2.lib.create_session(config['DB_URL'])
+
+    delete_directories = options.delete_directories
+
+    setup_logging(config, options)
+
     logger.info("Starting umdl")
+
+    if options.list_categories:
+        categories = mirrormanager2.lib.get_categories(session)
+        for c in categories:
+            logger.info(c)
+        session.close()
+        logger.info("Ending umdl")
+        return 0
+
     setup_arch_version_cache(session)
-    for i in config.get('umdl_master_directories'):
+    check_categories = []
+    if options.categories is None:
+        check_categories = config.get('umdl_master_directories')
+    else:
+        for i in config.get('umdl_master_directories'):
+            if i['category'] == options.categories:
+                check_categories.append(i)
+
+    for i in check_categories:
         cname = i['category']
 
         category = mirrormanager2.lib.get_category_by_name(session, cname)
