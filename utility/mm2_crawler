@@ -264,13 +264,15 @@ def timeout_check(timeout):
 
 
 class hostState:
-    def __init__(self, http_debuglevel=0, ftp_debuglevel=0):
+    def __init__(self, http_debuglevel=0, ftp_debuglevel=0, timeout_minutes=120):
         self.httpconn = {}
         self.ftpconn = {}
         self.http_debuglevel = http_debuglevel
         self.ftp_debuglevel = ftp_debuglevel
         self.ftp_dir_results = None
         self.keepalives_available = False
+        # ftplib and httplib take the timeout in seconds
+        self.timeout = timeout_minutes*60
 
     def get_connection(self, url):
         scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
@@ -285,13 +287,13 @@ class hostState:
     def open_http(self, url):
         scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
         if not self.httpconn.has_key(netloc):
-            self.httpconn[netloc] = myHTTPConnection(netloc)
+            self.httpconn[netloc] = myHTTPConnection(netloc, timeout=self.timeout)
             self.httpconn[netloc].set_debuglevel(self.http_debuglevel)
         return self.httpconn[netloc]
 
     def _open_ftp(self, netloc):
         if not self.ftpconn.has_key(netloc):
-            self.ftpconn[netloc] = FTP(netloc)
+            self.ftpconn[netloc] = FTP(netloc, timeout=self.timeout)
             self.ftpconn[netloc].set_debuglevel(self.ftp_debuglevel)
             self.ftpconn[netloc].login()
 
@@ -960,7 +962,8 @@ def per_host(session, host, options, config):
 
     hoststate = hostState(
         http_debuglevel=http_debuglevel,
-        ftp_debuglevel=ftp_debuglevel)
+        ftp_debuglevel=ftp_debuglevel,
+        timeout_minutes=options.timeout_minutes)
 
     categoryUrl = ''
     host_categories_to_scan = select_host_categories_to_scan(
