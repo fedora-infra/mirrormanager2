@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.0.7
+Version:        0.0.8
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -280,6 +280,25 @@ exit 0
 
 
 %changelog
+* Thu Apr 23 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.8-1
+- Update to 0.0.8
+- Make MM2 a little prettier on high-res display
+- Add a Location tag for static (Patrick Uiterwijk)
+- Fix the DB session issue on the crawler (Adrian Reber)
+- Add some documentation on how MirrorManager works
+- Decrease time required for set_not_up2date() (Adrien Reber)
+- Add support to auto disable mirrors (Adrien Reber)
+- Auto disable hosts which have a URL configured but which does not exist
+  (Adrian Reber)
+- crawl_duration is a host specific property (Adrian Reber)
+- Handle lighttpd returing a content length for directories (Adrian Reber)
+- Scan the directories which are supposed to be on each mirror (Adrian Reber)
+- Use Yesterday's date on mm2_get_internet2_netblocks to avoid TZ issue (Adrian
+  Reber)
+- Fix logging in the UMDL script (Adrian Reber)
+- Allow the UMDL to crawl only a specified category (Adrian Reber)
+- Fix example fedmsg config (Ralph Bean)
+
 * Mon Apr 13 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.7-1
 - Update to 0.0.7
 - Add missing import on mm2_update-EC2-netblocks
