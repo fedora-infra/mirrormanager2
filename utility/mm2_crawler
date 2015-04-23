@@ -1124,11 +1124,12 @@ def worker(options, config, host_id):
     threadlocal.hostname = host.name
 
     # setup per thread file logger
-    log_dir = config.get('CRAWLER_LOG_DIR', None)
+    log_dir = config.get('MM_LOG_DIR', None)
     # check if the directory exists
     if log_dir is not None:
+        log_dir += "/crawler"
         if not os.path.isdir(log_dir):
-            # CRAWLER_LOG_DIR seems to be configured but does not exist
+            # MM_LOG_DIR/crawler seems to be configured but does not exist
             # not logging
             logger.warning("Directory " + log_dir + " does not exists."
                            " Not logging per host")
