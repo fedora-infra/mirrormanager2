@@ -14,7 +14,7 @@ import socket
 import sys
 import threading
 import time
-import urlgrabber
+import urllib2
 import urlparse
 
 sys.path.append('..')
@@ -24,6 +24,12 @@ from mirrormanager2.lib.sync import run_rsync
 
 
 logger = logging.getLogger("crawler")
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+master_formatter = "%(levelname)s:%(name)s:%(hosts)s:%(threads)s:%(hostid)s:%(hostname)s:%(message)s"
+current_host = 0
+all_hosts = 0
+threads = 0
+threads_active = 0
 
 
 # This is a "thread local" object that allows us to store the start time of
@@ -31,6 +37,28 @@ logger = logging.getLogger("crawler")
 # not...)
 threadlocal = threading.local()
 
+# To insert information about the number of hosts and threads in each master
+# log message this filter is necessary
+class MasterFilter(logging.Filter):
+    def filter(self, record):
+        record.hosts = "Hosts(%d/%d)" % (current_host, all_hosts)
+        record.threads = "Threads(%d/%d)" % (threads_active, threads)
+        try:
+            record.hostid = threadlocal.hostid
+            record.hostname = threadlocal.hostname
+        except:
+            record.hostid = 0
+            record.hostname = 'master'
+        return True
+
+# This filter is necessary to enable logging per thread into a separate file
+# Based on http://plumberjack.blogspot.de/2010/09/configuring-logging-for-web.html
+class InjectingFilter(logging.Filter):
+    def __init__(self, thread_id):
+        self.thread_id = thread_id
+
+    def filter(self, record):
+        return threadlocal.thread_id == self.thread_id
 
 def thread_id():
     """ Silly util that returns a git-style short-hash id of the thread. """
@@ -55,24 +83,27 @@ def notify(options, topic, msg):
 
 
 def doit(options, config):
+    global all_hosts
+    global threads
 
     session = mirrormanager2.lib.create_session(config['DB_URL'])
 
     # Get *all* of the mirrors
-    hosts = mirrormanager2.lib.get_mirrors(session, private=False)
+    hosts = mirrormanager2.lib.get_mirrors(
+        session, private=False, order_by_crawl_duration=True,
+        admin_active=True, user_active=True, site_private=False,
+        site_user_active=True, site_admin_active=True)
 
     # Limit our host list down to only the ones we really want to crawl
     hosts = [
-        host for host in hosts if (
+        host.id for host in hosts if (
             not host.id < options.startid and
-            not host.id >= options.stopid and
-            not (
-                host.admin_active and
-                host.user_active and
-                host.site.user_active and
-                host.site.admin_active) and
-            not host.site.private)
+            not host.id >= options.stopid)
     ]
+
+    session.close()
+    all_hosts = len(hosts)
+    threads = options.threads
 
     # And then, for debugging, only do one host
     #hosts = [hosts.next()]
@@ -85,7 +116,7 @@ def doit(options, config):
 
     # Then create a threadpool to handle as many at a time as we like
     threadpool = multiprocessing.pool.ThreadPool(processes=options.threads)
-    fn = lambda host: worker(options, config, host)
+    fn = lambda host_id: worker(options, config, host_id)
 
     # Here's the big operation
     return_codes = threadpool.map(fn, hosts)
@@ -98,7 +129,9 @@ def doit(options, config):
 
 
 def setup_logging(debug):
-    logging.basicConfig()
+    logging.basicConfig(format=master_formatter)
+    f = MasterFilter()
+    logger.addFilter(f)
     if debug:
         logger.setLevel(logging.DEBUG)
     else:
@@ -107,6 +140,7 @@ def setup_logging(debug):
 
 
 def main():
+    starttime = time.time()
     parser = argparse.ArgumentParser(usage=sys.argv[0] + " [options]")
     parser.add_argument(
         "-c", "--config",
@@ -163,6 +197,7 @@ def main():
         exec(compile(config_file.read(), options.config, 'exec'), config)
 
     doit(options, config)
+    logger.info("Crawler finished after %d seconds" % (time.time() - starttime))
     return 0
 
 
@@ -222,9 +257,9 @@ class myHTTPConnection(httplib.HTTPConnection):
 # the magic begins
 
 
-def timeout_check(options):
+def timeout_check(timeout):
     delta = time.time() - threadlocal.starttime
-    if delta > (options.timeout_minutes * 60):
+    if delta > (timeout * 60):
         raise TimeoutException("Timed out after %rs" % delta)
 
 
@@ -365,6 +400,12 @@ def check_ftp_file(hoststate, url, filedata, readable):
         return None
     if len(results) == 1:
         line = results[0].split()
+        # For the basic check in check_for_base_dir() it is only
+        # relevant if the directory exists or not. Therefore
+        # passing None as filedata[]. This needs to be handled here.
+        if filedata is None:
+            # The file/directory seems to exist
+            return True
         if line[4] == filedata['size']:
             return True
     return False
@@ -432,6 +473,14 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
     #last_modified  = r.getheader('Last-Modified')
 
     if status >= 200 and status < 300:
+        # lighttpd returns a Content-Length for directories
+        # apache and nginx do not
+        # For the basic check in check_for_base_dir() it is only
+        # relevant if the directory exists or not. Therefore
+        # passing None as filedata[]. This needs to be handled here.
+        if filedata is None:
+            # The file/directory seems to exist
+            return True
         # fixme should check last_modified too
         if filedata['size'] == content_length or content_length is None: # handle no content-length header, streaming/chunked return or zero-length file
             return True
@@ -458,6 +507,8 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
 
 
 def report_stats(stats):
+    msg = "Crawl duration: %d seconds" % stats['duration']
+    logger.info(msg)
     msg = "Total directories: %d" % stats['numkeys']
     logger.info(msg)
     msg = "Changed to up2date: %d" % stats['up2date']
@@ -477,10 +528,9 @@ def report_stats(stats):
 
 def sync_hcds(session, host, host_category_dirs):
     stats = dict(up2date = 0, not_up2date = 0, unchanged = 0,
-                 unknown = 0, newdir = 0, deleted_on_master = 0)
+                 unknown = 0, newdir = 0, deleted_on_master = 0, duration = 0)
     current_hcds = {}
-    now = datetime.datetime.utcnow()
-    host.lastCrawled = now
+    stats['duration'] = time.time() -  threadlocal.starttime
     keys = host_category_dirs.keys()
     keys = sorted(keys, key = lambda t: t[1].name)
     stats['numkeys'] = len(keys)
@@ -556,6 +606,7 @@ def method_pref(urls, prev=""):
             if u.startswith('ftp:'):
                 pref = u
                 break
+    logger.info("Crawling with URL %s" % pref)
     return pref
 
 
@@ -583,8 +634,8 @@ def add_parents(session, host_category_dirs, hc, d):
 def compare_sha256(d, filename, graburl):
     """ looks for a FileDetails object that matches the given URL """
     found = False
-    s = urlgrabber.urlread(graburl)
-    sha256 = hashlib.sha256(s).hexdigest()
+    s = urllib2.urlopen(graburl)
+    sha256 = hashlib.sha256(s.read()).hexdigest()
     for fd in list(d.fileDetails):
         if fd.filename == filename and fd.sha256 is not None:
             if fd.sha256 == sha256:
@@ -593,11 +644,13 @@ def compare_sha256(d, filename, graburl):
     return found
 
 
-def try_per_file(d, hoststate, url):
+def try_per_file(d, hoststate, url, timeout):
     if d.files is None:
         return None
     exists = None
     for filename in d.files.keys():
+        # Check if maximum crawl time for this host has been reached
+        timeout_check(timeout)
         exists = None
         graburl = "%s/%s" % (url, filename)
         try:
@@ -631,7 +684,7 @@ def try_per_file(d, hoststate, url):
 
 def try_per_category(
         session, trydirs, url, host_category_dirs, hc, host,
-        categoryPrefixLen, options, config):
+        categoryPrefixLen, timeout, config):
     """ In addition to the crawls using http and ftp, this rsync crawl
     scans the complete category with one connection instead perdir (ftp)
     or perfile(http). """
@@ -646,8 +699,9 @@ def try_per_category(
         url += '/'
 
     rsync_start_time = datetime.datetime.utcnow()
+    params = config.get('CRAWLER_RSYNC_PARAMETERS', '--no-motd')
     try:
-        result, listing = run_rsync(url, '--no-motd')
+        result, listing = run_rsync(url, params, logger)
     except:
         logger.warning('Failed to run rsync.', exc_info = True)
         return False
@@ -676,14 +730,17 @@ def try_per_category(
         except IndexError:
             logger.debug("invalid rsync line: %s\n" % line)
 
+    # run_rsync() returns a temporary file which needs to be closed
+    listing.close()
+
     logger.debug("rsync listing has %d lines" % len(rsync))
     if len(rsync) == 0:
         # no rsync content, fail!
         return False
     # for all directories in this category
     for d in trydirs:
-        d = d.directory
-        timeout_check(options)
+        # Check if maximum crawl time for this host has been reached
+        timeout_check(timeout)
 
         # ignore unreadable directories - we can't really know about them
         if not d.readable:
@@ -738,7 +795,7 @@ def try_per_category(
     return False
 
 
-def try_per_dir(d, hoststate, url):
+def try_per_dir(d, hoststate, url, timeout):
     if d.files is None:
         return None
     if not url.startswith('ftp'):
@@ -752,6 +809,9 @@ def try_per_dir(d, hoststate, url):
 
     if len(listing) == 0:
         return False
+
+    # Check if maximum crawl time for this host has been reached
+    timeout_check(timeout)
 
     for line in listing:
         if line.startswith('total'): # some servers first include a line starting with the word 'total' that we can ignore
@@ -815,8 +875,13 @@ Date: %s
 
 
 def mark_not_up2date(session, config, exc, host, reason="Unknown"):
+    """This function marks a complete host as not being up to date.
+    It usually is called if the scan of a single category has failed.
+    This is something the crawler does at multiple places: Failure
+    in the scan of a single category disables the complete host."""
+    # Watch out: set_not_up2date(session) is commiting all changes
+    # in this thread to the database
     host.set_not_up2date(session)
-    host.lastCrawled = datetime.datetime.utcnow()
     msg = "Host %s marked not up2date: %s" % (host.id, reason)
     logger.warning(msg)
     if exc is not None:
@@ -831,11 +896,49 @@ def select_host_categories_to_scan(session, options, host):
             hc = mirrormanager2.lib.get_host_category_by_hostid_category(
                 session, host_id=host.id, category=category)
             for entry in hc:
-                result.append(hc)
+                result.append(entry)
     else:
         result = list(host.categories)
     return result
 
+def check_for_base_dir(hoststate, urls):
+    """Check if at least one of the given URL exists on the remote host.
+    This is used to detect mirrors which have completely dropped our content.
+    This is only looking at http and ftp URLs as those URLs are actually
+    relevant for normal access. If both tests fail the mirror will be marked
+    as failed during crawl.
+    """
+    exists = False
+    for u in urls:
+        if not u.endswith('/'):
+            u += '/'
+        if u.startswith('http:'):
+            try:
+                exists = check_head(hoststate, u, None, False, True)
+            except:
+                exists = False
+            if not exists:
+                logger.warning("Base URL %s does not exist." % u)
+                continue
+            # The base http URL seems to work. Good!
+            return True
+        if u.startswith('ftp:'):
+            try:
+                exists = get_ftp_dir(hoststate, u, True)
+            except TryLater:
+                # Some temporary difficulties on the mirror
+                exists = False
+            # exists is an empty list if that directory does not exist
+            if not exists:
+                logger.warning("Base URL %s does not exist." % u)
+                continue
+            # The base ftp URL seems to work. Good!
+            return True
+
+    # Reaching this point means that no functional http/ftp has been
+    # found. This means that the mirror will not work for normal http
+    # and ftp users.
+    return False
 
 def per_host(session, host, options, config):
     """Canary mode looks for 2 things:
@@ -844,6 +947,7 @@ def per_host(session, host, options, config):
     directories.
     """
     rc = 0
+    successful_categories = 0
     host = mirrormanager2.lib.get_host(session, host)
     host_category_dirs = {}
     if host.private and not options.include_private:
@@ -881,13 +985,28 @@ def per_host(session, host, options, config):
             continue
         categoryPrefixLen = len(category.topdir.name)+1
 
-        trydirs = list(hc.directories)
+        # Check if either the http or ftp URL of the host point
+        # to an existing and readable URL
+        exists = check_for_base_dir(hoststate, host_category_urls)
+
+        if not exists:
+            # Base categoryURL for the current host was not found.
+            # Skipping this category.
+            continue
+
+        # Record that this host has at least one (or more) categories
+        # which is accessible via http or ftp
+        successful_categories += 1
+
+        trydirs = list(hc.category.directories)
         # check the complete category in one go with rsync
         try:
             has_all_files = try_per_category(
                 session, trydirs, categoryUrl, host_category_dirs, hc,
-                host, categoryPrefixLen, options, config)
+                host, categoryPrefixLen, options.timeout_minutes, config)
         except TimeoutException:
+            # If the crawl of only one category fails, the host
+            # is completely marked as not being up to date.
             raise
 
         if type(has_all_files) == type(True):
@@ -902,9 +1021,7 @@ def per_host(session, host, options, config):
 
         try_later_delay = 1
         for d in trydirs:
-            timeout_check(options)
-
-            d = d.directory
+            timeout_check(options.timeout_minutes)
 
             if not d.readable:
                 continue
@@ -918,9 +1035,9 @@ def per_host(session, host, options, config):
             url = '%s/%s' % (categoryUrl, dirname)
 
             try:
-                has_all_files = try_per_dir(d, hoststate, url)
+                has_all_files = try_per_dir(d, hoststate, url, options.timeout_minutes)
                 if has_all_files is None:
-                    has_all_files = try_per_file(d, hoststate, url)
+                    has_all_files = try_per_file(d, hoststate, url, options.timeout_minutes)
 
                 if has_all_files == False:
                     logger.warning("Not up2date: %s" % (d.name))
@@ -952,8 +1069,12 @@ def per_host(session, host, options, config):
                 time.sleep(try_later_delay)
                 if try_later_delay < 60:
                     try_later_delay = try_later_delay << 1
+            except TimeoutException:
+                # If the crawl of only one category fails, the host
+                # is completely marked as not being up to date.
+                raise
             except:
-                logging.exception("Unhandled exception raised.")
+                logger.exception("Unhandled exception raised.")
                 mark_not_up2date(
                     session, config,
                     sys.exc_info(), host, "Unhandled exception raised.  "
@@ -966,35 +1087,101 @@ def per_host(session, host, options, config):
                 % (host.name, host.id))
     hoststate.close()
 
+    if successful_categories == 0:
+        # Let's say that '5' is the signal for the calling function
+        # that all categories have failed due to broken base URLs
+        # and that this host should me marked as failed during crawl
+        return 5
+
     if rc == 0:
         if len(host_category_dirs) > 0:
             sync_hcds(session, host, host_category_dirs)
     return rc
 
+def count_crawl_failures(host, config):
+   try:
+       host.crawl_failures += 1
+   except TypeError:
+       host.crawl_failures = 1
 
-def worker(options, config, host):
-    logger.info("Worker %r starting on host %r" % (thread_id(), host))
-    threadlocal.starttime = time.time()
+   auto_disable = config.get('CRAWLER_AUTO_DISABLE', 4)
+   if host.crawl_failures >= auto_disable:
+       host.disable_reason = ("Host has been disabled (user_active) after %d"
+                              " consecutive crawl failures" % auto_disable )
+       host.user_active = False
+            
+def worker(options, config, host_id):
+    global current_host
+    global threads_active
 
-    # Each worker gets its own thread
     session = mirrormanager2.lib.create_session(config['DB_URL'])
+    host = mirrormanager2.lib.get_host(session, host_id)
+
+    threads_active = threads_active + 1
+    current_host = current_host + 1
+    threadlocal.starttime = time.time()
+    threadlocal.hostid = host.id
+    threadlocal.hostname = host.name
+
+    # setup per thread file logger
+    log_dir = config.get('MM_LOG_DIR', None)
+    # check if the directory exists
+    if log_dir is not None:
+        log_dir += "/crawler"
+        if not os.path.isdir(log_dir):
+            # MM_LOG_DIR/crawler seems to be configured but does not exist
+            # not logging
+            logger.warning("Directory " + log_dir + " does not exists."
+                           " Not logging per host")
+            log_dir = None
+
+    if log_dir is not None:
+        fh = logging.FileHandler(log_dir + "/" + str(host.id) + '.log')
+        threadlocal.thread_id = thread_id()
+        f = InjectingFilter(thread_id())
+        fh.addFilter(f)
+
+        if options.debug:
+            fh.setLevel(logging.DEBUG)
+        else:
+            fh.setLevel(logging.INFO)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+
+    logger.info("Worker %r starting on host %r" % (thread_id(), host))
+
 
     try:
         rc = per_host(session, host.id, options, config)
+        host.last_crawled = datetime.datetime.utcnow()
+        host.last_crawl_duration = time.time() -  threadlocal.starttime
+        if rc == 5:
+            # rc == 5 has been define as a problem with all categories
+            count_crawl_failures(host, config)
+        else:
+            # Resetting as this only counts consecutive crawl failures
+            host.crawl_failures = 0
         session.commit()
-        session.close()
     except TimeoutException:
         rc = 2
         mark_not_up2date(
             session, config,
-            None, host.id,
+            None, host,
             "Crawler timed out before completing.  "
             "Host is likely overloaded.")
+        host.last_crawled = datetime.datetime.utcnow()
+        host.last_crawl_duration = time.time() -  threadlocal.starttime
+        count_crawl_failures(host, config)
+        session.commit()
     except Exception:
         logger.exception("Failure in thread %r, host %r" % (thread_id(), host))
         rc = 3
 
     logger.info("Ending crawl of %r with status %r" % (host, rc))
+    logger.removeHandler(fh)
+    fh.close()
+    session.close()
+    threads_active = threads_active - 1
     return rc
 
 

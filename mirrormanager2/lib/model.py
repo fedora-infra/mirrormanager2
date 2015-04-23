@@ -193,6 +193,25 @@ class Host(BASE):
     asn_clients = sa.Column(sa.Boolean(), default=True, nullable=False)
     max_connections = sa.Column(sa.Integer, default=1, nullable=False)
     last_crawl_duration = sa.Column(sa.BigInteger, default=0, nullable=True)
+    # Count the last consecutive crawl failures.
+    # This can be used to auto disable a host if the crawler fails
+    # multiple times in a row.
+    crawl_failures = sa.Column(sa.Integer, default=0, nullable=False)
+    # Add a text field to specify why the mirror was disabled.
+    # This can either be filled by the crawler for auto disable due
+    # to crawl failures, or by an admin (e.g., ticket number)
+    disable_reason = sa.Column(sa.Text(), nullable=True)
+    # If SSH based push mirroring will ever be implemented
+    # this field should contain the private key to connect to the
+    # destination host
+    push_ssh_private_key = sa.Column(sa.Text(), nullable=True)
+    # The host to contact for push mirroring
+    push_ssh_host = sa.Column(sa.Text(), nullable=True)
+    # The command to execute on the destination host for push mirroring
+    push_ssh_command = sa.Column(sa.Text(), nullable=True)
+    # This field holds information about the last few crawls.
+    # Which protocols were used, crawl duration, ...
+    last_crawls = sa.Column(sa.PickleType(), nullable=True)
 
     # Relations
     site = relation(
@@ -243,7 +262,7 @@ class Host(BASE):
         for hc in self.categories:
             for hcd in hc.directories:
                 hcd.up2date = False
-                session.commit()
+        session.commit()
 
     def is_active(self):
         return self.admin_active \

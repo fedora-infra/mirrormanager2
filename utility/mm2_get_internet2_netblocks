@@ -39,7 +39,11 @@ function get_i2_netblocks()
 {
     local YEAR=$(date +%Y)
     local MONTH=$(date +%m)
-    local DAY=$(date +%d)
+    # Use yesterday's files to avoid any time zones troubles.
+    # The system serving the Internet2 tables seems to be many
+    # hours behind UTC and therefore using yesterday's date is a
+    # good approach to avoid non existing directories and files.
+    local DAY=$(date --date='yesterday' +%d)
     local ROUTERS="ATLA CHIC HOUS KANS LOSA NEWY SALT SEAT WASH"
     local URL
     local last

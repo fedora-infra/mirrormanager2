@@ -101,6 +101,10 @@ class AddHostForm(wtf.Form):
         'User active',
         default=True
     )
+    disable_reason = wtforms.TextField(
+        'Disable Reason',
+        [wtforms.validators.Optional()],
+    )
     country = wtforms.TextField(
         'Country  <span class="error">*</span>',
         [wtforms.validators.Required()]

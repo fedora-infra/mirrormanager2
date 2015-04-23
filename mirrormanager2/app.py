@@ -351,12 +351,14 @@ def site_view(site_id):
         form=form,
     )
 
-
+from lib.notifications import fedmsg_publish
 @APP.route('/host/<int:site_id>/new', methods=['GET', 'POST'])
 @login_required
 def host_new(site_id):
     """ Create a new host.
     """
+
+    topic = 'host.added'
     siteobj = mmlib.get_site(SESSION, site_id)
 
     if siteobj is None:
@@ -370,10 +372,15 @@ def host_new(site_id):
         form.populate_obj(obj=host)
         host.bandwidth_int = int(host.bandwidth_int)
         host.asn = None if not host.asn else int(host.asn)
+        message = dict(
+            site_id=host.site_id,
+            bandwidth=host.bandwidth_int,
+            asn=host.asn)
 
         try:
             SESSION.flush()
             flask.flash('Host added')
+            fedmsg_publish(topic, message)
         except SQLAlchemyError as err:
             SESSION.rollback()
             flask.flash('Could not create the new host')
@@ -477,6 +484,7 @@ def siteadmin_delete(site_id, admin_id):
 def host_view(host_id):
     """ Create a new host.
     """
+    topic = 'host.updated'
     hostobj = mmlib.get_host(SESSION, host_id)
 
     if hostobj is None:
@@ -487,10 +495,16 @@ def host_view(host_id):
         form.populate_obj(obj=hostobj)
         hostobj.bandwidth_int = int(hostobj.bandwidth_int)
         hostobj.asn = None if not hostobj.asn else int(hostobj.asn)
+        message = dict(
+            site_id=hostobj.site_id,
+            host_id=host_id,
+            bandwidth=hostobj.bandwidth_int,
+            asn=hostobj.asn)
 
         try:
             SESSION.flush()
             flask.flash('Host updated')
+            fedmsg_publish(topic, message)
         except SQLAlchemyError as err:  # pragma: no cover
             # We cannot check this because the code updates data therefore
             # the only situation where it could fail is a failure at the
@@ -1111,3 +1125,16 @@ if APP.config.get('MM_AUTHENTICATION', None) == 'local':
     import mirrormanager2.login
     APP.before_request(login._check_session_cookie)
     APP.after_request(login._send_session_cookie)
+
+
+# pylint: disable=W0613
+@APP.teardown_request
+def shutdown_session(exception=None):
+    """ Remove the DB session at the end of each request. """
+    SESSION.remove()
+
+# pylint: disable=W0613
+@APP.before_request
+def set_session():
+    """ Set the flask session as permanent. """
+    flask.session.permanent = True
