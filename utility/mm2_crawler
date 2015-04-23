@@ -896,7 +896,7 @@ def select_host_categories_to_scan(session, options, host):
             hc = mirrormanager2.lib.get_host_category_by_hostid_category(
                 session, host_id=host.id, category=category)
             for entry in hc:
-                result.append(hc)
+                result.append(entry)
     else:
         result = list(host.categories)
     return result
