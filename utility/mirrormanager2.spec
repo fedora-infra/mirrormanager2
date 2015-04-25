@@ -196,6 +196,10 @@ install -m 0644 mirrorlist/systemd/mirrormanager_tempfile.conf \
 install -m 644 mirrorlist/systemd/mirrorlist-server.service \
     $RPM_BUILD_ROOT/%{_unitdir}/mirrorlist-server.service
 
+# Install the alembic files
+cp -r alembic $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
+install -m 644 utility/alembic.ini $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager2/alembic.ini
+
 # Install the zebra-dump-parser perl module
 cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
 
