@@ -16,6 +16,7 @@ import threading
 import time
 import urllib2
 import urlparse
+import gc
 
 sys.path.append('..')
 import mirrormanager2.lib
@@ -1182,6 +1183,7 @@ def worker(options, config, host_id):
     fh.close()
     session.close()
     threads_active = threads_active - 1
+    gc.collect()
     return rc
 
 
