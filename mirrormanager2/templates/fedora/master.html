@@ -80,6 +80,17 @@
     <script type="text/javascript"
         src="{{ url_for('static', filename='jquery-1.11.2.min.js') }}"></script>
 
+    {% if config['FEDMENU_URL'] %}
+    <script src="{{ config['FEDMENU_URL'] }}/js/fedmenu.js"></script>
+    <script>
+      fedmenu({
+          'url': '{{ config["FEDMENU_DATA_URL"] }}',
+          'mimeType': 'application/javascript',
+          'position': 'bottom-right',
+      });
+    </script>
+    {% endif %}
+
     {% endblock %}
 </body>
 </html>
