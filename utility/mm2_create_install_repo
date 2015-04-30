@@ -109,8 +109,9 @@ def doit(session, version_name, category_name, args):
             repo.version = ver
             repo.category = category
             repo.arch = arch
+            old_dir = old_directory.name if old_directory else None
             logger.info("Moved (%s, %s) from %s to %s" % (
-                repo.prefix, repo.arch.name, old_directory.name, d))
+                repo.prefix, repo.arch.name, old_dir, d))
 
         session.add(repo)
 
