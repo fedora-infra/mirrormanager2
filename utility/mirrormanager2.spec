@@ -191,6 +191,8 @@ install -m 644 createdb.py \
 mkdir -p %{buildroot}%{_tmpfilesdir}
 install -m 0644 mirrorlist/systemd/mirrormanager_tempfile.conf \
     $RPM_BUILD_ROOT/%{_tmpfilesdir}/%{name}-mirrorlist.conf
+install -m 0644 utility/backend_tempfile.conf \
+    $RPM_BUILD_ROOT/%{_tmpfilesdir}/%{name}-backend.conf
 
 # Install the systemd service file
 install -m 644 mirrorlist/systemd/mirrorlist-server.service \
@@ -272,6 +274,9 @@ exit 0
 %config(noreplace) %{_sysconfdir}/logrotate.d/mm2_umdl
 %attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lock/mirrormanager
 %attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/mirrormanager
+%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/log/mirrormanager
+%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/run/mirrormanager
+%{_tmpfilesdir}/%{name}-backend.conf
 %{_datadir}/mirrormanager2/zebra-dump-parser/
 %{_bindir}/mm2_get_global_netblocks
 %{_bindir}/mm2_get_internet2_netblocks
