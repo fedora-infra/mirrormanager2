@@ -93,7 +93,7 @@ def doit(session, version_name, category_name, args):
         d = os.path.join(parent, r['subpath'])
         directory = mirrormanager2.lib.get_directory_by_name(session, d)
         repo = mirrormanager2.lib.get_repo_prefix_arch(
-            session, prefix=prefix, arch=arch)
+            session, prefix=prefix, arch=arch.name)
 
         if not repo:
             repo = add_one_repository(
