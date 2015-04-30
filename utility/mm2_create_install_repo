@@ -1,0 +1,148 @@
+#!/usr/bin/env python
+
+"""
+This script creates the fedora-install repo for Fedora .
+
+Basically, it checks the content of the nfs mount, if the directory
+contains a lot of files, it takes the 3 most recents ones, stores them in
+the DB and they will be used later on to check if the mirrors are up to date.
+If the directory does not contain too many files, it will register them all
+and thus will check them all on the mirrors.
+The threshold is stored in: `short_filelist` and is currently at 10.
+
+If the script finds a yum or atomic repository (finds a repo data or an atomic
+summary file), it will create a repository object (cf `make_repository`) which
+is basically a mapping between a yum repo name (ie: Fedora-20-updates) and a
+directory (/pub/fedora/linux/updates/....)
+
+TODO: test IRL
+"""
+
+import logging
+import optparse
+import os
+import re
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), '..'))
+import mirrormanager2.lib
+from mirrormanager2.lib.model import Repository
+
+
+logger = None
+
+originalCategory = 'Fedora Other'
+
+    #dict(subpath='Workstation/armhfp/os', prefix="fedora-workstation-%s", arch="armhfp"),
+    #dict(subpath='Workstation/i386/os', prefix="fedora-workstation-%s", arch="i386"),
+    #dict(subpath='Workstation/x86_64/os', prefix="fedora-workstation-%s", arch='x86_64'),
+REPOS = [
+    dict(subpath='Server/armhfp/os', prefix="fedora-install-%s", arch="armhfp"),
+    dict(subpath='Server/i386/os', prefix="fedora-install-%s", arch="i386"),
+    dict(subpath='Server/x86_64/os', prefix="fedora-install-%s", arch="x86_64"),
+    ]
+    #dict(subpath='Server/aarch64/os', prefix="fedora-install-%s", arch="aarch64"),
+    #dict(subpath='Server/ppc64/os', prefix="fedora-install-%s", arch="ppc64"),
+    #dict(subpath='Server/ppc64le/os', prefix="fedora-install-%s", arch="ppc64le"),
+    #dict(subpath='Server/s390x/os', prefix="fedora-install-%s", arch="s390x"),
+
+
+
+def add_one_repository(directory, category, version, prefix, arch):
+    """ Add a repository to the database based on the information provided.
+    """
+
+    repo = Repository(
+        prefix=prefix,
+        version=version,
+        arch=arch,
+        name=directory.name,
+        category=category,
+        directory=directory
+    )
+    logger.info(
+        'Created Repository(prefix=%s, version=%s, arch=%s, category=%s) '
+        '-> Directory %s' % (
+            prefix, version.name, arch.name, category.name, directory.name
+        )
+    )
+    return repo
+
+
+
+def doit(session, version, category, args):
+    """ Actually add the repositories to the database. """
+
+    ver = mirrormanager2.lib.get_version_by_id(session, version)
+    category = mirrormanager2.lib.get_category_by_name(session, category)
+
+    parent = args[0]
+    for r in REPOS:
+        prefix = r['prefix'] % version
+        arch = mirrormanager2.lib.get_arch_by_name(session, r['arch'])
+        version = mirrormanager2.lib.get_version_by_name_version(
+            session, p_name=category.product.name, p_version=version)
+        d = os.path.join(parent, r['subpath'])
+        directory = mirrormanager2.lib.get_directory_by_name(session, d)
+        repo = mirrormanager2.lib.get_repo_prefix_arch(
+            session, prefix=prefix, arch=arch)
+
+        if not repo:
+            repo = add_one_repository(directory, category, version, prefix, arch)
+            logger.info("Added pointer (%s, %s) to %s" % (repo.prefix, repo.arch, d))
+
+        else repo:
+            old_directory = repo.directory
+            # do the updates
+            repo.name = d
+            repo.directory = directory
+            repo.version = ver
+            repo.category = category
+            repo.arch = arch
+            logger.info("Moved (%s, %s) from %s to %s" % (
+                repo.prefix, repo.arch.name, old_directory.name, d))
+
+        session.add(repo)
+
+
+def setup_logger(debug):
+    global logger
+    logging.basicConfig()
+    logger = logging.getLogger()
+    if debug:
+        logger.setLevel(logging.DEBUG)
+
+
+def main():
+    global options
+    parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option(
+        "-c", "--config",
+        dest="config", default='/etc/mirrormanager/mirrormanager2.cfg',
+        help="Configuration file to use")
+    parser.add_option(
+        "--version", dest="version", default='21', help="Version")
+    parser.add_option(
+        "--category", dest="category", default="Fedora Other")
+    parser.add_option(
+        "--debug", dest="debug", action="store_true", default=False)
+
+    (options, args) = parser.parse_args()
+    config = dict()
+    with open(options.config) as config_file:
+        exec(compile(config_file.read(), options.config, 'exec'), config)
+
+    session = mirrormanager2.lib.create_session(config['DB_URL'])
+
+    setup_logger(options.debug)
+    doit(session, options.version, options.category, args)
+
+    session.commit()
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
