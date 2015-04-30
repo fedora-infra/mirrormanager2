@@ -71,18 +71,19 @@ def add_one_repository(directory, category, version, prefix, arch):
 
 
 
-def doit(session, version, category, args):
+def doit(session, version_name, category_name, args):
     """ Actually add the repositories to the database. """
 
-    ver = mirrormanager2.lib.get_version_by_id(session, version)
-    category = mirrormanager2.lib.get_category_by_name(session, category)
+    ver = mirrormanager2.lib.get_version_by_id(session, version_name)
+    category = mirrormanager2.lib.get_category_by_name(
+        session, category_name)
 
     parent = args[0]
     for r in REPOS:
-        prefix = r['prefix'] % version
+        prefix = r['prefix'] % version_name
         arch = mirrormanager2.lib.get_arch_by_name(session, r['arch'])
         version = mirrormanager2.lib.get_version_by_name_version(
-            session, p_name=category.product.name, p_version=version)
+            session, p_name=category.product.name, p_version=version_name)
         d = os.path.join(parent, r['subpath'])
         directory = mirrormanager2.lib.get_directory_by_name(session, d)
         repo = mirrormanager2.lib.get_repo_prefix_arch(
