@@ -75,8 +75,14 @@ def doit(session, version_name, category_name, args):
     """ Actually add the repositories to the database. """
 
     ver = mirrormanager2.lib.get_version_by_id(session, version_name)
+    if not ver:
+        print 'No such version found: %s' % version_name
+        return 1
     category = mirrormanager2.lib.get_category_by_name(
         session, category_name)
+    if not category:
+        print 'No such category found: %s' % category_name
+        return 1
 
     parent = args[0]
     for r in REPOS:
