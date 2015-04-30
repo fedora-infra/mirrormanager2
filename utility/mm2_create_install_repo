@@ -89,10 +89,12 @@ def doit(session, version, category, args):
             session, prefix=prefix, arch=arch)
 
         if not repo:
-            repo = add_one_repository(directory, category, version, prefix, arch)
-            logger.info("Added pointer (%s, %s) to %s" % (repo.prefix, repo.arch, d))
+            repo = add_one_repository(
+                directory, category, version, prefix, arch)
+            logger.info(
+                "Added pointer (%s, %s) to %s" % (repo.prefix, repo.arch, d))
 
-        else repo:
+        else:
             old_directory = repo.directory
             # do the updates
             repo.name = d
