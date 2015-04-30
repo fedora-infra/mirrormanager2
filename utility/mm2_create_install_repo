@@ -73,6 +73,10 @@ def add_one_repository(directory, category, version, prefix, arch):
 
 def doit(session, version_name, category_name, args):
     """ Actually add the repositories to the database. """
+    if not args:
+        print 'Must simply the path to the base of the install repo'
+        print 'for example: mm2_create_install_repo --version=21 '\
+            '--category="Fedora Linux" pub/fedora/linux/releases/21/'
 
     ver = mirrormanager2.lib.get_version_by_id(session, version_name)
     if not ver:
