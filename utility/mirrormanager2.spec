@@ -24,6 +24,7 @@ BuildRequires:  python-fedora >= 0.3.33
 BuildRequires:  python-fedora-flask >= 0.3.33
 BuildRequires:  python-setuptools
 BuildRequires:  python-psutil
+BuildRequires:  python-alembic
 # Mirrorlist
 BuildRequires:  python-GeoIP
 BuildRequires:  py-radix
@@ -47,6 +48,7 @@ Requires:  python-fedora >= 0.3.33
 Requires:  python-fedora-flask >= 0.3.33
 Requires:  python-setuptools
 Requires:  python-psutil
+Requires:  python-alembic
 
 Requires:  %{name}-lib == %{version}
 Requires:  mod_wsgi
