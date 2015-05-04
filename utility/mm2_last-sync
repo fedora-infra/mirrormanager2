@@ -1,0 +1,134 @@
+#!/usr/bin/python
+
+# Copyright (C) 2014 by Adrian Reber
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+import requests
+import time
+import sys
+import getopt
+
+fedora = 'org.fedoraproject.prod.bodhi.updates.fedora.sync'
+epel = 'org.fedoraproject.prod.bodhi.updates.epel.sync'
+
+branched = 'org.fedoraproject.prod.compose.branched.rsync.complete'
+rawhide = 'org.fedoraproject.prod.compose.rawhide.rsync.complete'
+
+base_url = 'https://apps.fedoraproject.org/datagrepper/raw'
+
+
+topics =  []
+# default time interval to query for syncs: 1 day
+delta = 86400
+# return 0 and no output if a sync happened during <delta>
+# if no sync happened 1 is returned
+quiet = False
+
+def usage():
+	print
+	print "last-sync queries the Fedora Message Bus if new data is available on the public servers"
+	print
+	print "Usage: last-sync [options]"
+	print
+	print "Options:"
+	print "  -a, --all                 query all possible releases (default)"
+	print "                            (fedora, epel, branched, rawhide)"
+	print "  -f, --fedora              only query if fedora has been updated during <delta>"
+	print "  -e, --epel                only query if epel has been updated"
+	print "  -b, --branched            only query if the branched off release"
+	print "                            has been updated"
+	print "  -r, --rawhide             only query if rawhide has been updated"
+	print "  -q, --quiet               do not print out any informations"
+	print "  -d DELTA, --delta=DELTA   specify the time interval which should be used"
+	print "                            for the query (default: 86400)"
+
+
+# -a -f -e -b -r -q -d
+def parse_args():
+	global topics
+	global delta
+	global quiet
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], "afhebrqd:", ["all", "fedora", "epel", "rawhide", "branched", "quiet", "delta="])
+	except getopt.GetoptError as err:
+		print str(err)
+		usage()
+		sys.exit(2)
+
+	for option, argument in opts:
+		if option in ("-a", "--all"):
+			topics =  [ fedora, epel, branched, rawhide ]
+		if option in ("-f", "--fedora"):
+			topics.append(fedora)
+		if option in ("-e", "--epel"):
+			topics.append(epel)
+		if option in ("-r", "--rawhide"):
+			topics.append(rawhide)
+		if option in ("-b", "--branched"):
+			topics.append(branched)
+		if option in ("-q", "--quiet"):
+			quiet = True
+		if option in ("-d", "--delta"):
+			delta = argument
+		if option in ("-h"):
+			usage();
+			sys.exit(0)
+
+
+
+def getKey(item):
+	return item[1]
+
+def create_url(url, topics, delta):
+	topic = ""
+	for i in topics:
+		topic += "&topic=%s" % i
+	return '%s?delta=%s%s' % (url, delta, topic)
+
+parse_args()
+
+if topics == []:
+	topics =  [ fedora, epel, branched, rawhide ]
+
+data = requests.get(create_url(base_url, topics, delta)).json()
+
+repos = []
+
+for i in range(0, data['count']):
+	try:
+		repo = "%s-%s" % (data['raw_messages'][i]['msg']['repo'], data['raw_messages'][i]['msg']['release'])
+	except:
+		# the rawhide and branch sync message has no repo information
+		arch = data['raw_messages'][i]['msg']['arch']
+		if arch == '':
+			arch = 'primary'
+		repo = "%s-%s" % (data['raw_messages'][i]['msg']['branch'], arch)
+
+	repos.append([repo, data['raw_messages'][i]['timestamp']])
+
+if quiet == False:
+	for repo, timestamp in sorted(repos, key=getKey):
+		print "%s: %s" % (repo, time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime(timestamp)))
+
+if data['count'] > 0:
+	sys.exit(0)
+else:
+	sys.exit(1)
