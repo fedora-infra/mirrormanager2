@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.0.8
+Version:        0.0.9
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -200,7 +200,7 @@ install -m 644 mirrorlist/systemd/mirrorlist-server.service \
 
 # Install the alembic files
 cp -r alembic $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
-install -m 644 utility/alembic.ini $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager2/alembic.ini
+install -m 644 utility/alembic.ini $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager/alembic.ini
 
 # Install the zebra-dump-parser perl module
 cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
@@ -237,8 +237,11 @@ exit 0
 %dir %{_sysconfdir}/mirrormanager/
 %dir %{python_sitelib}/%{name}/
 
+%{_sysconfdir}/mirrormanager/alembic.ini
+
 %{_datadir}/mirrormanager2/mirrormanager2.wsgi
 %{_datadir}/mirrormanager2/mirrormanager2_createdb.py*
+%{_datadir}/mirrormanager2/alembic/
 
 %{python_sitelib}/%{name}/*.py*
 %{python_sitelib}/%{name}/templates/
@@ -289,6 +292,17 @@ exit 0
 
 
 %changelog
+* Mon May 04 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.9-1
+- Update to 0.0.9
+- Include and install alembic files
+- Try explicit garbage collection in the crawler (Adrian Reber)
+- Use defined timeout also for HTTP/FTP connections (Adrian Reber)
+- Add documentation about the crawler (Adrian Reber)
+- Also add a /var/run directory for the backend (Adrian Reber)
+- Add fedmenu integration
+- Add new utility script to be used to create the fedora-install-X repositories
+- Added last-sync script as mm2_last-sync (Adrian Reber)
+
 * Thu Apr 23 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.8-1
 - Update to 0.0.8
 - Make MM2 a little prettier on high-res display
