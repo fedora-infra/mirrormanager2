@@ -2,20 +2,6 @@
 
 """
 This script creates the fedora-install repo for Fedora .
-
-Basically, it checks the content of the nfs mount, if the directory
-contains a lot of files, it takes the 3 most recents ones, stores them in
-the DB and they will be used later on to check if the mirrors are up to date.
-If the directory does not contain too many files, it will register them all
-and thus will check them all on the mirrors.
-The threshold is stored in: `short_filelist` and is currently at 10.
-
-If the script finds a yum or atomic repository (finds a repo data or an atomic
-summary file), it will create a repository object (cf `make_repository`) which
-is basically a mapping between a yum repo name (ie: Fedora-20-updates) and a
-directory (/pub/fedora/linux/updates/....)
-
-TODO: test IRL
 """
 
 import logging
@@ -31,8 +17,6 @@ from mirrormanager2.lib.model import Repository
 
 
 logger = None
-
-originalCategory = 'Fedora Other'
 
     #dict(subpath='Workstation/armhfp/os', prefix="fedora-workstation-%s", arch="armhfp"),
     #dict(subpath='Workstation/i386/os', prefix="fedora-workstation-%s", arch="i386"),
@@ -71,24 +55,20 @@ def add_one_repository(directory, category, version, prefix, arch):
 
 
 
-def doit(session, version_name, category_name, args):
+def doit(session, version_name, category_name, parent):
     """ Actually add the repositories to the database. """
-    if not args:
-        print 'Must simply the path to the base of the install repo'
-        print 'for example: mm2_create_install_repo --version=21 '\
-            '--category="Fedora Linux" pub/fedora/linux/releases/21/'
 
-    ver = mirrormanager2.lib.get_version_by_id(session, version_name)
-    if not ver:
-        print 'No such version found: %s' % version_name
-        return 1
     category = mirrormanager2.lib.get_category_by_name(
         session, category_name)
     if not category:
         print 'No such category found: %s' % category_name
         return 1
+    ver = mirrormanager2.lib.get_version_by_name_version(
+          session, category.product.name, version_name)
+    if not ver:
+        print 'No such version found: %s' % version_name
+        return 1
 
-    parent = args[0]
     for r in REPOS:
         prefix = r['prefix'] % version_name
         arch = mirrormanager2.lib.get_arch_by_name(session, r['arch'])
@@ -130,7 +110,7 @@ def setup_logger(debug):
 
 def main():
     global options
-    parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
+    parser = optparse.OptionParser(usage=sys.argv[0] + " [options] parent-directory")
     parser.add_option(
         "-c", "--config",
         dest="config", default='/etc/mirrormanager/mirrormanager2.cfg',
@@ -143,6 +123,14 @@ def main():
         "--debug", dest="debug", action="store_true", default=False)
 
     (options, args) = parser.parse_args()
+
+    if len(args) != 1:
+        parser.error("Must specify the path to the base of the install repo\n"
+                     "for example: mm2_create_install_repo --version=21 "
+                     "--category='Fedora Linux' pub/fedora/linux/releases/21/")
+
+    parent = args[0]
+
     config = dict()
     with open(options.config) as config_file:
         exec(compile(config_file.read(), options.config, 'exec'), config)
@@ -150,7 +138,7 @@ def main():
     session = mirrormanager2.lib.create_session(config['DB_URL'])
 
     setup_logger(options.debug)
-    doit(session, options.version, options.category, args)
+    doit(session, options.version, options.category, parent)
 
     session.commit()
 
