@@ -291,6 +291,7 @@ exit 0
 %{_bindir}/mm2_update-EC2-netblocks
 %{_bindir}/mm2_update-master-directory-list
 %{_bindir}/mm2_update-mirrorlist-server
+%{_bindir}/mm2_create_install_repo
 
 
 %changelog
