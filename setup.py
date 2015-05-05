@@ -63,5 +63,6 @@ setup(
         'utility/mm2_update-EC2-netblocks',
         'utility/mm2_update-master-directory-list',
         'utility/mm2_update-mirrorlist-server',
+        'utility/mm2_create_install_repo',
     ],
 )
