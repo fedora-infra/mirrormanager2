@@ -97,7 +97,7 @@ def populate_directory_cache(session):
         cache = {}
         for r in mirrormanager2.lib.get_repositories(session):
             if r.directory and r.version and r.arch:
-                cache[r.directory.id] = r
+                append_value_to_cache(cache, r.directory.id, r)
         return cache
     def setup_version_ordered_mirrorlist_cache(session):
         cache = {}
@@ -136,14 +136,19 @@ def populate_directory_cache(session):
                 'byCountryInternet2': {}
             }
 
-            repo = directory_repo_cache.get(directory_id)
+            repos = directory_repo_cache.get(directory_id)
 
-            if repo is not None and repo.arch is not None:
-                global_caches['repo_arch_to_directoryname'][
-                    (repo.prefix, repo.arch.name)] = directoryname
-                # WARNING - this is a query # fixme use cache
-                cache[directoryname][
-                    'ordered_mirrorlist'] = repo.version.ordered_mirrorlist
+            if repos:
+                for repo in repos:
+                    if repo is not None \
+                            and repo.arch is not None \
+                            and repo.prefix:
+                        global_caches['repo_arch_to_directoryname'][
+                            (repo.prefix, repo.arch.name)] = directoryname
+                        # WARNING - this is a query # fixme use cache
+                        cache[directoryname][
+                            'ordered_mirrorlist'
+                        ] = repo.version.ordered_mirrorlist
 
             numcats = len(directory_category_cache.get(directory_id, []))
             if numcats == 0:
@@ -156,7 +161,7 @@ def populate_directory_cache(session):
 
             cache[directoryname]['subpath'] = directoryname[
                 category_topdir_cache[category_id]:]
-            del repo
+            del repos
 
         if country is not None:
             country = country.upper()
