@@ -140,7 +140,9 @@ def populate_directory_cache(session):
 
             if repos:
                 for repo in repos:
-                    if repo is not None and repo.arch is not None:
+                    if repo is not None \
+                            and repo.arch is not None \
+                            and repo.prefix:
                         global_caches['repo_arch_to_directoryname'][
                             (repo.prefix, repo.arch.name)] = directoryname
                         # WARNING - this is a query # fixme use cache
