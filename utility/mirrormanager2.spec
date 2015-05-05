@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.0.9
+Version:        0.0.10
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -295,6 +295,12 @@ exit 0
 
 
 %changelog
+* Tue May 05 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.10-1
+- Update to 0.0.10
+- Install the mm2_create_install_repo script
+- Fix version handling on mm2_create_install_repo (Adrian Reber)
+- Fix pickle generation when several repositories point to the same directory
+
 * Mon May 04 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.9-1
 - Update to 0.0.9
 - Include and install alembic files
