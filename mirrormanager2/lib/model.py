@@ -217,7 +217,9 @@ class Host(BASE):
     site = relation(
         'Site',
         foreign_keys=[site_id], remote_side=[Site.id],
-        backref=backref('hosts')
+        backref=backref(
+            'hosts', cascade="delete, delete-orphan", single_parent=True
+        )
     )
 
     # exclusive_dirs = MultipleJoin('DirectoryExclusiveHost')
@@ -480,7 +482,9 @@ class HostCategory(BASE):
     category = relation(
         'Category',
         foreign_keys=[category_id], remote_side=[Category.id],
-        backref=backref('host_categories')
+        backref=backref(
+            'host_categories', cascade="delete, delete-orphan",
+            single_parent=True)
     )
 
     host = relation(
@@ -523,13 +527,17 @@ class HostCategoryDir(BASE):
     directory = relation(
         'Directory',
         foreign_keys=[directory_id], remote_side=[Directory.id],
-        backref=backref('host_category_dirs'),
+        backref=backref(
+            'host_category_dirs', cascade="delete, delete-orphan",
+            single_parent=True),
     )
 
     host_category = relation(
         'HostCategory',
         foreign_keys=[host_category_id], remote_side=[HostCategory.id],
-        backref=backref('directories', order_by=path),
+        backref=backref(
+            'directories', order_by=path, cascade="delete, delete-orphan",
+            single_parent=True),
     )
 
     # Constraints
@@ -583,7 +591,8 @@ class HostCategoryUrl(BASE):
     host_category = relation(
         'HostCategory',
         foreign_keys=[host_category_id], remote_side=[HostCategory.id],
-        backref=backref('urls'),
+        backref=backref(
+            'urls', cascade="delete, delete-orphan", single_parent=True),
     )
 
     # Constraints
@@ -606,7 +615,9 @@ class HostAclIp(BASE):
     host = relation(
         'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
-        backref=backref('acl_ips', order_by='HostAclIp.ip'),
+        backref=backref(
+            'acl_ips', order_by='HostAclIp.ip',
+            cascade="delete, delete-orphan", single_parent=True),
     )
 
     # Constraints
@@ -629,7 +640,9 @@ class HostCountryAllowed(BASE):
     host = relation(
         'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
-        backref=backref('countries_allowed'),
+        backref=backref(
+            'countries_allowed', cascade="delete, delete-orphan",
+            single_parent=True),
     )
 
 
@@ -647,7 +660,9 @@ class HostNetblock(BASE):
     host = relation(
         'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
-        backref=backref('netblocks', order_by='HostNetblock.netblock'),
+        backref=backref(
+            'netblocks', order_by='HostNetblock.netblock',
+            cascade="delete, delete-orphan", single_parent=True),
     )
 
 
@@ -665,7 +680,9 @@ class HostPeerAsn(BASE):
     host = relation(
         'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
-        backref=backref('peer_asns'),
+        backref=backref(
+            'peer_asns', cascade="delete, delete-orphan",
+            single_parent=True),
     )
 
     # Constraints
@@ -912,7 +929,9 @@ class HostLocation(BASE):
     host = relation(
         'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
-        backref=backref('locations')
+        backref=backref(
+            'locations', cascade="delete, delete-orphan",
+            single_parent=True)
     )
     location = relation(
         'Location',
@@ -970,7 +989,9 @@ class HostCountry(BASE):
     host = relation(
         'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
-        backref=backref('countries')
+        backref=backref(
+            'countries', cascade="delete, delete-orphan",
+            single_parent=True)
     )
     country = relation(
         'Country',
