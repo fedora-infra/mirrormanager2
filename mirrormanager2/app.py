@@ -130,7 +130,7 @@ def is_site_admin(user, site):
     if not user:
         return False
 
-    admins = [admin.username for admin in mirror.admins]
+    admins = [admin.username for admin in site.admins]
 
     return user.username in admins
 
