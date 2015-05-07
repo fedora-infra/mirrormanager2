@@ -130,7 +130,7 @@ def is_site_admin(user, site):
     if not user:
         return False
 
-    admins = [admin.username for admin in mirror.admins]
+    admins = [admin.username for admin in site.admins]
 
     return user.username in admins
 
@@ -351,7 +351,45 @@ def site_view(site_id):
         form=form,
     )
 
+
 from lib.notifications import fedmsg_publish
+@APP.route('/site/<int:site_id>/drop', methods=['POST'])
+@login_required
+def site_drop(site_id):
+    """ Drop a given site.
+    """
+    topic = 'site.deleted'
+    siteobj = mmlib.get_site(SESSION, site_id)
+
+    if siteobj is None:
+        flask.abort(404, 'Site not found')
+
+    if not (is_site_admin(flask.g.fas_user, siteobj)
+            or is_mirrormanager_admin(flask.g.fas_user)):
+        flask.abort(403, 'Access denied')
+
+    form = forms.ConfirmationForm()
+    site_name = siteobj.name
+    if form.validate_on_submit():
+        message = dict(
+            site_id=siteobj.id,
+            site_name=siteobj.name,
+            org_url=siteobj.org_url)
+
+        SESSION.delete(siteobj)
+        try:
+            SESSION.commit()
+            flask.flash('Site "%s" dropped' % site_name)
+            fedmsg_publish(topic, message)
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            flask.flash('Could not delete this site')
+            APP.logger.debug('Could not delete this site')
+            APP.logger.exception(err)
+
+    return flask.redirect(flask.url_for('index'))
+
+
 @APP.route('/host/<int:site_id>/new', methods=['GET', 'POST'])
 @login_required
 def host_new(site_id):
@@ -363,6 +401,10 @@ def host_new(site_id):
 
     if siteobj is None:
         flask.abort(404, 'Site not found')
+
+    if not (is_site_admin(flask.g.fas_user, siteobj)
+            or is_mirrormanager_admin(flask.g.fas_user)):
+        flask.abort(403, 'Access denied')
 
     form = forms.AddHostForm()
     if form.validate_on_submit():
@@ -397,6 +439,44 @@ def host_new(site_id):
     )
 
 
+@APP.route('/host/<int:host_id>/drop', methods=['POST'])
+@login_required
+def host_drop(host_id):
+    """ Drop a given site.
+    """
+    topic = 'site.deleted'
+    hostobj = mmlib.get_host(SESSION, host_id)
+
+    if hostobj is None:
+        flask.abort(404, 'Site not found')
+
+    if not (is_site_admin(flask.g.fas_user, hostobj.site)
+            or is_mirrormanager_admin(flask.g.fas_user)):
+        flask.abort(403, 'Access denied')
+
+    site_id = hostobj.site.id
+    form = forms.ConfirmationForm()
+    if form.validate_on_submit():
+        message = dict(
+            site_id=hostobj.site_id,
+            host_id=host_id,
+            bandwidth=hostobj.bandwidth_int,
+            asn=hostobj.asn)
+
+        SESSION.delete(hostobj)
+        try:
+            SESSION.commit()
+            flask.flash('Host dropped')
+            fedmsg_publish(topic, message)
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            flask.flash('Could not delete this host')
+            APP.logger.debug('Could not delete this host')
+            APP.logger.exception(err)
+
+    return flask.redirect(flask.url_for('site_view', site_id=site_id))
+
+
 @APP.route('/site/<int:site_id>/admin/new', methods=['GET', 'POST'])
 @login_required
 def siteadmin_new(site_id):
@@ -406,6 +486,10 @@ def siteadmin_new(site_id):
 
     if siteobj is None:
         flask.abort(404, 'Site not found')
+
+    if not (is_site_admin(flask.g.fas_user, siteobj)
+            or is_mirrormanager_admin(flask.g.fas_user)):
+        flask.abort(403, 'Access denied')
 
     form = login_forms.LostPasswordForm()
     if form.validate_on_submit():
@@ -448,6 +532,10 @@ def siteadmin_delete(site_id, admin_id):
 
         if siteobj is None:
             flask.abort(404, 'Site not found')
+
+        if not (is_site_admin(flask.g.fas_user, siteobj)
+                or is_mirrormanager_admin(flask.g.fas_user)):
+            flask.abort(403, 'Access denied')
 
         siteadminobj = mmlib.get_siteadmin(SESSION, admin_id)
 
@@ -534,6 +622,10 @@ def host_acl_ip_new(host_id):
     if hostobj is None:
         flask.abort(404, 'Host not found')
 
+    if not (is_site_admin(flask.g.fas_user, hostobj.site)
+            or is_mirrormanager_admin(flask.g.fas_user)):
+        flask.abort(403, 'Access denied')
+
     form = forms.AddHostAclIpForm()
     if form.validate_on_submit():
         host_acl = model.HostAclIp()
@@ -573,6 +665,10 @@ def host_acl_ip_delete(host_id, host_acl_ip_id):
         if hostobj is None:
             flask.abort(404, 'Host not found')
 
+        if not (is_site_admin(flask.g.fas_user, hostobj.site)
+                or is_mirrormanager_admin(flask.g.fas_user)):
+            flask.abort(403, 'Access denied')
+
         hostaclobj = mmlib.get_host_acl_ip(SESSION, host_acl_ip_id)
 
         if hostaclobj is None:
@@ -604,6 +700,10 @@ def host_netblock_new(host_id):
 
     if hostobj is None:
         flask.abort(404, 'Host not found')
+
+    if not (is_site_admin(flask.g.fas_user, hostobj.site)
+            or is_mirrormanager_admin(flask.g.fas_user)):
+        flask.abort(403, 'Access denied')
 
     form = forms.AddHostNetblockForm()
     if form.validate_on_submit():
@@ -647,6 +747,10 @@ def host_netblock_delete(host_id, host_netblock_id):
         if hostobj is None:
             flask.abort(404, 'Host not found')
 
+        if not (is_site_admin(flask.g.fas_user, hostobj.site)
+                or is_mirrormanager_admin(flask.g.fas_user)):
+            flask.abort(403, 'Access denied')
+
         hostnetbobj = mmlib.get_host_netblock(SESSION, host_netblock_id)
 
         if hostnetbobj is None:
@@ -677,6 +781,10 @@ def host_asn_new(host_id):
 
     if hostobj is None:
         flask.abort(404, 'Host not found')
+
+    if not (is_site_admin(flask.g.fas_user, hostobj.site)
+            or is_mirrormanager_admin(flask.g.fas_user)):
+        flask.abort(403, 'Access denied')
 
     form = forms.AddHostAsnForm()
     if form.validate_on_submit():
@@ -721,6 +829,10 @@ def host_asn_delete(host_id, host_asn_id):
         if hostobj is None:
             flask.abort(404, 'Host not found')
 
+        if not (is_site_admin(flask.g.fas_user, hostobj.site)
+                or is_mirrormanager_admin(flask.g.fas_user)):
+            flask.abort(403, 'Access denied')
+
         hostasnobj = mmlib.get_host_peer_asn(SESSION, host_asn_id)
 
         if hostasnobj is None:
@@ -752,6 +864,10 @@ def host_country_new(host_id):
 
     if hostobj is None:
         flask.abort(404, 'Host not found')
+
+    if not (is_site_admin(flask.g.fas_user, hostobj.site)
+            or is_mirrormanager_admin(flask.g.fas_user)):
+        flask.abort(403, 'Access denied')
 
     form = forms.AddHostCountryForm()
     if form.validate_on_submit():
@@ -805,6 +921,10 @@ def host_country_delete(host_id, host_country_id):
         if hostobj is None:
             flask.abort(404, 'Host not found')
 
+        if not (is_site_admin(flask.g.fas_user, hostobj.site)
+                or is_mirrormanager_admin(flask.g.fas_user)):
+            flask.abort(403, 'Access denied')
+
         hostcntobj = mmlib.get_host_country(SESSION, host_country_id)
 
         if hostcntobj is None:
@@ -836,6 +956,10 @@ def host_category_new(host_id):
 
     if hostobj is None:
         flask.abort(404, 'Host not found')
+
+    if not (is_site_admin(flask.g.fas_user, hostobj.site)
+            or is_mirrormanager_admin(flask.g.fas_user)):
+        flask.abort(403, 'Access denied')
 
     categories = mmlib.get_categories(SESSION)
 
@@ -888,6 +1012,10 @@ def host_category_delete(host_id, hc_id):
         if hostobj is None:
             flask.abort(404, 'Host not found')
 
+        if not (is_site_admin(flask.g.fas_user, hostobj.site)
+                or is_mirrormanager_admin(flask.g.fas_user)):
+            flask.abort(403, 'Access denied')
+
         hcobj = mmlib.get_host_category(SESSION, hc_id)
 
         if hcobj is None:
@@ -927,6 +1055,10 @@ def host_category(host_id, hc_id):
 
     if hostobj is None:
         flask.abort(404, 'Host not found')
+
+    if not (is_site_admin(flask.g.fas_user, hostobj.site)
+            or is_mirrormanager_admin(flask.g.fas_user)):
+        flask.abort(403, 'Access denied')
 
     hcobj = mmlib.get_host_category(SESSION, hc_id)
 
@@ -979,6 +1111,10 @@ def host_category_url_new(host_id, hc_id):
 
     if hostobj is None:
         flask.abort(404, 'Host not found')
+
+    if not (is_site_admin(flask.g.fas_user, hostobj.site)
+            or is_mirrormanager_admin(flask.g.fas_user)):
+        flask.abort(403, 'Access denied')
 
     hcobj = mmlib.get_host_category(SESSION, hc_id)
 
@@ -1035,6 +1171,10 @@ def host_category_url_delete(host_id, hc_id, host_category_url_id):
 
         if hostobj is None:
             flask.abort(404, 'Host not found')
+
+        if not (is_site_admin(flask.g.fas_user, hostobj.site)
+                or is_mirrormanager_admin(flask.g.fas_user)):
+            flask.abort(403, 'Access denied')
 
         hcobj = mmlib.get_host_category(SESSION, hc_id)
 

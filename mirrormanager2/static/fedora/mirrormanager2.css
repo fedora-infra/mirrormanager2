@@ -17,6 +17,10 @@ select {
     font-size: 100%;
 }
 
+.inline {
+    display: inline;
+}
+
 /* Stealed this from flask-admin */
 form.icon button {
     background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
