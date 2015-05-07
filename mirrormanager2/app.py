@@ -401,6 +401,44 @@ def host_new(site_id):
     )
 
 
+@APP.route('/host/<int:host_id>/drop', methods=['POST'])
+@login_required
+def host_drop(host_id):
+    """ Drop a given site.
+    """
+    topic = 'site.deleted'
+    hostobj = mmlib.get_host(SESSION, host_id)
+
+    if hostobj is None:
+        flask.abort(404, 'Site not found')
+
+    if not (is_site_admin(flask.g.fas_user, hostobj.site)
+            or is_mirrormanager_admin(flask.g.fas_user)):
+        flask.abort(403, 'Access denied')
+
+    site_id = hostobj.site.id
+    form = forms.ConfirmationForm()
+    if form.validate_on_submit():
+        message = dict(
+            site_id=hostobj.site_id,
+            host_id=host_id,
+            bandwidth=hostobj.bandwidth_int,
+            asn=hostobj.asn)
+
+        SESSION.delete(hostobj)
+        try:
+            SESSION.commit()
+            flask.flash('Host dropped')
+            fedmsg_publish(topic, message)
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            flask.flash('Could not delete this host')
+            APP.logger.debug('Could not delete this host')
+            APP.logger.exception(err)
+
+    return flask.redirect(flask.url_for('site_view', site_id=site_id))
+
+
 @APP.route('/site/<int:site_id>/admin/new', methods=['GET', 'POST'])
 @login_required
 def siteadmin_new(site_id):

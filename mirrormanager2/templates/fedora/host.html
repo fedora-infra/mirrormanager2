@@ -10,7 +10,17 @@
 {% endblock %}
 
 {% block content %}
-<h2>Host {{ host.name }}</h2>
+<h2>Host {{ host.name }}
+  <form class="icon inline" method="POST"
+    action="{{ url_for('host_drop', host_id=host.id) }}">
+  {{ form.csrf_token }}
+    <button
+      onclick="return confirm('You sure you want to delete this host?');"
+      title="Delete host">
+      <span class="icon icon-trash blue"></span>
+    </button>
+  </form>
+</h2>
 
 <p>
   Back to <a href="{{ url_for('site_view', site_id=host.site_id) }}">
