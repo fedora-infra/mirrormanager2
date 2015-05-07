@@ -376,8 +376,6 @@ def site_drop(site_id):
             site_name=siteobj.name,
             org_url=siteobj.org_url)
 
-        for host in siteobj.hosts:
-            SESSION.delete(host)
         SESSION.delete(siteobj)
         try:
             SESSION.commit()
