@@ -444,7 +444,7 @@ def host_new(site_id):
 def host_drop(host_id):
     """ Drop a given site.
     """
-    topic = 'site.deleted'
+    topic = 'host.deleted'
     hostobj = mmlib.get_host(SESSION, host_id)
 
     if hostobj is None:
