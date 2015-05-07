@@ -351,7 +351,45 @@ def site_view(site_id):
         form=form,
     )
 
+
 from lib.notifications import fedmsg_publish
+@APP.route('/site/<int:site_id>/drop', methods=['POST'])
+@login_required
+def site_drop(site_id):
+    """ Drop a given site.
+    """
+    topic = 'site.deleted'
+    siteobj = mmlib.get_site(SESSION, site_id)
+
+    if siteobj is None:
+        flask.abort(404, 'Site not found')
+
+    if not (is_site_admin(flask.g.fas_user, siteobj)
+            or is_mirrormanager_admin(flask.g.fas_user)):
+        flask.abort(403, 'Access denied')
+
+    form = forms.ConfirmationForm()
+    site_name = siteobj.name
+    if form.validate_on_submit():
+        message = dict(
+            site_id=siteobj.id,
+            site_name=siteobj.name,
+            org_url=siteobj.org_url)
+
+        SESSION.delete(siteobj)
+        try:
+            SESSION.commit()
+            flask.flash('Site "%s" dropped' % site_name)
+            fedmsg_publish(topic, message)
+        except SQLAlchemyError as err:
+            SESSION.rollback()
+            flask.flash('Could not delete this site')
+            APP.logger.debug('Could not delete this site')
+            APP.logger.exception(err)
+
+    return flask.redirect(flask.url_for('index'))
+
+
 @APP.route('/host/<int:site_id>/new', methods=['GET', 'POST'])
 @login_required
 def host_new(site_id):

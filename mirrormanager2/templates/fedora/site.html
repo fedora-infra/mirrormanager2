@@ -97,5 +97,20 @@ Created by: {{ site.created_by }}
       </td>
       {% endfor %}
   </tr>
+  <tr>
+      <th>Delete site</th>
+      <td>
+        <form class="icon inline" method="POST"
+          action="{{ url_for('site_drop', site_id=site.id) }}">
+        {{ form.csrf_token }}
+          <button
+            onclick="return confirm('You sure you want to delete this site?');"
+            title="Delete site">
+            <span class="icon icon-trash blue"></span>
+            Delete
+          </button>
+        </form>
+      </td>
+  </tr>
 </table>
 {% endblock %}
