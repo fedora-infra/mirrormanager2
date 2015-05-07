@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.0.10
+Version:        0.1.0
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -295,6 +295,11 @@ exit 0
 
 
 %changelog
+* Thu May 07 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.1.0-1
+- Update 0.1.0
+- Add the possibilities to delete a site or a host
+- Do not only create /var/lock/mirrormanager on installation (Adrian Reber)
+
 * Tue May 05 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.0.10-1
 - Update to 0.0.10
 - Install the mm2_create_install_repo script
