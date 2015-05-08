@@ -97,6 +97,13 @@ def doit(options, config):
         admin_active=True, user_active=True, site_private=False,
         site_user_active=True, site_admin_active=True)
 
+    # Get a list of host names for fedmsg
+    host_names = [
+        host.name for host in hosts if (
+            not host.id < options.startid and
+            not host.id >= options.stopid)
+    ]
+
     # Limit our host list down to only the ones we really want to crawl
     hosts = [
         host.id for host in hosts if (
@@ -111,7 +118,10 @@ def doit(options, config):
     # And then, for debugging, only do one host
     #hosts = [hosts.next()]
 
-    notify(options, 'start', dict(hosts=hosts))
+    hostlist = [dict(id=id, host=host) for id, host in zip(hosts, host_names)]
+    msg = dict(hosts=hostlist)
+    msg['options'] = dict(options._get_kwargs())
+    notify(options, 'start', msg)
 
     # Before we do work, chdir to /var/tmp/.  mirrormanager1 did this and I'm
     # not totally sure why...
@@ -125,7 +135,9 @@ def doit(options, config):
     return_codes = threadpool.map(fn, hosts)
 
     # Put a bow on the results for fedmsg
-    results = [dict(rc=rc, host=host) for rc, host in zip(return_codes, hosts)]
+    results = [dict(rc=rc, host=host, id=id)
+               for rc, host, id in zip(return_codes, host_names, hosts)]
+
     notify(options, 'complete', dict(results=results))
 
     if options.canary:
