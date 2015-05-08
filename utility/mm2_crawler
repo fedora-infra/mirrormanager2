@@ -31,6 +31,8 @@ current_host = 0
 all_hosts = 0
 threads = 0
 threads_active = 0
+canary_hosts = 0
+canary_hosts_failed = 0
 
 
 # This is a "thread local" object that allows us to store the start time of
@@ -126,6 +128,9 @@ def doit(options, config):
     results = [dict(rc=rc, host=host) for rc, host in zip(return_codes, hosts)]
     notify(options, 'complete', dict(results=results))
 
+    if options.canary:
+        logger.info("%d of %d hosts disabled in canary mode" %
+                    (canary_hosts_failed, canary_hosts))
     return results
 
 
@@ -180,16 +185,17 @@ def main():
 
     parser.add_argument(
         "--canary", dest="canary", action="store_true", default=False,
-        help="fast crawl by only scanning for canary files")
+        help="Fast crawl by only checking if mirror can be reached")
+
+    parser.add_argument(
+        "--repodata", dest="repodata", action="store_true", default=False,
+        help="Fast crawl by only checking if the repodata is up to date")
 
     parser.add_argument(
         "--debug", "-d", dest="debug", action="store_true", default=False,
         help="enable printing of debug-level messages")
 
     options = parser.parse_args()
-
-    if options.canary:
-        raise NotImplementedError("Canary mode is not yet implemented.")
 
     setup_logging(options.debug)
 
@@ -529,7 +535,7 @@ def report_stats(stats):
     logger.info(msg)
 
 
-def sync_hcds(session, host, host_category_dirs):
+def sync_hcds(session, host, host_category_dirs, repodata):
     stats = dict(up2date = 0, not_up2date = 0, unchanged = 0,
                  unknown = 0, newdir = 0, deleted_on_master = 0, duration = 0)
     current_hcds = {}
@@ -575,18 +581,21 @@ def sync_hcds(session, host, host_category_dirs):
 
         current_hcds[hcd] = True
 
-    # now-historical HostCategoryDirs are not up2date
-    # we wait for a cascading Directory delete to delete this
-    for hc in list(host.categories):
-        for hcd in list(hc.directories):
-            if hcd.directory is not None and not hcd.directory.readable:
-                stats['unreadable'] += 1
-                continue
-            if hcd not in current_hcds:
-                if hcd.up2date != False:
-                    hcd.up2date = False
-                    session.add(hcd)
-                    stats['deleted_on_master'] += 1
+    # In repodata mode we only want to update the files actually scanned.
+    # Do not mark files which have not been scanned as not being up to date.
+    if not repodata:
+        # now-historical HostCategoryDirs are not up2date
+        # we wait for a cascading Directory delete to delete this
+        for hc in list(host.categories):
+            for hcd in list(hc.directories):
+                if hcd.directory is not None and not hcd.directory.readable:
+                    stats['unreadable'] += 1
+                    continue
+                if hcd not in current_hcds:
+                    if hcd.up2date != False:
+                        hcd.up2date = False
+                        session.add(hcd)
+                        stats['deleted_on_master'] += 1
     session.commit()
     report_stats(stats)
     del current_hcds
@@ -948,11 +957,13 @@ def check_for_base_dir(hoststate, urls):
     return False
 
 def per_host(session, host, options, config):
-    """Canary mode looks for 2 things:
-    directory.path ends in 'iso' or directory.path ends in 'repodata'.  In
-    this case it checks for availability of each of the files in those
-    directories.
-    """
+    """ This function scans all categories a host has defined.
+    If a RSYNC URL is available it tries to scan the host requiring
+    only single network connection. If this is not possible or fails
+    it tries to scan whole directories using FTP and if that also
+    fails it scans the hosts file by file using HTTP.
+    Canary mode only tries to determine if the mirror is up and
+    repodata mode only scans all the repodata/ directories."""
     rc = 0
     successful_categories = 0
     host = mirrormanager2.lib.get_host(session, host)
@@ -986,7 +997,12 @@ def per_host(session, host, options, config):
             continue
         category = hc.category
 
-        logger.info("scanning Category %s" % category.name)
+        if options.canary:
+            logger.info("canary scanning category %s" % category.name)
+        elif options.repodata:
+            logger.info("repodata scanning category %s" % category.name)
+        else:
+            logger.info("scanning category %s" % category.name)
 
         host_category_urls = [hcurl.url for hcurl in hc.urls]
         categoryUrl = method_pref(host_category_urls)
@@ -1007,22 +1023,29 @@ def per_host(session, host, options, config):
         # which is accessible via http or ftp
         successful_categories += 1
 
-        trydirs = list(hc.category.directories)
-        # check the complete category in one go with rsync
-        try:
-            has_all_files = try_per_category(
-                session, trydirs, categoryUrl, host_category_dirs, hc,
-                host, categoryPrefixLen, options.timeout_minutes, config)
-        except TimeoutException:
-            # If the crawl of only one category fails, the host
-            # is completely marked as not being up to date.
-            raise
-
-        if type(has_all_files) == type(True):
-            # all files in this category are up to date, or not
-            # no further checks necessary
-            # do the next category
+        if options.canary:
             continue
+
+        trydirs = list(hc.category.directories)
+
+        # No rsync in canary mode, we only retrive a small subset of
+        # existing files
+        if not options.repodata:
+            # check the complete category in one go with rsync
+            try:
+                has_all_files = try_per_category(
+                    session, trydirs, categoryUrl, host_category_dirs, hc,
+                    host, categoryPrefixLen, options.timeout_minutes, config)
+            except TimeoutException:
+                # If the crawl of only one category fails, the host
+                # is completely marked as not being up to date.
+                raise
+
+            if type(has_all_files) == type(True):
+                # all files in this category are up to date, or not
+                # no further checks necessary
+                # do the next category
+                continue
 
         # has_all_files is None, we don't know what failed, but something did
         # change preferred protocol if necessary to http or ftp
@@ -1035,9 +1058,8 @@ def per_host(session, host, options, config):
             if not d.readable:
                 continue
 
-            if options.canary:
-                if not (d.name.endswith('/repodata') \
-                        or d.name.endswith('/iso')):
+            if options.repodata:
+                if not d.name.endswith('/repodata'):
                     continue
 
             dirname = d.name[categoryPrefixLen:]
@@ -1097,14 +1119,20 @@ def per_host(session, host, options, config):
     hoststate.close()
 
     if successful_categories == 0:
-        # Let's say that '5' is the signal for the calling function
-        # that all categories have failed due to broken base URLs
-        # and that this host should me marked as failed during crawl
-        return 5
+        if options.canary:
+            # If running in canary mode do not auto disable mirrors
+            # if they have failed. Therefore do not return '5' but
+            # let's say '6'
+            rc = 6
+        else:
+            # Let's say that '5' is the signal for the calling function
+            # that all categories have failed due to broken base URLs
+            # and that this host should me marked as failed during crawl
+            rc = 5
 
     if rc == 0:
         if len(host_category_dirs) > 0:
-            sync_hcds(session, host, host_category_dirs)
+            sync_hcds(session, host, host_category_dirs, options.repodata)
     del host_category_dirs
     return rc
 
@@ -1123,12 +1151,15 @@ def count_crawl_failures(host, config):
 def worker(options, config, host_id):
     global current_host
     global threads_active
+    global canary_hosts
+    global canary_hosts_failed
 
     session = mirrormanager2.lib.create_session(config['DB_URL'])
     host = mirrormanager2.lib.get_host(session, host_id)
 
     threads_active = threads_active + 1
     current_host = current_host + 1
+    canary_hosts = canary_hosts + 1
     threadlocal.starttime = time.time()
     threadlocal.hostid = host.id
     threadlocal.hostname = host.name
@@ -1163,14 +1194,30 @@ def worker(options, config, host_id):
 
     try:
         rc = per_host(session, host.id, options, config)
-        host.last_crawled = datetime.datetime.utcnow()
-        host.last_crawl_duration = time.time() -  threadlocal.starttime
+        last_crawled = datetime.datetime.utcnow()
+        last_crawl_duration = time.time() -  threadlocal.starttime
         if rc == 5:
-            # rc == 5 has been define as a problem with all categories
+            # rc == 5 has been defined as a problem with all categories
             count_crawl_failures(host, config)
+        elif rc ==6:
+            # rc == 6: canary mode has failed for all categories.
+            # Let's mark the complete mirror as not being up to date.
+            mark_not_up2date(session, config, None, host,
+                             "Canary mode failed for all categories. "
+                             "Marking host as not up to date.")
+            canary_hosts_failed += 1
         else:
             # Resetting as this only counts consecutive crawl failures
             host.crawl_failures = 0
+        host.last_crawled = last_crawled
+
+        # Do not update last crawl duration in canary/repodata mode.
+        # This duration is completely different from the real time
+        # required to crawl the complete host so that it does not help
+        # to remember it.
+        if not (options.repodata or options.canary):
+            host.last_crawl_duration = last_crawl_duration
+
         session.commit()
     except TimeoutException:
         rc = 2
