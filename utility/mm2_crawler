@@ -978,6 +978,7 @@ def per_host(session, host, options, config):
 
     for hc in host_categories_to_scan:
         if hc.always_up2date:
+            successful_categories += 1
             continue
         category = hc.category
 
