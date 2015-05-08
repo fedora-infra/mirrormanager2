@@ -996,12 +996,6 @@ def per_host(session, host, options, config):
     categoryUrl = ''
     host_categories_to_scan = select_host_categories_to_scan(
         session, options, host)
-    if len(host_categories_to_scan) == 0:
-        mark_not_up2date(
-            session, config,
-            None, host, "No host category directories found.  "
-            "Check that your Host Category URLs are correct.")
-        return 1
 
     for hc in host_categories_to_scan:
         if hc.always_up2date:
