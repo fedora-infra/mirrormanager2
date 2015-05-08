@@ -589,6 +589,8 @@ def sync_hcds(session, host, host_category_dirs):
                     stats['deleted_on_master'] += 1
     session.commit()
     report_stats(stats)
+    del current_hcds
+    del stats
 
 
 def method_pref(urls, prev=""):
@@ -787,6 +789,8 @@ def try_per_category(
             host_category_dirs[(hc, d)] = True
             host_category_dirs = add_parents(
                 session, host_category_dirs, hc, d)
+
+    del rsync
 
     if len(host_category_dirs) > 0:
         return True
@@ -1101,6 +1105,7 @@ def per_host(session, host, options, config):
     if rc == 0:
         if len(host_category_dirs) > 0:
             sync_hcds(session, host, host_category_dirs)
+    del host_category_dirs
     return rc
 
 def count_crawl_failures(host, config):
