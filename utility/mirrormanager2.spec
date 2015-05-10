@@ -89,8 +89,10 @@ Requires:  python-GeoIP
 Requires:  py-radix
 Requires:  python-webob
 Requires:  python-IPy
-Requires:  systemd
 Requires(pre):  shadow-utils
+Requires(post): systemd
+Requires(preun): systemd
+Requires(postun): systemd
 
 %description mirrorlist
 Sub-part of mirrormanager serving mirrors to yum/dnf
@@ -227,6 +229,15 @@ getent passwd mirrormanager >/dev/null || \
     useradd -r -g mirrormanager -d %{_localstatedir}/lib/mirrormanager -s /sbin/nologin \
     -c "MirrorManager" mirrormanager
 exit 0
+
+%post mirrorlist
+%systemd_post mirrorlist-server.service
+
+%preun mirrorlist
+%systemd_preun mirrorlist-server.service
+
+%postun mirrorlist
+%systemd_postun_with_restart mirrorlist-server.service
 
 %check
 # One day we will have unit-tests to run here
