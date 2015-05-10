@@ -31,8 +31,7 @@ current_host = 0
 all_hosts = 0
 threads = 0
 threads_active = 0
-canary_hosts = 0
-canary_hosts_failed = 0
+hosts_failed = 0
 
 
 # This is a "thread local" object that allows us to store the start time of
@@ -141,8 +140,13 @@ def doit(options, config):
     notify(options, 'complete', dict(results=results))
 
     if options.canary:
-        logger.info("%d of %d hosts disabled in canary mode" %
-                    (canary_hosts_failed, canary_hosts))
+        mode = ' in canary mode'
+    elif options.repodata:
+        mode = ' in repodata mode'
+    else:
+        mode = ''
+
+    logger.info("%d of %d hosts failed%s" % (hosts_failed, current_host, mode))
     return results
 
 
@@ -158,6 +162,7 @@ def setup_logging(debug):
 
 
 def main():
+
     starttime = time.time()
     parser = argparse.ArgumentParser(usage=sys.argv[0] + " [options]")
     parser.add_argument(
@@ -1157,15 +1162,13 @@ def count_crawl_failures(host, config):
 def worker(options, config, host_id):
     global current_host
     global threads_active
-    global canary_hosts
-    global canary_hosts_failed
+    global hosts_failed
 
     session = mirrormanager2.lib.create_session(config['DB_URL'])
     host = mirrormanager2.lib.get_host(session, host_id)
 
     threads_active = threads_active + 1
     current_host = current_host + 1
-    canary_hosts = canary_hosts + 1
     threadlocal.starttime = time.time()
     threadlocal.hostid = host.id
     threadlocal.hostname = host.name
@@ -1205,13 +1208,14 @@ def worker(options, config, host_id):
         if rc == 5:
             # rc == 5 has been defined as a problem with all categories
             count_crawl_failures(host, config)
+            hosts_failed += 1
         elif rc ==6:
             # rc == 6: canary mode has failed for all categories.
             # Let's mark the complete mirror as not being up to date.
             mark_not_up2date(session, config, None, host,
                              "Canary mode failed for all categories. "
                              "Marking host as not up to date.")
-            canary_hosts_failed += 1
+            hosts_failed += 1
         else:
             # Resetting as this only counts consecutive crawl failures
             host.crawl_failures = 0
@@ -1235,6 +1239,7 @@ def worker(options, config, host_id):
         host.last_crawled = datetime.datetime.utcnow()
         host.last_crawl_duration = time.time() -  threadlocal.starttime
         count_crawl_failures(host, config)
+        hosts_failed += 1
         session.commit()
     except Exception:
         logger.exception("Failure in thread %r, host %r" % (thread_id(), host))
