@@ -721,7 +721,7 @@ def try_per_category(
     or perfile(http). """
 
     if not url.startswith('rsync'):
-        return None
+        return False
 
     # rsync URL available, let's use it; it requires only one network
     # connection instead of multiples like with http and ftp
@@ -1052,7 +1052,7 @@ def per_host(session, host, options, config):
                 # is completely marked as not being up to date.
                 raise
 
-            if type(has_all_files) == type(True):
+            if has_all_files:
                 # all files in this category are up to date, or not
                 # no further checks necessary
                 # do the next category
