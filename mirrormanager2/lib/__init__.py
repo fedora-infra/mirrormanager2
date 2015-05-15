@@ -678,7 +678,8 @@ def get_mirrors(
         last_crawl_duration=False, last_checked_in=False, last_crawled=False,
         site_private=None, site_admin_active=None, site_user_active=None,
         up2date=None, host_category_url_private=None,
-        version_id=None, arch_id=None, order_by_crawl_duration=False):
+        version_id=None, arch_id=None, order_by_crawl_duration=False,
+        product_id=None):
     ''' Retrieve the mirrors based on the criteria specified.
 
     :arg session: the session with which to connect to the database.
@@ -765,6 +766,15 @@ def get_mirrors(
             model.Category.id == model.Repository.category_id
         ).filter(
             model.Repository.arch_id == arch_id
+        )
+
+    if product_id is not None:
+        query = query.filter(
+            model.Host.id == model.HostCategory.host_id
+        ).filter(
+            model.HostCategory.category_id == model.Category.id
+        ).filter(
+            model.Category.product_id == product_id
         )
 
     final_query = session.query(

@@ -201,6 +201,7 @@ def index():
 
 
 @APP.route('/mirrors')
+@APP.route('/mirrors/<p_name>')
 @APP.route('/mirrors/<p_name>/<p_version>')
 @APP.route('/mirrors/<p_name>/<p_version>/<p_arch>')
 def list_mirrors(p_name=None, p_version=None, p_arch=None):
@@ -208,11 +209,16 @@ def list_mirrors(p_name=None, p_version=None, p_arch=None):
     """
     version_id = None
     arch_id = None
+    product_id = None
     if p_name and p_version:
         version = mmlib.get_version_by_name_version(
             SESSION, p_name, p_version)
         if version:
             version_id = version.id
+    elif p_name:
+        product = mmlib.get_product_by_name(SESSION, p_name)
+        if product:
+            product_id = product.id
 
     if p_arch:
         arch = mmlib.get_arch_by_name(SESSION, p_arch)
@@ -233,6 +239,7 @@ def list_mirrors(p_name=None, p_version=None, p_arch=None):
         host_category_url_private=False,
         version_id=version_id,
         arch_id=arch_id,
+        product_id=product_id,
     )
 
     return flask.render_template(

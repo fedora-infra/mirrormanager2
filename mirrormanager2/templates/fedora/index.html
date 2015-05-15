@@ -45,7 +45,9 @@ networks globally.
 {% for product in products %}
 <tr class="matrix_section">
   <td class="matrix_section" rowspan="{{product.displayed_versions | length }}">
-    {{product.name}}
+    <a href="{{ url_for('list_mirrors', p_name=product.name) }}">
+      {{product.name}}
+    </a>
   </td>
   {% for version in product.displayed_versions %}
     {% if not loop.first %}
