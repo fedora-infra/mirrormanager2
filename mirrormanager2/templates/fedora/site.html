@@ -47,7 +47,9 @@ Created by: {{ site.created_by }}
     {{ render_field_in_row(form.password) }}
     {{ render_field_in_row(form.org_url) }}
     {{ render_field_in_row(form.private) }}
+    {% if is_admin %}
     {{ render_field_in_row(form.admin_active) }}
+    {% endif %}
     {{ render_field_in_row(form.user_active) }}
     {{ render_field_in_row(form.all_sites_can_pull_from_me) }}
     {{ render_field_in_row(form.downstream_comments) }}

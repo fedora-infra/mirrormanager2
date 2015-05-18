@@ -31,7 +31,9 @@
 <form action="" method="POST">
   <table>
     {{ render_field_in_row(form.name) }}
+    {% if is_admin %}
     {{ render_field_in_row(form.admin_active) }}
+    {% endif %}
     {{ render_field_in_row(form.user_active) }}
     {{ render_field_in_row(form.disable_reason) }}
     {{ render_field_in_row(form.country) }}
@@ -46,7 +48,7 @@
     {{ render_field_in_row(form.max_connections) }}
   </table>
   <p class="buttons indent">
-    <input type="submit" class="submit positive button" value="Create">
+    <input type="submit" class="submit positive button" value="Update">
     <a href="{{ url_for('index') }}">
       <input type="button" value="Cancel" class="button">
     </a>
@@ -127,7 +129,7 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
   </ul>
 {% endif %}
 
-
+{% if is_admin %}
 <h3>
   Peer ASNs
 </h3>
@@ -159,6 +161,7 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
     </li>
   {% endfor %}
   </ul>
+{% endif %}
 {% endif %}
 
 <h3>
