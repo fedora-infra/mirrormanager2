@@ -31,7 +31,9 @@
 <form action="" method="POST">
   <table>
     {{ render_field_in_row(form.name) }}
+    {% if is_admin %}
     {{ render_field_in_row(form.admin_active) }}
+    {% endif %}
     {{ render_field_in_row(form.user_active) }}
     {{ render_field_in_row(form.disable_reason) }}
     {{ render_field_in_row(form.country) }}
