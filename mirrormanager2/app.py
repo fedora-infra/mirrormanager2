@@ -780,7 +780,7 @@ def host_netblock_delete(host_id, host_netblock_id):
 
 
 @APP.route('/host/<host_id>/asn/new', methods=['GET', 'POST'])
-@login_required
+@admin_required
 def host_asn_new(host_id):
     """ Create a new host_peer_asn.
     """

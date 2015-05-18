@@ -129,7 +129,7 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
   </ul>
 {% endif %}
 
-
+{% if is_admin %}
 <h3>
   Peer ASNs
 </h3>
@@ -161,6 +161,7 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
     </li>
   {% endfor %}
   </ul>
+{% endif %}
 {% endif %}
 
 <h3>
