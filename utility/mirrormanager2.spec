@@ -3,12 +3,15 @@
 
 Name:           mirrormanager2
 Version:        0.1.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Mirror management application
 
 License:        MIT
 URL:            http://fedorahosted.org/mirrormanager/
 Source0:        https://fedorahosted.org/releases/m/i/mirrormanager/%{name}-%{version}.tar.gz
+
+# Source: https://github.com/fedora-infra/mirrormanager2/pull/76
+Patch0:         76.patch
 
 BuildArch:      noarch
 
@@ -123,6 +126,9 @@ run MirrorManager.
 
 %prep
 %setup -q
+
+# Apply backports patches
+%patch0 -p1 -b .
 
 
 %build
@@ -295,6 +301,10 @@ exit 0
 
 
 %changelog
+* Tue May 19 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.1.0-2
+- Backport upstream changes from:
+  https://github.com/fedora-infra/mirrormanager2/pull/76
+
 * Thu May 07 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.1.0-1
 - Update 0.1.0
 - Add the possibilities to delete a site or a host

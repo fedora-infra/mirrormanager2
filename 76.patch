@@ -1,0 +1,97 @@
+From 1c38e53288fb36596ddaa627a3f3ea5c81927660 Mon Sep 17 00:00:00 2001
+From: Adrian Reber <adrian@lisas.de>
+Date: Fri, 15 May 2015 22:41:44 +0200
+Subject: [PATCH] Offer possibility to sort by product
+
+The MM1 publiclist had the possibility to not just sort by
+product/version and product/version/arch but also only by product. Now
+it is possible to only show EPEL or Fedora mirrors. Necessary for links
+which point to only a certain product and are now no longer working.
+---
+ mirrormanager2/app.py                      |  7 +++++++
+ mirrormanager2/lib/__init__.py             | 12 +++++++++++-
+ mirrormanager2/templates/fedora/index.html |  4 +++-
+ 3 files changed, 21 insertions(+), 2 deletions(-)
+
+diff --git a/mirrormanager2/app.py b/mirrormanager2/app.py
+index 822f93d..da97d81 100644
+--- a/mirrormanager2/app.py
++++ b/mirrormanager2/app.py
+@@ -201,6 +201,7 @@ def index():
+ 
+ 
+ @APP.route('/mirrors')
++@APP.route('/mirrors/<p_name>')
+ @APP.route('/mirrors/<p_name>/<p_version>')
+ @APP.route('/mirrors/<p_name>/<p_version>/<p_arch>')
+ def list_mirrors(p_name=None, p_version=None, p_arch=None):
+@@ -208,11 +209,16 @@ def list_mirrors(p_name=None, p_version=None, p_arch=None):
+     """
+     version_id = None
+     arch_id = None
++    product_id = None
+     if p_name and p_version:
+         version = mmlib.get_version_by_name_version(
+             SESSION, p_name, p_version)
+         if version:
+             version_id = version.id
++    elif p_name:
++        product = mmlib.get_product_by_name(SESSION, p_name)
++        if product:
++            product_id = product.id
+ 
+     if p_arch:
+         arch = mmlib.get_arch_by_name(SESSION, p_arch)
+@@ -233,6 +239,7 @@ def list_mirrors(p_name=None, p_version=None, p_arch=None):
+         host_category_url_private=False,
+         version_id=version_id,
+         arch_id=arch_id,
++        product_id=product_id,
+     )
+ 
+     return flask.render_template(
+diff --git a/mirrormanager2/lib/__init__.py b/mirrormanager2/lib/__init__.py
+index 5befa00..8faa79e 100644
+--- a/mirrormanager2/lib/__init__.py
++++ b/mirrormanager2/lib/__init__.py
+@@ -678,7 +678,8 @@ def get_mirrors(
+         last_crawl_duration=False, last_checked_in=False, last_crawled=False,
+         site_private=None, site_admin_active=None, site_user_active=None,
+         up2date=None, host_category_url_private=None,
+-        version_id=None, arch_id=None, order_by_crawl_duration=False):
++        version_id=None, arch_id=None, order_by_crawl_duration=False,
++        product_id=None):
+     ''' Retrieve the mirrors based on the criteria specified.
+ 
+     :arg session: the session with which to connect to the database.
+@@ -767,6 +768,15 @@ def get_mirrors(
+             model.Repository.arch_id == arch_id
+         )
+ 
++    if product_id is not None:
++        query = query.filter(
++            model.Host.id == model.HostCategory.host_id
++        ).filter(
++            model.HostCategory.category_id == model.Category.id
++        ).filter(
++            model.Category.product_id == product_id
++        )
++
+     final_query = session.query(
+         model.Host
+     ).filter(
+diff --git a/mirrormanager2/templates/fedora/index.html b/mirrormanager2/templates/fedora/index.html
+index 6d9274f..1e57900 100644
+--- a/mirrormanager2/templates/fedora/index.html
++++ b/mirrormanager2/templates/fedora/index.html
+@@ -45,7 +45,9 @@
+ {% for product in products %}
+ <tr class="matrix_section">
+   <td class="matrix_section" rowspan="{{product.displayed_versions | length }}">
+-    {{product.name}}
++    <a href="{{ url_for('list_mirrors', p_name=product.name) }}">
++      {{product.name}}
++    </a>
+   </td>
+   {% for version in product.displayed_versions %}
+     {% if not loop.first %}
