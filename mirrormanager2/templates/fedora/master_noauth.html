@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>{% block title %}{% endblock %} - MirrorManager</title>
+    <link rel="shortcut icon" type="image/vnd.microsoft.icon"
+        href="{{ url_for('static', filename='favicon.ico')}}"/>
+    <link rel="stylesheet" type="text/css" media="screen"
+        href="{{ url_for('static', filename='koji.css') }}"/>
+    <link rel="stylesheet" type="text/css" media="screen"
+        href="{{ url_for('static', filename='mirrormanager2.css') }}"/>
+    {% block header %}{% endblock %}
+  </head>
+  <body id="{% block tag %}{% endblock %}">
+
+    <div id="wrap">
+      <div id="innerwrap">
+
+        <!-- HEADER -->
+        <div id="header">
+          <img src="{{ url_for('static', filename='mirrormanager-logo.png') }}"
+            alt="MirrorManager Logo" id="kojiLogo"/>
+        </div><!-- end header -->
+
+        <!-- MAIN NAVIGATION -->
+        <div id="mainNav">
+          <h4 class="hide">Main Site Links:</h4>
+          <ul>
+            <li id="homeTab"><a href="{{url_for('index')}}">Home</a></li>
+            <li id="mirrorsTab"><a href="{{url_for('list_mirrors')}}">Mirrors</a></li>
+            {% block nav %}
+            {% endblock %}
+          </ul>
+        </div><!-- end mainNav -->
+
+        {% block loginstatus %}
+        {% endblock %}
+
+        <div id="content">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if category, messages %}
+                <ul id="flashes">
+                    {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+
+        </div>
+
+        <p id="footer">
+          Copyright &copy; 2014-2015 Red Hat
+          <a href="https://fedorahosted.org/mirrormanager/">mirrormanager</a>
+          -- {{version}}
+          -- <a href="http://mirrormanager.rtfd.org"
+                target="_blank">Documentation</a>
+          -- <a href="http://mirrormanager.readthedocs.org/en/latest/contributors.html">Authors</a>
+        </p>
+
+      </div>
+    </div>
+
+    {% block jscripts %}
+    <script type="text/javascript"
+        src="{{ url_for('static', filename='jquery-1.11.2.min.js') }}"></script>
+
+    {% if config['FEDMENU_URL'] %}
+    <script src="{{ config['FEDMENU_URL'] }}/js/fedmenu.js"></script>
+    <script>
+      fedmenu({
+          'url': '{{ config["FEDMENU_DATA_URL"] }}',
+          'mimeType': 'application/javascript',
+          'position': 'bottom-right',
+      });
+    </script>
+    {% endif %}
+
+    {% endblock %}
+</body>
+</html>
