@@ -1,0 +1,26 @@
+From 8f77e13611c44d344d651455a2f64559d7049764 Mon Sep 17 00:00:00 2001
+From: Adrian Reber <adrian@lisas.de>
+Date: Fri, 8 May 2015 22:20:20 +0200
+Subject: [PATCH] Support always update hosts which are unreachable.
+
+The crawler was not able to reach dl.fedoraproject.org due to
+firewalls and has therefore disabled the master mirror. Now all
+categories which are marked as always up to date count as a
+successfully scanned category and are not auto-disabled after a
+short time.
+---
+ utility/mm2_crawler | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/utility/mm2_crawler b/utility/mm2_crawler
+index 3453910..579a218 100755
+--- a/utility/mm2_crawler
++++ b/utility/mm2_crawler
+@@ -978,6 +978,7 @@ def per_host(session, host, options, config):
+ 
+     for hc in host_categories_to_scan:
+         if hc.always_up2date:
++            successful_categories += 1
+             continue
+         category = hc.category
+ 

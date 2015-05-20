@@ -1,0 +1,239 @@
+From e4e16d9597db68cf36d4c64c5d15175ab2f03d4d Mon Sep 17 00:00:00 2001
+From: Patrick Uiterwijk <puiterwijk@redhat.com>
+Date: Tue, 19 May 2015 12:15:10 +0200
+Subject: [PATCH] Create noauthed master for mirror publiclist
+
+This makes it possible to make publiclist varnish cached
+because that doesn't depend on any cookie status anymore.
+
+Signed-off-by: Patrick Uiterwijk <puiterwijk@redhat.com>
+---
+ mirrormanager2/templates/fedora/master.html        | 116 ++++-----------------
+ mirrormanager2/templates/fedora/master_noauth.html |  84 +++++++++++++++
+ mirrormanager2/templates/fedora/mirrors.html       |   2 +-
+ 3 files changed, 107 insertions(+), 95 deletions(-)
+ create mode 100644 mirrormanager2/templates/fedora/master_noauth.html
+
+diff --git a/mirrormanager2/templates/fedora/master.html b/mirrormanager2/templates/fedora/master.html
+index 86268fa..4559d08 100644
+--- a/mirrormanager2/templates/fedora/master.html
++++ b/mirrormanager2/templates/fedora/master.html
+@@ -1,96 +1,24 @@
+-<!DOCTYPE html>
+-<html lang='en'>
+-<head>
+-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+-    <title>{% block title %}{% endblock %} - MirrorManager</title>
+-    <link rel="shortcut icon" type="image/vnd.microsoft.icon"
+-        href="{{ url_for('static', filename='favicon.ico')}}"/>
+-    <link rel="stylesheet" type="text/css" media="screen"
+-        href="{{ url_for('static', filename='koji.css') }}"/>
+-    <link rel="stylesheet" type="text/css" media="screen"
+-        href="{{ url_for('static', filename='mirrormanager2.css') }}"/>
+-    {% block header %}{% endblock %}
+-  </head>
+-  <body id="{% block tag %}{% endblock %}">
++{% extends "master_noauth.html" %}
+ 
+-    <div id="wrap">
+-      <div id="innerwrap">
+-
+-        <!-- HEADER -->
+-        <div id="header">
+-          <img src="{{ url_for('static', filename='mirrormanager-logo.png') }}"
+-            alt="MirrorManager Logo" id="kojiLogo"/>
+-        </div><!-- end header -->
+-
+-        <!-- MAIN NAVIGATION -->
+-        <div id="mainNav">
+-          <h4 class="hide">Main Site Links:</h4>
+-          <ul>
+-            <li id="homeTab"><a href="{{url_for('index')}}">Home</a></li>
+-            <li id="mirrorsTab"><a href="{{url_for('list_mirrors')}}">Mirrors</a></li>
+-            {% if g.fas_user %}
+-            <li id="mysitesTab"><a href="{{url_for('mysite')}}">My Sites</a></li>
+-            {% endif %}
+-            {% if is_admin %}
+-            <li id="adminTab"><a href="{{url_for('admin.index')}}">Admin</a></li>
+-            <li id="allSitesTab"><a href="{{url_for('all_sites')}}">All sites</a></li>
+-            {% endif %}
+-          </ul>
+-        </div><!-- end mainNav -->
+-
+-        <span id="loginInfo">
+-          {% if g.fas_user %}
+-            <span class="text">logged in as </span>
+-            {{ g.fas_user.username }} |
+-            <a href="{{ url_for('auth_logout') }}?next={{request.url}}">log out</a>
+-          {% else %}
+-        <a href="{{ url_for('auth_login') }}?next={{request.url}}">login</a>
+-          {% endif %}
+-        </span>
+-
+-        <div id="content">
+-
+-            {% with messages = get_flashed_messages(with_categories=true) %}
+-                {% if category, messages %}
+-                <ul id="flashes">
+-                    {% for category, message in messages %}
+-                    <li class="{{ category }}">{{ message }}</li>
+-                    {% endfor %}
+-                </ul>
+-                {% endif %}
+-            {% endwith %}
+-
+-            {% block content %}{% endblock %}
+-
+-        </div>
+-
+-        <p id="footer">
+-          Copyright &copy; 2014-2015 Red Hat
+-          <a href="https://fedorahosted.org/mirrormanager/">mirrormanager</a>
+-          -- {{version}}
+-          -- <a href="http://mirrormanager.rtfd.org"
+-                target="_blank">Documentation</a>
+-          -- <a href="http://mirrormanager.readthedocs.org/en/latest/contributors.html">Authors</a>
+-        </p>
+-
+-      </div>
+-    </div>
+-
+-    {% block jscripts %}
+-    <script type="text/javascript"
+-        src="{{ url_for('static', filename='jquery-1.11.2.min.js') }}"></script>
+-
+-    {% if config['FEDMENU_URL'] %}
+-    <script src="{{ config['FEDMENU_URL'] }}/js/fedmenu.js"></script>
+-    <script>
+-      fedmenu({
+-          'url': '{{ config["FEDMENU_DATA_URL"] }}',
+-          'mimeType': 'application/javascript',
+-          'position': 'bottom-right',
+-      });
+-    </script>
++{% block nav %}
++    {% if g.fas_user %}
++    <li id="mysitesTab"><a href="{{url_for('mysite')}}">My Sites</a></li>
+     {% endif %}
+-
+-    {% endblock %}
+-</body>
+-</html>
++    {% if is_admin %}
++    <li id="adminTab"><a href="{{url_for('admin.index')}}">Admin</a></li>
++    <li id="allSitesTab"><a href="{{url_for('all_sites')}}">All sites</a></li>
++    {% endif %}
++{% endblock %}
++
++
++{% block loginstatus %}
++    <span id="loginInfo">
++      {% if g.fas_user %}
++        <span class="text">logged in as </span>
++        {{ g.fas_user.username }} |
++        <a href="{{ url_for('auth_logout') }}?next={{request.url}}">log out</a>
++      {% else %}
++    <a href="{{ url_for('auth_login') }}?next={{request.url}}">login</a>
++      {% endif %}
++    </span>
++{% endblock %}
+diff --git a/mirrormanager2/templates/fedora/master_noauth.html b/mirrormanager2/templates/fedora/master_noauth.html
+new file mode 100644
+index 0000000..4c1d48b
+--- /dev/null
++++ b/mirrormanager2/templates/fedora/master_noauth.html
+@@ -0,0 +1,84 @@
++<!DOCTYPE html>
++<html lang='en'>
++<head>
++    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
++    <title>{% block title %}{% endblock %} - MirrorManager</title>
++    <link rel="shortcut icon" type="image/vnd.microsoft.icon"
++        href="{{ url_for('static', filename='favicon.ico')}}"/>
++    <link rel="stylesheet" type="text/css" media="screen"
++        href="{{ url_for('static', filename='koji.css') }}"/>
++    <link rel="stylesheet" type="text/css" media="screen"
++        href="{{ url_for('static', filename='mirrormanager2.css') }}"/>
++    {% block header %}{% endblock %}
++  </head>
++  <body id="{% block tag %}{% endblock %}">
++
++    <div id="wrap">
++      <div id="innerwrap">
++
++        <!-- HEADER -->
++        <div id="header">
++          <img src="{{ url_for('static', filename='mirrormanager-logo.png') }}"
++            alt="MirrorManager Logo" id="kojiLogo"/>
++        </div><!-- end header -->
++
++        <!-- MAIN NAVIGATION -->
++        <div id="mainNav">
++          <h4 class="hide">Main Site Links:</h4>
++          <ul>
++            <li id="homeTab"><a href="{{url_for('index')}}">Home</a></li>
++            <li id="mirrorsTab"><a href="{{url_for('list_mirrors')}}">Mirrors</a></li>
++            {% block nav %}
++            {% endblock %}
++          </ul>
++        </div><!-- end mainNav -->
++
++        {% block loginstatus %}
++        {% endblock %}
++
++        <div id="content">
++
++            {% with messages = get_flashed_messages(with_categories=true) %}
++                {% if category, messages %}
++                <ul id="flashes">
++                    {% for category, message in messages %}
++                    <li class="{{ category }}">{{ message }}</li>
++                    {% endfor %}
++                </ul>
++                {% endif %}
++            {% endwith %}
++
++            {% block content %}{% endblock %}
++
++        </div>
++
++        <p id="footer">
++          Copyright &copy; 2014-2015 Red Hat
++          <a href="https://fedorahosted.org/mirrormanager/">mirrormanager</a>
++          -- {{version}}
++          -- <a href="http://mirrormanager.rtfd.org"
++                target="_blank">Documentation</a>
++          -- <a href="http://mirrormanager.readthedocs.org/en/latest/contributors.html">Authors</a>
++        </p>
++
++      </div>
++    </div>
++
++    {% block jscripts %}
++    <script type="text/javascript"
++        src="{{ url_for('static', filename='jquery-1.11.2.min.js') }}"></script>
++
++    {% if config['FEDMENU_URL'] %}
++    <script src="{{ config['FEDMENU_URL'] }}/js/fedmenu.js"></script>
++    <script>
++      fedmenu({
++          'url': '{{ config["FEDMENU_DATA_URL"] }}',
++          'mimeType': 'application/javascript',
++          'position': 'bottom-right',
++      });
++    </script>
++    {% endif %}
++
++    {% endblock %}
++</body>
++</html>
+diff --git a/mirrormanager2/templates/fedora/mirrors.html b/mirrormanager2/templates/fedora/mirrors.html
+index f2a99e4..a2f5f2d 100644
+--- a/mirrormanager2/templates/fedora/mirrors.html
++++ b/mirrormanager2/templates/fedora/mirrors.html
+@@ -1,4 +1,4 @@
+-{% extends "master.html" %}
++{% extends "master_noauth.html" %}
+ 
+ {% block title %}Home{% endblock %}
+ {%block tag %}mirrors{% endblock %}
