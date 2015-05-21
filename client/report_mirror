@@ -327,7 +327,7 @@ def main():
             except socket.error, m:
                 print "Error checking in: %s.  Please try again later." % (
                     m[1])
-            except ProtocolError:
+            except xmlrpclib.ProtocolError:
                 print "Error checking in: Service Temporarily "\
                     "Unavailable.  Please try again later."
                 sys.exit(1)
