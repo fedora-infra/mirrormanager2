@@ -44,57 +44,57 @@ def move_install_repo(session, version, test=False, debug=False):
         if options.version == 'development':
             # We do not change development repos
             continue
+
+        prefix=u'fedora-install-%s' % ver.name
+        if a.primary_arch:
+            d = u'pub/fedora/linux/releases/%s/Server/%s/os' % (
+                ver.name, a.name)
+            category = mirrormanager2.lib.get_category_by_name(
+                session, 'Fedora Linux')
         else:
-            prefix=u'fedora-install-%s' % ver.name
-            if a.primary_arch:
-                d = u'pub/fedora/linux/releases/%s/Server/%s/os' % (
-                    ver.name, a.name)
-                category = mirrormanager2.lib.get_category_by_name(
-                    session, 'Fedora Linux')
-            else:
-                d = u'pub/fedora-secondary/releases/%s/Server/%s/os' % (
-                    ver.name, a.name)
-                category = mirrormanager2.lib.get_category_by_name(
-                    session, 'Fedora Secondary Arches')
+            d = u'pub/fedora-secondary/releases/%s/Server/%s/os' % (
+                ver.name, a.name)
+            category = mirrormanager2.lib.get_category_by_name(
+                session, 'Fedora Secondary Arches')
 
-            if not test:
-                if not os.path.isdir(os.path.join('/srv', d)):
-                    print "directory %s does not exist on disk, skipping "\
-                        "creation of a repository there" % d
-                    continue
-
-            dobj = mirrormanager2.lib.get_directory_by_name(session, d)
-
-            if not dobj:
-                print "directory %s exists on disk, but not in the database"\
-                    " yet, skipping creation of a repository there until "\
-                    "after the next UMDL run." % d
+        if not test:
+            if not os.path.isdir(os.path.join('/srv', d)):
+                print "directory %s does not exist on disk, skipping "\
+                    "creation of a repository there" % d
                 continue
 
-            repo = mirrormanager2.lib.get_repo_prefix_arch(
-                session, prefix, a.name)
-            if not repo:
-                print 'No repo found for prefix: %s - arch: %s' % (
-                    prefix, a.name)
-                return
+        dobj = mirrormanager2.lib.get_directory_by_name(session, d)
 
-            print "Updating %s" % repo
-            print "Updating %s repo for arch %s" % (repo.prefix, a.name)
+        if not dobj:
+            print "directory %s exists on disk, but not in the database"\
+                " yet, skipping creation of a repository there until "\
+                "after the next UMDL run." % d
+            continue
 
-            if debug:
-                print '%s   becomes   %s' % (repo.version_id, ver.id)
-                print '%s   becomes   %s' % (repo.arch_id, a.id)
-                print '%s   becomes   %s' % (repo.name, dobj.name)
-                print '%s   becomes   %s' % (repo.directory_id, dobj.id)
-                print '%s   becomes   %s' % (repo.category_id, category.id)
-            else:
-                repo.version_id = ver.id
-                repo.arch_id = a.id
-                repo.name = dobj.name
-                repo.directory_id=dobj.id
-                repo.category_id=category.id
-                session.add(repo)
-                session.flush()
+        repo = mirrormanager2.lib.get_repo_prefix_arch(
+            session, prefix, a.name)
+        if not repo:
+            print 'No repo found for prefix: %s - arch: %s' % (
+                prefix, a.name)
+            return
+
+        print "Updating %s" % repo
+        print "Updating %s repo for arch %s" % (repo.prefix, a.name)
+
+        if debug:
+            print '%s   becomes   %s' % (repo.version_id, ver.id)
+            print '%s   becomes   %s' % (repo.arch_id, a.id)
+            print '%s   becomes   %s' % (repo.name, dobj.name)
+            print '%s   becomes   %s' % (repo.directory_id, dobj.id)
+            print '%s   becomes   %s' % (repo.category_id, category.id)
+        else:
+            repo.version_id = ver.id
+            repo.arch_id = a.id
+            repo.name = dobj.name
+            repo.directory_id=dobj.id
+            repo.category_id=category.id
+            session.add(repo)
+            session.flush()
 
     session.commit()
 
