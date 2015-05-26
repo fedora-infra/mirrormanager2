@@ -1,0 +1,148 @@
+#!/usr/bin/python
+
+"""
+This script changes the directory path from the fedora-install-X repositories
+for a given version.
+
+This can be used several time during the release cycle to move a repo from
+a beta state to a release state.
+
+This is currently kind of a work-around until the logic can be added into
+the UMDL script.
+
+TODO: test IRL
+"""
+
+import sys
+import re
+import os
+
+sys.path.insert(0, os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), '..'))
+import mirrormanager2.lib
+from mirrormanager2.lib.model import Repository
+from optparse import OptionParser
+
+
+# moving from pub/fedora/linux/releases/test/22_Beta/Server/x86_64/os/
+# to          pub/fedora/linux/releases/22/Server/x86_64/os
+# TODO: adjust the UMDL to do this
+
+
+def move_install_repo(session, version, test=False, debug=False):
+    ''' Move the install repo for the specified version to their release
+    path.
+    '''
+    product = mirrormanager2.lib.get_product_by_name(session, "Fedora")
+    ver = mirrormanager2.lib.get_version_by_name_version(
+        session, product.name, version)
+
+    if not ver:
+        print 'No version found for %s-%s' % (product.name, version)
+        return
+
+    for a in mirrormanager2.lib.get_arches(session):
+        if a.name == u'source':
+            continue
+
+        if options.version == 'development':
+            # We do not change development repos
+            continue
+
+        prefix = u'fedora-install-%s' % ver.name
+        if a.primary_arch:
+            d = u'pub/fedora/linux/releases/%s/Server/%s/os' % (
+                ver.name, a.name)
+            category = mirrormanager2.lib.get_category_by_name(
+                session, 'Fedora Linux')
+        else:
+            d = u'pub/fedora-secondary/releases/%s/Server/%s/os' % (
+                ver.name, a.name)
+            category = mirrormanager2.lib.get_category_by_name(
+                session, 'Fedora Secondary Arches')
+
+        if not test:
+            if not os.path.isdir(os.path.join('/srv', d)):
+                print "directory %s does not exist on disk, skipping "\
+                    "creation of a repository there" % d
+                continue
+
+        dobj = mirrormanager2.lib.get_directory_by_name(session, d)
+
+        if not dobj:
+            print "directory %s exists on disk, but not in the database"\
+                " yet, skipping creation of a repository there until "\
+                "after the next UMDL run." % d
+            continue
+
+        repo = mirrormanager2.lib.get_repo_prefix_arch(
+            session, prefix, a.name)
+        if not repo:
+            print 'No repo found for prefix: %s - arch: %s' % (
+                prefix, a.name)
+            continue
+
+        print "Updating %s" % repo
+        print "Updating %s repo for arch %s" % (repo.prefix, a.name)
+
+        if debug:
+            print '%s   becomes   %s' % (repo.version_id, ver.id)
+            print '%s   becomes   %s' % (repo.arch_id, a.id)
+            print '%s   becomes   %s' % (repo.name, dobj.name)
+            print '%s   becomes   %s' % (repo.directory_id, dobj.id)
+            print '%s   becomes   %s' % (repo.category_id, category.id)
+        else:
+            repo.version_id = ver.id
+            repo.arch_id = a.id
+            repo.name = dobj.name
+            repo.directory_id = dobj.id
+            repo.category_id = category.id
+            session.add(repo)
+            session.flush()
+
+    session.commit()
+
+
+def main():
+    global options
+    parser = OptionParser(
+        usage=sys.argv[0] + " [options]")
+    parser.add_option(
+        "-c", "--config", dest="config",
+        default='/etc/mirrormanager/mirrormanager2.cfg',
+        help="Configuration file to use "
+             "(default=/etc/mirrormanager/mirrormanager2.cfg)")
+    parser.add_option(
+        "--version", dest="version", type="string",
+        help="OS version to move (e.g. '14') [required]", default=None)
+
+    parser.add_option(
+        "--test", dest="test", default=False, action="store_true",
+        help="Small flag used for the unit-tests to avoid one check")
+    parser.add_option(
+        "--debug", dest="debug", default=False, action="store_true",
+        help="Output what changes but do not change anything")
+
+    (options, args) = parser.parse_args()
+
+    d = dict()
+    with open(options.config) as config_file:
+        exec(compile(config_file.read(), options.config, 'exec'), d)
+
+    session = mirrormanager2.lib.create_session(d['DB_URL'])
+
+    if options.version is None:
+        parser.print_help()
+        sys.exit(1)
+
+    move_install_repo(
+        session,
+        options.version,
+        test=options.test,
+        debug=options.debug)
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
