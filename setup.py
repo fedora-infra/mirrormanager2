@@ -64,5 +64,6 @@ setup(
         'utility/mm2_update-master-directory-list',
         'utility/mm2_update-mirrorlist-server',
         'utility/mm2_create_install_repo',
+        'utility/mm2_upgrade-install-repo',
     ],
 )
