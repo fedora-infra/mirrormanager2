@@ -80,7 +80,7 @@ def move_install_repo(session, version, test=False, debug=False):
         if not repo:
             print 'No repo found for prefix: %s - arch: %s' % (
                 prefix, a.name)
-            return
+            continue
 
         print "Updating %s" % repo
         print "Updating %s repo for arch %s" % (repo.prefix, a.name)
