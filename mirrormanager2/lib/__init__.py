@@ -130,6 +130,21 @@ def get_host(session, host_id):
     return query.first()
 
 
+def get_host_by_name(session, host_name):
+    ''' Return a specified Host via its name.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Host
+    ).filter(
+        model.Host.name == host_name
+    )
+
+    return query.first()
+
+
 def get_hosts(session):
     ''' Return all Hosts in the database.
 
