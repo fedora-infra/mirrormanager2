@@ -100,6 +100,21 @@ def get_siteadmin(session, admin_id):
     return query.first()
 
 
+def get_siteadmins(session):
+    ''' Return all SiteAdmin present in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.SiteAdmin
+    ).order_by(
+        model.SiteAdmin.username
+    )
+
+    return query.all()
+
+
 def get_all_sites(session):
     ''' Return all existing Site.
 
@@ -125,6 +140,21 @@ def get_host(session, host_id):
         model.Host
     ).filter(
         model.Host.id == host_id
+    )
+
+    return query.first()
+
+
+def get_host_by_name(session, host_name):
+    ''' Return a specified Host via its name.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.Host
+    ).filter(
+        model.Host.name == host_name
     )
 
     return query.first()
