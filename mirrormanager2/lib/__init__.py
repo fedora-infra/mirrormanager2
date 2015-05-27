@@ -100,6 +100,21 @@ def get_siteadmin(session, admin_id):
     return query.first()
 
 
+def get_siteadmins(session):
+    ''' Return all SiteAdmin present in the database.
+
+    :arg session: the session with which to connect to the database.
+
+    '''
+    query = session.query(
+        model.SiteAdmin
+    ).order_by(
+        model.SiteAdmin.username
+    )
+
+    return query.all()
+
+
 def get_all_sites(session):
     ''' Return all existing Site.
 
