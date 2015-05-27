@@ -137,15 +137,15 @@ def api_repositories():
 
     repositories = mmlib.get_repositories(SESSION)
     repos = []
-    for repositorie in repositories:
-        if not repositorie:
+    for repository in repositories:
+        if not repository:
             continue
 
         tmp = {
-            'name': repositorie.name,
-            'directory': repositorie.directory.name,
+            'name': repository.name,
+            'directory': repository.directory.name,
         }
-        repos.append({repositorie.prefix: tmp})
+        repos.append({repository.prefix: tmp})
 
     output = {
         'total': len(repositories),
