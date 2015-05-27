@@ -1257,6 +1257,7 @@ def auth_logout():
     return flask.redirect(next_url)
 
 import admin
+import api
 import xmlrpc
 
 # Only import the login controller if the app is set up for local login
