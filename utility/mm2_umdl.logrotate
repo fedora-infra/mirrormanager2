@@ -4,6 +4,5 @@
     daily
     dateext
     rotate 15
-    postrotate
-    endscript
+    copytruncate
 }
