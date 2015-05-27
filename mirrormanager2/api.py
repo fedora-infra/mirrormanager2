@@ -23,8 +23,10 @@
 MirrorManager2 API controller.
 '''
 
+import flask
 
 import mirrormanager2.lib as mmlib
+from mirrormanager2.app import APP, SESSION
 
 
 @APP.route('/api/mirroradmins/')
