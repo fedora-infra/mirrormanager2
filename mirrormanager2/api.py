@@ -35,15 +35,19 @@ def api_mirroradmins():
     '''
     List the admins of a mirror
     ---------------------------
-    Returns the admins of a mirror given a specific URL.
+    Returns all the mirror admins or the admins of a specific mirror
+    specified by its host URL or site name.
 
     ::
+
+        /api/mirroradmins/
 
         /api/mirroradmins/?name=<mirror url>
 
     Accepts GET queries only.
 
-    :arg name: the url of the mirror to return the admins of.
+    :kwarg name: restrict the list of admins returns to the admins of this
+        mirror or host.
 
     Sample response:
 
@@ -61,26 +65,27 @@ def api_mirroradmins():
 
     name = flask.request.args.get('name', None)
     if not name:
-        jsonout = flask.jsonify({'message': 'No name provided'})
-        jsonout.status_code = 400
-        return jsonout
-
-    site = None
-    host = mmlib.get_host_by_name(SESSION, name)
-    if not host:
-        site = mmlib.get_site_by_name(SESSION, name)
+        admins = set(
+            [admin.username
+             for admin in mmlib.get_siteadmins(SESSION)]
+        )
     else:
-        site = host.site
+        site = None
+        host = mmlib.get_host_by_name(SESSION, name)
+        if not host:
+            site = mmlib.get_site_by_name(SESSION, name)
+        else:
+            site = host.site
 
-    if not site:
-        jsonout = flask.jsonify(
-            {'message': 'No host or site found for %s' % name})
-        jsonout.status_code = 400
-        return jsonout
+        if not site:
+            jsonout = flask.jsonify(
+                {'message': 'No host or site found for %s' % name})
+            jsonout.status_code = 400
+            return jsonout
 
-    admins = set([site.created_by])
-    for admin in site.admins:
-        admins.add(admin.username)
+        admins = set([site.created_by])
+        for admin in site.admins:
+            admins.add(admin.username)
 
     output = {
         'total': len(admins),
