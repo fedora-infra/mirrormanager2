@@ -39,11 +39,11 @@ def api_mirroradmins():
 
     ::
 
-        /api/mirroradmins/?url=<mirror url>
+        /api/mirroradmins/?name=<mirror url>
 
     Accepts GET queries only.
 
-    :arg url: the url of the mirror to return the admins of.
+    :arg name: the url of the mirror to return the admins of.
 
     Sample response:
 
@@ -59,21 +59,28 @@ def api_mirroradmins():
 
     '''
 
-    url = flask.request.args.get('url', None)
-    if not url:
-        jsonout = flask.jsonify({'message': 'No url provided'})
+    name = flask.request.args.get('name', None)
+    if not name:
+        jsonout = flask.jsonify({'message': 'No name provided'})
         jsonout.status_code = 400
         return jsonout
 
-    host = mmlib.get_host_by_name(mirrormanager2.app.SESSION, url)
+    site = None
+    host = mmlib.get_host_by_name(SESSION, name)
     if not host:
-        jsonout = flask.jsonify({'message': 'No host found for %s' % url})
+        site = mmlib.get_site_by_name(SESSION, name)
+    else:
+        site = host.site
+
+    if not site:
+        jsonout = flask.jsonify(
+            {'message': 'No host or site found for %s' % name})
         jsonout.status_code = 400
         return jsonout
 
-    admins = set([host.site.created_by])
-    for admin in host.site.admins:
-        admins.add(admin)
+    admins = set([site.created_by])
+    for admin in site.admins:
+        admins.add(admin.username)
 
     output = {
         'total': len(admins),
