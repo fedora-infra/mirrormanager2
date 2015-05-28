@@ -95,3 +95,63 @@ def api_mirroradmins():
     jsonout = flask.jsonify(output)
     jsonout.status_code = 200
     return jsonout
+
+
+@APP.route('/api/repositories/')
+@APP.route('/api/repositories')
+def api_repositories():
+    '''
+    List the repositories
+    ---------------------
+    Returns the list of repositories present in the database.
+
+    ::
+
+        /api/repositories
+
+    Accepts GET queries only.
+
+    Sample response:
+
+    ::
+
+      {
+        "repositories": [
+          {
+            "fedora-install-20": {
+              "directory": "pub/fedora/linux/releases/20/Fedora/i386/os",
+              "name": "pub/fedora/linux/releases/20/Fedora/i386/os"
+            }
+          },
+          {
+            "rawhide": {
+              "directory": "pub/fedora/linux/development/rawhide/i386/os",
+              "name": "Fedora-Fedora Linux-development-i386"
+            }
+          }
+        ]
+        "total": 2
+      }
+
+    '''
+
+    repositories = mmlib.get_repositories(SESSION)
+    repos = []
+    for repository in repositories:
+        if not repository:
+            continue
+
+        tmp = {
+            'name': repository.name,
+            'directory': repository.directory.name,
+        }
+        repos.append({repository.prefix: tmp})
+
+    output = {
+        'total': len(repositories),
+        'repositories': repos,
+    }
+
+    jsonout = flask.jsonify(output)
+    jsonout.status_code = 200
+    return jsonout
