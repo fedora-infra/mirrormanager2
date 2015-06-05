@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.1.0
+Version:        0.2.0
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -307,6 +307,25 @@ exit 0
 
 
 %changelog
+* Fri Jun 05 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.2.0-1
+- Update to 0.2.0
+- Include the background header file in MM2 itself (Adrian Reber)
+- Support always update hosts which are unreachable in the crawler (Adrian
+  Reber)
+- Adjust the spec file to the systemd packaging guidelines for Fedora
+- Multiple improvements to the crawler, including a start of a canary mode
+  (Adrian Reber)
+- Offer possibility to sort by product, bringing back MM1 behavior (Adrian
+  Reber)
+- Couple of UI fixes about who is allowed to access what
+- Fix peer ASNs (in the same spirit, who can access)
+- Create noauthed master for mirror publiclist so that it can be cached in
+  memcachd (Patrick Uiterwijk)
+- Fix the report_mirror to correctly catch the xmlrpclib.ProtocolError
+- Add a new utility script to upgrade repo from -alpha or -beta to release
+- Adjust the logrotate configuration to fix the permission denied error
+- Create 2 API endpoints, one for zodbot's .mirroradmin and one for nagios
+
 * Thu May 07 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.1.0-1
 - Update 0.1.0
 - Add the possibilities to delete a site or a host
