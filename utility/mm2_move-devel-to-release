@@ -10,8 +10,6 @@ published.
 This implies that for a week, users will be actually hitting the development
 tree (which is hardlinked to the release tree and thus will have the same
 content)
-
-TODO: test IRL
 """
 
 import sys
@@ -24,22 +22,14 @@ import mirrormanager2.lib
 from mirrormanager2.lib.model import RepositoryRedirect, Repository
 from optparse import OptionParser
 
-
-# moving from pub/fedora/linux/development/14/x86_64/os to
-# pub/fedora/linux/releases/14/Everything/x86_64/os
-# by now, UMDL would have created a new repository object at the target
-# directory anyhow except it's version and arch values are wrong
-# and we want to zero out the values in the current repository object
-
-def fixup_repos(session, version, fromrepo, torepo):
-    fromrepo_arch = fromrepo.arch
-    fromrepo.arch = None
-    session.add(fromrepo)
-
-    torepo.prefix = fromrepo.prefix
-    torepo.arch = fromrepo_arch
-    torepo.version = version
-    session.add(torepo)
+def fixup_repos(session, version, repo, new_dir):
+    """ This functions has changed a lot since MM1. Now the given
+    repository is updated to point to the right directory and the
+    name is changed to reflect the new directory."""
+    repo.name = new_dir.name
+    repo.version = version
+    repo.directory_id = new_dir.id
+    session.add(repo)
 
     session.commit()
 
@@ -62,7 +52,9 @@ def move_devel_repo(session, category, version):
     newpattern = os.path.join('releases', version, 'Everything')
     oldRe = re.compile(oldpattern)
     for r in c.repositories:
-        if r.version_id != v.id:
+        if not r.prefix:
+            # This script is only interested in repositories without
+            # a prefix. Not changing existing repositories.
             continue
         d = r.directory
         if oldRe.search(d.name):
@@ -74,19 +66,12 @@ def move_devel_repo(session, category, version):
                 sys.stderr.flush()
                 continue
 
-            l = len(new_d.repositories)
-            if l == 0:
-                continue  # umdl hasn't found this directory yet.
-                          # Pretty unlikely...
-            if l > 1:
-                # how'd we wind up with 2 repos pointing at this directory?
-                raise ValueError
-
-            fixup_repos(session, v, r, new_d.repositories[0])
-            print "%s => %s" % (d.name, t)
-
-
+            if new_d.repositories:
+                # The new directory already has a repository and will
+                # thus lead to a duplicate key value violation.
                 continue
+            fixup_repos(session, v, r, new_d)
+            print "%s => %s" % (d.name, t)
 
 def print_categories(session):
     print "Available categories:"
