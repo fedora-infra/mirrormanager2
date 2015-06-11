@@ -10,8 +10,6 @@ published.
 This implies that for a week, users will be actually hitting the development
 tree (which is hardlinked to the release tree and thus will have the same
 content)
-
-TODO: test IRL
 """
 
 import sys
@@ -24,22 +22,14 @@ import mirrormanager2.lib
 from mirrormanager2.lib.model import RepositoryRedirect, Repository
 from optparse import OptionParser
 
-
-# moving from pub/fedora/linux/development/14/x86_64/os to
-# pub/fedora/linux/releases/14/Everything/x86_64/os
-# by now, UMDL would have created a new repository object at the target
-# directory anyhow except it's version and arch values are wrong
-# and we want to zero out the values in the current repository object
-
-def fixup_repos(session, version, fromrepo, torepo):
-    fromrepo_arch = fromrepo.arch
-    fromrepo.arch = None
-    session.add(fromrepo)
-
-    torepo.prefix = fromrepo.prefix
-    torepo.arch = fromrepo_arch
-    torepo.version = version
-    session.add(torepo)
+def fixup_repos(session, version, repo, new_dir):
+    """ This functions has changed a lot since MM1. Now the given
+    repository is updated to point to the right directory and the
+    name is changed to reflect the new directory."""
+    repo.name = new_dir.name
+    repo.version = version
+    repo.directory_id = new_dir.id
+    session.add(repo)
 
     session.commit()
 
@@ -62,7 +52,9 @@ def move_devel_repo(session, category, version):
     newpattern = os.path.join('releases', version, 'Everything')
     oldRe = re.compile(oldpattern)
     for r in c.repositories:
-        if r.version_id != v.id:
+        if not r.prefix:
+            # This script is only interested in repositories without
+            # a prefix. Not changing existing repositories.
             continue
         d = r.directory
         if oldRe.search(d.name):
@@ -74,94 +66,12 @@ def move_devel_repo(session, category, version):
                 sys.stderr.flush()
                 continue
 
-            l = len(new_d.repositories)
-            if l == 0:
-                continue  # umdl hasn't found this directory yet.
-                          # Pretty unlikely...
-            if l > 1:
-                # how'd we wind up with 2 repos pointing at this directory?
-                raise ValueError
-
-            fixup_repos(session, v, r, new_d.repositories[0])
-            print "%s => %s" % (d.name, t)
-
-
-def move_install_repo(session, version, test=False):
-    product=mirrormanager2.lib.get_product_by_name(session, "Fedora")
-    ver = mirrormanager2.lib.get_version_by_name_version(
-            session, product.name, version)
-
-    for a in mirrormanager2.lib.get_arches(session):
-        if a.name == u'source':
-            continue
-
-        if options.version == 'development':
-            # yeah, development is ver.name, displayname is rawhide
-            # We need a RepositoryRedirect here instead, as Repositories
-            # already exist to these directories.
-            fromRepo = u'fedora-install-rawhide'
-            toRepo = u'rawhide'
-            try:
-                rr = RepositoryRedirect(fromRepo=fromRepo, toRepo=toRepo)
-                session.add(rr)
-                session.flush()
-            except:
-                print "Repository Redirect %s -> %s already exists, "\
-                    "ignoring." % (fromRepo, toRepo)
-                pass
-        else:
-            prefix=u'fedora-install-%s' % ver.name
-            if a.primary_arch:
-                d = u'pub/fedora/linux/releases/%s/Fedora/%s/os' % (
-                    ver.name, a.name)
-                category = mirrormanager2.lib.get_category_by_name(
-                    session, 'Fedora Linux')
-            else:
-                d = u'pub/fedora-secondary/releases/%s/Fedora/%s/os' % (
-                    ver.name, a.name)
-                category = mirrormanager2.lib.get_category_by_name(
-                    session, 'Fedora Secondary Arches')
-
-            repos = mirrormanager2.lib.get_repo_by_dir(session, d)
-            for r in repos:
-                print "destroying %s" % r
-                session.delete(r)
-                session.flush()
-
-            if not test:
-                if not os.path.isdir(os.path.join('/', d)):
-                    print "directory %s does not exist on disk, skipping "\
-                        "creation of a repository there" % d
-                    continue
-
-            dobj = mirrormanager2.lib.get_directory_by_name(session, d)
-
-            if not dobj:
-                print "directory %s exists on disk, but not in the database"\
-                    " yet, skipping creation of a repository there until "\
-                    "after the next UMDL run." % d
+            if new_d.repositories:
+                # The new directory already has a repository and will
+                # thus lead to a duplicate key value violation.
                 continue
-
-            print "updating %s repo for arch %s" % (prefix, a.name)
-
-            prefix = u'fedora-install-%s' % ver.name
-            repo = mirrormanager2.lib.get_repo_prefix_arch(
-                session, prefix=prefix, arch=a.name)
-
-            if not repo:
-                repo = Repository()
-                repo.version_id = ver.id
-                repo.arch_id = a.id
-                repo.prefix = prefix
-
-            repo.name = dobj.name
-            repo.directory_id=dobj.id
-            repo.category_id=category.id
-            session.add(repo)
-            session.flush()
-
-    session.commit()
-
+            fixup_repos(session, v, r, new_d)
+            print "%s => %s" % (d.name, t)
 
 def print_categories(session):
     print "Available categories:"
@@ -185,10 +95,6 @@ def main():
         "--category", dest="category", type="string",
         help="Category (e.g. 'Fedora Linux') [required]", default=None)
 
-    parser.add_option(
-        "--test", dest="test", default=False, action="store_true",
-        help="Small flag used for the unit-tests to avoid one check")
-
     (options, args) = parser.parse_args()
 
     d = dict()
@@ -206,11 +112,6 @@ def main():
         session,
         options.category,
         options.version)
-
-    move_install_repo(
-        session,
-        options.version,
-        test=options.test)
 
     return 0
 
