@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.2.0
+Version:        0.2.1
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -307,6 +307,11 @@ exit 0
 
 
 %changelog
+* Thu Jun 11 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.2.1-1
+- Update to 0.2.1
+- Fix the mm2_move-devel-to-release script to work properly with MM2 and our
+  products (Adrian Reber)
+
 * Fri Jun 05 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.2.0-1
 - Update to 0.2.0
 - Include the background header file in MM2 itself (Adrian Reber)
