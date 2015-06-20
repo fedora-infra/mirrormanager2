@@ -19,7 +19,6 @@ summary file), it will create a repository object (cf `make_repository`) which
 is basically a mapping between a yum repo name (ie: Fedora-20-updates) and a
 directory (/pub/fedora/linux/updates/....)
 
-TODO: test IRL
 """
 
 import glob
