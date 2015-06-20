@@ -475,7 +475,7 @@ class HostCategory(BASE):
     id = sa.Column(sa.Integer, primary_key=True)
     host_id = sa.Column(sa.Integer, sa.ForeignKey('host.id'), nullable=True)
     category_id = sa.Column(
-        sa.Integer, sa.ForeignKey('category.id'), nullable=True)
+        sa.Integer, sa.ForeignKey('category.id', ondelete='CASCADE'), nullable=True)
     always_up2date = sa.Column(sa.Boolean(), default=False, nullable=False)
 
     # Relations
@@ -521,7 +521,7 @@ class HostCategoryDir(BASE):
     up2date = sa.Column(
         sa.Boolean, default=True, nullable=False, index=True)
     directory_id = sa.Column(
-        sa.Integer, sa.ForeignKey('directory.id'), nullable=True)
+        sa.Integer, sa.ForeignKey('directory.id', ondelete='CASCADE'), nullable=True)
 
     # Relations
     directory = relation(
@@ -565,7 +565,7 @@ class CategoryDirectory(BASE):
     directory = relation(
         'Directory',
         foreign_keys=[directory_id], remote_side=[Directory.id],
-        backref=backref('categorydir')
+        backref=backref('categorydir', cascade="delete, delete-orphan", single_parent=True)
     )
 
     def __repr__(self):
@@ -836,7 +836,8 @@ class FileDetail(BASE):
     directory = relation(
         'Directory',
         foreign_keys=[directory_id], remote_side=[Directory.id],
-        backref="fileDetails",
+        backref=backref( 'fileDetails', cascade="delete, delete-orphan",
+                  single_parent=True)
     )
 
 
