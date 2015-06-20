@@ -5,7 +5,7 @@ This script crawls the local copy of the master mirrors (which in our case
 is just a nfs mount of the master mirror content). According to what it
 finds, it updates the mirrormanager2 database.
 It will create new product/version if it finds them and drop directories if
-they disapeared.
+they disappeared.
 
 Basically, it checks the content of the nfs mount, if the directory
 contains a lot of files, it takes the 3 most recents ones, stores them in
