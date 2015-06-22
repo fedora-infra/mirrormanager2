@@ -398,7 +398,7 @@ def is_excluded(path, excludes):
     return False
 
 
-def nuke_gone_directories(diskpath, category):
+def nuke_gone_directories(session, diskpath, category):
     """ deleting a Directory has a ripple effect through the whole
         database.  Be really sure you're ready do to this.  It comes
         in handy when say a Test release is dropped."""
@@ -413,7 +413,8 @@ def nuke_gone_directories(diskpath, category):
         if not os.path.isdir(os.path.join(diskpath, relativeDName)):
             if len(d.categories) == 1: # safety, this should always trigger
                 logger.info("Deleting gone directory %s" % (d.name))
-                d.destroySelf()
+                session.delete(d)
+                session.commit()
 
 
 def ctime_from_rsync(date, hms):
@@ -850,7 +851,7 @@ def main():
             sync_directories_from_disk(session, config, i['path'], category)
 
             if options.delete_directories:
-                nuke_gone_directories(i['path'], category)
+                nuke_gone_directories(session, i['path'], category)
 
     logger.info("Ending umdl")
 
