@@ -1084,7 +1084,7 @@ def host_category(host_id, hc_id):
 
     form = forms.EditHostCategoryForm(obj=hcobj)
 
-    if form.validate_on_submit():
+    if form.validate_on_submit() and is_mirrormanager_admin(flask.g.fas_user):
 
         form.populate_obj(obj=hcobj)
 

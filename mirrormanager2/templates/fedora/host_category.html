@@ -23,6 +23,7 @@
    Fedora and Fedora Archive.
 </p>
 
+{% if is_admin %}
 <form action="{{ url_for('host_category', host_id=host.id,
                  hc_id=hostcategory.id) }}" method="POST">
   <table>
@@ -33,6 +34,7 @@
     {{ form.csrf_token }}
   </p>
 </form>
+{% endif %}
 
 <h3>URLs serving this content</h3>
 
