@@ -3,14 +3,14 @@ Contributors to MirrorManager
 
 MirrorManager2 would be nothing without its contributors.
 
-On June 11, 2015 (release 0.2.1), the list looks as follow:
+On June 24, 2015 (release 0.3.0), the list looks as follow:
 
 =================  ===========
 Number of commits  Contributor
 =================  ===========
-       821          Pierre-Yves Chibon <pingou@pingoured.fr>
-        80          Adrian Reber <adrian@lisas.de>
-        54          Ralph Bean <rbean@redhat.com>
+       827          Pierre-Yves Chibon <pingou@pingoured.fr>
+        85          Adrian Reber <adrian@lisas.de>
+        56          Ralph Bean <rbean@redhat.com>
         14          Luke Macken <lmacken@redhat.com>
          4          Matt Domsch <Matt_Domsch@dell.com>
          4          Ralph Bean <ralph.bean@gmail.com>

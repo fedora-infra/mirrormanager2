@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.2.1
+Version:        0.3.0
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -307,6 +307,13 @@ exit 0
 
 
 %changelog
+* Wed Jun 24 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.3.0-1
+- Update to 0.3.0
+- Fix the --delete action of the umdl (Adrian Reber)
+- If the user is not an admin, keep the existing admin_active settings
+- Only MM2 admins are allowed to change the always_up2date flag of a mirror
+- Also fix the mm2_crawler logrotate script like the one for umdl (Adrian Reber)
+
 * Thu Jun 11 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.2.1-1
 - Update to 0.2.1
 - Fix the mm2_move-devel-to-release script to work properly with MM2 and our
