@@ -335,7 +335,12 @@ def site_view(site_id):
 
     form = forms.AddSiteForm(obj=siteobj)
     if form.validate_on_submit():
+        admin_active = siteobj.admin_active
         obj = form.populate_obj(obj=siteobj)
+
+        # If the user is *not* an admin, keep the current admin_active flag
+        if not is_mirrormanager_admin(flask.g.fas_user):
+            siteobj.admin_active = admin_active
 
         try:
             SESSION.flush()
@@ -587,9 +592,15 @@ def host_view(host_id):
 
     form = forms.AddHostForm(obj=hostobj)
     if form.validate_on_submit():
+        admin_active = hostobj.admin_active
         form.populate_obj(obj=hostobj)
         hostobj.bandwidth_int = int(hostobj.bandwidth_int)
         hostobj.asn = None if not hostobj.asn else int(hostobj.asn)
+
+        # If the user is *not* an admin, keep the current admin_active flag
+        if not is_mirrormanager_admin(flask.g.fas_user):
+            hostobj.admin_active = admin_active
+
         message = dict(
             site_id=hostobj.site_id,
             host_id=host_id,
