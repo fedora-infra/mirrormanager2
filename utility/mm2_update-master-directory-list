@@ -360,7 +360,8 @@ def make_repository(session, directory, relativeDName, category, target):
 
     # stop making duplicate Repository objects.
     if len(directory.repositories) > 0:
-        logger.warning("%s: directory already has a repository")
+        logger.warning("%s: directory already has a repository" %
+            (directory.name))
         return None
 
     repo = None
