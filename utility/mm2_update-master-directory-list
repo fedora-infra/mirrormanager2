@@ -37,365 +37,20 @@ import hashlib
 sys.path.insert(0, os.path.join(os.path.dirname(
     os.path.abspath(__file__)), '..'))
 import mirrormanager2.lib
-from mirrormanager2.lib.model import (
-    Arch, Directory, Repository, Version, FileDetail)
-from mirrormanager2.lib.repomap import repo_prefix
-from mirrormanager2.lib.sync import run_rsync
+import umdl
 
 
-delete_directories=False
-logger = None
+logger = logging.getLogger('umdl')
 stdexcludes=['.*\.snapshot', '.*/\.~tmp~']
 
-
-def parent_dir(path):
-    sdir = path.split('/')[:-1]
-    try:
-        parent = os.path.join(*sdir)
-    except TypeError: #
-        parent = u''
-    return parent
-
-
-def remove_category_topdir(topdirName, path):
-    path = path[len(topdirName)+1:]
-    return path
-
-
-def _get_version_from_path(path):
-    # Debian/Ubuntu versioning
-    # this ignores 10.10 and maverick-{anything}, but picks up 'maverick'
-    s = r'dists/(\w+)/'
-    m = re.search(re.compile(s), path)
-    if m is not None:
-        return m.group(1)
-    # Fedora versioning
-    s = r'/?(([\.\d]+)([-_]\w+)?)/'
-    m = re.search(re.compile(s), path)
-    if m is not None:
-        return m.group(1)
-    # Rawhide, development
-    if 'rawhide' in path:
-        return 'development'
-    return None
-
-
-def create_version_from_path(session, category, path):
-    ver = None
-    vname = _get_version_from_path(path)
-    if vname is not None and vname != '':
-        if u'/test/' in path:
-            isTest = True
-        else:
-            isTest = False
-
-        ver = mirrormanager2.lib.get_version_by_name_version(
-            session, category.product.name, vname)
-        if not ver:
-            ver = Version(
-                product=category.product,
-                name=vname,
-                is_test=isTest)
-            session.add(ver)
-            session.flush()
-
-    return ver
-
-arch_cache = None
-version_cache = None
-
-
-def setup_arch_version_cache(session):
-    global arch_cache
-    if arch_cache is None:
-        arch_cache = mirrormanager2.lib.get_arches(session)
-
-    global version_cache
-    if version_cache is None:
-        version_cache = mirrormanager2.lib.get_versions(session)
-
-
-def guess_ver_arch_from_path(session, category, path):
-    arch = None
-    if 'SRPMS' in path:
-        arch = mirrormanager2.lib.get_arch_by_name(session, 'source')
-    else:
-        for a in arch_cache:
-            s = '.*(^|/)%s(/|$).*' % (a['name'])
-            if re.compile(s).match(path):
-                arch = mirrormanager2.lib.get_arch_by_name(session, a['name'])
-                break
-
-    ver = None
-    # newest versions/IDs first, also handles stupid Fedora 9.newkey hack.
-    for v in version_cache:
-        if v['product_id'] != category.product.id:
-            continue
-        s = '.*(^|/)%s(/|$).*' % (v['name'])
-        if re.compile(s).match(path):
-            ver = mirrormanager2.lib.get_version_by_id(session, v['id'])
-            break
-
-    # create Versions if we can figure it out...
-    if ver is None:
-        ver = create_version_from_path(session, category, path)
-        if ver:
-            version_cache.append(ver)
-    return (ver, arch)
-
-
-# Something like this is committed to yum upstream, but may not be in the
-# copy we are using.
-def set_repomd_timestamp(yumrepo):
-    timestamp = 0
-    for ft in yumrepo.fileTypes():
-        thisdata = yumrepo.repoData[ft]
-        timestamp = max(int(thisdata.timestamp), timestamp)
-    yumrepo.timestamp = timestamp
-    return timestamp
-
-
-def make_file_details_from_checksums(session, diskpath, relativeDName, D):
-    def _parse_checksum_file(relativeDName, checksumlen):
-        r = {}
-        try:
-            f = open(os.path.join(diskpath, relativeDName),  'r')
-            for line in f:
-                line = line.strip()
-                s = line.split()
-                if len(s) < 2:
-                    continue
-                if len(s[0]) != checksumlen:
-                    continue
-                # strip off extraneous starting '*' char from name
-                s[1] = s[1].strip('*')
-                r[s[1]] = s[0]
-            f.close()
-        except:
-            pass
-        return r
-
-    def _checksums_from_globs(relativeDName, globs, checksumlen):
-        d = {}
-        checksum_files = []
-        for g in globs:
-            checksum_files.extend(
-                glob.glob(os.path.join(diskpath, relativeDName, g)))
-        for f in checksum_files:
-            d.update(_parse_checksum_file(f, checksumlen))
-        return d
-
-    if diskpath is None:
-        return
-
-    sha1_globs = ['*.sha1sum', 'SHA1SUM', 'sha1sum.txt']
-    md5_globs = ['*.md5sum', 'MD5SUM', 'md5sum.txt']
-    sha256_globs = ['*-CHECKSUM', 'sha256sum.txt']
-    sha512_globs = ['*.sha512sum', 'SHA512SUM', 'sha512sum.txt']
-    md5dict = _checksums_from_globs(relativeDName, md5_globs, 32)
-    sha1dict = _checksums_from_globs(relativeDName, sha1_globs, 40)
-    sha256dict = _checksums_from_globs(relativeDName, sha256_globs, 64)
-    sha512dict = _checksums_from_globs(relativeDName, sha512_globs, 128)
-
-    files = set()
-    for k in md5dict.keys():
-        files.add(k)
-    for k in sha1dict.keys():
-        files.add(k)
-    for k in sha256dict.keys():
-        files.add(k)
-    for k in sha512dict.keys():
-        files.add(k)
-
-    for f in files:
-        try:
-            s = os.stat(os.path.join(diskpath, relativeDName, f))
-        except OSError:
-            # bail if the file doesn't actually exist
-            continue
-        sha1 = sha1dict.get(f)
-        md5  = md5dict.get(f)
-        sha256  = sha256dict.get(f)
-        sha512  = sha512dict.get(f)
-        size = s.st_size
-        ctime = s[stat.ST_CTIME]
-        fd = mirrormanager2.lib.get_file_detail(
-            session,
-            directory_id=D.id,
-            filename=f,
-            sha1=sha1,
-            md5=md5,
-            sha256=sha256,
-            sha512=sha512,
-            size=size,
-            timestamp=ctime)
-        if not fd:
-            fd = FileDetail(
-                directory=D,
-                filename=f,
-                sha1=sha1,
-                md5=md5,
-                sha256=sha256,
-                sha512=sha512,
-                timestamp=ctime,
-                size=size)
-            session.add(fd)
-            session.commit()
-
-
-def make_repo_file_details(session, diskpath, relativeDName, D, category, target):
-
-    warning = "Won't make repo file details"
-
-    if diskpath is None:
-        logger.warning("%s: diskpath is None" % warning)
-        return
-
-    # For yum repos and ostree repos
-    allowed_targets = ['repomd.xml', 'summary']
-    if target not in allowed_targets:
-        logger.warning("%s: %r not in %r" % (warning, target, allowed_targets))
-        return
-
-    absolutepath = os.path.join(diskpath, relativeDName, target)
-
-    if not os.path.exists(absolutepath):
-        logger.warning("%s: %r does not exist" % (warning, absolutepath))
-        return
-
-    try:
-        f = open(absolutepath, 'r')
-        contents = f.read()
-        f.close()
-    except:
-        return
-
-    size = len(contents)
-    md5 = hashlib.md5(contents).hexdigest()
-    sha1 = hashlib.sha1(contents).hexdigest()
-    sha256 = hashlib.sha256(contents).hexdigest()
-    sha512 = hashlib.sha512(contents).hexdigest()
-
-    if target == 'repomd.xml':
-        yumrepo = yum.repoMDObject.RepoMD('repoid', absolutepath)
-        if 'timestamp' not in yumrepo.__dict__:
-            set_repomd_timestamp(yumrepo)
-        timestamp = yumrepo.timestamp
-    elif target == 'summary':
-        # TODO -- ostree repos may have a timestamp in their summary file
-        # someday.  for now, just use the system mtime.
-        timestamp = os.path.getmtime(absolutepath)
-
-    fd = mirrormanager2.lib.get_file_detail(
-        session,
-        directory_id=D.id,
-        filename=target,
-        sha1=sha1,
-        md5=md5,
-        sha256=sha256,
-        sha512=sha512,
-        size=size,
-        timestamp=timestamp)
-    if not fd:
-        fd = FileDetail(
-            directory_id=D.id,
-            filename=target,
-            sha1=sha1,
-            md5=md5,
-            sha256=sha256,
-            sha512=sha512,
-            timestamp=timestamp,
-            size=size)
-        logger.info("Updating FileDetail %r, %r" % (fd, absolutepath))
-        session.add(fd)
-        session.commit()
-
-
-def move_repository_from_development(prefix, arch, newdir):
-    try:
-        repo = Repository.selectBy(prefix=prefix, arch=arch)[0]
-    except:
-        return None
-
-    if repo.directory is not None and newdir.name is not None:
-        if '/development' in repo.directory.name \
-                and '/releases' in newdir.name:
-            repo.directory = newdir
-    return repo
-
-
-def make_repository(session, directory, relativeDName, category, target):
-
-    warning = "Won't make repository object"
-
-    # For yum repos and ostree repos
-    allowed_targets = ['repomd.xml', 'summary']
-    if target not in allowed_targets:
-        logger.warning("%s: %r not in %r" % (warning, target, allowed_targets))
-        return
-
-    if target == 'repomd.xml':
-        (ver, arch) = guess_ver_arch_from_path(session, category, relativeDName)
-        if ver is None or arch is None:
-            logger.warning("%s: could not guess version and arch %r, %r" % (
-                warning, ver, arch))
-            return None
-    elif target == 'summary':
-        # For ostree, we someday need to actually extract the arch information
-        # from the ostree repo, but for now (F21 and F22) we will only be
-        # shipping x86_64, so we hardcode that.  At present, it is not possible
-        # to query an ostree repo for the arch information.  Bug walters about
-        # this.
-        arch = mirrormanager2.lib.get_arch_by_name(session, 'x86_64')
-        # Furthermore, we'll grab the version piece from the path which looks
-        # like atomic/rawhide or atomic/21.
-        ver = relativeDName.rstrip('/').split('/')[-1]
-        ver = mirrormanager2.lib.get_version_by_name_version(
-            session, category.product.name, ver)
-        if ver is None:
-            if not relativeDName.endswith('/'):
-                relativeDName += '/'
-            ver = create_version_from_path(category, relativeDName)
-            session.add(ver)
-            session.commit()
-            version_cache.append(ver)
-
-    # stop making duplicate Repository objects.
-    if len(directory.repositories) > 0:
-        logger.warning("%s: directory already has a repository" %
-            (directory.name))
-        return None
-
-    repo = None
-    prefix = repo_prefix(relativeDName, category, ver)
-    repo = mirrormanager2.lib.get_repo_prefix_arch(
-        session, prefix, arch.name)
-
-    if not repo:
-        # historically, Repository.name was a longer string with
-        # product and category deliniations.  But we were getting
-        # unique constraint conflicts once we started introducing
-        # repositories under repositories.  And .name isn't used for
-        # anything meaningful.  So simply have it match dir.name,
-        # which can't conflict.
-        repo = Repository(
-            name=directory.name,
-            category=category,
-            version=ver,
-            arch=arch,
-            directory=directory,
-            prefix=prefix)
-        logger.info(
-            'Created Repository(prefix=%s, version=%s, arch=%s, '
-            'category=%s) -> Directory %s'
-            % (prefix, ver.name, arch.name, category.name, directory.name))
-        session.add(repo)
-        session.flush()
-    else:
-        if repo.prefix != prefix:
-            repo.prefix = prefix
-
-    return repo
+def cache_directories(category):
+    cache = dict()
+    topdirName = category.topdir.name
+    for directory in list(category.directories):
+        relativeDName = umdl.remove_category_topdir(
+            topdirName, directory.name).strip(u'/')
+        cache[relativeDName] = directory
+    return cache
 
 
 def is_excluded(path, excludes):
@@ -405,263 +60,45 @@ def is_excluded(path, excludes):
     return False
 
 
-def nuke_gone_directories(session, diskpath, category):
-    """ deleting a Directory has a ripple effect through the whole
-        database.  Be really sure you're ready do to this.  It comes
-        in handy when say a Test release is dropped."""
+def sync_directories_from_fullfilelist(
+    session, config, diskpath, category, excludes=None):
 
-    topdirName = category.topdir.name
-
-    directories = category.directories # in ascending name order
-    directories.reverse() # now in decending name order, bottoms up
-    for d in directories:
-        if is_excluded(d.name, category.excludes): continue
-        relativeDName = remove_category_topdir(topdirName, d.name)
-        if not os.path.isdir(os.path.join(diskpath, relativeDName)):
-            if len(d.categories) == 1: # safety, this should always trigger
-                logger.info("Deleting gone directory %s" % (d.name))
-                session.delete(d)
-                session.commit()
-
-
-def ctime_from_rsync(date, hms):
-    year, month, day = date.split('/')
-    hour, minute, second = hms.split(':')
-    t = datetime.datetime(
-        int(year), int(month), int(day),
-        int(hour), int(minute), int(second), 0, None)
-    return int(time.mktime(t.timetuple()))
-
-
-def fill_category_directories_from_rsync(
-        line, category, topdirName, category_directories):
-    readable = True
-    relativeDName = line.split()[4]
-    if re.compile('^\.$').match(d):
-        directoryname = topdirName
-    else:
-        directoryname = os.path.join(topdirName, relativeDName)
-
-    if is_excluded(directoryname, stdexcludes + category.excludes): return
-
-    perms = line.split()[0]
-    if not re.compile('^d......r.x').match(perms) \
-            or parent_dir(relativeDName) in category.unreadable_dirs:
-        readable=False
-        category.unreadable_dirs.add(relativeDName)
-
-    try:
-        perm, size, date, hms, filepath = line.split()
-    except ValueError:
-        raise
-    ctime = ctime_from_rsync(date, hms)
-
-    category_directories[relativeDName] = {
-        'files':{},
-        'isRepository':False,
-        'isAtomic':False,
-        'readable':readable,
-        'ctime':ctime,
-        'changed':True}
-    if d.endswith('repodata'):
-        parent_relativeDName = parent_dir(relativeDName)
-        try:
-            category_directories[parent_relativeDName]['isRepository'] = True
-        except KeyError:
-            category_directories[parent_relativeDName] = {
-                'files':{},
-                'isRepository':True,
-                'readable':readable,
-                'ctime':ctime,
-                'changed':True}
-
-    return category_directories
-
-
-def add_file_to_directory(line, category_directories):
-    try:
-        perm, size, date, hms, filepath = line.split()
-    except ValueError:
-        return
-    try:
-        dt = ctime_from_rsync(date, hms)
-    except ValueError:
-        return
-
-    l = filepath.split('/')
-    filename = l[-1]
-    subpath = l[:-1]
-    if len(subpath) > 0:
-        relativeDName = os.path.join(*subpath)
-    else:
-        relativeDName = ''
-    category_directories[relativeDName]['files'][filename] = {
-        'size':size, 'stat':dt}
-
-
-def short_filelist(files):
-    html=0
-    rpms=0
-    hdrs=0
-    drpms=0
-    for f in files.keys():
-        if f.endswith('.html'):  html += 1
-        if f.endswith('.rpm'):   rpms += 1
-        if f.endswith('.hdr'):   hdrs += 1
-        if f.endswith('.drpm'): drpms += 1
-    if html>10 or rpms > 10 or hdrs > 10 or drpms > 10:
-        date_file_list = []
-        rc = {}
-        for k in files.keys():
-            date_file_tuple = (files[k]['stat'], k, files[k]['size'])
-            date_file_list.append(date_file_tuple)
-        date_file_list.sort()
-        # keep the most recent 3
-        date_file_list = date_file_list[-3:]
-
-        for _, k, _ in date_file_list:
-            rc[k] = files[k]
-        return rc
-    else:
-        return files
-
-
-def sync_category_directories(
-        session, config, diskpath, category, category_directories):
-
-    logger.debug("  sync_directories_directories %r" % category)
-
-    for relativeDName in sorted(category_directories.keys()):
-        value = category_directories[relativeDName]
-        set_readable = False
-        set_ctime = False
-        set_files = False
-
-        if relativeDName in category.directory_cache:
-            d = category.directory_cache[relativeDName]
-            if d['readable'] != value['readable']:
-                set_readable = True
-            if d['ctime'] != value['ctime']:
-                set_ctime = True
-            D = mirrormanager2.lib.get_directory_by_id(session, d.id)
-        else:
-            if relativeDName == u'':
-                D = category.topdir
-            else:
-                # Can't find the new directory, just add it
-                dname = os.path.join(category.topdir.name, relativeDName)
-                D = Directory(
-                    name=dname,
-                    readable=value['readable'],
-                    ctime=value['ctime'])
-                logger.debug(
-                    u'Created Directory(%s, readable=%s, ctime=%s)'
-                    % (dname, value['readable'], value['ctime']))
-            # Add this category to the directory
-            D.categories.append(category)
-            session.add(D)
-            # And flush so that we can already start using it
-            session.flush()
-            # Refresh the cache
-            category.directory_cache = cache_directories(category)
-            d = category.directory_cache[relativeDName]
-
-        if value['changed']:
-            set_files = True
-
-        if (set_readable or set_ctime or set_files):
-            if set_readable:
-                D.readable = value['readable']
-            if set_ctime:
-                D.ctime = value['ctime']
-            if set_files:
-                if D.files != short_filelist(value['files']):
-                    D.files = short_filelist(value['files'])
-        session.add(D)
-        session.commit()
-        make_file_details_from_checksums(session, diskpath, relativeDName, D)
-
-    # this has to be a second pass to be sure the child repodata/ dir is
-    # created in the db first
-    for relativeDName, value in category_directories.iteritems():
-        d = category.directory_cache[relativeDName]
-        D = mirrormanager2.lib.get_directory_by_id(session, d.id)
-
-        if value['isRepository']:
-            target = 'repomd.xml'
-        elif value['isAtomic']:
-            target = 'summary'
-        else:
-            target = None
-
-        if value['isRepository'] or value['isAtomic']:
-            make_repository(session, D, relativeDName, category, target)
-
-        if 'repomd.xml' in value['files']:
-            target = 'repomd.xml'
-        elif 'summary' in value['files']:
-            target = 'summary'
-        else:
-            continue
-
-        make_repo_file_details(
-            session, diskpath, relativeDName, D, category, target)
-
-    Directory.age_file_details(session, config)
-
-
-def parse_rsync_listing(session, config, category, f):
-    topdirName = category.topdir.name
-    category_directories = {}
+    excludes = excludes or []
+    logger.debug("sync_directories_from_fullfilelist %r" % diskpath)
     category.unreadable_dirs = set()
-    while True:
-        line = f.readline()
-        if not line: break
-        line.strip()
-        l = line.split()
-        if line.startswith('d') and len(l) == 5 and len(l[0]) == 10:
-            # good guess it's a directory line
-            if re.compile('^\.$').match(line):
-                # we know category.topdir exists and isn't excluded
-                pass
-            else:
-                category_directories = fill_category_directories_from_rsync(
-                    line, category, topdirName, category_directories)
-        else:
-            add_file_to_directory(line, category_directories)
+    # drop any trailing slashes from diskpath
+    diskpath = diskpath.rstrip(u'/')
+    category_directories = {}
 
-    sync_category_directories(
-        session, config, None, category, category_directories)
+    with open(diskpath + '/fullfilelist') as stream:
+        for row in stream:
+            row = row.strip()
+            relativeDName = os.path.join(diskpath, row).replace(
+                config.get('UMDL_PREFIX', ''), '')
+            relativeDName = relativeDName.rstrip('/')
+            logger.debug("  walking %r" % relativeDName)
+            if is_excluded(relativeDName, stdexcludes + excludes):
+                logger.info("excluding %s" % (relativeDName))
+                continue
 
+            # avoid disappearing directories
+            try:
+                s = os.stat(os.path.join(
+                    config.get('UMDL_PREFIX', ''), relativeDName))
+                ctime = s[stat.ST_CTIME]
+            except OSError:
+                logger.debug("Avoiding %r, dissappeared." % relativeDName)
+                continue
 
-def sync_directories_using_rsync(session, config, rsyncpath, category):
-    try:
-        result, output = run_rsync(rsyncpath, category.extra_rsync_options, logger)
-    except:
-        logger.warning('Failed to run rsync.', exc_info = True)
-        return
-    if result > 0:
-        logger.info(
-            "rsync returned exit code %d for Category %s: %s"
-            % (result, category.name, output))
-    # still, try to use the output listing if we can
-    parse_rsync_listing(session, config, category, output)
+            mode = s.st_mode
+            readable = not not (mode & stat.S_IRWXO & (stat.S_IROTH|stat.S_IXOTH))
+            if not readable \
+                or umdl.parent_dir(relativeDName) in category.unreadable_dirs:
+                category.unreadable_dirs.add(relativeDName)
 
-
-def sync_directories_from_file(session, config, filename, category):
-    f = open(filename, 'r')
-    parse_rsync_listing(session, config, None, category, f)
-    f.close()
-
-
-def cache_directories(category):
-    cache = dict()
-    topdirName = category.topdir.name
-    for directory in list(category.directories):
-        relativeDName = remove_category_topdir(
-            topdirName, directory.name).strip(u'/')
-        cache[relativeDName] = directory
-    return cache
+            umdl.sync_category_directory(
+                session, config, category, relativeDName, readable, ctime)
+            session.commit()
 
 
 def sync_directories_from_disk(
@@ -675,70 +112,34 @@ def sync_directories_from_disk(
     category_directories = {}
 
     for dirpath, dirnames, filenames in os.walk(diskpath, topdown=True):
-        relativeDName = dirpath[len(diskpath) + 1:]
-        relativeDName = relativeDName.strip(u'/')
+        print dirpath
+        relativeDName = dirpath.replace(config.get('UMDL_PREFIX', ''), '')
         logger.debug("  walking %r" % relativeDName)
+
         if is_excluded(relativeDName, stdexcludes + excludes):
             logger.info("excluding %s" % (relativeDName))
-            # exclude all its subdirs too
-            dirnames[:] = []
             continue
-
 
         # avoid disappearing directories
         try:
-            s = os.stat(os.path.join(diskpath, relativeDName))
+            s = os.stat(os.path.join(config.get('UMDL_PREFIX', ''), relativeDName))
             ctime = s[stat.ST_CTIME]
         except OSError:
             logger.debug("Avoiding %r, dissappeared." % relativeDName)
             continue
 
-        try:
-            d_ctime = category.directory_cache[relativeDName]['ctime']
-        except KeyError:
-            # we'll need to create it
-            d_ctime = 0
-
-        dirnames.sort()
-
         mode = s.st_mode
         readable = not not (mode & stat.S_IRWXO & (stat.S_IROTH|stat.S_IXOTH))
-        if not readable or parent_dir(relativeDName) in category.unreadable_dirs:
+        if not readable \
+                or umdl.parent_dir(relativeDName) in category.unreadable_dirs:
             category.unreadable_dirs.add(relativeDName)
-        isRepo = u'repodata' in dirnames
-        isAtomic = u'summary' in filenames and u'objects' in dirnames
 
-        changed = (d_ctime != ctime)
-        if changed:
-            logger.info("%s has changed: %s != %s" % (
-                relativeDName, d_ctime, ctime))
-        else:
-            logger.debug("    %s has not changed" % relativeDName)
+        umdl.sync_category_directory(
+            session, config, category, relativeDName, readable, ctime)
+        session.commit()
 
-        category_directories[relativeDName] = {
-            'files':{},
-            'isRepository':isRepo,
-            'isAtomic':isAtomic,
-            'readable':readable,
-            'ctime':ctime,
-            'changed':changed}
-
-        # skip per-file stat()s if the directory hasn't changed
-        if changed:
-            for f in filenames:
-                try:
-                    s = os.stat(os.path.join(diskpath, relativeDName, f))
-                except OSError:
-                    continue
-                category_directories[relativeDName]['files'][f] = {
-                    'size':str(s.st_size),
-                    'stat':s[stat.ST_CTIME]}
-
-    sync_category_directories(
-        session, config, diskpath, category, category_directories)
 
 def setup_logging(config, options):
-    global logger
     log_dir = config.get('MM_LOG_DIR', None)
     # check if the directory exists
     if log_dir is not None:
@@ -757,7 +158,6 @@ def setup_logging(config, options):
     fmt = '%(asctime)s %(message)s'
     datefmt = '%m/%d/%Y %I:%M:%S %p'
     formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
-    logger = logging.getLogger('umdl')
     handler = logging.handlers.WatchedFileHandler(log_file, "a+b")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
@@ -773,8 +173,6 @@ def setup_logging(config, options):
 
 
 def main():
-    global delete_directories
-    global logger
     parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option(
         "-c", "--config",
@@ -799,7 +197,7 @@ def main():
     parser.add_option(
         "--delete-directories",
         dest="delete_directories",
-        default=delete_directories,
+        default=False,
         action="store_true",
         help="delete directories from the database that are no longer "
             "on disk")
@@ -810,8 +208,6 @@ def main():
         exec(compile(config_file.read(), options.config, 'exec'), config)
 
     session = mirrormanager2.lib.create_session(config['DB_URL'])
-
-    delete_directories = options.delete_directories
 
     setup_logging(config, options)
 
@@ -825,7 +221,7 @@ def main():
         logger.info("Ending umdl")
         return 0
 
-    setup_arch_version_cache(session)
+    umdl.setup_arch_version_cache(session)
     check_categories = []
     if options.categories is None:
         check_categories = config.get('umdl_master_directories')
@@ -854,17 +250,13 @@ def main():
         category.extra_rsync_options = i.get('options')
         category.directory_cache = cache_directories(category)
 
-        if i['type'] == 'rsync':
-            sync_directories_using_rsync(session, config, i['url'], category)
-
-        if i['type'] == 'file':
-            sync_directories_from_file(session, config, i['url'], category)
-
         if i['type'] == 'directory':
             sync_directories_from_disk(session, config, i['path'], category)
 
             if options.delete_directories:
-                nuke_gone_directories(session, i['path'], category)
+                umdl.nuke_gone_directories(session, i['path'], category)
+        else:
+            logger.info('Un-supported type: %s' % i['type'])
 
     logger.info("Ending umdl")
 
