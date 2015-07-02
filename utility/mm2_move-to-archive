@@ -4,8 +4,6 @@
 This script changes the directory path for a release once it goes EOL.
 
 In principle it should be run about a week after the said release went EOL.
-
-TODO: test IRL
 """
 
 import sys
@@ -36,7 +34,7 @@ def doit(session, original_cat, archive_cat, directory_re):
     for d in c.directories:
         if dirRe.search(d.name):
             for r in d.repositories:
-                t = os.path.join(archivetopdir, d.name[len(originaltopdir):])
+                t = os.path.join(archivetopdir, d.name[len(originaltopdir)+1:])
                 print "trying to find %s" % t
                 new_d = mirrormanager2.lib.get_directory_by_name(session, t)
                 if new_d is None:
