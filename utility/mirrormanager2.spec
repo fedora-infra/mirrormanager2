@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.3.0
+Version:        0.3.1
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -307,6 +307,11 @@ exit 0
 
 
 %changelog
+* Thu Jul 02 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.3.1-1
+- Update to 0.3.1
+- Fix for broken logging output in the UMDL (Adrian Reber)
+- Fix mm2_move-to-archive (Adrian Reber)
+
 * Wed Jun 24 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.3.0-1
 - Update to 0.3.0
 - Fix the --delete action of the umdl (Adrian Reber)
