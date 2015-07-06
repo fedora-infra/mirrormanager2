@@ -311,19 +311,6 @@ def make_repo_file_details(session, config, relativeDName, D, category, target):
         session.flush()
 
 
-def move_repository_from_development(prefix, arch, newdir):
-    try:
-        repo = Repository.selectBy(prefix=prefix, arch=arch)[0]
-    except:
-        return None
-
-    if repo.directory is not None and newdir.name is not None:
-        if '/development' in repo.directory.name \
-                and '/releases' in newdir.name:
-            repo.directory = newdir
-    return repo
-
-
 def make_repository(session, directory, relativeDName, category, target):
 
     warning = "Won't make repository object"
@@ -395,46 +382,6 @@ def make_repository(session, directory, relativeDName, category, target):
             repo.prefix = prefix
 
     return repo
-
-
-def nuke_gone_directories(session, diskpath, category):
-    """ deleting a Directory has a ripple effect through the whole
-        database.  Be really sure you're ready do to this.  It comes
-        in handy when say a Test release is dropped."""
-
-    topdirName = category.topdir.name
-
-    directories = category.directories # in ascending name order
-    directories.reverse() # now in decending name order, bottoms up
-    for d in directories:
-        if is_excluded(d.name, category.excludes): continue
-        relativeDName = remove_category_topdir(topdirName, d.name)
-        if not os.path.isdir(os.path.join(diskpath, relativeDName)):
-            if len(d.categories) == 1: # safety, this should always trigger
-                logger.info("Deleting gone directory %s" % (d.name))
-                session.delete(d)
-                session.flush()
-
-
-def add_file_to_directory(line, category_directories):
-    try:
-        perm, size, date, hms, filepath = line.split()
-    except ValueError:
-        return
-    try:
-        dt = ctime_from_rsync(date, hms)
-    except ValueError:
-        return
-
-    l = filepath.split('/')
-    filename = l[-1]
-    subpath = l[:-1]
-    if len(subpath) > 0:
-        relativeDName = os.path.join(*subpath)
-    else:
-        relativeDName = ''
-    category_directories[relativeDName]['files'][filename] = {
-        'size':size, 'stat':dt}
 
 
 def short_filelist(config, relativeDName, files):
