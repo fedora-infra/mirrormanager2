@@ -469,5 +469,3 @@ def sync_category_directory(
         make_repository(session, D, relativeDName, category, 'summary')
         make_repo_file_details(
             session, config, relativeDName, D, category, target)
-
-    Directory.age_file_details(session, config)
