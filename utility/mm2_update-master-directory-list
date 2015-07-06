@@ -122,7 +122,8 @@ def sync_directories_from_disk(
 
         # avoid disappearing directories
         try:
-            s = os.stat(os.path.join(config.get('UMDL_PREFIX', ''), relativeDName))
+            s = os.stat(os.path.join(
+                config.get('UMDL_PREFIX', ''), relativeDName))
             ctime = s[stat.ST_CTIME]
         except OSError:
             logger.debug("Avoiding %r, dissappeared." % relativeDName)
@@ -136,7 +137,7 @@ def sync_directories_from_disk(
 
         umdl.sync_category_directory(
             session, config, category, relativeDName, readable, ctime)
-        session.commit()
+    session.commit()
 
 
 def setup_logging(config, options):
