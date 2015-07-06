@@ -252,7 +252,17 @@ def main():
         category.directory_cache = cache_directories(category)
 
         if i['type'] == 'directory':
+            #import cProfile, pstats, StringIO
+            #pr = cProfile.Profile()
+            #pr.enable()
             sync_directories_from_disk(session, config, i['path'], category)
+            #pr.disable()
+
+            #s = StringIO.StringIO()
+            #sortby = 'cumulative'
+            #ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+            #ps.print_stats(.1)
+            #print s.getvalue()
 
             if options.delete_directories:
                 umdl.nuke_gone_directories(session, i['path'], category)
