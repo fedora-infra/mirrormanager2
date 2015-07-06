@@ -263,9 +263,6 @@ def main():
             #ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
             #ps.print_stats(.1)
             #print s.getvalue()
-
-            if options.delete_directories:
-                umdl.nuke_gone_directories(session, i['path'], category)
         else:
             logger.info('Un-supported type: %s' % i['type'])
 
