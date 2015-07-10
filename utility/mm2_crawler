@@ -33,6 +33,9 @@ threads = 0
 threads_active = 0
 hosts_failed = 0
 
+# This is the global timeout variable, so that it can be
+# decreased by the signal handler and thus change in all threads.
+timeout=120
 
 # This is a "thread local" object that allows us to store the start time of
 # each worker thread (so they can measure and check if they should time out or
@@ -87,6 +90,9 @@ def notify(options, topic, msg):
 def doit(options, config):
     global all_hosts
     global threads
+    global timeout
+
+    timeout = options.timeout_minutes
 
     session = mirrormanager2.lib.create_session(config['DB_URL'])
 
@@ -281,7 +287,8 @@ class myHTTPConnection(httplib.HTTPConnection):
 # the magic begins
 
 
-def timeout_check(timeout):
+def timeout_check():
+    global timeout
     delta = time.time() - threadlocal.starttime
     if delta > (timeout * 60):
         raise TimeoutException("Timed out after %rs" % delta)
@@ -675,13 +682,13 @@ def compare_sha256(d, filename, graburl):
     return found
 
 
-def try_per_file(d, hoststate, url, timeout):
+def try_per_file(d, hoststate, url):
     if d.files is None:
         return None
     exists = None
     for filename in d.files.keys():
         # Check if maximum crawl time for this host has been reached
-        timeout_check(timeout)
+        timeout_check()
         exists = None
         graburl = "%s/%s" % (url, filename)
         try:
@@ -715,7 +722,7 @@ def try_per_file(d, hoststate, url, timeout):
 
 def try_per_category(
         session, trydirs, url, host_category_dirs, hc, host,
-        categoryPrefixLen, timeout, config):
+        categoryPrefixLen, config):
     """ In addition to the crawls using http and ftp, this rsync crawl
     scans the complete category with one connection instead perdir (ftp)
     or perfile(http). """
@@ -728,6 +735,8 @@ def try_per_category(
     rsync = {}
     if not url.endswith('/'):
         url += '/'
+
+    timeout_check()
 
     rsync_start_time = datetime.datetime.utcnow()
     params = config.get('CRAWLER_RSYNC_PARAMETERS', '--no-motd')
@@ -771,7 +780,7 @@ def try_per_category(
     # for all directories in this category
     for d in trydirs:
         # Check if maximum crawl time for this host has been reached
-        timeout_check(timeout)
+        timeout_check()
 
         # ignore unreadable directories - we can't really know about them
         if not d.readable:
@@ -828,7 +837,7 @@ def try_per_category(
     return False
 
 
-def try_per_dir(d, hoststate, url, timeout):
+def try_per_dir(d, hoststate, url):
     if d.files is None:
         return None
     if not url.startswith('ftp'):
@@ -844,7 +853,7 @@ def try_per_dir(d, hoststate, url, timeout):
         return False
 
     # Check if maximum crawl time for this host has been reached
-    timeout_check(timeout)
+    timeout_check()
 
     for line in listing:
         if line.startswith('total'): # some servers first include a line starting with the word 'total' that we can ignore
@@ -981,6 +990,7 @@ def per_host(session, host, options, config):
     fails it scans the hosts file by file using HTTP.
     Canary mode only tries to determine if the mirror is up and
     repodata mode only scans all the repodata/ directories."""
+    global timeout
     rc = 0
     successful_categories = 0
     host = mirrormanager2.lib.get_host(session, host)
@@ -1003,6 +1013,7 @@ def per_host(session, host, options, config):
         session, options, host)
 
     for hc in host_categories_to_scan:
+        timeout_check()
         if hc.always_up2date:
             successful_categories += 1
             continue
@@ -1046,7 +1057,7 @@ def per_host(session, host, options, config):
             try:
                 has_all_files = try_per_category(
                     session, trydirs, categoryUrl, host_category_dirs, hc,
-                    host, categoryPrefixLen, options.timeout_minutes, config)
+                    host, categoryPrefixLen, config)
             except TimeoutException:
                 # If the crawl of only one category fails, the host
                 # is completely marked as not being up to date.
@@ -1064,7 +1075,7 @@ def per_host(session, host, options, config):
 
         try_later_delay = 1
         for d in trydirs:
-            timeout_check(options.timeout_minutes)
+            timeout_check()
 
             if not d.readable:
                 continue
@@ -1077,9 +1088,9 @@ def per_host(session, host, options, config):
             url = '%s/%s' % (categoryUrl, dirname)
 
             try:
-                has_all_files = try_per_dir(d, hoststate, url, options.timeout_minutes)
+                has_all_files = try_per_dir(d, hoststate, url)
                 if has_all_files is None:
-                    has_all_files = try_per_file(d, hoststate, url, options.timeout_minutes)
+                    has_all_files = try_per_file(d, hoststate, url)
 
                 if has_all_files == False:
                     logger.warning("Not up2date: %s" % (d.name))
