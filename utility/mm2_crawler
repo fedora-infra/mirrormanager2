@@ -1006,7 +1006,14 @@ def per_host(session, host, options, config):
     hoststate = hostState(
         http_debuglevel=http_debuglevel,
         ftp_debuglevel=ftp_debuglevel,
-        timeout_minutes=options.timeout_minutes)
+        # This used to be the same timout as for the whole category.
+        # This does not make much sense as according to the documentation
+        # ...If the optional timeout parameter is given, blocking operations
+        # ...(like connection attempts) will timeout after that many seconds
+        # ...(if it is not given, the global default timeout setting is used)...
+        # Setting this to '1' should limit the connection establishment to
+        # to 1 minute.
+        timeout_minutes=1)
 
     categoryUrl = ''
     host_categories_to_scan = select_host_categories_to_scan(
