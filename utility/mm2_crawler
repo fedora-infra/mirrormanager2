@@ -6,6 +6,7 @@ import ftplib
 from ftplib import FTP
 import hashlib
 import httplib
+import signal
 import logging
 import multiprocessing.pool
 import os
@@ -37,6 +38,9 @@ hosts_failed = 0
 # decreased by the signal handler and thus change in all threads.
 timeout=120
 
+# Variable used to coordinate graceful shutdown of all threads
+shutdown=False
+
 # This is a "thread local" object that allows us to store the start time of
 # each worker thread (so they can measure and check if they should time out or
 # not...)
@@ -63,7 +67,17 @@ class InjectingFilter(logging.Filter):
         self.thread_id = thread_id
 
     def filter(self, record):
-        return threadlocal.thread_id == self.thread_id
+        try:
+            return threadlocal.thread_id == self.thread_id
+        except:
+            return False
+
+def sigalrm_handler(signal, stackframe):
+    global timeout
+    global shutdown
+    logger.warning("Received SIGALRM. Setting global timeout to -1.")
+    timeout = -1
+    shutdown = True
 
 def thread_id():
     """ Silly util that returns a git-style short-hash id of the thread. """
@@ -91,6 +105,11 @@ def doit(options, config):
     global all_hosts
     global threads
     global timeout
+    global shutdown
+
+    shutdown_timer = 0
+    # number of minutes to wait if a signal is received to shutdown the crawler
+    SHUTDOWN_TIMEOUT = 5
 
     timeout = options.timeout_minutes
 
@@ -132,12 +151,45 @@ def doit(options, config):
     # not totally sure why...
     os.chdir('/var/tmp')
 
+    signal.signal(signal.SIGALRM, sigalrm_handler)
     # Then create a threadpool to handle as many at a time as we like
     threadpool = multiprocessing.pool.ThreadPool(processes=options.threads)
     fn = lambda host_id: worker(options, config, host_id)
 
     # Here's the big operation
-    return_codes = threadpool.map(fn, hosts)
+    result = threadpool.map_async(fn, hosts)
+
+    while not result.ready():
+        time.sleep(1)
+        if shutdown:
+            # Being here means that the signal handler was called and the
+            # timeout was decreased to -1. Not starting any new workers.
+            threadpool.close()
+            # Wait for SHUTDOWN_TIMEOUT minutes for all threads to shutdown
+            shutdown_timer = time.time()
+            shutdown = False
+        if shutdown_timer:
+            delta = time.time() - shutdown_timer
+            if delta > SHUTDOWN_TIMEOUT * 60:
+                # Time out for graceful shutdown is over.
+                # Let's terminate all threads.
+                logger.warning("About to terminate all threads.")
+                threadpool.terminate()
+                logger.warning("About to terminate all threads. Done.")
+                break
+
+    try:
+
+        logger.info("Retrieving results.")
+        # Only waiting 60 seconds for the results.
+        # We already waited SHUTDOWN_TIMEOUT minutes above.
+        # It would be nice to get the return codes of the successful crawls.
+        return_codes = result.get(60)
+    except multiprocessing.TimeoutError:
+        # There are threads which did not finish during the timeout.
+        # Put bogus results in return_codes.
+        logger.info("Retrieving results failed. Inventing return codes.")
+        return_codes = [42]*len(hosts)
 
     # Put a bow on the results for fedmsg
     results = [dict(rc=rc, host=host, id=id)
@@ -1181,12 +1233,17 @@ def worker(options, config, host_id):
     global current_host
     global threads_active
     global hosts_failed
+    global timeout
+
+    current_host = current_host + 1
+    if timeout < 0:
+        # And another new return value: 7 -> SIGARLM
+        return 7
 
     session = mirrormanager2.lib.create_session(config['DB_URL'])
     host = mirrormanager2.lib.get_host(session, host_id)
 
     threads_active = threads_active + 1
-    current_host = current_host + 1
     threadlocal.starttime = time.time()
     threadlocal.hostid = host.id
     threadlocal.hostname = host.name
