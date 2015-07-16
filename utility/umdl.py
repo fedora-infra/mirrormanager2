@@ -423,6 +423,9 @@ def sync_category_directory(
         category, relativeDName))
 
     created = False
+    relativeDName = relativeDName.replace(category.topdir.name, '')
+    if relativeDName.startswith('/'):
+        relativeDName = relativeDName[1:]
     if relativeDName in category.directory_cache:
         d = category.directory_cache[relativeDName]
         if d['readable'] != readable:
@@ -451,7 +454,8 @@ def sync_category_directory(
 
 
     D.readable = readable
-    dirfiles = os.listdir(os.path.join(PREFIX, relativeDName))
+    dirfiles = os.listdir(os.path.join(
+        PREFIX, category.topdir.name, relativeDName))
     if D.ctime != ctime or created:
         shortfiles = short_filelist(config, relativeDName, dirfiles)
         if D.files != shortfiles:
