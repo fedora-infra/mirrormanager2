@@ -208,6 +208,9 @@ def main():
         action="store_true",
         help="delete directories from the database that are no longer "
             "on disk")
+    parser.add_option(
+        "--start-at", dest="path", default=None,
+        help="Specify the path at which to start the run")
 
     (options, args) = parser.parse_args()
     config = dict()
@@ -257,11 +260,15 @@ def main():
         category.extra_rsync_options = i.get('options')
         category.directory_cache = cache_directories(category)
 
+        path = i['path']
+        if len(check_categories) == 1:
+            path = options.path or i['path']
+
         if i['type'] == 'directory':
             #import cProfile, pstats, StringIO
             #pr = cProfile.Profile()
             #pr.enable()
-            sync_directories_from_disk(session, config, i['path'], category)
+            sync_directories_from_disk(session, config, path, category)
             #pr.disable()
 
             #s = StringIO.StringIO()
@@ -274,7 +281,7 @@ def main():
             #pr = cProfile.Profile()
             #pr.enable()
             sync_directories_from_fullfilelist(
-                session, config, i['path'], category)
+                session, config, path, category)
             #pr.disable()
 
             #s = StringIO.StringIO()
