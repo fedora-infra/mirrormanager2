@@ -465,7 +465,6 @@ def sync_category_directory(
 
     make_file_details_from_checksums(session, config, relativeDName, D)
 
-    target = None
     if 'repomd.xml' in dirfiles:
         make_repository(session, D, relativeDName, category, 'repomd.xml')
         make_repo_file_details(
