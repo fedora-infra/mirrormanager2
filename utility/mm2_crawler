@@ -879,28 +879,33 @@ def try_per_category(
         # the rsync listing is missing the category part of the url
         # remove if from the ones we are comparing it with
         name = d.name[categoryPrefixLen:]
-        for filename in sorted(d.files.keys()):
+        for filedetail in sorted(d.fileDetails):
+            filename = filedetail.filename
             if len(name) == 0:
                 key = filename
             else:
                 key = os.path.join(name, filename)
             try:
                 logger.debug('trying with key %s' % key)
-                if rsync[key]['size'] != d.files[filename]['size'] \
+                if float(rsync[key]['size']) != float(filedetail.size) \
                         and not rsync[key]['mode'].startswith('l'):
                     # ignore symlink size differences
                     logger.debug(
                         'rsync: file size mismatch %s %s != %s\n'
-                        % (filename, d.files[filename]['size'],
-                           rsync[key]['size']))
+                        % (filename, filedetail.size, rsync[key]['size']))
                     all_files = False
                     break
-            except KeyError: # file is not in the rsync listing
+            except ValueError:  # one of the conversion to float() failed
+                msg = 'Invalid size value for file %s\n' % key
+                logger.debug(msg)
+                all_files = False
+                break
+            except KeyError:  # file is not in the rsync listing
                 msg = 'Missing remote file %s\n' % key
                 logger.debug(msg)
                 all_files = False
                 break
-            except: # something else went wrong
+            except:  # something else went wrong
                 exception_msg = "Exception caught in try_per_category()\n"
                 logger.exception(exception_msg)
                 all_files = False
@@ -1312,7 +1317,7 @@ def count_crawl_failures(host, config):
        host.disable_reason = ("Host has been disabled (user_active) after %d"
                               " consecutive crawl failures" % auto_disable )
        host.user_active = False
-            
+
 def worker(options, config, host_id):
     global current_host
     global threads_active
