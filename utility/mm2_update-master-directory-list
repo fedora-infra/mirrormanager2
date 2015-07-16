@@ -70,7 +70,7 @@ def _get_version_from_path(path):
     if m is not None:
         return m.group(1)
     # Fedora versioning
-    s = r'/?(([\.\d]+)(\-\w+)?)/'
+    s = r'/?(([\.\d]+)([-_]\w+)?)/'
     m = re.search(re.compile(s), path)
     if m is not None:
         return m.group(1)
@@ -80,7 +80,7 @@ def _get_version_from_path(path):
     return None
 
 
-def create_version_from_path(category, path):
+def create_version_from_path(session, category, path):
     ver = None
     vname = _get_version_from_path(path)
     if vname is not None and vname != '':
@@ -88,13 +88,16 @@ def create_version_from_path(category, path):
             isTest = True
         else:
             isTest = False
-        try:
+
+        ver = mirrormanager2.lib.get_version_by_name_version(
+            session, category.product.name, vname)
+        if not ver:
             ver = Version(
                 product=category.product,
                 name=vname,
                 is_test=isTest)
-        except Exception, err:
-            print err
+            session.add(ver)
+            session.flush()
 
     return ver
 
@@ -135,10 +138,8 @@ def guess_ver_arch_from_path(session, category, path):
 
     # create Versions if we can figure it out...
     if ver is None:
-        ver = create_version_from_path(category, path)
+        ver = create_version_from_path(session, category, path)
         if ver:
-            session.add(ver)
-            session.commit()
             version_cache.append(ver)
     return (ver, arch)
 
@@ -305,6 +306,7 @@ def make_repo_file_details(session, diskpath, relativeDName, D, category, target
             sha512=sha512,
             timestamp=timestamp,
             size=size)
+        logger.info("Updating FileDetail %r, %r" % (fd, absolutepath))
         session.add(fd)
         session.commit()
 
@@ -366,7 +368,10 @@ def make_repository(session, directory, relativeDName, category, target):
 
     repo = None
     prefix = repo_prefix(relativeDName, category, ver)
-    try:
+    repo = mirrormanager2.lib.get_repo_prefix_arch(
+        session, prefix, arch.name)
+
+    if not repo:
         # historically, Repository.name was a longer string with
         # product and category deliniations.  But we were getting
         # unique constraint conflicts once we started introducing
@@ -385,9 +390,10 @@ def make_repository(session, directory, relativeDName, category, target):
             'category=%s) -> Directory %s'
             % (prefix, ver.name, arch.name, category.name, directory.name))
         session.add(repo)
-        session.commit()
-    except Exception, err:
-        print err
+        session.flush()
+    else:
+        if repo.prefix != prefix:
+            repo.prefix = prefix
 
     return repo
 
