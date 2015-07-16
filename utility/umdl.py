@@ -469,8 +469,8 @@ def sync_category_directory(
     if 'repomd.xml' in dirfiles:
         make_repository(session, D, relativeDName, category, 'repomd.xml')
         make_repo_file_details(
-            session, config, relativeDName, D, category, target)
+            session, config, relativeDName, D, category, 'repomd.xml')
     elif 'summary' in dirfiles:
         make_repository(session, D, relativeDName, category, 'summary')
         make_repo_file_details(
-            session, config, relativeDName, D, category, target)
+            session, config, relativeDName, D, category, 'summary')
