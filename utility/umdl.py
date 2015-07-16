@@ -81,7 +81,7 @@ def _get_version_from_path(path):
     return None
 
 
-def create_version_from_path(category, path):
+def create_version_from_path(session, category, path):
     ver = None
     vname = _get_version_from_path(path)
     if vname is not None and vname != '':
@@ -89,13 +89,16 @@ def create_version_from_path(category, path):
             isTest = True
         else:
             isTest = False
-        try:
+
+        ver = mirrormanager2.lib.get_version_by_name_version(
+            session, category.product.name, vname)
+        if not ver:
             ver = Version(
                 product=category.product,
                 name=vname,
                 is_test=isTest)
-        except Exception, err:
-            print err
+            session.add(ver)
+            session.flush()
 
     return ver
 
@@ -136,10 +139,8 @@ def guess_ver_arch_from_path(session, category, path):
 
     # create Versions if we can figure it out...
     if ver is None:
-        ver = create_version_from_path(category, path)
+        ver = create_version_from_path(session, category, path)
         if ver:
-            session.add(ver)
-            session.flush()
             version_cache.append(ver)
     return (ver, arch)
 
