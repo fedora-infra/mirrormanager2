@@ -6,6 +6,7 @@ import ftplib
 from ftplib import FTP
 import hashlib
 import httplib
+import signal
 import logging
 import multiprocessing.pool
 import os
@@ -33,6 +34,12 @@ threads = 0
 threads_active = 0
 hosts_failed = 0
 
+# This is the global timeout variable, so that it can be
+# decreased by the signal handler and thus change in all threads.
+timeout=120
+
+# Variable used to coordinate graceful shutdown of all threads
+shutdown=False
 
 # This is a "thread local" object that allows us to store the start time of
 # each worker thread (so they can measure and check if they should time out or
@@ -60,7 +67,17 @@ class InjectingFilter(logging.Filter):
         self.thread_id = thread_id
 
     def filter(self, record):
-        return threadlocal.thread_id == self.thread_id
+        try:
+            return threadlocal.thread_id == self.thread_id
+        except:
+            return False
+
+def sigalrm_handler(signal, stackframe):
+    global timeout
+    global shutdown
+    logger.warning("Received SIGALRM. Setting global timeout to -1.")
+    timeout = -1
+    shutdown = True
 
 def thread_id():
     """ Silly util that returns a git-style short-hash id of the thread. """
@@ -87,6 +104,14 @@ def notify(options, topic, msg):
 def doit(options, config):
     global all_hosts
     global threads
+    global timeout
+    global shutdown
+
+    shutdown_timer = 0
+    # number of minutes to wait if a signal is received to shutdown the crawler
+    SHUTDOWN_TIMEOUT = 5
+
+    timeout = options.timeout_minutes
 
     session = mirrormanager2.lib.create_session(config['DB_URL'])
 
@@ -126,12 +151,45 @@ def doit(options, config):
     # not totally sure why...
     os.chdir('/var/tmp')
 
+    signal.signal(signal.SIGALRM, sigalrm_handler)
     # Then create a threadpool to handle as many at a time as we like
     threadpool = multiprocessing.pool.ThreadPool(processes=options.threads)
     fn = lambda host_id: worker(options, config, host_id)
 
     # Here's the big operation
-    return_codes = threadpool.map(fn, hosts)
+    result = threadpool.map_async(fn, hosts)
+
+    while not result.ready():
+        time.sleep(1)
+        if shutdown:
+            # Being here means that the signal handler was called and the
+            # timeout was decreased to -1. Not starting any new workers.
+            threadpool.close()
+            # Wait for SHUTDOWN_TIMEOUT minutes for all threads to shutdown
+            shutdown_timer = time.time()
+            shutdown = False
+        if shutdown_timer:
+            delta = time.time() - shutdown_timer
+            if delta > SHUTDOWN_TIMEOUT * 60:
+                # Time out for graceful shutdown is over.
+                # Let's terminate all threads.
+                logger.warning("About to terminate all threads.")
+                threadpool.terminate()
+                logger.warning("About to terminate all threads. Done.")
+                break
+
+    try:
+
+        logger.info("Retrieving results.")
+        # Only waiting 60 seconds for the results.
+        # We already waited SHUTDOWN_TIMEOUT minutes above.
+        # It would be nice to get the return codes of the successful crawls.
+        return_codes = result.get(60)
+    except multiprocessing.TimeoutError:
+        # There are threads which did not finish during the timeout.
+        # Put bogus results in return_codes.
+        logger.info("Retrieving results failed. Inventing return codes.")
+        return_codes = [42]*len(hosts)
 
     # Put a bow on the results for fedmsg
     results = [dict(rc=rc, host=host, id=id)
@@ -281,7 +339,8 @@ class myHTTPConnection(httplib.HTTPConnection):
 # the magic begins
 
 
-def timeout_check(timeout):
+def timeout_check():
+    global timeout
     delta = time.time() - threadlocal.starttime
     if delta > (timeout * 60):
         raise TimeoutException("Timed out after %rs" % delta)
@@ -675,13 +734,13 @@ def compare_sha256(d, filename, graburl):
     return found
 
 
-def try_per_file(d, hoststate, url, timeout):
+def try_per_file(d, hoststate, url):
     if d.files is None:
         return None
     exists = None
     for filename in d.files.keys():
         # Check if maximum crawl time for this host has been reached
-        timeout_check(timeout)
+        timeout_check()
         exists = None
         graburl = "%s/%s" % (url, filename)
         try:
@@ -715,7 +774,7 @@ def try_per_file(d, hoststate, url, timeout):
 
 def try_per_category(
         session, trydirs, url, host_category_dirs, hc, host,
-        categoryPrefixLen, timeout, config):
+        categoryPrefixLen, config):
     """ In addition to the crawls using http and ftp, this rsync crawl
     scans the complete category with one connection instead perdir (ftp)
     or perfile(http). """
@@ -728,6 +787,8 @@ def try_per_category(
     rsync = {}
     if not url.endswith('/'):
         url += '/'
+
+    timeout_check()
 
     rsync_start_time = datetime.datetime.utcnow()
     params = config.get('CRAWLER_RSYNC_PARAMETERS', '--no-motd')
@@ -771,7 +832,7 @@ def try_per_category(
     # for all directories in this category
     for d in trydirs:
         # Check if maximum crawl time for this host has been reached
-        timeout_check(timeout)
+        timeout_check()
 
         # ignore unreadable directories - we can't really know about them
         if not d.readable:
@@ -828,7 +889,7 @@ def try_per_category(
     return False
 
 
-def try_per_dir(d, hoststate, url, timeout):
+def try_per_dir(d, hoststate, url):
     if d.files is None:
         return None
     if not url.startswith('ftp'):
@@ -844,7 +905,7 @@ def try_per_dir(d, hoststate, url, timeout):
         return False
 
     # Check if maximum crawl time for this host has been reached
-    timeout_check(timeout)
+    timeout_check()
 
     for line in listing:
         if line.startswith('total'): # some servers first include a line starting with the word 'total' that we can ignore
@@ -981,6 +1042,7 @@ def per_host(session, host, options, config):
     fails it scans the hosts file by file using HTTP.
     Canary mode only tries to determine if the mirror is up and
     repodata mode only scans all the repodata/ directories."""
+    global timeout
     rc = 0
     successful_categories = 0
     host = mirrormanager2.lib.get_host(session, host)
@@ -996,13 +1058,21 @@ def per_host(session, host, options, config):
     hoststate = hostState(
         http_debuglevel=http_debuglevel,
         ftp_debuglevel=ftp_debuglevel,
-        timeout_minutes=options.timeout_minutes)
+        # This used to be the same timout as for the whole category.
+        # This does not make much sense as according to the documentation
+        # ...If the optional timeout parameter is given, blocking operations
+        # ...(like connection attempts) will timeout after that many seconds
+        # ...(if it is not given, the global default timeout setting is used)...
+        # Setting this to '1' should limit the connection establishment to
+        # to 1 minute.
+        timeout_minutes=1)
 
     categoryUrl = ''
     host_categories_to_scan = select_host_categories_to_scan(
         session, options, host)
 
     for hc in host_categories_to_scan:
+        timeout_check()
         if hc.always_up2date:
             successful_categories += 1
             continue
@@ -1046,7 +1116,7 @@ def per_host(session, host, options, config):
             try:
                 has_all_files = try_per_category(
                     session, trydirs, categoryUrl, host_category_dirs, hc,
-                    host, categoryPrefixLen, options.timeout_minutes, config)
+                    host, categoryPrefixLen, config)
             except TimeoutException:
                 # If the crawl of only one category fails, the host
                 # is completely marked as not being up to date.
@@ -1064,7 +1134,7 @@ def per_host(session, host, options, config):
 
         try_later_delay = 1
         for d in trydirs:
-            timeout_check(options.timeout_minutes)
+            timeout_check()
 
             if not d.readable:
                 continue
@@ -1077,9 +1147,9 @@ def per_host(session, host, options, config):
             url = '%s/%s' % (categoryUrl, dirname)
 
             try:
-                has_all_files = try_per_dir(d, hoststate, url, options.timeout_minutes)
+                has_all_files = try_per_dir(d, hoststate, url)
                 if has_all_files is None:
-                    has_all_files = try_per_file(d, hoststate, url, options.timeout_minutes)
+                    has_all_files = try_per_file(d, hoststate, url)
 
                 if has_all_files == False:
                     logger.warning("Not up2date: %s" % (d.name))
@@ -1163,12 +1233,17 @@ def worker(options, config, host_id):
     global current_host
     global threads_active
     global hosts_failed
+    global timeout
+
+    current_host = current_host + 1
+    if timeout < 0:
+        # And another new return value: 7 -> SIGARLM
+        return 7
 
     session = mirrormanager2.lib.create_session(config['DB_URL'])
     host = mirrormanager2.lib.get_host(session, host_id)
 
     threads_active = threads_active + 1
-    current_host = current_host + 1
     threadlocal.starttime = time.time()
     threadlocal.hostid = host.id
     threadlocal.hostname = host.name
