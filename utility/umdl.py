@@ -259,7 +259,8 @@ def make_repo_file_details(session, config, relativeDName, D, category, target):
         return
 
     absolutepath = os.path.join(
-        config.get('UMDL_PREFIX', ''), relativeDName, target)
+        config.get('UMDL_PREFIX', ''), category.topdir.name,
+        relativeDName, target)
 
     if not os.path.exists(absolutepath):
         logger.warning("%s: %r does not exist" % (warning, absolutepath))
