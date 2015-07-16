@@ -74,9 +74,8 @@ def sync_directories_from_fullfilelist(
     with open(diskpath + '/fullfilelist') as stream:
         for row in stream:
             row = os.path.dirname(os.path.join(diskpath, row.strip()))
-            if row.endswith((
-                    '.rpm', '.xz', '.qcow2', '.ova', '.iso', '.gz', '.img',
-                    '.html', '.cfg', '.c32')):
+            if os.path.splitext(row)[1]:
+                # If there is an extension it's a file not a folder
                 continue
             if row in seen:
                 continue
@@ -120,7 +119,6 @@ def sync_directories_from_disk(
     category_directories = {}
 
     for dirpath, dirnames, filenames in os.walk(diskpath, topdown=True):
-        print dirpath
         relativeDName = dirpath.replace(config.get('UMDL_PREFIX', ''), '')
         logger.debug("  walking %r" % relativeDName)
 
