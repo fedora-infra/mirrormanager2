@@ -1036,6 +1036,7 @@ def select_host_categories_to_scan(session, options, host):
         result = list(host.categories)
     return result
 
+
 def check_for_base_dir(hoststate, urls):
     """Check if at least one of the given URL exists on the remote host.
     This is used to detect mirrors which have completely dropped our content.
@@ -1239,7 +1240,6 @@ def per_host(session, host, options, config):
                 has_all_files = try_per_dir(d, hoststate, url)
                 if has_all_files is None:
                     has_all_files = try_per_file(d, hoststate, url)
-
                 if has_all_files == False:
                     logger.warning("Not up2date: %s" % (d.name))
                     host_category_dirs[(hc, d)] = False
@@ -1306,6 +1306,7 @@ def per_host(session, host, options, config):
     del host_category_dirs
     return rc
 
+
 def count_crawl_failures(host, config):
    try:
        host.crawl_failures += 1
@@ -1314,9 +1315,11 @@ def count_crawl_failures(host, config):
 
    auto_disable = config.get('CRAWLER_AUTO_DISABLE', 4)
    if host.crawl_failures >= auto_disable:
-       host.disable_reason = ("Host has been disabled (user_active) after %d"
-                              " consecutive crawl failures" % auto_disable )
-       host.user_active = False
+        host.disable_reason = (
+            "Host has been disabled (user_active) after %d"
+            " consecutive crawl failures" % auto_disable )
+        host.user_active = False
+
 
 def worker(options, config, host_id):
     global current_host
