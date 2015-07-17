@@ -957,9 +957,10 @@ def try_per_dir(d, hoststate, url):
         except IndexError: # line doesn't have 8 fields, it's not a dir line
             pass
 
-    for filename in d.files.keys():
+    for filedetail in d.fileDetails:
+        filename = filedetail.filename
         try:
-            if results[filename]['size'] != d.files[filename]['size']:
+            if float(results[filename]['size']) != float(filedetail.size):
                 return False
         except:
             return False
