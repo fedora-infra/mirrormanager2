@@ -527,7 +527,7 @@ def check_ftp_file(hoststate, url, filedata, readable):
         if filedata is None:
             # The file/directory seems to exist
             return True
-        if line[4] == filedata['size']:
+        if float(line[4]) == float(filedata.size):
             return True
     return False
 
@@ -579,7 +579,8 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
         if retry == 0:
             # retry once
             hoststate.close_http(url)
-            return check_head(hoststate, url, filedata, recursion, readable, retry=1)
+            return check_head(
+                hoststate, url, filedata, recursion, readable, retry=1)
         else:
             raise HTTPUnknown()
 
@@ -603,12 +604,17 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
             # The file/directory seems to exist
             return True
         # fixme should check last_modified too
-        if filedata['size'] == content_length or content_length is None: # handle no content-length header, streaming/chunked return or zero-length file
+        if float(filedata.size) == float(content_length) \
+                or content_length is None:
+            # handle no content-length header, streaming/chunked return
+            # or zero-length file
             return True
         else:
             return False
     if status >= 300 and status < 400:
-        return handle_redirect(hoststate, url, r.getheader('Location'), filedata, recursion, readable)
+        return handle_redirect(
+            hoststate, url, r.getheader('Location'), filedata, recursion,
+            readable)
     elif status >= 400 and status < 500:
         if status == 403: # forbidden
             # may be a hidden dir still
@@ -774,14 +780,15 @@ def try_per_file(d, hoststate, url):
     if d.files is None:
         return None
     exists = None
-    for filename in d.files.keys():
+    for filedetail in d.fileDetails:
+        filename = filedetail.filename
         # Check if maximum crawl time for this host has been reached
         timeout_check()
         exists = None
         graburl = "%s/%s" % (url, filename)
         try:
             exists = check_url(
-                hoststate, graburl, d.files[filename], 0, d.readable)
+                hoststate, graburl, filedetail, 0, d.readable)
             if exists == False:
                 return False
         except TryLater:
@@ -879,28 +886,33 @@ def try_per_category(
         # the rsync listing is missing the category part of the url
         # remove if from the ones we are comparing it with
         name = d.name[categoryPrefixLen:]
-        for filename in sorted(d.files.keys()):
+        for filedetail in sorted(d.fileDetails):
+            filename = filedetail.filename
             if len(name) == 0:
                 key = filename
             else:
                 key = os.path.join(name, filename)
             try:
                 logger.debug('trying with key %s' % key)
-                if rsync[key]['size'] != d.files[filename]['size'] \
+                if float(rsync[key]['size']) != float(filedetail.size) \
                         and not rsync[key]['mode'].startswith('l'):
                     # ignore symlink size differences
                     logger.debug(
                         'rsync: file size mismatch %s %s != %s\n'
-                        % (filename, d.files[filename]['size'],
-                           rsync[key]['size']))
+                        % (filename, filedetail.size, rsync[key]['size']))
                     all_files = False
                     break
-            except KeyError: # file is not in the rsync listing
+            except ValueError:  # one of the conversion to float() failed
+                msg = 'Invalid size value for file %s\n' % key
+                logger.debug(msg)
+                all_files = False
+                break
+            except KeyError:  # file is not in the rsync listing
                 msg = 'Missing remote file %s\n' % key
                 logger.debug(msg)
                 all_files = False
                 break
-            except: # something else went wrong
+            except:  # something else went wrong
                 exception_msg = "Exception caught in try_per_category()\n"
                 logger.exception(exception_msg)
                 all_files = False
@@ -952,9 +964,10 @@ def try_per_dir(d, hoststate, url):
         except IndexError: # line doesn't have 8 fields, it's not a dir line
             pass
 
-    for filename in d.files.keys():
+    for filedetail in d.fileDetails:
+        filename = filedetail.filename
         try:
-            if results[filename]['size'] != d.files[filename]['size']:
+            if float(results[filename]['size']) != float(filedetail.size):
                 return False
         except:
             return False
@@ -1030,6 +1043,7 @@ def select_host_categories_to_scan(session, options, host):
     else:
         result = list(host.categories)
     return result
+
 
 def check_for_base_dir(hoststate, urls):
     """Check if at least one of the given URL exists on the remote host.
@@ -1234,7 +1248,6 @@ def per_host(session, host, options, config):
                 has_all_files = try_per_dir(d, hoststate, url)
                 if has_all_files is None:
                     has_all_files = try_per_file(d, hoststate, url)
-
                 if has_all_files == False:
                     logger.warning("Not up2date: %s" % (d.name))
                     host_category_dirs[(hc, d)] = False
@@ -1301,6 +1314,7 @@ def per_host(session, host, options, config):
     del host_category_dirs
     return rc
 
+
 def count_crawl_failures(host, config):
    try:
        host.crawl_failures += 1
@@ -1309,10 +1323,12 @@ def count_crawl_failures(host, config):
 
    auto_disable = config.get('CRAWLER_AUTO_DISABLE', 4)
    if host.crawl_failures >= auto_disable:
-       host.disable_reason = ("Host has been disabled (user_active) after %d"
-                              " consecutive crawl failures" % auto_disable )
-       host.user_active = False
-            
+        host.disable_reason = (
+            "Host has been disabled (user_active) after %d"
+            " consecutive crawl failures" % auto_disable )
+        host.user_active = False
+
+
 def worker(options, config, host_id):
     global current_host
     global threads_active
