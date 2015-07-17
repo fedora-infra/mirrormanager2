@@ -18,6 +18,7 @@ import time
 import urllib2
 import urlparse
 import gc
+import GeoIP
 
 sys.path.append('..')
 import mirrormanager2.lib
@@ -40,6 +41,13 @@ timeout=120
 
 # Variable used to coordinate graceful shutdown of all threads
 shutdown=False
+
+# our own private copy of country_continents to be edited
+country_continents = GeoIP.country_continents
+gi = GeoIP.new(GeoIP.GEOIP_MEMORY_CACHE)
+# hard coded list of continents; let's hope this does not change all the time
+# this is according to GeoIP
+continents = ['AF', 'AN', 'AS', 'EU', 'NA', 'OC', 'SA', '--' ]
 
 # This is a "thread local" object that allows us to store the start time of
 # each worker thread (so they can measure and check if they should time out or
@@ -83,6 +91,14 @@ def thread_id():
     """ Silly util that returns a git-style short-hash id of the thread. """
     return hashlib.md5(str(threading.current_thread().ident)).hexdigest()[:7]
 
+# Add the information from the country_continent_redirect table to
+# country_continents information from GeoIP
+def handle_country_continent_redirect(session):
+    new_country_continents = GeoIP.country_continents
+    for c in mirrormanager2.lib.get_country_continent_redirect(session):
+        new_country_continents[c.country] = c.continent
+    global country_continents
+    country_continents = new_country_continents
 
 def notify(options, topic, msg):
     if not options.fedmsg:
@@ -106,6 +122,7 @@ def doit(options, config):
     global threads
     global timeout
     global shutdown
+    global continents
 
     shutdown_timer = 0
     # number of minutes to wait if a signal is received to shutdown the crawler
@@ -113,7 +130,21 @@ def doit(options, config):
 
     timeout = options.timeout_minutes
 
+    # Fill continent list
+    if options.continents:
+        if any(item.startswith('^') for item in options.continents):
+            for item in options.continents:
+                if item.startswith('^'):
+                    continents.remove(item[1:])
+        else:
+            continents = options.continents
+
+        continents = [x.upper() for x in continents]
+
     session = mirrormanager2.lib.create_session(config['DB_URL'])
+
+    # load country_continent mapping
+    handle_country_continent_redirect(session)
 
     # Get *all* of the mirrors
     hosts = mirrormanager2.lib.get_mirrors(
@@ -265,6 +296,10 @@ def main():
     parser.add_argument(
         "--repodata", dest="repodata", action="store_true", default=False,
         help="Fast crawl by only checking if the repodata is up to date")
+
+    parser.add_argument(
+        "--continent", dest="continents", action="append", default=[],
+        help="Limit crawling by continent. Exclude by prefixing with'^'")
 
     parser.add_argument(
         "--debug", "-d", dest="debug", action="store_true", default=False,
@@ -419,6 +454,7 @@ class hostState:
 class TryLater(Exception): pass
 class ForbiddenExpected(Exception): pass
 class TimeoutException(Exception): pass
+class WrongContinent(Exception): pass
 class HTTPUnknown(Exception): pass
 class HTTP500(Exception): pass
 
@@ -1034,6 +1070,45 @@ def check_for_base_dir(hoststate, urls):
     # and ftp users.
     return False
 
+
+def check_continent(categoryUrl):
+    # Before the first network access to the mirror let's
+    # check if continent mode is enabled and verfiy if
+    # the mirror is on the target continent.
+    # The continent check takes the first URL of the first category
+    # for the decision on which continent the mirror is.
+    try:
+        hostname = urlparse.urlsplit(categoryUrl)[1]
+    except:
+        # Not being able the split the URL is strange.
+        # Something is broken. '5' is the start for auto-disablement
+        return 5
+
+    # The function urlsplit() does not remove ':' in case someone
+    # specified a port. Only look at the first element before ':'
+    hostname = hostname.split(':')[0]
+
+    try:
+        hostname = socket.gethostbyname(hostname)
+    except:
+        # Name resolution failed. Returning '5' as this means
+        # that the base URL is broken.
+        return 5
+
+    country = gi.country_code_by_addr(hostname)
+    if not country:
+        # For hosts with no country in the GeoIP database
+        # the default is 'US' as that is where most of
+        # Fedora infrastructure systems are running
+        country = 'US'
+    if country_continents[country] in continents:
+        return 0
+    # And another return value. '8' is used for mirrors on
+    # the wrong continent. The crawl should not be listed in
+    # the database at all.
+    return 8
+
+
 def per_host(session, host, options, config):
     """ This function scans all categories a host has defined.
     If a RSYNC URL is available it tries to scan the host requiring
@@ -1078,18 +1153,27 @@ def per_host(session, host, options, config):
             continue
         category = hc.category
 
+        host_category_urls = [hcurl.url for hcurl in hc.urls]
+        categoryUrl = method_pref(host_category_urls)
+        if categoryUrl is None:
+            continue
+        categoryPrefixLen = len(category.topdir.name)+1
+
+        if options.continents:
+            # Only check for continent if something specified
+            # on the command-line
+            rc = check_continent(categoryUrl)
+            if rc == 8:
+                raise WrongContinent
+            if rc != 0:
+                return rc
+
         if options.canary:
             logger.info("canary scanning category %s" % category.name)
         elif options.repodata:
             logger.info("repodata scanning category %s" % category.name)
         else:
             logger.info("scanning category %s" % category.name)
-
-        host_category_urls = [hcurl.url for hcurl in hc.urls]
-        categoryUrl = method_pref(host_category_urls)
-        if categoryUrl is None:
-            continue
-        categoryPrefixLen = len(category.topdir.name)+1
 
         # Check if either the http or ftp URL of the host point
         # to an existing and readable URL
@@ -1260,8 +1344,10 @@ def worker(options, config, host_id):
                            " Not logging per host")
             log_dir = None
 
+    log_file = None
     if log_dir is not None:
-        fh = logging.FileHandler(log_dir + "/" + str(host.id) + '.log')
+        log_file = log_dir + "/" + str(host.id) + '.log'
+        fh = logging.FileHandler(log_file)
         threadlocal.thread_id = thread_id()
         f = InjectingFilter(thread_id())
         fh.addFilter(f)
@@ -1316,6 +1402,13 @@ def worker(options, config, host_id):
         count_crawl_failures(host, config)
         hosts_failed += 1
         session.commit()
+    except WrongContinent:
+        logger.info("Skipping %r; wrong continent" % host)
+        rc = 8
+        # Delete log file for wrong continent mirrors as it contains
+        # no useful information.
+        if log_file:
+            os.unlink(log_file)
     except Exception:
         logger.exception("Failure in thread %r, host %r" % (thread_id(), host))
         rc = 3
