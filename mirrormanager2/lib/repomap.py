@@ -55,6 +55,8 @@ def repo_prefix(path, category, ver):
     version = u'unknown'
     if not isRawhide and ver is not None:
         version = ver.name
+    if isDevelopment:
+        version = is_development(path)
 
     if isEpel:
         # epel-
