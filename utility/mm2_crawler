@@ -527,7 +527,7 @@ def check_ftp_file(hoststate, url, filedata, readable):
         if filedata is None:
             # The file/directory seems to exist
             return True
-        if line[4] == filedata['size']:
+        if float(line[4]) == float(filedata.size):
             return True
     return False
 
@@ -579,7 +579,8 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
         if retry == 0:
             # retry once
             hoststate.close_http(url)
-            return check_head(hoststate, url, filedata, recursion, readable, retry=1)
+            return check_head(
+                hoststate, url, filedata, recursion, readable, retry=1)
         else:
             raise HTTPUnknown()
 
@@ -603,12 +604,17 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
             # The file/directory seems to exist
             return True
         # fixme should check last_modified too
-        if filedata['size'] == content_length or content_length is None: # handle no content-length header, streaming/chunked return or zero-length file
+        if float(filedata.size) == float(content_length) \
+                or content_length is None:
+            # handle no content-length header, streaming/chunked return
+            # or zero-length file
             return True
         else:
             return False
     if status >= 300 and status < 400:
-        return handle_redirect(hoststate, url, r.getheader('Location'), filedata, recursion, readable)
+        return handle_redirect(
+            hoststate, url, r.getheader('Location'), filedata, recursion,
+            readable)
     elif status >= 400 and status < 500:
         if status == 403: # forbidden
             # may be a hidden dir still
@@ -774,14 +780,15 @@ def try_per_file(d, hoststate, url):
     if d.files is None:
         return None
     exists = None
-    for filename in d.files.keys():
+    for filedetail in d.fileDetails:
+        filename = filedetail.filename
         # Check if maximum crawl time for this host has been reached
         timeout_check()
         exists = None
         graburl = "%s/%s" % (url, filename)
         try:
             exists = check_url(
-                hoststate, graburl, d.files[filename], 0, d.readable)
+                hoststate, graburl, filedetail, 0, d.readable)
             if exists == False:
                 return False
         except TryLater:
