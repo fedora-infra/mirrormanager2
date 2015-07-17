@@ -76,23 +76,22 @@ def repo_prefix(path, category, ver):
 
     elif isFedoraLinux or isFedoraSecondary or isFedoraArchive:
         if isReleases or isDevelopment:
-            if isReleases:
-                if isEverything:
-                    # fedora-
-                    if isDebug:
-                        prefix = u'fedora-debug-%s' % version
-                    elif isSource:
-                        prefix = u'fedora-source-%s' % version
-                    else:
-                        prefix=u'fedora-%s' % version
-                elif isFedora:
-                    if isDebug or isSource:
-                        # ignore releases/$version/Fedora/$arch/debug/
-                        # ignore releases/$version/Fedora/source/SRPMS/
-                        prefix = None
-                    else:
-                        # fedora-install-
-                        prefix = u'fedora-install-%s' % version
+            if isEverything or isDevelopment:
+                # fedora-
+                if isDebug:
+                    prefix = u'fedora-debug-%s' % version
+                elif isSource:
+                    prefix = u'fedora-source-%s' % version
+                else:
+                    prefix=u'fedora-%s' % version
+            elif isFedora:
+                if isDebug or isSource:
+                    # ignore releases/$version/Fedora/$arch/debug/
+                    # ignore releases/$version/Fedora/source/SRPMS/
+                    prefix = None
+                else:
+                    # fedora-install-
+                    prefix = u'fedora-install-%s' % version
         elif isAtomic:
             # atomic
             prefix = u'atomic-%s' % version
