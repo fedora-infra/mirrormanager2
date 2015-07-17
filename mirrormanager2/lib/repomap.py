@@ -1,7 +1,7 @@
 import re
 
 def is_development(path):
-    development_re = r'\/development\/((\d+))/'
+    development_re = r'\/?development\/((\d+))/'
     m = re.search(re.compile(development_re), path)
     if m is not None:
         return m.group(1)
@@ -38,7 +38,7 @@ def repo_prefix(path, category, ver):
     isAtomic = u'atomic' in path
     isEverything = u'Everything' in path
     isFedora = u'Fedora' in path
-    
+
 
     isEpel = (category.name == u'Fedora EPEL')
     isFedoraLinux = (category.name == u'Fedora Linux')
@@ -132,7 +132,7 @@ def repo_prefix(path, category, ver):
                 prefix = u'free-el-source-%s' % version
             else:
                 prefix=u'free-el-%s' % version
-            
+
         elif isUpdatesReleased:
             # updates-released-
             if isDebug:
@@ -150,7 +150,7 @@ def repo_prefix(path, category, ver):
                 prefix = u'free-el-updates-testing-source-%s' % version
             else:
                 prefix = u'free-el-updates-testing-%s' % version
-        
+
     elif isRrpmfusionNonfreeEl:
         if isReleases:
             if not isEverything:
@@ -162,7 +162,7 @@ def repo_prefix(path, category, ver):
                 prefix = u'nonfree-el-source-%s' % version
             else:
                 prefix=u'nonfree-el-%s' % version
-            
+
         elif isUpdatesReleased:
             # updates-released-
             if isDebug:
@@ -192,7 +192,7 @@ def repo_prefix(path, category, ver):
                 prefix = u'free-fedora-source-%s' % version
             else:
                 prefix=u'free-fedora-%s' % version
-            
+
         elif isUpdatesReleased:
             # updates-released-
             if isDebug:
@@ -230,7 +230,7 @@ def repo_prefix(path, category, ver):
                 prefix = u'nonfree-fedora-source-%s' % version
             else:
                 prefix=u'nonfree-fedora-%s' % version
-            
+
         elif isUpdatesReleased:
             # updates-released-
             if isDebug:
@@ -264,7 +264,7 @@ def repo_prefix(path, category, ver):
         isHA = u'HighAvailability' in path
         isLFS = u'LargeFileSystem' in path
         isLB = u'LoadBalance' in path
-        
+
         if isCS:
             prefix = u'rhel-%s-clusteredstorage' % version
         elif isHA:
