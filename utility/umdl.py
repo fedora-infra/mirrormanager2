@@ -93,6 +93,9 @@ def create_version_from_path(session, category, path):
         ver = mirrormanager2.lib.get_version_by_name_version(
             session, category.product.name, vname)
         if not ver:
+            logger.info(
+                'Created Version(product=%s, name=%s, is_test=%s, '
+                % (category.product, vname, isTest))
             ver = Version(
                 product=category.product,
                 name=vname,
@@ -315,6 +318,10 @@ def make_repo_file_details(session, config, relativeDName, D, category, target):
 
 def make_repository(session, directory, relativeDName, category, target):
 
+    logger.info(
+        "Checking into Repo %s - %s - cat: %s - target: %s"
+        % (directory, relativeDName, category, target))
+
     warning = "Won't make repository object"
 
     # For yum repos and ostree repos
@@ -380,6 +387,9 @@ def make_repository(session, directory, relativeDName, category, target):
         session.add(repo)
         session.flush()
     else:
+        logger.info(
+            'Adjusting prefix Repository(%s) %s -> %s'
+            % (repo, repo.prefix, prefix))
         if repo.prefix != prefix:
             repo.prefix = prefix
 
