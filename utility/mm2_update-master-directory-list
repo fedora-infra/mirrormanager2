@@ -120,7 +120,7 @@ def guess_ver_arch_from_path(session, category, path):
         for a in arch_cache:
             s = '.*(^|/)%s(/|$).*' % (a['name'])
             if re.compile(s).match(path):
-                arch = mirrormanager2.lib.get_arch_by_name(session, a['id'])
+                arch = mirrormanager2.lib.get_arch_by_name(session, a['name'])
                 break
 
     ver = None
@@ -139,7 +139,7 @@ def guess_ver_arch_from_path(session, category, path):
         if ver:
             session.add(ver)
             session.commit()
-            version_cache.append(ver.sqlmeta.asDict())
+            version_cache.append(ver)
     return (ver, arch)
 
 
@@ -581,16 +581,22 @@ def sync_category_directories(
         d = category.directory_cache[relativeDName]
         D = mirrormanager2.lib.get_directory_by_id(session, d.id)
 
-        target = None
+        if value['isRepository']:
+            target = 'repomd.xml'
+        elif value['isAtomic']:
+            target = 'summary'
+        else:
+            target = None
+
+        if value['isRepository'] or value['isAtomic']:
+            make_repository(session, D, relativeDName, category, target)
+
         if 'repomd.xml' in value['files']:
             target = 'repomd.xml'
         elif 'summary' in value['files']:
             target = 'summary'
         else:
             continue
-
-        if value['isRepository'] or value['isAtomic']:
-            make_repository(session, D, relativeDName, category, target)
 
         make_repo_file_details(
             session, diskpath, relativeDName, D, category, target)
