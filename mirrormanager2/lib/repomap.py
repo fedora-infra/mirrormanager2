@@ -1,7 +1,7 @@
 import re
 
 def is_development(path):
-    development_re = r'\/development\/((\d+))/'
+    development_re = r'\/?development\/((\d+))/'
     m = re.search(re.compile(development_re), path)
     if m is not None:
         return m.group(1)
@@ -38,7 +38,7 @@ def repo_prefix(path, category, ver):
     isAtomic = u'atomic' in path
     isEverything = u'Everything' in path
     isFedora = u'Fedora' in path
-    
+
 
     isEpel = (category.name == u'Fedora EPEL')
     isFedoraLinux = (category.name == u'Fedora Linux')
@@ -55,6 +55,8 @@ def repo_prefix(path, category, ver):
     version = u'unknown'
     if not isRawhide and ver is not None:
         version = ver.name
+    if isDevelopment:
+        version = is_development(path)
 
     if isEpel:
         # epel-
@@ -76,23 +78,22 @@ def repo_prefix(path, category, ver):
 
     elif isFedoraLinux or isFedoraSecondary or isFedoraArchive:
         if isReleases or isDevelopment:
-            if isReleases:
-                if isEverything:
-                    # fedora-
-                    if isDebug:
-                        prefix = u'fedora-debug-%s' % version
-                    elif isSource:
-                        prefix = u'fedora-source-%s' % version
-                    else:
-                        prefix=u'fedora-%s' % version
-                elif isFedora:
-                    if isDebug or isSource:
-                        # ignore releases/$version/Fedora/$arch/debug/
-                        # ignore releases/$version/Fedora/source/SRPMS/
-                        prefix = None
-                    else:
-                        # fedora-install-
-                        prefix = u'fedora-install-%s' % version
+            if isEverything or isDevelopment:
+                # fedora-
+                if isDebug:
+                    prefix = u'fedora-debug-%s' % version
+                elif isSource:
+                    prefix = u'fedora-source-%s' % version
+                else:
+                    prefix=u'fedora-%s' % version
+            elif isFedora:
+                if isDebug or isSource:
+                    # ignore releases/$version/Fedora/$arch/debug/
+                    # ignore releases/$version/Fedora/source/SRPMS/
+                    prefix = None
+                else:
+                    # fedora-install-
+                    prefix = u'fedora-install-%s' % version
         elif isAtomic:
             # atomic
             prefix = u'atomic-%s' % version
@@ -132,7 +133,7 @@ def repo_prefix(path, category, ver):
                 prefix = u'free-el-source-%s' % version
             else:
                 prefix=u'free-el-%s' % version
-            
+
         elif isUpdatesReleased:
             # updates-released-
             if isDebug:
@@ -150,7 +151,7 @@ def repo_prefix(path, category, ver):
                 prefix = u'free-el-updates-testing-source-%s' % version
             else:
                 prefix = u'free-el-updates-testing-%s' % version
-        
+
     elif isRrpmfusionNonfreeEl:
         if isReleases:
             if not isEverything:
@@ -162,7 +163,7 @@ def repo_prefix(path, category, ver):
                 prefix = u'nonfree-el-source-%s' % version
             else:
                 prefix=u'nonfree-el-%s' % version
-            
+
         elif isUpdatesReleased:
             # updates-released-
             if isDebug:
@@ -192,7 +193,7 @@ def repo_prefix(path, category, ver):
                 prefix = u'free-fedora-source-%s' % version
             else:
                 prefix=u'free-fedora-%s' % version
-            
+
         elif isUpdatesReleased:
             # updates-released-
             if isDebug:
@@ -230,7 +231,7 @@ def repo_prefix(path, category, ver):
                 prefix = u'nonfree-fedora-source-%s' % version
             else:
                 prefix=u'nonfree-fedora-%s' % version
-            
+
         elif isUpdatesReleased:
             # updates-released-
             if isDebug:
@@ -264,7 +265,7 @@ def repo_prefix(path, category, ver):
         isHA = u'HighAvailability' in path
         isLFS = u'LargeFileSystem' in path
         isLB = u'LoadBalance' in path
-        
+
         if isCS:
             prefix = u'rhel-%s-clusteredstorage' % version
         elif isHA:
