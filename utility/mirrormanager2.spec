@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.3.1
+Version:        0.4.0
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -307,6 +307,16 @@ exit 0
 
 
 %changelog
+* Wed Jul 22 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.4.0-1
+- Update to 0.4.0
+- Add utility script to update the MM2 DB for a single file (light-weight UMDL
+  for a single file) (Ralph Bean)
+- Add support to gracefully shutdown the crawler (Adrian Reber)
+- Add support to limit crawling by continent (Adrian Reber)
+- Fix the crawler to work properly with MM2
+- Fix the repomap to create properly development repos
+- Fix new repository detection and creation in UMDL (Adrian Reber)
+
 * Thu Jul 02 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.3.1-1
 - Update to 0.3.1
 - Fix for broken logging output in the UMDL (Adrian Reber)
