@@ -1160,6 +1160,11 @@ def per_host(session, host, options, config):
     host_categories_to_scan = select_host_categories_to_scan(
         session, options, host)
 
+    if not host_categories_to_scan:
+        # If the host has no categories do not auto-disable it.
+        # Just skip the host
+        return 0
+
     for hc in host_categories_to_scan:
         timeout_check()
         if hc.always_up2date:
