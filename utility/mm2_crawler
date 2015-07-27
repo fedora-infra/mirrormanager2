@@ -135,7 +135,18 @@ def doit(options, config):
         if any(item.startswith('^') for item in options.continents):
             for item in options.continents:
                 if item.startswith('^'):
-                    continents.remove(item[1:])
+                    try:
+                        continents.remove(item[1:].upper())
+                    except ValueError:
+                        # A continent was specified which is not
+                        # in the continents list. Just ignore it.
+                        msg = "Ignoring unknown continent: "
+                        msg += item[1:].upper()
+                        logger.warning(msg)
+                        msg = "Not in the list of known continents. "
+                        msg += "%r"
+                        logger.warning(msg % continents)
+                        pass
         else:
             continents = options.continents
 
