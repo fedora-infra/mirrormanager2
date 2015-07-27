@@ -104,6 +104,7 @@ Group:          Development/Tools
 BuildArch:      noarch
 
 Requires:  %{name}-lib == %{version}
+Requires:  python-GeoIP
 Requires(pre):  shadow-utils
 
 %description crawler
