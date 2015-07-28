@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.4.0
+Version:        0.4.1
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -308,6 +308,11 @@ exit 0
 
 
 %changelog
+* Tue Jul 28 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.4.1-1
+- Update to 0.4.1
+- If the host has no categories do not auto-disable it (Adrian Reber)
+- Different small umdl and crawler fixe (Adrian Reber)
+
 * Wed Jul 22 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.4.0-1
 - Update to 0.4.0
 - Add utility script to update the MM2 DB for a single file (light-weight UMDL
