@@ -54,6 +54,7 @@ setup(
     install_requires=get_requirements() + get_requirements(
         'requirements_mirrorlist.txt'),
     scripts = [
+        'client/report_mirror',
         'utility/mm2_crawler',
         'utility/mm2_get_global_netblocks',
         'utility/mm2_get_internet2_netblocks',
