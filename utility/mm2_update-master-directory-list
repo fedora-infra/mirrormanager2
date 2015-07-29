@@ -292,6 +292,9 @@ def main():
         else:
             logger.info('Un-supported type: %s' % i['type'])
 
+    logger.info('Refresh the list of repomd.xml')
+    Directory.age_file_details(session, config)
+
     logger.info("Ending umdl")
 
     return 0
