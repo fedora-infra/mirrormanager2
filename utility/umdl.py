@@ -476,7 +476,7 @@ def sync_category_directory(
 
     make_file_details_from_checksums(session, config, relativeDName, D)
 
-    if 'repomd.xml' in dirfiles:
+    if 'repodata' in dirfiles:
         make_repository(session, D, relativeDName, category, 'repomd.xml')
         make_repo_file_details(
             session, config, relativeDName, D, category, 'repomd.xml')
