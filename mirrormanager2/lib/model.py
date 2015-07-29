@@ -314,9 +314,9 @@ class Directory(BASE):
     def _age_file_details(cls, session, config):
         """For each file, keep at least 1 FileDetail entry.
 
-        Remove the second-most recent entry if the most recent entry is older
-        than max_propogation_days.  This gives mirrors time to pick up the most
-        recent change.
+        Remove the second-most recent entry if the most recent entry is
+        older than max_propogation_days.  This gives mirrors time to pick
+        up the most recent change.
 
         Remove any others that are more than max_stale_days old.
         """
