@@ -124,6 +124,16 @@ Requires(pre):  shadow-utils
 Install a number of utility scripts to be used manually or in cron jobs to
 run MirrorManager.
 
+%package client
+Summary:        Fedora mirror management system downstream mirror tools
+Group:          Applications/Internet
+BuildArch:      noarch
+
+%description client
+Client-side, run on each downstream mirror, to report back to the
+MirrorManager database a description of the content carried by that
+mirror.
+
 %prep
 %setup -q
 
@@ -209,6 +219,12 @@ install -m 644 utility/alembic.ini $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager/
 
 # Install the zebra-dump-parser perl module
 cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
+
+# Install the client files
+mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager-client
+install -m 0644 client/report_mirror.conf \
+    $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager-client/report_mirror.conf
+
 
 %pre mirrorlist
 getent group mirrormanager >/dev/null || groupadd -r mirrormanager
@@ -305,6 +321,12 @@ exit 0
 %{_bindir}/mm2_update-mirrorlist-server
 %{_bindir}/mm2_create_install_repo
 %{_bindir}/mm2_upgrade-install-repo
+
+
+%files client
+%dir %{_sysconfdir}/mirrormanager-client
+%config(noreplace) %{_sysconfdir}/mirrormanager-client/report_mirror.conf
+%{_bindir}/report_mirror
 
 
 %changelog
