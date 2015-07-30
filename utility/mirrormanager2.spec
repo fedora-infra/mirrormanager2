@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.4.1
+Version:        0.4.2
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -330,6 +330,11 @@ exit 0
 
 
 %changelog
+* Thu Jul 30 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.4.2-1
+- Update to 0.4.2
+- Create the -client subpackage containing the report_mirror script and
+  configuration file (Adrian Reber)
+
 * Tue Jul 28 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.4.1-1
 - Update to 0.4.1
 - If the host has no categories do not auto-disable it (Adrian Reber)
