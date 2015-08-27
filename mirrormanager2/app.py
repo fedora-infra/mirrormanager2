@@ -1145,6 +1145,7 @@ def host_category_url_new(host_id, hc_id):
         host_category_u = model.HostCategoryUrl()
         host_category_u.host_category_id = hcobj.id
         form.populate_obj(obj=host_category_u)
+        host_category_u.url = form.url.data.strip()
         SESSION.add(host_category_u)
 
         try:
