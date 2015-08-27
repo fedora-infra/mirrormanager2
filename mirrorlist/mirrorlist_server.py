@@ -22,6 +22,7 @@ import sys
 from string import zfill, atoi
 import time
 import traceback
+from operator import itemgetter
 
 try:
     import threading
@@ -161,7 +162,7 @@ def metalink(cache, directory, file, hosts_and_urls):
     preference = 100
     try:
         fdc = file_details_cache[directory]
-        detailslist = fdc[file]
+        detailslist = sorted(fdc[file], key=itemgetter('timestamp'), reverse=True)
     except KeyError:
         return ('metalink', 404, metalink_file_not_found(directory, file))
 
