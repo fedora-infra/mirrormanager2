@@ -869,7 +869,7 @@ def get_directory_by_name(session, dirname):
 
 def get_file_detail(
         session, filename, directory_id, md5=False, sha1=False, sha256=False,
-        sha512=False, size=False, timestamp=False):
+        sha512=False, size=False, timestamp=False, reverse=False):
     ''' Return a specified FileDetail having the corresponding details.
 
     :arg session: the session with which to connect to the database.
@@ -908,6 +908,10 @@ def get_file_detail(
 
     if timestamp is not False:
         query = query.filter(model.FileDetail.timestamp == timestamp)
+
+    if reverse is True:
+        # This should return the newest file
+        query = query.order_by(model.FileDetail.id.desc())
 
     return query.first()
 
