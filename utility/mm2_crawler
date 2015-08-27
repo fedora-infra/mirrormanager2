@@ -1183,7 +1183,7 @@ def per_host(session, host, options, config):
             continue
         category = hc.category
 
-        host_category_urls = [hcurl.url for hcurl in hc.urls]
+        host_category_urls = [hcurl.url.strip() for hcurl in hc.urls]
         categoryUrl = method_pref(host_category_urls)
         if categoryUrl is None:
             continue
