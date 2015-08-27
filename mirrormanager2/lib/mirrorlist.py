@@ -23,6 +23,8 @@ import os
 import hashlib
 import cPickle as pickle
 
+from operator import itemgetter
+
 from IPy import IP
 import pprint
 import dns.resolver
@@ -300,6 +302,15 @@ def file_details_cache(session):
                     sha512=fd.sha512,
                     size=fd.size)
                 append_value_to_cache(cache[d.name], fd.filename, details)
+
+    for dir in cache.keys():
+        for file in cache[dir].keys():
+            if len(cache[dir][file]) > 1:
+                cache[dir][file] = sorted(
+                    cache[dir][file],
+                    key=itemgetter('timestamp'),
+                    reverse=True)
+
     return cache
 
 
