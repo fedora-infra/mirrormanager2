@@ -37,7 +37,7 @@ import hashlib
 sys.path.insert(0, os.path.join(os.path.dirname(
     os.path.abspath(__file__)), '..'))
 import mirrormanager2.lib
-import umdl
+import mirrormanager2.lib.umdl as umdl
 
 
 logger = logging.getLogger('umdl')
