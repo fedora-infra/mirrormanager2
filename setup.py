@@ -62,6 +62,7 @@ setup(
         'utility/mm2_refresh_mirrorlist_cache',
         'utility/mm2_update-EC2-netblocks',
         'utility/mm2_update-master-directory-list',
+        'utility/mm2_umdl2',
         'utility/mm2_update-mirrorlist-server',
         'utility/mm2_create_install_repo',
         'utility/mm2_upgrade-install-repo',
