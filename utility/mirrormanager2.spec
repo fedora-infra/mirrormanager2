@@ -318,6 +318,7 @@ exit 0
 %{_bindir}/mm2_refresh_mirrorlist_cache
 %{_bindir}/mm2_update-EC2-netblocks
 %{_bindir}/mm2_update-master-directory-list
+%{_bindir}/mm2_umdl2
 %{_bindir}/mm2_update-mirrorlist-server
 %{_bindir}/mm2_create_install_repo
 %{_bindir}/mm2_upgrade-install-repo
