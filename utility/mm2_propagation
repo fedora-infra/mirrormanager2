@@ -1,0 +1,207 @@
+#!/usr/bin/python
+
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+import sys
+import time
+import glob
+
+from matplotlib import rc
+
+font = {'family' : 'serif',
+        'size'   : 10}
+
+rc('text', usetex=True)
+rc('font', **font)
+
+def list_adder(a, b):
+    return [i+j for i,j in zip(a, b)]
+
+def label_bars_size(rects, fmt, offset=[]):
+    i = 0
+    for rect in rects:
+        width = int(rect.get_width())
+
+        xloc = rect.get_x()+rect.get_width()/2.0
+        try:
+            plus = offset[i]
+        except:
+            plus = 0
+
+        if rect.get_height() > 8:
+            yloc = rect.get_height() / 2 + plus + 3
+        else:
+            yloc = rect.get_height() + plus - 1.2
+
+        if rect.get_height() > 6:
+            ax.text(xloc, yloc, fmt % rect.get_height(), horizontalalignment='center', rotation='horizontal',
+                verticalalignment='top', color='white')
+        i += 1
+
+
+repomd_same = []
+repomd_one_day = []
+repomd_two_day = []
+repomd_other = []
+repomd_none = []
+labels = []
+maximum = 0
+sha256sums = []
+
+hosts_broken = {}
+hosts_older = {}
+hosts_older_1 = {}
+hosts_older_2 = {}
+
+prefix = ""
+if len(sys.argv) == 2:
+    prefix = sys.argv[1]
+
+files = 'propagation/%sprop*' % prefix
+
+total = len(glob.glob(files))
+remaining = total
+print "%d data points available" % total
+
+
+
+for filename in sorted(glob.glob(files)):
+    for line in open(filename):
+        line = line.rstrip()
+        line = line.split('::')
+        if not line[5] in sha256sums:
+            sha256sums.append(line[5])
+
+for filename in sorted(glob.glob(files)):
+    total -= 1
+    if total > 58:
+        remaining -=1
+        continue
+    if remaining > 30 and total % 2 == 0:
+        continue
+    remaining -= 1
+    same = 0
+    one_day = 0
+    two_day = 0
+    other = 0
+    none = 0
+    scandate = None
+
+    for line in open(filename):
+        line = line.rstrip()
+        line = line.split('::')
+        date = line[4].split('-')
+        scandate = "%s-%s-%s\n%s-%s-%s" % tuple(date)
+        if line[3] == 'NOSUM':
+            none += 1
+            try:
+                hosts_broken[line[1]] += 1
+            except:
+                hosts_broken[line[1]] = 1
+
+        elif line[3] == line[5]:
+            same += 1
+        elif line[3] in sha256sums:
+            offset = sha256sums.index(line[5])
+            if sha256sums.index(line[3]) == offset:
+                same += 1
+            elif sha256sums.index(line[3]) == offset - 1:
+                one_day += 1
+                try:
+                    hosts_older_1[line[1]] += 1
+                except:
+                    hosts_older_1[line[1]] = 1
+            elif sha256sums.index(line[3]) == offset - 2:
+                two_day += 1
+                try:
+                    hosts_older_2[line[1]] += 1
+                except:
+                    hosts_older_2[line[1]] = 1
+            else:
+                other += 1
+        else:
+            other += 1
+            try:
+                hosts_older[line[1]] += 1
+            except:
+                hosts_older[line[1]] = 1
+    if none + same + other + one_day + two_day > maximum:
+        maximum = none + same + other + one_day + two_day
+
+    repomd_same.append(same)
+    repomd_one_day.append(one_day)
+    repomd_two_day.append(two_day)
+    repomd_other.append(other)
+    repomd_none.append(none)
+    labels.append(scandate)
+
+print "%d data points used" %  len(repomd_same)
+
+fd = open('%srepomd-report.txt' % prefix, 'w')
+
+print "Hosts broken"
+fd.write("Hosts broken\n")
+for url, count in sorted(hosts_broken.items(), key=lambda x: (int(x[1])), reverse=True):
+    print "%s: %d" % (url, count)
+    fd.write("%s: %d\n" % (url, count))
+print "Hosts older"
+fd.write("Hosts older\n")
+for url, count in sorted(hosts_older.items(), key=lambda x: (int(x[1])), reverse=True):
+    print "%s: %d" % (url, count)
+    fd.write("%s: %d\n" % (url, count))
+print "Hosts older - 1"
+fd.write("Hosts older - 1\n")
+for url, count in sorted(hosts_older_1.items(), key=lambda x: (int(x[1])), reverse=True):
+    print "%s: %d" % (url, count)
+    fd.write("%s: %d\n" % (url, count))
+fd.write("Hosts older - 2\n")
+print "Hosts older - 2"
+for url, count in sorted(hosts_older_2.items(), key=lambda x: (int(x[1])), reverse=True):
+    print "%s: %d" % (url, count)
+    fd.write("%s: %d\n" % (url, count))
+
+fd.close()
+
+ind = np.arange(len(labels))
+width = 0.62
+
+fig = plt.figure(figsize=(16, 8))
+ax = fig.add_subplot(111)
+
+rects = ax.bar(ind, repomd_same, width, color='red', label="synced")
+label_bars_size(rects, '%.0f')
+
+rects = ax.bar(ind, repomd_one_day, width, bottom=repomd_same,
+        color='mediumvioletred',
+        label='synced - 1')
+label_bars_size(rects, '%.0f', repomd_same)
+
+bottom = list_adder(repomd_same, repomd_one_day)
+rects = ax.bar(ind, repomd_two_day, width, bottom=bottom, color='b',
+        label='synced - 2')
+label_bars_size(rects, '%.0f', bottom)
+
+bottom = list_adder(bottom, repomd_two_day)
+rects = ax.bar(ind, repomd_other, width, bottom=bottom, color='g', label='older')
+label_bars_size(rects, '%.0f', bottom)
+
+bottom = list_adder(bottom, repomd_other)
+rects = ax.bar(ind, repomd_none, width, bottom=bottom, color='y', label='N/A')
+label_bars_size(rects, '%.0f', bottom)
+
+ax.set_ylim(0, maximum +40)
+ax.set_xticks(ind+width)
+ax.set_xticklabels(labels)
+plt.setp(plt.xticks()[1], rotation=90)
+
+plt.legend(loc=2, shadow=True, fancybox=True, ncol=3)
+if prefix == 'f22-updates-':
+    plt.title("repomd.xml propagation for updates/22/x86 64/repodata")
+else:
+    plt.title("repomd.xml propagation for development/rawhide/x86 64/os/repodata")
+plt.savefig("%s%s-repomd-propagation.pdf" % (prefix,labels[len(labels)-1].replace('\n','-')), bbox_inches='tight')
+plt.savefig("%s%s-repomd-propagation.svg" % (prefix,labels[len(labels)-1].replace('\n','-')), bbox_inches='tight')
+print "%s%s-repomd-propagation.pdf" % (prefix,labels[len(labels)-1].replace('\n','-'))
+plt.savefig("%srepomd-propagation.pdf" % prefix , bbox_inches='tight')
+plt.savefig("%srepomd-propagation.svg" % prefix , bbox_inches='tight')
