@@ -43,8 +43,6 @@ from mirrormanager2.lib.repomap import repo_prefix
 from mirrormanager2.lib.sync import run_rsync
 import mirrormanager2.lib.umdl as umdl
 
-
-delete_directories=False
 logger = None
 stdexcludes=['.*\.snapshot', '.*/\.~tmp~']
 cname = "N/A"
@@ -673,7 +671,6 @@ def setup_logging(config, options):
 
 
 def main():
-    global delete_directories
     global logger
     global cname
     parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
@@ -700,7 +697,7 @@ def main():
     parser.add_option(
         "--delete-directories",
         dest="delete_directories",
-        default=delete_directories,
+        default=False,
         action="store_true",
         help="delete directories from the database that are no longer "
             "on disk")
@@ -711,8 +708,6 @@ def main():
         exec(compile(config_file.read(), options.config, 'exec'), config)
 
     session = mirrormanager2.lib.create_session(config['DB_URL'])
-
-    delete_directories = options.delete_directories
 
     setup_logging(config, options)
 
