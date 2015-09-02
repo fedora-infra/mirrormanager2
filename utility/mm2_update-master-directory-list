@@ -47,7 +47,12 @@ import mirrormanager2.lib.umdl as umdl
 delete_directories=False
 logger = None
 stdexcludes=['.*\.snapshot', '.*/\.~tmp~']
+cname = "N/A"
 
+class MasterFilter(logging.Filter):
+    def filter(self, record):
+        record.category = cname
+        return True
 
 def make_file_details_from_checksums(session, diskpath, relativeDName, D):
     def _parse_checksum_file(relativeDName, checksumlen):
@@ -648,13 +653,14 @@ def setup_logging(config, options):
     else:
         log_file = options.logfile
 
-    fmt = '%(asctime)s %(message)s'
-    datefmt = '%m/%d/%Y %I:%M:%S %p'
-    formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
+    fmt = '%(asctime)s:%(category)s:%(message)s'
+    formatter = logging.Formatter(fmt=fmt)
     logger = logging.getLogger('umdl')
     handler = logging.handlers.WatchedFileHandler(log_file, "a+b")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+    f = MasterFilter()
+    logger.addFilter(f)
     # list_categories is a special case where the user wants to see something
     # on the console and not only in the log file
     if options.debug or options.list_categories:
@@ -669,6 +675,7 @@ def setup_logging(config, options):
 def main():
     global delete_directories
     global logger
+    global cname
     parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option(
         "-c", "--config",
