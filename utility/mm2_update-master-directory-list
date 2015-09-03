@@ -41,119 +41,16 @@ from mirrormanager2.lib.model import (
     Arch, Directory, Repository, Version, FileDetail)
 from mirrormanager2.lib.repomap import repo_prefix
 from mirrormanager2.lib.sync import run_rsync
+import mirrormanager2.lib.umdl as umdl
 
-
-delete_directories=False
 logger = None
 stdexcludes=['.*\.snapshot', '.*/\.~tmp~']
+cname = "N/A"
 
-
-def parent_dir(path):
-    sdir = path.split('/')[:-1]
-    try:
-        parent = os.path.join(*sdir)
-    except TypeError: #
-        parent = u''
-    return parent
-
-
-def remove_category_topdir(topdirName, path):
-    path = path[len(topdirName)+1:]
-    return path
-
-
-def _get_version_from_path(path):
-    # Debian/Ubuntu versioning
-    # this ignores 10.10 and maverick-{anything}, but picks up 'maverick'
-    s = r'dists/(\w+)/'
-    m = re.search(re.compile(s), path)
-    if m is not None:
-        return m.group(1)
-    # Fedora versioning
-    s = r'/?(([\.\d]+)([-_]\w+)?)/'
-    m = re.search(re.compile(s), path)
-    if m is not None:
-        return m.group(1)
-    # Rawhide, development
-    if 'rawhide' in path:
-        return 'development'
-    return None
-
-
-def create_version_from_path(session, category, path):
-    ver = None
-    vname = _get_version_from_path(path)
-    if vname is not None and vname != '':
-        if u'/test/' in path:
-            isTest = True
-        else:
-            isTest = False
-
-        ver = mirrormanager2.lib.get_version_by_name_version(
-            session, category.product.name, vname)
-        if not ver:
-            ver = Version(
-                product=category.product,
-                name=vname,
-                is_test=isTest)
-            session.add(ver)
-            session.flush()
-
-    return ver
-
-arch_cache = None
-version_cache = None
-
-
-def setup_arch_version_cache(session):
-    global arch_cache
-    if arch_cache is None:
-        arch_cache = mirrormanager2.lib.get_arches(session)
-
-    global version_cache
-    if version_cache is None:
-        version_cache = mirrormanager2.lib.get_versions(session)
-
-
-def guess_ver_arch_from_path(session, category, path):
-    arch = None
-    if 'SRPMS' in path:
-        arch = mirrormanager2.lib.get_arch_by_name(session, 'source')
-    else:
-        for a in arch_cache:
-            s = '.*(^|/)%s(/|$).*' % (a['name'])
-            if re.compile(s).match(path):
-                arch = mirrormanager2.lib.get_arch_by_name(session, a['name'])
-                break
-
-    ver = None
-    # newest versions/IDs first, also handles stupid Fedora 9.newkey hack.
-    for v in version_cache:
-        if v['product_id'] != category.product.id:
-            continue
-        s = '.*(^|/)%s(/|$).*' % (v['name'])
-        if re.compile(s).match(path):
-            ver = mirrormanager2.lib.get_version_by_id(session, v['id'])
-            break
-
-    # create Versions if we can figure it out...
-    if ver is None:
-        ver = create_version_from_path(session, category, path)
-        if ver:
-            version_cache.append(ver)
-    return (ver, arch)
-
-
-# Something like this is committed to yum upstream, but may not be in the
-# copy we are using.
-def set_repomd_timestamp(yumrepo):
-    timestamp = 0
-    for ft in yumrepo.fileTypes():
-        thisdata = yumrepo.repoData[ft]
-        timestamp = max(int(thisdata.timestamp), timestamp)
-    yumrepo.timestamp = timestamp
-    return timestamp
-
+class MasterFilter(logging.Filter):
+    def filter(self, record):
+        record.category = cname
+        return True
 
 def make_file_details_from_checksums(session, diskpath, relativeDName, D):
     def _parse_checksum_file(relativeDName, checksumlen):
@@ -279,7 +176,7 @@ def make_repo_file_details(session, diskpath, relativeDName, D, category, target
     if target == 'repomd.xml':
         yumrepo = yum.repoMDObject.RepoMD('repoid', absolutepath)
         if 'timestamp' not in yumrepo.__dict__:
-            set_repomd_timestamp(yumrepo)
+            umdl.set_repomd_timestamp(yumrepo)
         timestamp = yumrepo.timestamp
     elif target == 'summary':
         # TODO -- ostree repos may have a timestamp in their summary file
@@ -335,7 +232,7 @@ def make_repository(session, directory, relativeDName, category, target):
         return
 
     if target == 'repomd.xml':
-        (ver, arch) = guess_ver_arch_from_path(session, category, relativeDName)
+        (ver, arch) = umdl.guess_ver_arch_from_path(session, category, relativeDName)
         if ver is None or arch is None:
             logger.warning("%s: could not guess version and arch %r, %r" % (
                 warning, ver, arch))
@@ -355,10 +252,10 @@ def make_repository(session, directory, relativeDName, category, target):
         if ver is None:
             if not relativeDName.endswith('/'):
                 relativeDName += '/'
-            ver = create_version_from_path(category, relativeDName)
+            ver = umdl.create_version_from_path(category, relativeDName)
             session.add(ver)
             session.commit()
-            version_cache.append(ver)
+            umdl.version_cache.append(ver)
 
     # stop making duplicate Repository objects.
     if len(directory.repositories) > 0:
@@ -416,7 +313,7 @@ def nuke_gone_directories(session, diskpath, category):
     directories.reverse() # now in decending name order, bottoms up
     for d in directories:
         if is_excluded(d.name, category.excludes): continue
-        relativeDName = remove_category_topdir(topdirName, d.name)
+        relativeDName = umdl.remove_category_topdir(topdirName, d.name)
         if not os.path.isdir(os.path.join(diskpath, relativeDName)):
             if len(d.categories) == 1: # safety, this should always trigger
                 logger.info("Deleting gone directory %s" % (d.name))
@@ -446,7 +343,7 @@ def fill_category_directories_from_rsync(
 
     perms = line.split()[0]
     if not re.compile('^d......r.x').match(perms) \
-            or parent_dir(relativeDName) in category.unreadable_dirs:
+            or umdl.parent_dir(relativeDName) in category.unreadable_dirs:
         readable=False
         category.unreadable_dirs.add(relativeDName)
 
@@ -464,7 +361,7 @@ def fill_category_directories_from_rsync(
         'ctime':ctime,
         'changed':True}
     if d.endswith('repodata'):
-        parent_relativeDName = parent_dir(relativeDName)
+        parent_relativeDName = umdl.parent_dir(relativeDName)
         try:
             category_directories[parent_relativeDName]['isRepository'] = True
         except KeyError:
@@ -658,7 +555,7 @@ def cache_directories(category):
     cache = dict()
     topdirName = category.topdir.name
     for directory in list(category.directories):
-        relativeDName = remove_category_topdir(
+        relativeDName = umdl.remove_category_topdir(
             topdirName, directory.name).strip(u'/')
         cache[relativeDName] = directory
     return cache
@@ -703,7 +600,7 @@ def sync_directories_from_disk(
 
         mode = s.st_mode
         readable = not not (mode & stat.S_IRWXO & (stat.S_IROTH|stat.S_IXOTH))
-        if not readable or parent_dir(relativeDName) in category.unreadable_dirs:
+        if not readable or umdl.parent_dir(relativeDName) in category.unreadable_dirs:
             category.unreadable_dirs.add(relativeDName)
         isRepo = u'repodata' in dirnames
         isAtomic = u'summary' in filenames and u'objects' in dirnames
@@ -754,13 +651,14 @@ def setup_logging(config, options):
     else:
         log_file = options.logfile
 
-    fmt = '%(asctime)s %(message)s'
-    datefmt = '%m/%d/%Y %I:%M:%S %p'
-    formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
+    fmt = '%(asctime)s:%(category)s:%(message)s'
+    formatter = logging.Formatter(fmt=fmt)
     logger = logging.getLogger('umdl')
     handler = logging.handlers.WatchedFileHandler(log_file, "a+b")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+    f = MasterFilter()
+    logger.addFilter(f)
     # list_categories is a special case where the user wants to see something
     # on the console and not only in the log file
     if options.debug or options.list_categories:
@@ -773,8 +671,8 @@ def setup_logging(config, options):
 
 
 def main():
-    global delete_directories
     global logger
+    global cname
     parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option(
         "-c", "--config",
@@ -799,7 +697,7 @@ def main():
     parser.add_option(
         "--delete-directories",
         dest="delete_directories",
-        default=delete_directories,
+        default=False,
         action="store_true",
         help="delete directories from the database that are no longer "
             "on disk")
@@ -810,8 +708,6 @@ def main():
         exec(compile(config_file.read(), options.config, 'exec'), config)
 
     session = mirrormanager2.lib.create_session(config['DB_URL'])
-
-    delete_directories = options.delete_directories
 
     setup_logging(config, options)
 
@@ -825,7 +721,7 @@ def main():
         logger.info("Ending umdl")
         return 0
 
-    setup_arch_version_cache(session)
+    umdl.setup_arch_version_cache(session)
     check_categories = []
     if options.categories is None:
         check_categories = config.get('umdl_master_directories')
