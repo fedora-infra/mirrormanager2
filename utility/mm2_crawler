@@ -34,6 +34,7 @@ all_hosts = 0
 threads = 0
 threads_active = 0
 hosts_failed = 0
+check_start = time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
 
 # This is the global timeout variable, so that it can be
 # decreased by the signal handler and thus change in all threads.
@@ -315,6 +316,18 @@ def main():
     parser.add_argument(
         "--debug", "-d", dest="debug", action="store_true", default=False,
         help="enable printing of debug-level messages")
+
+    parser.add_argument(
+        "--propagation", "-p", dest="propagation", action="store_true", default=False,
+        help="Print out information about repomd.xml propagation "
+            "Defaults to development/rawhide/x86_64/os/repodata "
+            "Only the category 'Fedora Linux' is supported")
+
+    parser.add_argument(
+        "--proppath", dest="proppath", metavar='PATH',
+        default="development/rawhide/x86_64/os/repodata",
+        help="Use another path for propgation check  "
+            "Defaults to development/rawhide/x86_64/os/repodata")
 
     options = parser.parse_args()
 
@@ -1134,6 +1147,38 @@ def check_continent(categoryUrl):
     return 8
 
 
+def check_propagation(session, catname, host_category_urls, path):
+    # Print out information about the repomd.xml status
+    if catname != 'Fedora Linux':
+        return 9
+    # Right now propagation test mode only supports the category "Fedora Linux"
+    base = "pub/fedora/linux/" + path
+    url = None
+    for u in host_category_urls:
+        if not u.endswith('/'):
+            u += '/'
+        if u.startswith('http:'):
+            url = u
+    if not url:
+        return 9
+    d = mirrormanager2.lib.get_directory_by_name(session, base)
+    fd = mirrormanager2.lib.get_file_detail(session, 'repomd.xml', d.id, reverse=True)
+    url += path
+    url += '/repomd.xml'
+    import requests
+    ses = requests.Session()
+    try:
+        contents = ses.get(url, timeout=30)
+    except requests.exceptions.ConnectionError:
+        logger.info("URL::%s::SHA256::%s::%s::%s" % (url, 'NOSUM', check_start, fd.sha256))
+        return 9
+    has = hashlib.sha256()
+    has.update(contents.content)
+    csum = has.hexdigest()
+    logger.info("URL::%s::SHA256::%s::%s::%s" % (url, csum, check_start, fd.sha256))
+    return 9
+
+
 def per_host(session, host, options, config):
     """ This function scans all categories a host has defined.
     If a RSYNC URL is available it tries to scan the host requiring
@@ -1178,12 +1223,17 @@ def per_host(session, host, options, config):
 
     for hc in host_categories_to_scan:
         timeout_check()
-        if hc.always_up2date:
+        if hc.always_up2date and not options.propagation:
             successful_categories += 1
             continue
         category = hc.category
 
-        host_category_urls = [hcurl.url.strip() for hcurl in hc.urls]
+        host_category_urls = [hcurl.url for hcurl in hc.urls]
+
+        if options.propagation:
+            return check_propagation(session, category.name,
+                host_category_urls, options.proppath)
+
         categoryUrl = method_pref(host_category_urls)
         if categoryUrl is None:
             continue
@@ -1344,6 +1394,35 @@ def count_crawl_failures(host, config):
             " consecutive crawl failures" % auto_disable )
         host.user_active = False
 
+def thread_file_logger(log_dir, host_id, debug):
+
+    # check if the directory exists
+    if log_dir is not None:
+        log_dir += "/crawler"
+        if not os.path.isdir(log_dir):
+            # MM_LOG_DIR/crawler seems to be configured but does not exist
+            # not logging
+            logger.warning("Directory " + log_dir + " does not exists."
+                           " Not logging per host")
+            log_dir = None
+
+    log_file = None
+    fh = None
+    if log_dir is not None:
+        log_file = log_dir + "/" + str(host_id) + '.log'
+        fh = logging.FileHandler(log_file)
+        threadlocal.thread_id = thread_id()
+        f = InjectingFilter(thread_id())
+        fh.addFilter(f)
+
+        if debug:
+            fh.setLevel(logging.DEBUG)
+        else:
+            fh.setLevel(logging.INFO)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+
+    return log_file, fh
 
 def worker(options, config, host_id):
     global current_host
@@ -1364,38 +1443,25 @@ def worker(options, config, host_id):
     threadlocal.hostid = host.id
     threadlocal.hostname = host.name
 
-    # setup per thread file logger
-    log_dir = config.get('MM_LOG_DIR', None)
-    # check if the directory exists
-    if log_dir is not None:
-        log_dir += "/crawler"
-        if not os.path.isdir(log_dir):
-            # MM_LOG_DIR/crawler seems to be configured but does not exist
-            # not logging
-            logger.warning("Directory " + log_dir + " does not exists."
-                           " Not logging per host")
-            log_dir = None
-
     log_file = None
-    if log_dir is not None:
-        log_file = log_dir + "/" + str(host.id) + '.log'
-        fh = logging.FileHandler(log_file)
-        threadlocal.thread_id = thread_id()
-        f = InjectingFilter(thread_id())
-        fh.addFilter(f)
-
-        if options.debug:
-            fh.setLevel(logging.DEBUG)
-        else:
-            fh.setLevel(logging.INFO)
-        fh.setFormatter(formatter)
-        logger.addHandler(fh)
+    fh = None
+    if not options.propagation:
+        log_file, fh = thread_file_logger(config.get('MM_LOG_DIR', None),
+            host.id, options.debug)
 
     logger.info("Worker %r starting on host %r" % (thread_id(), host))
 
 
     try:
         rc = per_host(session, host.id, options, config)
+
+        # If 9 is returned the crawler is running in propagation test mode.
+        if rc == 9:
+            # Do not save any status about this run.
+            threads_active = threads_active - 1
+            session.close()
+            return 0
+
         last_crawled = datetime.datetime.utcnow()
         last_crawl_duration = time.time() -  threadlocal.starttime
         if rc == 5:
@@ -1446,8 +1512,9 @@ def worker(options, config, host_id):
         rc = 3
 
     logger.info("Ending crawl of %r with status %r" % (host, rc))
-    logger.removeHandler(fh)
-    fh.close()
+    if fh:
+        logger.removeHandler(fh)
+        fh.close()
     session.close()
     threads_active = threads_active - 1
     gc.collect()
