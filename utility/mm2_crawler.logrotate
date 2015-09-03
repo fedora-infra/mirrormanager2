@@ -1,7 +1,7 @@
 /var/log/mirrormanager/crawler/*log {
     missingok
     notifempty
-    daily
+    weekly
     dateext
     rotate 15
     copytruncate
