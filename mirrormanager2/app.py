@@ -286,6 +286,8 @@ def site_new():
         SESSION.add(site)
         form.populate_obj(obj=site)
         site.created_by = flask.g.fas_user.username
+        if site.org_url.endswith('/'):
+            site.org_url = site.org_url[:-1]
 
         try:
             SESSION.flush()
@@ -424,6 +426,7 @@ def host_new(site_id):
         SESSION.add(host)
         host.site_id = siteobj.id
         form.populate_obj(obj=host)
+
         host.bandwidth_int = int(host.bandwidth_int)
         host.asn = None if not host.asn else int(host.asn)
         message = dict(
@@ -1145,7 +1148,12 @@ def host_category_url_new(host_id, hc_id):
         host_category_u = model.HostCategoryUrl()
         host_category_u.host_category_id = hcobj.id
         form.populate_obj(obj=host_category_u)
-        host_category_u.url = form.url.data.strip()
+
+        url = form.url.data.strip()
+        if url.endswith('/'):
+            url = url[:-1]
+        host_category_u.url = url
+
         SESSION.add(host_category_u)
 
         try:
