@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.4.2
+Version:        0.5
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -331,6 +331,17 @@ exit 0
 
 
 %changelog
+* Fri Sep 04 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.5-1
+- Update to 0.5
+- Add order option to get_file_detail() (Adrian Reber)
+- Remove all whitespaces around the mirror URLs (Adrian Reber)
+- Sort metalinks alternates by timestamps descending (Adrian Reber)
+- Rewrite the UMDL2 into a UMDL2
+- Add code to graph repomd.xml propagation (Adrian Reber)
+- Rotate crawler logs once per week (Adrian Reber)
+- Update the UMDL1 to share code with the UMDL2 (Adrian Reber)
+- Remove trailing slash of site and host_category_url
+
 * Thu Jul 30 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.4.2-1
 - Update to 0.4.2
 - Create the -client subpackage containing the report_mirror script and
