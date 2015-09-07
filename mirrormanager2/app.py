@@ -285,6 +285,7 @@ def site_new():
         site = model.Site()
         SESSION.add(site)
         form.populate_obj(obj=site)
+        site.admin_active = True
         site.created_by = flask.g.fas_user.username
         if site.org_url.endswith('/'):
             site.org_url = site.org_url[:-1]
@@ -425,6 +426,7 @@ def host_new(site_id):
         host = model.Host()
         SESSION.add(host)
         host.site_id = siteobj.id
+        host.admin_active = True
         form.populate_obj(obj=host)
 
         host.bandwidth_int = int(host.bandwidth_int)
