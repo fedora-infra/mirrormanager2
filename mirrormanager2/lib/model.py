@@ -490,7 +490,9 @@ class HostCategory(BASE):
     host = relation(
         'Host',
         foreign_keys=[host_id], remote_side=[Host.id],
-        backref=backref('categories')
+        backref=backref(
+            'categories', cascade="delete, delete-orphan",
+            single_parent=True)
     )
 
     # Constraints
