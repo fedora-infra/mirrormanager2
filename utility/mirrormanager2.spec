@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.5
+Version:        0.5.1
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -331,6 +331,12 @@ exit 0
 
 
 %changelog
+* Mon Sep 07 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.5.1-1
+- Update to 0.5.1
+- Deleting URLs if site or host is removed (avoids the situation where a host is
+  removed and then someone tries to re-add it) (Adrian Reber)
+- Ensure that new host and new site are admin_active
+
 * Fri Sep 04 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.5-1
 - Update to 0.5
 - Add order option to get_file_detail() (Adrian Reber)
