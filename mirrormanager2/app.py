@@ -426,8 +426,8 @@ def host_new(site_id):
         host = model.Host()
         SESSION.add(host)
         host.site_id = siteobj.id
-        host.admin_active = True
         form.populate_obj(obj=host)
+        host.admin_active = True
 
         host.bandwidth_int = int(host.bandwidth_int)
         host.asn = None if not host.asn else int(host.asn)
