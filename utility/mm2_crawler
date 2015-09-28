@@ -862,7 +862,7 @@ def try_per_category(
     try:
         result, listing = run_rsync(url, params, logger)
     except:
-        logger.warning('Failed to run rsync.', exc_info = True)
+        logger.exception('Failed to run rsync.', exc_info = True)
         return False
     rsync_stop_time = datetime.datetime.utcnow()
     msg = "rsync time: %s" % str(rsync_stop_time - rsync_start_time)
