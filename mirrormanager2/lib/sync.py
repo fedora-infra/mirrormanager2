@@ -25,9 +25,24 @@ MirrorManager2 internal api to manage sync.
 
 import subprocess
 import tempfile
+import errno
+
+def check_timeout(logger, p):
+    ''' Check if the process is running and kill it if so. '''
+
+    if p.poll() is None:
+        try:
+            p.kill()
+            logger.info(
+                'Error: process taking too long to complete - terminated'
+            )
+        except OSError as err:
+            if err.errno != errno.ESRCH:
+                # if there is such process
+                raise
 
 
-def run_rsync(rsyncpath, extra_rsync_args=None, logger=None):
+def run_rsync(rsyncpath, extra_rsync_args=None, logger=None, timeout=None):
     tmpfile = tempfile.SpooledTemporaryFile()
     cmd = "rsync --temp-dir=/tmp -r --exclude=.snapshot --exclude='*.~tmp~'"
     if extra_rsync_args is not None:
@@ -45,8 +60,21 @@ def run_rsync(rsyncpath, extra_rsync_args=None, logger=None):
         close_fds=True,
         bufsize=-1
     )
+
+    timeout_thread = None
+    if timeout:
+        # Start a thread to check the status of the process after ``timeout``
+        # seconds. If the process is still running then, kill it.
+        timeout_thread = threading.Timer(timeout, check_timeout, [logger, p])
+        timeout_thread.start()
+        timeout_thread.join()
+
     p.wait()
     result = p.returncode
+
+    if timeout_thread:
+        timeout_thread.cancel()
+
     tmpfile.flush()
     tmpfile.seek(0)
     return (result, tmpfile)
