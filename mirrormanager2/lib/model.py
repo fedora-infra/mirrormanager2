@@ -464,7 +464,8 @@ class SiteAdmin(BASE):
     site = relation(
         'Site',
         foreign_keys=[site_id], remote_side=[Site.id],
-        backref=backref('admins'),
+        backref=backref('admins', cascade="delete, delete-orphan",
+                        single_parent=True),
     )
 
 
