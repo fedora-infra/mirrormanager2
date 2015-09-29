@@ -1236,6 +1236,72 @@ def host_category_url_delete(host_id, hc_id, host_category_url_id):
         flask.url_for('host_category', host_id=host_id, hc_id=hc_id))
 
 
+@APP.route('/rsyncFilter')
+@APP.route('/rsyncFilter/')
+def rsyncFilter():
+    """ Returns the filter to use in your rsync job. """
+
+    def parents(folder):
+        path = []
+        splitpath = folder.split('/')
+        for i in xrange(1, len(splitpath)):
+            path.append('/'.join(splitpath[:i]))
+        return path
+
+    def strip_prefix(to_strip, folder):
+        splitdir = folder.split('/')
+        splitdir = splitdir[to_strip:]
+        folder = '/'.join(splitdir)
+        return folder
+
+    def num_prefix_components(prefix):
+        splitprefix = prefix.split('/')
+        return len(splitprefix)
+
+    # by setting excludes here, we cause the filter rules to
+    # not transfer anything if there is no new content or if
+    # a mistake was made in the URL.
+    message=None
+    excludes=[u'*']
+    cat = flask.request.args.get('categories')
+    since = flask.request.args.get('since')
+    stripprefix = flask.request.args.get('stripprefix')
+
+    if cat is None or since is None or stripprefix is None:
+        message=u'Missing categories, since, or stripprefix arguments'
+        return flask.render_template(
+            'rsync_filter.html', excludes=excludes, message=message)
+
+    num_prefix = num_prefix_components(stripprefix)
+    try:
+        since = int(since)
+    except:
+        message=u'value of argument since is not an integer'
+        return flask.render_template(
+            'rsync_filter.html', excludes=excludes, message=message)
+
+    includes = set()
+    categories_requested = cat.split(',')
+    newer_dirs = mirrormanager2.lib.get_rsync_filter_directories(
+        SESSION, categories_requested, since)
+
+    for i in xrange(len(newer_dirs)):
+        newer_dirs[i] = strip_prefix(num_prefix, newer_dirs[i])
+
+    includes.update(newer_dirs)
+    for n in newer_dirs:
+        includes.update(parents(n))
+
+    includes = sorted(includes)
+    # add trailing slash as rsync wants it
+    for i in xrange(len(includes)):
+        includes[i] += u'/'
+
+    return flask.render_template(
+        'rsync_filter.html',
+        includes=includes, excludes=excludes, message=message)
+
+
 @APP.route('/login', methods=['GET', 'POST'])
 def auth_login():  # pragma: no cover
     """ Login mechanism for this application.
