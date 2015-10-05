@@ -1,0 +1,14 @@
+# rsync --exclude-from=(this file)
+{% if message %}
+# {{ message }}
+{% endif %}
+# includes
+{% for include in includes %}
++ {{ include }}
++ {{ include }}*
+{% endfor %}
+# excludes
+{% for exclude in excludes %}
++ {{ exclude }}
+{% endfor %}
+# end of list

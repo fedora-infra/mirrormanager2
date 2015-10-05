@@ -1185,3 +1185,36 @@ def get_directory_exclusive_host(session):
     )
 
     return query.all()
+
+
+def get_rsync_filter_directories(session, categories, since):
+    ''' Return the list of directory that were updated.
+
+    :arg session: the session with which to connect to the database.
+    :arg categories: a list of category names.
+    :arg since: timestamp.
+
+    '''
+
+    try:
+        since = int(since)
+    except:
+        return []
+
+    if len(categories) == 0:
+        return []
+
+    query = session.query(
+        model.Directory.name
+    ).filter(
+        model.Directory.id == model.CategoryDirectory.directory_id
+    ).filter(
+        model.CategoryDirectory.category_id == model.Category.id
+    ).filter(
+        model.Category.name.in_(categories)
+    ).filter(
+        model.Directory.ctime > since
+    )
+
+    result = [entry[0] for entry in query.all()]
+    return result
