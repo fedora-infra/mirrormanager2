@@ -551,7 +551,7 @@ def check_ftp_file(hoststate, url, filedata, readable):
         if filedata is None:
             # The file/directory seems to exist
             return True
-        if float(line[4]) == float(filedata.size):
+        if float(line[4]) == float(filedata['size']):
             return True
     return False
 
@@ -628,7 +628,7 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
             # The file/directory seems to exist
             return True
         # fixme should check last_modified too
-        if float(filedata.size) == float(content_length) \
+        if float(filedata['size']) == float(content_length) \
                 or content_length is None:
             # handle no content-length header, streaming/chunked return
             # or zero-length file
@@ -804,15 +804,19 @@ def try_per_file(d, hoststate, url):
     if d.files is None:
         return None
     exists = None
-    for filedetail in d.fileDetails:
-        filename = filedetail.filename
+    # d.files is a dict which contains the last (maybe 10) files
+    # of the current directory. umdl copies the pickled dict
+    # into the database. It is either a dict or nothing.
+    if not isinstance(d.files, dict):
+        return None
+    for filename in d.files:
         # Check if maximum crawl time for this host has been reached
         timeout_check()
         exists = None
         graburl = "%s/%s" % (url, filename)
         try:
             exists = check_url(
-                hoststate, graburl, filedetail, 0, d.readable)
+                hoststate, graburl, d.files[filename], 0, d.readable)
             if exists == False:
                 return False
         except TryLater:
@@ -910,20 +914,25 @@ def try_per_category(
         # the rsync listing is missing the category part of the url
         # remove if from the ones we are comparing it with
         name = d.name[categoryPrefixLen:]
-        for filedetail in sorted(d.fileDetails):
-            filename = filedetail.filename
+        # d.files is a dict which contains the last (maybe 10) files
+        # of the current directory. umdl copies the pickled dict
+        # into the database. It is either a dict or nothing.
+        if not isinstance(d.files, dict):
+            return False
+        for filename in sorted(d.files):
             if len(name) == 0:
                 key = filename
             else:
                 key = os.path.join(name, filename)
             try:
                 logger.debug('trying with key %s' % key)
-                if float(rsync[key]['size']) != float(filedetail.size) \
+                if float(rsync[key]['size']) != float(d.files[filename]['size']) \
                         and not rsync[key]['mode'].startswith('l'):
                     # ignore symlink size differences
                     logger.debug(
                         'rsync: file size mismatch %s %s != %s\n'
-                        % (filename, filedetail.size, rsync[key]['size']))
+                        % (filename, d.files[filename]['size'],
+                           rsync[key]['size']))
                     all_files = False
                     break
             except ValueError:  # one of the conversion to float() failed
@@ -988,10 +997,15 @@ def try_per_dir(d, hoststate, url):
         except IndexError: # line doesn't have 8 fields, it's not a dir line
             pass
 
-    for filedetail in d.fileDetails:
-        filename = filedetail.filename
+    # d.files is a dict which contains the last (maybe 10) files
+    # of the current directory. umdl copies the pickled dict
+    # into the database. It is either a dict or nothing.
+    if not isinstance(d.files, dict):
+        return False
+    for filename in d.files:
         try:
-            if float(results[filename]['size']) != float(filedetail.size):
+            if (float(results[filename]['size']) !=
+                    float(d.files[filename]['size'])):
                 return False
         except:
             return False
