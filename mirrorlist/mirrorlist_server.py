@@ -16,7 +16,7 @@ import cPickle as pickle
 import select
 import signal
 import socket
-from SocketServer import (StreamRequestHandler, ForkingMixIn,
+from SocketServer import (StreamRequestHandler, ThreadingMixIn,
                           UnixStreamServer, BaseServer)
 import sys
 from string import zfill, atoi
@@ -850,7 +850,6 @@ def errordoc(metalink, message):
 
 class MirrorlistHandler(StreamRequestHandler):
     def handle(self):
-        signal.signal(signal.SIGHUP, signal.SIG_IGN)
         random.seed()
         try:
             # read size of incoming pickle
@@ -916,16 +915,15 @@ def sighup_handler(signum, frame):
         logfile = open(name, 'a')
 
     # put this in a separate thread so it doesn't block clients
-    if threading.active_count() < 2:
-        thread = threading.Thread(target=load_databases_and_caches)
-        thread.daemon = False
-        try:
-            thread.start()
-        except KeyError:
-        # bug fix for handing an exception when unable to delete from
-        #_limbo even though it's not in limbo
-        # https://code.google.com/p/googleappengine/source/browse/trunk/python/google/appengine/dist27/threading.py?r=327
-            pass
+    thread = threading.Thread(target=load_databases_and_caches)
+    thread.daemon = False
+    try:
+        thread.start()
+    except KeyError:
+    # bug fix for handing an exception when unable to delete from
+    #_limbo even though it's not in limbo
+    # https://code.google.com/p/googleappengine/source/browse/trunk/python/google/appengine/dist27/threading.py?r=327
+        pass
 
 
 def sigterm_handler(signum, frame):
@@ -936,10 +934,9 @@ def sigterm_handler(signum, frame):
         must_die = True
 
 
-class ForkingUnixStreamServer(ForkingMixIn, UnixStreamServer):
+class ThreadingUnixStreamServer(ThreadingMixIn, UnixStreamServer):
     request_queue_size = 300
     def finish_request(self, request, client_address):
-        signal.signal(signal.SIGHUP, signal.SIG_IGN)
         BaseServer.finish_request(self, request, client_address)
 
 
@@ -1106,7 +1103,7 @@ def main():
     signal.signal(signal.SIGHUP, sighup_handler)
     # restart interrupted syscalls like select
     signal.siginterrupt(signal.SIGHUP, False)
-    ss = ForkingUnixStreamServer(socketfile, MirrorlistHandler)
+    ss = ThreadingUnixStreamServer(socketfile, MirrorlistHandler)
 
     while not must_die:
         try:
