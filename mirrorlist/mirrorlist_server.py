@@ -52,43 +52,8 @@ must_die = False
 # because we don't know the Version associated with that dir here.
 default_ordered_mirrorlist = False
 
-gipv4 = None
-gipv6 = None
-
-# key is strings in tuple (repo.prefix, arch)
-mirrorlist_cache = {}
-
-# key is directory.name, returns keys for mirrorlist_cache
-directory_name_to_mirrorlist = {}
-
-# key is an IPy.IP structure, value is list of host ids
-host_netblock_cache = {}
-
-# key is hostid, value is list of countries to allow
-host_country_allowed_cache = {}
-
-repo_arch_to_directoryname = {}
-
-# redirect from a repo with one name to a repo with another
-repo_redirect = {}
-country_continent_redirect_cache = {}
-
 # our own private copy of country_continents to be edited
 country_continents = GeoIP.country_continents
-
-disabled_repositories = {}
-host_bandwidth_cache = {}
-host_country_cache = {}
-host_max_connections_cache = {}
-file_details_cache = {}
-hcurl_cache = {}
-asn_host_cache = {}
-internet2_tree = radix.Radix()
-global_tree = radix.Radix()
-host_netblocks_tree = radix.Radix()
-netblock_country_tree = radix.Radix()
-location_cache = {}
-netblock_country_cache = {}
 
 ## Set up our syslog data.
 syslogger = logging.getLogger('mirrormanager')
@@ -97,6 +62,9 @@ handler = logging.handlers.SysLogHandler(
     address='/dev/log',
     facility=logging.handlers.SysLogHandler.LOG_LOCAL4)
 syslogger.addHandler(handler)
+
+# The entire in-memory structure
+database = {}
 
 
 def lookup_ip_asn(tree, ip):
@@ -160,7 +128,7 @@ def metalink_file_not_found(directory, file):
 def metalink(cache, directory, file, hosts_and_urls):
     preference = 100
     try:
-        fdc = file_details_cache[directory]
+        fdc = database['file_details_cache'][directory]
         detailslist = fdc[file]
     except KeyError:
         return ('metalink', 404, metalink_file_not_found(directory, file))
@@ -215,7 +183,7 @@ def metalink(cache, directory, file, hosts_and_urls):
             doc += indent(4) + \
                 '<url protocol="%s" type="%s" location="%s" '\
                 'preference="%s" %s>' % (
-                    protocol, protocol, host_country_cache[hostid].upper(),
+                    protocol, protocol, database['host_country_cache'][hostid].upper(),
                     preference, private)
             doc += url
             doc += '</url>\n'
@@ -260,8 +228,8 @@ def trim_by_client_country(s, clientCountry):
         return s
     r = s.copy()
     for hostid in s:
-        if hostid in host_country_allowed_cache and \
-               clientCountry not in host_country_allowed_cache[hostid]:
+        if hostid in database['host_country_allowed_cache'] and \
+               clientCountry not in database['host_country_allowed_cache'][hostid]:
             r.remove(hostid)
     return r
 
@@ -269,7 +237,7 @@ def trim_by_client_country(s, clientCountry):
 def shuffle(s):
     l = []
     for hostid in s:
-        item = (host_bandwidth_cache[hostid], hostid)
+        item = (database['host_bandwidth_cache'][hostid], hostid)
         l.append(item)
     newlist = weighted_shuffle(l)
     results = []
@@ -282,7 +250,7 @@ continents = {}
 
 def handle_country_continent_redirect():
     new_country_continents = GeoIP.country_continents
-    for country, continent in country_continent_redirect_cache.iteritems():
+    for country, continent in database['country_continent_redirect_cache'].iteritems():
         new_country_continents[country] = continent
     global country_continents
     country_continents = new_country_continents
@@ -354,7 +322,7 @@ def do_country(kwargs, cache, clientCountry, requested_countries, header):
 def do_netblocks(kwargs, cache, header):
     hostresults = set()
     if not kwargs.has_key('netblock') or kwargs['netblock'] == "1":
-        tree_results = tree_lookup(host_netblocks_tree, kwargs['IP'], 'hosts')
+        tree_results = tree_lookup(database['host_netblocks_tree'], kwargs['IP'], 'hosts')
         for (prefix, hostids) in tree_results:
             for hostid in hostids:
                 if hostid in cache['byHostId']:
@@ -368,7 +336,7 @@ def do_internet2(kwargs, cache, clientCountry, header):
     ip = kwargs['IP']
     if ip is None:
         return (header, hostresults)
-    asn = lookup_ip_asn(internet2_tree, ip)
+    asn = lookup_ip_asn(database['internet2_tree'], ip)
     if asn is not None:
         header += 'Using Internet2 '
         if clientCountry is not None \
@@ -383,9 +351,9 @@ def do_asn(kwargs, cache, header):
     ip = kwargs['IP']
     if ip is None:
         return (header, hostresults)
-    asn = lookup_ip_asn(global_tree, ip)
-    if asn is not None and asn in asn_host_cache:
-        for hostid in asn_host_cache[asn]:
+    asn = lookup_ip_asn(database['global_tree'], ip)
+    if asn is not None and asn in database['asn_host_cache']:
+        for hostid in database['asn_host_cache'][asn]:
             if hostid in cache['byHostId']:
                 hostresults.add(hostid)
                 header += 'Using ASN %s ' % asn
@@ -403,8 +371,8 @@ def do_geoip(kwargs, cache, clientCountry, header):
 
 def do_location(kwargs, header):
     hostresults = set()
-    if 'location' in kwargs and kwargs['location'] in location_cache:
-        hostresults = set(location_cache[kwargs['location']])
+    if 'location' in kwargs and kwargs['location'] in database['location_cache']:
+        hostresults = set(database['location_cache'][kwargs['location']])
         header += "Using location %s " % kwargs['location']
     return (header, hostresults)
 
@@ -420,7 +388,7 @@ def append_path(hosts, cache, file, pathIsDirectory=False):
     for hostid in hosts:
         hcurls = []
         for hcurl_id in cache['byHostId'][hostid]:
-            s = hcurl_cache[hcurl_id]
+            s = database['hcurl_cache'][hcurl_id]
             if subpath is not None:
                 s += "/" + subpath
             if file is None and pathIsDirectory:
@@ -465,7 +433,7 @@ def client_ip_to_country(ip):
 
     # lookup in the cache first
     tree_results = tree_lookup(
-        netblock_country_tree, ip, 'country', maxResults=1)
+        database['netblock_country_tree'], ip, 'country', maxResults=1)
     if len(tree_results) > 0:
         (prefix, clientCountry) = tree_results[0]
         return clientCountry
@@ -473,8 +441,8 @@ def client_ip_to_country(ip):
     # attempt IPv6, then IPv6 6to4 as IPv4, then Teredo, then IPv4
     try:
         if ip.version() == 6:
-            if gipv6 is not None:
-                clientCountry = gipv6.country_code_by_addr_v6(
+            if database['gipv6'] is not None:
+                clientCountry = database['gipv6'].country_code_by_addr_v6(
                     ip.strNormal())
             if clientCountry is None:
                 # Try the IPv6-to-IPv4 translation schemes
@@ -483,8 +451,8 @@ def client_ip_to_country(ip):
                     if result is not None:
                         ip = result
                         break
-        if ip.version() == 4 and gipv4 is not None:
-            clientCountry = gipv4.country_code_by_addr(ip.strNormal())
+        if ip.version() == 4 and database['gipv4'] is not None:
+            clientCountry = database['gipv4'].country_code_by_addr(ip.strNormal())
     except:
         pass
     return clientCountry
@@ -526,14 +494,14 @@ def do_mirrorlist(kwargs):
         sdir = path.split('/')
         try:
             # path was to a directory
-            cache = mirrorlist_cache['/'.join(sdir)]
+            cache = database['mirrorlist_cache']['/'.join(sdir)]
             pathIsDirectory=True
         except KeyError:
             # path was to a file, try its directory
             file = sdir[-1]
             sdir = sdir[:-1]
             try:
-                cache = mirrorlist_cache['/'.join(sdir)]
+                cache = database['mirrorlist_cache']['/'.join(sdir)]
             except KeyError:
                 return return_error(
                     kwargs, message=header + 'error: invalid path')
@@ -541,22 +509,22 @@ def do_mirrorlist(kwargs):
     else:
         if u'source' in kwargs['repo']:
             kwargs['arch'] = u'source'
-        repo = repo_redirect.get(kwargs['repo'], kwargs['repo'])
+        repo = database['repo_redirect'].get(kwargs['repo'], kwargs['repo'])
         arch = kwargs['arch']
         header = "# repo = %s arch = %s " % (repo, arch)
 
-        if repo in disabled_repositories:
+        if repo in database['disabled_repositories']:
             return return_error(kwargs, message=header + 'repo disabled')
         try:
-            dir = repo_arch_to_directoryname[(repo, arch)]
+            dir = database['repo_arch_to_directoryname'][(repo, arch)]
             if 'metalink' in kwargs and kwargs['metalink']:
                 dir += '/repodata'
                 file = 'repomd.xml'
             else:
                 pathIsDirectory=True
-            cache = mirrorlist_cache[dir]
+            cache = database['mirrorlist_cache'][dir]
         except KeyError:
-            repos = repo_arch_to_directoryname.keys()
+            repos = database['repo_arch_to_directoryname'].keys()
             repos.sort()
             repo_information = header + "error: invalid repo or arch\n"
             repo_information += "# following repositories are available:\n"
@@ -769,21 +737,7 @@ def setup_netblocks(netblocks_file, asns_wanted=None):
 
 
 def read_caches():
-    global mirrorlist_cache
-    global host_netblock_cache
-    global host_country_allowed_cache
-    global host_max_connections_cache
-    global repo_arch_to_directoryname
-    global repo_redirect
-    global country_continent_redirect_cache
-    global disabled_repositories
-    global host_bandwidth_cache
-    global host_country_cache
-    global file_details_cache
-    global hcurl_cache
-    global asn_host_cache
-    global location_cache
-    global netblock_country_cache
+    info = {}
 
     data = {}
     try:
@@ -794,50 +748,48 @@ def read_caches():
         pass
 
     if 'mirrorlist_cache' in data:
-        mirrorlist_cache = data['mirrorlist_cache']
+        info['mirrorlist_cache'] = data['mirrorlist_cache']
     if 'host_netblock_cache' in data:
-        host_netblock_cache = data['host_netblock_cache']
+        info['host_netblock_cache'] = data['host_netblock_cache']
     if 'host_country_allowed_cache' in data:
-        host_country_allowed_cache = data['host_country_allowed_cache']
+        info['host_country_allowed_cache'] = data['host_country_allowed_cache']
     if 'repo_arch_to_directoryname' in data:
-        repo_arch_to_directoryname = data['repo_arch_to_directoryname']
+        info['repo_arch_to_directoryname'] = data['repo_arch_to_directoryname']
     if 'repo_redirect_cache' in data:
-        repo_redirect = data['repo_redirect_cache']
+        info['repo_redirect'] = data['repo_redirect_cache']
     if 'country_continent_redirect_cache' in data:
-        country_continent_redirect_cache = data[
+        info['country_continent_redirect_cache'] = data[
             'country_continent_redirect_cache']
     if 'disabled_repositories' in data:
-        disabled_repositories = data['disabled_repositories']
+        info['disabled_repositories'] = data['disabled_repositories']
     if 'host_bandwidth_cache' in data:
-        host_bandwidth_cache = data['host_bandwidth_cache']
+        info['host_bandwidth_cache'] = data['host_bandwidth_cache']
     if 'host_country_cache' in data:
-        host_country_cache = data['host_country_cache']
+        info['host_country_cache'] = data['host_country_cache']
     if 'file_details_cache' in data:
-        file_details_cache = data['file_details_cache']
+        info['file_details_cache'] = data['file_details_cache']
     if 'hcurl_cache' in data:
-        hcurl_cache = data['hcurl_cache']
+        info['hcurl_cache'] = data['hcurl_cache']
     if 'asn_host_cache' in data:
-        asn_host_cache = data['asn_host_cache']
+        info['asn_host_cache'] = data['asn_host_cache']
     if 'location_cache' in data:
-        location_cache = data['location_cache']
+        info['location_cache'] = data['location_cache']
     if 'netblock_country_cache' in data:
-        netblock_country_cache = data['netblock_country_cache']
+        info['netblock_country_cache'] = data['netblock_country_cache']
     if 'host_max_connections_cache' in data:
-        host_max_connections_cache = data['host_max_connections_cache']
+        info['host_max_connections_cache'] = data['host_max_connections_cache']
 
     setup_continents()
-    global internet2_tree
-    global global_tree
-    global host_netblocks_tree
-    global netblock_country_tree
 
-    internet2_tree = setup_netblocks(internet2_netblocks_file)
-    global_tree    = setup_netblocks(global_netblocks_file, asn_host_cache)
+    info['internet2_tree'] = setup_netblocks(internet2_netblocks_file)
+    info['global_tree']    = setup_netblocks(global_netblocks_file, info['asn_host_cache'])
     # host_netblocks_tree key is a netblock, value is a list of host IDs
-    host_netblocks_tree = setup_cache_tree(host_netblock_cache, 'hosts')
+    info['host_netblocks_tree'] = setup_cache_tree(info['host_netblock_cache'], 'hosts')
     # netblock_country_tree key is a netblock, value is a single country string
-    netblock_country_tree = setup_cache_tree(
-        netblock_country_cache, 'country')
+    info['netblock_country_tree'] = setup_cache_tree(
+        info['netblock_country_cache'], 'country')
+
+    return info
 
 
 def errordoc(metalink, message):
@@ -976,18 +928,19 @@ def parse_args():
 
 
 def open_geoip_databases():
-    global gipv4
-    global gipv6
+    info = {'gipv4': None,
+            'gipv6': None}
     try:
-        gipv4 = GeoIP.open(
+        info['gipv4'] = GeoIP.open(
             "/usr/share/GeoIP/GeoIP.dat", GeoIP.GEOIP_STANDARD)
     except:
-        gipv4=None
+        pass
     try:
-        gipv6 = GeoIP.open(
+        info['gipv6'] = GeoIP.open(
             "/usr/share/GeoIP/GeoIPv6.dat", GeoIP.GEOIP_STANDARD)
     except:
-        gipv6=None
+        pass
+    return info
 
 
 def convert_6to4_v4(ip):
@@ -1026,12 +979,43 @@ def convert_teredo_v4(ip):
 
 
 def load_databases_and_caches(*args, **kwargs):
+    global database
+
+    new_database = {
+        'gipv4': None,
+        'gipv6': None,
+        # key is strings in tuple (repo.prefix, arch)
+        'mirrorlist_cache': {},
+        # key is an IPy.IP structure, value is list of host ids
+        'host_netblock_cache': {},
+        # key is hostid, value is list of countries to allow
+        'host_country_allowed_cache': {},
+        'repo_arch_to_directoryname': {},
+        # redirect from a repo with one name to a repo with another
+        'repo_redirect': {},
+        'country_continent_redirect_cache': {},
+        'disabled_repositories': {},
+        'host_bandwidth_cache': {},
+        'host_country_cache': {},
+        'host_max_connections_cache': {},
+        'file_details_cache': {},
+        'hcurl_cache': {},
+        'asn_host_cache': {},
+        'internet2_tree': radix.Radix(),
+        'global_tree': radix.Radix(),
+        'host_netblocks_tree': radix.Radix(),
+        'netblock_country_tree': radix.Radix(),
+        'location_cache': {},
+        'netblock_country_cache': {}
+        }
     sys.stderr.write("load_databases_and_caches...")
     sys.stderr.flush()
-    open_geoip_databases()
-    read_caches()
+    new_database.update(open_geoip_databases())
+    new_database.update(read_caches())
     sys.stderr.write("done.\n")
     sys.stderr.flush()
+    # Update the entire in-memory structure at once
+    database = new_database
 
 
 def remove_pidfile(pidfile):
