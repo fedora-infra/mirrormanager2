@@ -196,18 +196,13 @@ def metalink(cache, directory, file, hosts_and_urls):
 
 
 def tree_lookup(tree, ip, field, maxResults=None):
-    # fast lookup in the tree; if present, find all the matching values by
-    # deleting the found one and searching again this is safe w/o copying
-    # the tree again only because this is the only place the tree is used,
-    # and we'll get a new copy of the tree from our parent the next time it
-    # fork()s.
+    # Lookup up to maxResults matching prefixes from the tree
     # returns a list of tuples (prefix, data)
     result = []
     len_data = 0
     if ip is None:
         return result
-    node = tree.search_best(ip.strNormal())
-    while node is not None:
+    for node in tree.search_covering(ip.strNormal()):
         prefix = node.prefix
         if type(node.data[field]) == list:
             len_data += len(node.data[field])
@@ -215,10 +210,7 @@ def tree_lookup(tree, ip, field, maxResults=None):
             len_data += 1
         t = (prefix, node.data[field],)
         result.append(t)
-        if maxResults is None or len_data < maxResults:
-            tree.delete(prefix)
-            node = tree.search_best(ip.strNormal())
-        else:
+        if maxResults is not None and len_data >= maxResults:
             break
     return result
 
