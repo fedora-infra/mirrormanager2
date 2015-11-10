@@ -30,22 +30,40 @@
 
 <form action="" method="POST">
   <table>
-    {{ render_field_in_row(form.name) }}
+      {{ render_field_in_row(form.name,
+        after="FQDN of server as seen by a public end user") }}
     {% if is_admin %}
-    {{ render_field_in_row(form.admin_active) }}
+    {{ render_field_in_row(form.admin_active,
+        after="Uncheck this box to temporarily disable this host, it will
+              be removed from public listings.") }}
     {% endif %}
-    {{ render_field_in_row(form.user_active) }}
+    {{ render_field_in_row(form.user_active,
+        after="Uncheck this box to temporarily disable this host, it will
+              be removed from public listings.") }}
     {{ render_field_in_row(form.disable_reason) }}
-    {{ render_field_in_row(form.country) }}
-    {{ render_field_in_row(form.bandwidth_int) }}
-    {{ render_field_in_row(form.private) }}
-    {{ render_field_in_row(form.internet2) }}
-    {{ render_field_in_row(form.internet2_clients) }}
-    {{ render_field_in_row(form.asn) }}
-    {{ render_field_in_row(form.asn_clients) }}
-    {{ render_field_in_row(form.robot_email) }}
-    {{ render_field_in_row(form.comment) }}
-    {{ render_field_in_row(form.max_connections) }}
+    {{ render_field_in_row(form.country,
+        after="2-letter ISO country code") }}
+    {{ render_field_in_row(form.bandwidth_int,
+        after="integer megabits/sec, how much bandwidth this host can serve") }}
+    {{ render_field_in_row(form.private,
+        after="e.g. not available to the public, an internal private mirror") }}
+    {{ render_field_in_row(form.internet2,
+        after="on Internet2") }}
+    {{ render_field_in_row(form.internet2_clients,
+        after="serves Internet2 clients, even if private") }}
+    {{ render_field_in_row(form.asn,
+        after="Autonomous System Number, used in BGP routing tables.") }}
+    {{ render_field_in_row(form.asn_clients,
+        after="Serve all clients from the same ASN.  Used for ISPs,
+               companies, or schools, not personal networks.") }}
+    {{ render_field_in_row(form.robot_email,
+        after="email address, will receive notice of upstream content updates") }}
+    {{ render_field_in_row(form.comment,
+        after="text, anything else you'd like a public end user to know
+               about your mirror") }}
+    {{ render_field_in_row(form.max_connections,
+        after="Maximum parallel download connections per client, suggested
+               via metalinks.") }}
   </table>
   <p class="buttons indent">
     <input type="submit" class="submit positive button" value="Update">

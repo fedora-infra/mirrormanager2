@@ -36,6 +36,8 @@ MirrorManager2 forms.
 from flask.ext import wtf
 import wtforms
 
+COUNTRY_REGEX = '^[a-zA-Z][a-zA-Z]$'
+
 
 def is_number(form, field):
     ''' Check if the data in the field is a number and raise an exception
@@ -107,7 +109,10 @@ class AddHostForm(wtf.Form):
     )
     country = wtforms.TextField(
         'Country  <span class="error">*</span>',
-        [wtforms.validators.Required()]
+        [
+            wtforms.validators.Required(),
+            wtforms.validators.Regexp(COUNTRY_REGEX, flags=re.IGNORECASE),
+        ]
     )
     bandwidth_int = wtforms.TextField(
         'Bandwidth  <span class="error">*</span>',
@@ -185,7 +190,10 @@ class AddHostCountryForm(wtf.Form):
     """ Form to add or edit a host_country. """
     country = wtforms.TextField(
         'Country  <span class="error">*</span>',
-        [wtforms.validators.Required()]
+        [
+            wtforms.validators.Required(),
+            wtforms.validators.Regexp(COUNTRY_REGEX, flags=re.IGNORECASE),
+        ]
     )
 
 
