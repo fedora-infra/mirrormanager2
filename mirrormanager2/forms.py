@@ -33,6 +33,7 @@ MirrorManager2 forms.
 # pylint: disable=W0232
 
 
+import re
 from flask.ext import wtf
 import wtforms
 
