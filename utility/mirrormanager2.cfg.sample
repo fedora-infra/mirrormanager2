@@ -81,6 +81,13 @@ MM_COOKIE_NAME = 'MirrorManager'
 # decide where to store log files.
 MM_LOG_DIR = '/var/log/mirrormanager'
 
+# This is used to exclude certain protocols to be entered
+# for host category URLs at all.
+# The following is the default for Fedora to exclude FTP based
+# mirrors to be added. Removing this confguration option
+# or setting it to '' removes any protocol restrictions.
+MM_PROTOCOL_REGEX = '^(?!ftp)(.*)$'
+
 # If not specified the application will rely on the root_url when sending
 # emails, otherwise it will use this URL
 # Default: ``None``.

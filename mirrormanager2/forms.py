@@ -37,6 +37,8 @@ import re
 from flask.ext import wtf
 import wtforms
 
+from mirrormanager2.app import APP
+
 COUNTRY_REGEX = '^[a-zA-Z][a-zA-Z]$'
 
 
@@ -233,9 +235,19 @@ class EditHostCategoryForm(wtf.Form):
 
 class AddHostCategoryUrlForm(wtf.Form):
     """ Form to add a host_category_url. """
+    p = APP.config.get('MM_PROTOCOL_REGEX', '')
     url = wtforms.TextField(
         'URL  <span class="error">*</span>',
-        [wtforms.validators.Required()]
+        [
+            wtforms.validators.Required(),
+            # private mirrors might have unusual URLs
+            wtforms.validators.URL(require_tld=False),
+            wtforms.validators.Regexp(
+                p,
+                flags=re.IGNORECASE,
+                message=u'Unsupported URL'
+            ),
+        ]
     )
     private = wtforms.BooleanField(
         'Private',
