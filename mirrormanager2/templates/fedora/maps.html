@@ -1,0 +1,14 @@
+{% extends "master_noauth.html" %}
+
+{% block title %}Maps{% endblock %}
+{%block tag %}maps{% endblock %}
+
+{% block content %}
+<h1>Maps</h1>
+{%- if config['SHOW_MAPS'] -%}
+Map of all public mirrors - <a href="{{url_for('index')}}{{ config['INTERACTIVE_MAP'] }}">Interactive Map</a>
+<img src="{{url_for('index')}}{{ config['STATIC_MAP'] }}" border="0" alt="alt" class="centered"/>
+{%- else -%}
+Actually, this is disabled and you should not be here. Go away!
+{%- endif -%}
+{%- endblock -%}

@@ -74,6 +74,16 @@ STATISTICS_BASE = '/var/www/mirrormanager-statistics/data'
 # Countries which have to be excluded.
 EMBARGOED_COUNTRIES = ['CU', 'IR', 'KP', 'SD', 'SY']
 
+# When this is set to True, an additional menu item is shown which
+# displays the maps generated with mm2_generate-worldmap.
+SHOW_MAPS = True
+
+# Location of the static map displayed in the map tab.
+STATIC_MAP = '/map/map.png'
+
+# Location of the interactive openstreetmap based map.
+INTERACTIVE_MAP = '/map/mirrors.html'
+
 # When this is set to True, the session cookie will only be returned to the
 # server via ssl (https). If you connect to the server via plain http, the
 # cookie will not be sent. This prevents sniffing of the cookie contents.

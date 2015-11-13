@@ -1428,3 +1428,8 @@ def statistics(date=None, cat='countries'):
         image=statistics_file_name(today, cat, 'png'),
         cat=cat,
     )
+
+
+@APP.route('/maps')
+def maps():
+        return flask.render_template('maps.html')
