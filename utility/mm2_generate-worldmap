@@ -1,0 +1,162 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2007-2012 Dell, Inc. by Matt Domsch <Matt_Domsch@dell.com>
+# Copyright (c) 2015      Adrian Reber <adrian@lisas.de>
+#
+# Based on examples from python-GeoIP and python-basemap-examples
+# Licensed under the GNU General Public License v2
+# because it uses data from python-basemap-data which is GPL
+# while the rest of MirrorManager is licensed MIT/X11
+
+
+import sys
+import os
+import string
+import warnings
+import mirrormanager2.lib
+from optparse import OptionParser
+import GeoIP
+import matplotlib
+matplotlib.use('Agg')
+from pylab import *
+import urlparse
+import codecs
+
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+
+# this export sucks - basemap should do this automatically
+os.environ['BASEMAPDATA'] = '/usr/share/basemap'
+from mpl_toolkits.basemap import Basemap
+
+gi = None
+
+
+def uniq(input):
+    seen = set()
+    seen_add = seen.add
+    return [x for x in input if not (x in seen or seen_add(x))]
+
+
+def lookup_host_locations(config):
+    session = mirrormanager2.lib.create_session(config['DB_URL'])
+    hcurls = mirrormanager2.lib.get_host_category_url(session)
+
+    results = []
+    tracking = []
+    embargoed_countries = set(
+        [x.country_code.upper() for x in
+         list(mirrormanager2.lib.get_embargoed_countries(session))])
+
+    for hcurl in hcurls:
+        hn = urlparse.urlsplit(hcurl.url)[1]
+        if hn in tracking:
+            continue
+        try:
+            gir = gi.record_by_name(hn)
+        except:
+            continue
+        try:
+            name = hcurl.host_category.host.site.name
+        except:
+            name = "N/A"
+        if gir is not None:
+            if gir['country_code'] in embargoed_countries:
+                print "skipping " + hn
+                continue
+            t = (
+                hn,
+                gir['country_code'],
+                gir['latitude'],
+                gir['longitude'])
+            print "%s %s %s %s" % t
+            results.append([t, name])
+            tracking.append(hn)
+
+    session.close()
+
+    return results
+
+
+def doit(options, config):
+
+    m = Basemap(llcrnrlon=-180., llcrnrlat=-90, urcrnrlon=180., urcrnrlat=90.,
+                resolution='c', projection='cyl')
+    # plot them as filled circles on the map.
+    # first, create a figure.
+    dpi = 100
+    dimx = 800 / dpi
+    dimy = 400 / dpi
+    fig = figure(
+        figsize=(
+            dimx,
+            dimy),
+        dpi=dpi,
+        frameon=False,
+        facecolor='blue')
+    # take up the whole space
+    fig.add_axes([0.0, 0.0, 1.0, 1.0])
+    canvas = FigureCanvas(fig)
+    # background color will be used for 'wet' areas.
+    # use zorder=10 to make sure markers are drawn last.
+    # (otherwise they are covered up when continents are filled)
+    results = lookup_host_locations(config)
+    fd = codecs.open(
+        options.output +
+        "/mirrors_location.txt",
+        'w',
+        "utf-8-sig")
+    fd.write("lat\tlon\ttitle\tdescription\ticonSize\ticonOffset\ticon\n")
+    for t in results:
+        lat = t[0][2]
+        lon = t[0][3]
+        # draw a red dot at the center.
+        xpt, ypt = m(lon, lat)
+        m.plot([xpt], [ypt], 'ro', zorder=10)
+        fd.write(
+            "%s\t%s\t<a href=\"http://%s/\" target=\"_blank\">%s</a>"
+            "\t%s\t21,25\t-10,-25\t./f-dot.png\n" %
+            (t[0][2], t[0][3], t[0][0], t[0][0], t[1]))
+
+    fd.close()
+    # draw coasts and fill continents.
+    m.drawcoastlines(linewidth=0.5)
+    m.drawcountries(linewidth=0.5)
+    m.fillcontinents(color='green')
+    canvas.print_figure(options.output + "/map.png", dpi=100)
+
+
+def main():
+    global gi
+    parser = OptionParser(usage=sys.argv[0] + " [options]")
+    parser.add_option(
+        "-c", "--config",
+        dest="config",
+        default='/etc/mirrormanager/mirrormanager2.cfg',
+        help="Configuration file to use")
+
+    parser.add_option(
+        "-o",
+        "--output",
+        metavar="DIR",
+        dest="output",
+        action="store",
+        type="string",
+        help="write output to DIR")
+
+    (options, args) = parser.parse_args()
+
+    if options.output is None:
+        parser.print_help()
+        sys.exit(1)
+
+    config = dict()
+    with open(options.config) as config_file:
+        exec(compile(config_file.read(), options.config, 'exec'), config)
+
+    gi = GeoIP.open("/usr/share/GeoIP/GeoLiteCity.dat", GeoIP.GEOIP_STANDARD)
+
+    doit(options, config)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
