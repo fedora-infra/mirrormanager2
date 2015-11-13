@@ -26,12 +26,15 @@ import sys
 import pylab
 import time
 import getopt
+import os
 
 start = time.clock()
 
 logfile = None
 dest = None
 offset = 0
+configuration = '/etc/mirrormanager/mirrormanager2.cfg'
+embargoed_countries = []
 
 
 def usage():
@@ -42,6 +45,8 @@ def usage():
     print "  mirrorlist_statistics.py [OPTION]..."
     print
     print "Options:"
+    print "  -c, --config=CONFIG   Configuration file to use"
+    print "                        (default=/etc/mirrormanager/mirrormanager2.cfg)"
     print "  -l, --log=LOGFILE     logfile which should be used as input"
     print "  -d, --dest=DIRECTORY  output directory"
     print "  -o, --offset=DAYS     number of days which should be subtracted"
@@ -54,9 +59,13 @@ def parse_args():
     global logfile
     global dest
     global offset
-    opts, args = getopt.getopt(sys.argv[1:], "l:d:ho:",
-                               ["log=", "dest=", "help", "offset"])
+    global configuration
+    global embargoed_countries
+    opts, args = getopt.getopt(sys.argv[1:], "c:l:d:ho:",
+                               ["conf=", "log=", "dest=", "help", "offset"])
     for option, argument in opts:
+        if option in ("-c", "--conf"):
+            configuration = argument
         if option in ("-l", "--log"):
             logfile = argument
         if option in ("-d", "--dest"):
@@ -66,6 +75,19 @@ def parse_args():
         if option in ("-h", "--help"):
             usage()
             sys.exit(0)
+
+    if not os.access(configuration, os.R_OK):
+        print "Cannot access configuration file: " + configuration
+        print "Exiting"
+        sys.exit(-1)
+
+    d = dict()
+    with open(configuration) as config_file:
+        exec(compile(config_file.read(), configuration, 'exec'), d)
+
+    if 'EMBARGOED_COUNTRIES' in d:
+        if isinstance(d['EMBARGOED_COUNTRIES'], list):
+            embargoed_countries = d['EMBARGOED_COUNTRIES']
 
 
 parse_args()
@@ -107,9 +129,15 @@ for line in open(logfile):
         if not ((int(y) == y1) and (int(m) == m1) and (int(d) == d1)):
             continue
     try:
-        countries[arguments[5][:2]] += 1
+        if arguments[5][:2] in embargoed_countries:
+            countries['N/'] += 1
+        else:
+            countries[arguments[5][:2]] += 1
     except:
-        countries[arguments[5][:2]] = 1
+        if arguments[5][:2] in embargoed_countries:
+            countries['N/'] = 1
+        else:
+            countries[arguments[5][:2]] = 1
     try:
         archs[arguments[9]] += 1
     except:

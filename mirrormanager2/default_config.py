@@ -66,6 +66,9 @@ EMAIL_FROM = 'nobody@fedoraproject.org'
 # Default: ``localhost``.
 SMTP_SERVER = 'localhost'
 
+# Countries which have to be excluded.
+EMBARGOED_COUNTRIES = ['CU', 'IR', 'KP', 'SD', 'SY']
+
 # When this is set to True, the session cookie will only be returned to the
 # server via ssl (https). If you connect to the server via plain http, the
 # cookie will not be sent. This prevents sniffing of the cookie contents.
