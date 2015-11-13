@@ -22,7 +22,10 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import sys, pylab, time, getopt
+import sys
+import pylab
+import time
+import getopt
 
 start = time.clock()
 
@@ -52,7 +55,7 @@ def parse_args():
     global dest
     global offset
     opts, args = getopt.getopt(sys.argv[1:], "l:d:ho:",
-                ["log=", "dest=", "help", "offset"])
+                               ["log=", "dest=", "help", "offset"])
     for option, argument in opts:
         if option in ("-l", "--log"):
             logfile = argument
@@ -75,9 +78,8 @@ if logfile is None or dest is None:
 
 def sort_dict(dict):
     """ Sort dictionary by values and reverse. """
-    items=dict.items()
-    sorteditems=[[v[1],v[0]] for v in items ]
-    sorteditems.sort()
+    items = dict.items()
+    sorteditems = sorted([[v[1], v[0]] for v in items])
     sorteditems.reverse()
     return sorteditems
 
@@ -113,16 +115,16 @@ for line in open(logfile):
     except:
         archs[arguments[9]] = 1
     try:
-        repositories[arguments[7][:len(arguments[7])-1]] += 1
+        repositories[arguments[7][:len(arguments[7]) - 1]] += 1
     except:
-        repositories[arguments[7][:len(arguments[7])-1]] = 1
+        repositories[arguments[7][:len(arguments[7]) - 1]] = 1
     accesses += 1
     continue
 
 
 def do_pie(prefix, dict, accesses):
-    pylab.figure(1, figsize=(8,8))
-    ax =  pylab.axes([0.1, 0.1, 0.8, 0.8])
+    pylab.figure(1, figsize=(8, 8))
+    ax = pylab.axes([0.1, 0.1, 0.8, 0.8])
 
     labels = []
     fracs = []
@@ -131,7 +133,7 @@ def do_pie(prefix, dict, accesses):
     for item in dict.keys():
         frac = dict[item]
 
-        if (float(frac)/float(accesses) > 0.01):
+        if (float(frac) / float(accesses) > 0.01):
             labels.append(item)
             fracs.append(frac)
         else:
@@ -146,26 +148,18 @@ def do_pie(prefix, dict, accesses):
             changed = True
         i += 1
 
-    if changed == False:
+    if not changed:
         labels.append('other')
         fracs.append(rest)
 
-    pylab.pie(fracs, labels=labels, autopct='%1.1f%%', pctdistance=0.75, shadow=True)
+    pylab.pie(
+        fracs,
+        labels=labels,
+        autopct='%1.1f%%',
+        pctdistance=0.75,
+        shadow=True)
     pylab.savefig('%s%s-%d-%02d-%02d.png' % (dest, prefix, y1, m1, d1))
     pylab.close(1)
-
-
-def write_size(html, size):
-    if size/1024 <= 0:
-        html.write('%.2f Bytes'  % (size))
-    elif size/1024/1024 <= 0:
-        html.write('%.2f KB'  % (size/1024.00))
-    elif size/1024/1024/1024 <= 0:
-        html.write('%.2f MB'  % (size/1024.00/1024.00))
-    elif size/1024/1024/1024/1024 <= 0:
-        html.write('%.2f GB'  % (size/1024.00/1024.00/1024.00))
-    else:
-        html.write('%.2f TB'  % (size/1024.00/1024.00/1024.00/1024.00))
 
 
 def background(html, css_class, toggle):
@@ -192,21 +186,26 @@ def do_html(prefix, dict, accesses):
         size = item[0]
         toggle = background(html, 'matrix_even', toggle)
         html.write('<td>%s</td>\n' % (item[1]))
-        html.write('\t<td align="right">%05.4lf %%</td>\n' % ((float(size)/float(accesses))*100))
+        html.write('\t<td align="right">%05.4lf %%</td>\n' %
+                   ((float(size) / float(accesses)) * 100))
         html.write('<td align="right">')
         html.write('%d' % (size))
         html.write('</td></tr>\n')
 
     # print the overall information
     background(html, 'total', True)
-    html.write('<th>Total</th><th>\n');
+    html.write('<th>Total</th><th>\n')
     html.write('</th><th align="right">%d' % (accesses))
-    html.write('</th></tr>\n');
+    html.write('</th></tr>\n')
 
     html.write('</table>\n')
     end = time.clock()
-    html.write('<p>Last updated: %s GMT' % time.strftime("%a, %d %b %Y %H:%M:%S",time.gmtime()))
-    html.write(' (runtime %ss)</p>\n' % (end-start))
+    html.write(
+        '<p>Last updated: %s GMT' %
+        time.strftime(
+            "%a, %d %b %Y %H:%M:%S",
+            time.gmtime()))
+    html.write(' (runtime %ss)</p>\n' % (end - start))
 
 
 do_pie('countries', countries, accesses)
