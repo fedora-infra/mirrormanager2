@@ -28,6 +28,7 @@ import logging
 import logging.handlers
 import os
 import sys
+import datetime
 
 import flask
 
@@ -1366,3 +1367,64 @@ def shutdown_session(exception=None):
 def set_session():
     """ Set the flask session as permanent. """
     flask.session.permanent = True
+
+
+def statistics_file_name(date, cat, ext):
+    year = date.year
+    month = date.month
+    day = date.day
+    name = "%s/%s/%s-" % (year, month, cat)
+    name = "%s%s-%s-%s.%s" % (name, year, month, day, ext)
+    return name
+
+
+def check_for_statistics(date, cat):
+    try:
+        stat_file = APP.config['STATISTICS_BASE']
+        stat_file = os.path.join(
+            stat_file,
+            statistics_file_name(date, cat, 'txt')
+        )
+        if os.access(stat_file, os.R_OK):
+            return stat_file
+    except:
+        pass
+    return None
+
+
+@APP.route('/statistics')
+@APP.route('/statistics/<date>')
+@APP.route('/statistics/<date>/<cat>')
+def statistics(date=None, cat='countries'):
+
+    if cat not in ['countries', 'archs', 'repositories']:
+        cat = 'countries'
+
+    try:
+        today = datetime.datetime.strptime(date, '%Y-%m-%d').date()
+    except:
+        today = datetime.date.today()
+    yesterday = today - datetime.timedelta(days=1)
+    tomorrow = today + datetime.timedelta(days=1)
+
+    today_file = check_for_statistics(today, cat)
+    if not check_for_statistics(yesterday, cat):
+        yesterday = None
+    if not check_for_statistics(tomorrow, cat):
+        tomorrow = None
+
+    try:
+        with open(today_file, 'r') as data:
+            table = data.read()
+    except:
+        table = 'N/A'
+
+    return flask.render_template(
+        'statistics.html',
+        table=table,
+        yesterday=yesterday,
+        today=today,
+        tomorrow=tomorrow,
+        image=statistics_file_name(today, cat, 'png'),
+        cat=cat,
+    )
