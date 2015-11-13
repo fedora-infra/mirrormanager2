@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Copyright (C) 2008 by Alexander Koenig
-# Copyright (C) 2008, 2009 by Adrian Reber
+# Copyright (C) 2008, 2015 by Adrian Reber
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -181,17 +181,16 @@ def background(html, css_class, toggle):
 
 def do_html(prefix, dict, accesses):
     html = open('%s%s-%d-%02d-%02d.txt' % (dest, prefix, y1, m1, d1), 'w')
-    html.write('<img src="data/%s-%d-%02d-%02d.png" border="0" alt="alt"/>\n' % (prefix, y1, m1, d1))
     html.write('<h2>Details</h2>\n')
-    html.write('<table class="altrows" align="center">\n')
-    html.write('<tr><th class="statusth">Mirror Name</th><th class="statusth">%</th>')
-    html.write('<th class="statusth">#Requests</th></tr>\n')
+    html.write('<table align="center">\n')
+    html.write('<tr id="matrixtitle"><th>Mirror Name</th><th>%</th>')
+    html.write('<th>#Requests</th></tr>\n')
 
     toggle = False
 
     for item in sort_dict(dict):
         size = item[0]
-        toggle = background(html, 'odd', toggle)
+        toggle = background(html, 'matrix_even', toggle)
         html.write('<td>%s</td>\n' % (item[1]))
         html.write('\t<td align="right">%05.4lf %%</td>\n' % ((float(size)/float(accesses))*100))
         html.write('<td align="right">')
