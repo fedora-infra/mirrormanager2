@@ -369,6 +369,8 @@ def site_view(site_id):
 
 
 from lib.notifications import fedmsg_publish
+
+
 @APP.route('/site/<int:site_id>/drop', methods=['POST'])
 @login_required
 def site_drop(site_id):
@@ -1262,14 +1264,14 @@ def rsyncFilter():
     # by setting excludes here, we cause the filter rules to
     # not transfer anything if there is no new content or if
     # a mistake was made in the URL.
-    message=None
-    excludes=[u'*']
+    message = None
+    excludes = [u'*']
     cat = flask.request.args.get('categories')
     since = flask.request.args.get('since')
     stripprefix = flask.request.args.get('stripprefix')
 
     if cat is None or since is None or stripprefix is None:
-        message=u'Missing categories, since, or stripprefix arguments'
+        message = u'Missing categories, since, or stripprefix arguments'
         return flask.render_template(
             'rsync_filter.html', excludes=excludes, message=message)
 
@@ -1277,7 +1279,7 @@ def rsyncFilter():
     try:
         since = int(since)
     except:
-        message=u'value of argument since is not an integer'
+        message = u'value of argument since is not an integer'
         return flask.render_template(
             'rsync_filter.html', excludes=excludes, message=message)
 
@@ -1361,6 +1363,7 @@ if APP.config.get('MM_AUTHENTICATION', None) == 'local':
 def shutdown_session(exception=None):
     """ Remove the DB session at the end of each request. """
     SESSION.remove()
+
 
 # pylint: disable=W0613
 @APP.before_request
