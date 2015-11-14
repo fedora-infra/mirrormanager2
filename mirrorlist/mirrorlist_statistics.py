@@ -126,8 +126,8 @@ for line in open(logfile):
         y, m, d = arguments[3][:10].split('-')
     except:
         continue
-        if not ((int(y) == y1) and (int(m) == m1) and (int(d) == d1)):
-            continue
+    if not ((int(y) == y1) and (int(m) == m1) and (int(d) == d1)):
+        continue
     try:
         if arguments[5][:2] in embargoed_countries:
             countries['N/'] += 1
