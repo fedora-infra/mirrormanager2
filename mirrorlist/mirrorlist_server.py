@@ -41,7 +41,6 @@ cachefile = '/var/lib/mirrormanager/mirrorlist_cache.pkl'
 internet2_netblocks_file = '/var/lib/mirrormanager/i2_netblocks.txt'
 global_netblocks_file = '/var/lib/mirrormanager/global_netblocks.txt'
 logfile = None
-debug = False
 must_die = False
 # at a point in time when we're no longer serving content for versions
 # that don't use yum prioritymethod=fallback
@@ -491,7 +490,6 @@ def client_ip_to_country(ip):
 
 
 def do_mirrorlist(kwargs):
-    global debug
     global logfile
 
     def return_error(kwargs, message='', returncode=200):
@@ -610,17 +608,13 @@ def do_mirrorlist(kwargs):
     else:
         print_client_country = clientCountry
 
-    if debug and kwargs.has_key('repo') and kwargs.has_key('arch'):
+    if logfile and kwargs.has_key('repo') and kwargs.has_key('arch'):
         msg = "IP: %s; DATE: %s; COUNTRY: %s; REPO: %s; ARCH: %s\n"  % (
             (kwargs['IP'] or 'None'), time.strftime("%Y-%m-%d"),
             print_client_country, kwargs['repo'], kwargs['arch'])
 
-        sys.stdout.write(msg)
-        sys.stdout.flush()
-
-        if logfile is not None:
-            logfile.write(msg)
-            logfile.flush()
+        logfile.write(msg)
+        logfile.flush()
 
     if not done:
         header, internet2_results = do_internet2(
@@ -948,14 +942,13 @@ def parse_args():
     global socketfile
     global internet2_netblocks_file
     global global_netblocks_file
-    global debug
     global logfile
     global pidfile
     opts, args = getopt.getopt(
         sys.argv[1:], "c:i:g:p:s:dl:",
         [
             "cache", "internet2_netblocks", "global_netblocks",
-            "pidfile", "socket", "debug", "log="
+            "pidfile", "socket", "log="
         ]
     )
     for option, argument in opts:
@@ -974,8 +967,6 @@ def parse_args():
                 logfile = open(argument, 'a')
             except:
                 logfile = None
-        if option in ("-d", "--debug"):
-            debug = True
 
 
 def open_geoip_databases():
