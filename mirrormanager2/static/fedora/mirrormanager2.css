@@ -67,3 +67,10 @@ input[type="checkbox"] {
     border-bottom: 1px solid #DDDDDD;
     border-top: 1px solid #DDDDDD;
 }
+
+.centered {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}

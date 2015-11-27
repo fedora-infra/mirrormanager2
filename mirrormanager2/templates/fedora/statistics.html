@@ -1,0 +1,25 @@
+{% extends "master_noauth.html" %}
+
+{% block title %}Statistics{% endblock %}
+{%block tag %}statistics{% endblock %}
+
+{% block content %}
+<h1>Statistics</h1>
+<p class="centered">Mirrorlist access breakdown by
+<a href="{{url_for('statistics')}}/{{ today }}/countries">country</a>
+| <a href="{{url_for('statistics')}}/{{ today }}/archs">architecture</a>
+| <a href="{{url_for('statistics')}}/{{ today }}/repositories">repository</a>
+on {{today}}</p>
+<p class="centered">{% if yesterday %}
+<a href="{{url_for('statistics')}}/{{ yesterday }}/{{ cat }}"><{{ yesterday }}</a>
+{%- endif -%}
+|
+{% if tomorrow %}
+<a href="{{url_for('statistics')}}/{{ tomorrow }}/{{ cat }}">{{ tomorrow }}></a>
+{%- endif -%}</p>
+
+<img src="{{url_for('index')}}data/{{ image }}" border="0" alt="alt" class="centered"/>
+
+{{ table|safe }}
+
+{% endblock %}

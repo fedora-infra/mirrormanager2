@@ -28,6 +28,12 @@
           <ul>
             <li id="homeTab"><a href="{{url_for('index')}}">Home</a></li>
             <li id="mirrorsTab"><a href="{{url_for('list_mirrors')}}">Mirrors</a></li>
+            {% if config['SHOW_STATISTICS'] %}
+            <li id="statsTab"><a href="{{url_for('statistics')}}">Statistics</a></li>
+            {% endif %}
+            {% if config['SHOW_MAPS'] %}
+            <li id="mapsTab"><a href="{{url_for('maps')}}">Maps</a></li>
+            {% endif %}
             {% block nav %}
             {% endblock %}
           </ul>
