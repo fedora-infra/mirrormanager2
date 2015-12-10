@@ -30,21 +30,23 @@ import glob
 
 from matplotlib import rc
 
-font = {'family' : 'serif',
-        'size'   : 10}
+font = {'family': 'serif',
+        'size': 10}
 
 rc('text', usetex=True)
 rc('font', **font)
 
+
 def list_adder(a, b):
-    return [i+j for i,j in zip(a, b)]
+    return [i + j for i, j in zip(a, b)]
+
 
 def label_bars_size(rects, fmt, offset=[]):
     i = 0
     for rect in rects:
         width = int(rect.get_width())
 
-        xloc = rect.get_x()+rect.get_width()/2.0
+        xloc = rect.get_x() + rect.get_width() / 2.0
         try:
             plus = offset[i]
         except:
@@ -56,8 +58,15 @@ def label_bars_size(rects, fmt, offset=[]):
             yloc = rect.get_height() + plus - 1.2
 
         if rect.get_height() > 6:
-            ax.text(xloc, yloc, fmt % rect.get_height(), horizontalalignment='center', rotation='horizontal',
-                verticalalignment='top', color='white')
+            ax.text(
+                xloc,
+                yloc,
+                fmt %
+                rect.get_height(),
+                horizontalalignment='center',
+                rotation='horizontal',
+                verticalalignment='top',
+                color='white')
         i += 1
 
 
@@ -86,7 +95,6 @@ remaining = total
 print "%d data points available" % total
 
 
-
 for filename in sorted(glob.glob(files)):
     for line in open(filename):
         line = line.rstrip()
@@ -97,7 +105,7 @@ for filename in sorted(glob.glob(files)):
 for filename in sorted(glob.glob(files)):
     total -= 1
     if total > 58:
-        remaining -=1
+        remaining -= 1
         continue
     if remaining > 30 and total % 2 == 0:
         continue
@@ -157,28 +165,40 @@ for filename in sorted(glob.glob(files)):
     repomd_none.append(none)
     labels.append(scandate)
 
-print "%d data points used" %  len(repomd_same)
+print "%d data points used" % len(repomd_same)
 
 fd = open('%srepomd-report.txt' % prefix, 'w')
 
 print "Hosts broken"
 fd.write("Hosts broken\n")
-for url, count in sorted(hosts_broken.items(), key=lambda x: (int(x[1])), reverse=True):
+for url, count in sorted(
+        hosts_broken.items(),
+        key=lambda x: (int(x[1])),
+        reverse=True):
     print "%s: %d" % (url, count)
     fd.write("%s: %d\n" % (url, count))
 print "Hosts older"
 fd.write("Hosts older\n")
-for url, count in sorted(hosts_older.items(), key=lambda x: (int(x[1])), reverse=True):
+for url, count in sorted(
+        hosts_older.items(),
+        key=lambda x: (int(x[1])),
+        reverse=True):
     print "%s: %d" % (url, count)
     fd.write("%s: %d\n" % (url, count))
 print "Hosts older - 1"
 fd.write("Hosts older - 1\n")
-for url, count in sorted(hosts_older_1.items(), key=lambda x: (int(x[1])), reverse=True):
+for url, count in sorted(
+        hosts_older_1.items(),
+        key=lambda x: (int(x[1])),
+        reverse=True):
     print "%s: %d" % (url, count)
     fd.write("%s: %d\n" % (url, count))
 fd.write("Hosts older - 2\n")
 print "Hosts older - 2"
-for url, count in sorted(hosts_older_2.items(), key=lambda x: (int(x[1])), reverse=True):
+for url, count in sorted(
+        hosts_older_2.items(),
+        key=lambda x: (int(x[1])),
+        reverse=True):
     print "%s: %d" % (url, count)
     fd.write("%s: %d\n" % (url, count))
 
@@ -194,25 +214,31 @@ rects = ax.bar(ind, repomd_same, width, color='red', label="synced")
 label_bars_size(rects, '%.0f')
 
 rects = ax.bar(ind, repomd_one_day, width, bottom=repomd_same,
-        color='mediumvioletred',
-        label='synced - 1')
+               color='mediumvioletred',
+               label='synced - 1')
 label_bars_size(rects, '%.0f', repomd_same)
 
 bottom = list_adder(repomd_same, repomd_one_day)
 rects = ax.bar(ind, repomd_two_day, width, bottom=bottom, color='b',
-        label='synced - 2')
+               label='synced - 2')
 label_bars_size(rects, '%.0f', bottom)
 
 bottom = list_adder(bottom, repomd_two_day)
-rects = ax.bar(ind, repomd_other, width, bottom=bottom, color='g', label='older')
+rects = ax.bar(
+    ind,
+    repomd_other,
+    width,
+    bottom=bottom,
+    color='g',
+    label='older')
 label_bars_size(rects, '%.0f', bottom)
 
 bottom = list_adder(bottom, repomd_other)
 rects = ax.bar(ind, repomd_none, width, bottom=bottom, color='y', label='N/A')
 label_bars_size(rects, '%.0f', bottom)
 
-ax.set_ylim(0, maximum +40)
-ax.set_xticks(ind+width)
+ax.set_ylim(0, maximum + 40)
+ax.set_xticks(ind + width)
 ax.set_xticklabels(labels)
 plt.setp(plt.xticks()[1], rotation=90)
 
@@ -221,8 +247,14 @@ if prefix == 'f22-updates-':
     plt.title("repomd.xml propagation for updates/22/x86 64/repodata")
 else:
     plt.title("repomd.xml propagation for development/rawhide/x86 64/os/repodata")
-plt.savefig("%s%s-repomd-propagation.pdf" % (prefix,labels[len(labels)-1].replace('\n','-')), bbox_inches='tight')
-plt.savefig("%s%s-repomd-propagation.svg" % (prefix,labels[len(labels)-1].replace('\n','-')), bbox_inches='tight')
-print "%s%s-repomd-propagation.pdf" % (prefix,labels[len(labels)-1].replace('\n','-'))
-plt.savefig("%srepomd-propagation.pdf" % prefix , bbox_inches='tight')
-plt.savefig("%srepomd-propagation.svg" % prefix , bbox_inches='tight')
+plt.savefig(
+    "%s%s-repomd-propagation.pdf" %
+    (prefix, labels[len(labels) - 1].replace('\n', '-')),
+    bbox_inches='tight')
+plt.savefig(
+    "%s%s-repomd-propagation.svg" %
+    (prefix, labels[len(labels) - 1].replace('\n', '-')),
+    bbox_inches='tight')
+print "%s%s-repomd-propagation.pdf" % (prefix, labels[len(labels) - 1].replace('\n', '-'))
+plt.savefig("%srepomd-propagation.pdf" % prefix, bbox_inches='tight')
+plt.savefig("%srepomd-propagation.svg" % prefix, bbox_inches='tight')
