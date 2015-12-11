@@ -1373,9 +1373,9 @@ def set_session():
 
 
 def statistics_file_name(date, cat, ext):
-    year = date.year
-    month = date.month
-    day = date.day
+    year = date.strftime('%Y')
+    month = date.strftime('%m')
+    day = date.strftime('%d')
     name = "%s/%s/%s-" % (year, month, cat)
     name = "%s%s-%s-%s.%s" % (name, year, month, day, ext)
     return name
