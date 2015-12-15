@@ -251,7 +251,7 @@ fd.close()
 ind = np.arange(len(labels))
 width = 0.62
 
-fig = plt.figure(figsize=(16, 8))
+fig = plt.figure(figsize=(14, 7))
 ax = fig.add_subplot(111)
 
 rects = ax.bar(ind, repomd_same, width, color='red', label="synced")
