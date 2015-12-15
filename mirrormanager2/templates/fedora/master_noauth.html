@@ -34,6 +34,9 @@
             {% if config['SHOW_MAPS'] %}
             <li id="mapsTab"><a href="{{url_for('maps')}}">Maps</a></li>
             {% endif %}
+            {% if config['SHOW_PROPAGATION'] %}
+            <li id="propTab"><a href="{{url_for('propagation')}}">Propagation</a></li>
+            {% endif %}
             {% block nav %}
             {% endblock %}
           </ul>
