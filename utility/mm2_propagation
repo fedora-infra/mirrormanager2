@@ -114,6 +114,10 @@ parser.add_argument(
     "--outdir", dest='outdir', required=True,
     help="Specifiy directory into which the output should be placed")
 
+parser.add_argument(
+    "--debug", dest='debug', default=False,
+    action='store_true',
+    help="Print debug output during")
 
 args = parser.parse_args()
 
@@ -127,7 +131,8 @@ if not total:
     sys.exit(0)
 
 remaining = total
-print "%d data points available" % total
+if args.debug:
+    print "%d data points available" % total
 
 proppath = None
 
@@ -206,44 +211,53 @@ for filename in sorted(glob.glob(args.logfiles)):
     repomd_none.append(none)
     labels.append(scandate)
 
-print "%d data points used" % len(repomd_same)
+if args.debug:
+    print "%d data points used" % len(repomd_same)
 
 fd = open('%s-repomd-report.txt' % args.prefix, 'w')
 
-print "Hosts broken"
+if args.debug:
+    print "Hosts broken"
 fd.write("Hosts broken\n")
 for url, count in sorted(
         hosts_broken.items(),
         key=lambda x: (int(x[1])),
         reverse=True):
-    print "%s: %d" % (url, count)
+    if args.debug:
+        print "%s: %d" % (url, count)
     fd.write("%s: %d\n" % (url, count))
 
-print "Hosts older"
+if args.debug:
+    print "Hosts older"
 fd.write("Hosts older\n")
 for url, count in sorted(
         hosts_older.items(),
         key=lambda x: (int(x[1])),
         reverse=True):
-    print "%s: %d" % (url, count)
+    if args.debug:
+        print "%s: %d" % (url, count)
     fd.write("%s: %d\n" % (url, count))
 
-print "Hosts older - 1"
+if args.debug:
+    print "Hosts older - 1"
 fd.write("Hosts older - 1\n")
 for url, count in sorted(
         hosts_older_1.items(),
         key=lambda x: (int(x[1])),
         reverse=True):
-    print "%s: %d" % (url, count)
+    if args.debug:
+        print "%s: %d" % (url, count)
     fd.write("%s: %d\n" % (url, count))
 fd.write("Hosts older - 2\n")
 
-print "Hosts older - 2"
+if args.debug:
+    print "Hosts older - 2"
 for url, count in sorted(
         hosts_older_2.items(),
         key=lambda x: (int(x[1])),
         reverse=True):
-    print "%s: %d" % (url, count)
+    if args.debug:
+        print "%s: %d" % (url, count)
     fd.write("%s: %d\n" % (url, count))
 
 fd.close()
@@ -302,8 +316,9 @@ plt.savefig(
     (args.prefix, labels[len(labels) - 1].split('\n')[0]),
     bbox_inches='tight')
 
-print("%s-%s-repomd-propagation.pdf" %
-      (args.prefix, labels[len(labels) - 1].split('\n')[0]))
+if args.debug:
+    print("%s-%s-repomd-propagation.pdf" %
+          (args.prefix, labels[len(labels) - 1].split('\n')[0]))
 
 plt.savefig("%s-repomd-propagation.pdf" % args.prefix, bbox_inches='tight')
 plt.savefig("%s-repomd-propagation.svg" % args.prefix, bbox_inches='tight')
