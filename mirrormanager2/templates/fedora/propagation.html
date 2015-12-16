@@ -1,0 +1,31 @@
+{% extends "master_noauth.html" %}
+
+{% block title %}Propagation{% endblock %}
+{%block tag %}propagation{% endblock %}
+
+{% block content %}
+     <h1>Propagation</h1>
+{%- if config['SHOW_PROPAGATION'] -%}
+    {%- if prefix == "oops" %}
+        <h3>Ooooops, some file was somehow (or somewhere) not found. Move along!</h3>
+    {%- else %}
+        This diagram shows how many mirrors for the {{prefix}} branch have a repomd.xml file which is the same
+        (respectively one day older, two days older or much older) version as on the master mirror.
+        {%- if props %}
+            <br/>The same diagram is als available for the branches:
+            <ul>
+            {%- for prop in props -%}
+                {%- if prop != prefix %}
+                   <li><a href="{{url_for('propagation')}}/{{prop}}">{{prop}}</a></li>
+                {%- endif -%}
+            {%- endfor -%}
+            </ul>
+        {%- endif -%}
+        <img src="{{url_for('index')}}data/propagation/{{prefix}}-repomd-propagation.svg" border="0" alt="alt" class="centered"/>
+    {%- endif -%}
+
+{% else -%}
+    Actually, this is disabled and you should not be here. Go away!
+{%- endif -%}
+
+{% endblock %}

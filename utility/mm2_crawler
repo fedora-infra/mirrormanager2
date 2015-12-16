@@ -1184,12 +1184,16 @@ def check_propagation(session, catname, host_category_urls, path):
     try:
         contents = ses.get(url, timeout=30)
     except requests.exceptions.ConnectionError:
-        logger.info("URL::%s::SHA256::%s::%s::%s" % (url, 'NOSUM', check_start, fd.sha256))
+        logger.info(
+            "URL::%s::SHA256::%s::%s::%s::503"
+             % (url, 'NOSUM', check_start, fd.sha256))
         return 9
     has = hashlib.sha256()
     has.update(contents.content)
     csum = has.hexdigest()
-    logger.info("URL::%s::SHA256::%s::%s::%s" % (url, csum, check_start, fd.sha256))
+    logger.info(
+        "URL::%s::SHA256::%s::%s::%s::%s"
+        % (url, csum, check_start, fd.sha256, contents.status_code))
     return 9
 
 

@@ -25,6 +25,7 @@
 import sys
 import pylab
 import time
+import gzip
 import getopt
 import os
 
@@ -47,7 +48,7 @@ def usage():
     print "Options:"
     print "  -c, --config=CONFIG   Configuration file to use"
     print "                        (default=/etc/mirrormanager/mirrormanager2.cfg)"
-    print "  -l, --log=LOGFILE     logfile which should be used as input"
+    print "  -l, --log=LOGFILE     gzipped logfile which should be used as input"
     print "  -d, --dest=DIRECTORY  output directory"
     print "  -o, --offset=DAYS     number of days which should be subtracted"
     print "                        from today's date and be used as basis for log analysis"
@@ -120,7 +121,7 @@ archs = {}
 i = 0
 
 
-for line in open(logfile):
+for line in gzip.open(logfile):
     arguments = line.split()
     try:
         y, m, d = arguments[3][:10].split('-')

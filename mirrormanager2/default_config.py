@@ -88,6 +88,14 @@ STATIC_MAP = '/map/map.png'
 # Location of the interactive openstreetmap based map.
 INTERACTIVE_MAP = '/map/mirrors.html'
 
+# The crawler can generate propagation statistics which can be
+# converted into svg/pdf with mm2_propagation. These files
+# can be displayed next to the statistics and maps tab if desired.
+SHOW_PROPAGATION = True
+
+# Where to look for the above mentioned propagation images.
+PROPAGATION_BASE = '/var/www/mirrormanager-statistics/data/propagation'
+
 # When this is set to True, the session cookie will only be returned to the
 # server via ssl (https). If you connect to the server via plain http, the
 # cookie will not be sent. This prevents sniffing of the cookie contents.

@@ -6,7 +6,10 @@ Version:        0.5.1
 Release:        1%{?dist}
 Summary:        Mirror management application
 
-License:        MIT
+# Most MirrorManager files are licensed under the MIT license. Some
+# imported/derivated parts like zebra-dump-parser or the the script
+# to generate the worldmaps are licensed under GPLv2 and GPLv2+
+License:        MIT and GPLv2+ and GPLv2
 URL:            http://fedorahosted.org/mirrormanager/
 Source0:        https://fedorahosted.org/releases/m/i/mirrormanager/%{name}-%{version}.tar.gz
 
@@ -134,6 +137,24 @@ Client-side, run on each downstream mirror, to report back to the
 MirrorManager database a description of the content carried by that
 mirror.
 
+%package statistics
+Summary:        Scripts to generate MirrorManager statistics
+Group:          Applications/Internet
+BuildArch:      noarch
+
+Requires:  %{name}-lib == %{version}
+Requires:  python-GeoIP
+Requires:  python-matplotlib
+Requires:  python-basemap
+
+%description statistics
+A collection of different statistics script which are analyzing
+MirrorManager content or log files. It contains scripts to analyze
+the mirrorlist server connections, draws maps of all available mirrors
+and can also visualize how fast the master data propagates to all the
+mirrors. As it depends on matplotlib it has a rather large dependency
+tree.
+
 %prep
 %setup -q
 
@@ -260,7 +281,7 @@ exit 0
 # One day we will have unit-tests to run here
 
 %files
-%doc README.rst LICENSE-MIT-X11 doc/
+%doc README.rst LICENSE-MIT-X11 LICENSE-GPLv2 doc/
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrormanager.conf
 %config(noreplace) %{_sysconfdir}/mirrormanager/mirrormanager2.cfg
 
@@ -329,6 +350,10 @@ exit 0
 %config(noreplace) %{_sysconfdir}/mirrormanager-client/report_mirror.conf
 %{_bindir}/report_mirror
 
+%files statistics
+%{_bindir}/mm2_generate-worldmap
+%{_bindir}/mm2_propagation
+%{_bindir}/mirrorlist_statistics
 
 %changelog
 * Mon Sep 07 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.5.1-1
