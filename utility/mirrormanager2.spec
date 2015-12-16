@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.5.1
+Version:        0.6
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -356,6 +356,22 @@ exit 0
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Wed Dec 16 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.6-1
+- Update to 0.6
+- Really ensure that new host is admin_active (Seth Jennings)
+- Add the possibility to kill rsync after some time
+- Add headers to the table listing the mirrors
+- Cascade deletion and bring back the rsyncFilter endpoint
+- Fix to the crawler (Adrian Reber)
+- Improved documentation and validation
+- Optionally exclude certain protocols from MM (Adrian Reber)
+- Import generate-worldmap from MM1 (Adrian Reber)
+- Optionally display mirrorlist statistics (Adrian Reber)
+- mirrorlist: Remove --debug option (Adrian Reber)
+- More mirrorlist statistics changes and spec file integration (Adrian Reber)
+- Switch the MirrorList server to use threading rather than forking (Patrick
+  Uiterwijk)
+
 * Mon Sep 07 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.5.1-1
 - Update to 0.5.1
 - Deleting URLs if site or host is removed (avoids the situation where a host is
