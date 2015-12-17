@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.6
+Version:        0.6.1
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -356,6 +356,10 @@ exit 0
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Thu Dec 17 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.6.1-1
+- Update to 0.6.1
+- Fix mirrorlist to access info from the just loaded pickle (Patrick Uiterwijk)
+
 * Wed Dec 16 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.6-1
 - Update to 0.6
 - Really ensure that new host is admin_active (Seth Jennings)
