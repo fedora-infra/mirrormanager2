@@ -239,17 +239,17 @@ def shuffle(s):
 
 continents = {}
 
-def handle_country_continent_redirect():
+def handle_country_continent_redirect(new_db):
     new_country_continents = GeoIP.country_continents
-    for country, continent in database['country_continent_redirect_cache'].iteritems():
+    for country, continent in new_db['country_continent_redirect_cache'].iteritems():
         new_country_continents[country] = continent
     global country_continents
     country_continents = new_country_continents
 
 
-def setup_continents():
+def setup_continents(new_db):
     new_continents = defaultdict(list)
-    handle_country_continent_redirect()
+    handle_country_continent_redirect(new_db)
     for c, continent in country_continents.iteritems():
         new_continents[continent].append(c)
     global continents
@@ -765,7 +765,7 @@ def read_caches():
     if 'host_max_connections_cache' in data:
         info['host_max_connections_cache'] = data['host_max_connections_cache']
 
-    setup_continents()
+    setup_continents(info)
 
     info['internet2_tree'] = setup_netblocks(internet2_netblocks_file)
     info['global_tree']    = setup_netblocks(global_netblocks_file, info['asn_host_cache'])
