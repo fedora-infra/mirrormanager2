@@ -23,6 +23,8 @@
 
 import argparse
 import glob
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -31,10 +33,8 @@ import time
 
 from matplotlib import rc
 
-font = {'family': 'serif',
-        'size': 10}
+font = {'size': 9}
 
-rc('text', usetex=True)
 rc('font', **font)
 
 
@@ -73,7 +73,7 @@ def label_bars_size(rects, fmt, offset=[], last=False):
         if last:
             ax.text(
                 xloc,
-                yloc + 6,
+                rect.get_height() + plus + 6,
                 fmt %
                 float(plus + rect.get_height()),
                 horizontalalignment='center',
@@ -144,8 +144,6 @@ for filename in sorted(glob.glob(args.logfiles)):
             proppath = line[7]
         if not line[5] in sha256sums:
             sha256sums.append(line[5])
-
-proppath = proppath.replace('_', '\_')
 
 for filename in sorted(glob.glob(args.logfiles)):
     total -= 1

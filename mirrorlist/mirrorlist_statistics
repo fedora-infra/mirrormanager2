@@ -23,7 +23,9 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import sys
-import pylab
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import time
 import gzip
 import getopt
@@ -152,8 +154,8 @@ for line in gzip.open(logfile):
 
 
 def do_pie(prefix, dict, accesses):
-    pylab.figure(1, figsize=(8, 8))
-    ax = pylab.axes([0.1, 0.1, 0.8, 0.8])
+    plt.figure(1, figsize=(8, 8))
+    ax = plt.axes([0.1, 0.1, 0.8, 0.8])
 
     labels = []
     fracs = []
@@ -181,14 +183,14 @@ def do_pie(prefix, dict, accesses):
         labels.append('other')
         fracs.append(rest)
 
-    pylab.pie(
+    plt.pie(
         fracs,
         labels=labels,
         autopct='%1.1f%%',
         pctdistance=0.75,
         shadow=True)
-    pylab.savefig('%s%s-%d-%02d-%02d.png' % (dest, prefix, y1, m1, d1))
-    pylab.close(1)
+    plt.savefig('%s%s-%d-%02d-%02d.png' % (dest, prefix, y1, m1, d1))
+    plt.close(1)
 
 
 def background(html, css_class, toggle):
