@@ -44,8 +44,8 @@ def lookup_host_locations(config):
     results = []
     tracking = []
     embargoed_countries = set(
-        [x.country_code.upper() for x in
-         list(mirrormanager2.lib.get_embargoed_countries(session))])
+        [x.upper() for x in
+         list(config['EMBARGOED_COUNTRIES'])])
 
     for hcurl in hcurls:
         hn = urlparse.urlsplit(hcurl.url)[1]
