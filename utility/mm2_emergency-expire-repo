@@ -1,0 +1,111 @@
+#!/usr/bin/env python
+#
+# Copyright (C) 2015 by Red Hat, Inc.
+# Author: Patrick Uiterwijk <puiterwijk@redhat.com>
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""
+This script is an emergency script meant for releng to be used if an very
+important update has went out, and we want to make sure that clients pick up
+the latest version of the repo, even if that means more load on the master
+mirrors.
+It does this by deleting all non-current file_detail entries for this specific
+repository, resulting in no alternate file checksums in the pickle.
+This will cause the metalink to not return any <alternates> entries, such that
+only the very latest version of the repo is considered as up-to-date.
+"""
+
+import logging
+import argparse
+import sys
+
+import mirrormanager2.lib
+from mirrormanager2.lib.model import Repository, Product, Version
+
+
+logger = logging.getLogger('mm2')
+
+
+def setup_logging(options):
+    format = "[%(asctime)s][%(name)10s %(levelname)7s] %(message)s"
+    datefmt = '%m/%d/%Y %I:%M:%S %p'
+    logging.basicConfig(format=format, datefmt=datefmt)
+
+    if options.debug:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Expire old files for repos")
+    parser.add_argument(
+        'product',
+        help="Product to clear old filedetails for (Fedora, EPEL)")
+    parser.add_argument(
+        'version',
+        help="VERSION to clear old filedetails for (20, 21)")
+    parser.add_argument(
+        "-c", "--config",
+        dest="config", default='/etc/mirrormanager/mirrormanager2.cfg',
+        help="Configuration file to use")
+    parser.add_argument(
+        "--debug",
+        dest="debug", default=False, action="store_true",
+        help="enable debugging")
+
+    options = parser.parse_args()
+
+    config = dict()
+    with open(options.config) as config_file:
+        exec(compile(config_file.read(), options.config, 'exec'), config)
+
+    session = mirrormanager2.lib.create_session(config['DB_URL'])
+
+    setup_logging(options)
+
+    product = session.query(Product).filter_by(name=options.product).first()
+    if not product:
+        logger.error('No product %s found' % options.product)
+        return 1
+
+    version = session.query(Version).filter_by(name=options.version,
+                                               product_id=product.id).first()
+    if not version:
+        logger.error('No version %s found' % options.version)
+        return 1
+
+    repos = session.query(Repository).filter_by(version_id=version.id).all()
+    if len(repos) < 1:
+        logger.error('No repos found for %s version %s' % (product, version))
+        return 1
+
+    for repo in repos:
+        logger.info("Clearing for repo %s" % repo.name)
+        (files, deleted) = repo.emergency_expire_old_file_details(session)
+        logger.info("Files kept: %s" % ', '.join(files))
+        logger.info("Older versions deleted: " % ', '.join(deleted.keys()))
+
+    logger.info("Done.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -819,6 +819,33 @@ class Repository(BASE):
         sa.Index('t_repository_directory_id_idx', 'directory_id'),
     )
 
+    def emergency_expire_old_file_details(self, session):
+        """Emergency method to expire all old files.
+
+        This is to be used to tell clients to only use the newest files.
+        CAUTION: this will make all slightly outdated mirrors be non-trusted,
+        so should be used sparingly!
+        """
+
+        files = session.query(FileDetail). \
+            filter_by(directory_id=self.directory_id). \
+            order_by(FileDetail.timestamp.desc()).all()
+
+        files_seen = []
+        files_deleted = {}
+
+        for f in files:
+            if f.filename in files_seen:
+                files_deleted[f.filename] += 1
+                session.delete(f)
+            else:
+                files_seen.append(f.filename)
+                files_deleted[f.filename] = 0
+
+        session.commit()
+
+        return (files_seen, files_deleted)
+
 
 class FileDetail(BASE):
 
