@@ -266,7 +266,7 @@ width = 0.62
 fig = plt.figure(figsize=(14, 7))
 ax = fig.add_subplot(111)
 
-rects = ax.bar(ind, repomd_same, width, color='red', label="synced")
+rects = ax.bar(ind, repomd_same, width, color='g', label="synced")
 label_bars_size(rects, '%.0f')
 
 rects = ax.bar(ind, repomd_one_day, width, bottom=repomd_same,
@@ -285,7 +285,7 @@ rects = ax.bar(
     repomd_other,
     width,
     bottom=bottom,
-    color='g',
+    color='red',
     label='older')
 label_bars_size(rects, '%.0f', bottom)
 
