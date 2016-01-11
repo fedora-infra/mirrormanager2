@@ -35,6 +35,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import relation
 from sqlalchemy.orm import backref
+from sqlalchemy.orm import deferred
 
 
 class MirrorManagerBaseMixin(object):
@@ -183,7 +184,7 @@ class Host(BASE):
     #bandwidth = sa.Column(sa.Text, nullable=True)
     bandwidth_int = sa.Column(sa.Integer, default=100, nullable=True)
     comment = sa.Column(sa.Text(), nullable=True)
-    config = sa.Column(sa.PickleType(), nullable=True)
+    config = deferred(sa.Column(sa.PickleType(), nullable=True))
     last_checked_in = sa.Column(sa.DateTime, nullable=True, default=None)
     last_crawled = sa.Column(sa.DateTime, nullable=True, default=None)
     private = sa.Column(sa.Boolean(), default=False, nullable=False)
@@ -196,22 +197,22 @@ class Host(BASE):
     # Count the last consecutive crawl failures.
     # This can be used to auto disable a host if the crawler fails
     # multiple times in a row.
-    crawl_failures = sa.Column(sa.Integer, default=0, nullable=False)
+    crawl_failures = deferred(sa.Column(sa.Integer, default=0, nullable=False))
     # Add a text field to specify why the mirror was disabled.
     # This can either be filled by the crawler for auto disable due
     # to crawl failures, or by an admin (e.g., ticket number)
-    disable_reason = sa.Column(sa.Text(), nullable=True)
+    disable_reason = deferred(sa.Column(sa.Text(), nullable=True))
     # If SSH based push mirroring will ever be implemented
     # this field should contain the private key to connect to the
     # destination host
-    push_ssh_private_key = sa.Column(sa.Text(), nullable=True)
+    push_ssh_private_key = deferred(sa.Column(sa.Text(), nullable=True))
     # The host to contact for push mirroring
-    push_ssh_host = sa.Column(sa.Text(), nullable=True)
+    push_ssh_host = deferred(sa.Column(sa.Text(), nullable=True))
     # The command to execute on the destination host for push mirroring
-    push_ssh_command = sa.Column(sa.Text(), nullable=True)
+    push_ssh_command = deferred(sa.Column(sa.Text(), nullable=True))
     # This field holds information about the last few crawls.
     # Which protocols were used, crawl duration, ...
-    last_crawls = sa.Column(sa.PickleType(), nullable=True)
+    last_crawls = deferred(sa.Column(sa.PickleType(), nullable=True))
 
     # Relations
     site = relation(
