@@ -110,7 +110,4 @@ def read_host_config(session, config):
             host.user_active = False
 
     message = mirrormanager2.lib.uploaded_config(session, host, config)
-    host.config = config
-    session.add(host)
-    session.commit()
     return (True, message)
