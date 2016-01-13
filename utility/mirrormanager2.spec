@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.6.1
+Version:        0.7
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -356,6 +356,16 @@ exit 0
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Wed Jan 13 2016 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.7-1
+- Update to 0.7
+- Fix various matplotlib problems in the statitics (Adrian Reber)
+- Make green be synced and red be older in the propagation page (Patrick
+  Uiterwijk)
+- Add the possibility to clear all old files from a repo (to ensure users have
+  only up to date mirrors) (Patrick Uiterwijk)
+- Do not load the host config until it's asked (Drops the memory usage and
+  increase the speed of the application) (Adrian Reber)
+
 * Thu Dec 17 2015 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.6.1-1
 - Update to 0.6.1
 - Fix mirrorlist to access info from the just loaded pickle (Patrick Uiterwijk)
