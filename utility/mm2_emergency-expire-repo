@@ -45,13 +45,9 @@ logger = logging.getLogger('mm2')
 
 def setup_logging(options):
     format = "[%(asctime)s][%(name)10s %(levelname)7s] %(message)s"
-    datefmt = '%m/%d/%Y %I:%M:%S %p'
-    logging.basicConfig(format=format, datefmt=datefmt)
+    logging.basicConfig(format=format)
 
-    if options.debug:
-        logger.setLevel(logging.DEBUG)
-    else:
-        logger.setLevel(logging.INFO)
+    logger.setLevel(logging.INFO)
 
 
 def main():
@@ -66,10 +62,6 @@ def main():
         "-c", "--config",
         dest="config", default='/etc/mirrormanager/mirrormanager2.cfg',
         help="Configuration file to use")
-    parser.add_argument(
-        "--debug",
-        dest="debug", default=False, action="store_true",
-        help="enable debugging")
 
     options = parser.parse_args()
 
@@ -100,8 +92,13 @@ def main():
     for repo in repos:
         logger.info("Clearing for repo %s" % repo.name)
         (files, deleted) = repo.emergency_expire_old_file_details(session)
-        logger.info("Files kept: %s" % ', '.join(files))
-        logger.info("Older versions deleted: " % ', '.join(deleted.keys()))
+
+        if files:
+            logger.info("Files kept: %s" % ', '.join(files))
+        if deleted.keys():
+            logger.info(
+                "Older versions deleted: %s" %
+                ', '.join(deleted.keys()))
 
     logger.info("Done.")
     return 0
