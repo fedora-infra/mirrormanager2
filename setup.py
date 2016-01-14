@@ -57,6 +57,7 @@ setup(
         'client/report_mirror',
         'mirrorlist/mirrorlist_statistics',
         'utility/mm2_crawler',
+        'utility/mm2_emergency-expire-repo',
         'utility/mm2_generate-worldmap',
         'utility/mm2_get_global_netblocks',
         'utility/mm2_get_internet2_netblocks',
