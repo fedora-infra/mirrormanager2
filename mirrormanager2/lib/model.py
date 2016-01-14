@@ -27,6 +27,7 @@ import datetime
 import collections
 import logging
 import time
+import os
 
 import sqlalchemy as sa
 from sqlalchemy import create_engine
@@ -827,25 +828,36 @@ class Repository(BASE):
         CAUTION: this will make all slightly outdated mirrors be non-trusted,
         so should be used sparingly!
         """
+        if not self.directory:
+            return False
 
-        files = session.query(FileDetail). \
-            filter_by(directory_id=self.directory_id). \
-            order_by(FileDetail.timestamp.desc()).all()
+        subdirs = session.query(
+            Directory
+        ).filter(
+            Directory.name.like(self.directory.name + '%')
+        ).all()
 
-        files_seen = []
         files_deleted = {}
+        for directory in subdirs:
+            files = session.query(
+                FileDetail
+            ).filter_by(
+                directory_id=directory.id
+            ).order_by(
+                FileDetail.timestamp.desc()
+            ).all()
 
-        for f in files:
-            if f.filename in files_seen:
-                files_deleted[f.filename] += 1
-                session.delete(f)
-            else:
-                files_seen.append(f.filename)
-                files_deleted[f.filename] = 0
+            for f in files:
+                full_filename = os.path.join(directory.name, f.filename)
+                if full_filename in files_deleted:
+                    files_deleted[full_filename] += 1
+                    session.delete(f)
+                else:
+                    files_deleted[full_filename] = 0
 
         session.commit()
 
-        return (files_seen, files_deleted)
+        return files_deleted
 
 
 class FileDetail(BASE):
