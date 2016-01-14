@@ -332,6 +332,7 @@ exit 0
 %attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/run/mirrormanager
 %{_tmpfilesdir}/%{name}-backend.conf
 %{_datadir}/mirrormanager2/zebra-dump-parser/
+%{_bindir}/mm2_emergency-expire-repo
 %{_bindir}/mm2_get_global_netblocks
 %{_bindir}/mm2_get_internet2_netblocks
 %{_bindir}/mm2_move-devel-to-release
