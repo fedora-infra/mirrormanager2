@@ -91,14 +91,16 @@ def main():
 
     for repo in repos:
         logger.info("Clearing for repo %s" % repo.name)
-        (files, deleted) = repo.emergency_expire_old_file_details(session)
+        deleted = repo.emergency_expire_old_file_details(session)
 
-        if files:
-            logger.info("Files kept: %s" % ', '.join(files))
-        if deleted.keys():
-            logger.info(
-                "Older versions deleted: %s" %
-                ', '.join(deleted.keys()))
+        if not deleted:
+            logger.info("Unused repo")
+        else:
+            logger.info("Older versions deleted: %s",
+                        ', '.join([filename
+                                   for filename
+                                   in deleted
+                                   if deleted[filename] != 0]))
 
     logger.info("Done.")
     return 0
