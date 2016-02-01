@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.7
+Version:        0.7.1
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -357,6 +357,10 @@ exit 0
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Mon Feb 01 2016 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.7.1-1
+- Update to 0.7.1
+- Fixes to the emergency script (Adrian Reber and Patrick Uiterwijk)
+
 * Wed Jan 13 2016 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.7-1
 - Update to 0.7
 - Fix various matplotlib problems in the statitics (Adrian Reber)
