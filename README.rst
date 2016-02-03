@@ -5,7 +5,7 @@ MirrorManager2 is a rewrite of `mirrormanager <https://fedorahosted.org/mirrorma
 using flask and SQLAlchemy.
 
 MirrorManager is the application that keeps track of the nearly 400 public mirrors,
-and over 300 private mirrors,that carry Fedora, EPEL, and RHEL content, and is used
+and over 300 private mirrors, that carry Fedora, EPEL, and RHEL content, and is used
 by rpmfusion.org, a third party repository. It automatically selects the "best"
 mirror for a given user based on a set of fallback heuristics.
 For more details `mirrormanager <https://fedorahosted.org/mirrormanager/>`_
@@ -27,7 +27,7 @@ First, set up a virtualenv::
     $ virtualenv my-MirrorMan-env
     $ source my-MirrorMan-env/bin/activate
 
-Issueing that last command should change your prompt to indicate that you are
+Issuing that last command should change your prompt to indicate that you are
 operating in an active virtualenv.
 
 Next, install your dependencies::
