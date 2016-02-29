@@ -85,11 +85,6 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
 <h3>
   Master rsync server Access Control List IPs
 </h3>
-<p>
-  These host DNS names and/or IP addresses will be allowed to rsync from
-  the master rsync/ftp servers. List here all the machines that you use for
-  pulling.
-</p>
 
 <a class="icon icon-plus-sign blue"
   href="{{ url_for('host_acl_ip_new', host_id=host.id) }}"> [add]</a>
