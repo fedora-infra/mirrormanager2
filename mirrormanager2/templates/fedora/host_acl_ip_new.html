@@ -12,12 +12,6 @@
     {{ host.name }}</a>
 </p>
 
-<p>
-  These host DNS names and/or IP addresses will be allowed to rsync from the
-  master rsync/ftp servers. List here all the machines that you use for
-  pulling.
-</p>
-
 <form action="{{ url_for('host_acl_ip_new', host_id=host.id) }}" method="POST">
   <table>
     {{ render_field_in_row(form.ip) }}
