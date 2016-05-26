@@ -37,7 +37,7 @@ function last_rib()
 
 function get_ipv6_netblocks()
 {
-    local curdate=$(date +"%Y.%m")
+    local curdate=$(date --date='yesterday' +"%Y.%m")
     URL="http://archive.routeviews.org/route-views6/bgpdata/$curdate/RIBS/"
     wget -q -O ${tmpdir}/index.html "${URL}?C=M;O=D"
     last=$(last_rib)
