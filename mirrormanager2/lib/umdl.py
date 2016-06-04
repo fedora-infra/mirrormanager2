@@ -85,7 +85,8 @@ def create_version_from_path(session, category, path):
     ver = None
     vname = _get_version_from_path(path)
     if vname is not None and vname != '':
-        if u'/test/' in path:
+        test_paths = [ u'/test/', u'/stage/']
+        if any(x in path for x in test_paths):
             isTest = True
         else:
             isTest = False
