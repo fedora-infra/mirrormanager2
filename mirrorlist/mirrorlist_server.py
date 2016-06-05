@@ -393,12 +393,15 @@ def append_path(hosts, cache, file, pathIsDirectory=False):
     return results
 
 
-def trim_to_preferred_protocols(hosts_and_urls):
-    """ remove all but http and ftp URLs,
-    and if both http and ftp are offered,
-    leave only http. Return [(hostid, url), ...] """
+def trim_to_preferred_protocols(hosts_and_urls, try_protocols=None):
+    """ Remove all protocols but https, http and ftp,
+    and if both http and ftp are offered, leave only http.
+    If try_protocols is not empty only the specified
+    protocols will be used.
+    Return [(hostid, url), ...] """
     results = []
-    try_protocols = ('https', 'http', 'ftp')
+    if not try_protocols:
+        try_protocols = ('https', 'http', 'ftp')
     for (hostid, hcurls) in hosts_and_urls:
         protocols = {}
         url = None
@@ -671,6 +674,21 @@ def do_mirrorlist(kwargs):
     hosts_and_urls = append_path(
         allhosts, cache, file, pathIsDirectory=pathIsDirectory)
 
+    protocols_trimmed = False
+    if 'protocol' in kwargs and kwargs['protocol']:
+        try:
+            # Expecting a single string as value
+            # of the parameter protocol.
+            # Trying to convert it to a tuple for
+            # the protocol trim function.
+            try_protocols = (kwargs['protocol'],)
+            hosts_and_urls = trim_to_preferred_protocols(
+                    hosts_and_urls, try_protocols)
+            protocols_trimmed = True
+            header += 'protocol = %s ' % (kwargs['protocol'])
+        except:
+            pass
+
     if 'metalink' in kwargs and kwargs['metalink']:
         (resulttype, returncode, results)=metalink(
             cache, dir, file, hosts_and_urls)
@@ -682,7 +700,8 @@ def do_mirrorlist(kwargs):
         return d
 
     else:
-        hosts_and_urls = trim_to_preferred_protocols(hosts_and_urls)
+        if not protocols_trimmed:
+            hosts_and_urls = trim_to_preferred_protocols(hosts_and_urls)
         d = dict(
             message=header,
             resulttype='mirrorlist',
