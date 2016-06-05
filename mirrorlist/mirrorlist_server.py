@@ -409,7 +409,7 @@ def trim_to_preferred_protocols(hosts_and_urls):
 
         for p in try_protocols:
             if p in protocols:
-                url = protocols[p]
+                url = [protocols[p]]
                 break
 
         if url is not None:
@@ -682,12 +682,12 @@ def do_mirrorlist(kwargs):
         return d
 
     else:
-        host_url_list = trim_to_preferred_protocols(hosts_and_urls)
+        hosts_and_urls = trim_to_preferred_protocols(hosts_and_urls)
         d = dict(
             message=header,
             resulttype='mirrorlist',
             returncode=200,
-            results=host_url_list)
+            results=hosts_and_urls)
         return d
 
 

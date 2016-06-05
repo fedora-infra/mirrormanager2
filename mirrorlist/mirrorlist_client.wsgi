@@ -165,7 +165,7 @@ def application(environ, start_response):
         text = ""
         text += message + '\n'
         for (hostid, url) in results:
-            text += url + '\n'
+            text += url[0] + '\n'
         results = text
         response.headers['Content-Type'] = "text/plain"
     elif resulttype == 'metalink':
