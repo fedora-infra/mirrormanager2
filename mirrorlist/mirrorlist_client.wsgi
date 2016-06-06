@@ -74,7 +74,7 @@ def real_client_ip(xforwardedfor):
 def request_setup(environ, request):
     fields = [
         'repo', 'arch', 'country', 'path', 'netblock', 'location',
-        'version', 'cc'
+        'version', 'cc', 'protocol'
     ]
     d = {}
     request_data = request.GET
@@ -165,7 +165,7 @@ def application(environ, start_response):
         text = ""
         text += message + '\n'
         for (hostid, url) in results:
-            text += url + '\n'
+            text += url[0] + '\n'
         results = text
         response.headers['Content-Type'] = "text/plain"
     elif resulttype == 'metalink':
