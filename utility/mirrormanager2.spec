@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.7.1
+Version:        0.7.2
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -357,6 +357,16 @@ exit 0
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Wed Jun 15 2016 Adrian Reber <adrian@lisas.de> - 0.7.2-1
+- Update to 0.7.2
+- Fix propagation diagram creation
+- Use yesterday's date in get_global_netblocks
+- Mark path containing /stage/ as testing
+- Added an option with which the user can define the preferred
+  protocol)
+- Adjust repomap for the new repo layout (Pierre-Yves Chibon)
+- Typo fix in readme (Taranjeet)
+
 * Mon Feb 01 2016 Pierre-Yves Chibon <pingou@pingoured.fr> - 0.7.1-1
 - Update to 0.7.1
 - Fixes to the emergency script (Adrian Reber and Patrick Uiterwijk)
