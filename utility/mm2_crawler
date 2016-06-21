@@ -678,8 +678,8 @@ def report_stats(stats):
 
 
 def sync_hcds(session, host, host_category_dirs, repodata):
-    stats = dict(up2date = 0, not_up2date = 0, unchanged = 0,
-                 unknown = 0, newdir = 0, deleted_on_master = 0, duration = 0)
+    stats = dict(up2date=0, not_up2date=0, unchanged=0,
+                 unknown=0, newdir=0, deleted_on_master=0, duration=0)
     current_hcds = {}
     stats['duration'] = time.time() -  threadlocal.starttime
     keys = host_category_dirs.keys()
