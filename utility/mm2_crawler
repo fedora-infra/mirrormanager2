@@ -662,6 +662,8 @@ def report_stats(stats):
     logger.info(msg)
     msg = "Total directories: %d" % stats['numkeys']
     logger.info(msg)
+    msg = "Unreadable directories: %d" % stats['unreadable']
+    logger.info(msg)
     msg = "Changed to up2date: %d" % stats['up2date']
     logger.info(msg)
     msg = "Changed to not up2date: %d" % stats['not_up2date']
@@ -678,7 +680,7 @@ def report_stats(stats):
 
 
 def sync_hcds(session, host, host_category_dirs, repodata):
-    stats = dict(up2date=0, not_up2date=0, unchanged=0,
+    stats = dict(up2date=0, not_up2date=0, unchanged=0, unreadable=0,
                  unknown=0, newdir=0, deleted_on_master=0, duration=0)
     current_hcds = {}
     stats['duration'] = time.time() -  threadlocal.starttime
