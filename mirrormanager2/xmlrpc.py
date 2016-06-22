@@ -27,6 +27,7 @@ import base64
 import pickle
 import json
 import bz2
+import logging
 
 import flask
 from flaskext.xmlrpc import XMLRPCHandler, Fault
@@ -34,6 +35,9 @@ from flaskext.xmlrpc import XMLRPCHandler, Fault
 from mirrormanager2.app import APP, ADMIN, SESSION
 from mirrormanager2.lib import model
 from mirrormanager2.lib.hostconfig import read_host_config
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 XMLRPC = XMLRPCHandler('xmlrpc')
@@ -46,9 +50,12 @@ def checkin(pickledata):
     try:
         config = json.loads(uncompressed)
     except ValueError:
+        logging.info("Fell back to pickle")
         config = pickle.loads(uncompressed)
     r, message = read_host_config(SESSION, config)
     if r is not None:
+        logging.info("Checkin succesful: %s" % message)
         return message + 'checked in successful'
     else:
+        logging.error("Error during checkin: %s" % message)
         return message + 'error checking in'
