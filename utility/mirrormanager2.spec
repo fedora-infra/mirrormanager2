@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.7.2
+Version:        0.7.3
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -357,6 +357,16 @@ exit 0
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Thu Jun 23 2016 Adrian Reber <adrian@lisas.de> - 0.7.3-1
+- Update to 0.7.3
+- Allow submission of checkin information via json (Patrick Uiterwijk)
+  https://github.com/fedora-infra/mirrormanager2/issues/170
+- Add logging to checkin code (Patrick Uiterwijk)
+- mm2_crawler: Add missing field to stats dict
+  https://github.com/fedora-infra/mirrormanager2/issues/176
+- mirrolist: fix &redirect=1
+  https://github.com/fedora-infra/mirrormanager2/issues/178
+
 * Wed Jun 15 2016 Adrian Reber <adrian@lisas.de> - 0.7.2-1
 - Update to 0.7.2
 - Fix propagation diagram creation
