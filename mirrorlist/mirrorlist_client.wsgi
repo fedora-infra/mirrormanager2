@@ -123,12 +123,15 @@ def request_setup(environ, request):
     return d
 
 
-def keep_only_http_results(input):
-    output = []
+def get_first_http_url(input):
+    """ Only used for the redirect case. In the case
+    a redirect has been requested only the first URL
+    is returned starting with 'http'."""
     for hostid, url in input:
-        if url.startswith(u'http'):
-            output.append((hostid, url))
-    return output
+        for u in url:
+            if u.startswith(u'http'):
+                return u
+    return None
 
 
 def application(environ, start_response):
@@ -148,14 +151,13 @@ def application(environ, start_response):
         return response(environ, start_response)
 
     if resulttype == 'mirrorlist':
-        # results look like [(hostid, url), ...]
+        # results look like [(hostid, [url, url]), ...]
         if 'redirect' in request.GET:
             if len(results) == 0:
                 response.status_code = 404
             else:
-                results = keep_only_http_results(results)
-                if len(results):
-                    (hostid, url) = results[0]
+                url = get_first_http_url(results)
+                if url:
                     response.status_code = 302
                     response.headers['Location'] = str(url)
                 else:
