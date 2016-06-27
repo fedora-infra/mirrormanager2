@@ -1351,7 +1351,7 @@ def auth_logout():
 
 import admin
 import api
-import xmlrpc
+import checkin
 
 # Only import the login controller if the app is set up for local login
 if APP.config.get('MM_AUTHENTICATION', None) == 'local':
