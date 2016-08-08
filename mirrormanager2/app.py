@@ -23,6 +23,7 @@
 MirrorManager2 main flask controller.
 '''
 
+from __future__ import absolute_import
 import logging
 import logging.handlers
 import glob
@@ -371,7 +372,7 @@ def site_view(site_id):
     )
 
 
-from lib.notifications import fedmsg_publish
+from .lib.notifications import fedmsg_publish
 
 
 @APP.route('/site/<int:site_id>/drop', methods=['POST'])
@@ -1356,9 +1357,9 @@ def auth_logout():
         login.logout()
     return flask.redirect(next_url)
 
-import admin
-import api
-import xmlrpc
+from . import admin
+from . import api
+from . import xmlrpc
 
 # Only import the login controller if the app is set up for local login
 if APP.config.get('MM_AUTHENTICATION', None) == 'local':
