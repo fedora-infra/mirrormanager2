@@ -4,6 +4,8 @@
 mirrormanager2 tests for the `Update Master Directory List` (UMDL) cron.
 '''
 
+from __future__ import print_function
+
 __requires__ = ['SQLAlchemy >= 0.7']
 import pkg_resources
 
@@ -100,7 +102,7 @@ class UMDLTest(tests.Modeltests):
             log.split(':', 3)[-1]
             for log in logs
         ])
-        print logs
+        print(logs)
         exp = """N/A:Starting umdl
 Fedora EPEL:umdl_master_directories Category Fedora EPEL does not exist in the database, skipping
 Fedora Linux:umdl_master_directories Category Fedora Linux does not exist in the database, skipping

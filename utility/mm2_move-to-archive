@@ -6,6 +6,7 @@ This script changes the directory path for a release once it goes EOL.
 In principle it should be run about a week after the said release went EOL.
 """
 
+from __future__ import print_function
 import sys
 import re
 import os
@@ -35,7 +36,7 @@ def doit(session, original_cat, archive_cat, directory_re):
         if dirRe.search(d.name):
             for r in d.repositories:
                 t = os.path.join(archivetopdir, d.name[len(originaltopdir)+1:])
-                print "trying to find %s" % t
+                print("trying to find %s" % t)
                 new_d = mirrormanager2.lib.get_directory_by_name(session, t)
                 if new_d is None:
                     raise Exception(
@@ -45,7 +46,7 @@ def doit(session, original_cat, archive_cat, directory_re):
                 r.category = a
                 session.add(r)
                 session.commit()
-                print "%s => %s" % (d.name, t)
+                print("%s => %s" % (d.name, t))
 
 
 def main():
@@ -88,7 +89,7 @@ def main():
             options.directoryRe)
         return 0
     except Exception, err:
-        print err
+        print(err)
         return 1
 
 

@@ -1,5 +1,6 @@
 #!/usr/bin/python2
 
+from __future__ import print_function
 import os, sys
 import json
 import ConfigParser
@@ -127,7 +128,7 @@ def parse_section(conf, section, item, required_options,
     if conf.has_option(section, 'enabled'):
         if conf.get(section, 'enabled') != '1' \
                 and section.lower() in item.config:
-            print 'removing disabled section %s' % (section)
+            print('removing disabled section %s' % (section))
             del item.config[section.lower()]
             return False
 
@@ -321,17 +322,17 @@ def main():
 
         if data is not None:
             try:
-                print server.checkin(data)
+                print(server.checkin(data))
             except socket.error, m:
-                print "Error checking in: %s.  Please try again later." % (
-                    m[1])
+                print("Error checking in: %s.  Please try again later." % (
+                    m[1]))
             except xmlrpclib.ProtocolError:
-                print "Error checking in: Service Temporarily "\
-                    "Unavailable.  Please try again later."
+                print("Error checking in: Service Temporarily "
+                      "Unavailable.  Please try again later.")
                 sys.exit(1)
             except xmlrpclib.Fault:
-                print "Error checking in.  Connection closed before "\
-                    "checkin complete.  Please try again later."
+                print("Error checking in.  Connection closed before "
+                      "checkin complete.  Please try again later.")
                 sys.exit(1)
 
 

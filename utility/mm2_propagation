@@ -21,6 +21,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+from __future__ import print_function
 import argparse
 import glob
 import matplotlib
@@ -127,12 +128,12 @@ args.prefix = os.path.join(args.outdir, args.prefix)
 total = len(glob.glob(args.logfiles))
 
 if not total:
-    print "No input files found at: " + args.logfiles
+    print("No input files found at: " + args.logfiles)
     sys.exit(0)
 
 remaining = total
 if args.debug:
-    print "%d data points available" % total
+    print("%d data points available" % total)
 
 proppath = None
 
@@ -222,52 +223,52 @@ for filename in sorted(glob.glob(args.logfiles)):
     labels.append(scandate)
 
 if args.debug:
-    print "%d data points used" % len(repomd_same)
+    print("%d data points used" % len(repomd_same))
 
 fd = open('%s-repomd-report.txt' % args.prefix, 'w')
 
 if args.debug:
-    print "Hosts broken"
+    print("Hosts broken")
 fd.write("Hosts broken\n")
 for url, count in sorted(
         hosts_broken.items(),
         key=lambda x: (int(x[1])),
         reverse=True):
     if args.debug:
-        print "%s: %d" % (url, count)
+        print("%s: %d" % (url, count))
     fd.write("%s: %d\n" % (url, count))
 
 if args.debug:
-    print "Hosts older"
+    print("Hosts older")
 fd.write("Hosts older\n")
 for url, count in sorted(
         hosts_older.items(),
         key=lambda x: (int(x[1])),
         reverse=True):
     if args.debug:
-        print "%s: %d" % (url, count)
+        print("%s: %d" % (url, count))
     fd.write("%s: %d\n" % (url, count))
 
 if args.debug:
-    print "Hosts older - 1"
+    print("Hosts older - 1")
 fd.write("Hosts older - 1\n")
 for url, count in sorted(
         hosts_older_1.items(),
         key=lambda x: (int(x[1])),
         reverse=True):
     if args.debug:
-        print "%s: %d" % (url, count)
+        print("%s: %d" % (url, count))
     fd.write("%s: %d\n" % (url, count))
 fd.write("Hosts older - 2\n")
 
 if args.debug:
-    print "Hosts older - 2"
+    print("Hosts older - 2")
 for url, count in sorted(
         hosts_older_2.items(),
         key=lambda x: (int(x[1])),
         reverse=True):
     if args.debug:
-        print "%s: %d" % (url, count)
+        print("%s: %d" % (url, count))
     fd.write("%s: %d\n" % (url, count))
 
 fd.close()
@@ -327,8 +328,8 @@ plt.savefig(
     bbox_inches='tight')
 
 if args.debug:
-    print("%s-%s-repomd-propagation.pdf" %
-          (args.prefix, labels[len(labels) - 1].split('\n')[0]))
+    print(("%s-%s-repomd-propagation.pdf" %
+          (args.prefix, labels[len(labels) - 1].split('\n')[0])))
 
 plt.savefig("%s-repomd-propagation.pdf" % args.prefix, bbox_inches='tight')
 plt.savefig("%s-repomd-propagation.svg" % args.prefix, bbox_inches='tight')

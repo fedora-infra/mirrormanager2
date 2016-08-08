@@ -4,6 +4,8 @@
 mirrormanager2 tests for the `Move Devel To Release` (MDTL) script.
 '''
 
+from __future__ import print_function
+
 __requires__ = ['SQLAlchemy >= 0.7']
 import pkg_resources
 

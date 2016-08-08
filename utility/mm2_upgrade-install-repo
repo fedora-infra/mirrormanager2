@@ -13,6 +13,7 @@ the UMDL script.
 TODO: test IRL
 """
 
+from __future__ import print_function
 import sys
 import re
 import os
@@ -38,7 +39,7 @@ def move_install_repo(session, version, test=False, debug=False):
         session, product.name, version)
 
     if not ver:
-        print 'No version found for %s-%s' % (product.name, version)
+        print('No version found for %s-%s' % (product.name, version))
         return
 
     for a in mirrormanager2.lib.get_arches(session):
@@ -63,34 +64,34 @@ def move_install_repo(session, version, test=False, debug=False):
 
         if not test:
             if not os.path.isdir(os.path.join('/srv', d)):
-                print "directory %s does not exist on disk, skipping "\
-                    "creation of a repository there" % d
+                print("directory %s does not exist on disk, skipping "
+                      "creation of a repository there" % d)
                 continue
 
         dobj = mirrormanager2.lib.get_directory_by_name(session, d)
 
         if not dobj:
-            print "directory %s exists on disk, but not in the database"\
-                " yet, skipping creation of a repository there until "\
-                "after the next UMDL run." % d
+            print("directory %s exists on disk, but not in the database"
+                  " yet, skipping creation of a repository there until "
+                  "after the next UMDL run." % d)
             continue
 
         repo = mirrormanager2.lib.get_repo_prefix_arch(
             session, prefix, a.name)
         if not repo:
-            print 'No repo found for prefix: %s - arch: %s' % (
-                prefix, a.name)
+            print('No repo found for prefix: %s - arch: %s' % (
+                prefix, a.name))
             continue
 
-        print "Updating %s" % repo
-        print "Updating %s repo for arch %s" % (repo.prefix, a.name)
+        print("Updating %s" % repo)
+        print("Updating %s repo for arch %s" % (repo.prefix, a.name))
 
         if debug:
-            print '%s   becomes   %s' % (repo.version_id, ver.id)
-            print '%s   becomes   %s' % (repo.arch_id, a.id)
-            print '%s   becomes   %s' % (repo.name, dobj.name)
-            print '%s   becomes   %s' % (repo.directory_id, dobj.id)
-            print '%s   becomes   %s' % (repo.category_id, category.id)
+            print('%s   becomes   %s' % (repo.version_id, ver.id))
+            print('%s   becomes   %s' % (repo.arch_id, a.id))
+            print('%s   becomes   %s' % (repo.name, dobj.name))
+            print('%s   becomes   %s' % (repo.directory_id, dobj.id))
+            print('%s   becomes   %s' % (repo.category_id, category.id))
         else:
             repo.version_id = ver.id
             repo.arch_id = a.id

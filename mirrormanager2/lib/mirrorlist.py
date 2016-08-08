@@ -19,6 +19,8 @@
 # of Red Hat, Inc.
 #
 
+from __future__ import print_function
+
 import datetime
 import os
 import hashlib
@@ -399,6 +401,6 @@ def dump_caches(session, filename):
         f.close()
         #print 'Pickle generated at %s' % filename
     except Exception as err:
-        print 'Error generating the pickle (%s): %s' % (
-            filename, err)
+        print('Error generating the pickle (%s): %s' % (
+            filename, err))
         pass

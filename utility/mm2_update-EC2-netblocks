@@ -4,7 +4,7 @@ Synchronize Amazon AWS-published EC2 netblock lists per region into the
 MirrorManager database for Fedora Infrastructure-managed mirrors in S3.
 """
 
-# std imports
+from __future__ import print_function
 import json
 import optparse
 import os
@@ -66,7 +66,7 @@ def doit(session, dry_run):
             h = hosts_by_region[region]
             host = h['host']
             if not host_has_netblock(hosts_by_region, region, ip_prefix):
-                print "Adding host %s netblock %s" % (host.name, ip_prefix)
+                print("Adding host %s netblock %s" % (host.name, ip_prefix))
                 if not dry_run:
                     nb = HostNetblock(host=host, netblock=ip_prefix, name=None) # this adds the entry to the database, mark as not stale
                     session.add(nb)
@@ -85,7 +85,7 @@ def doit(session, dry_run):
         for netblock in hosts_by_region[region]['netblocks']:
             if hosts_by_region[region]['netblocks'][netblock]['stale']: # delete this, it's no longer on Amazon's list
                 host = h['host']
-                print "Deleting host %s netblock %s" % (host.name, netblock)
+                print("Deleting host %s netblock %s" % (host.name, netblock))
                 if not dry_run:
                     nb = mirrormanager2.lib.get_host_netblock(
                         session,

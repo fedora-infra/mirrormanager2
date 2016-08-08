@@ -4,6 +4,7 @@
 #  by Matt Domsch <Matt_Domsch@dell.com>
 # Licensed under the MIT/X11 license
 
+from __future__ import print_function
 import socket, os
 import cPickle as pickle
 from string import zfill, atoi
@@ -81,4 +82,4 @@ while True:
     start = datetime.datetime.utcnow()
     result = do_mirrorlist(d)
     end = datetime.datetime.utcnow()
-    print "[%s]   connect: %s  total: %s" % (pid, connectTime, (end-start))
+    print("[%s]   connect: %s  total: %s" % (pid, connectTime, (end-start)))
