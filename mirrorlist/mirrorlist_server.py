@@ -315,7 +315,7 @@ def do_country(kwargs, cache, clientCountry, requested_countries, header):
 
 def do_netblocks(kwargs, cache, header):
     hostresults = set()
-    if not kwargs.has_key('netblock') or kwargs['netblock'] == "1":
+    if 'netblock' not in kwargs or kwargs['netblock'] == "1":
         tree_results = tree_lookup(database['host_netblocks_tree'], kwargs['IP'], 'hosts')
         for (prefix, hostids) in tree_results:
             for hostid in hostids:
@@ -469,9 +469,8 @@ def do_mirrorlist(kwargs):
             d['results'] = metalink_failuredoc(message)
         return d
 
-    if not (kwargs.has_key('repo') \
-            and kwargs.has_key('arch')) \
-            and not kwargs.has_key('path'):
+    if not ('repo' in kwargs and 'arch' in kwargs
+            or 'path' in kwargs):
         return return_error(
             kwargs,
             message='# either path=, or repo= and arch= must be specified')
@@ -479,7 +478,7 @@ def do_mirrorlist(kwargs):
     file = None
     cache = None
     pathIsDirectory = False
-    if kwargs.has_key('path'):
+    if 'path' in kwargs:
         path = kwargs['path'].strip('/')
 
     # Strip duplicate "//" from the path
@@ -550,7 +549,7 @@ def do_mirrorlist(kwargs):
     header, location_results = do_location(kwargs, header)
 
     requested_countries = []
-    if kwargs.has_key('country'):
+    if 'country' in kwargs:
         requested_countries = uniqueify(
             [c.upper() for c in kwargs['country'].split(',') ])
 
@@ -574,7 +573,7 @@ def do_mirrorlist(kwargs):
     else:
         print_client_country = clientCountry
 
-    if logfile and kwargs.has_key('repo') and kwargs.has_key('arch'):
+    if logfile and 'repo' in kwargs and 'arch' in kwargs:
         msg = "IP: %s; DATE: %s; COUNTRY: %s; REPO: %s; ARCH: %s\n"  % (
             (kwargs['IP'] or 'None'), time.strftime("%Y-%m-%d"),
             print_client_country, kwargs['repo'], kwargs['arch'])

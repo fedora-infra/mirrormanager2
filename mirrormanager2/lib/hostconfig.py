@@ -36,7 +36,7 @@ def validate_config(config):
         message += 'config file is not a dict.\n'\
         'Please update your copy of report_mirror.\n'
         return (False, message)
-    if not config.has_key('version'):
+    if 'version' not in config:
         message += 'config file has no version field.\n'
         return (False, message)
     # this field is an integer
@@ -46,26 +46,26 @@ def validate_config(config):
         return (False, message)
 
     for section in ['global', 'site', 'host']:
-        if not config.has_key(section):
+        if section not in config:
             message += 'config file missing section %s.\n' % (section)
             return (False, message)
 
     globl = config['global']
     # this field is a string as it comes from the config file
-    if not globl.has_key('enabled') or globl['enabled'] != '1':
+    if 'enabled' not in globl or globl['enabled'] != '1':
         message += 'config file section [global] not enabled.\n'
         return (False, message)
 
     site = config['site']
     for opt in ['name', 'password']:
-        if not site.has_key(opt):
+        if opt not in site:
             message += 'config file [site] missing required option %s.'\
                 '\n' % (opt)
             return (False, message)
 
     host = config['host']
     for opt in ['name']:
-        if not host.has_key(opt):
+        if opt not in host:
             message +=  'section [host] missing required option %s.\n' % (
                 opt)
             return (False, message)
@@ -75,7 +75,7 @@ def validate_config(config):
             continue
 
         for opt in ['dirtree']:
-            if not config[category].has_key(opt):
+            if opt not in config[category]:
                 message += 'section [%s] missing required option %s.\n' % (
                     category, opt)
                 return (False, message)
@@ -108,7 +108,7 @@ def read_host_config(session, config):
         return (None, 'Config file host name for site not found.\n')
 
     # handle the optional arguments
-    if config['host'].has_key('user_active'):
+    if 'user_active' in config['host']:
         if config['host']['user_active'] in ['true', '1', 't', 'y', 'yes']:
             host.user_active = True
         else:

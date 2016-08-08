@@ -1035,7 +1035,7 @@ def uploaded_config(session, host, config):
     # so we have to find the matching mixed-case category name.
 
     for cat_name in _config_categories(config):
-        if not config[cat_name].has_key('dirtree'):
+        if 'dirtree' not in config[cat_name]:
             # The received report_mirror data is missing
             # the actual data. Pretty unlikely, but possible.
             continue
