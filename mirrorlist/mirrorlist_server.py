@@ -846,7 +846,7 @@ class MirrorlistHandler(StreamRequestHandler):
             results = r['results']
             resulttype = r['resulttype']
             returncode = r['returncode']
-        except Exception, e:
+        except Exception as e:
             message=u'# Bad Request %s\n# %s' % (e, d)
             exception_msg = traceback.format_exc(e)
             sys.stderr.write(message+'\n')
@@ -1045,7 +1045,7 @@ def create_pidfile_dir(pidfile):
         return
     try:
         os.makedirs(piddir, mode=0755)
-    except OSError, err:
+    except OSError as err:
         if err.errno == 17: # File exists
             pass
         else:
@@ -1068,7 +1068,7 @@ def manage_pidfile(pidfile):
     pid = os.getpid()
     try:
         f = open(pidfile, 'r')
-    except IOError, err:
+    except IOError as err:
         if err.errno == 2: # No such file or directory
             return write_pidfile(pidfile, pid)
         return 1
@@ -1081,7 +1081,7 @@ def manage_pidfile(pidfile):
         os.kill(int(oldpid), 0)
     except ValueError: # malformed oldpid
         return write_pidfile(pidfile, pid)
-    except OSError, err:
+    except OSError as err:
         if err.errno == 3: # No such process
             return write_pidfile(pidfile, pid)
     return 1

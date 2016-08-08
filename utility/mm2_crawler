@@ -516,7 +516,7 @@ def get_ftp_dir(hoststate, url, readable, i=0):
 
     try:
         hoststate.ftp_dir(url)
-    except ftplib.error_perm, e:
+    except ftplib.error_perm as e:
         # Returned by Princeton University when directory does not exist
         if str(e).startswith('550'):
             return []
@@ -537,7 +537,7 @@ def get_ftp_dir(hoststate, url, readable, i=0):
         else:
             logger.error("unknown permanent error %s on %s" % (e, url))
             raise
-    except ftplib.error_temp, e:
+    except ftplib.error_temp as e:
         # Returned by Boston University when directory does not exist
         if str(e).startswith('450'):
             return []

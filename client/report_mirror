@@ -323,7 +323,7 @@ def main():
         if data is not None:
             try:
                 print(server.checkin(data))
-            except socket.error, m:
+            except socket.error as m:
                 print("Error checking in: %s.  Please try again later." % (
                     m[1]))
             except xmlrpclib.ProtocolError:
