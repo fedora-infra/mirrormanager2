@@ -23,7 +23,6 @@
 MirrorManager2 main flask controller.
 '''
 
-
 import logging
 import logging.handlers
 import glob
@@ -1257,7 +1256,7 @@ def rsyncFilter():
     def parents(folder):
         path = []
         splitpath = folder.split('/')
-        for i in xrange(1, len(splitpath)):
+        for i in range(1, len(splitpath)):
             path.append('/'.join(splitpath[:i]))
         return path
 
@@ -1298,7 +1297,7 @@ def rsyncFilter():
     newer_dirs = mirrormanager2.lib.get_rsync_filter_directories(
         SESSION, categories_requested, since)
 
-    for i in xrange(len(newer_dirs)):
+    for i in range(len(newer_dirs)):
         newer_dirs[i] = strip_prefix(num_prefix, newer_dirs[i])
 
     includes.update(newer_dirs)
@@ -1307,7 +1306,7 @@ def rsyncFilter():
 
     includes = sorted(includes)
     # add trailing slash as rsync wants it
-    for i in xrange(len(includes)):
+    for i in range(len(includes)):
         includes[i] += u'/'
 
     return flask.render_template(
