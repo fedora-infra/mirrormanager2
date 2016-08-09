@@ -248,7 +248,7 @@ continents = {}
 
 def handle_country_continent_redirect(new_db):
     new_country_continents = GeoIP.country_continents
-    for country, continent in new_db['country_continent_redirect_cache'].iteritems():
+    for country, continent in new_db['country_continent_redirect_cache'].items():
         new_country_continents[country] = continent
     global country_continents
     country_continents = new_country_continents
@@ -257,7 +257,7 @@ def handle_country_continent_redirect(new_db):
 def setup_continents(new_db):
     new_continents = defaultdict(list)
     handle_country_continent_redirect(new_db)
-    for c, continent in country_continents.iteritems():
+    for c, continent in country_continents.items():
         new_continents[continent].append(c)
     global continents
     continents = new_continents
@@ -274,7 +274,7 @@ def do_countrylist(kwargs, cache, clientCountry, requested_countries, header):
     def collapse(d):
         """ collapses a dict {key:set(hostids)} into a set of hostids """
         s = set()
-        for country, hostids in d.iteritems():
+        for country, hostids in d.items():
             for hostid in hostids:
                 s.add(hostid)
         return s
@@ -725,7 +725,7 @@ def do_mirrorlist(kwargs):
 
 def setup_cache_tree(cache, field):
     tree = radix.Radix()
-    for k, v in cache.iteritems():
+    for k, v in cache.items():
         node = tree.add(k.strNormal())
         node.data[field] = v
     return tree

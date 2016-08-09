@@ -1023,7 +1023,7 @@ def uploaded_config(session, host, config):
         dfiles = hcdir.directory.files
         if len(dfiles) == 0 and len(files) == 0:
             return True
-        for fname, fdata in dfiles.iteritems():
+        for fname, fdata in dfiles.items():
             if fname not in files:
                 return False
             if fdata['size'] != files[fname]:
@@ -1056,7 +1056,7 @@ def uploaded_config(session, host, config):
         deleted = 0
         added = 0
         # and now one HostCategoryDir for each dir in the dirtree
-        for dirname,files in config[cat_name]['dirtree'].iteritems():
+        for dirname,files in config[cat_name]['dirtree'].items():
             d = dirname.strip('/')
             hcdir = get_hostcategorydir_by_hostcategoryid_and_path(
                 session, host_category_id=hc.id, path=d)

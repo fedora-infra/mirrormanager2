@@ -329,7 +329,7 @@ class Directory(BASE):
         stale = t - (60 * 60 * 24 * max_stale)
         propogation = t - (60 * 60 * 24 * max_propogation)
 
-        for k, fds in cls.file_details_cache.iteritems():
+        for k, fds in cls.file_details_cache.items():
             (directory_id, filename) = k
             if len(fds) > 1:
                 start = 2

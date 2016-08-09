@@ -117,7 +117,7 @@ def request_setup(environ, request):
     if scriptname == '/metalink' or pathinfo == '/metalink':
         d['metalink'] = True
 
-    for k, v in d.iteritems():
+    for k, v in d.items():
         try:
             d[k] = unicode(v, 'utf8', 'replace')
         except:
