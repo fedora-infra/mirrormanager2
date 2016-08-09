@@ -12,7 +12,10 @@ import logging
 import logging.handlers
 import os
 import random
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 import select
 import signal
 import socket

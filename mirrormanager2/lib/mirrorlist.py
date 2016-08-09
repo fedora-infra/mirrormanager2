@@ -24,7 +24,10 @@ from __future__ import print_function
 import datetime
 import os
 import hashlib
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 from operator import itemgetter
 

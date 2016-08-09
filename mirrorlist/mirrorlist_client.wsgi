@@ -14,7 +14,10 @@
 
 import socket
 import select
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 from string import zfill, atoi, strip, replace
 from webob import Request, Response
 

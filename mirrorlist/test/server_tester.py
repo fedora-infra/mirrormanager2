@@ -6,7 +6,10 @@
 
 from __future__ import print_function
 import socket, os
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 from string import zfill, atoi
 import datetime
 
