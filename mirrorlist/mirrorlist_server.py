@@ -19,8 +19,12 @@ except ImportError:
 import select
 import signal
 import socket
-from SocketServer import (StreamRequestHandler, ThreadingMixIn,
-                          UnixStreamServer, BaseServer)
+try:
+    from socketserver import (StreamRequestHandler, ThreadingMixIn,
+                              UnixStreamServer, BaseServer)
+except ImportError:
+    from SocketServer import (StreamRequestHandler, ThreadingMixIn,
+                              UnixStreamServer, BaseServer)
 import sys
 from string import zfill, atoi
 import time
