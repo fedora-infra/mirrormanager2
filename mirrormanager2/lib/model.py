@@ -367,14 +367,15 @@ class Product(BASE):
                 versions[version.name] = version
 
         # Try to "smartly" sort versions for display.
-        def intify(value):
+        # Return a tuple for sorting to avoid str↔int comparisons under python3
+        def intify(item):
+            k, v = item
             try:
-                return int(value)
+                return (0, int(k))
             except ValueError:
-                return value
+                return (1, k)
 
-        keys = [intify(key) for key in versions]
-        return [versions[str(key)] for key in sorted(keys, reverse=True)]
+        return [v for k,v in sorted(versions.items(), reverse=True, key=intify)]
 
 
 class Category(BASE):
