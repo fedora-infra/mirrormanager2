@@ -10,7 +10,6 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
-from string import zfill, atoi
 import datetime
 
 socketfile = '/var/run/mirrormanager/mirrorlist_server.sock'
@@ -33,7 +32,7 @@ def do_mirrorlist(d):
     p = pickle.dumps(d)
     size = len(p)
     #print "writing size %s to server" % size
-    s.sendall(zfill('%s' % size, 10))
+    s.sendall(str(size).zfill(10))
 
     # write the pickle
     #print "writing the pickle"
@@ -47,7 +46,7 @@ def do_mirrorlist(d):
     while readlen < 10:
         resultsize += s.recv(10 - readlen)
         readlen = len(resultsize)
-    resultsize = atoi(resultsize)
+    resultsize = int(resultsize)
 
     #print "reading %s bytes of the results list" % resultsize
     readlen = 0

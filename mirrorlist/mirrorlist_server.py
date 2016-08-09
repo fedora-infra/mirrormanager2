@@ -26,7 +26,6 @@ except ImportError:
     from SocketServer import (StreamRequestHandler, ThreadingMixIn,
                               UnixStreamServer, BaseServer)
 import sys
-from string import zfill, atoi
 import time
 import traceback
 
@@ -831,7 +830,7 @@ class MirrorlistHandler(StreamRequestHandler):
             while readlen < 10:
                 size += self.rfile.read(10 - readlen)
                 readlen = len(size)
-            size = atoi(size)
+            size = int(size)
 
             # read the pickle
             readlen = 0
@@ -872,7 +871,7 @@ class MirrorlistHandler(StreamRequestHandler):
                 'resulttype':resulttype,
                 'results':results,
                 'returncode':returncode})
-            self.connection.sendall(zfill('%s' % len(p), 10))
+            self.connection.sendall(str(len(p)).zfill(10))
 
             self.connection.sendall(p)
             self.connection.shutdown(socket.SHUT_WR)
