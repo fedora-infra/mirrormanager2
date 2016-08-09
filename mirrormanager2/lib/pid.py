@@ -33,7 +33,7 @@ def remove_pidfile(pidfile):
 def create_pidfile_dir(pidfile):
     piddir = os.path.dirname(pidfile)
     if piddir and not os.path.exists(piddir):
-        os.makedirs(piddir, mode=0755)
+        os.makedirs(piddir, mode=0o755)
 
 
 def write_pidfile(pidfile, pid):

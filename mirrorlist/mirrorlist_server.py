@@ -1044,7 +1044,7 @@ def create_pidfile_dir(pidfile):
     if not piddir:
         return
     try:
-        os.makedirs(piddir, mode=0755)
+        os.makedirs(piddir, mode=0o755)
     except OSError as err:
         if err.errno == 17: # File exists
             pass
