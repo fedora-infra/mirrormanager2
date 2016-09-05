@@ -42,7 +42,7 @@ if args.config:
     if not config.startswith('/'):
         here = os.path.join(os.path.dirname(os.path.abspath(__file__)))
         config = os.path.join(here, config)
-    os.environ['PKGDB2_CONFIG'] = config
+    os.environ['MM2_CONFIG'] = config
 
 from mirrormanager2.app import APP
 
