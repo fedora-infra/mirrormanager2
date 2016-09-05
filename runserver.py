@@ -32,11 +32,6 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-if args.profile:
-    from werkzeug.contrib.profiler import ProfilerMiddleware
-    APP.config['PROFILE'] = True
-    APP.wsgi_app = ProfilerMiddleware(APP.wsgi_app, restrictions=[30])
-
 if args.config:
     config = args.config
     if not config.startswith('/'):
@@ -45,6 +40,11 @@ if args.config:
     os.environ['MM2_CONFIG'] = config
 
 from mirrormanager2.app import APP
+
+if args.profile:
+    from werkzeug.contrib.profiler import ProfilerMiddleware
+    APP.config['PROFILE'] = True
+    APP.wsgi_app = ProfilerMiddleware(APP.wsgi_app, restrictions=[30])
 
 APP.debug = True
 APP.run(port=int(args.port), host=args.host)
