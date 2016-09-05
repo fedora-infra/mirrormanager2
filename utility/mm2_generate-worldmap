@@ -113,7 +113,8 @@ def doit(options, config):
         xpt, ypt = m(lon, lat)
         m.plot([xpt], [ypt], 'ro', zorder=10)
         fd.write(
-            "%s\t%s\t<a href=\"http://%s/\" target=\"_blank\">%s</a>"
+            "%s\t%s\t<a href='http://%s/' rel='noopener noreferrer' "
+            "target='_blank'>%s</a>"
             "\t%s\t21,25\t-10,-25\t./f-dot.png\n" %
             (t[0][2], t[0][3], t[0][0], t[0][0], t[1]))
 
