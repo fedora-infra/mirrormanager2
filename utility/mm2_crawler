@@ -748,7 +748,7 @@ def sync_hcds(session, host, host_category_dirs, repodata):
 
 def method_pref(urls, prev=""):
     """ return which of the hosts connection method should be used
-    rsync > http > ftp """
+    rsync > http(s) > ftp """
     pref = None
     for u in urls:
         if prev.startswith('rsync:'):
@@ -756,7 +756,7 @@ def method_pref(urls, prev=""):
         if u.startswith('rsync:'):
             return u
     for u in urls:
-        if u.startswith('http:'):
+        if u.startswith(('http:', 'https:')):
             pref = u
             break
     if pref is None:
