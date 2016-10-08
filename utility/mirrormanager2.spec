@@ -21,7 +21,7 @@ BuildRequires:  python-flask-admin
 BuildRequires:  python-flask-xml-rpc
 BuildRequires:  python-flask-wtf
 BuildRequires:  python-wtforms
-BuildRequires:  python-IPy < 0.80
+BuildRequires:  python-IPy
 BuildRequires:  python-dns
 BuildRequires:  python-fedora >= 0.3.33
 BuildRequires:  python-fedora-flask >= 0.3.33
@@ -69,7 +69,7 @@ Summary:        Library to interact with MirrorManager's database
 Group:          Development/Tools
 BuildArch:      noarch
 
-Requires:  python-IPy < 0.80
+Requires:  python-IPy
 Requires:  python-dns
 
 # EPEL6
@@ -357,6 +357,9 @@ exit 0
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Sat Oct 08 2016 Patrick Uiterwijk <puiterwijk@redhat.com> - 0.7.3-2
+- Remove <0.80 requirement on IPy
+
 * Thu Jun 23 2016 Adrian Reber <adrian@lisas.de> - 0.7.3-1
 - Update to 0.7.3
 - Allow submission of checkin information via json (Patrick Uiterwijk)
