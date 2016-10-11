@@ -140,10 +140,15 @@ for filename in sorted(glob.glob(args.logfiles)):
     for line in open(filename):
         line = line.rstrip()
         line = line.split('::')
-        if not proppath:
-            proppath = line[7]
-        if not line[5] in sha256sums:
-            sha256sums.append(line[5])
+        try:
+            if not proppath:
+                proppath = line[7]
+            if not line[5] in sha256sums:
+                if len(line[5]) == 64:
+                    # sha256sum is 64 character long
+                    sha256sums.append(line[5])
+        except:
+            pass
 
 for filename in sorted(glob.glob(args.logfiles)):
     total -= 1
@@ -163,8 +168,13 @@ for filename in sorted(glob.glob(args.logfiles)):
     for line in open(filename):
         line = line.rstrip()
         line = line.split('::')
-        date = line[4].split('-')
-        scandate = "%s-%s-%s\n%s-%s-%s" % tuple(date)
+        if len(line) <= 6:
+            continue
+        try:
+            date = line[4].split('-')
+            scandate = "%s-%s-%s\n%s-%s-%s" % tuple(date)
+        except:
+            continue
         if line[3] == 'NOSUM':
             none += 1
             try:
@@ -175,6 +185,8 @@ for filename in sorted(glob.glob(args.logfiles)):
             continue
         elif line[3] == line[5]:
             same += 1
+        elif len(line[5]) != 64:
+            other += 1
         elif line[3] in sha256sums:
             offset = sha256sums.index(line[5])
             if sha256sums.index(line[3]) == offset:
