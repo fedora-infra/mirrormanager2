@@ -118,7 +118,7 @@ def is_mirrormanager_admin(user):
 
     if auth_method in ('fas', 'local'):
         admins = APP.config['ADMIN_GROUP']
-        if isinstance(admins, basestring):
+        if isinstance(admins, str):
             admins = [admins]
         admins = set(admins)
 
