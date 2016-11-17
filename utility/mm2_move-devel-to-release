@@ -49,7 +49,7 @@ def move_devel_repo(session, category, version):
         sys.exit(1)
 
     oldpattern = os.path.join('development', version)
-    newpattern = os.path.join('releases', version, 'Everything')
+    newpattern = os.path.join('releases', version)
     oldRe = re.compile(oldpattern)
     for r in c.repositories:
         if not r.prefix:
