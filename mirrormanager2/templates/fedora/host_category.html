@@ -39,7 +39,7 @@
 <h3>URLs serving this content</h3>
 
 <p>
-  The same content may be served by multiple means: http, ftp, and rsync
+  The same content may be served by multiple means: http, https, and rsync
   are common examples. Content may also be served via a 'private' URL only
   visible to other mirror admins. Such private URLs usually include a
   nonstandard rsync port, and/or a username and password. Admins from Mirror
@@ -64,6 +64,9 @@
           title="Delete url">
           <span class="icon icon-trash blue"></span>
         </button>
+        {%- if urls.private -%}
+          (Private URL - This URL will not show up in the mirrorlist/metalink)
+        {%- endif -%}
     </form>
   </li>
   {% endfor %}

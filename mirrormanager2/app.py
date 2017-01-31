@@ -1153,6 +1153,7 @@ def host_category_url_new(host_id, hc_id):
     if form.validate_on_submit():
 
         host_category_u = model.HostCategoryUrl()
+        private = host_category_u.private
         host_category_u.host_category_id = hcobj.id
         form.populate_obj(obj=host_category_u)
 
@@ -1160,6 +1161,10 @@ def host_category_url_new(host_id, hc_id):
         if url.endswith('/'):
             url = url[:-1]
         host_category_u.url = url
+
+        # If the user is *not* an admin, keep the current private flag
+        if not is_mirrormanager_admin(flask.g.fas_user):
+            host_category_u.private = private
 
         SESSION.add(host_category_u)
 
