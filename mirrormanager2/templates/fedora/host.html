@@ -82,6 +82,7 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
 {% if host.crawl_failures > 0 %}<br/>Number of consecutive crawl failures: {{ host.crawl_failures }} {% endif %}
 </p>
 
+{%- if config['MASTER_RSYNC_ACL'] -%}
 <h3>
   Master rsync server Access Control List IPs
 </h3>
@@ -111,7 +112,7 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
   {% endfor %}
   </ul>
 {% endif %}
-
+{%- endif -%}{# MASTER_RSYNC_ACL ##}
 
 <h3>
   Site-local Netblocks

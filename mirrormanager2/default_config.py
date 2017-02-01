@@ -96,6 +96,10 @@ SHOW_PROPAGATION = True
 # Where to look for the above mentioned propagation images.
 PROPAGATION_BASE = '/var/www/mirrormanager-statistics/data/propagation'
 
+# Disable master rsync server ACL
+# Fedora does not use it and therefore it is set to False
+MASTER_RSYNC_ACL = False
+
 # When this is set to True, the session cookie will only be returned to the
 # server via ssl (https). If you connect to the server via plain http, the
 # cookie will not be sent. This prevents sniffing of the cookie contents.
