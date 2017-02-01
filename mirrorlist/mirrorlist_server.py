@@ -41,6 +41,9 @@ cachefile = '/var/lib/mirrormanager/mirrorlist_cache.pkl'
 internet2_netblocks_file = '/var/lib/mirrormanager/i2_netblocks.txt'
 global_netblocks_file = '/var/lib/mirrormanager/global_netblocks.txt'
 logfile = None
+# If not at least 'minimum' mirrors are found for a country/continent,
+# mirrors from the global list are appended to the country/continent list
+minimum = int(5)
 must_die = False
 # at a point in time when we're no longer serving content for versions
 # that don't use yum prioritymethod=fallback
@@ -597,14 +600,14 @@ def do_mirrorlist(kwargs):
     if not done:
         header, geoip_results = do_geoip(
             kwargs, cache, clientCountry, header)
-        if len(geoip_results) >= 3:
+        if len(geoip_results) >= minimum:
             if not ordered_mirrorlist:
                 done = 1
 
     if not done:
         header, continent_results = do_continent(
             kwargs, cache, clientCountry, [], header)
-        if len(geoip_results) + len(continent_results) >= 3:
+        if len(geoip_results) + len(continent_results) >= minimum:
             done = 1
 
     if not done:
@@ -904,11 +907,12 @@ def parse_args():
     global global_netblocks_file
     global logfile
     global pidfile
+    global minimum
     opts, args = getopt.getopt(
-        sys.argv[1:], "c:i:g:p:s:dl:",
+        sys.argv[1:], "c:i:g:p:s:dl:m:",
         [
             "cache", "internet2_netblocks", "global_netblocks",
-            "pidfile", "socket", "log="
+            "pidfile", "socket", "log=", "minimum="
         ]
     )
     for option, argument in opts:
@@ -927,6 +931,11 @@ def parse_args():
                 logfile = open(argument, 'a')
             except:
                 logfile = None
+        if option in ("-m", "--minimum"):
+            minimum = int(argument)
+
+    sys.stderr.write("Minimum mirrors is set to %d\n" % (minimum))
+    sys.stderr.flush()
 
 
 def open_geoip_databases():
