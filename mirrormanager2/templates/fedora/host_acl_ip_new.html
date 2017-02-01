@@ -12,6 +12,7 @@
     {{ host.name }}</a>
 </p>
 
+{%- if config['MASTER_RSYNC_ACL'] -%}
 <p>
   These host DNS names and/or IP addresses will be allowed to rsync from the
   master rsync/ftp servers. List here all the machines that you use for
@@ -30,5 +31,6 @@
     {{ form.csrf_token }}
   </p>
 </form>
+{%- endif -%}{# MASTER_RSYNC_ACL ##}
 
 {% endblock %}
