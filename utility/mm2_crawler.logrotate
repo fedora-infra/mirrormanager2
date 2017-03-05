@@ -5,4 +5,5 @@
     dateext
     rotate 15
     copytruncate
+    compress
 }
