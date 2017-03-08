@@ -122,6 +122,12 @@ MM_LOG_DIR = '/var/log/mirrormanager'
 # or setting it to '' removes any protocol restrictions.
 MM_PROTOCOL_REGEX = '^(?!ftp)(.*)$'
 
+# The netblock size parameters define which netblock sizes can be
+# added by a site administrator. Larger networks can only be added by
+# mirrormanager admins.
+MM_IPV4_NETBLOCK_SIZE = '/16'
+MM_IPV6_NETBLOCK_SIZE = '/32'
+
 # If not specified the application will rely on the root_url when sending
 # emails, otherwise it will use this URL
 # Default: ``None``.
