@@ -725,6 +725,7 @@ def host_netblock_new(host_id):
     """ Create a new host_netblock.
     """
     hostobj = mmlib.get_host(SESSION, host_id)
+    flask.g.is_mirrormanager_admin = is_mirrormanager_admin(flask.g.fas_user)
 
     if hostobj is None:
         flask.abort(404, 'Host not found')

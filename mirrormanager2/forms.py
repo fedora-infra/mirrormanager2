@@ -36,6 +36,9 @@ MirrorManager2 forms.
 import re
 from flask.ext import wtf
 import wtforms
+from flask import g
+
+import IPy
 
 from mirrormanager2.app import APP
 
@@ -164,6 +167,28 @@ class AddHostAclIpForm(wtf.Form):
         [wtforms.validators.Required()]
     )
 
+def validate_netblocks(form, field):
+    max_ipv4_netblock_size = APP.config.get('MM_IPV4_NETBLOCK_SIZE', '/16')
+    max_ipv6_netblock_size = APP.config.get('MM_IPV6_NETBLOCK_SIZE', '/32')
+
+    emsg = "Error: IPv4 netblocks larger than %s" % max_ipv4_netblock_size
+    emsg += ", and IPv6 netblocks larger than %s" % max_ipv6_netblock_size
+    emsg += " can only be created by mirrormanager administrators."
+    emsg += " Please ask the mirrormanager administrators for assistance."
+
+    ipv4_block = IPy.IP('10.0.0.0%s' % max_ipv4_netblock_size)
+    ipv6_block = IPy.IP('fec0::%s'   % max_ipv6_netblock_size)
+
+    try:
+        ip = IPy.IP(field.data, make_net=True)
+    except ValueError:
+        # also accept DNS hostnames
+        return
+    if (((ip.version() == 4 and ip.len() > ipv4_block.len()) or
+            (ip.version() == 6 and ip.len() > ipv6_block.len())) and
+             not g.is_mirrormanager_admin):
+        raise wtforms.validators.ValidationError(emsg)
+
 
 class AddHostNetblockForm(wtf.Form):
     """ Form to add or edit a host_netblock. """
@@ -173,7 +198,7 @@ class AddHostNetblockForm(wtf.Form):
     )
     netblock = wtforms.TextField(
         'Netblock  <span class="error">*</span>',
-        [wtforms.validators.Required()]
+        [wtforms.validators.Required(), validate_netblocks]
     )
 
 
