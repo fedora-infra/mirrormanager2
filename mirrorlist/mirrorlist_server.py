@@ -692,6 +692,13 @@ def do_mirrorlist(kwargs):
         except:
             pass
 
+    if 'time' in kwargs:
+        try:
+            # Last code modifying the header. Let's enter a newline
+            header += '\n# database creation time: %s' % (database['time'])
+        except:
+            pass
+
     if 'metalink' in kwargs and kwargs['metalink']:
         (resulttype, returncode, results)=metalink(
             cache, dir, file, hosts_and_urls)
@@ -786,6 +793,8 @@ def read_caches():
         info['netblock_country_cache'] = data['netblock_country_cache']
     if 'host_max_connections_cache' in data:
         info['host_max_connections_cache'] = data['host_max_connections_cache']
+    if 'time' in data:
+        info['time'] = data['time']
 
     setup_continents(info)
 

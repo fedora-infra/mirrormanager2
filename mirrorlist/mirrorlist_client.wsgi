@@ -74,7 +74,7 @@ def real_client_ip(xforwardedfor):
 def request_setup(environ, request):
     fields = [
         'repo', 'arch', 'country', 'path', 'netblock', 'location',
-        'version', 'cc', 'protocol'
+        'version', 'cc', 'protocol', 'time'
     ]
     d = {}
     request_data = request.GET

@@ -19,6 +19,7 @@
 # of Red Hat, Inc.
 #
 
+import datetime
 import os
 import hashlib
 import cPickle as pickle
@@ -389,6 +390,7 @@ def dump_caches(session, filename):
         'hcurl_cache': hcurl_cache(session),
         'location_cache': location_cache(session),
         'netblock_country_cache': netblock_country_cache(session),
+        'time': datetime.datetime.utcnow(),
     }
 
     try:
