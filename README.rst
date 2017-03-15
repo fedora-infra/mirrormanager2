@@ -17,6 +17,40 @@ For more details `mirrormanager <https://fedorahosted.org/mirrormanager/>`_
 Hacking
 -------
 
+Hacking with Vagrant
+~~~~~~~~~~~~~~~~~~~~
+Quickly start hacking on mirrormanager2 using the vagrant setup that is included
+in the repo is super simple.
+
+First, make a copy of the Vagrantfile example::
+
+    $ cp Vagrantfile.example Vagrantfile
+
+Next, install Ansible, Vagrant and the vagrant-libvirt plugin from the official Fedora
+repos::
+
+    $ sudo dnf install ansible vagrant vagrant-libvirt vagrant-sshfs
+
+
+Now, from within main directory (the one with the Vagrantfile in it) of your git
+checkout of mirrormanager2, run the ``vagrant up`` command to provision your dev
+environment::
+
+    $ vagrant up
+
+When this command is completed (it may take a while) you will be able to the
+command to start the mirrormanager server::
+
+    $ vagrant ssh -c "pushd /vagrant/; python runserver.py --host '0.0.0.0'"
+
+Once that is running, simply go to http://localhost:5000/ in your browser on
+your host to see your running mirrormanager test instance.
+
+
+Manual Setup
+~~~~~~~~~~~~
+
+
 Here are some preliminary instructions about how to stand up your own instance
 of mirrormanager2.  We'll use a virtualenv and a sqlite database and we'll install
 our dependencies from the Python Package Index (PyPI).
@@ -45,9 +79,3 @@ running::
     (my-MirrorMan-env)$ python runserver.py
 
 Open your browser and visit http://localhost:5000 to check it out.
-
-
-
-
-
-
