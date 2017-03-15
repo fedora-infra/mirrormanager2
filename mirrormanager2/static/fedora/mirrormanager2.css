@@ -74,3 +74,5 @@ input[type="checkbox"] {
     margin-right: auto;
     text-align: center;
 }
+
+.bodycontent{min-height:600px}
