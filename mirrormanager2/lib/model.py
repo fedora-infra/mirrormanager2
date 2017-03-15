@@ -769,6 +769,8 @@ class Version(BASE):
         '''
         arches = set()
         for repo in self.repositories:
+            if repo.disabled:
+                continue
             arches.add(repo.arch.name)
         return arches
 
