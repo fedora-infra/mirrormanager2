@@ -160,98 +160,6 @@ def set_repomd_timestamp(yumrepo):
     return timestamp
 
 
-def make_file_details_from_checksums(session, config, relativeDName, D):
-    def _parse_checksum_file(relativeDName, checksumlen):
-        r = {}
-        try:
-            f = open(os.path.join(
-                config.get('UMDL_PREFIX', ''), relativeDName),  'r')
-            for line in f:
-                line = line.strip()
-                s = line.split()
-                if len(s) < 2:
-                    continue
-                if len(s[0]) != checksumlen:
-                    continue
-                # strip off extraneous starting '*' char from name
-                s[1] = s[1].strip('*')
-                r[s[1]] = s[0]
-            f.close()
-        except:
-            pass
-        return r
-
-    def _checksums_from_globs(config, relativeDName, globs, checksumlen):
-        d = {}
-        checksum_files = []
-        for g in globs:
-            checksum_files.extend(
-                glob.glob(os.path.join(
-                    config.get('UMDL_PREFIX', ''), relativeDName, g)))
-        for f in checksum_files:
-            d.update(_parse_checksum_file(f, checksumlen))
-        return d
-
-    sha1_globs = ['*.sha1sum', 'SHA1SUM', 'sha1sum.txt']
-    md5_globs = ['*.md5sum', 'MD5SUM', 'md5sum.txt']
-    sha256_globs = ['*-CHECKSUM', 'sha256sum.txt']
-    sha512_globs = ['*.sha512sum', 'SHA512SUM', 'sha512sum.txt']
-    md5dict = _checksums_from_globs(
-        config, relativeDName, md5_globs, 32)
-    sha1dict = _checksums_from_globs(
-        config, relativeDName, sha1_globs, 40)
-    sha256dict = _checksums_from_globs(
-        config, relativeDName, sha256_globs, 64)
-    sha512dict = _checksums_from_globs(
-        config, relativeDName, sha512_globs, 128)
-
-    files = set()
-    for k in md5dict.keys():
-        files.add(k)
-    for k in sha1dict.keys():
-        files.add(k)
-    for k in sha256dict.keys():
-        files.add(k)
-    for k in sha512dict.keys():
-        files.add(k)
-
-    for f in files:
-        try:
-            s = os.stat(os.path.join(
-                config.get('UMDL_PREFIX', ''), relativeDName, f))
-        except OSError:
-            # bail if the file doesn't actually exist
-            continue
-        sha1 = sha1dict.get(f)
-        md5  = md5dict.get(f)
-        sha256  = sha256dict.get(f)
-        sha512  = sha512dict.get(f)
-        size = s.st_size
-        ctime = s[stat.ST_CTIME]
-        fd = mirrormanager2.lib.get_file_detail(
-            session,
-            directory_id=D.id,
-            filename=f,
-            sha1=sha1,
-            md5=md5,
-            sha256=sha256,
-            sha512=sha512,
-            size=size,
-            timestamp=ctime)
-        if not fd:
-            fd = FileDetail(
-                directory=D,
-                filename=f,
-                sha1=sha1,
-                md5=md5,
-                sha256=sha256,
-                sha512=sha512,
-                timestamp=ctime,
-                size=size)
-            session.add(fd)
-            session.flush()
-
-
 def make_repo_file_details(session, config, relativeDName, D, category, target):
 
     warning = "Won't make repo file details"
@@ -474,8 +382,6 @@ def sync_category_directory(
             D.files = shortfiles
     session.add(D)
     session.flush()
-
-    make_file_details_from_checksums(session, config, relativeDName, D)
 
     if 'repodata' in dirfiles:
         make_repository(session, D, relativeDName, category, 'repomd.xml')
