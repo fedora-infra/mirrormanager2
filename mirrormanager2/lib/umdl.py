@@ -388,11 +388,11 @@ def make_repository(session, directory, relativeDName, category, target):
         session.add(repo)
         session.flush()
     else:
-        logger.info(
-            'Adjusting prefix Repository(%s) %s -> %s'
-            % (repo, repo.prefix, prefix))
         if repo.prefix != prefix:
             repo.prefix = prefix
+            logger.info(
+                'Adjusting prefix Repository(%s) %s -> %s'
+                % (repo, repo.prefix, prefix))
 
     return repo
 
