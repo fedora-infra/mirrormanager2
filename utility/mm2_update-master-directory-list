@@ -43,7 +43,7 @@ from mirrormanager2.lib.repomap import repo_prefix
 from mirrormanager2.lib.sync import run_rsync
 import mirrormanager2.lib.umdl as umdl
 
-logger = None
+logger = logging.getLogger('umdl')
 stdexcludes=['.*\.snapshot', '.*/\.~tmp~']
 cname = "N/A"
 
@@ -504,7 +504,6 @@ def sync_category_directories(
         make_repo_file_details(
             session, diskpath, relativeDName, D, category, target)
 
-    Directory.age_file_details(session, config)
 
 
 def parse_rsync_listing(session, config, category, f):
@@ -635,7 +634,6 @@ def sync_directories_from_disk(
         session, config, diskpath, category, category_directories)
 
 def setup_logging(config, options):
-    global logger
     log_dir = config.get('MM_LOG_DIR', None)
     # check if the directory exists
     if log_dir is not None:
@@ -652,8 +650,8 @@ def setup_logging(config, options):
         log_file = options.logfile
 
     fmt = '%(asctime)s:%(category)s:%(message)s'
-    formatter = logging.Formatter(fmt=fmt)
-    logger = logging.getLogger('umdl')
+    datefmt = '%Y-%m-%d %H:%M:%S'
+    formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
     handler = logging.handlers.WatchedFileHandler(log_file, "a+b")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
@@ -671,7 +669,6 @@ def setup_logging(config, options):
 
 
 def main():
-    global logger
     global cname
     parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option(
@@ -761,6 +758,11 @@ def main():
 
             if options.delete_directories:
                 nuke_gone_directories(session, i['path'], category)
+
+    logger.info('Refresh the list of repomd.xml')
+    Directory.age_file_details(session, config)
+
+    session.commit()
 
     logger.info("Ending umdl")
 
