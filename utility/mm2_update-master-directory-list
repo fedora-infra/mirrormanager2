@@ -32,6 +32,7 @@ import yum.repoMDObject
 import datetime
 import time
 import hashlib
+import mmap
 
 
 sys.path.insert(0, os.path.join(os.path.dirname(
@@ -506,6 +507,100 @@ def short_filelist(files):
         return files
 
 
+def sync_category_directory(
+        session, config, category, relativeDName, ctime, files):
+    """
+    This function is a re-implementation of the function
+    sync_category_directories() using fullfiletimelist and (almost)
+    no disk access. It checks if the directory :relativeDName: has
+    a newer :ctime: than in the database. If it does it updates the
+    directory information in the database. Including checksums and
+    repository metadata (for metalinks).
+
+    :param session: SQLAlchemy session
+    :param config: umdl config
+    :param category: SQLAlchemy object of a MirrorManager category
+    :param relativeDName: current directory name
+    :param ctime: actual ctime from relativeDName
+    :param files: contains file-names, ctimes and sizes of all
+                  files in the directory relativeDName
+    """
+
+    logger.debug("  sync_category_directory %s - %s" % (
+        category, relativeDName))
+
+    topdir = category.topdir.name
+
+    created = False
+    set_ctime = False
+    relativeDName = relativeDName.replace(topdir, '')
+    if relativeDName.startswith('/'):
+        relativeDName = relativeDName[1:]
+    if relativeDName in category.directory_cache:
+        d = category.directory_cache[relativeDName]
+        if d['ctime'] != ctime:
+            set_ctime = True
+            logger.info('ctime changed: ctime in database: %d - ctime on disk: %d' % (d['ctime'], ctime))
+        D = mirrormanager2.lib.get_directory_by_id(session, d.id)
+    else:
+        if relativeDName == u'':
+            D = category.topdir
+        else:
+            # Can't find the new directory, just add it
+            dname = os.path.join(topdir, relativeDName)
+            D = Directory(name=dname, ctime=ctime)
+            logger.debug(u'Created Directory(%s, ctime=%s)' % (dname, ctime))
+            created = True
+        # Add this category to the directory
+        D.categories.append(category)
+        session.add(D)
+        # And flush so that we can already start using it
+        session.flush()
+        # Refresh the cache
+        category.directory_cache[relativeDName] = D
+
+    if set_ctime:
+        D.ctime = ctime
+        logger.info('Setting ctime to %d' % ctime)
+
+    if set_ctime or created:
+
+        # stating changed files to see if they are readable
+        s = None
+        try:
+            s = os.stat(os.path.join(
+                config.get('UMDL_PREFIX', ''),
+                topdir,
+                relativeDName))
+        except OSError:
+            # The main reason for this execption is that the
+            # file from the fullfiletimelist does not exist.
+            logger.warning("Hmm, stat()ing %s failed. Theoretically this cannot happen." % relativeDName)
+
+        if s:
+            mode = s.st_mode
+            D.readable = not not (mode & stat.S_IRWXO & (stat.S_IROTH|stat.S_IXOTH))
+        # the whole stat block can be removed once fullfiletimelist marks unreadable directories
+
+        shortfiles = short_filelist(files)
+        if D.files != shortfiles:
+            D.files = shortfiles
+            logger.debug("File list for directory %s updated: %s" % (relativeDName, D.files))
+        session.add(D)
+        session.flush()
+
+        # Having the checksum detection here means, that only checksums of
+        # new or changed directories will be picked up.
+        # As the checksums detection code was broken for some time, not all
+        # missing checksums will be picked up in fullfiletimelist mode.
+        # The actual disk scanning will find those files, however.
+        make_file_details_from_checksums(session, config, D, files)
+
+    if ('repomd.xml' in files) and (set_ctime or created):
+        umdl.make_repository(session, D, relativeDName, category, 'repomd.xml')
+        umdl.make_repo_file_details(
+            session, config, relativeDName, D, category, 'repomd.xml')
+
 def sync_category_directories(
         session, config, diskpath, category, category_directories):
 
@@ -720,6 +815,136 @@ def sync_directories_from_disk(
         nuke_gone_directories(session, diskpath, category)
 
 
+def sync_directories_from_fullfiletimelist(
+    session, config, diskpath, category):
+    """
+    This functions tries to scan the master mirror by looking for
+    'fullfiletimelist-*' and using its content instead of accessing
+    the file-system. This greatly speeds up master mirror scanning
+    and reduces overall I/O on the storage system.
+    If no 'fullfiletimelist-*' file is found the functions returns
+    False and umdl can fall back to disk based master mirror scanning.
+
+    :param session: SQLAlchemy session
+    :param config: umdl config
+    :param diskpath: top directory of the category where the
+                     master mirror scanning starts
+    :param category: SQLAlchemy object of a MirrorManager category
+    :returns: True for success; False for failure
+    """
+
+    def _handle_fedora_linux_category(path):
+        if category.name == 'Fedora Linux':
+            # The 'Fedora Linux' category is the only category
+            # which starts at one directory level lower.
+            # 'Fedora Linux' -> pub/fedora/linux
+            # 'Fedora EPEL' -> pub/epel
+            # fullfiletimelist-fedora starts at linux/
+            # need to remove 'linux/' so that topdir + filename
+            # point to the right file
+            return path[6:]
+        return path
+
+    # let's look for a fullfiletimelist-* file
+    try:
+        if category.name == 'Fedora Linux':
+            filelist = glob.glob('%s/../fullfiletimelist-*' % diskpath)
+        else:
+            filelist = glob.glob('%s/fullfiletimelist-*' % diskpath)
+    except:
+        return False
+
+    if len(filelist) < 1:
+        # not a single element found in the glob
+        return False
+
+    # blindly take the first file found by the glob
+    logger.info('Get fullfiletimelist %s' % filelist[0])
+    # A hash with directories as key and ctime as value
+    ctimes = {}
+    # A hash with directories as key and
+    # { filename: { 'stat' : ctime, 'size': 'filesize' } } as value
+    files = {}
+    seen = set()
+
+    logger.info("Loading and parsing %s" % filelist[0])
+
+    umdl_prefix = config.get('UMDL_PREFIX', '')
+    # Not opening the file as stream and reading line by line as this breaks
+    # if the file changes. As this can happen, the file is loaded once into
+    # memory using mmap.
+    with open(filelist[0], 'rb') as f:
+        # tell mmap to open file read-only or mmap might fail
+        m = mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
+        row = m.readline()
+        while row:
+            col = row.split()
+            row = m.readline()
+            # only rows with at least 4 columns are what we are looking for
+            # 'ctime\ttype\tsize\tname'
+            if len(col) >= 4:
+
+                # Type can be either 'f', 'd', 'f-', 'd-'.
+                # As long as the '-' support is not implemented only look
+                # for the first character so that this does not break
+                # once types with '-' can appear.
+                # https://pagure.io/quick-fedora-mirror/issue/40
+
+                # only files (type: f)
+                if col[1][0] == 'f':
+                    # put all the information in a dict with path as key
+                    tmp = os.path.dirname(_handle_fedora_linux_category(col[3]))
+                    tmp = os.path.join(diskpath, tmp).replace(umdl_prefix, '')
+                    tmp = unicode(tmp, 'utf8')
+
+                    tmp2 = os.path.basename(_handle_fedora_linux_category(col[3]))
+                    tmp2 = unicode(tmp2, 'utf8')
+
+                    if tmp in seen:
+                        files[tmp].update({tmp2: {'stat': int(col[0]), 'size' : col[2] }})
+                    else:
+                        files[tmp] = {tmp2: {'stat': int(col[0]), 'size' : col[2] }}
+                        # Use a set() to track if the element already exists in the dict().
+                        # This is much faster than if tmp in files.keys(); much much faster
+                        seen.add(tmp)
+                elif col[1][0] == 'd':
+                    # get all directories and their ctime
+                    tmp = os.path.join(
+                        diskpath,
+                        _handle_fedora_linux_category(col[3])
+                    )
+
+                    tmp = tmp.replace(config.get('UMDL_PREFIX', ''), '')
+                    tmp = unicode(tmp, 'utf8')
+                    ctimes[tmp] = int(col[0])
+
+    # add the root directory of the current category
+    tmp = unicode(diskpath.replace(umdl_prefix, ''), 'utf8')
+    ctimes[tmp] = 0
+
+    logger.debug("sync_directories_from_fullfiletimelist %r" % diskpath)
+    seen = set()
+
+    for dirname in ctimes.keys():
+        if dirname in seen:
+            logger.info("Skipping already seen directory %s" % (dirname))
+            continue
+        seen.add(dirname)
+        if is_excluded(dirname, stdexcludes):
+            logger.info("Excluding %s" % (dirname))
+            continue
+        try:
+            file_dict = files[dirname]
+        except:
+            # An empty directory is not part of files{}
+            file_dict = {}
+        sync_category_directory(session, config, category, dirname, ctimes[dirname], file_dict)
+
+    if category.delete_directories:
+        nuke_gone_directories(session, None, category, ctimes)
+
+    return True
+
 def setup_logging(config, options):
     log_dir = config.get('MM_LOG_DIR', None)
     # check if the directory exists
@@ -778,6 +1003,10 @@ def main():
         "--debug",
         dest="debug", default=False, action="store_true",
         help="enable debugging")
+    parser.add_option(
+        "--skip-fullfiletimelist",
+        dest="skip_fullfiletimelist", default=False, action="store_true",
+        help="Do not look for a fullfiletimelist-*; actually scan the filesystem")
     parser.add_option(
         "--delete-directories",
         dest="delete_directories",
@@ -840,9 +1069,14 @@ def main():
 
         if i['type'] == 'file':
             sync_directories_from_file(session, config, i['url'], category)
-
         if i['type'] == 'directory':
-            sync_directories_from_disk(session, config, i['path'], category)
+            found = False
+            if not options.skip_fullfiletimelist:
+                found = sync_directories_from_fullfiletimelist(
+                    session, config, i['path'], category)
+
+            if options.skip_fullfiletimelist or not found:
+                sync_directories_from_disk(session, config, i['path'], category)
 
 
     logger.info('Refresh the list of repomd.xml')
