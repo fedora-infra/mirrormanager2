@@ -374,7 +374,7 @@ def is_excluded(path, excludes):
     return False
 
 
-def nuke_gone_directories(session, diskpath, category):
+def nuke_gone_directories(session, diskpath, category, ctimes=None):
     """ deleting a Directory has a ripple effect through the whole
         database.  Be really sure you're ready do to this.  It comes
         in handy when say a Test release is dropped."""
@@ -382,15 +382,26 @@ def nuke_gone_directories(session, diskpath, category):
     topdirName = category.topdir.name
 
     directories = category.directories # in ascending name order
-    directories.reverse() # now in decending name order, bottoms up
+    directories.reverse() # now in descending name order, bottoms up
     for d in directories:
-        if is_excluded(d.name, category.excludes): continue
-        relativeDName = umdl.remove_category_topdir(topdirName, d.name)
-        if not os.path.isdir(os.path.join(diskpath, relativeDName)):
-            if len(d.categories) == 1: # safety, this should always trigger
-                logger.info("Deleting gone directory %s" % (d.name))
-                session.delete(d)
-                session.commit()
+        if is_excluded(d.name, category.excludes):
+            continue
+
+        gone = False
+
+        if diskpath:
+            relativeDName = umdl.remove_category_topdir(topdirName, d.name)
+            if not os.path.isdir(os.path.join(diskpath, relativeDName)):
+                gone = True
+        else:
+            if d.name == topdirName:
+                continue
+            if d.name not in ctimes.keys():
+                gone = True
+        if gone and len(d.categories) == 1: # safety, this should always trigger
+            logger.info("Deleting gone directory %s" % (d.name))
+            session.delete(d)
+            session.commit()
 
 
 def ctime_from_rsync(date, hms):
@@ -705,6 +716,10 @@ def sync_directories_from_disk(
     sync_category_directories(
         session, config, diskpath, category, category_directories)
 
+    if category.delete_directories:
+        nuke_gone_directories(session, diskpath, category)
+
+
 def setup_logging(config, options):
     log_dir = config.get('MM_LOG_DIR', None)
     # check if the directory exists
@@ -818,6 +833,7 @@ def main():
         category.excludes = i.get('excludes', [])
         category.extra_rsync_options = i.get('options')
         category.directory_cache = cache_directories(category)
+        category.delete_directories = options.delete_directories
 
         if i['type'] == 'rsync':
             sync_directories_using_rsync(session, config, i['url'], category)
@@ -828,8 +844,6 @@ def main():
         if i['type'] == 'directory':
             sync_directories_from_disk(session, config, i['path'], category)
 
-            if options.delete_directories:
-                nuke_gone_directories(session, i['path'], category)
 
     logger.info('Refresh the list of repomd.xml')
     Directory.age_file_details(session, config)
