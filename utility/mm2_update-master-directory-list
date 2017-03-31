@@ -52,70 +52,141 @@ class MasterFilter(logging.Filter):
         record.category = cname
         return True
 
-def make_file_details_from_checksums(session, diskpath, relativeDName, D):
+
+def make_file_details_from_checksums(session, config, D, files=None):
+    """
+    This function looks for checksum files in the given directory. From those
+    checksum files the checksums are extracted and then written to
+    MirrorManager's database. With the checksums in the database
+    MirrorManager can create metalinks for those files, ISOs for example.
+
+    If the variable :files: is None this function will actually access the
+    file-system to detect if the checksum files exits. If :files: is not None
+    the function will use files to detect if checksum files exist.
+
+    :param session: SQLAlchemy session
+    :param config: umdl config
+    :param D: MirrorManager database directory object
+    :param files: optional hash with the files in the directory; if this is
+                  None, the function will actually scan the directory :D:
+    """
+
+    def _handle_checksum_line(line, checksumlen):
+        """
+        This function tries to extract the filename and the its checksum
+        from given :line:.
+        """
+
+        line = line.strip()
+        try:
+            # old style fileformat
+            # 25ceb179396f45586e373cee04bea0c436481a5b340bc24073f8178546b1e51b *Fedora-i386-20-20131211.1-sda.qcow2
+            checksum, filename = line.split()
+            algo, delimiter = None, None
+        except ValueError:
+            # new style - bsd style checksum
+            # SHA256 (Fedora-Cloud-Base-25-1.3.x86_64.qcow2) = 4942be57a97c7e6f9f420ba29555776c79ed49c603d7cabb0394bb1a790eb336
+            algo, filename, delimiter, checksum = line.split()
+
+        if algo is None:
+            # old style fileformat
+            if len(checksum) != checksumlen:
+                return None, None
+            # strip off extraneous starting '*' char from name
+            filename = filename.lstrip('*')
+            return filename, checksum
+
+        # new style - bsd style checksum
+        if (checksumlen == 32) and (algo != 'MD5'):
+            return None, None
+        if (checksumlen == 40) and (algo != 'SHA1'):
+            return None, None
+        if (checksumlen == 64) and (algo != 'SHA256'):
+            return None, None
+        if (checksumlen == 128) and (algo != 'SHA512'):
+            return None, None
+
+        filename = filename[1:-1]
+
+        return filename, checksum
+
     def _parse_checksum_file(relativeDName, checksumlen):
         r = {}
         try:
-            f = open(os.path.join(diskpath, relativeDName),  'r')
-            for line in f:
-                line = line.strip()
-                s = line.split()
-                if len(s) < 2:
-                    continue
-                if len(s[0]) != checksumlen:
-                    continue
-                # strip off extraneous starting '*' char from name
-                s[1] = s[1].strip('*')
-                r[s[1]] = s[0]
-            f.close()
+            with open(os.path.join(config.get('UMDL_PREFIX', ''),
+                relativeDName),  'r') as f:
+                for line in f:
+                    filename, checksum = _handle_checksum_line(line, checksumlen)
+                    if filename != None:
+                        r[filename] = checksum
         except:
             pass
         return r
 
     def _checksums_from_globs(relativeDName, globs, checksumlen):
+        """
+        Finds checksum files on disk (or from the filelist) and extracts
+        the checksums and places the result in a dict[filename] = checksum.
+        Finding the checksum files does a os.listdir() if the variable
+        files is None.
+
+        :param relativeDName: path to the directory (without category topdir)
+        :param globs: possible patterns containing checksums
+        :param checksumlen: number of characters the checksum has
+        :returns: dict[filename] = checksum
+        """
+
         d = {}
         checksum_files = []
         for g in globs:
-            checksum_files.extend(
-                glob.glob(os.path.join(diskpath, relativeDName, g)))
+            if files != None:
+                for f in files.keys():
+                    if re.compile(g).match(f):
+                        checksum_files.append(os.path.join(relativeDName,f))
+            else:
+                for f in os.listdir(os.path.join(config.get('UMDL_PREFIX', ''), relativeDName)):
+                    if re.compile(g).match(f):
+                        checksum_files.append(os.path.join(relativeDName,f))
         for f in checksum_files:
             d.update(_parse_checksum_file(f, checksumlen))
         return d
 
-    if diskpath is None:
-        return
+    sha1_globs = ['.*\.sha1sum', 'SHA1SUM', 'sha1sum.txt']
+    md5_globs = ['.*\.md5sum', 'MD5SUM', 'md5sum.txt']
+    sha256_globs = ['.*-CHECKSUM', 'sha256sum.txt']
+    sha512_globs = ['.*\.sha512sum', 'SHA512SUM', 'sha512sum.txt']
+    md5dict = _checksums_from_globs(D.name, md5_globs, 32)
+    sha1dict = _checksums_from_globs(D.name, sha1_globs, 40)
+    sha256dict = _checksums_from_globs(D.name, sha256_globs, 64)
+    sha512dict = _checksums_from_globs(D.name, sha512_globs, 128)
 
-    sha1_globs = ['*.sha1sum', 'SHA1SUM', 'sha1sum.txt']
-    md5_globs = ['*.md5sum', 'MD5SUM', 'md5sum.txt']
-    sha256_globs = ['*-CHECKSUM', 'sha256sum.txt']
-    sha512_globs = ['*.sha512sum', 'SHA512SUM', 'sha512sum.txt']
-    md5dict = _checksums_from_globs(relativeDName, md5_globs, 32)
-    sha1dict = _checksums_from_globs(relativeDName, sha1_globs, 40)
-    sha256dict = _checksums_from_globs(relativeDName, sha256_globs, 64)
-    sha512dict = _checksums_from_globs(relativeDName, sha512_globs, 128)
-
-    files = set()
+    sum_files = set()
     for k in md5dict.keys():
-        files.add(k)
+        sum_files.add(k)
     for k in sha1dict.keys():
-        files.add(k)
+        sum_files.add(k)
     for k in sha256dict.keys():
-        files.add(k)
+        sum_files.add(k)
     for k in sha512dict.keys():
-        files.add(k)
+        sum_files.add(k)
 
-    for f in files:
-        try:
-            s = os.stat(os.path.join(diskpath, relativeDName, f))
-        except OSError:
-            # bail if the file doesn't actually exist
-            continue
+    for f in sum_files:
+        if files != None:
+            size = int(files[f]['size'])
+            ctime = files[f]['stat']
+        else:
+            try:
+                s = os.stat(os.path.join(config.get('UMDL_PREFIX', ''), D.name, f))
+            except OSError:
+                # bail if the file doesn't actually exist
+                continue
+            size = s.st_size
+            ctime = s[stat.ST_CTIME]
         sha1 = sha1dict.get(f)
         md5  = md5dict.get(f)
         sha256  = sha256dict.get(f)
         sha512  = sha512dict.get(f)
-        size = s.st_size
-        ctime = s[stat.ST_CTIME]
+
         fd = mirrormanager2.lib.get_file_detail(
             session,
             directory_id=D.id,
@@ -138,6 +209,7 @@ def make_file_details_from_checksums(session, diskpath, relativeDName, D):
                 size=size)
             session.add(fd)
             session.commit()
+            logger.debug("Added checksum for %s to database", f)
 
 
 def make_repo_file_details(session, diskpath, relativeDName, D, category, target):
@@ -476,7 +548,7 @@ def sync_category_directories(
                     D.files = short_filelist(value['files'])
         session.add(D)
         session.commit()
-        make_file_details_from_checksums(session, diskpath, relativeDName, D)
+        make_file_details_from_checksums(session, config, D)
 
     # this has to be a second pass to be sure the child repodata/ dir is
     # created in the db first
