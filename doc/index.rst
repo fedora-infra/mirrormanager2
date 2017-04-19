@@ -8,12 +8,11 @@ manage their mirrors.
 
 Resources:
 
-- `Home page <http://fedorahosted.org/mirrormanager/>`_
+- `Home page <https://github.com/fedora-infra/mirrormanager2/>`_
 - `Documentation <http://mirrormanager.rtfd.org/>`_
-- `Git repository <http://git.fedorahosted.org/git/mirrormanager2>`_
-- `Github mirror <https://github.com/fedora-infra/mirrormanager2>`_
+- `Git repository <https://github.com/fedora-infra/mirrormanager2.git>`_
 - `Discussion mailing-list
-  <http://www.redhat.com/mailman/listinfo/mirror-list-d>`_
+  <https://lists.fedoraproject.org/archives/list/mirror-admin@lists.fedoraproject.org/>`_
 
 
 Contents:

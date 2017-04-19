@@ -8,11 +8,10 @@ MirrorManager is the application that keeps track of the nearly 400 public mirro
 and over 300 private mirrors, that carry Fedora, EPEL, and RHEL content, and is used
 by rpmfusion.org, a third party repository. It automatically selects the "best"
 mirror for a given user based on a set of fallback heuristics.
-For more details `mirrormanager <https://fedorahosted.org/mirrormanager/>`_
 
 :Github mirror: https://github.com/fedora-infra/mirrormanager2
-:Mailing list for announcements: http://www.redhat.com/mailman/listinfo/mirror-list
-:Mailing list for discussions: http://www.redhat.com/mailman/listinfo/mirror-list-d
+:Mailing list for announcements and discussions: 
+https://lists.fedoraproject.org/archives/list/mirror-admin@lists.fedoraproject.org/
 
 Hacking
 -------
