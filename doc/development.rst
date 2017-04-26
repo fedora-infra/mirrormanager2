@@ -8,13 +8,13 @@ Anonymous:
 
 ::
 
-  git clone http://git.fedorahosted.org/git/mirrormanager2.git
+  git clone https://github.com/fedora-infra/mirrormanager2.git
 
 Contributors:
 
 ::
 
-  git clone ssh://<FAS user>@git.fedorahosted.org/git/mirrormanager2.git
+  git clone git@github.com:fedora-infra/mirrormanager2.git
 
 
 Dependencies

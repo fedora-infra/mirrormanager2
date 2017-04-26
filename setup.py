@@ -47,8 +47,8 @@ setup(
     maintainer='Pierre-Yves Chibon',
     maintainer_email='pingou@pingoured.fr',
     license='MIT',
-    download_url='https://fedorahosted.org/releases/m/i/mirrormanager/',
-    url='https://fedorahosted.org/mirrormanager/',
+    download_url='https://github.com/fedora-infra/mirrormanager2/releases',
+    url='https://github.com/fedora-infra/mirrormanager2/',
     packages=['mirrormanager2'],
     include_package_data=True,
     install_requires=get_requirements() + get_requirements(

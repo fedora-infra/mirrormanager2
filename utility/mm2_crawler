@@ -593,7 +593,7 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
     conn.request('HEAD', reqpath,
                  headers={'Connection':'Keep-Alive',
                           'Pragma':'no-cache',
-                          'User-Agent':'mirrormanager-crawler/0.1 (+http://fedorahosted.org/mirrormanager)'})
+                          'User-Agent':'mirrormanager-crawler/0.1 (+https://github.com/fedora-infra/mirrormanager2/)'})
 
     r = None
     try:

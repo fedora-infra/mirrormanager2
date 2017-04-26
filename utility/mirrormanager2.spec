@@ -10,8 +10,8 @@ Summary:        Mirror management application
 # imported/derivated parts like zebra-dump-parser or the the script
 # to generate the worldmaps are licensed under GPLv2 and GPLv2+
 License:        MIT and GPLv2+ and GPLv2
-URL:            http://fedorahosted.org/mirrormanager/
-Source0:        https://fedorahosted.org/releases/m/i/mirrormanager/%{name}-%{version}.tar.gz
+URL:            https://github.com/fedora-infra/mirrormanager2/
+Source0:        https://github.com/fedora-infra/mirrormanager2/archive/%{version}.tar.gz
 
 BuildArch:      noarch
 
