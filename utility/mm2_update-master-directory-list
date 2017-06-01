@@ -32,6 +32,7 @@ import yum.repoMDObject
 import datetime
 import time
 import hashlib
+import mmap
 
 
 sys.path.insert(0, os.path.join(os.path.dirname(
@@ -43,7 +44,7 @@ from mirrormanager2.lib.repomap import repo_prefix
 from mirrormanager2.lib.sync import run_rsync
 import mirrormanager2.lib.umdl as umdl
 
-logger = None
+logger = logging.getLogger('umdl')
 stdexcludes=['.*\.snapshot', '.*/\.~tmp~']
 cname = "N/A"
 
@@ -52,70 +53,141 @@ class MasterFilter(logging.Filter):
         record.category = cname
         return True
 
-def make_file_details_from_checksums(session, diskpath, relativeDName, D):
+
+def make_file_details_from_checksums(session, config, D, files=None):
+    """
+    This function looks for checksum files in the given directory. From those
+    checksum files the checksums are extracted and then written to
+    MirrorManager's database. With the checksums in the database
+    MirrorManager can create metalinks for those files, ISOs for example.
+
+    If the variable :files: is None this function will actually access the
+    file-system to detect if the checksum files exits. If :files: is not None
+    the function will use files to detect if checksum files exist.
+
+    :param session: SQLAlchemy session
+    :param config: umdl config
+    :param D: MirrorManager database directory object
+    :param files: optional hash with the files in the directory; if this is
+                  None, the function will actually scan the directory :D:
+    """
+
+    def _handle_checksum_line(line, checksumlen):
+        """
+        This function tries to extract the filename and the its checksum
+        from given :line:.
+        """
+
+        line = line.strip()
+        try:
+            # old style fileformat
+            # 25ceb179396f45586e373cee04bea0c436481a5b340bc24073f8178546b1e51b *Fedora-i386-20-20131211.1-sda.qcow2
+            checksum, filename = line.split()
+            algo, delimiter = None, None
+        except ValueError:
+            # new style - bsd style checksum
+            # SHA256 (Fedora-Cloud-Base-25-1.3.x86_64.qcow2) = 4942be57a97c7e6f9f420ba29555776c79ed49c603d7cabb0394bb1a790eb336
+            algo, filename, delimiter, checksum = line.split()
+
+        if algo is None:
+            # old style fileformat
+            if len(checksum) != checksumlen:
+                return None, None
+            # strip off extraneous starting '*' char from name
+            filename = filename.lstrip('*')
+            return filename, checksum
+
+        # new style - bsd style checksum
+        if (checksumlen == 32) and (algo != 'MD5'):
+            return None, None
+        if (checksumlen == 40) and (algo != 'SHA1'):
+            return None, None
+        if (checksumlen == 64) and (algo != 'SHA256'):
+            return None, None
+        if (checksumlen == 128) and (algo != 'SHA512'):
+            return None, None
+
+        filename = filename[1:-1]
+
+        return filename, checksum
+
     def _parse_checksum_file(relativeDName, checksumlen):
         r = {}
         try:
-            f = open(os.path.join(diskpath, relativeDName),  'r')
-            for line in f:
-                line = line.strip()
-                s = line.split()
-                if len(s) < 2:
-                    continue
-                if len(s[0]) != checksumlen:
-                    continue
-                # strip off extraneous starting '*' char from name
-                s[1] = s[1].strip('*')
-                r[s[1]] = s[0]
-            f.close()
+            with open(os.path.join(config.get('UMDL_PREFIX', ''),
+                relativeDName),  'r') as f:
+                for line in f:
+                    filename, checksum = _handle_checksum_line(line, checksumlen)
+                    if filename != None:
+                        r[filename] = checksum
         except:
             pass
         return r
 
     def _checksums_from_globs(relativeDName, globs, checksumlen):
+        """
+        Finds checksum files on disk (or from the filelist) and extracts
+        the checksums and places the result in a dict[filename] = checksum.
+        Finding the checksum files does a os.listdir() if the variable
+        files is None.
+
+        :param relativeDName: path to the directory (without category topdir)
+        :param globs: possible patterns containing checksums
+        :param checksumlen: number of characters the checksum has
+        :returns: dict[filename] = checksum
+        """
+
         d = {}
         checksum_files = []
         for g in globs:
-            checksum_files.extend(
-                glob.glob(os.path.join(diskpath, relativeDName, g)))
+            if files != None:
+                for f in files.keys():
+                    if re.compile(g).match(f):
+                        checksum_files.append(os.path.join(relativeDName,f))
+            else:
+                for f in os.listdir(os.path.join(config.get('UMDL_PREFIX', ''), relativeDName)):
+                    if re.compile(g).match(f):
+                        checksum_files.append(os.path.join(relativeDName,f))
         for f in checksum_files:
             d.update(_parse_checksum_file(f, checksumlen))
         return d
 
-    if diskpath is None:
-        return
+    sha1_globs = ['.*\.sha1sum', 'SHA1SUM', 'sha1sum.txt']
+    md5_globs = ['.*\.md5sum', 'MD5SUM', 'md5sum.txt']
+    sha256_globs = ['.*-CHECKSUM', 'sha256sum.txt']
+    sha512_globs = ['.*\.sha512sum', 'SHA512SUM', 'sha512sum.txt']
+    md5dict = _checksums_from_globs(D.name, md5_globs, 32)
+    sha1dict = _checksums_from_globs(D.name, sha1_globs, 40)
+    sha256dict = _checksums_from_globs(D.name, sha256_globs, 64)
+    sha512dict = _checksums_from_globs(D.name, sha512_globs, 128)
 
-    sha1_globs = ['*.sha1sum', 'SHA1SUM', 'sha1sum.txt']
-    md5_globs = ['*.md5sum', 'MD5SUM', 'md5sum.txt']
-    sha256_globs = ['*-CHECKSUM', 'sha256sum.txt']
-    sha512_globs = ['*.sha512sum', 'SHA512SUM', 'sha512sum.txt']
-    md5dict = _checksums_from_globs(relativeDName, md5_globs, 32)
-    sha1dict = _checksums_from_globs(relativeDName, sha1_globs, 40)
-    sha256dict = _checksums_from_globs(relativeDName, sha256_globs, 64)
-    sha512dict = _checksums_from_globs(relativeDName, sha512_globs, 128)
-
-    files = set()
+    sum_files = set()
     for k in md5dict.keys():
-        files.add(k)
+        sum_files.add(k)
     for k in sha1dict.keys():
-        files.add(k)
+        sum_files.add(k)
     for k in sha256dict.keys():
-        files.add(k)
+        sum_files.add(k)
     for k in sha512dict.keys():
-        files.add(k)
+        sum_files.add(k)
 
-    for f in files:
-        try:
-            s = os.stat(os.path.join(diskpath, relativeDName, f))
-        except OSError:
-            # bail if the file doesn't actually exist
-            continue
+    for f in sum_files:
+        if files != None:
+            size = int(files[f]['size'])
+            ctime = files[f]['stat']
+        else:
+            try:
+                s = os.stat(os.path.join(config.get('UMDL_PREFIX', ''), D.name, f))
+            except OSError:
+                # bail if the file doesn't actually exist
+                continue
+            size = s.st_size
+            ctime = s[stat.ST_CTIME]
         sha1 = sha1dict.get(f)
         md5  = md5dict.get(f)
         sha256  = sha256dict.get(f)
         sha512  = sha512dict.get(f)
-        size = s.st_size
-        ctime = s[stat.ST_CTIME]
+
         fd = mirrormanager2.lib.get_file_detail(
             session,
             directory_id=D.id,
@@ -138,6 +210,7 @@ def make_file_details_from_checksums(session, diskpath, relativeDName, D):
                 size=size)
             session.add(fd)
             session.commit()
+            logger.debug("Added checksum for %s to database", f)
 
 
 def make_repo_file_details(session, diskpath, relativeDName, D, category, target):
@@ -302,7 +375,7 @@ def is_excluded(path, excludes):
     return False
 
 
-def nuke_gone_directories(session, diskpath, category):
+def nuke_gone_directories(session, diskpath, category, ctimes=None):
     """ deleting a Directory has a ripple effect through the whole
         database.  Be really sure you're ready do to this.  It comes
         in handy when say a Test release is dropped."""
@@ -310,15 +383,26 @@ def nuke_gone_directories(session, diskpath, category):
     topdirName = category.topdir.name
 
     directories = category.directories # in ascending name order
-    directories.reverse() # now in decending name order, bottoms up
+    directories.reverse() # now in descending name order, bottoms up
     for d in directories:
-        if is_excluded(d.name, category.excludes): continue
-        relativeDName = umdl.remove_category_topdir(topdirName, d.name)
-        if not os.path.isdir(os.path.join(diskpath, relativeDName)):
-            if len(d.categories) == 1: # safety, this should always trigger
-                logger.info("Deleting gone directory %s" % (d.name))
-                session.delete(d)
-                session.commit()
+        if is_excluded(d.name, category.excludes):
+            continue
+
+        gone = False
+
+        if diskpath:
+            relativeDName = umdl.remove_category_topdir(topdirName, d.name)
+            if not os.path.isdir(os.path.join(diskpath, relativeDName)):
+                gone = True
+        else:
+            if d.name == topdirName:
+                continue
+            if d.name not in ctimes.keys():
+                gone = True
+        if gone and len(d.categories) == 1: # safety, this should always trigger
+            logger.info("Deleting gone directory %s" % (d.name))
+            session.delete(d)
+            session.commit()
 
 
 def ctime_from_rsync(date, hms):
@@ -423,6 +507,100 @@ def short_filelist(files):
         return files
 
 
+def sync_category_directory(
+        session, config, category, relativeDName, ctime, files):
+    """
+    This function is a re-implementation of the function
+    sync_category_directories() using fullfiletimelist and (almost)
+    no disk access. It checks if the directory :relativeDName: has
+    a newer :ctime: than in the database. If it does it updates the
+    directory information in the database. Including checksums and
+    repository metadata (for metalinks).
+
+    :param session: SQLAlchemy session
+    :param config: umdl config
+    :param category: SQLAlchemy object of a MirrorManager category
+    :param relativeDName: current directory name
+    :param ctime: actual ctime from relativeDName
+    :param files: contains file-names, ctimes and sizes of all
+                  files in the directory relativeDName
+    """
+
+    logger.debug("  sync_category_directory %s - %s" % (
+        category, relativeDName))
+
+    topdir = category.topdir.name
+
+    created = False
+    set_ctime = False
+    relativeDName = relativeDName.replace(topdir, '')
+    if relativeDName.startswith('/'):
+        relativeDName = relativeDName[1:]
+    if relativeDName in category.directory_cache:
+        d = category.directory_cache[relativeDName]
+        if d['ctime'] != ctime:
+            set_ctime = True
+            logger.info('ctime changed: ctime in database: %d - ctime on disk: %d' % (d['ctime'], ctime))
+        D = mirrormanager2.lib.get_directory_by_id(session, d.id)
+    else:
+        if relativeDName == u'':
+            D = category.topdir
+        else:
+            # Can't find the new directory, just add it
+            dname = os.path.join(topdir, relativeDName)
+            D = Directory(name=dname, ctime=ctime)
+            logger.debug(u'Created Directory(%s, ctime=%s)' % (dname, ctime))
+            created = True
+        # Add this category to the directory
+        D.categories.append(category)
+        session.add(D)
+        # And flush so that we can already start using it
+        session.flush()
+        # Refresh the cache
+        category.directory_cache[relativeDName] = D
+
+    if set_ctime:
+        D.ctime = ctime
+        logger.info('Setting ctime to %d' % ctime)
+
+    if set_ctime or created:
+
+        # stating changed files to see if they are readable
+        s = None
+        try:
+            s = os.stat(os.path.join(
+                config.get('UMDL_PREFIX', ''),
+                topdir,
+                relativeDName))
+        except OSError:
+            # The main reason for this execption is that the
+            # file from the fullfiletimelist does not exist.
+            logger.warning("Hmm, stat()ing %s failed. Theoretically this cannot happen." % relativeDName)
+
+        if s:
+            mode = s.st_mode
+            D.readable = not not (mode & stat.S_IRWXO & (stat.S_IROTH|stat.S_IXOTH))
+        # the whole stat block can be removed once fullfiletimelist marks unreadable directories
+
+        shortfiles = short_filelist(files)
+        if D.files != shortfiles:
+            D.files = shortfiles
+            logger.debug("File list for directory %s updated: %s" % (relativeDName, D.files))
+        session.add(D)
+        session.flush()
+
+        # Having the checksum detection here means, that only checksums of
+        # new or changed directories will be picked up.
+        # As the checksums detection code was broken for some time, not all
+        # missing checksums will be picked up in fullfiletimelist mode.
+        # The actual disk scanning will find those files, however.
+        make_file_details_from_checksums(session, config, D, files)
+
+    if ('repomd.xml' in files) and (set_ctime or created):
+        umdl.make_repository(session, D, relativeDName, category, 'repomd.xml')
+        umdl.make_repo_file_details(
+            session, config, relativeDName, D, category, 'repomd.xml')
+
 def sync_category_directories(
         session, config, diskpath, category, category_directories):
 
@@ -476,7 +654,7 @@ def sync_category_directories(
                     D.files = short_filelist(value['files'])
         session.add(D)
         session.commit()
-        make_file_details_from_checksums(session, diskpath, relativeDName, D)
+        make_file_details_from_checksums(session, config, D)
 
     # this has to be a second pass to be sure the child repodata/ dir is
     # created in the db first
@@ -504,7 +682,6 @@ def sync_category_directories(
         make_repo_file_details(
             session, diskpath, relativeDName, D, category, target)
 
-    Directory.age_file_details(session, config)
 
 
 def parse_rsync_listing(session, config, category, f):
@@ -634,8 +811,141 @@ def sync_directories_from_disk(
     sync_category_directories(
         session, config, diskpath, category, category_directories)
 
+    if category.delete_directories:
+        nuke_gone_directories(session, diskpath, category)
+
+
+def sync_directories_from_fullfiletimelist(
+    session, config, diskpath, category):
+    """
+    This functions tries to scan the master mirror by looking for
+    'fullfiletimelist-*' and using its content instead of accessing
+    the file-system. This greatly speeds up master mirror scanning
+    and reduces overall I/O on the storage system.
+    If no 'fullfiletimelist-*' file is found the functions returns
+    False and umdl can fall back to disk based master mirror scanning.
+
+    :param session: SQLAlchemy session
+    :param config: umdl config
+    :param diskpath: top directory of the category where the
+                     master mirror scanning starts
+    :param category: SQLAlchemy object of a MirrorManager category
+    :returns: True for success; False for failure
+    """
+
+    def _handle_fedora_linux_category(path):
+        if category.name == 'Fedora Linux':
+            # The 'Fedora Linux' category is the only category
+            # which starts at one directory level lower.
+            # 'Fedora Linux' -> pub/fedora/linux
+            # 'Fedora EPEL' -> pub/epel
+            # fullfiletimelist-fedora starts at linux/
+            # need to remove 'linux/' so that topdir + filename
+            # point to the right file
+            return path[6:]
+        return path
+
+    # let's look for a fullfiletimelist-* file
+    try:
+        if category.name == 'Fedora Linux':
+            filelist = glob.glob('%s/../fullfiletimelist-*' % diskpath)
+        else:
+            filelist = glob.glob('%s/fullfiletimelist-*' % diskpath)
+    except:
+        return False
+
+    if len(filelist) < 1:
+        # not a single element found in the glob
+        return False
+
+    # blindly take the first file found by the glob
+    logger.info('Get fullfiletimelist %s' % filelist[0])
+    # A hash with directories as key and ctime as value
+    ctimes = {}
+    # A hash with directories as key and
+    # { filename: { 'stat' : ctime, 'size': 'filesize' } } as value
+    files = {}
+    seen = set()
+
+    logger.info("Loading and parsing %s" % filelist[0])
+
+    umdl_prefix = config.get('UMDL_PREFIX', '')
+    # Not opening the file as stream and reading line by line as this breaks
+    # if the file changes. As this can happen, the file is loaded once into
+    # memory using mmap.
+    with open(filelist[0], 'rb') as f:
+        # tell mmap to open file read-only or mmap might fail
+        m = mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
+        row = m.readline()
+        while row:
+            col = row.split()
+            row = m.readline()
+            # only rows with at least 4 columns are what we are looking for
+            # 'ctime\ttype\tsize\tname'
+            if len(col) >= 4:
+
+                # Type can be either 'f', 'd', 'f-', 'd-'.
+                # As long as the '-' support is not implemented only look
+                # for the first character so that this does not break
+                # once types with '-' can appear.
+                # https://pagure.io/quick-fedora-mirror/issue/40
+
+                # only files (type: f)
+                if col[1][0] == 'f':
+                    # put all the information in a dict with path as key
+                    tmp = os.path.dirname(_handle_fedora_linux_category(col[3]))
+                    tmp = os.path.join(diskpath, tmp).replace(umdl_prefix, '')
+                    tmp = unicode(tmp, 'utf8')
+
+                    tmp2 = os.path.basename(_handle_fedora_linux_category(col[3]))
+                    tmp2 = unicode(tmp2, 'utf8')
+
+                    if tmp in seen:
+                        files[tmp].update({tmp2: {'stat': int(col[0]), 'size' : col[2] }})
+                    else:
+                        files[tmp] = {tmp2: {'stat': int(col[0]), 'size' : col[2] }}
+                        # Use a set() to track if the element already exists in the dict().
+                        # This is much faster than if tmp in files.keys(); much much faster
+                        seen.add(tmp)
+                elif col[1][0] == 'd':
+                    # get all directories and their ctime
+                    tmp = os.path.join(
+                        diskpath,
+                        _handle_fedora_linux_category(col[3])
+                    )
+
+                    tmp = tmp.replace(config.get('UMDL_PREFIX', ''), '')
+                    tmp = unicode(tmp, 'utf8')
+                    ctimes[tmp] = int(col[0])
+
+    # add the root directory of the current category
+    tmp = unicode(diskpath.replace(umdl_prefix, ''), 'utf8')
+    ctimes[tmp] = 0
+
+    logger.debug("sync_directories_from_fullfiletimelist %r" % diskpath)
+    seen = set()
+
+    for dirname in ctimes.keys():
+        if dirname in seen:
+            logger.info("Skipping already seen directory %s" % (dirname))
+            continue
+        seen.add(dirname)
+        if is_excluded(dirname, stdexcludes):
+            logger.info("Excluding %s" % (dirname))
+            continue
+        try:
+            file_dict = files[dirname]
+        except:
+            # An empty directory is not part of files{}
+            file_dict = {}
+        sync_category_directory(session, config, category, dirname, ctimes[dirname], file_dict)
+
+    if category.delete_directories:
+        nuke_gone_directories(session, None, category, ctimes)
+
+    return True
+
 def setup_logging(config, options):
-    global logger
     log_dir = config.get('MM_LOG_DIR', None)
     # check if the directory exists
     if log_dir is not None:
@@ -652,8 +962,8 @@ def setup_logging(config, options):
         log_file = options.logfile
 
     fmt = '%(asctime)s:%(category)s:%(message)s'
-    formatter = logging.Formatter(fmt=fmt)
-    logger = logging.getLogger('umdl')
+    datefmt = '%Y-%m-%d %H:%M:%S'
+    formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
     handler = logging.handlers.WatchedFileHandler(log_file, "a+b")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
@@ -671,7 +981,6 @@ def setup_logging(config, options):
 
 
 def main():
-    global logger
     global cname
     parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option(
@@ -694,6 +1003,10 @@ def main():
         "--debug",
         dest="debug", default=False, action="store_true",
         help="enable debugging")
+    parser.add_option(
+        "--skip-fullfiletimelist",
+        dest="skip_fullfiletimelist", default=False, action="store_true",
+        help="Do not look for a fullfiletimelist-*; actually scan the filesystem")
     parser.add_option(
         "--delete-directories",
         dest="delete_directories",
@@ -749,18 +1062,27 @@ def main():
         category.excludes = i.get('excludes', [])
         category.extra_rsync_options = i.get('options')
         category.directory_cache = cache_directories(category)
+        category.delete_directories = options.delete_directories
 
         if i['type'] == 'rsync':
             sync_directories_using_rsync(session, config, i['url'], category)
 
         if i['type'] == 'file':
             sync_directories_from_file(session, config, i['url'], category)
-
         if i['type'] == 'directory':
-            sync_directories_from_disk(session, config, i['path'], category)
+            found = False
+            if not options.skip_fullfiletimelist:
+                found = sync_directories_from_fullfiletimelist(
+                    session, config, i['path'], category)
 
-            if options.delete_directories:
-                nuke_gone_directories(session, i['path'], category)
+            if options.skip_fullfiletimelist or not found:
+                sync_directories_from_disk(session, config, i['path'], category)
+
+
+    logger.info('Refresh the list of repomd.xml')
+    Directory.age_file_details(session, config)
+
+    session.commit()
 
     logger.info("Ending umdl")
 
