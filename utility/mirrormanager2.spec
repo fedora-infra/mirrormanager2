@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.7.3
+Version:        0.8
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -357,6 +357,29 @@ exit 0
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Thu Jun 02 2017 Adrian Reber <adrian@lisas.de> - 0.8-1
+- Update to 0.8
+- Specify rel="noopener noreferrer" to link including target='_blank'
+- Improve the runserver script
+- Make the propagation script more robust
+- crawler: also crawl https-only mirrors
+  https://github.com/fedora-infra/mirrormanager2/issues/183
+- mm2_move-devel-to-release: adapt to latest repository layout
+  https://github.com/fedora-infra/mirrormanager2/issues/195
+- Private URLs are now restricted to admins
+  https://github.com/fedora-infra/mirrormanager2/issues/149
+- mirrorlist: at least 5 mirrors should be returned for country/continent
+  https://github.com/fedora-infra/mirrormanager2/issues/194
+- Remove 'Master rsync server Access Control List IPs' section
+  https://github.com/fedora-infra/mirrormanager2/issues/145
+- mirrorlist: add pkl generation time to pkl
+  https://github.com/fedora-infra/mirrormanager2/issues/184
+- restrict non-admin users to certain netblock sizes
+  https://github.com/fedora-infra/mirrormanager2/issues/71
+- Change all references from fedorahosted.org to use the github area
+- umdl: add fullfiletimelist-* based master scanning
+  https://github.com/fedora-infra/mirrormanager2/issues/206
+
 * Sat Oct 08 2016 Patrick Uiterwijk <puiterwijk@redhat.com> - 0.7.3-2
 - Remove <0.80 requirement on IPy
 
