@@ -357,7 +357,7 @@ exit 0
 %{_bindir}/mirrorlist_statistics
 
 %changelog
-* Thu Jun 02 2017 Adrian Reber <adrian@lisas.de> - 0.8-1
+* Fri Jun 02 2017 Adrian Reber <adrian@lisas.de> - 0.8-1
 - Update to 0.8
 - Specify rel="noopener noreferrer" to link including target='_blank'
 - Improve the runserver script
