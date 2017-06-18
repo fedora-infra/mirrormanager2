@@ -549,7 +549,11 @@ def sync_category_directory(
         d = category.directory_cache[relativeDName]
         if d['ctime'] != ctime:
             set_ctime = True
-            logger.info('ctime changed: ctime in database: %d - ctime on disk: %d' % (d['ctime'], ctime))
+            logger.info(
+                'ctime changed for %s: ctime in database: %d '
+                '- ctime on disk: %d'
+                % (topdir + '/' + relativeDName ,d['ctime'], ctime)
+            )
         D = mirrormanager2.lib.get_directory_by_id(session, d.id)
     else:
         if relativeDName == u'':
@@ -570,7 +574,6 @@ def sync_category_directory(
 
     if set_ctime:
         D.ctime = ctime
-        logger.info('Setting ctime to %d' % ctime)
 
     if set_ctime or created:
 
@@ -868,7 +871,7 @@ def sync_directories_from_fullfiletimelist(
         return False
 
     # blindly take the first file found by the glob
-    logger.info('Get fullfiletimelist %s' % filelist[0])
+    logger.info("Loading and parsing %s" % filelist[0])
     # A hash with directories as key and ctime as value
     ctimes = {}
     # A hash with directories as key and
@@ -876,7 +879,6 @@ def sync_directories_from_fullfiletimelist(
     files = {}
     seen = set()
 
-    logger.info("Loading and parsing %s" % filelist[0])
 
     umdl_prefix = config.get('UMDL_PREFIX', '')
     # Not opening the file as stream and reading line by line as this breaks
