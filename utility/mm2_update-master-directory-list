@@ -176,8 +176,14 @@ def make_file_details_from_checksums(session, config, D, files=None):
 
     for f in sum_files:
         if files != None:
-            size = int(files[f]['size'])
-            ctime = files[f]['stat']
+            try:
+                size = int(files[f]['size'])
+                ctime = files[f]['stat']
+            except KeyError:
+                # there are seldom cases where the CHECKSUM file
+                # points to files in a sub-directory like
+                # pxeboot/vmlinuz; ignore it for now
+                continue
         else:
             try:
                 s = os.stat(os.path.join(config.get('UMDL_PREFIX', ''), D.name, f))
