@@ -78,16 +78,19 @@ def make_file_details_from_checksums(session, config, D, files=None):
         from given :line:.
         """
 
-        line = line.strip()
-        try:
+        line = line.strip().split()
+        if len(line) == 2:
             # old style fileformat
             # 25ceb179396f45586e373cee04bea0c436481a5b340bc24073f8178546b1e51b *Fedora-i386-20-20131211.1-sda.qcow2
-            checksum, filename = line.split()
+            checksum, filename = line
             algo, delimiter = None, None
-        except ValueError:
+        elif len(line) == 4:
             # new style - bsd style checksum
             # SHA256 (Fedora-Cloud-Base-25-1.3.x86_64.qcow2) = 4942be57a97c7e6f9f420ba29555776c79ed49c603d7cabb0394bb1a790eb336
-            algo, filename, delimiter, checksum = line.split()
+            algo, filename, delimiter, checksum = line
+        else:
+            # this is a line we do not care about
+            return None, None
 
         if algo is None:
             # old style fileformat
