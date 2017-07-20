@@ -23,9 +23,20 @@ from mirrormanager2.lib.model import RepositoryRedirect, Repository
 from optparse import OptionParser
 
 def fixup_repos(session, version, repo, new_dir):
-    """ This functions has changed a lot since MM1. Now the given
+    """
+    This function does the actual changes in the database.
+    The version, directory ID and name are adapted to point
+    to the release tree and not to the development tree.
+
+    This functions has changed a lot since MM1. Now the given
     repository is updated to point to the right directory and the
-    name is changed to reflect the new directory."""
+    name is changed to reflect the new directory.
+
+    :param session: SQLAlchemy session
+    :param version: A MM version object
+    :param repo: The repository object which will be changed
+    :param new_dir: The directory object which will be used now
+    """
     repo.name = new_dir.name
     repo.version = version
     repo.directory_id = new_dir.id
@@ -35,6 +46,19 @@ def fixup_repos(session, version, repo, new_dir):
 
 
 def move_devel_repo(session, category, version):
+    """
+    This function loops over all repositories of a :category: and checks
+    if the directory name (d.name) includes the :version: string.
+
+    If the directory name matches the :version: and includes
+    'development' in the path name the fixup_repos() function is used
+    to change the directory ID, version and name of the repository object.
+
+    :param session: SQLAlchemy session
+    :param category: the category name as a string
+    :param version: the version to move from devel to release
+    """
+
     c = mirrormanager2.lib.get_category_by_name(session, category)
     if c is None:
         print "Category '%s' not found, exiting" % category
@@ -53,10 +77,19 @@ def move_devel_repo(session, category, version):
     oldRe = re.compile(oldpattern)
     for r in c.repositories:
         if not r.prefix:
-            # This script is only interested in repositories without
-            # a prefix. Not changing existing repositories.
+            # Not really sure what this test is for.
+            # There are actually prefix-s which are NULL and
+            # some have are an empty string. Probably just
+            # a safeguard to avoid crashes.
             continue
+
         d = r.directory
+
+        if not d:
+            # Also not interested in repositories without
+            # a directory.
+            continue
+
         if oldRe.search(d.name):
             t = d.name.replace(oldpattern, newpattern)
             new_d = mirrormanager2.lib.get_directory_by_name(session, t)
