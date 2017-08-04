@@ -107,7 +107,7 @@ def metalink_header():
     doc += ' type="dynamic"'
     doc += ' pubdate="%s"' % pubdate
     doc += ' generator="mirrormanager"'
-    doc += ' xmlns:mm0="https://github.com/fedora-infra/mirrormanager2/"'
+    doc += ' xmlns:mm0="http://fedorahosted.org/mirrormanager"'
     doc += '>\n'
     return doc
 
