@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.8
+Version:        0.8.1
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -357,6 +357,17 @@ exit 0
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Mon Aug 07 2017 Adrian Reber <adrian@lisas.de> - 0.8.1-1
+- Update to 0.8.1
+- Revert namespace changes
+  https://github.com/fedora-infra/mirrormanager2/pull/214
+- move-devel-to-release: fix the script to work with f26
+  https://github.com/fedora-infra/mirrormanager2/pull/213
+- Initial conversion to Fedora Bootstrap
+  https://github.com/fedora-infra/mirrormanager2/pull/204
+- umdl: various fixes found in production
+  https://github.com/fedora-infra/mirrormanager2/pull/211
+
 * Fri Jun 02 2017 Adrian Reber <adrian@lisas.de> - 0.8-1
 - Update to 0.8
 - Specify rel="noopener noreferrer" to link including target='_blank'
