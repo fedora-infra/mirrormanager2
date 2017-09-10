@@ -504,7 +504,7 @@ def short_filelist(files):
 
 
 def sync_category_directory(
-        session, config, category, relativeDName, ctime, files):
+        session, config, category, relativeDName, ctime, files, is_repo):
     """
     This function is a re-implementation of the function
     sync_category_directories() using fullfiletimelist and (almost)
@@ -520,6 +520,9 @@ def sync_category_directory(
     :param ctime: actual ctime from relativeDName
     :param files: contains file-names, ctimes and sizes of all
                   files in the directory relativeDName
+    :param is_repo: this boolean is true if the current directory
+                    :relativeDName: has a 'repodata'
+                    sub-directory.
     """
 
     logger.debug("  sync_category_directory %s - %s" % (
@@ -595,8 +598,10 @@ def sync_category_directory(
         # The actual disk scanning will find those files, however.
         make_file_details_from_checksums(session, config, D, files)
 
-    if ('repomd.xml' in files) and (set_ctime or created):
+    if is_repo and (set_ctime or created):
         umdl.make_repository(session, D, relativeDName, category, 'repomd.xml')
+
+    if ('repomd.xml' in files) and (set_ctime or created):
         umdl.make_repo_file_details(
             session, config, relativeDName, D, category, 'repomd.xml')
 
@@ -865,6 +870,8 @@ def sync_directories_from_fullfiletimelist(
     # { filename: { 'stat' : ctime, 'size': 'filesize' } } as value
     files = {}
     seen = set()
+    # A set with a list of directories with a repository (repodata)
+    repo = set()
 
 
     umdl_prefix = config.get('UMDL_PREFIX', '')
@@ -915,6 +922,13 @@ def sync_directories_from_fullfiletimelist(
                     tmp = tmp.replace(config.get('UMDL_PREFIX', ''), '')
                     tmp = unicode(tmp, 'utf8')
                     ctimes[tmp] = int(col[0])
+                    # Only if a directory contains a 'repodata' directory
+                    # it should be used for repository creation.
+                    if 'repodata' in tmp:
+                        # There is a 'repodata' directory, add the parent
+                        # directory to the repo set().
+                        # Remove '/repodata'
+                        repo.add(tmp[:-9])
 
     # add the root directory of the current category
     tmp = unicode(diskpath.replace(umdl_prefix, ''), 'utf8')
@@ -936,7 +950,13 @@ def sync_directories_from_fullfiletimelist(
         except:
             # An empty directory is not part of files{}
             file_dict = {}
-        sync_category_directory(session, config, category, dirname, ctimes[dirname], file_dict)
+
+        if dirname in repo:
+            is_repo = True
+        else:
+            is_repo = False
+
+        sync_category_directory(session, config, category, dirname, ctimes[dirname], file_dict, is_repo)
 
     if category.delete_directories:
         nuke_gone_directories(session, None, category, ctimes)
