@@ -290,19 +290,6 @@ def make_repo_file_details(session, diskpath, relativeDName, D, category, target
         session.commit()
 
 
-def move_repository_from_development(prefix, arch, newdir):
-    try:
-        repo = Repository.selectBy(prefix=prefix, arch=arch)[0]
-    except:
-        return None
-
-    if repo.directory is not None and newdir.name is not None:
-        if '/development' in repo.directory.name \
-                and '/releases' in newdir.name:
-            repo.directory = newdir
-    return repo
-
-
 def make_repository(session, directory, relativeDName, category, target):
 
     warning = "Won't make repository object"
