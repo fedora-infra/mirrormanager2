@@ -599,7 +599,13 @@ def sync_category_directory(
         make_file_details_from_checksums(session, config, D, files)
 
     if is_repo and (set_ctime or created):
-        umdl.make_repository(session, D, relativeDName, category, 'repomd.xml')
+        # This is here to skip MM repository creation for those
+        # directories. This should leave 'Everything' as the directory
+        # which is used to create the repository.
+        # This is not the most flexible implementation.
+        skip_dir = [ u'Cloud', u'Workstation', u'Server' ]
+        if not any(x in relativeDName for x in skip_dir):
+            umdl.make_repository(session, D, relativeDName, category, 'repomd.xml')
 
     if ('repomd.xml' in files) and (set_ctime or created):
         umdl.make_repo_file_details(
