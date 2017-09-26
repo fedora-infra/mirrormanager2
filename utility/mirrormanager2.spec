@@ -2,7 +2,7 @@
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
 Name:           mirrormanager2
-Version:        0.8.2
+Version:        0.8.3
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -357,7 +357,12 @@ exit 0
 %{_bindir}/mirrorlist_statistics
 
 %changelog
-* Mon Sep 24 2017 Adrian Reber <adrian@lisas.de> - 0.8.2-1
+* Tue Sep 26 2017 Adrian Reber <adrian@lisas.de> - 0.8.3-1
+- Update to 0.8.3
+- umdl: fix 'modular' repository detection
+  https://github.com/fedora-infra/mirrormanager2/pull/221
+
+* Sun Sep 24 2017 Adrian Reber <adrian@lisas.de> - 0.8.2-1
 - Update to 0.8.2
 - detect and setup mirrorlist/metalinks for modular Fedora
   https://github.com/fedora-infra/mirrormanager2/pull/220
