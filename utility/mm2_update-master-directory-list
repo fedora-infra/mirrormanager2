@@ -603,9 +603,14 @@ def sync_category_directory(
         # directories. This should leave 'Everything' as the directory
         # which is used to create the repository.
         # This is not the most flexible implementation.
+
+        # Too make it even 'nicer' this list of directories to skip
+        # is not relevant for the 'modular' directory tree.
         skip_dir = [ u'Cloud', u'Workstation', u'Server' ]
-        if not any(x in relativeDName for x in skip_dir):
-            umdl.make_repository(session, D, relativeDName, category, 'repomd.xml')
+        if ((not any(x in relativeDName for x in skip_dir)) or
+                ('modular' in relativeDName)):
+            umdl.make_repository(
+                session, D, relativeDName, category, 'repomd.xml')
 
     if ('repomd.xml' in files) and (set_ctime or created):
         umdl.make_repo_file_details(

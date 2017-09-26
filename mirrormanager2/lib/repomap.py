@@ -79,8 +79,8 @@ def repo_prefix(path, category, ver):
             else:
                 prefix = u'epel-%s' % version
 
-    elif isFedoraLinux or isFedoraSecondary or isFedoraArchive or isModularFedoraLinux:
-        if isReleases or isDevelopment:
+    elif isFedoraLinux or isFedoraSecondary or isFedoraArchive:
+        if isReleases or isDevelopment or isModular:
             if isEverything and not isModular:
                 if isRawhide:
                     # rawhide
