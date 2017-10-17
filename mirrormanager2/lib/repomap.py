@@ -119,11 +119,11 @@ def repo_prefix(path, category, ver):
                     #Modular Releases
                     if isServer:
                         if isDebug:
-                            prefix = u'modular-fedora-server-debug'
+                            prefix = u'modular-fedora-server-debug-f%s' % version
                         elif isSource:
-                            prefix = u'modular-fedora-server-source'
+                            prefix = u'modular-fedora-server-source-f%s' % version
                         else:
-                            prefix = u'modular-fedora-server'
+                            prefix = u'modular-fedora-server-f%s' % version
 
         elif isAtomic:
             # atomic
