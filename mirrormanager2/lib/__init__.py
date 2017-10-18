@@ -529,10 +529,11 @@ def get_product_by_name(session, p_name):
     return query.first()
 
 
-def get_products(session):
+def get_products(session, publiclist=None):
     ''' Return the list of all the products in the database.
 
     :arg session: the session with which to connect to the database.
+    :arg publiclist: if the result should be filtered by the publiclist column
 
     '''
     query = session.query(
@@ -540,6 +541,9 @@ def get_products(session):
     ).order_by(
         model.Product.name
     )
+
+    if publiclist is not None:
+        query = query.filter(model.Product.publiclist == publiclist)
 
     return query.all()
 
@@ -631,10 +635,11 @@ def get_reporedirect(session):
     return query.all()
 
 
-def get_arches(session):
+def get_arches(session, publiclist=None):
     ''' Return the list of all the arch in the database.
 
     :arg session: the session with which to connect to the database.
+    :arg publiclist: if the result should be filtered by the publiclist column
 
     '''
     query = session.query(
@@ -642,6 +647,9 @@ def get_arches(session):
     ).order_by(
         model.Arch.name
     )
+
+    if publiclist is not None:
+        query = query.filter(model.Arch.publiclist == publiclist)
 
     return query.all()
 
