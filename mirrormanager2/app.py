@@ -192,8 +192,10 @@ def inject_variables():
 def index():
     """ Displays the index page.
     """
-    products = mmlib.get_products(SESSION)
-    arches = mmlib.get_arches(SESSION)
+    # publiclist=True filters out all results which have
+    # publiclist set to False
+    products = mmlib.get_products(SESSION, publiclist=True)
+    arches = mmlib.get_arches(SESSION, publiclist=True)
     arches_name = [arch.name for arch in arches]
 
     return flask.render_template(
