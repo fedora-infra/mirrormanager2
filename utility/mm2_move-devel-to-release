@@ -77,10 +77,7 @@ def move_devel_repo(session, category, version):
     oldRe = re.compile(oldpattern)
     for r in c.repositories:
         if not r.prefix:
-            # Not really sure what this test is for.
-            # There are actually prefix-s which are NULL and
-            # some have are an empty string. Probably just
-            # a safeguard to avoid crashes.
+            # This seems to be necessary for test cases using sqlite
             continue
 
         d = r.directory
