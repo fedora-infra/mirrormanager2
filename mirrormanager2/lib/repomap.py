@@ -105,32 +105,16 @@ def repo_prefix(path, category, ver):
                 else:
                     # fedora-install-
                     prefix = u'fedora-install-%s' % version
-            elif isModular:
+            elif isModular and isServer:
                 if isBikeshed:
                     # Modular Bikeshed
-                    if isServer:
-                        if isDebug:
-                            prefix = u'modular-bikeshed-server-debug'
-                        elif isSource:
-                            prefix = u'modular-bikeshed-server-source'
-                        else:
-                            prefix = u'modular-bikeshed-server'
-                else:
-                    #Modular Releases
-                    if isServer:
-                        if isDebug:
-                            prefix = u'modular-fedora-server-debug-f%s' % version
-                        elif isSource:
-                            prefix = u'modular-fedora-server-source-f%s' % version
-                        else:
-                            prefix = u'modular-fedora-server-f%s' % version
-
-        elif isAtomic:
-            # atomic
-            prefix = u'atomic-%s' % version
-        elif isUpdatesReleased:
-            if isModular:
-                if isServer:
+                    if isDebug:
+                        prefix = u'modular-bikeshed-server-debug'
+                    elif isSource:
+                        prefix = u'modular-bikeshed-server-source'
+                    else:
+                        prefix = u'modular-bikeshed-server'
+                elif isUpdatesReleased:
                     # Modular Server updates-released-
                     if isDebug:
                         prefix = u'modular-server-updates-released-debug-f%s' % version
@@ -138,17 +122,7 @@ def repo_prefix(path, category, ver):
                         prefix = u'modular-server-updates-released-source-f%s' % version
                     else:
                         prefix = u'modular-server-updates-released-f%s' % version
-            else:
-                # updates-released-
-                if isDebug:
-                    prefix = u'updates-released-debug-f%s' % version
-                elif isSource:
-                    prefix = u'updates-released-source-f%s' % version
-                else:
-                    prefix = u'updates-released-f%s' % version
-        elif isUpdatesTesting:
-            if isModular:
-                if isServer:
+                elif isUpdatesTesting:
                     # Modular Server updates-testing
                     if isDebug:
                         prefix = u'modular-server-updates-testing-debug-f%s' % version
@@ -156,14 +130,34 @@ def repo_prefix(path, category, ver):
                         prefix = u'modular-server-updates-testing-source-f%s' % version
                     else:
                         prefix = u'modular-server-updates-testing-f%s' % version
-            else:
-                # updates-testing-
-                if isDebug:
-                    prefix = u'updates-testing-debug-f%s' % version
-                elif isSource:
-                    prefix = u'updates-testing-source-f%s' % version
                 else:
-                    prefix = u'updates-testing-f%s' % version
+                    #Modular Releases
+                    if isDebug:
+                        prefix = u'modular-fedora-server-debug-f%s' % version
+                    elif isSource:
+                        prefix = u'modular-fedora-server-source-f%s' % version
+                    else:
+                        prefix = u'modular-fedora-server-f%s' % version
+
+        elif isAtomic:
+            # atomic
+            prefix = u'atomic-%s' % version
+        elif isUpdatesReleased:
+            # updates-released-
+            if isDebug:
+                prefix = u'updates-released-debug-f%s' % version
+            elif isSource:
+                prefix = u'updates-released-source-f%s' % version
+            else:
+                prefix = u'updates-released-f%s' % version
+        elif isUpdatesTesting:
+            # updates-testing-
+            if isDebug:
+                prefix = u'updates-testing-debug-f%s' % version
+            elif isSource:
+                prefix = u'updates-testing-source-f%s' % version
+            else:
+                prefix = u'updates-testing-f%s' % version
         elif isRawhide:
             # rawhide
             if isDebug:
