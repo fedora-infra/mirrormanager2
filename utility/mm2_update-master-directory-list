@@ -321,7 +321,7 @@ def make_repository(session, directory, relativeDName, category, target):
         if ver is None:
             if not relativeDName.endswith('/'):
                 relativeDName += '/'
-            ver = umdl.create_version_from_path(category, relativeDName)
+            ver = umdl.create_version_from_path(session, category, relativeDName)
             session.add(ver)
             session.commit()
             umdl.version_cache.append(ver)
