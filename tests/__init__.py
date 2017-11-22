@@ -65,6 +65,15 @@ class FakeFasUser(object):
     bugzilla_email = 'pingou@fp.o'
 
 
+class AnotherFakeFasUser(object):
+    """ Fake FAS user used for the tests. """
+    id = 110
+    username = 'kevin'
+    cla_done = True
+    groups = ['packager', 'cla_done']
+    bugzilla_email = 'kevin@fp.o'
+
+
 class FakeFasUserAdmin(object):
     """ Fake FAS user used for the tests. """
     id = 1000
@@ -388,7 +397,7 @@ def create_directory(session):
     ''' Create some Directory to play with for the tests
     '''
     item = model.Directory(
-        name='pub/fedora/linux/releases',
+        name='pub/fedora/linux',
         readable=True,
     )
     session.add(item)
@@ -523,6 +532,32 @@ def create_hostcategoryurl(session):
     item = model.HostCategoryUrl(
         host_category_id=1,
         url='http://dl.fedoraproject.org/pub/epel',
+        private=False,
+    )
+    session.add(item)
+
+    item = model.HostCategoryUrl(
+        host_category_id=3,
+        url='https://infrastructure.fedoraproject.org/pub/fedora/linux',
+        private=False,
+    )
+    session.add(item)
+    item = model.HostCategoryUrl(
+        host_category_id=3,
+        url='https://infrastructure.fedoraproject.org/pub/epel',
+        private=False,
+    )
+    session.add(item)
+
+    item = model.HostCategoryUrl(
+        host_category_id=3,
+        url='https://dl.fedoraproject.org/pub/fedora/linux',
+        private=False,
+    )
+    session.add(item)
+    item = model.HostCategoryUrl(
+        host_category_id=3,
+        url='https://dl.fedoraproject.org/pub/epel',
         private=False,
     )
     session.add(item)

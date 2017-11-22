@@ -48,8 +48,9 @@ class MDTLTest(tests.Modeltests):
         self.script = os.path.join(
             FOLDER, '..', 'utility', 'mm2_move-devel-to-release')
 
-        self.command = ('%s -c %s --version=27'
-                        ' --category=' % (self.script, self.configfile)).split()
+        self.command = (
+            '%s -c %s --version=27 --category=' %
+            (self.script, self.configfile)).split()
         self.command[-1] += 'Fedora Linux'
 
         self.assertTrue(os.path.exists(self.configfile))

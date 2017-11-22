@@ -122,14 +122,14 @@ class MMLibModeltests(tests.Modeltests):
         # Before change, all is up2date
         for hc in item.categories:
             for hcd in hc.directories:
-               self.assertTrue(hcd.up2date)
+                self.assertTrue(hcd.up2date)
 
         item.set_not_up2date(self.session)
 
         # After change, all is *not* up2date
         for hc in item.categories:
             for hcd in hc.directories:
-               self.assertFalse(hcd.up2date)
+                self.assertFalse(hcd.up2date)
 
     def test_host_is_active(self):
         """ Test the Host.is_active object of mirrormanager2.lib.model.
@@ -155,7 +155,7 @@ class MMLibModeltests(tests.Modeltests):
 
         item = model.Directory.get(self.session, 1)
         self.assertEqual(
-            str(item), '<Directory(1 - pub/fedora/linux/releases)>')
+            str(item), '<Directory(1 - pub/fedora/linux)>')
         item = model.Directory.get(self.session, 3)
         self.assertEqual(str(item), '<Directory(3 - pub/epel)>')
 
@@ -183,7 +183,7 @@ class MMLibModeltests(tests.Modeltests):
         self.assertEqual(item.displayed_versions[0].name, '7')
 
         item = model.Product.get(self.session, 2)
-        for index, string in enumerate(['development', '21', '20', '19']):
+        for index, string in enumerate(['development', '27', '26', '25']):
             self.assertEqual(item.displayed_versions[index].name, string)
 
     def test_category_repr(self):
@@ -244,9 +244,9 @@ class MMLibModeltests(tests.Modeltests):
         tests.create_version(self.session)
 
         item = model.Version.get(self.session, 1)
-        self.assertEqual(str(item), '<Version(1 - 20)>')
+        self.assertEqual(str(item), '<Version(1 - 26)>')
         item = model.Version.get(self.session, 2)
-        self.assertEqual(str(item), '<Version(2 - 21-alpha)>')
+        self.assertEqual(str(item), '<Version(2 - 27-alpha)>')
 
     def test_version_arches(self):
         """ Test the Version.arches object of mirrormanager2.lib.model.
@@ -294,7 +294,8 @@ class MMLibModeltests(tests.Modeltests):
         tests.create_base_items(self.session)
         tests.create_user_groups(self.session)
 
-        for index, string in enumerate(['pingou', 'kevin', 'ralph', 'shaiton']):
+        for index, string in enumerate([
+                'pingou', 'kevin', 'ralph', 'shaiton']):
             item = model.User.get(self.session, index + 1)
             self.assertEqual(item.username, string)
 

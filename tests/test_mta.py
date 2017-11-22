@@ -48,7 +48,7 @@ class MTATest(tests.Modeltests):
         self.script = os.path.join(
             FOLDER, '..', 'utility', 'mm2_move-to-archive')
 
-        self.command = ('%s -c %s --directoryRe=/20' % (
+        self.command = ('%s -c %s --directoryRe=/26' % (
             self.script, self.configfile)).split()
 
         self.assertTrue(os.path.exists(self.configfile))
@@ -87,7 +87,7 @@ class MTATest(tests.Modeltests):
 
         # One step further
         item = model.Directory(
-            name='pub/fedora/linux/archives/',
+            name='pub/archive',
             readable=True,
         )
         self.session.add(item)
@@ -118,41 +118,41 @@ class MTATest(tests.Modeltests):
 
         results = mirrormanager2.lib.get_repositories(self.session)
         self.assertEqual(len(results), 3)
-        self.assertEqual(results[0].prefix, 'updates-testing-f19')
+        self.assertEqual(results[0].prefix, 'updates-testing-f25')
         self.assertEqual(
             results[0].directory.name,
-            'pub/fedora/linux/updates/testing/19/x86_64')
-        self.assertEqual(results[1].prefix, 'updates-testing-f20')
+            'pub/fedora/linux/updates/testing/25/x86_64')
+        self.assertEqual(results[1].prefix, 'updates-testing-f26')
         self.assertEqual(
             results[1].directory.name,
-            'pub/fedora/linux/updates/testing/20/x86_64')
-        self.assertEqual(results[2].prefix, 'updates-testing-f21')
+            'pub/fedora/linux/updates/testing/26/x86_64')
+        self.assertEqual(results[2].prefix, 'updates-testing-f27')
         self.assertEqual(
             results[2].directory.name,
-            'pub/fedora/linux/updates/testing/21/x86_64')
+            'pub/fedora/linux/updates/testing/27/x86_64')
 
         results = mirrormanager2.lib.get_directories(self.session)
         # create_directory creates 9 directories
         # we create 1 more here, 9+1=10
         self.assertEqual(len(results), 10)
-        self.assertEqual(results[0].name, 'pub/fedora/linux/releases')
+        self.assertEqual(results[0].name, 'pub/fedora/linux')
         self.assertEqual(results[1].name, 'pub/fedora/linux/extras')
         self.assertEqual(results[2].name, 'pub/epel')
-        self.assertEqual(results[3].name, 'pub/fedora/linux/releases/20')
-        self.assertEqual(results[4].name, 'pub/fedora/linux/releases/21')
+        self.assertEqual(results[3].name, 'pub/fedora/linux/releases/26')
+        self.assertEqual(results[4].name, 'pub/fedora/linux/releases/27')
         self.assertEqual(
             results[5].name,
-            'pub/archive/fedora/linux/releases/20/Fedora/source')
+            'pub/archive/fedora/linux/releases/26/Everything/source')
         self.assertEqual(
             results[6].name,
-            'pub/fedora/linux/updates/testing/19/x86_64')
+            'pub/fedora/linux/updates/testing/25/x86_64')
         self.assertEqual(
             results[7].name,
-            'pub/fedora/linux/updates/testing/20/x86_64')
+            'pub/fedora/linux/updates/testing/26/x86_64')
         self.assertEqual(
             results[8].name,
-            'pub/fedora/linux/updates/testing/21/x86_64')
-        self.assertEqual(results[9].name, 'pub/fedora/linux/archives/')
+            'pub/fedora/linux/updates/testing/27/x86_64')
+        self.assertEqual(results[9].name, 'pub/archive')
 
         process = subprocess.Popen(
             args=command,
@@ -161,16 +161,16 @@ class MTATest(tests.Modeltests):
 
         self.assertEqual(
             stdout,
-            'trying to find pub/fedora/linux/archives/fedora/linux/testing/'
-            '20/x86_64\n'
+            'trying to find pub/archive/fedora/linux/updates/testing/'
+            '26/x86_64\n'
             'Unable to find a directory in [Fedora Archive] for pub/fedora/'
-            'linux/updates/testing/20/x86_64\n')
+            'linux/updates/testing/26/x86_64\n')
         self.assertEqual(stderr, '')
 
         # Run the script so that it works
 
         item = model.Directory(
-            name='pub/fedora/linux/archives/fedora/linux/testing/20/x86_64',
+            name='pub/archive/fedora/linux/updates/testing/26/x86_64',
             readable=True,
         )
         self.session.add(item)
@@ -183,53 +183,54 @@ class MTATest(tests.Modeltests):
 
         self.assertEqual(
             stdout,
-            'trying to find pub/fedora/linux/archives/fedora/linux/testing/20/x86_64\n'
-            'pub/fedora/linux/updates/testing/20/x86_64 => '
-            'pub/fedora/linux/archives/fedora/linux/testing/20/x86_64\n')
+            'trying to find pub/archive/fedora/'
+            'linux/updates/testing/26/x86_64\n'
+            'pub/fedora/linux/updates/testing/26/x86_64 => '
+            'pub/archive/fedora/linux/updates/testing/26/x86_64\n')
         self.assertEqual(stderr, '')
 
         results = mirrormanager2.lib.get_repositories(self.session)
         self.assertEqual(len(results), 3)
-        self.assertEqual(results[0].prefix, 'updates-testing-f19')
+        self.assertEqual(results[0].prefix, 'updates-testing-f25')
         self.assertEqual(
             results[0].directory.name,
-            'pub/fedora/linux/updates/testing/19/x86_64')
-        self.assertEqual(results[1].prefix, 'updates-testing-f20')
+            'pub/fedora/linux/updates/testing/25/x86_64')
+        self.assertEqual(results[1].prefix, 'updates-testing-f26')
         self.assertEqual(
             results[1].directory.name,
-            'pub/fedora/linux/archives/fedora/linux/testing/20/x86_64')
-        self.assertEqual(results[2].prefix, 'updates-testing-f21')
+            'pub/archive/fedora/linux/updates/testing/26/x86_64')
+        self.assertEqual(results[2].prefix, 'updates-testing-f27')
         self.assertEqual(
             results[2].directory.name,
-            'pub/fedora/linux/updates/testing/21/x86_64')
+            'pub/fedora/linux/updates/testing/27/x86_64')
 
-       # After the script
+        # After the script
 
         results = mirrormanager2.lib.get_directories(self.session)
         # create_directory creates 9 directories
         # we create 1 more here, 9+1=10
         self.assertEqual(len(results), 11)
-        self.assertEqual(results[0].name, 'pub/fedora/linux/releases')
+        self.assertEqual(results[0].name, 'pub/fedora/linux')
         self.assertEqual(results[1].name, 'pub/fedora/linux/extras')
         self.assertEqual(results[2].name, 'pub/epel')
-        self.assertEqual(results[3].name, 'pub/fedora/linux/releases/20')
-        self.assertEqual(results[4].name, 'pub/fedora/linux/releases/21')
+        self.assertEqual(results[3].name, 'pub/fedora/linux/releases/26')
+        self.assertEqual(results[4].name, 'pub/fedora/linux/releases/27')
         self.assertEqual(
             results[5].name,
-            'pub/archive/fedora/linux/releases/20/Fedora/source')
+            'pub/archive/fedora/linux/releases/26/Everything/source')
         self.assertEqual(
             results[6].name,
-            'pub/fedora/linux/updates/testing/19/x86_64')
+            'pub/fedora/linux/updates/testing/25/x86_64')
         self.assertEqual(
             results[7].name,
-            'pub/fedora/linux/updates/testing/20/x86_64')
+            'pub/fedora/linux/updates/testing/26/x86_64')
         self.assertEqual(
             results[8].name,
-            'pub/fedora/linux/updates/testing/21/x86_64')
-        self.assertEqual(results[9].name, 'pub/fedora/linux/archives/')
+            'pub/fedora/linux/updates/testing/27/x86_64')
+        self.assertEqual(results[9].name, 'pub/archive')
         self.assertEqual(
             results[10].name,
-            'pub/fedora/linux/archives/fedora/linux/testing/20/x86_64')
+            'pub/archive/fedora/linux/updates/testing/26/x86_64')
 
 
 if __name__ == '__main__':
