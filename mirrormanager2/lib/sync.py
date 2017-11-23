@@ -31,7 +31,17 @@ import threading
 
 
 def check_timeout(logger, p, timeout, e):
-    ''' Check if the process is running and kill it if so. '''
+    """
+    Check if the process is running and kill it if it running
+    longer than the specified timeout.
+
+    :param logger: If a logger is available it will be used for messages
+    :param p: The process handle representing the rsync process
+    :param timeout: The timeout after which the rsync process should
+                    definitely end. Will be p.kill()-ed.
+    :param e: The threading.Event() object used to wait for the end of
+              rsync process
+    """
 
     e.wait(timeout)
 
@@ -49,6 +59,21 @@ def check_timeout(logger, p, timeout, e):
 
 
 def run_rsync(rsyncpath, extra_rsync_args=None, logger=None, timeout=None):
+    """
+    This functions runs 'rsync' on :rsyncpath: and returns the output listing
+    as a file descriptor pointing to a tempfile.SpooledTemporaryFile().
+    It is used in the crawler and umdl and aborts after :timeout: if specified.
+
+    :param rsyncpath: The path 'rsync' should use to do a recursive listing.
+                      This can be anything 'rsync' accepts.
+    :param extra_rsync_args: Additional parameters added to 'rsync' like
+                             excludes or includes or anything else.
+    :param logger: If a logger is available it will be used for messages
+    :param timeout: The timeout after which the rsync process should
+                    definitely end. Will be p.kill()-ed.
+    :returns: return code, file descriptor
+    """
+
     tmpfile = tempfile.SpooledTemporaryFile()
     cmd = "rsync --temp-dir=/tmp -r --exclude=.snapshot --exclude='*.~tmp~'"
     if extra_rsync_args is not None:
