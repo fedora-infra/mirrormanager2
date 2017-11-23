@@ -35,7 +35,7 @@ import werkzeug
 import flask
 
 from functools import wraps
-from flask.ext.admin import Admin
+from flask_admin import Admin
 from sqlalchemy.exc import SQLAlchemyError
 
 from mirrormanager2 import __version__
@@ -89,7 +89,7 @@ LOG = APP.logger
 if APP.config.get('MM_AUTHENTICATION') == 'fas':
     # Use FAS for authentication
     try:
-        from flask.ext.fas_openid import FAS
+        from flask_fas_openid import FAS
         FAS = FAS(APP)
     except ImportError:
         APP.logger.exception("Couldn't import flask-fas-openid")
