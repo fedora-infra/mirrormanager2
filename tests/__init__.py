@@ -22,8 +22,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(
 from mirrormanager2.app import APP, FAS, LOG
 from mirrormanager2.lib import model
 
-#DB_PATH = 'sqlite:///:memory:'
-## A file database is required to check the integrity, don't ask
+# DB_PATH = 'sqlite:///:memory:'
+# A file database is required to check the integrity, don't ask
 DB_PATH = 'sqlite:////tmp/test.sqlite'
 FAITOUT_URL = 'http://faitout.fedorainfracloud.org/'
 
@@ -63,6 +63,15 @@ class FakeFasUser(object):
     cla_done = True
     groups = ['packager', 'cla_done']
     bugzilla_email = 'pingou@fp.o'
+
+
+class AnotherFakeFasUser(object):
+    """ Fake FAS user used for the tests. """
+    id = 110
+    username = 'kevin'
+    cla_done = True
+    groups = ['packager', 'cla_done']
+    bugzilla_email = 'kevin@fp.o'
 
 
 class FakeFasUserAdmin(object):
@@ -388,7 +397,7 @@ def create_directory(session):
     ''' Create some Directory to play with for the tests
     '''
     item = model.Directory(
-        name='pub/fedora/linux/releases',
+        name='pub/fedora/linux',
         readable=True,
     )
     session.add(item)
@@ -406,35 +415,35 @@ def create_directory(session):
     session.add(item)
 
     item = model.Directory(
-        name='pub/fedora/linux/releases/20',
+        name='pub/fedora/linux/releases/26',
         readable=True,
     )
     session.add(item)
 
     item = model.Directory(
-        name='pub/fedora/linux/releases/21',
+        name='pub/fedora/linux/releases/27',
         readable=True,
     )
     session.add(item)
 
     item = model.Directory(
-        name='pub/archive/fedora/linux/releases/20/Fedora/source',
+        name='pub/archive/fedora/linux/releases/26/Everything/source',
         readable=True,
     )
     session.add(item)
 
     item = model.Directory(
-        name='pub/fedora/linux/updates/testing/19/x86_64',
+        name='pub/fedora/linux/updates/testing/25/x86_64',
         readable=True,
     )
     session.add(item)
     item = model.Directory(
-        name='pub/fedora/linux/updates/testing/20/x86_64',
+        name='pub/fedora/linux/updates/testing/26/x86_64',
         readable=True,
     )
     session.add(item)
     item = model.Directory(
-        name='pub/fedora/linux/updates/testing/21/x86_64',
+        name='pub/fedora/linux/updates/testing/27/x86_64',
         readable=True,
     )
     session.add(item)
@@ -527,6 +536,32 @@ def create_hostcategoryurl(session):
     )
     session.add(item)
 
+    item = model.HostCategoryUrl(
+        host_category_id=3,
+        url='https://infrastructure.fedoraproject.org/pub/fedora/linux',
+        private=False,
+    )
+    session.add(item)
+    item = model.HostCategoryUrl(
+        host_category_id=3,
+        url='https://infrastructure.fedoraproject.org/pub/epel',
+        private=False,
+    )
+    session.add(item)
+
+    item = model.HostCategoryUrl(
+        host_category_id=3,
+        url='https://dl.fedoraproject.org/pub/fedora/linux',
+        private=False,
+    )
+    session.add(item)
+    item = model.HostCategoryUrl(
+        host_category_id=3,
+        url='https://dl.fedoraproject.org/pub/epel',
+        private=False,
+    )
+    session.add(item)
+
     session.commit()
 
 
@@ -605,7 +640,7 @@ def create_version(session):
     ''' Create some Version to play with for the tests
     '''
     item = model.Version(
-        name=20,
+        name=26,
         product_id=2,
         is_test=False,
         display=True,
@@ -613,7 +648,7 @@ def create_version(session):
     )
     session.add(item)
     item = model.Version(
-        name='21-alpha',
+        name='27-alpha',
         product_id=2,
         is_test=True,
         display=False,
@@ -621,7 +656,7 @@ def create_version(session):
     )
     session.add(item)
     item = model.Version(
-        name=21,
+        name=27,
         product_id=2,
         is_test=False,
         display=True,
@@ -638,7 +673,7 @@ def create_version(session):
     )
     session.add(item)
     item = model.Version(
-        name=19,
+        name=25,
         product_id=2,
         is_test=False,
         display=True,
@@ -662,8 +697,8 @@ def create_repository(session):
     ''' Create some Repository to play with for the tests
     '''
     item = model.Repository(
-        name='pub/fedora/linux/updates/testing/19/x86_64',
-        prefix='updates-testing-f19',
+        name='pub/fedora/linux/updates/testing/25/x86_64',
+        prefix='updates-testing-f25',
         category_id=1,
         version_id=5,
         arch_id=3,
@@ -672,8 +707,8 @@ def create_repository(session):
     )
     session.add(item)
     item = model.Repository(
-        name='pub/fedora/linux/updates/testing/20/x86_64',
-        prefix='updates-testing-f20',
+        name='pub/fedora/linux/updates/testing/26/x86_64',
+        prefix='updates-testing-f26',
         category_id=1,
         version_id=1,
         arch_id=3,
@@ -682,8 +717,8 @@ def create_repository(session):
     )
     session.add(item)
     item = model.Repository(
-        name='pub/fedora/linux/updates/testing/21/x86_64',
-        prefix='updates-testing-f21',
+        name='pub/fedora/linux/updates/testing/27/x86_64',
+        prefix='updates-testing-f27',
         category_id=1,
         version_id=3,
         arch_id=3,
@@ -754,14 +789,14 @@ def create_hostcategorydir(session):
     item = model.HostCategoryDir(
         host_category_id=1,
         directory_id=4,
-        path='pub/fedora/linux/releases/20',
+        path='pub/fedora/linux/releases/26',
         up2date=True,
     )
     session.add(item)
     item = model.HostCategoryDir(
         host_category_id=3,
         directory_id=5,
-        path='pub/fedora/linux/releases/21',
+        path='pub/fedora/linux/releases/27',
         up2date=True,
     )
     session.add(item)

@@ -24,7 +24,7 @@ FOLDER = os.path.dirname(os.path.abspath(__file__))
 
 CONFIG = """
 DB_URL = '%(db_path)s'
-
+UMDL_PREFIX = '%(folder)s/../testdata/'
 
 # Specify whether the crawler should send a report by email
 CRAWLER_SEND_EMAIL =  False
@@ -86,7 +86,8 @@ class UMDLTest(tests.Modeltests):
     def test_0_umdl_empty_db(self):
         """ Test the umdl cron against an empty database. """
 
-        process = subprocess.Popen(args=self.umdl_command.split(),
+        process = subprocess.Popen(
+            args=self.umdl_command.split(),
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
 
@@ -95,17 +96,19 @@ class UMDLTest(tests.Modeltests):
 
         with open(self.logfile) as stream:
             logs = stream.readlines()
-        #self.assertEqual(len(logs), 5)
         logs = ''.join([
-            log.split(' ', 3)[-1]
+            log.split(':', 3)[-1]
             for log in logs
         ])
         print logs
-        exp ="""umdl_master_directories Category Fedora EPEL does not exist in the database, skipping
-umdl_master_directories Category Fedora Linux does not exist in the database, skipping
-umdl_master_directories Category Fedora Secondary Arches does not exist in the database, skipping
-umdl_master_directories Category Fedora Archive does not exist in the database, skipping
-umdl_master_directories Category Fedora Other does not exist in the database, skipping
+        exp = """N/A:Starting umdl
+Fedora EPEL:umdl_master_directories Category Fedora EPEL does not exist in the database, skipping
+Fedora Linux:umdl_master_directories Category Fedora Linux does not exist in the database, skipping
+Fedora Secondary Arches:umdl_master_directories Category Fedora Secondary Arches does not exist in the database, skipping
+Fedora Archive:umdl_master_directories Category Fedora Archive does not exist in the database, skipping
+Fedora Other:umdl_master_directories Category Fedora Other does not exist in the database, skipping
+Fedora Other:Refresh the list of repomd.xml
+Fedora Other:Ending umdl
 """
         self.assertEqual(logs, exp)
 
@@ -120,7 +123,8 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
 
         # Run the UDML
 
-        process = subprocess.Popen(args=self.umdl_command.split(),
+        process = subprocess.Popen(
+            args=self.umdl_command.split(),
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
 
@@ -129,24 +133,38 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
 
         with open(self.logfile) as stream:
             logs = stream.readlines()
-        #self.assertEqual(len(logs), 3)
         logs = ''.join([
-            log.split(' ', 3)[-1]
+            log.split(':', 3)[-1]
             for log in logs
         ])
-        print logs
-        exp ="""umdl_master_directories Category Fedora Secondary Arches does not exist in the database, skipping
-umdl_master_directories Category Fedora Archive does not exist in the database, skipping
-umdl_master_directories Category Fedora Other does not exist in the database, skipping
-"""
-        self.assertEqual(logs, exp)
+
+        for i in [
+                'N/A:Starting umdl',
+                'Fedora Linux: has changed: 0 !=',
+                'atomic/21/refs/heads/fedora-atomic/f21/x86_64/updates has',
+                'Linux:atomic/rawhide/objects has changed: 0',
+                'Fedora Linux:atomic/rawhide/tmp has changed: 0 !=',
+                'Fedora Linux:development has changed: 0 !=',
+                'Fedora Linux:releases/20/Fedora has changed: 0 !=',
+                'Fedora/source/SRPMS/r has changed: 0 !=',
+                'releases/20/Fedora/x86_64/iso has changed: 0 !=',
+                'releases/20/Live/x86_64 has changed: 0 !=',
+                'Fedora Linux:Updating FileDetail <mirrormanager2.lib.model',
+                'Created Version(product=<Product(2 - Fedora)>',
+                'Created Repository(prefix=atomic-unknown, version=developm',
+                'Version(product=<Product(2 - Fedora)>, name=20',
+                'Repository(prefix=None, version=20, arch=source',
+                'ategory Fedora Secondary Arches does not exist',
+                'Fedora Other:Refresh the list of repomd.xml'
+        ]:
+            self.assertTrue(i in logs)
 
         # The DB should now be filled with what UMDL added, so let's check it
         results = mirrormanager2.lib.query_directories(self.session)
         self.assertEqual(len(results), 0)
 
         results = mirrormanager2.lib.get_versions(self.session)
-        self.assertEqual(len(results), 2)
+        self.assertEqual(len(results), 3)
         self.assertEqual(results[0].name, 'development')
         self.assertEqual(results[0].product.name, 'Fedora')
         self.assertEqual(results[1].name, '21')
@@ -163,25 +181,25 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(results[1].name, 'Fedora')
 
         results = mirrormanager2.lib.get_repositories(self.session)
-        self.assertEqual(len(results), 2)
+        self.assertEqual(len(results), 5)
         self.assertEqual(
-            results[0].name, 'pub/fedora/linux/releases/atomic/rawhide')
+            results[0].name, 'pub/fedora/linux/atomic/rawhide')
         self.assertEqual(results[0].category.name, 'Fedora Linux')
         self.assertEqual(results[0].version.name, 'development')
         self.assertEqual(results[0].arch.name, 'x86_64')
         self.assertEqual(
             results[0].directory.name,
-            'pub/fedora/linux/releases/atomic/rawhide')
+            'pub/fedora/linux/atomic/rawhide')
         self.assertEqual(results[0].prefix, 'atomic-unknown')
 
         self.assertEqual(
-            results[1].name, 'pub/fedora/linux/releases/atomic/21')
-        self.assertEqual(results[1].category.name, 'Fedora Linux')
-        self.assertEqual(results[1].version.name, '21')
-        self.assertEqual(results[1].arch.name, 'x86_64')
+            results[2].name, 'pub/fedora/linux/atomic/21')
+        self.assertEqual(results[2].category.name, 'Fedora Linux')
+        self.assertEqual(results[2].version.name, '21')
+        self.assertEqual(results[2].arch.name, 'x86_64')
         self.assertEqual(
-            results[1].directory.name, 'pub/fedora/linux/releases/atomic/21')
-        self.assertEqual(results[1].prefix, 'atomic-21')
+            results[2].directory.name, 'pub/fedora/linux/atomic/21')
+        self.assertEqual(results[2].prefix, 'atomic-21')
 
         results = mirrormanager2.lib.get_arches(self.session)
         self.assertEqual(len(results), 4)
@@ -191,35 +209,32 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(results[3].name, 'x86_64')
 
         results = mirrormanager2.lib.get_directories(self.session)
-        # tree testdata/pub says there are 84 directories and 150 files
+        # tree testdata/pub says there are 82 directories and 150 files
         # There are 7 directories added by create_directory which are not
-        # present on the FS, 84 + 7 = 91, so we are good \ó/
-        self.assertEqual(len(results), 91)
-        self.assertEqual(results[0].name, 'pub/fedora/linux/releases')
+        # present on the FS, 82 + 7 = 89, so we are good \ó/
+        self.assertEqual(len(results), 89)
+        self.assertEqual(results[0].name, 'pub/fedora/linux')
         self.assertEqual(results[1].name, 'pub/fedora/linux/extras')
         self.assertEqual(results[2].name, 'pub/epel')
-        self.assertEqual(results[3].name, 'pub/fedora/linux/releases/20')
-        self.assertEqual(results[4].name, 'pub/fedora/linux/releases/21')
+        self.assertEqual(results[3].name, 'pub/fedora/linux/releases/26')
+        self.assertEqual(results[4].name, 'pub/fedora/linux/releases/27')
         self.assertEqual(
             results[5].name,
-            'pub/archive/fedora/linux/releases/20/Fedora/source')
+            'pub/archive/fedora/linux/releases/26/Everything/source')
         self.assertEqual(
             results[20].name,
-            'pub/fedora/linux/releases/atomic/21/refs/heads/fedora-atomic/f21')
+            'pub/fedora/linux/atomic/21/refs/heads/fedora-atomic/f21')
         self.assertEqual(
             results[21].name,
-            'pub/fedora/linux/releases/atomic/21/refs/heads/'
+            'pub/fedora/linux/atomic/21/refs/heads/'
             'fedora-atomic/f21/x86_64')
         self.assertEqual(
             results[22].name,
-            'pub/fedora/linux/releases/atomic/21/refs/heads/'
+            'pub/fedora/linux/atomic/21/refs/heads/'
             'fedora-atomic/f21/x86_64/updates')
         self.assertEqual(
             results[23].name,
-            'pub/fedora/linux/releases/atomic/21/refs/remotes')
-        self.assertEqual(
-            results[24].name,
-            'pub/fedora/linux/releases/atomic/21/remote-cache')
+            'pub/fedora/linux/atomic/21/remote-cache')
 
         results = mirrormanager2.lib.get_file_detail(
             self.session, 'repomd.xml', 7)
@@ -232,7 +247,7 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(results[cnt].filename, 'Fedora-20-x86_64-DVD.iso')
         self.assertEqual(
             results[cnt].directory.name,
-            'pub/fedora/linux/releases/releases/20/Fedora/x86_64/iso')
+            'pub/fedora/linux/releases/20/Fedora/x86_64/iso')
         self.assertEqual(results[cnt].sha512, None)
         self.assertEqual(
             results[cnt].sha256,
@@ -242,7 +257,7 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(results[cnt].filename, 'Fedora-20-x86_64-netinst.iso')
         self.assertEqual(
             results[cnt].directory.name,
-            'pub/fedora/linux/releases/releases/20/Fedora/x86_64/iso')
+            'pub/fedora/linux/releases/20/Fedora/x86_64/iso')
         self.assertEqual(results[cnt].sha512, None)
         self.assertEqual(
             results[cnt].sha256,
@@ -253,7 +268,7 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
             results[cnt].filename, 'Fedora-Live-Desktop-x86_64-20-1.iso')
         self.assertEqual(
             results[cnt].directory.name,
-            'pub/fedora/linux/releases/releases/20/Live/x86_64')
+            'pub/fedora/linux/releases/20/Live/x86_64')
         self.assertEqual(results[cnt].sha512, None)
         self.assertEqual(
             results[cnt].sha256,
@@ -264,7 +279,7 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
             results[cnt].filename, 'Fedora-Live-KDE-x86_64-20-1.iso')
         self.assertEqual(
             results[cnt].directory.name,
-            'pub/fedora/linux/releases/releases/20/Live/x86_64')
+            'pub/fedora/linux/releases/20/Live/x86_64')
         self.assertEqual(results[cnt].sha512, None)
         self.assertEqual(
             results[cnt].sha256,
@@ -274,7 +289,7 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(results[cnt].filename, 'repomd.xml')
         self.assertEqual(
             results[cnt].directory.name,
-            'pub/fedora/linux/releases/development/22/x86_64/os/repodata')
+            'pub/fedora/linux/development/22/x86_64/os/repodata')
         self.assertEqual(
             results[cnt].sha256,
             '108b4102829c0839c7712832577fe7da24f0a9491f4dc25d4145efe6aced2ebf')
@@ -288,7 +303,7 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(results[cnt].filename, 'summary')
         self.assertEqual(
             results[cnt].directory.name,
-            'pub/fedora/linux/releases/atomic/rawhide')
+            'pub/fedora/linux/atomic/rawhide')
         self.assertEqual(
             results[cnt].sha256,
             '6b439b70ecb1941e0e2e0ea0817a66715067cbd96d4367f4cd23ca287aeb14cb')
@@ -302,7 +317,7 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(results[cnt].filename, 'summary')
         self.assertEqual(
             results[cnt].directory.name,
-            'pub/fedora/linux/releases/atomic/21')
+            'pub/fedora/linux/atomic/21')
         self.assertEqual(
             results[cnt].sha256,
             '6b439b70ecb1941e0e2e0ea0817a66715067cbd96d4367f4cd23ca287aeb14cb')
@@ -316,7 +331,7 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(results[cnt].filename, 'repomd.xml')
         self.assertEqual(
             results[cnt].directory.name,
-            'pub/fedora/linux/releases/releases/20/Fedora/source/SRPMS/repodata')
+            'pub/fedora/linux/releases/20/Fedora/source/SRPMS/repodata')
         self.assertEqual(
             results[cnt].sha256,
             '9a4738934092cf17e4540ee9cab741e922eb8306875ae5621feb01ebeb1f67f2')
@@ -330,7 +345,7 @@ umdl_master_directories Category Fedora Other does not exist in the database, sk
         self.assertEqual(results[cnt].filename, 'repomd.xml')
         self.assertEqual(
             results[cnt].directory.name,
-            'pub/fedora/linux/releases/releases/20/Fedora/x86_64/os/repodata')
+            'pub/fedora/linux/releases/20/Fedora/x86_64/os/repodata')
         self.assertEqual(
             results[cnt].sha256,
             '108b4102829c0839c7712832577fe7da24f0a9491f4dc25d4145efe6aced2ebf')
