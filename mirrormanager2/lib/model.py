@@ -528,6 +528,8 @@ class HostCategoryDir(BASE):
     directory_id = sa.Column(
         sa.Integer, sa.ForeignKey('directory.id', ondelete='CASCADE'), nullable=True)
 
+    __mapper_args__ = {'confirm_deleted_rows': False}
+
     # Relations
     directory = relation(
         'Directory',
@@ -591,6 +593,8 @@ class HostCategoryUrl(BASE):
         nullable=False)
     url = sa.Column(sa.Text(), nullable=False, unique=True)
     private = sa.Column(sa.Boolean(), default=False, nullable=False)
+
+    __mapper_args__ = {'confirm_deleted_rows': False}
 
     # Relations
     host_category = relation(
