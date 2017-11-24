@@ -182,7 +182,6 @@ class Host(BASE):
     admin_active = sa.Column(sa.Boolean(), default=True, nullable=False)
     user_active = sa.Column(sa.Boolean(), default=True, nullable=False)
     country = sa.Column(sa.Text(), nullable=False)
-    #bandwidth = sa.Column(sa.Text, nullable=True)
     bandwidth_int = sa.Column(sa.Integer, default=100, nullable=True)
     comment = sa.Column(sa.Text(), nullable=True)
     config = deferred(sa.Column(sa.PickleType(), nullable=True))
@@ -272,6 +271,7 @@ class Host(BASE):
         return self.admin_active \
             and self.user_active \
             and self.site.user_active
+
 
 class Directory(BASE):
 
@@ -478,7 +478,10 @@ class HostCategory(BASE):
     id = sa.Column(sa.Integer, primary_key=True)
     host_id = sa.Column(sa.Integer, sa.ForeignKey('host.id'), nullable=True)
     category_id = sa.Column(
-        sa.Integer, sa.ForeignKey('category.id', ondelete='CASCADE'), nullable=True)
+        sa.Integer,
+        sa.ForeignKey('category.id', ondelete='CASCADE'),
+        nullable=True
+    )
     always_up2date = sa.Column(sa.Boolean(), default=False, nullable=False)
 
     # Relations
@@ -526,7 +529,12 @@ class HostCategoryDir(BASE):
     up2date = sa.Column(
         sa.Boolean, default=True, nullable=False, index=True)
     directory_id = sa.Column(
-        sa.Integer, sa.ForeignKey('directory.id', ondelete='CASCADE'), nullable=True)
+        sa.Integer,
+        sa.ForeignKey('directory.id', ondelete='CASCADE'),
+        nullable=True
+    )
+
+    __mapper_args__ = {'confirm_deleted_rows': False}
 
     # Relations
     directory = relation(
@@ -570,7 +578,11 @@ class CategoryDirectory(BASE):
     directory = relation(
         'Directory',
         foreign_keys=[directory_id], remote_side=[Directory.id],
-        backref=backref('categorydir', cascade="delete, delete-orphan", single_parent=True)
+        backref=backref(
+            'categorydir',
+            cascade="delete, delete-orphan",
+            single_parent=True
+        )
     )
 
     def __repr__(self):
@@ -591,6 +603,8 @@ class HostCategoryUrl(BASE):
         nullable=False)
     url = sa.Column(sa.Text(), nullable=False, unique=True)
     private = sa.Column(sa.Boolean(), default=False, nullable=False)
+
+    __mapper_args__ = {'confirm_deleted_rows': False}
 
     # Relations
     host_category = relation(
@@ -879,8 +893,11 @@ class FileDetail(BASE):
     directory = relation(
         'Directory',
         foreign_keys=[directory_id], remote_side=[Directory.id],
-        backref=backref('fileDetails', cascade="delete, delete-orphan",
-                  single_parent=True)
+        backref=backref(
+            'fileDetails',
+            cascade="delete, delete-orphan",
+            single_parent=True
+        )
     )
 
 
