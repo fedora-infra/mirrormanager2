@@ -1,7 +1,7 @@
 Fedora MirrorManager
 ====================
 
-MirrorManager2 is a rewrite of `mirrormanager <https://fedorahosted.org/mirrormanager/>`_
+MirrorManager2 is a rewrite of `mirrormanager <https://pagure.io/mirrormanager/>`_
 using flask and SQLAlchemy.
 
 MirrorManager is the application that keeps track of the nearly 400 public mirrors,
@@ -10,8 +10,7 @@ by rpmfusion.org, a third party repository. It automatically selects the "best"
 mirror for a given user based on a set of fallback heuristics.
 
 :Github mirror: https://github.com/fedora-infra/mirrormanager2
-:Mailing list for announcements and discussions: 
-https://lists.fedoraproject.org/archives/list/mirror-admin@lists.fedoraproject.org/
+:Mailing list for announcements and discussions: https://lists.fedoraproject.org/archives/list/mirror-admin@lists.fedoraproject.org/
 
 Hacking
 -------
@@ -51,8 +50,10 @@ Manual Setup
 
 
 Here are some preliminary instructions about how to stand up your own instance
-of mirrormanager2.  We'll use a virtualenv and a sqlite database and we'll install
-our dependencies from the Python Package Index (PyPI).
+of mirrormanager2. All required packages for MirrorManager2 are part of Fedora
+or RHEL/CentOS/EPEL. In the following example we will, however use a virtualenv
+and a sqlite database and we will install our dependencies from the Python
+Package Index (PyPI).
 
 First, set up a virtualenv::
 
@@ -78,3 +79,8 @@ running::
     (my-MirrorMan-env)$ python runserver.py
 
 Open your browser and visit http://localhost:5000 to check it out.
+
+Once you made your changes please run the test suite to verify that nothing
+covered by tests has been broken::
+
+    (my-MirrorMan-env)$ ./runtests.sh
