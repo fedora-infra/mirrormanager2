@@ -34,7 +34,7 @@ MirrorManager2 forms.
 
 
 import re
-from flask.ext import wtf
+import flask_wtf as wtf
 import wtforms
 from flask import g
 

@@ -45,7 +45,7 @@ def user_set(APP, user):
     """ Set the provided user as fas_user in the provided application."""
 
     # Hack used to remove the before_request function set by
-    # flask.ext.fas_openid.FAS which otherwise kills our effort to set a
+    # flask_fas_openid.FAS which otherwise kills our effort to set a
     # flask.g.fas_user.
     APP.before_request_funcs[None] = []
 

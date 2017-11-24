@@ -24,12 +24,8 @@ MirrorManager2 admin flask controller.
 '''
 
 import flask
-from flask.ext.admin import BaseView, expose
-try:
-    from flask.ext.admin.contrib.sqla import ModelView
-except ImportError:  # pragma: no cover
-    # The module was renamed in flask-admin
-    from flask.ext.admin.contrib.sqlamodel import ModelView
+from flask_admin import BaseView, expose
+from flask_admin.contrib.sqla import ModelView
 
 from mirrormanager2.app import APP, ADMIN, SESSION, is_mirrormanager_admin
 from mirrormanager2.lib import model
