@@ -30,6 +30,9 @@ class FlaskUiAppTest(tests.Modeltests):
         """ Set up the environnment, ran before every test. """
         super(FlaskUiAppTest, self).setUp()
 
+        skip = os.getenv('MM2_SKIP_NETWORK_TESTS', 0)
+        self.network_tests = not bool(skip)
+
         mirrormanager2.app.APP.config['TESTING'] = True
         mirrormanager2.app.SESSION = self.session
         mirrormanager2.app.ADMIN.SESSION = self.session
@@ -136,9 +139,10 @@ class FlaskUiAppTest(tests.Modeltests):
         self.assertEqual(output.status_code, 302)
         output = self.app.get('/site/mine', follow_redirects=True)
         self.assertEqual(output.status_code, 200)
-        self.assertTrue(
-            '<title>OpenID transaction in progress</title>'
-            in output.data)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in output.data)
 
         user = tests.FakeFasUser()
         with tests.user_set(mirrormanager2.app.APP, user):
@@ -153,9 +157,10 @@ class FlaskUiAppTest(tests.Modeltests):
         self.assertEqual(output.status_code, 302)
         output = self.app.get('/admin/all_sites', follow_redirects=True)
         self.assertEqual(output.status_code, 200)
-        self.assertTrue(
-            '<title>OpenID transaction in progress</title>'
-            in output.data)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in output.data)
 
         user = tests.FakeFasUser()
         with tests.user_set(mirrormanager2.app.APP, user):
@@ -191,9 +196,10 @@ class FlaskUiAppTest(tests.Modeltests):
         self.assertEqual(output.status_code, 302)
         output = self.app.get('/site/new', follow_redirects=True)
         self.assertEqual(output.status_code, 200)
-        self.assertTrue(
-            '<title>OpenID transaction in progress</title>'
-            in output.data)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in output.data)
 
         user = tests.FakeFasUser()
         with tests.user_set(mirrormanager2.app.APP, user):
@@ -264,8 +270,10 @@ class FlaskUiAppTest(tests.Modeltests):
         output = self.app.get('/site/2', follow_redirects=True)
 
         self.assertEqual(output.status_code, 200)
-        self.assertTrue(
-            '<title>OpenID transaction in progress</title>' in output.data)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in output.data)
 
         user = tests.FakeFasUser()
         with tests.user_set(mirrormanager2.app.APP, user):
@@ -340,8 +348,10 @@ class FlaskUiAppTest(tests.Modeltests):
         self.assertEqual(output.status_code, 302)
         output = self.app.get('/host/2/new', follow_redirects=True)
         self.assertEqual(output.status_code, 200)
-        self.assertTrue(
-            '<title>OpenID transaction in progress</title>' in output.data)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in output.data)
 
         user = tests.FakeFasUser()
         with tests.user_set(mirrormanager2.app.APP, user):
@@ -419,8 +429,10 @@ class FlaskUiAppTest(tests.Modeltests):
         self.assertEqual(output.status_code, 302)
         output = self.app.get('/site/2/admin/new', follow_redirects=True)
         self.assertEqual(output.status_code, 200)
-        self.assertTrue(
-            '<title>OpenID transaction in progress</title>' in output.data)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in output.data)
 
         user = tests.FakeFasUser()
         with tests.user_set(mirrormanager2.app.APP, user):
@@ -487,8 +499,10 @@ class FlaskUiAppTest(tests.Modeltests):
         self.assertEqual(output.status_code, 302)
         output = self.app.post('/site/2/admin/3/delete', follow_redirects=True)
         self.assertEqual(output.status_code, 200)
-        self.assertTrue(
-            '<title>OpenID transaction in progress</title>' in output.data)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in output.data)
 
         user = tests.FakeFasUser()
         with tests.user_set(mirrormanager2.app.APP, user):
@@ -569,8 +583,10 @@ class FlaskUiAppTest(tests.Modeltests):
         output = self.app.get('/host/5', follow_redirects=True)
 
         self.assertEqual(output.status_code, 200)
-        self.assertTrue(
-            '<title>OpenID transaction in progress</title>' in output.data)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in output.data)
 
         user = tests.FakeFasUser()
         with tests.user_set(mirrormanager2.app.APP, user):
@@ -638,8 +654,10 @@ class FlaskUiAppTest(tests.Modeltests):
         output = self.app.get('/host/3/netblock/new', follow_redirects=True)
 
         self.assertEqual(output.status_code, 200)
-        self.assertTrue(
-            '<title>OpenID transaction in progress</title>' in output.data)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in output.data)
 
         user = tests.AnotherFakeFasUser()
         with tests.user_set(mirrormanager2.app.APP, user):
@@ -703,8 +721,10 @@ class FlaskUiAppTest(tests.Modeltests):
         output = self.app.post(
             '/host/3/host_netblock/1/delete', follow_redirects=True)
         self.assertEqual(output.status_code, 200)
-        self.assertTrue(
-            '<title>OpenID transaction in progress</title>' in output.data)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in output.data)
 
         user = tests.AnotherFakeFasUser()
         with tests.user_set(mirrormanager2.app.APP, user):
@@ -777,8 +797,10 @@ class FlaskUiAppTest(tests.Modeltests):
         output = self.app.get('/host/3/asn/new', follow_redirects=True)
 
         self.assertEqual(output.status_code, 200)
-        self.assertTrue(
-            '<title>OpenID transaction in progress</title>' in output.data)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in output.data)
 
         user = tests.FakeFasUserAdmin()
         with tests.user_set(mirrormanager2.app.APP, user):
@@ -842,8 +864,10 @@ class FlaskUiAppTest(tests.Modeltests):
         output = self.app.post(
             '/host/3/host_asn/1/delete', follow_redirects=True)
         self.assertEqual(output.status_code, 200)
-        self.assertTrue(
-            '<title>OpenID transaction in progress</title>' in output.data)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in output.data)
 
         user = tests.FakeFasUserAdmin()
         with tests.user_set(mirrormanager2.app.APP, user):
@@ -913,8 +937,10 @@ class FlaskUiAppTest(tests.Modeltests):
         output = self.app.get('/host/5/country/new', follow_redirects=True)
 
         self.assertEqual(output.status_code, 200)
-        self.assertTrue(
-            '<title>OpenID transaction in progress</title>' in output.data)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in output.data)
 
         user = tests.AnotherFakeFasUser()
         with tests.user_set(mirrormanager2.app.APP, user):
@@ -996,8 +1022,10 @@ class FlaskUiAppTest(tests.Modeltests):
         output = self.app.post(
             '/host/1/host_country/2/delete', follow_redirects=True)
         self.assertEqual(output.status_code, 200)
-        self.assertTrue(
-            '<title>OpenID transaction in progress</title>' in output.data)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in output.data)
 
         user = tests.AnotherFakeFasUser()
         with tests.user_set(mirrormanager2.app.APP, user):
@@ -1067,8 +1095,10 @@ class FlaskUiAppTest(tests.Modeltests):
         output = self.app.get('/host/5/category/new', follow_redirects=True)
 
         self.assertEqual(output.status_code, 200)
-        self.assertTrue(
-            '<title>OpenID transaction in progress</title>' in output.data)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in output.data)
 
         user = tests.FakeFasUser()
         with tests.user_set(mirrormanager2.app.APP, user):
@@ -1183,8 +1213,10 @@ class FlaskUiAppTest(tests.Modeltests):
         output = self.app.post(
             '/host/1/category/1/delete', follow_redirects=True)
         self.assertEqual(output.status_code, 200)
-        self.assertTrue(
-            '<title>OpenID transaction in progress</title>' in output.data)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in output.data)
 
         user = tests.FakeFasUser()
         with tests.user_set(mirrormanager2.app.APP, user):
@@ -1263,8 +1295,10 @@ class FlaskUiAppTest(tests.Modeltests):
             '/host/1/category/1/url/new', follow_redirects=True)
 
         self.assertEqual(output.status_code, 200)
-        self.assertTrue(
-            '<title>OpenID transaction in progress</title>' in output.data)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in output.data)
 
         user = tests.FakeFasUser()
         with tests.user_set(mirrormanager2.app.APP, user):
@@ -1359,8 +1393,10 @@ class FlaskUiAppTest(tests.Modeltests):
         output = self.app.post(
             '/host/1/category/1/url/3/delete', follow_redirects=True)
         self.assertEqual(output.status_code, 200)
-        self.assertTrue(
-            '<title>OpenID transaction in progress</title>' in output.data)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in output.data)
 
         user = tests.FakeFasUser()
         with tests.user_set(mirrormanager2.app.APP, user):
@@ -1460,8 +1496,10 @@ class FlaskUiAppTest(tests.Modeltests):
         self.assertEqual(output.status_code, 302)
         output = self.app.post('/host/2/category/5', follow_redirects=True)
         self.assertEqual(output.status_code, 200)
-        self.assertTrue(
-            '<title>OpenID transaction in progress</title>' in output.data)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in output.data)
 
         user = tests.FakeFasUser()
         with tests.user_set(mirrormanager2.app.APP, user):
