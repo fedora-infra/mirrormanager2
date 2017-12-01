@@ -863,10 +863,20 @@ def try_per_category(
 
     timeout_check()
 
+    # Get remaining time this crawl thread has
+    delta = time.time() - threadlocal.starttime
+    # Give the rsync process 90% of the remaining time to finish
+    # the listing of the available files. 90% could already be too
+    # much as updating the status of all scanned directories in the
+    # database usually takes quite some time. But there are more
+    # timeout checks all over the crawler code to make sure we are
+    # not over the timeout.
+    timeout = int(delta * 0.9)
+
     rsync_start_time = datetime.datetime.utcnow()
     params = config.get('CRAWLER_RSYNC_PARAMETERS', '--no-motd')
     try:
-        result, listing = run_rsync(url, params, logger)
+        result, listing = run_rsync(url, params, logger, timeout)
     except:
         logger.exception('Failed to run rsync.', exc_info = True)
         return False
