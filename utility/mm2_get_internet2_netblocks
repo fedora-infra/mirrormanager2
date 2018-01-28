@@ -49,13 +49,15 @@ function get_i2_netblocks()
     local last
 
     for ROUTER in ${ROUTERS}; do
-        URL="http://zebra.net.internet2.edu/bgp/RIBS/${ROUTER}/${YEAR}/${MONTH}/${DAY}"
+        URL="https://routes.net.internet2.edu/bgp/RIBS/${ROUTER}/${YEAR}/${MONTH}/${DAY}"
         wget -q -O ${tmpdir}/index.html "${URL}/"
         last=$(last_rib)
-        wget -O ${tmpdir}/rib.gz -q "${URL}/${last}"
-        zcat ${tmpdir}/rib.gz | perl zebra-dump-parser/zebra-dump-parser.pl >> ${listfile}
+        wget -O ${tmpdir}/rib -q "${URL}/${last}"
+        cat ${tmpdir}/rib | perl zebra-dump-parser/zebra-dump-parser.pl 2>&1 | grep -v Unknown >> ${listfile}
     done
-    sort ${listfile} | uniq > ${tmpdir}/list-sorted
+    sort ${listfile} | uniq | grep "^[0-9].*" | \
+        grep ".*\s.*" | grep -v "^0.0/16" | grep -v "^10.0.0/16" | \
+        grep -v "^000:206f" > ${tmpdir}/list-sorted
     mv ${tmpdir}/list-sorted ${listfile}
 }
 
