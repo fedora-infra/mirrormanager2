@@ -15,17 +15,7 @@ before_install:
 
 install:
   - sudo docker run --detach --volume="${PWD}":/tmp/test --name `sed -e "s,:,-," <<< ${DISTRO}` ${DISTRO} sleep 600
-  - |
-    sudo docker exec `sed -e "s,:,-," <<< ${DISTRO}` \
-    bash -c 'dnf -y install yum; \
-    yum -y install epel-release; \
-    yum -y install yum-utils rsync && \
-    cd /tmp/test && \
-    yum-builddep -y utility/mirrormanager2.spec && \
-    yum -y install python2-mock python2-nose python-blinker python-nose python2-fedmsg-core; \
-    yum -y install python-coverage; \
-    dnf -y install python2-coverage; \
-    exit 0'
+  - tests/setup_test_container.sh ${DISTRO}
 
 script:
   - sudo docker exec `sed -e "s,:,-," <<< ${DISTRO}` bash -c 'cd /tmp/test && ./runtests.sh'

@@ -50,7 +50,7 @@ class CrawlerTest(tests.Modeltests):
         # Test timeout if timeout works
 
         # Travis needs a really small timeout value
-        result, fd = run_rsync('/', timeout=0.5)
+        result, fd = run_rsync('/', timeout=0.05)
         fd.close()
         self.assertEqual(result, -9)
 
