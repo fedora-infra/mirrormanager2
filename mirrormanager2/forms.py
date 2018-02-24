@@ -98,7 +98,7 @@ class AddSiteForm(wtf.Form):
 class AddHostForm(wtf.Form):
     """ Form to add or edit a host. """
     name = wtforms.TextField(
-        'Site name  <span class="error">*</span>',
+        'Host name  <span class="error">*</span>',
         [wtforms.validators.Required()]
     )
     admin_active = wtforms.BooleanField(
