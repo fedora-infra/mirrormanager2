@@ -104,22 +104,6 @@ def repo_prefix(path, category, ver):
                 else:
                     # fedora-install-
                     prefix = u'fedora-install-%s' % version
-            elif isUpdatesReleased:
-                # updates-released-
-                if isDebug:
-                    prefix = u'updates-released-debug-f%s' % version
-                elif isSource:
-                    prefix = u'updates-released-source-f%s' % version
-                else:
-                    prefix = u'updates-released-f%s' % version
-            elif isUpdatesTesting:
-                # updates-testing-
-                if isDebug:
-                    prefix = u'updates-testing-debug-f%s' % version
-                elif isSource:
-                    prefix = u'updates-testing-source-f%s' % version
-                else:
-                    prefix = u'updates-testing-f%s' % version
         elif isModular:
             if isUpdatesReleased:
                 # updates-released-modular-
@@ -156,7 +140,7 @@ def repo_prefix(path, category, ver):
         elif isAtomic:
             # atomic
             prefix = u'atomic-%s' % version
-        elif isUpdatesReleased:
+        elif isUpdatesReleased and isEverything:
             # updates-released-
             if isDebug:
                 prefix = u'updates-released-debug-f%s' % version
@@ -164,7 +148,7 @@ def repo_prefix(path, category, ver):
                 prefix = u'updates-released-source-f%s' % version
             else:
                 prefix = u'updates-released-f%s' % version
-        elif isUpdatesTesting:
+        elif isUpdatesTesting and isEverything:
             # updates-testing-
             if isDebug:
                 prefix = u'updates-testing-debug-f%s' % version
