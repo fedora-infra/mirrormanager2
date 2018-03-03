@@ -27,7 +27,6 @@ def repo_prefix(path, category, ver):
     # assign shortnames to repositories like yum default mirrorlists expects
     isDebug = u'debug' in path
     isRawhide = u'rawhide' in path
-    isBikeshed = u'bikeshed' in path
     isDevelopment = is_development(path) is not None
     isSource = u'source' in path or u'SRPMS' in path
     isUpdatesTesting = u'updates/testing' in path
@@ -40,7 +39,7 @@ def repo_prefix(path, category, ver):
     isEverything = u'Everything' in path
     isFedora = u'Fedora' in path
     isServer = u'Server' in path
-    isModular = u'modular' in path
+    isModular = u'Modular' in path
 
 
     isEpel = (category.name == u'Fedora EPEL')
@@ -80,8 +79,8 @@ def repo_prefix(path, category, ver):
                 prefix = u'epel-%s' % version
 
     elif isFedoraLinux or isFedoraSecondary or isFedoraArchive:
-        if isReleases or isDevelopment or isModular:
-            if isEverything and not isModular:
+        if isReleases or isDevelopment:
+            if isEverything:
                 if isRawhide:
                     # rawhide
                     if isDebug:
@@ -97,7 +96,7 @@ def repo_prefix(path, category, ver):
                     prefix = u'fedora-source-%s' % version
                 else:
                     prefix=u'fedora-%s' % version
-            elif isFedora and not isModular:
+            elif isFedora:
                 if isDebug or isSource:
                     # ignore releases/$version/Fedora/$arch/debug/
                     # ignore releases/$version/Fedora/source/SRPMS/
@@ -105,44 +104,43 @@ def repo_prefix(path, category, ver):
                 else:
                     # fedora-install-
                     prefix = u'fedora-install-%s' % version
-            elif isModular and isServer:
-                if isBikeshed:
-                    # Modular Bikeshed
-                    if isDebug:
-                        prefix = u'modular-bikeshed-server-debug'
-                    elif isSource:
-                        prefix = u'modular-bikeshed-server-source'
-                    else:
-                        prefix = u'modular-bikeshed-server'
-                elif isUpdatesReleased:
-                    # Modular Server updates-released-
-                    if isDebug:
-                        prefix = u'modular-server-updates-released-debug-f%s' % version
-                    elif isSource:
-                        prefix = u'modular-server-updates-released-source-f%s' % version
-                    else:
-                        prefix = u'modular-server-updates-released-f%s' % version
-                elif isUpdatesTesting:
-                    # Modular Server updates-testing
-                    if isDebug:
-                        prefix = u'modular-server-updates-testing-debug-f%s' % version
-                    elif isSource:
-                        prefix = u'modular-server-updates-testing-source-f%s' % version
-                    else:
-                        prefix = u'modular-server-updates-testing-f%s' % version
+        elif isModular:
+            if isUpdatesReleased:
+                # updates-released-modular-
+                if isDebug:
+                    prefix = u'updates-released-modular-debug-f%s' % version
+                elif isSource:
+                    prefix = u'updates-released-modular-source-f%s' % version
                 else:
-                    #Modular Releases
-                    if isDebug:
-                        prefix = u'modular-fedora-server-debug-f%s' % version
-                    elif isSource:
-                        prefix = u'modular-fedora-server-source-f%s' % version
-                    else:
-                        prefix = u'modular-fedora-server-f%s' % version
+                    prefix = u'updates-released-modular-f%s' % version
+            elif isUpdatesTesting:
+                # updates-testing-modular-
+                if isDebug:
+                    prefix = u'updates-testing-modular-debug-f%s' % version
+                elif isSource:
+                    prefix = u'updates-testing-modular-source-f%s' % version
+                else:
+                    prefix = u'updates-testing-modular-f%s' % version
+            elif isRawhide:
+                # rawhide-modular
+                if isDebug:
+                    prefix = u'rawhide-modular-debug'
+                elif isSource:
+                    prefix = u'rawhide-modular-source'
+                else:
+                    prefix = u'rawhide-modular'
+            # fedora-modular-
+            elif isDebug:
+                prefix = u'fedora-modular-debug-%s' % version
+            elif isSource:
+                prefix = u'fedora-modular-source-%s' % version
+            else:
+                prefix=u'fedora-modular-%s' % version
 
         elif isAtomic:
             # atomic
             prefix = u'atomic-%s' % version
-        elif isUpdatesReleased:
+        elif isUpdatesReleased and isEverything:
             # updates-released-
             if isDebug:
                 prefix = u'updates-released-debug-f%s' % version
@@ -150,7 +148,7 @@ def repo_prefix(path, category, ver):
                 prefix = u'updates-released-source-f%s' % version
             else:
                 prefix = u'updates-released-f%s' % version
-        elif isUpdatesTesting:
+        elif isUpdatesTesting and isEverything:
             # updates-testing-
             if isDebug:
                 prefix = u'updates-testing-debug-f%s' % version
