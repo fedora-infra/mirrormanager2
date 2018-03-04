@@ -28,6 +28,7 @@ import pickle
 import json
 import bz2
 import logging
+import zlib
 
 import flask
 from flaskext.xmlrpc import XMLRPCHandler, Fault
@@ -38,6 +39,34 @@ from mirrormanager2.lib.hostconfig import read_host_config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+@APP.route('/checkin/json', methods=['POST'])
+def checkin_json():
+    ctype = flask.request.headers.get('Content-Type')
+    try:
+        if ctype == 'application/gzip':
+            data = json.loads(zlib.decompress(flask.request.data, 16+zlib.MAX_WBITS))
+        elif ctype == 'application/json':
+            data = json.loads(flask.request.data)
+        else:
+            return 'Invalid content type', 415
+    except Exception as ex:
+        logging.error('Unable to read input data: %s' % ex)
+        return 'Error decoding', 400
+
+    try:
+        r, message = read_host_config(SESSION, config)
+    except Exception as ex:
+        logging.error('Unable to parse input data: %s' % ex)
+        return 'Error parsing', 500
+
+    if r is not None:
+        logging.info('JSON checkin succesful: %s' % message)
+        return message
+    else:
+        logging.error('Error during JSON checkin: %s' % message)
+        return message, 406
 
 
 XMLRPC = XMLRPCHandler('xmlrpc')
