@@ -1,8 +1,14 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from
 %distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 
+%if 0%{?fedora} > 27 || 0%{?rhel} > 7
+%global py2_prefix python2
+%else
+%global py2_prefix python
+%endif
+
 Name:           mirrormanager2
-Version:        0.8.3
+Version:        0.8.4
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -15,46 +21,56 @@ Source0:        https://github.com/fedora-infra/mirrormanager2/archive/%{version
 
 BuildArch:      noarch
 
-BuildRequires:  python2-devel
-BuildRequires:  python-flask
-BuildRequires:  python-flask-admin
-BuildRequires:  python-flask-xml-rpc
-BuildRequires:  python-flask-wtf
-BuildRequires:  python-wtforms
-BuildRequires:  python-IPy
-BuildRequires:  python-dns
-BuildRequires:  python-fedora >= 0.3.33
-BuildRequires:  python-fedora-flask >= 0.3.33
-BuildRequires:  python-setuptools
-BuildRequires:  python-psutil
-BuildRequires:  python-alembic
+BuildRequires:  %{py2_prefix}-devel
+BuildRequires:  %{py2_prefix}-flask
+BuildRequires:  %{py2_prefix}-flask-admin
+BuildRequires:  %{py2_prefix}-flask-xml-rpc
+BuildRequires:  %{py2_prefix}-flask-wtf
+BuildRequires:  %{py2_prefix}-wtforms
+BuildRequires:  %{py2_prefix}-IPy
+BuildRequires:  %{py2_prefix}-dns
+BuildRequires:  %{py2_prefix}-fedora >= 0.3.33
+BuildRequires:  %{py2_prefix}-fedora-flask >= 0.3.33
+BuildRequires:  %{py2_prefix}-setuptools
+BuildRequires:  %{py2_prefix}-psutil
+BuildRequires:  %{py2_prefix}-alembic
 # Mirrorlist
-BuildRequires:  python-GeoIP
+BuildRequires:  %{py2_prefix}-GeoIP
+BuildRequires:  %{py2_prefix}-webob
+BuildRequires:  systemd
+BuildRequires:  %{py2_prefix}-sqlalchemy >= 0.7
+# Testing
+BuildRequires:  %{py2_prefix}-fedmsg-core
+BuildRequires:  %{py2_prefix}-mock
+BuildRequires:  %{py2_prefix}-blinker
+BuildRequires:  rsync
+BuildRequires:  yum
+
+%if 0%{?rhel} && 0%{?rhel} <= 7
+BuildRequires:  python2-rpm-macros
 BuildRequires:  py-radix
-BuildRequires:  python-webob
-
-BuildRequires:  systemd-devel
-
-# EPEL6
-%if ( 0%{?rhel} && 0%{?rhel} == 6 )
-BuildRequires:  python-sqlalchemy0.7
-%else
-BuildRequires:  python-sqlalchemy >= 0.7
-%endif
-
-Requires:  python-flask
-Requires:  python-flask-admin
-Requires:  python-flask-xml-rpc
-Requires:  python-flask-wtf
-Requires:  python-wtforms
-Requires:  python-fedora >= 0.3.33
-Requires:  python-fedora-flask >= 0.3.33
-Requires:  python-setuptools
-Requires:  python-psutil
-Requires:  python-alembic
-
-Requires:  %{name}-lib == %{version}
 Requires:  mod_wsgi
+%else
+BuildRequires:  python2-py-radix
+Requires:  python2-mod_wsgi
+%endif
+# Testing
+BuildRequires:  %{py2_prefix}-nose
+BuildRequires:  %{py2_prefix}-coverage
+
+Requires:  %{py2_prefix}-flask
+Requires:  %{py2_prefix}-flask-admin
+Requires:  %{py2_prefix}-flask-xml-rpc
+Requires:  %{py2_prefix}-flask-wtf
+Requires:  %{py2_prefix}-wtforms
+Requires:  %{py2_prefix}-fedora >= 0.3.33
+Requires:  %{py2_prefix}-fedora-flask >= 0.3.33
+Requires:  %{py2_prefix}-setuptools
+Requires:  %{py2_prefix}-psutil
+Requires:  %{py2_prefix}-alembic
+
+Requires:  %{name}-lib = %{version}-%{release}
+Requires:  %{name}-filesystem = %{version}-%{release}
 
 %description
 MirrorManager keeps track of the public and private mirrors, that carry
@@ -69,15 +85,10 @@ Summary:        Library to interact with MirrorManager's database
 Group:          Development/Tools
 BuildArch:      noarch
 
-Requires:  python-IPy
-Requires:  python-dns
-
-# EPEL6
-%if ( 0%{?rhel} && 0%{?rhel} == 6 )
-Requires:  python-sqlalchemy0.7
-%else
-Requires:  python-sqlalchemy >= 0.7
-%endif
+Requires:  %{name}-filesystem = %{version}-%{release}
+Requires:  %{py2_prefix}-IPy
+Requires:  %{py2_prefix}-dns
+Requires:  %{py2_prefix}-sqlalchemy >= 0.7
 
 %description lib
 Library to interact with MirrorManager's database
@@ -88,10 +99,19 @@ Summary:        MirrorList serving mirrors to yum/dnf
 Group:          Development/Tools
 BuildArch:      noarch
 
-Requires:  python-GeoIP
+Requires:  %{name}-filesystem = %{version}-%{release}
+Requires:  %{py2_prefix}-GeoIP
+Requires:  %{py2_prefix}-webob
+Requires:  %{py2_prefix}-IPy
+Requires:  httpd
+%if 0%{?rhel} && 0%{?rhel} <= 7
 Requires:  py-radix
-Requires:  python-webob
-Requires:  python-IPy
+Requires:  mod_wsgi
+%else
+Requires:  python2-py-radix
+Requires:  python2-mod_wsgi
+%endif
+Requires:  systemd
 Requires(pre):  shadow-utils
 Requires(post): systemd
 Requires(preun): systemd
@@ -106,8 +126,10 @@ Summary:        Crawler for MirrorManager
 Group:          Development/Tools
 BuildArch:      noarch
 
-Requires:  %{name}-lib == %{version}
-Requires:  python-GeoIP
+Requires:  %{name}-filesystem = %{version}-%{release}
+Requires:  %{name}-lib = %{version}-%{release}
+Requires:  %{py2_prefix}-GeoIP
+Requires:  logrotate
 Requires(pre):  shadow-utils
 
 %description crawler
@@ -120,7 +142,8 @@ Summary:        Backend scripts for MirrorManager
 Group:          Development/Tools
 BuildArch:      noarch
 
-Requires:  %{name}-lib == %{version}
+Requires:  %{name}-filesystem = %{version}-%{release}
+Requires:  %{name}-lib = %{version}-%{release}
 Requires(pre):  shadow-utils
 
 %description backend
@@ -132,6 +155,13 @@ Summary:        Fedora mirror management system downstream mirror tools
 Group:          Applications/Internet
 BuildArch:      noarch
 
+Requires:  %{name}-filesystem = %{version}-%{release}
+Requires:  logrotate
+Requires:  systemd
+
+Obsoletes: mirrormanager-client <= 1.4.4-6
+Provides:  mirrormanager-client = %{version}-%{release}
+
 %description client
 Client-side, run on each downstream mirror, to report back to the
 MirrorManager database a description of the content carried by that
@@ -142,10 +172,11 @@ Summary:        Scripts to generate MirrorManager statistics
 Group:          Applications/Internet
 BuildArch:      noarch
 
-Requires:  %{name}-lib == %{version}
-Requires:  python-GeoIP
-Requires:  python-matplotlib
-Requires:  python-basemap
+Requires:  %{name}-filesystem = %{version}-%{release}
+Requires:  %{name}-lib = %{version}-%{release}
+Requires:  %{py2_prefix}-GeoIP
+Requires:  %{py2_prefix}-matplotlib
+Requires:  %{py2_prefix}-basemap
 
 %description statistics
 A collection of different statistics script which are analyzing
@@ -155,17 +186,24 @@ and can also visualize how fast the master data propagates to all the
 mirrors. As it depends on matplotlib it has a rather large dependency
 tree.
 
+%package filesystem
+Summary:        Base directories used by multiple subpackages
+BuildArch:      noarch
+
+%description filesystem
+Base directories used by multiple subpackages
+
+
 %prep
 %setup -q
 
 
 %build
-%{__python} setup.py build
+%py2_build
 
 
 %install
-rm -rf $RPM_BUILD_ROOT
-%{__python} setup.py install -O1 --skip-build --root $RPM_BUILD_ROOT
+%py2_install
 
 # Create directories needed
 # Apache configuration files
@@ -280,8 +318,11 @@ exit 0
 %check
 # One day we will have unit-tests to run here
 
+# And that is starting today ;)
+MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -d -v
+
 %files
-%doc README.rst LICENSE-MIT-X11 LICENSE-GPLv2 doc/
+%doc README.rst doc/
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrormanager.conf
 %config(noreplace) %{_sysconfdir}/mirrormanager/mirrormanager2.cfg
 
@@ -294,15 +335,19 @@ exit 0
 %{_datadir}/mirrormanager2/mirrormanager2_createdb.py*
 %{_datadir}/mirrormanager2/alembic/
 
-%{python_sitelib}/%{name}/*.py*
-%{python_sitelib}/%{name}/templates/
-%{python_sitelib}/%{name}/static/
-%{python_sitelib}/%{name}*.egg-info
+%{python2_sitelib}/%{name}/*.py*
+%{python2_sitelib}/%{name}/templates/
+%{python2_sitelib}/%{name}/static/
+%{python2_sitelib}/%{name}*.egg-info
 
+%files filesystem
+%license LICENSE-MIT-X11 LICENSE-GPLv2
+%dir %{python2_sitelib}/%{name}
+%dir %{_datadir}/mirrormanager2
 
 %files lib
-%{python_sitelib}/%{name}/lib/
-%{python_sitelib}/%{name}/__init__.py*
+%{python2_sitelib}/%{name}/lib/
+%{python2_sitelib}/%{name}/__init__.py*
 
 
 %files mirrorlist
@@ -357,6 +402,26 @@ exit 0
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Sun Mar 04 2018 Adrian Reber <adrian@lisas.de> - 0.8.4-1
+- Update to 0.8.4
+- Sync with Fedora's specfile
+- Explicitly specify 'python2' wherever calling the python
+  interpreter
+- Correctly handle Fedora 28 modular layout
+  https://github.com/fedora-infra/mirrormanager2/pull/242
+- Use "site", "host" and "mirror" consistently
+  https://github.com/fedora-infra/mirrormanager2/pull/241
+- crawler: support https only hosts
+  https://github.com/fedora-infra/mirrormanager2/pull/240
+- Make mm2_get_internet2_netblocks work again
+  https://github.com/fedora-infra/mirrormanager2/pull/234
+- crawler: use timeout also on rsync crawls
+  https://github.com/fedora-infra/mirrormanager2/pull/229
+- Fix existing test cases and re-enable tests on commits
+- Enable tests in the %%check section
+- publiclist: hide disabled arches and products
+  https://github.com/fedora-infra/mirrormanager2/pull/223
+
 * Tue Sep 26 2017 Adrian Reber <adrian@lisas.de> - 0.8.3-1
 - Update to 0.8.3
 - umdl: fix 'modular' repository detection
