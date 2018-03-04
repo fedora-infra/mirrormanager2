@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 #
 # Copyright (c) 2014 Red Hat, Inc.
 # Copyright (c) 2007-2013 Dell, Inc.

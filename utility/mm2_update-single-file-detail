@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 """
 This script is like the light-weight version of update-master-directory-list.
 Instead of crawling *all* files on the nfs mount of the master mirror content,

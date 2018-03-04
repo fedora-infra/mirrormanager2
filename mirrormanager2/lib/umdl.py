@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 """
 This script crawls the local copy of the master mirrors (which in our case
