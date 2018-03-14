@@ -96,6 +96,14 @@ def repo_prefix(path, category, ver):
                     prefix = u'fedora-source-%s' % version
                 else:
                     prefix=u'fedora-%s' % version
+            elif isModular:
+                # fedora-modular-
+                if isDebug:
+                    prefix = u'fedora-modular-debug-%s' % version
+                elif isSource:
+                    prefix = u'fedora-modular-source-%s' % version
+                else:
+                    prefix=u'fedora-modular-%s' % version
             elif isFedora:
                 if isDebug or isSource:
                     # ignore releases/$version/Fedora/$arch/debug/
