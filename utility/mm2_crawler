@@ -617,18 +617,24 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
         reqpath += "?%s" % query
     if len(fragment) > 0:
         reqpath += "#%s" % fragment
-    conn.request('HEAD', reqpath,
-                 headers={'Connection':'Keep-Alive',
-                          'Pragma':'no-cache',
-                          'User-Agent':'mirrormanager-crawler/0.1 (+https://github.com/fedora-infra/mirrormanager2/)'})
 
     r = None
     try:
+        conn.request('HEAD', reqpath,
+                     headers={
+                         'Connection': 'Keep-Alive',
+                         'Pragma': 'no-cache',
+                         'User-Agent': 'mirrormanager-crawler/0.1 (+https://'
+                         'github.com/fedora-infra/mirrormanager2/)'})
         r = conn.getresponse()
         status = r.status
     except:
         if retry == 0:
-            # retry once
+            # If the above attempt to connect to the mirror fails, the crawler
+            # will retry once. One possible reason for a connection failure is
+            # that the connection, which is kept open to leverage keep-alive,
+            # has been closed by the remote end. Therefore we are closing
+            # the connection and are restarting the whole operation.
             hoststate.close_http(url)
             return check_head(
                 hoststate, url, filedata, recursion, readable, retry=1)
