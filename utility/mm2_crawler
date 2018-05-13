@@ -712,7 +712,7 @@ def report_stats(stats):
     logger.info(msg)
 
 
-def sync_hcds(session, host, host_category_dirs, repodata):
+def sync_hcds(session, host, host_category_dirs, options):
     stats = dict(up2date=0, not_up2date=0, unchanged=0, unreadable=0,
                  unknown=0, newdir=0, deleted_on_master=0, duration=0)
     current_hcds = {}
@@ -760,10 +760,12 @@ def sync_hcds(session, host, host_category_dirs, repodata):
 
     # In repodata mode we only want to update the files actually scanned.
     # Do not mark files which have not been scanned as not being up to date.
-    if not repodata:
+    if not options.repodata:
         # now-historical HostCategoryDirs are not up2date
         # we wait for a cascading Directory delete to delete this
-        for hc in list(host.categories):
+        host_categories_to_scan = select_host_categories_to_scan(
+            session, options, host)
+        for hc in host_categories_to_scan:
             for hcd in list(hc.directories):
                 if hcd.directory is not None and not hcd.directory.readable:
                     stats['unreadable'] += 1
@@ -1439,7 +1441,7 @@ def per_host(session, host, options, config):
 
     if rc == 0:
         if len(host_category_dirs) > 0:
-            sync_hcds(session, host, host_category_dirs, options.repodata)
+            sync_hcds(session, host, host_category_dirs, options)
     del host_category_dirs
     return rc
 
