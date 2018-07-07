@@ -307,9 +307,7 @@ def main():
 #        statdata = get_stats(conf, 'stats')
 
     # upload p and statsdata here
-    if not item.config.has_key('global') \
-            or not item.config['global'].has_key('enabled') \
-            or item.config['global']['enabled'] != '1':
+    if item.config.get('global', {}).get('enabled') != '1':
         sys.exit(1)
 
     if not options.no_send:

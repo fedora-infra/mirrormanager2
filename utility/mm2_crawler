@@ -427,32 +427,32 @@ class hostState:
     def get_connection(self, url):
         scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
         if scheme == 'ftp':
-            if self.ftpconn.has_key(netloc):
+            if netloc in self.ftpconn:
                 return self.ftpconn[netloc]
         elif scheme == 'http':
-            if self.httpconn.has_key(netloc):
+            if netloc in self.httpconn:
                 return self.httpconn[netloc]
         elif scheme == 'https':
-            if self.httpsconn.has_key(netloc):
+            if netloc in self.httpsconn:
                 return self.httspconn[netloc]
         return None
 
     def open_http(self, url):
         scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
         if scheme == 'http':
-            if not self.httpconn.has_key(netloc):
+            if netloc not in self.httpconn:
                 self.httpconn[netloc] = myHTTPConnection(netloc, timeout=self.timeout)
                 self.httpconn[netloc].set_debuglevel(self.http_debuglevel)
             return self.httpconn[netloc]
 
         elif scheme == 'https':
-            if not self.httpsconn.has_key(netloc):
+            if netloc not in self.httpsconn:
                 self.httpsconn[netloc] = myHTTPSConnection(netloc, timeout=self.timeout)
                 self.httpsconn[netloc].set_debuglevel(self.http_debuglevel)
             return self.httpsconn[netloc]
 
     def _open_ftp(self, netloc):
-        if not self.ftpconn.has_key(netloc):
+        if netloc not in self.ftpconn:
             self.ftpconn[netloc] = FTP(netloc, timeout=self.timeout)
             self.ftpconn[netloc].set_debuglevel(self.ftp_debuglevel)
             self.ftpconn[netloc].login()
@@ -473,18 +473,18 @@ class hostState:
     def close_http(self, url):
         scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
         if scheme == 'http':
-            if self.httpconn.has_key(netloc):
+            if netloc in self.httpconn:
                 self.httpconn[netloc].close()
                 del self.httpconn[netloc]
 
         elif scheme == 'https':
-            if self.httpsconn.has_key(netloc):
+            if netlock in self.httpsconn:
                 self.httpsconn[netloc].close()
                 del self.httpsconn[netloc]
 
     def close_ftp(self, url):
         scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
-        if self.ftpconn.has_key(netloc):
+        if netlock in self.ftpconn:
             try:
                 self.ftpconn[netloc].quit()
             except:
