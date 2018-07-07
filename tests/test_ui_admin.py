@@ -77,21 +77,23 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.app.get('/admin/')
             self.assertEqual(output.status_code, 200)
-            self.assertTrue('<title>Home - Admin</title>' in output.data)
+            data = output.get_data(as_text=True)
+            self.assertTrue('<title>Home - Admin</title>' in data)
             self.assertFalse(
-                '<a href="/admin/archview/">Arch</a>' in output.data)
+                '<a href="/admin/archview/">Arch</a>' in data)
             self.assertFalse(
-                '<a href="/admin/categoryview/">Category</a>' in output.data)
+                '<a href="/admin/categoryview/">Category</a>' in data)
 
         user = tests.FakeFasUserAdmin()
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.app.get('/admin/')
             self.assertEqual(output.status_code, 200)
-            self.assertTrue('<title>Home - Admin</title>' in output.data)
+            data = output.get_data(as_text=True)
+            self.assertTrue('<title>Home - Admin</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_arch(self, login_func):
@@ -102,16 +104,17 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/arch/')
             self.assertEqual(output.status_code, 200)
-            self.assertTrue('<title>Arch - Admin</title>' in output.data)
+            data = output.get_data(as_text=True)
+            self.assertTrue('<title>Arch - Admin</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/arch(view)?/\?sort=0" '
-                'title="Sort by Name">Name</a>', output.data))
+                'title="Sort by Name">Name</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (4)</a>' in output.data)
+                '<a href="javascript:void(0)">List (4)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_category(self, login_func):
@@ -122,16 +125,17 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/category/')
             self.assertEqual(output.status_code, 200)
-            self.assertTrue('<title>Category - Admin</title>' in output.data)
+            data = output.get_data(as_text=True)
+            self.assertTrue('<title>Category - Admin</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/\?sort=[02]" '
-                'title="Sort by Name">Name</a>', output.data))
+                'title="Sort by Name">Name</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (2)</a>' in output.data)
+                '<a href="javascript:void(0)">List (2)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_country(self, login_func):
@@ -142,17 +146,18 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/country/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
-                '<title>Country - Country - Admin</title>' in output.data)
+                '<title>Country - Country - Admin</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/country(view)?/\?sort=0" '
-                'title="Sort by Code">Code</a>', output.data))
+                'title="Sort by Code">Code</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (2)</a>' in output.data)
+                '<a href="javascript:void(0)">List (2)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_countrycontinentredirectview(self, login_func):
@@ -164,18 +169,19 @@ class FlaskUiAdminTest(tests.Modeltests):
             output = self.handle_flask_admin_urls(
                 '/admin/countrycontinentredirect/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Country - Country Continent Redirect - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/countrycontinentredirect(view)?/\?sort=0" '
-                'title="Sort by Country">Country</a>', output.data))
+                'title="Sort by Country">Country</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (3)</a>' in output.data)
+                '<a href="javascript:void(0)">List (3)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_embargoedcountryview(self, login_func):
@@ -186,18 +192,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/embargoedcountry/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Country - Embargoed Country - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/embargoedcountry(view)?/\?sort=0" '
-                'title="Sort by Country Code">Country Code</a>', output.data))
+                'title="Sort by Country Code">Country Code</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (0)</a>' in output.data)
+                '<a href="javascript:void(0)">List (0)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_directoryview(self, login_func):
@@ -208,18 +215,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/directory/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Directory - Directory - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/directory(view)?/\?sort=0" '
-                'title="Sort by Name">Name</a>', output.data))
+                'title="Sort by Name">Name</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (9)</a>' in output.data)
+                '<a href="javascript:void(0)">List (9)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_directoryexclusivehostview(self, login_func):
@@ -231,17 +239,18 @@ class FlaskUiAdminTest(tests.Modeltests):
             output = self.handle_flask_admin_urls(
                 '/admin/directoryexclusivehost/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Directory - Directory Exclusive Host - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertEqual(
-                output.data.count('<th class="column-header">'), 3)
+                data.count('<th class="column-header">'), 3)
             self.assertTrue(
-                '<a href="javascript:void(0)">List (0)</a>' in output.data)
+                '<a href="javascript:void(0)">List (0)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_filedetailview(self, login_func):
@@ -252,18 +261,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/filedetail/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>File - File Detail - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/filedetail(view)?/\?sort=[01]" '
-                'title="Sort by Filename">Filename</a>', output.data))
+                'title="Sort by Filename">Filename</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (0)</a>' in output.data)
+                '<a href="javascript:void(0)">List (0)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_filedetailfilegroupview(self, login_func):
@@ -275,17 +285,18 @@ class FlaskUiAdminTest(tests.Modeltests):
             output = self.handle_flask_admin_urls(
                 '/admin/filedetailfilegroup/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>File - File Detail File Group - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertEqual(
-                output.data.count('<th class="column-header">'), 0)
+                data.count('<th class="column-header">'), 0)
             self.assertTrue(
-                '<a href="javascript:void(0)">List (0)</a>' in output.data)
+                '<a href="javascript:void(0)">List (0)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_filegroupview(self, login_func):
@@ -296,18 +307,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/filegroup/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>File - File Group - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/filegroup(view)?/\?sort=0" '
-                'title="Sort by Name">Name</a>', output.data))
+                'title="Sort by Name">Name</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (0)</a>' in output.data)
+                '<a href="javascript:void(0)">List (0)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_hostview(self, login_func):
@@ -318,18 +330,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/host/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Host - Host - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/host(view)?/\?sort=[0-9]" '
-                'title="Sort by Name">Name</a>', output.data))
+                'title="Sort by Name">Name</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (3)</a>' in output.data)
+                '<a href="javascript:void(0)">List (3)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_hostaclipview(self, login_func):
@@ -340,18 +353,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/hostaclip/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Host - Host Acl Ip - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/hostaclip(view)?/\?sort=[01]" '
-                'title="Sort by Ip">Ip</a>', output.data))
+                'title="Sort by Ip">Ip</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (0)</a>' in output.data)
+                '<a href="javascript:void(0)">List (0)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_hostcategoryview(self, login_func):
@@ -362,19 +376,20 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/hostcategory/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Host - Host Category - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/hostcategory(view)?/\?sort=[02]" '
                 'title="Sort by Always Up2Date">Always Up2Date</a>',
-                output.data))
+                data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (4)</a>' in output.data)
+                '<a href="javascript:void(0)">List (4)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_hostcategorydirview(self, login_func):
@@ -385,18 +400,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/hostcategorydir/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Host - Host Category Dir - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/hostcategorydir(view)?/\?sort=[02]" '
-                'title="Sort by Path">Path</a>', output.data))
+                'title="Sort by Path">Path</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (2)</a>' in output.data)
+                '<a href="javascript:void(0)">List (2)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_hostcategoryurlview(self, login_func):
@@ -407,18 +423,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/hostcategoryurl/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Host - Host Category Url - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/hostcategoryurl(view)?/\?sort=[01]" '
-                'title="Sort by Url">Url</a>', output.data))
+                'title="Sort by Url">Url</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (8)</a>' in output.data)
+                '<a href="javascript:void(0)">List (8)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_hostcountryview(self, login_func):
@@ -429,17 +446,18 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/hostcountry/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Host - Host Country - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertEqual(
-                output.data.count('<th class="column-header">'), 2)
+                data.count('<th class="column-header">'), 2)
             self.assertTrue(
-                '<a href="javascript:void(0)">List (0)</a>' in output.data)
+                '<a href="javascript:void(0)">List (0)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_hostcountryallowedview(self, login_func):
@@ -450,18 +468,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/hostcountryallowed/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Host - Host Country Allowed - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/hostcountryallowed(view)?/\?sort=[01]" '
-                'title="Sort by Country">Country</a>', output.data))
+                'title="Sort by Country">Country</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (0)</a>' in output.data)
+                '<a href="javascript:void(0)">List (0)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_hostlocationview(self, login_func):
@@ -472,17 +491,18 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/hostlocation/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Host - Host Location - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertEqual(
-                output.data.count('<th class="column-header">'), 2)
+                data.count('<th class="column-header">'), 2)
             self.assertTrue(
-                '<a href="javascript:void(0)">List (0)</a>' in output.data)
+                '<a href="javascript:void(0)">List (0)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_hostnetblockview(self, login_func):
@@ -493,18 +513,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/hostnetblock/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Host - Host Netblock - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/hostnetblock(view)?/\?sort=[02]" '
-                'title="Sort by Name">Name</a>', output.data))
+                'title="Sort by Name">Name</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (0)</a>' in output.data)
+                '<a href="javascript:void(0)">List (0)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_hostpeerasnview(self, login_func):
@@ -515,18 +536,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/hostpeerasn/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Host - Host Peer Asn - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/hostpeerasn(view)?/\?sort=[02]" '
-                'title="Sort by Name">Name</a>', output.data))
+                'title="Sort by Name">Name</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (0)</a>' in output.data)
+                '<a href="javascript:void(0)">List (0)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_hoststatsview(self, login_func):
@@ -537,18 +559,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/hoststats/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Host - Host Stats - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/hoststats(view)?/\?sort=[02]" '
-                'title="Sort by Type">Type</a>', output.data))
+                'title="Sort by Type">Type</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (0)</a>' in output.data)
+                '<a href="javascript:void(0)">List (0)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_locationview(self, login_func):
@@ -559,18 +582,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/location/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Location - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/location(view)?/\?sort=0" '
-                'title="Sort by Name">Name</a>', output.data))
+                'title="Sort by Name">Name</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (3)</a>' in output.data)
+                '<a href="javascript:void(0)">List (3)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_netblockcountryview(self, login_func):
@@ -581,18 +605,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/netblockcountry/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Netblock Country - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/netblockcountry(view)?/\?sort=0" '
-                'title="Sort by Netblock">Netblock</a>', output.data))
+                'title="Sort by Netblock">Netblock</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (1)</a>' in output.data)
+                '<a href="javascript:void(0)">List (1)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_productview(self, login_func):
@@ -603,18 +628,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/product/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Product - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/product(view)?/\?sort=0" '
-                'title="Sort by Name">Name</a>', output.data))
+                'title="Sort by Name">Name</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (2)</a>' in output.data)
+                '<a href="javascript:void(0)">List (2)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_repositoryview(self, login_func):
@@ -625,18 +651,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/repository/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Repository - Repository - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/repository(view)?/\?sort=[0-4]" '
-                'title="Sort by Name">Name</a>', output.data))
+                'title="Sort by Name">Name</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (3)</a>' in output.data)
+                '<a href="javascript:void(0)">List (3)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_repositoryredirectview(self, login_func):
@@ -647,18 +674,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/repositoryredirect/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Repository - Repository Redirect - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/repositoryredirect(view)?/\?sort=0" '
-                'title="Sort by To Repo">To Repo</a>', output.data))
+                'title="Sort by To Repo">To Repo</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (3)</a>' in output.data)
+                '<a href="javascript:void(0)">List (3)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_siteview(self, login_func):
@@ -669,18 +697,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/site/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Site - Site - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/site(view)?/\?sort=0" '
-                'title="Sort by Name">Name</a>', output.data))
+                'title="Sort by Name">Name</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (3)</a>' in output.data)
+                '<a href="javascript:void(0)">List (3)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_siteadminview(self, login_func):
@@ -691,18 +720,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/siteadmin/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Site - Site Admin - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/siteadmin(view)?/\?sort=[01]" '
-                'title="Sort by Username">Username</a>', output.data))
+                'title="Sort by Username">Username</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (5)</a>' in output.data)
+                '<a href="javascript:void(0)">List (5)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_sitetositeview(self, login_func):
@@ -713,18 +743,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/sitetosite/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Site - Site To Site - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/sitetosite(view)?/\?sort=[0-2]" '
-                'title="Sort by Username">Username</a>', output.data))
+                'title="Sort by Username">Username</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (0)</a>' in output.data)
+                '<a href="javascript:void(0)">List (0)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_versionview(self, login_func):
@@ -735,18 +766,19 @@ class FlaskUiAdminTest(tests.Modeltests):
         with tests.user_set(mirrormanager2.app.APP, user):
             output = self.handle_flask_admin_urls('/admin/version/')
             self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
             self.assertTrue(
                 '<title>Version - Admin'
-                '</title>' in output.data)
+                '</title>' in data)
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/">Arch</a>', output.data))
+                '<a href="/admin/arch(view)?/">Arch</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/">Category</a>', output.data))
+                '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
                 '<a href="/admin/version(view)?/\?sort=[01]" '
-                'title="Sort by Name">Name</a>', output.data))
+                'title="Sort by Name">Name</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (6)</a>' in output.data)
+                '<a href="javascript:void(0)">List (6)</a>' in data)
 
 
 if __name__ == '__main__':
