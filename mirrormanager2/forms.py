@@ -34,8 +34,12 @@ MirrorManager2 forms.
 
 
 import re
-import flask_wtf as wtf
 import wtforms
+try:
+    from flask_wtf import FlaskForm
+except ImportError:
+    from flask_wtf import Form as FlaskForm
+
 from flask import g
 
 import IPy
@@ -55,12 +59,12 @@ def is_number(form, field):
         raise wtforms.ValidationError('Field must contain a number')
 
 
-class ConfirmationForm(wtf.Form):
+class ConfirmationForm(FlaskForm):
     """ Simple form, just used for CSRF protection. """
     pass
 
 
-class AddSiteForm(wtf.Form):
+class AddSiteForm(FlaskForm):
     """ Form to add or edit a site. """
     name = wtforms.TextField(
         'Site name',
@@ -95,7 +99,7 @@ class AddSiteForm(wtf.Form):
     )
 
 
-class AddHostForm(wtf.Form):
+class AddHostForm(FlaskForm):
     """ Form to add or edit a host. """
     name = wtforms.TextField(
         'Host name  <span class="error">*</span>',
@@ -160,7 +164,7 @@ class AddHostForm(wtf.Form):
     )
 
 
-class AddHostAclIpForm(wtf.Form):
+class AddHostAclIpForm(FlaskForm):
     """ Form to add or edit a host_acl_ip. """
     ip = wtforms.TextField(
         'IP  <span class="error">*</span>',
@@ -190,7 +194,7 @@ def validate_netblocks(form, field):
         raise wtforms.validators.ValidationError(emsg)
 
 
-class AddHostNetblockForm(wtf.Form):
+class AddHostNetblockForm(FlaskForm):
     """ Form to add or edit a host_netblock. """
     name = wtforms.TextField(
         'Name  <span class="error">*</span>',
@@ -202,7 +206,7 @@ class AddHostNetblockForm(wtf.Form):
     )
 
 
-class AddHostAsnForm(wtf.Form):
+class AddHostAsnForm(FlaskForm):
     """ Form to add or edit a host_peer_asn. """
     name = wtforms.TextField(
         'Name  <span class="error">*</span>',
@@ -214,7 +218,7 @@ class AddHostAsnForm(wtf.Form):
     )
 
 
-class AddHostCountryForm(wtf.Form):
+class AddHostCountryForm(FlaskForm):
     """ Form to add or edit a host_country. """
     country = wtforms.TextField(
         'Country  <span class="error">*</span>',
@@ -225,7 +229,7 @@ class AddHostCountryForm(wtf.Form):
     )
 
 
-class AddHostCategoryForm(wtf.Form):
+class AddHostCategoryForm(FlaskForm):
     """ Form to add a host_category. """
     category_id = wtforms.SelectField(
         'Category',
@@ -250,7 +254,7 @@ class AddHostCategoryForm(wtf.Form):
             ]
 
 
-class EditHostCategoryForm(wtf.Form):
+class EditHostCategoryForm(FlaskForm):
     """ Form to edit a host_category. """
     always_up2date = wtforms.BooleanField(
         'Always up to date',
@@ -258,7 +262,7 @@ class EditHostCategoryForm(wtf.Form):
     )
 
 
-class AddHostCategoryUrlForm(wtf.Form):
+class AddHostCategoryUrlForm(FlaskForm):
     """ Form to add a host_category_url. """
     p = APP.config.get('MM_PROTOCOL_REGEX', '')
     url = wtforms.TextField(

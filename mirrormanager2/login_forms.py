@@ -35,6 +35,10 @@ MirrorManager2 login forms.
 
 import flask_wtf as wtf
 import wtforms
+try:
+    from flask_wtf import FlaskForm
+except ImportError:
+    from flask_wtf import Form as FlaskForm
 
 
 def same_password(form, field):
@@ -44,7 +48,7 @@ def same_password(form, field):
         raise wtf.ValidationError('Both password fields should be equal')
 
 
-class LostPasswordForm(wtf.Form):
+class LostPasswordForm(FlaskForm):
     """ Form to ask for a password change. """
     username = wtforms.TextField(
         'username  <span class="error">*</span>',
@@ -52,7 +56,7 @@ class LostPasswordForm(wtf.Form):
     )
 
 
-class ResetPasswordForm(wtf.Form):
+class ResetPasswordForm(FlaskForm):
     """ Form to reset one's password in the local database. """
     password = wtforms.PasswordField(
         'Password  <span class="error">*</span>',
@@ -64,7 +68,7 @@ class ResetPasswordForm(wtf.Form):
     )
 
 
-class LoginForm(wtf.Form):
+class LoginForm(FlaskForm):
     """ Form to login via the local database. """
     username = wtforms.TextField(
         'username  <span class="error">*</span>',
@@ -76,7 +80,7 @@ class LoginForm(wtf.Form):
     )
 
 
-class NewUserForm(wtf.Form):
+class NewUserForm(FlaskForm):
     """ Form to add a new user to the local database. """
     user_name = wtforms.TextField(
         'username  <span class="error">*</span>',
