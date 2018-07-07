@@ -59,7 +59,8 @@ class MTATest(tests.Modeltests):
 
         process = subprocess.Popen(
             args=command,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True)
         stdout, stderr = process.communicate()
 
         self.assertEqual(stderr, '')
@@ -77,7 +78,8 @@ class MTATest(tests.Modeltests):
 
         process = subprocess.Popen(
             args=command,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True)
         stdout, stderr = process.communicate()
 
         self.assertEqual(
@@ -156,7 +158,8 @@ class MTATest(tests.Modeltests):
 
         process = subprocess.Popen(
             args=command,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True)
         stdout, stderr = process.communicate()
 
         self.assertEqual(
@@ -178,7 +181,8 @@ class MTATest(tests.Modeltests):
 
         process = subprocess.Popen(
             args=command,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True)
         stdout, stderr = process.communicate()
 
         self.assertEqual(

@@ -90,7 +90,8 @@ class UMDLTest(tests.Modeltests):
 
         process = subprocess.Popen(
             args=self.umdl_command.split(),
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True)
         stdout, stderr = process.communicate()
 
         self.assertEqual(stdout, '')
@@ -127,7 +128,8 @@ Fedora Other:Ending umdl
 
         process = subprocess.Popen(
             args=self.umdl_command.split(),
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True)
         stdout, stderr = process.communicate()
 
         self.assertEqual(stdout, '')
