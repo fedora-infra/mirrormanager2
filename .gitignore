@@ -11,3 +11,4 @@ build/
 _build/
 mirrormanager2_tests.cfg
 mirrormanager2_tests_mdtr.cfg
+/.pytest_cache/
