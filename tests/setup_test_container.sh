@@ -10,10 +10,10 @@ echo "Installing for ${1}"
 env
 
 if [[ "${1}" == cento* ]]; then
-	export PKG=yum
+	export PKG="yum"
 	export BUILDDEP=yum-builddep
 else
-	export PKG=dnf
+	export PKG="dnf --best --allowerasing"
 	export BUILDDEP='dnf builddep'
 fi
 
@@ -26,8 +26,7 @@ sudo docker exec `sed -e "s,:,-," <<< ${1}` \
 	${PKG} -y install yum rsync rpm-build && \
 	cd /tmp/test && \
 	${BUILDDEP} -y utility/mirrormanager2.spec && \
-	${PKG} -y install python2-mock python2-nose python-blinker python-nose python2-fedmsg-core; \
-	${PKG} -y install python-coverage; \
-	${PKG} -y install python2-coverage; \
+	${PKG} -y install python2-mock python-blinker python2-fedmsg-core; \
+	${PKG} -y install python2-pytest-cov; \
 	exit 0"
 

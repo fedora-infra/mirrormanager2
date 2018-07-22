@@ -18,7 +18,7 @@ install:
   - tests/setup_test_container.sh ${DISTRO}
 
 script:
-  - sudo docker exec `sed -e "s,:,-," <<< ${DISTRO}` bash -c 'cd /tmp/test && ./runtests.sh -d -v'
+  - sudo docker exec `sed -e "s,:,-," <<< ${DISTRO}` bash -c 'cd /tmp/test && ./runtests.sh -v'
 
 after_script:
   - sudo docker stop `sed -e "s,:,-," <<< ${DISTRO}`
