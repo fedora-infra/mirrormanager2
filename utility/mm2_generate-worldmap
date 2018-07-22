@@ -9,6 +9,7 @@
 # while the rest of MirrorManager is licensed MIT/X11
 
 
+from __future__ import print_function
 import sys
 import os
 import string
@@ -61,14 +62,14 @@ def lookup_host_locations(config):
             name = "N/A"
         if gir is not None:
             if gir['country_code'] in embargoed_countries:
-                print "skipping " + hn
+                print("skipping " + hn)
                 continue
             t = (
                 hn,
                 gir['country_code'],
                 gir['latitude'],
                 gir['longitude'])
-            print "%s %s %s %s" % t
+            print("%s %s %s %s" % t)
             results.append([t, name])
             tracking.append(hn)
 

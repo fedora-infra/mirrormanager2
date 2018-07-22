@@ -12,14 +12,20 @@ import logging
 import logging.handlers
 import os
 import random
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 import select
 import signal
 import socket
-from SocketServer import (StreamRequestHandler, ThreadingMixIn,
-                          UnixStreamServer, BaseServer)
+try:
+    from socketserver import (StreamRequestHandler, ThreadingMixIn,
+                              UnixStreamServer, BaseServer)
+except ImportError:
+    from SocketServer import (StreamRequestHandler, ThreadingMixIn,
+                              UnixStreamServer, BaseServer)
 import sys
-from string import zfill, atoi
 import time
 import traceback
 
@@ -87,10 +93,8 @@ def uniqueify(seq, idfun=None):
     result = []
     for item in seq:
         marker = idfun(item)
-        # in old Python versions:
-        # if seen.has_key(marker)
-        # but in new ones:
-        if marker in seen: continue
+        if marker in seen:
+            continue
         seen[marker] = 1
         result.append(item)
     return result
@@ -244,7 +248,7 @@ continents = {}
 
 def handle_country_continent_redirect(new_db):
     new_country_continents = GeoIP.country_continents
-    for country, continent in new_db['country_continent_redirect_cache'].iteritems():
+    for country, continent in new_db['country_continent_redirect_cache'].items():
         new_country_continents[country] = continent
     global country_continents
     country_continents = new_country_continents
@@ -253,7 +257,7 @@ def handle_country_continent_redirect(new_db):
 def setup_continents(new_db):
     new_continents = defaultdict(list)
     handle_country_continent_redirect(new_db)
-    for c, continent in country_continents.iteritems():
+    for c, continent in country_continents.items():
         new_continents[continent].append(c)
     global continents
     continents = new_continents
@@ -270,7 +274,7 @@ def do_countrylist(kwargs, cache, clientCountry, requested_countries, header):
     def collapse(d):
         """ collapses a dict {key:set(hostids)} into a set of hostids """
         s = set()
-        for country, hostids in d.iteritems():
+        for country, hostids in d.items():
             for hostid in hostids:
                 s.add(hostid)
         return s
@@ -315,7 +319,7 @@ def do_country(kwargs, cache, clientCountry, requested_countries, header):
 
 def do_netblocks(kwargs, cache, header):
     hostresults = set()
-    if not kwargs.has_key('netblock') or kwargs['netblock'] == "1":
+    if 'netblock' not in kwargs or kwargs['netblock'] == "1":
         tree_results = tree_lookup(database['host_netblocks_tree'], kwargs['IP'], 'hosts')
         for (prefix, hostids) in tree_results:
             for hostid in hostids:
@@ -469,9 +473,8 @@ def do_mirrorlist(kwargs):
             d['results'] = metalink_failuredoc(message)
         return d
 
-    if not (kwargs.has_key('repo') \
-            and kwargs.has_key('arch')) \
-            and not kwargs.has_key('path'):
+    if not ('repo' in kwargs and 'arch' in kwargs
+            or 'path' in kwargs):
         return return_error(
             kwargs,
             message='# either path=, or repo= and arch= must be specified')
@@ -479,7 +482,7 @@ def do_mirrorlist(kwargs):
     file = None
     cache = None
     pathIsDirectory = False
-    if kwargs.has_key('path'):
+    if 'path' in kwargs:
         path = kwargs['path'].strip('/')
 
     # Strip duplicate "//" from the path
@@ -550,7 +553,7 @@ def do_mirrorlist(kwargs):
     header, location_results = do_location(kwargs, header)
 
     requested_countries = []
-    if kwargs.has_key('country'):
+    if 'country' in kwargs:
         requested_countries = uniqueify(
             [c.upper() for c in kwargs['country'].split(',') ])
 
@@ -574,7 +577,7 @@ def do_mirrorlist(kwargs):
     else:
         print_client_country = clientCountry
 
-    if logfile and kwargs.has_key('repo') and kwargs.has_key('arch'):
+    if logfile and 'repo' in kwargs and 'arch' in kwargs:
         msg = "IP: %s; DATE: %s; COUNTRY: %s; REPO: %s; ARCH: %s\n"  % (
             (kwargs['IP'] or 'None'), time.strftime("%Y-%m-%d"),
             print_client_country, kwargs['repo'], kwargs['arch'])
@@ -722,7 +725,7 @@ def do_mirrorlist(kwargs):
 
 def setup_cache_tree(cache, field):
     tree = radix.Radix()
-    for k, v in cache.iteritems():
+    for k, v in cache.items():
         node = tree.add(k.strNormal())
         node.data[field] = v
     return tree
@@ -827,7 +830,7 @@ class MirrorlistHandler(StreamRequestHandler):
             while readlen < 10:
                 size += self.rfile.read(10 - readlen)
                 readlen = len(size)
-            size = atoi(size)
+            size = int(size)
 
             # read the pickle
             readlen = 0
@@ -849,7 +852,7 @@ class MirrorlistHandler(StreamRequestHandler):
             results = r['results']
             resulttype = r['resulttype']
             returncode = r['returncode']
-        except Exception, e:
+        except Exception as e:
             message=u'# Bad Request %s\n# %s' % (e, d)
             exception_msg = traceback.format_exc(e)
             sys.stderr.write(message+'\n')
@@ -868,7 +871,7 @@ class MirrorlistHandler(StreamRequestHandler):
                 'resulttype':resulttype,
                 'results':results,
                 'returncode':returncode})
-            self.connection.sendall(zfill('%s' % len(p), 10))
+            self.connection.sendall(str(len(p)).zfill(10))
 
             self.connection.sendall(p)
             self.connection.shutdown(socket.SHUT_WR)
@@ -1047,8 +1050,8 @@ def create_pidfile_dir(pidfile):
     if not piddir:
         return
     try:
-        os.makedirs(piddir, mode=0755)
-    except OSError, err:
+        os.makedirs(piddir, mode=0o755)
+    except OSError as err:
         if err.errno == 17: # File exists
             pass
         else:
@@ -1071,7 +1074,7 @@ def manage_pidfile(pidfile):
     pid = os.getpid()
     try:
         f = open(pidfile, 'r')
-    except IOError, err:
+    except IOError as err:
         if err.errno == 2: # No such file or directory
             return write_pidfile(pidfile, pid)
         return 1
@@ -1084,7 +1087,7 @@ def manage_pidfile(pidfile):
         os.kill(int(oldpid), 0)
     except ValueError: # malformed oldpid
         return write_pidfile(pidfile, pid)
-    except OSError, err:
+    except OSError as err:
         if err.errno == 3: # No such process
             return write_pidfile(pidfile, pid)
     return 1

@@ -670,7 +670,7 @@ def sync_category_directories(
 
     # this has to be a second pass to be sure the child repodata/ dir is
     # created in the db first
-    for relativeDName, value in category_directories.iteritems():
+    for relativeDName, value in category_directories.items():
         d = category.directory_cache[relativeDName]
         D = mirrormanager2.lib.get_directory_by_id(session, d.id)
 

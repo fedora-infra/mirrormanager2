@@ -42,7 +42,7 @@ def fedmsg_publish(*args, **kwargs):  # pragma: no cover
     try:
         import fedmsg
         fedmsg.publish(*args, **kwargs)
-    except Exception, err:
+    except Exception as err:
         warnings.warn(str(err))
 
 

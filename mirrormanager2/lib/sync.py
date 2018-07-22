@@ -74,7 +74,7 @@ def run_rsync(rsyncpath, extra_rsync_args=None, logger=None, timeout=None):
     :returns: return code, file descriptor
     """
 
-    tmpfile = tempfile.SpooledTemporaryFile()
+    tmpfile = tempfile.SpooledTemporaryFile(mode='w+t')
     cmd = "rsync --temp-dir=/tmp -r --exclude=.snapshot --exclude='*.~tmp~'"
     if extra_rsync_args is not None:
         cmd += ' ' + extra_rsync_args

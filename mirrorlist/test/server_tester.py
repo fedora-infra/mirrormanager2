@@ -4,9 +4,12 @@
 #  by Matt Domsch <Matt_Domsch@dell.com>
 # Licensed under the MIT/X11 license
 
+from __future__ import print_function
 import socket, os
-import cPickle as pickle
-from string import zfill, atoi
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 import datetime
 
 socketfile = '/var/run/mirrormanager/mirrorlist_server.sock'
@@ -29,7 +32,7 @@ def do_mirrorlist(d):
     p = pickle.dumps(d)
     size = len(p)
     #print "writing size %s to server" % size
-    s.sendall(zfill('%s' % size, 10))
+    s.sendall(str(size).zfill(10))
 
     # write the pickle
     #print "writing the pickle"
@@ -43,7 +46,7 @@ def do_mirrorlist(d):
     while readlen < 10:
         resultsize += s.recv(10 - readlen)
         readlen = len(resultsize)
-    resultsize = atoi(resultsize)
+    resultsize = int(resultsize)
 
     #print "reading %s bytes of the results list" % resultsize
     readlen = 0
@@ -69,7 +72,7 @@ while True:
          'arch':'i386',
          'metalink':False}
 
-    for k, v in d.iteritems():
+    for k, v in d.items():
         try:
             d[k] = unicode(v, 'utf8', 'replace')
         except:
@@ -81,4 +84,4 @@ while True:
     start = datetime.datetime.utcnow()
     result = do_mirrorlist(d)
     end = datetime.datetime.utcnow()
-    print "[%s]   connect: %s  total: %s" % (pid, connectTime, (end-start))
+    print("[%s]   connect: %s  total: %s" % (pid, connectTime, (end-start)))

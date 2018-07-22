@@ -23,7 +23,7 @@
 MirrorManager2 main flask controller.
 '''
 
-
+from __future__ import absolute_import
 import logging
 import logging.handlers
 import glob
@@ -118,7 +118,7 @@ def is_mirrormanager_admin(user):
 
     if auth_method in ('fas', 'local'):
         admins = APP.config['ADMIN_GROUP']
-        if isinstance(admins, basestring):
+        if isinstance(admins, str):
             admins = [admins]
         admins = set(admins)
 
@@ -372,7 +372,7 @@ def site_view(site_id):
     )
 
 
-from lib.notifications import fedmsg_publish
+from .lib.notifications import fedmsg_publish
 
 
 @APP.route('/site/<int:site_id>/drop', methods=['POST'])
@@ -1257,7 +1257,7 @@ def rsyncFilter():
     def parents(folder):
         path = []
         splitpath = folder.split('/')
-        for i in xrange(1, len(splitpath)):
+        for i in range(1, len(splitpath)):
             path.append('/'.join(splitpath[:i]))
         return path
 
@@ -1298,7 +1298,7 @@ def rsyncFilter():
     newer_dirs = mirrormanager2.lib.get_rsync_filter_directories(
         SESSION, categories_requested, since)
 
-    for i in xrange(len(newer_dirs)):
+    for i in range(len(newer_dirs)):
         newer_dirs[i] = strip_prefix(num_prefix, newer_dirs[i])
 
     includes.update(newer_dirs)
@@ -1307,7 +1307,7 @@ def rsyncFilter():
 
     includes = sorted(includes)
     # add trailing slash as rsync wants it
-    for i in xrange(len(includes)):
+    for i in range(len(includes)):
         includes[i] += u'/'
 
     return flask.render_template(
@@ -1357,9 +1357,9 @@ def auth_logout():
         login.logout()
     return flask.redirect(next_url)
 
-import admin
-import api
-import xmlrpc
+from . import admin
+from . import api
+from . import xmlrpc
 
 # Only import the login controller if the app is set up for local login
 if APP.config.get('MM_AUTHENTICATION', None) == 'local':

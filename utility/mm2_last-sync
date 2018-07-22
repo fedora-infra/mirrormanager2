@@ -21,6 +21,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+from __future__ import print_function
 import requests
 import time
 import sys
@@ -43,22 +44,22 @@ delta = 86400
 quiet = False
 
 def usage():
-	print
-	print "last-sync queries the Fedora Message Bus if new data is available on the public servers"
-	print
-	print "Usage: last-sync [options]"
-	print
-	print "Options:"
-	print "  -a, --all                 query all possible releases (default)"
-	print "                            (fedora, epel, branched, rawhide)"
-	print "  -f, --fedora              only query if fedora has been updated during <delta>"
-	print "  -e, --epel                only query if epel has been updated"
-	print "  -b, --branched            only query if the branched off release"
-	print "                            has been updated"
-	print "  -r, --rawhide             only query if rawhide has been updated"
-	print "  -q, --quiet               do not print out any informations"
-	print "  -d DELTA, --delta=DELTA   specify the time interval which should be used"
-	print "                            for the query (default: 86400)"
+	print()
+	print("last-sync queries the Fedora Message Bus if new data is available on the public servers")
+	print()
+	print("Usage: last-sync [options]")
+	print()
+	print("Options:")
+	print("  -a, --all                 query all possible releases (default)")
+	print("                            (fedora, epel, branched, rawhide)")
+	print("  -f, --fedora              only query if fedora has been updated during <delta>")
+	print("  -e, --epel                only query if epel has been updated")
+	print("  -b, --branched            only query if the branched off release")
+	print("                            has been updated")
+	print("  -r, --rawhide             only query if rawhide has been updated")
+	print("  -q, --quiet               do not print out any informations")
+	print("  -d DELTA, --delta=DELTA   specify the time interval which should be used")
+	print("                            for the query (default: 86400)")
 
 
 # -a -f -e -b -r -q -d
@@ -69,7 +70,7 @@ def parse_args():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], "afhebrqd:", ["all", "fedora", "epel", "rawhide", "branched", "quiet", "delta="])
 	except getopt.GetoptError as err:
-		print str(err)
+		print(str(err))
 		usage()
 		sys.exit(2)
 
@@ -126,7 +127,7 @@ for i in range(0, data['count']):
 
 if quiet == False:
 	for repo, timestamp in sorted(repos, key=getKey):
-		print "%s: %s" % (repo, time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime(timestamp)))
+		print("%s: %s" % (repo, time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime(timestamp))))
 
 if data['count'] > 0:
 	sys.exit(0)

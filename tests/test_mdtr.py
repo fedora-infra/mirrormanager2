@@ -4,6 +4,8 @@
 mirrormanager2 tests for the `Move Devel To Release` (MDTL) script.
 '''
 
+from __future__ import print_function
+
 __requires__ = ['SQLAlchemy >= 0.7']
 import pkg_resources
 
@@ -63,7 +65,8 @@ class MDTLTest(tests.Modeltests):
 
         process = subprocess.Popen(
             args=command,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True)
         stdout, stderr = process.communicate()
 
         self.assertEqual(stderr, '')
@@ -80,7 +83,8 @@ class MDTLTest(tests.Modeltests):
 
         process = subprocess.Popen(
             args=command,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True)
         stdout, stderr = process.communicate()
 
         self.assertEqual(stdout, 'Version 27 not found for product Fedora\n')
@@ -91,7 +95,8 @@ class MDTLTest(tests.Modeltests):
 
         process = subprocess.Popen(
             args=command,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True)
         stdout, stderr = process.communicate()
 
         self.assertEqual(stdout, '')
@@ -201,7 +206,8 @@ class MDTLTest(tests.Modeltests):
 
         process = subprocess.Popen(
             args=command[:],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True)
         stdout, stderr = process.communicate()
 
         self.assertEqual(
@@ -269,7 +275,8 @@ class MDTLTest(tests.Modeltests):
 
         process = subprocess.Popen(
             args=command[:],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True)
         stdout, stderr = process.communicate()
 
         self.assertEqual(

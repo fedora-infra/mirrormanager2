@@ -1,8 +1,12 @@
 #!/usr/bin/python2
 
+from __future__ import print_function
 import os, sys
 import json
-import ConfigParser
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 import pprint
 import xmlrpclib
 import base64
@@ -127,7 +131,7 @@ def parse_section(conf, section, item, required_options,
     if conf.has_option(section, 'enabled'):
         if conf.get(section, 'enabled') != '1' \
                 and section.lower() in item.config:
-            print 'removing disabled section %s' % (section)
+            print('removing disabled section %s' % (section))
             del item.config[section.lower()]
             return False
 
@@ -207,7 +211,7 @@ def parse_category(conf, section, item, crawl):
 
 def config(cfg, item, crawl=True):
     broken = False
-    conf = ConfigParser.ConfigParser()
+    conf = configparser.ConfigParser()
     files = conf.read(cfg)
     if files == []:
         errorprint('Configuration file %s not found' % (cfg))
@@ -307,9 +311,7 @@ def main():
 #        statdata = get_stats(conf, 'stats')
 
     # upload p and statsdata here
-    if not item.config.has_key('global') \
-            or not item.config['global'].has_key('enabled') \
-            or item.config['global']['enabled'] != '1':
+    if item.config.get('global', {}).get('enabled') != '1':
         sys.exit(1)
 
     if not options.no_send:
@@ -323,17 +325,17 @@ def main():
 
         if data is not None:
             try:
-                print server.checkin(data)
-            except socket.error, m:
-                print "Error checking in: %s.  Please try again later." % (
-                    m[1])
+                print(server.checkin(data))
+            except socket.error as m:
+                print("Error checking in: %s.  Please try again later." % (
+                    m[1]))
             except xmlrpclib.ProtocolError:
-                print "Error checking in: Service Temporarily "\
-                    "Unavailable.  Please try again later."
+                print("Error checking in: Service Temporarily "
+                      "Unavailable.  Please try again later.")
                 sys.exit(1)
             except xmlrpclib.Fault:
-                print "Error checking in.  Connection closed before "\
-                    "checkin complete.  Please try again later."
+                print("Error checking in.  Connection closed before "
+                      "checkin complete.  Please try again later.")
                 sys.exit(1)
 
 

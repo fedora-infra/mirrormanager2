@@ -33,7 +33,7 @@ def remove_pidfile(pidfile):
 def create_pidfile_dir(pidfile):
     piddir = os.path.dirname(pidfile)
     if piddir and not os.path.exists(piddir):
-        os.makedirs(piddir, mode=0755)
+        os.makedirs(piddir, mode=0o755)
 
 
 def write_pidfile(pidfile, pid):
@@ -54,7 +54,7 @@ def manage_pidfile(pidfile):
     try:
         with open(pidfile, 'r') as stream:
             oldpid = stream.read()
-    except IOError, err:
+    except IOError as err:
         return 1
 
     # is the oldpid process still running?
@@ -62,7 +62,7 @@ def manage_pidfile(pidfile):
         os.kill(int(oldpid), 0)
     except ValueError:  # malformed oldpid
         return write_pidfile(pidfile, pid)
-    except OSError, err:
+    except OSError as err:
         if err.errno == 3:  # No such process
             return write_pidfile(pidfile, pid)
     return 1

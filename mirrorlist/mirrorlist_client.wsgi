@@ -14,8 +14,10 @@
 
 import socket
 import select
-import cPickle as pickle
-from string import zfill, atoi, strip, replace
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 from webob import Request, Response
 
 socketfile = '/var/run/mirrormanager/mirrorlist_server.sock'
@@ -32,7 +34,7 @@ def get_mirrorlist(d):
     p = pickle.dumps(d)
     del d
     size = len(p)
-    s.sendall(zfill('%s' % size, 10))
+    s.sendall(str(size).zfill(10))
 
     # write the pickle
     s.sendall(p)
@@ -50,7 +52,7 @@ def get_mirrorlist(d):
     while readlen < 10:
         resultsize += s.recv(10 - readlen)
         readlen = len(resultsize)
-    resultsize = atoi(resultsize)
+    resultsize = int(resultsize)
 
     readlen = 0
     p = ''
@@ -80,17 +82,17 @@ def request_setup(environ, request):
     request_data = request.GET
     for f in fields:
         if f in request_data:
-            d[f] = strip(request_data[f])
+            d[f] = request_data[f].strip()
             # add back '+' that were converted to ' ' by util.FieldStorage
             if f == 'path':
-                d[f] = replace(d[f], ' ', '+')
+                d[f] = d[f].replace(' ', '+')
 
     if 'ip' in request_data:
-        client_ip = strip(request_data['ip'])
+        client_ip = request_data['ip'].strip()
     elif 'X-Forwarded-For' in request.headers \
             and 'mirrorlist_client.noreverseproxy' not in environ:
         client_ip = real_client_ip(
-            strip(request.headers['X-Forwarded-For']))
+            request.headers['X-Forwarded-For'].strip())
     else:
         client_ip = request.environ['REMOTE_ADDR']
     d['client_ip'] = client_ip
@@ -115,7 +117,7 @@ def request_setup(environ, request):
     if scriptname == '/metalink' or pathinfo == '/metalink':
         d['metalink'] = True
 
-    for k, v in d.iteritems():
+    for k, v in d.items():
         try:
             d[k] = unicode(v, 'utf8', 'replace')
         except:

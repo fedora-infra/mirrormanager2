@@ -22,6 +22,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+from __future__ import print_function
 import sys
 import matplotlib
 matplotlib.use('Agg')
@@ -41,21 +42,21 @@ embargoed_countries = []
 
 
 def usage():
-    print "mirrorlist_statistics.py analyzes mirrorlist_server.py logfiles"
-    print "and draws piecharts"
-    print
-    print "Usage:"
-    print "  mirrorlist_statistics.py [OPTION]..."
-    print
-    print "Options:"
-    print "  -c, --config=CONFIG   Configuration file to use"
-    print "                        (default=/etc/mirrormanager/mirrormanager2.cfg)"
-    print "  -l, --log=LOGFILE     gzipped logfile which should be used as input"
-    print "  -d, --dest=DIRECTORY  output directory"
-    print "  -o, --offset=DAYS     number of days which should be subtracted"
-    print "                        from today's date and be used as basis for log analysis"
-    print "  -h, --help            show this help; then exit"
-    print
+    print("mirrorlist_statistics.py analyzes mirrorlist_server.py logfiles")
+    print("and draws piecharts")
+    print()
+    print("Usage:")
+    print("  mirrorlist_statistics.py [OPTION]...")
+    print()
+    print("Options:")
+    print("  -c, --config=CONFIG   Configuration file to use")
+    print("                        (default=/etc/mirrormanager/mirrormanager2.cfg)")
+    print("  -l, --log=LOGFILE     gzipped logfile which should be used as input")
+    print("  -d, --dest=DIRECTORY  output directory")
+    print("  -o, --offset=DAYS     number of days which should be subtracted")
+    print("                        from today's date and be used as basis for log analysis")
+    print("  -h, --help            show this help; then exit")
+    print()
 
 
 def parse_args():
@@ -80,8 +81,8 @@ def parse_args():
             sys.exit(0)
 
     if not os.access(configuration, os.R_OK):
-        print "Cannot access configuration file: " + configuration
-        print "Exiting"
+        print("Cannot access configuration file: " + configuration)
+        print("Exiting")
         sys.exit(-1)
 
     d = dict()

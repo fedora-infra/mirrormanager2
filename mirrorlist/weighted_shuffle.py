@@ -2,6 +2,8 @@
 #  by Matt Domsch <Matt_Domsch@dell.com>
 # Licensed under the MIT/X11 license
 
+from __future__ import print_function
+
 import random
 import bisect
 
@@ -86,4 +88,4 @@ def unit_test():
     while 1:
         l = [(1000, 1), (1000, 2), (100, 3), (100, 4), (10, 5), (10, 6), (10, 7), (10, 8)]
         newlist = weighted_shuffle(l)
-        print newlist
+        print(newlist)

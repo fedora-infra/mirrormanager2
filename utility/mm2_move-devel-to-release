@@ -12,6 +12,7 @@ tree (which is hardlinked to the release tree and thus will have the same
 content)
 """
 
+from __future__ import print_function
 import sys
 import re
 import os
@@ -61,15 +62,15 @@ def move_devel_repo(session, category, version):
 
     c = mirrormanager2.lib.get_category_by_name(session, category)
     if c is None:
-        print "Category '%s' not found, exiting" % category
+        print("Category '%s' not found, exiting" % category)
         print_categories(session)
         sys.exit(1)
 
     v = mirrormanager2.lib.get_version_by_name_version(
         session, c.product.name, version)
     if not v:
-        print 'Version %s not found for product %s' % (
-            version, c.product.name)
+        print('Version %s not found for product %s' % (
+            version, c.product.name))
         sys.exit(1)
 
     oldpattern = os.path.join('development', version)
@@ -101,12 +102,12 @@ def move_devel_repo(session, category, version):
                 # thus lead to a duplicate key value violation.
                 continue
             fixup_repos(session, v, r, new_d)
-            print "%s => %s" % (d.name, t)
+            print("%s => %s" % (d.name, t))
 
 def print_categories(session):
-    print "Available categories:"
+    print("Available categories:")
     for c in mirrormanager2.lib.get_categories(session):
-        print "\t%s" % c.name
+        print("\t%s" % c.name)
 
 
 def main():
