@@ -6,6 +6,7 @@
 
 # standard library modules in alphabetical order
 from collections import defaultdict
+import csv
 import datetime
 import getopt
 import logging
@@ -36,7 +37,7 @@ except ImportError:
 
 # not-so-standard library modules that this program needs
 from IPy import IP
-import GeoIP
+import geoip2.database
 import radix
 from weighted_shuffle import weighted_shuffle
 
@@ -46,6 +47,7 @@ socketfile = '/var/run/mirrormanager/mirrorlist_server.sock'
 cachefile = '/var/lib/mirrormanager/mirrorlist_cache.pkl'
 internet2_netblocks_file = '/var/lib/mirrormanager/i2_netblocks.txt'
 global_netblocks_file = '/var/lib/mirrormanager/global_netblocks.txt'
+country_continent_csv = '/usr/share/mirrormanager2/country_continent.csv'
 logfile = None
 # If not at least 'minimum' mirrors are found for a country/continent,
 # mirrors from the global list are appended to the country/continent list
@@ -61,7 +63,7 @@ must_die = False
 default_ordered_mirrorlist = False
 
 # our own private copy of country_continents to be edited
-country_continents = GeoIP.country_continents
+country_continents = {}
 
 ## Set up our syslog data.
 syslogger = logging.getLogger('mirrormanager')
@@ -73,6 +75,14 @@ syslogger.addHandler(handler)
 
 # The entire in-memory structure
 database = {}
+
+
+def read_country_continents():
+    local_country_continents = {}
+    with open(country_continent_csv, mode='r') as infile:
+        reader = csv.reader(infile)
+        local_country_continents = {rows[0]: rows[1] for rows in reader}
+    return local_country_continents
 
 
 def lookup_ip_asn(tree, ip):
@@ -247,7 +257,7 @@ def shuffle(s):
 continents = {}
 
 def handle_country_continent_redirect(new_db):
-    new_country_continents = GeoIP.country_continents
+    new_country_continents = read_country_continents()
     for country, continent in new_db['country_continent_redirect_cache'].items():
         new_country_continents[country] = continent
     global country_continents
@@ -442,9 +452,10 @@ def client_ip_to_country(ip):
     # attempt IPv6, then IPv6 6to4 as IPv4, then Teredo, then IPv4
     try:
         if ip.version() == 6:
-            if database['gipv6'] is not None:
-                clientCountry = database['gipv6'].country_code_by_addr_v6(
-                    ip.strNormal())
+            if database['geoip'] is not None:
+                clientCountry = (database['geoip']
+                                 .country(ip.strNormal())
+                                 .country.iso_code)
             if clientCountry is None:
                 # Try the IPv6-to-IPv4 translation schemes
                 for scheme in (convert_6to4_v4, convert_teredo_v4):
@@ -452,8 +463,10 @@ def client_ip_to_country(ip):
                     if result is not None:
                         ip = result
                         break
-        if ip.version() == 4 and database['gipv4'] is not None:
-            clientCountry = database['gipv4'].country_code_by_addr(ip.strNormal())
+        if ip.version() == 4 and database['geoip'] is not None:
+            clientCountry = (database['geoip']
+                             .country(ip.strNormal())
+                             .country.iso_code)
     except:
         pass
     return clientCountry
@@ -920,11 +933,12 @@ def parse_args():
     global logfile
     global pidfile
     global minimum
+    global country_continent_csv
     opts, args = getopt.getopt(
         sys.argv[1:], "c:i:g:p:s:dl:m:",
         [
             "cache", "internet2_netblocks", "global_netblocks",
-            "pidfile", "socket", "log=", "minimum="
+            "pidfile", "socket", "log=", "minimum=", "cccsv="
         ]
     )
     for option, argument in opts:
@@ -938,6 +952,8 @@ def parse_args():
             socketfile = argument
         if option in ("-p", "--pidfile"):
             pidfile = argument
+        if option == "--cccsv":
+            country_continent_csv = argument
         if option in ("-l", "--log"):
             try:
                 logfile = open(argument, 'a')
@@ -951,16 +967,9 @@ def parse_args():
 
 
 def open_geoip_databases():
-    info = {'gipv4': None,
-            'gipv6': None}
+    info = {'geoip': None }
     try:
-        info['gipv4'] = GeoIP.open(
-            "/usr/share/GeoIP/GeoIP.dat", GeoIP.GEOIP_STANDARD)
-    except:
-        pass
-    try:
-        info['gipv6'] = GeoIP.open(
-            "/usr/share/GeoIP/GeoIPv6.dat", GeoIP.GEOIP_STANDARD)
+        info['geoip'] = geoip2.database.Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb')
     except:
         pass
     return info
@@ -1003,10 +1012,10 @@ def convert_teredo_v4(ip):
 
 def load_databases_and_caches(*args, **kwargs):
     global database
+    global country_continents
 
     new_database = {
-        'gipv4': None,
-        'gipv6': None,
+        'geoip': None,
         # key is strings in tuple (repo.prefix, arch)
         'mirrorlist_cache': {},
         # key is an IPy.IP structure, value is list of host ids

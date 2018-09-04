@@ -35,7 +35,7 @@ BuildRequires:  %{py2_prefix}-setuptools
 BuildRequires:  %{py2_prefix}-psutil
 BuildRequires:  %{py2_prefix}-alembic
 # Mirrorlist
-BuildRequires:  %{py2_prefix}-GeoIP
+BuildRequires:  %{py2_prefix}-geoip2
 BuildRequires:  %{py2_prefix}-webob
 BuildRequires:  systemd
 BuildRequires:  %{py2_prefix}-sqlalchemy >= 0.7
@@ -100,7 +100,7 @@ Group:          Development/Tools
 BuildArch:      noarch
 
 Requires:  %{name}-filesystem = %{version}-%{release}
-Requires:  %{py2_prefix}-GeoIP
+Requires:  %{py2_prefix}-geoip2
 Requires:  %{py2_prefix}-webob
 Requires:  %{py2_prefix}-IPy
 Requires:  httpd
