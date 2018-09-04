@@ -284,6 +284,9 @@ mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager-client
 install -m 0644 client/report_mirror.conf \
     $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager-client/report_mirror.conf
 
+# Install the country_continent file from MaxMind
+install -m 0644 utility/country_continent.csv \
+    $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/country_continent.csv
 
 %pre mirrorlist
 getent group mirrormanager >/dev/null || groupadd -r mirrormanager
@@ -344,6 +347,7 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -d -v
 %license LICENSE-MIT-X11 LICENSE-GPLv2
 %dir %{python2_sitelib}/%{name}
 %dir %{_datadir}/mirrormanager2
+%{_datadir}/mirrormanager2/country_continent.csv
 
 %files lib
 %{python2_sitelib}/%{name}/lib/
