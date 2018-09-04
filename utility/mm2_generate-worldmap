@@ -1,7 +1,7 @@
 #!/usr/bin/python2
 #
 # Copyright (c) 2007-2012 Dell, Inc. by Matt Domsch <Matt_Domsch@dell.com>
-# Copyright (c) 2015      Adrian Reber <adrian@lisas.de>
+# Copyright (c) 2015,2018 Adrian Reber <adrian@lisas.de>
 #
 # Based on examples from python-GeoIP and python-basemap-examples
 # Licensed under the GNU General Public License v2
@@ -16,20 +16,19 @@ import string
 import warnings
 import mirrormanager2.lib
 from optparse import OptionParser
-import GeoIP
+import geoip2.database
 import matplotlib
 matplotlib.use('Agg')
 from pylab import *
 import urlparse
 import codecs
+import socket
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 # this export sucks - basemap should do this automatically
 os.environ['BASEMAPDATA'] = '/usr/share/basemap'
 from mpl_toolkits.basemap import Basemap
-
-gi = None
 
 
 def uniq(input):
@@ -38,7 +37,7 @@ def uniq(input):
     return [x for x in input if not (x in seen or seen_add(x))]
 
 
-def lookup_host_locations(config):
+def lookup_host_locations(config, gi):
     session = mirrormanager2.lib.create_session(config['DB_URL'])
     hcurls = mirrormanager2.lib.get_host_category_url(session)
 
@@ -53,7 +52,8 @@ def lookup_host_locations(config):
         if hn in tracking:
             continue
         try:
-            gir = gi.record_by_name(hn)
+            ip = socket.gethostbyname(hn)
+            gir = gi.city(ip)
         except:
             continue
         try:
@@ -61,14 +61,14 @@ def lookup_host_locations(config):
         except:
             name = "N/A"
         if gir is not None:
-            if gir['country_code'] in embargoed_countries:
+            if gir.country.iso_code in embargoed_countries:
                 print("skipping " + hn)
                 continue
             t = (
                 hn,
-                gir['country_code'],
-                gir['latitude'],
-                gir['longitude'])
+                gir.country.iso_code,
+                gir.location.latitude,
+                gir.location.longitude)
             print("%s %s %s %s" % t)
             results.append([t, name])
             tracking.append(hn)
@@ -80,6 +80,7 @@ def lookup_host_locations(config):
 
 def doit(options, config):
 
+    gi = geoip2.database.Reader('/usr/share/GeoIP/GeoLite2-City.mmdb')
     m = Basemap(llcrnrlon=-180., llcrnrlat=-90, urcrnrlon=180., urcrnrlat=90.,
                 resolution='c', projection='cyl')
     # plot them as filled circles on the map.
@@ -100,7 +101,7 @@ def doit(options, config):
     # background color will be used for 'wet' areas.
     # use zorder=10 to make sure markers are drawn last.
     # (otherwise they are covered up when continents are filled)
-    results = lookup_host_locations(config)
+    results = lookup_host_locations(config, gi)
     fd = codecs.open(
         options.output +
         "/mirrors_location.txt",
@@ -128,7 +129,6 @@ def doit(options, config):
 
 
 def main():
-    global gi
     parser = OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option(
         "-c", "--config",
@@ -154,8 +154,6 @@ def main():
     config = dict()
     with open(options.config) as config_file:
         exec(compile(config_file.read(), options.config, 'exec'), config)
-
-    gi = GeoIP.open("/usr/share/GeoIP/GeoLiteCity.dat", GeoIP.GEOIP_STANDARD)
 
     doit(options, config)
 

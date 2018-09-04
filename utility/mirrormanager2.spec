@@ -174,7 +174,7 @@ BuildArch:      noarch
 
 Requires:  %{name}-filesystem = %{version}-%{release}
 Requires:  %{name}-lib = %{version}-%{release}
-Requires:  %{py2_prefix}-GeoIP
+Requires:  %{py2_prefix}-geoip2
 Requires:  %{py2_prefix}-matplotlib
 Requires:  %{py2_prefix}-basemap
 
