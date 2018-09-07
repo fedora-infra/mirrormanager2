@@ -28,7 +28,7 @@ import optparse
 import os
 import stat
 import sys
-import yum.repoMDObject
+import rpmmd.repoMDObject
 import datetime
 import time
 import hashlib
@@ -284,7 +284,7 @@ def make_repo_file_details(session, config, relativeDName, D, category, target):
     sha512 = hashlib.sha512(contents).hexdigest()
 
     if target == 'repomd.xml':
-        yumrepo = yum.repoMDObject.RepoMD('repoid', absolutepath)
+        yumrepo = rpmmd.repoMDObject.RepoMD('repoid', absolutepath)
         if 'timestamp' not in yumrepo.__dict__:
             set_repomd_timestamp(yumrepo)
         timestamp = yumrepo.timestamp

@@ -16,7 +16,7 @@ import optparse
 import os
 import sys
 
-import yum.repoMDObject
+import rpmmd.repoMDObject
 
 sys.path.insert(0, os.path.join(os.path.dirname(
     os.path.abspath(__file__)), '..'))
@@ -140,7 +140,7 @@ def main():
         target = options.filename.split('/')[-1]
 
         if target == 'repomd.xml':
-            yumrepo = yum.repoMDObject.RepoMD('repoid', absolutepath)
+            yumrepo = rpmmd.repoMDObject.RepoMD('repoid', absolutepath)
             if 'timestamp' not in yumrepo.__dict__:
                 set_repomd_timestamp(yumrepo)
             timestamp = yumrepo.timestamp
