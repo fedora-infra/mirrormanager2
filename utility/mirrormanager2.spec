@@ -44,7 +44,7 @@ BuildRequires:  %{py2_prefix}-fedmsg-core
 BuildRequires:  %{py2_prefix}-mock
 BuildRequires:  %{py2_prefix}-blinker
 BuildRequires:  rsync
-BuildRequires:  yum
+BuildRequires:  %{py2_prefix}-pyrpmmd
 
 %if 0%{?rhel} && 0%{?rhel} <= 7
 BuildRequires:  python2-rpm-macros
@@ -89,6 +89,7 @@ Requires:  %{name}-filesystem = %{version}-%{release}
 Requires:  %{py2_prefix}-IPy
 Requires:  %{py2_prefix}-dns
 Requires:  %{py2_prefix}-sqlalchemy >= 0.7
+Requires:  %{py2_prefix}-pyrpmmd
 
 %description lib
 Library to interact with MirrorManager's database

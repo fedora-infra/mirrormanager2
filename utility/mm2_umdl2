@@ -23,12 +23,12 @@ directory (/pub/fedora/linux/updates/....)
 
 import glob
 import logging
+import logging.handlers
 import re
 import optparse
 import os
 import stat
 import sys
-import yum.repoMDObject
 import datetime
 import time
 import hashlib
