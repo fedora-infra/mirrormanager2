@@ -1,5 +1,5 @@
 # List of dependencies for the mirrormanager repolist server
 
-GeoIP
+geoip2
 py-radix>0.8
 webob

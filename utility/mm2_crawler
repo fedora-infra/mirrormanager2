@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 
 import argparse
+import csv
 import datetime
 import ftplib
 from ftplib import FTP
@@ -18,7 +19,7 @@ import time
 import urllib2
 import urlparse
 import gc
-import GeoIP
+import geoip2.database
 
 sys.path.append('..')
 import mirrormanager2.lib
@@ -44,8 +45,8 @@ timeout=120
 shutdown=False
 
 # our own private copy of country_continents to be edited
-country_continents = GeoIP.country_continents
-gi = GeoIP.new(GeoIP.GEOIP_MEMORY_CACHE)
+country_continents = {}
+gi = geoip2.database.Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb')
 # hard coded list of continents; let's hope this does not change all the time
 # this is according to GeoIP
 continents = ['AF', 'AN', 'AS', 'EU', 'NA', 'OC', 'SA', '--' ]
@@ -95,7 +96,11 @@ def thread_id():
 # Add the information from the country_continent_redirect table to
 # country_continents information from GeoIP
 def handle_country_continent_redirect(session):
-    new_country_continents = GeoIP.country_continents
+    country_continent_csv = '/usr/share/mirrormanager2/country_continent.csv'
+    new_country_continents = {}
+    with open(country_continent_csv, mode='r') as infile:
+        reader = csv.reader(infile)
+        new_country_continents = {rows[0]: rows[1] for rows in reader}
     for c in mirrormanager2.lib.get_country_continent_redirect(session):
         new_country_continents[c.country] = c.continent
     global country_continents
@@ -1194,7 +1199,7 @@ def check_continent(categoryUrl):
         # that the base URL is broken.
         return 5
 
-    country = gi.country_code_by_addr(hostname)
+    country = gi.country(hostname).country.iso_code
     if not country:
         # For hosts with no country in the GeoIP database
         # the default is 'US' as that is where most of
