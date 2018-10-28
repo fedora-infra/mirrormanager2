@@ -52,7 +52,7 @@ class LostPasswordForm(FlaskForm):
     """ Form to ask for a password change. """
     username = wtforms.TextField(
         'username  <span class="error">*</span>',
-        [wtforms.validators.Required()]
+        [wtforms.validators.InputRequired()]
     )
 
 
@@ -60,11 +60,11 @@ class ResetPasswordForm(FlaskForm):
     """ Form to reset one's password in the local database. """
     password = wtforms.PasswordField(
         'Password  <span class="error">*</span>',
-        [wtforms.validators.Required()]
+        [wtforms.validators.InputRequired()]
     )
     confirm_password = wtforms.PasswordField(
         'Confirm password  <span class="error">*</span>',
-        [wtforms.validators.Required(), same_password]
+        [wtforms.validators.InputRequired(), same_password]
     )
 
 
@@ -72,11 +72,11 @@ class LoginForm(FlaskForm):
     """ Form to login via the local database. """
     username = wtforms.TextField(
         'username  <span class="error">*</span>',
-        [wtforms.validators.Required()]
+        [wtforms.validators.InputRequired()]
     )
     password = wtforms.PasswordField(
         'Password  <span class="error">*</span>',
-        [wtforms.validators.Required()]
+        [wtforms.validators.InputRequired()]
     )
 
 
@@ -84,7 +84,7 @@ class NewUserForm(FlaskForm):
     """ Form to add a new user to the local database. """
     user_name = wtforms.TextField(
         'username  <span class="error">*</span>',
-        [wtforms.validators.Required()]
+        [wtforms.validators.InputRequired()]
     )
     display_name = wtforms.TextField(
         'Full name',
@@ -92,13 +92,13 @@ class NewUserForm(FlaskForm):
     )
     email_address = wtforms.TextField(
         'Email address  <span class="error">*</span>',
-        [wtforms.validators.Required(), wtforms.validators.Email()]
+        [wtforms.validators.InputRequired(), wtforms.validators.Email()]
     )
     password = wtforms.PasswordField(
         'Password  <span class="error">*</span>',
-        [wtforms.validators.Required()]
+        [wtforms.validators.InputRequired()]
     )
     confirm_password = wtforms.PasswordField(
         'Confirm password  <span class="error">*</span>',
-        [wtforms.validators.Required(), same_password]
+        [wtforms.validators.InputRequired(), same_password]
     )

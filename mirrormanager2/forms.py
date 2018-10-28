@@ -68,15 +68,15 @@ class AddSiteForm(FlaskForm):
     """ Form to add or edit a site. """
     name = wtforms.TextField(
         'Site name',
-        [wtforms.validators.Required()]
+        [wtforms.validators.InputRequired()]
     )
     password = wtforms.TextField(
         'Site Password',
-        [wtforms.validators.Required()]
+        [wtforms.validators.InputRequired()]
     )
     org_url = wtforms.TextField(
         'Organisation URL',
-        [wtforms.validators.Required()],
+        [wtforms.validators.InputRequired()],
     )
     private = wtforms.BooleanField(
         'Private',
@@ -103,7 +103,7 @@ class AddHostForm(FlaskForm):
     """ Form to add or edit a host. """
     name = wtforms.TextField(
         'Host name  <span class="error">*</span>',
-        [wtforms.validators.Required()]
+        [wtforms.validators.InputRequired()]
     )
     admin_active = wtforms.BooleanField(
         'Admin active',
@@ -120,13 +120,13 @@ class AddHostForm(FlaskForm):
     country = wtforms.TextField(
         'Country  <span class="error">*</span>',
         [
-            wtforms.validators.Required(),
+            wtforms.validators.InputRequired(),
             wtforms.validators.Regexp(COUNTRY_REGEX, flags=re.IGNORECASE),
         ]
     )
     bandwidth_int = wtforms.TextField(
         'Bandwidth  <span class="error">*</span>',
-        [wtforms.validators.Required(), is_number],
+        [wtforms.validators.InputRequired(), is_number],
     )
     private = wtforms.BooleanField(
         'Private',
@@ -159,7 +159,7 @@ class AddHostForm(FlaskForm):
     )
     max_connections = wtforms.TextField(
         'Max connections  <span class="error">*</span>',
-        [wtforms.validators.Required(), is_number],
+        [wtforms.validators.InputRequired(), is_number],
         default=1
     )
 
@@ -168,7 +168,7 @@ class AddHostAclIpForm(FlaskForm):
     """ Form to add or edit a host_acl_ip. """
     ip = wtforms.TextField(
         'IP  <span class="error">*</span>',
-        [wtforms.validators.Required()]
+        [wtforms.validators.InputRequired()]
     )
 
 def validate_netblocks(form, field):
@@ -198,11 +198,11 @@ class AddHostNetblockForm(FlaskForm):
     """ Form to add or edit a host_netblock. """
     name = wtforms.TextField(
         'Name  <span class="error">*</span>',
-        [wtforms.validators.Required()]
+        [wtforms.validators.InputRequired()]
     )
     netblock = wtforms.TextField(
         'Netblock  <span class="error">*</span>',
-        [wtforms.validators.Required(), validate_netblocks]
+        [wtforms.validators.InputRequired(), validate_netblocks]
     )
 
 
@@ -210,11 +210,11 @@ class AddHostAsnForm(FlaskForm):
     """ Form to add or edit a host_peer_asn. """
     name = wtforms.TextField(
         'Name  <span class="error">*</span>',
-        [wtforms.validators.Required()]
+        [wtforms.validators.InputRequired()]
     )
     asn = wtforms.TextField(
         'ASN  <span class="error">*</span>',
-        [wtforms.validators.Required(), is_number]
+        [wtforms.validators.InputRequired(), is_number]
     )
 
 
@@ -223,7 +223,7 @@ class AddHostCountryForm(FlaskForm):
     country = wtforms.TextField(
         'Country  <span class="error">*</span>',
         [
-            wtforms.validators.Required(),
+            wtforms.validators.InputRequired(),
             wtforms.validators.Regexp(COUNTRY_REGEX, flags=re.IGNORECASE),
         ]
     )
@@ -233,7 +233,7 @@ class AddHostCategoryForm(FlaskForm):
     """ Form to add a host_category. """
     category_id = wtforms.SelectField(
         'Category',
-        [wtforms.validators.Required(), is_number],
+        [wtforms.validators.InputRequired(), is_number],
         choices=[(item, item) for item in []]
     )
     always_up2date = wtforms.BooleanField(
@@ -268,7 +268,7 @@ class AddHostCategoryUrlForm(FlaskForm):
     url = wtforms.TextField(
         'URL  <span class="error">*</span>',
         [
-            wtforms.validators.Required(),
+            wtforms.validators.InputRequired(),
             # private mirrors might have unusual URLs
             wtforms.validators.URL(require_tld=False),
             wtforms.validators.Regexp(
