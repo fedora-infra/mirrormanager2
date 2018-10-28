@@ -1683,6 +1683,198 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue(
                 '<h2>Fedora Public Active Mirrors</h2>' in data)
 
+    def test_toggle_private_flag_host(self):
+        """
+        Test that the toggling of the private flag in the host
+        deletes all host category directories.
+        """
+        output = self.app.get('/host/2/category/3')
+        self.assertEqual(output.status_code, 302)
+
+        output = self.app.get('/host/2/category/3', follow_redirects=True)
+        self.assertEqual(output.status_code, 200)
+        data = output.get_data(as_text=True)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in data)
+
+        user = tests.FakeFasUser()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/host/50/category/3')
+            self.assertEqual(output.status_code, 404)
+            data = output.get_data(as_text=True)
+            self.assertTrue('<p>Host not found</p>' in data)
+
+            output = self.app.get('/host/2/category/3')
+            self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
+            self.assertTrue(
+                'pub/fedora/linux/releases/27' in data)
+            self.assertTrue('Back to <a href="/site/2">' in data)
+            self.assertTrue(
+                '<title>Host Category - MirrorManager</title>'
+                in data)
+
+            output = self.app.get('/host/2')
+            data = output.get_data(as_text=True)
+            csrf_token = data.split(
+                'name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+            # Toggle private flag -> private: True
+            post_data = {
+                'name': 'mirror2.localhost',
+                'admin_active': True,
+                'private': True,
+                'user_active': True,
+                'country': 'FR',
+                'bandwidth_int': 100,
+                'asn_clients': True,
+                'max_connections': 10,
+                'csrf_token': csrf_token,
+            }
+
+            output = self.app.post('/host/2', data=post_data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
+
+            output = self.app.get('/host/2/category/3')
+            self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
+            # Make sure the host_category_directory is gone
+            self.assertFalse(
+                'pub/fedora/linux/releases/27' in data)
+            self.assertTrue('Back to <a href="/site/2">' in data)
+            self.assertTrue(
+                '<title>Host Category - MirrorManager</title>'
+                in data)
+            # more test data
+            tests.create_hostcategorydir_one_more(self.session)
+
+            output = self.app.get('/host/2/category/3')
+            self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
+            self.assertTrue(
+                'pub/fedora/linux/updates/testing/26/x86_64' in data)
+            self.assertTrue('Back to <a href="/site/2">' in data)
+            self.assertTrue(
+                '<title>Host Category - MirrorManager</title>'
+                in data)
+
+            # Toggle private flag -> private: False (or rather None)
+            post_data = {
+                'name': 'mirror2.localhost',
+                'admin_active': True,
+                'private': None,
+                'user_active': True,
+                'country': 'FR',
+                'bandwidth_int': 100,
+                'asn_clients': True,
+                'max_connections': 10,
+                'csrf_token': csrf_token,
+            }
+
+            output = self.app.post('/host/2', data=post_data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
+
+            output = self.app.get('/host/2/category/3')
+            self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
+            # Make sure the host_category_directory is gone
+            self.assertFalse(
+                'pub/fedora/linux/updates/testing/26/x86_64' in data)
+            self.assertTrue('Back to <a href="/site/2">' in data)
+            self.assertTrue(
+                '<title>Host Category - MirrorManager</title>'
+                in data)
+
+
+    def test_toggle_private_flag_site(self):
+        """
+        Test that the toggling of the private flag in the site
+        deletes all host category directories.
+        """
+        output = self.app.get('/host/2/category/3')
+        self.assertEqual(output.status_code, 302)
+
+        output = self.app.get('/host/2/category/3', follow_redirects=True)
+        self.assertEqual(output.status_code, 200)
+        data = output.get_data(as_text=True)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in data)
+
+        user = tests.FakeFasUser()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/host/50/category/3')
+            self.assertEqual(output.status_code, 404)
+            data = output.get_data(as_text=True)
+            self.assertTrue('<p>Host not found</p>' in data)
+
+            output = self.app.get('/host/2/category/3')
+            self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
+            self.assertTrue(
+                'pub/fedora/linux/releases/27' in data)
+            self.assertTrue('Back to <a href="/site/2">' in data)
+            self.assertTrue(
+                '<title>Host Category - MirrorManager</title>'
+                in data)
+
+            output = self.app.get('/host/2')
+            data = output.get_data(as_text=True)
+            csrf_token = data.split(
+                'name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+            # more test data
+            tests.create_hostcategorydir_even_more(self.session)
+
+            output = self.app.get('/host/2/category/3')
+            self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
+            self.assertTrue(
+                'pub/fedora/linux/updates/testing/27/x86_64' in data)
+            self.assertTrue('Back to <a href="/site/2">' in data)
+            self.assertTrue(
+                '<title>Host Category - MirrorManager</title>'
+                in data)
+
+            post_data = {
+                'name': 'test-mirror2.1',
+                'password': 'test_password2',
+                'org_url': 'http://getfedora.org',
+                'admin_active': True,
+                'user_active': True,
+                'private': True,
+                'downstream_comments': 'Mirror available over HTTP.',
+                'csrf_token': csrf_token,
+            }
+
+            output = self.app.post('/site/2', data=post_data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
+            self.assertTrue(
+                '<h2>Fedora Public Active Mirrors</h2>' in data)
+            self.assertTrue(
+                '<li class="message">Site Updated</li>' in data)
+
+            output = self.app.get('/host/2/category/3')
+            self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
+            # Make sure the host_category_directory is gone
+            self.assertFalse(
+                'pub/fedora/linux/updates/testing/27/x86_64' in data)
+            self.assertTrue('Back to <a href="/site/2">' in data)
+            self.assertTrue(
+                '<title>Host Category - MirrorManager</title>'
+                in data)
+
+
 if __name__ == '__main__':
     SUITE = unittest.TestLoader().loadTestsFromTestCase(FlaskUiAppTest)
     unittest.TextTestRunner(verbosity=10).run(SUITE)

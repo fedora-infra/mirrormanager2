@@ -806,6 +806,28 @@ def create_hostcategorydir(session):
     session.commit()
 
 
+def create_hostcategorydir_one_more(session):
+    item = model.HostCategoryDir(
+        host_category_id=3,
+        directory_id=8,
+        path='pub/fedora/linux/updates/testing/26/x86_64',
+        up2date=True,
+    )
+    session.add(item)
+
+    session.commit()
+
+def create_hostcategorydir_even_more(session):
+    item = model.HostCategoryDir(
+        host_category_id=3,
+        directory_id=9,
+        path='pub/fedora/linux/updates/testing/27/x86_64',
+        up2date=True,
+    )
+    session.add(item)
+
+    session.commit()
+
 def create_directoryexclusivehost(session):
     ''' Create some DirectoryExclusiveHost to play with for the tests
     '''
