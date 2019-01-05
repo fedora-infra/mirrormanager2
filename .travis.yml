@@ -1,5 +1,8 @@
-language: c
+language: generic
 sudo: required
+
+services:
+  - docker
 
 env:
   - DISTRO="centos:7"

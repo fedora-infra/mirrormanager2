@@ -4,7 +4,7 @@ After=network.target
 Documentation=https://github.com/fedora-infra/mirrormanager2
 
 [Service]
-ExecStart=/usr/bin/python2 /usr/share/mirrormanager2/mirrorlist_server.py
+ExecStart=/usr/bin/python /usr/share/mirrormanager2/mirrorlist_server.py
 Type=simple
 User=mirrormanager
 Group=mirrormanager

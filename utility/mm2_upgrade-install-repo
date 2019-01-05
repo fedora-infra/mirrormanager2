@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/env python
 
 """
 This script changes the directory path from the fedora-install-X repositories
