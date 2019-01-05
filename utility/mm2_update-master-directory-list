@@ -251,6 +251,8 @@ def make_repo_file_details(session, diskpath, relativeDName, D, category, target
         return
 
     size = len(contents)
+    if sys.version_info >= (3,0):
+        contents = contents.encode('utf-8')
     md5 = hashlib.md5(contents).hexdigest()
     sha1 = hashlib.sha1(contents).hexdigest()
     sha256 = hashlib.sha256(contents).hexdigest()
@@ -991,7 +993,7 @@ def setup_logging(config, options):
     fmt = '%(asctime)s:%(category)s:%(message)s'
     datefmt = '%Y-%m-%d %H:%M:%S'
     formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
-    handler = logging.handlers.WatchedFileHandler(log_file, "a+b")
+    handler = logging.handlers.WatchedFileHandler(log_file, "a+")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     f = MasterFilter()
