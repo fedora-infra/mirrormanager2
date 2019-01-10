@@ -1,10 +1,16 @@
-%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from
-%distutils.sysconfig import get_python_lib; print (get_python_lib())")}
+# This package depends on automagic byte compilation
+# https://fedoraproject.org/wiki/Changes/No_more_automagic_Python_bytecompilation_phase_2
+%global _python_bytecompile_extra 1
 
-%if 0%{?fedora} > 27 || 0%{?rhel} > 7
-%global py2_prefix python2
+%if (0%{?rhel} && 0%{?rhel} <= 7)
+# Since the Python 3 stack in EPEL is missing too many dependencies,
+# we're sticking with Python 2 there for now.
+%global __python %{__python2}
+%global python_pkgversion %{nil}
 %else
-%global py2_prefix python
+# Default to Python 3 when not EL
+%global __python %{__python3}
+%global python_pkgversion %{python3_pkgversion}
 %endif
 
 Name:           mirrormanager2
@@ -17,57 +23,57 @@ Summary:        Mirror management application
 # to generate the worldmaps are licensed under GPLv2 and GPLv2+
 License:        MIT and GPLv2+ and GPLv2
 URL:            https://github.com/fedora-infra/mirrormanager2/
-Source0:        https://github.com/fedora-infra/mirrormanager2/archive/%{version}.tar.gz
+Source0:        %{url}/archive/%{version}/%{name}-%{version}.tar.gz
 
 BuildArch:      noarch
 
-BuildRequires:  %{py2_prefix}-devel
-BuildRequires:  %{py2_prefix}-flask
-BuildRequires:  %{py2_prefix}-flask-admin
-BuildRequires:  %{py2_prefix}-flask-xml-rpc
-BuildRequires:  %{py2_prefix}-flask-wtf
-BuildRequires:  %{py2_prefix}-wtforms
-BuildRequires:  %{py2_prefix}-IPy
-BuildRequires:  %{py2_prefix}-dns
-BuildRequires:  %{py2_prefix}-fedora >= 0.3.33
-BuildRequires:  %{py2_prefix}-fedora-flask >= 0.3.33
-BuildRequires:  %{py2_prefix}-setuptools
-BuildRequires:  %{py2_prefix}-psutil
-BuildRequires:  %{py2_prefix}-alembic
+BuildRequires:  python%{python_pkgversion}-devel
+BuildRequires:  python%{python_pkgversion}-flask
+BuildRequires:  python%{python_pkgversion}-flask-admin
+BuildRequires:  python%{python_pkgversion}-flask-xml-rpc
+BuildRequires:  python%{python_pkgversion}-flask-wtf
+BuildRequires:  python%{python_pkgversion}-wtforms
+BuildRequires:  python%{python_pkgversion}-IPy
+BuildRequires:  python%{python_pkgversion}-dns
+BuildRequires:  python%{python_pkgversion}-fedora >= 0.3.33
+BuildRequires:  python%{python_pkgversion}-fedora-flask >= 0.3.33
+BuildRequires:  python%{python_pkgversion}-setuptools
+BuildRequires:  python%{python_pkgversion}-psutil
+BuildRequires:  python%{python_pkgversion}-alembic
 # Mirrorlist
-BuildRequires:  %{py2_prefix}-geoip2
-BuildRequires:  %{py2_prefix}-webob
+BuildRequires:  python%{python_pkgversion}-geoip2
+BuildRequires:  python%{python_pkgversion}-webob
 BuildRequires:  systemd
-BuildRequires:  %{py2_prefix}-sqlalchemy >= 0.7
+BuildRequires:  python%{python_pkgversion}-sqlalchemy >= 0.7
 # Testing
-BuildRequires:  %{py2_prefix}-fedmsg-core
-BuildRequires:  %{py2_prefix}-mock
-BuildRequires:  %{py2_prefix}-blinker
+BuildRequires:  python%{python_pkgversion}-fedmsg-core
+BuildRequires:  python%{python_pkgversion}-mock
+BuildRequires:  python%{python_pkgversion}-blinker
 BuildRequires:  rsync
-BuildRequires:  %{py2_prefix}-pyrpmmd
+BuildRequires:  python%{python_pkgversion}-pyrpmmd
 
 %if 0%{?rhel} && 0%{?rhel} <= 7
 BuildRequires:  python2-rpm-macros
 BuildRequires:  py-radix
 Requires:  mod_wsgi
 %else
-BuildRequires:  python2-py-radix
-Requires:  python2-mod_wsgi
+BuildRequires:  python%{python_pkgversion}-py-radix
+Requires:  python%{python3_pkgversion}-mod_wsgi
 %endif
 # Testing
-BuildRequires:  %{py2_prefix}-nose
-BuildRequires:  %{py2_prefix}-coverage
+BuildRequires:  python%{python_pkgversion}-nose
+BuildRequires:  python%{python_pkgversion}-coverage
 
-Requires:  %{py2_prefix}-flask
-Requires:  %{py2_prefix}-flask-admin
-Requires:  %{py2_prefix}-flask-xml-rpc
-Requires:  %{py2_prefix}-flask-wtf
-Requires:  %{py2_prefix}-wtforms
-Requires:  %{py2_prefix}-fedora >= 0.3.33
-Requires:  %{py2_prefix}-fedora-flask >= 0.3.33
-Requires:  %{py2_prefix}-setuptools
-Requires:  %{py2_prefix}-psutil
-Requires:  %{py2_prefix}-alembic
+Requires:  python%{python_pkgversion}-flask
+Requires:  python%{python_pkgversion}-flask-admin
+Requires:  python%{python_pkgversion}-flask-xml-rpc
+Requires:  python%{python_pkgversion}-flask-wtf
+Requires:  python%{python_pkgversion}-wtforms
+Requires:  python%{python_pkgversion}-fedora >= 0.3.33
+Requires:  python%{python_pkgversion}-fedora-flask >= 0.3.33
+Requires:  python%{python_pkgversion}-setuptools
+Requires:  python%{python_pkgversion}-psutil
+Requires:  python%{python_pkgversion}-alembic
 
 Requires:  %{name}-lib = %{version}-%{release}
 Requires:  %{name}-filesystem = %{version}-%{release}
@@ -86,10 +92,10 @@ Group:          Development/Tools
 BuildArch:      noarch
 
 Requires:  %{name}-filesystem = %{version}-%{release}
-Requires:  %{py2_prefix}-IPy
-Requires:  %{py2_prefix}-dns
-Requires:  %{py2_prefix}-sqlalchemy >= 0.7
-Requires:  %{py2_prefix}-pyrpmmd
+Requires:  python%{python_pkgversion}-IPy
+Requires:  python%{python_pkgversion}-dns
+Requires:  python%{python_pkgversion}-sqlalchemy >= 0.7
+Requires:  python%{python_pkgversion}-pyrpmmd
 
 %description lib
 Library to interact with MirrorManager's database
@@ -101,16 +107,16 @@ Group:          Development/Tools
 BuildArch:      noarch
 
 Requires:  %{name}-filesystem = %{version}-%{release}
-Requires:  %{py2_prefix}-geoip2
-Requires:  %{py2_prefix}-webob
-Requires:  %{py2_prefix}-IPy
+Requires:  python%{python_pkgversion}-geoip2
+Requires:  python%{python_pkgversion}-webob
+Requires:  python%{python_pkgversion}-IPy
 Requires:  httpd
 %if 0%{?rhel} && 0%{?rhel} <= 7
 Requires:  py-radix
 Requires:  mod_wsgi
 %else
-Requires:  python2-py-radix
-Requires:  python2-mod_wsgi
+Requires:  python%{python_pkgversion}-py-radix
+Requires:  python%{python_pkgversion}-mod_wsgi
 %endif
 Requires:  systemd
 Requires(pre):  shadow-utils
@@ -129,7 +135,7 @@ BuildArch:      noarch
 
 Requires:  %{name}-filesystem = %{version}-%{release}
 Requires:  %{name}-lib = %{version}-%{release}
-Requires:  %{py2_prefix}-geoip2
+Requires:  python%{python_pkgversion}-geoip2
 Requires:  logrotate
 Requires(pre):  shadow-utils
 
@@ -175,9 +181,9 @@ BuildArch:      noarch
 
 Requires:  %{name}-filesystem = %{version}-%{release}
 Requires:  %{name}-lib = %{version}-%{release}
-Requires:  %{py2_prefix}-geoip2
-Requires:  %{py2_prefix}-matplotlib
-Requires:  %{py2_prefix}-basemap
+Requires:  python%{python_pkgversion}-geoip2
+Requires:  python%{python_pkgversion}-matplotlib
+Requires:  python%{python_pkgversion}-basemap
 
 %description statistics
 A collection of different statistics script which are analyzing
@@ -200,11 +206,11 @@ Base directories used by multiple subpackages
 
 
 %build
-%py2_build
+%py_build
 
 
 %install
-%py2_install
+%py_install
 
 # Create directories needed
 # Apache configuration files
@@ -289,6 +295,16 @@ install -m 0644 client/report_mirror.conf \
 install -m 0644 utility/country_continent.csv \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/country_continent.csv
 
+# Fix the shebang for various scripts
+sed -e "s|#!/usr/bin/env python|#!%{__python}|" -i \
+    $RPM_BUILD_ROOT/%{_bindir}/*
+    $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/*.py \
+    $RPM_BUILD_ROOT/%{python_sitelib}/mirrormanager2/lib/umdl.py
+
+# Switch interpreter for systemd units
+sed -e "s|/usr/bin/python|%{__python}|g" -i $RPM_BUILD_ROOT/%{_unitdir}/*.service
+
+
 %pre mirrorlist
 getent group mirrormanager >/dev/null || groupadd -r mirrormanager
 getent passwd mirrormanager >/dev/null || \
@@ -332,6 +348,9 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -d -v
 
 %dir %{_sysconfdir}/mirrormanager/
 %dir %{python_sitelib}/%{name}/
+%if ! (0%{?rhel} && 0%{?rhel} <= 7)
+%dir %{python_sitelib}/__pycache__
+%endif
 
 %{_sysconfdir}/mirrormanager/alembic.ini
 
@@ -339,20 +358,30 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -d -v
 %{_datadir}/mirrormanager2/mirrormanager2_createdb.py*
 %{_datadir}/mirrormanager2/alembic/
 
-%{python2_sitelib}/%{name}/*.py*
-%{python2_sitelib}/%{name}/templates/
-%{python2_sitelib}/%{name}/static/
-%{python2_sitelib}/%{name}*.egg-info
+%{python_sitelib}/%{name}/*.py*
+%if ! (0%{?rhel} && 0%{?rhel} <= 7)
+%{python_sitelib}/%{name}/__pycache__/*
+%endif
+%{python_sitelib}/%{name}/templates/
+%{python_sitelib}/%{name}/static/
+%{python_sitelib}/%{name}*.egg-info
 
 %files filesystem
 %license LICENSE-MIT-X11 LICENSE-GPLv2
-%dir %{python2_sitelib}/%{name}
+%dir %{python_sitelib}/%{name}
 %dir %{_datadir}/mirrormanager2
+%if ! (0%{?rhel} && 0%{?rhel} <= 7)
+%dir %{_datadir}/mirrormanager2/__pycache__
+%endif
 %{_datadir}/mirrormanager2/country_continent.csv
 
 %files lib
-%{python2_sitelib}/%{name}/lib/
-%{python2_sitelib}/%{name}/__init__.py*
+%{python_sitelib}/%{name}/lib/
+%{python_sitelib}/%{name}/__init__.py*
+%if ! (0%{?rhel} && 0%{?rhel} <= 7)
+%{python_sitelib}/%{name}/__pycache__/__init__.*.py*
+%{python_sitelib}/%{name}/lib/__pycache__/
+%endif
 
 
 %files mirrorlist
@@ -364,6 +393,10 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -d -v
 %{_datadir}/mirrormanager2/mirrorlist_client.wsgi
 %{_datadir}/mirrormanager2/mirrorlist_server.py*
 %{_datadir}/mirrormanager2/weighted_shuffle.py*
+%if ! (0%{?rhel} && 0%{?rhel} <= 7)
+%{_datadir}/mirrormanager2/__pycache__/mirrorlist_server.*.py*
+%{_datadir}/mirrormanager2/__pycache__/weighted_shuffle.*.py*
+%endif
 
 
 %files crawler
