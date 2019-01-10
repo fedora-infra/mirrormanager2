@@ -78,21 +78,16 @@ class CrawlerTest(tests.Modeltests):
 
         fd.close()
 
-        # Check that atomic is not excluded (see below)
-        self.assertTrue('atomic' in output)
-
         for i in [
                 '20/Live/x86_64/Fedora-Live-x86_64-20-CHECKSUM',
                 'pub/fedora/linux/releases/20/Fedora/',
                 'releases/20/Fedora/source/SRPMS/a/aalib-1.4.0-0.23',
-                '69a69a59e169ad7d440fbb97d1e917724bb325f96.dirtree',
-                'pub/fedora/linux/atomic/21/objects/04',
                 'pub/fedora/linux/development/22/x86_64/os/repodata'
         ]:
             self.assertTrue(i in output)
 
         # Test the 'extra_rsync_args'
-        extra = '--exclude *atomic*'
+        extra = '--exclude *aalib*'
         result, fd = run_rsync(dest, extra)
         self.assertEqual(result, 0)
         output = ''
@@ -104,10 +99,10 @@ class CrawlerTest(tests.Modeltests):
 
         fd.close()
 
-        # Check that atomic is excluded
-        self.assertFalse('atomic' in output)
+        # Check that aalib is excluded
+        self.assertFalse('aalib' in output)
 
-        # Check that non-atomic is still included
+        # Check that non-excluded files are still included
         self.assertTrue('fedora/linux/development/22/' in output)
 
 
