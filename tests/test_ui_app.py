@@ -32,6 +32,8 @@ class FlaskUiAppTest(tests.Modeltests):
 
         skip = os.getenv('MM2_SKIP_NETWORK_TESTS', 0)
         self.network_tests = not bool(skip)
+        if skip:
+            raise unittest.SkipTest('Skipping FlaskUiAppTest tests')
 
         mirrormanager2.app.APP.config['TESTING'] = True
         mirrormanager2.app.SESSION = self.session

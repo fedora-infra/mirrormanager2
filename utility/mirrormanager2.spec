@@ -14,7 +14,7 @@
 %endif
 
 Name:           mirrormanager2
-Version:        0.8.4
+Version:        0.9.0
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -297,7 +297,7 @@ install -m 0644 utility/country_continent.csv \
 
 # Fix the shebang for various scripts
 sed -e "s|#!/usr/bin/env python|#!%{__python}|" -i \
-    $RPM_BUILD_ROOT/%{_bindir}/*
+    $RPM_BUILD_ROOT/%{_bindir}/* \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/*.py \
     $RPM_BUILD_ROOT/%{python_sitelib}/mirrormanager2/lib/umdl.py
 
@@ -336,10 +336,8 @@ exit 0
 %systemd_postun_with_restart mirrorlist-server.service
 
 %check
-# One day we will have unit-tests to run here
-
-# And that is starting today ;)
-MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -d -v
+# Exclude test_ui_app.py as it requires network connectivity
+MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 
 %files
 %doc README.rst doc/
@@ -349,13 +347,16 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -d -v
 %dir %{_sysconfdir}/mirrormanager/
 %dir %{python_sitelib}/%{name}/
 %if ! (0%{?rhel} && 0%{?rhel} <= 7)
-%dir %{python_sitelib}/__pycache__
+%dir %{python_sitelib}/%{name}/__pycache__
 %endif
 
 %{_sysconfdir}/mirrormanager/alembic.ini
 
 %{_datadir}/mirrormanager2/mirrormanager2.wsgi
 %{_datadir}/mirrormanager2/mirrormanager2_createdb.py*
+%if ! (0%{?rhel} && 0%{?rhel} <= 7)
+%{_datadir}/mirrormanager2/__pycache__/mirrormanager2_createdb.*.py*
+%endif
 %{_datadir}/mirrormanager2/alembic/
 
 %{python_sitelib}/%{name}/*.py*
@@ -380,7 +381,6 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -d -v
 %{python_sitelib}/%{name}/__init__.py*
 %if ! (0%{?rhel} && 0%{?rhel} <= 7)
 %{python_sitelib}/%{name}/__pycache__/__init__.*.py*
-%{python_sitelib}/%{name}/lib/__pycache__/
 %endif
 
 
@@ -440,6 +440,31 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -d -v
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Tue Jan 15 2019 Adrian Reber <adrian@lisas.de> - 0.9.0-1
+- Update to 0.9.0
+- crawler: Correctly calculate the remaining time
+  https://github.com/fedora-infra/mirrormanager2/pull/244
+- repomap: more modular repository detection logic
+  https://github.com/fedora-infra/mirrormanager2/pull/243
+- crawler: correctly handle keep-alive for HTTPS
+  https://github.com/fedora-infra/mirrormanager2/pull/245
+- crawler: only update directories of the current category
+  https://github.com/fedora-infra/mirrormanager2/pull/250
+- python3 compatibility
+  https://github.com/fedora-infra/mirrormanager2/pull/185
+- rpmmd: switch from yum.repoMDObject pyrpmmd
+  https://github.com/fedora-infra/mirrormanager2/pull/254
+- Migrate to new geoip API
+  https://github.com/fedora-infra/mirrormanager2/pull/253
+- Use InputRequired() instead of Required()
+  https://github.com/fedora-infra/mirrormanager2/pull/256
+- Enable MirrorManager2 to be built using Python 3 for Fedora
+  https://github.com/fedora-infra/mirrormanager2/pull/260
+- Fix tests with python3
+  https://github.com/fedora-infra/mirrormanager2/pull/261
+- Toggle private
+  https://github.com/fedora-infra/mirrormanager2/pull/257
+
 * Sun Mar 04 2018 Adrian Reber <adrian@lisas.de> - 0.8.4-1
 - Update to 0.8.4
 - Sync with Fedora's specfile
