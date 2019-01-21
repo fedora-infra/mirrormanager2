@@ -1,0 +1,21 @@
+[run]
+# Track what conditional branches are covered.
+branch = True
+#include =
+#    mirrormanager2/*
+
+[report]
+# Fail if the coverage is not 100%
+fail_under = 42
+# Display results with up 1/100th of a percent accuracy.
+precision = 2
+exclude_lines =
+    pragma: no cover
+
+    # Don't complain if tests don't hit defensive assertion code
+    raise AssertionError
+    raise NotImplementedError
+
+    if __name__ == .__main__.:
+omit =
+    mirrormanager2/tests/*
