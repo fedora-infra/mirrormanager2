@@ -1288,8 +1288,8 @@ def per_host(session, host, options, config):
 
     if not host_categories_to_scan:
         # If the host has no categories do not auto-disable it.
-        # Just skip the host
-        return 0
+        # Just skip the host. rc == 12 do not reset auto-disable
+        return 12
 
     for hc in host_categories_to_scan:
         timeout_check()
@@ -1545,6 +1545,11 @@ def worker(options, config, host_id):
                              "Canary mode failed for all categories. "
                              "Marking host as not up to date.")
             hosts_failed += 1
+        elif rc == 12:
+            # rc == 12: no category to crawl found. This is to make sure,
+            # that host.crawl_failures is not reset to zero for crawling
+            # non existing categories on this host
+            logger.info("No categories to crawl on host %r" % host)
         else:
             # Resetting as this only counts consecutive crawl failures
             host.crawl_failures = 0
