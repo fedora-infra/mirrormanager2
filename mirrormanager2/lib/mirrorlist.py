@@ -76,7 +76,7 @@ def shrink(mc):
     for d in mc:
         for subcache in subcaches:
             c = mc[d][subcache]
-            s = hashlib.sha1(pp.pformat(c)).hexdigest()
+            s = hashlib.sha1(pp.pformat(c).encode('utf-8')).hexdigest()
             if s in matches:
                 mc[d][subcache] = matches[s]
             else:
