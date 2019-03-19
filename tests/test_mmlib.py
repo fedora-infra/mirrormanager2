@@ -15,7 +15,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(
     os.path.abspath(__file__)), '..'))
 
 import mirrormanager2.lib
+import mirrormanager2.lib.mirrorlist
+import mirrormanager2.lib.mirrormanager_pb2
 import tests
+import tempfile
+import datetime
+import pickle
+from IPy import IP
 
 
 class MMLibtests(tests.Modeltests):
@@ -790,7 +796,6 @@ class MMLibtests(tests.Modeltests):
             else:
                 self.assertTrue(False)
 
-
     def test_get_mirrors(self):
         """ Test the get_mirrors function of mirrormanager2.lib.
         """
@@ -1131,6 +1136,216 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(
             results.directory.name,
             'pub/fedora/linux/updates/testing/25/x86_64')
+
+    def test_mirrorlist_export(self):
+        """ Test the export to mirrorlist by comparing
+        the result of pickle and protobuf export.
+        """
+
+        tests.create_base_items(self.session)
+        tests.create_site(self.session)
+        tests.create_hosts(self.session)
+        tests.create_directory(self.session)
+        tests.create_filedetail(self.session)
+        tests.create_category(self.session)
+        tests.create_categorydirectory(self.session)
+        tests.create_directoryexclusivehost(self.session)
+        tests.create_hostcategory(self.session)
+        tests.create_hostcategoryurl(self.session)
+        tests.create_hostcategorydir(self.session)
+        tests.create_hostcategorydir_one_more(self.session)
+        tests.create_hostcategorydir_even_more(self.session)
+        tests.create_hostpeerasn(self.session)
+        tests.create_hostnetblock(self.session)
+        tests.create_netblockcountry(self.session)
+        tests.create_repositoryredirect(self.session)
+        tests.create_version(self.session)
+        tests.create_repository(self.session)
+        tests.create_hostcountry(self.session)
+        tests.create_host_country_allowed(self.session)
+        # Locations has not been ported to MirrorManager2, does not work
+        # tests.create_location(self.session)
+
+        mirrormanager2.lib.mirrorlist.populate_all_caches(self.session)
+        fd, path = tempfile.mkstemp()
+        mirrormanager2.lib.mirrorlist.dump_caches(
+            self.session,
+            path,
+            path + '.proto'
+        )
+
+        f = open(path, 'rb')
+        data = pickle.load(f)
+        f.close()
+
+        mirrorlist = mirrormanager2.lib.mirrormanager_pb2.MirrorList()
+        f = open(path + '.proto', 'rb')
+        mirrorlist.ParseFromString(f.read())
+        f.close()
+        os.remove(path)
+        os.remove(path + '.proto')
+
+        self.assertEqual(
+            data['time'].year,
+            datetime.datetime.fromtimestamp(mirrorlist.Time).year
+        )
+        self.assertEqual(
+            data['time'].month,
+            datetime.datetime.fromtimestamp(mirrorlist.Time).month
+        )
+        self.assertEqual(
+            data['time'].day,
+            datetime.datetime.fromtimestamp(mirrorlist.Time).day
+        )
+        self.assertEqual(
+            data['time'].hour,
+            datetime.datetime.fromtimestamp(mirrorlist.Time).hour
+        )
+        self.assertEqual(
+            data['time'].minute,
+            datetime.datetime.fromtimestamp(mirrorlist.Time).minute
+        )
+        self.assertEqual(
+            data['time'].second,
+            datetime.datetime.fromtimestamp(mirrorlist.Time).second
+        )
+
+        host_asn_cache = {}
+        for i, item in enumerate(mirrorlist.HostAsnCache):
+            if item.key not in host_asn_cache.keys():
+                host_asn_cache[item.key] = []
+            for v, value in enumerate(item.value):
+                host_asn_cache[item.key].append(value)
+
+        self.assertEqual(data['asn_host_cache'], host_asn_cache)
+
+        netblock_country_cache = {}
+        for i, item in enumerate(mirrorlist.NetblockCountryCache):
+            netblock_country_cache[
+                IP(item.key)] = item.value
+
+        self.assertEqual(
+            data['netblock_country_cache'],
+            netblock_country_cache)
+
+        location_cache = {}
+        for i, item in enumerate(mirrorlist.LocationCache):
+            if item.key not in location_cache.keys():
+                location_cache[item.key] = []
+            for v, value in enumerate(item.value):
+                location_cache[item.key].append(value)
+        self.assertEqual(data['location_cache'], location_cache)
+
+        hcurl_cache = {}
+        for i, item in enumerate(mirrorlist.HCUrlCache):
+            hcurl_cache[item.key] = item.value
+        self.assertEqual(data['hcurl_cache'], hcurl_cache)
+
+        file_details_cache = {}
+        for i, item in enumerate(mirrorlist.FileDetailsCache):
+            if item.directory not in file_details_cache.keys():
+                file_details_cache[item.directory] = {}
+            fdcf = item.FileDetailsCacheFiles
+            for fd, file_details in enumerate(fdcf):
+                file_details_cache[item.directory][file_details.filename] = []
+                details_list = file_details.FileDetails
+                for v, value in enumerate(details_list):
+                    fd = {}
+                    fd['timestamp'] = value.TimeStamp
+                    fd['size'] = value.Size
+                    fd['sha1'] = value.SHA1
+                    fd['md5'] = value.MD5
+                    fd['sha256'] = value.SHA256
+                    fd['sha512'] = value.SHA512
+                    file_details_cache[
+                        item.directory][
+                        file_details.filename].append(fd)
+
+        self.assertEqual(data['file_details_cache'], file_details_cache)
+        disabled_repositories = {}
+        for i, item in enumerate(mirrorlist.DisabledRepositoryCache):
+            disabled_repositories[item.key] = item.value
+        self.assertEqual(data['disabled_repositories'], disabled_repositories)
+        cou_con_redirect_cache = {}
+        for i, item in enumerate(mirrorlist.CountryContinentRedirectCache):
+            cou_con_redirect_cache[item.key] = item.value
+        self.assertEqual(
+            data['country_continent_redirect_cache'],
+            cou_con_redirect_cache)
+        repo_redirect_cache = {}
+        for i, item in enumerate(mirrorlist.RepositoryRedirectCache):
+            repo_redirect_cache[item.key] = item.value
+        self.assertEqual(data['repo_redirect_cache'], repo_redirect_cache)
+
+        repo_arch_to_directoryname = {}
+        for i, item in enumerate(mirrorlist.RepoArchToDirectoryName):
+            repo_arch_to_directoryname[
+                (item.key.split('+')[0], item.key.split('+')[1])
+            ] = item.value
+
+        self.assertEqual(
+            data['repo_arch_to_directoryname'],
+            repo_arch_to_directoryname
+        )
+
+        host_max_connections_cache = {}
+        for i, item in enumerate(mirrorlist.HostMaxConnectionCache):
+            host_max_connections_cache[item.key] = item.value
+        host_country_cache = {}
+        for i, item in enumerate(mirrorlist.HostCountryCache):
+            host_country_cache[item.key] = item.value
+        host_bandwidth_cache = {}
+        for i, item in enumerate(mirrorlist.HostBandwidthCache):
+            host_bandwidth_cache[item.key] = item.value
+        self.assertEqual(
+            data['host_max_connections_cache'],
+            host_max_connections_cache
+        )
+        self.assertEqual(
+            data['host_country_cache'],
+            host_country_cache
+        )
+        self.assertEqual(
+            data['host_bandwidth_cache'],
+            host_bandwidth_cache
+        )
+
+        host_netblock_cache = {}
+        for i, item in enumerate(mirrorlist.HostNetblockCache):
+            if IP(item.key) not in host_netblock_cache.keys():
+                host_netblock_cache[IP(item.key)] = []
+            for v, value in enumerate(item.value):
+                host_netblock_cache[IP(item.key)].append(value)
+
+        self.assertEqual(data['host_netblock_cache'], host_netblock_cache)
+
+        mirrorlist_cache = {}
+        for i, item in enumerate(mirrorlist.MirrorListCache):
+            if item.directory not in mirrorlist_cache.keys():
+                mirrorlist_cache[item.directory] = {}
+            mc = mirrorlist_cache[item.directory]
+            mc['subpath'] = item.Subpath
+            mc['ordered_mirrorlist'] = item.OrderedMirrorList
+            mc['global'] = set()
+            for v, value in enumerate(item.Global):
+                mc['global'].add(value)
+            mc['byCountry'] = {}
+            for c, country in enumerate(item.ByCountry):
+                mc['byCountry'][country.key] = set()
+                for v, value in enumerate(country.value):
+                    mc['byCountry'][country.key].add(value)
+            mc['byCountryInternet2'] = {}
+            for c, country in enumerate(item.ByCountryInternet2):
+                mc['byCountryInternet2'][country.key] = set()
+                for v, value in enumerate(country.value):
+                    mc['byCountryInternet2'][country.key].add(value)
+            mc['byHostId'] = {}
+            for i, id in enumerate(item.ByHostId):
+                mc['byHostId'][id.key] = []
+                for h, hcurl in enumerate(id.value):
+                    mc['byHostId'][id.key].append(hcurl)
+
+        self.assertEqual(data['mirrorlist_cache'], mirrorlist_cache)
 
 
 if __name__ == '__main__':
