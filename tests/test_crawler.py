@@ -24,11 +24,6 @@ import unittest
 import subprocess
 import sys
 import os
-
-
-sys.path.insert(0, os.path.join(os.path.dirname(
-    os.path.abspath(__file__)), '..'))
-
 import mirrormanager2.lib
 from mirrormanager2.lib.sync import run_rsync
 import tests

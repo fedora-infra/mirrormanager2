@@ -17,10 +17,6 @@ import os
 
 from contextlib import contextmanager
 from flask import appcontext_pushed, g
-
-sys.path.insert(0, os.path.join(os.path.dirname(
-    os.path.abspath(__file__)), '..'))
-
 from mirrormanager2.app import APP, FAS, LOG
 from mirrormanager2.lib import model
 

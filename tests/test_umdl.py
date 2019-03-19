@@ -8,16 +8,10 @@ from __future__ import print_function
 
 __requires__ = ['SQLAlchemy >= 0.7']
 import pkg_resources
-
 import unittest
 import subprocess
 import sys
 import os
-
-
-sys.path.insert(0, os.path.join(os.path.dirname(
-    os.path.abspath(__file__)), '..'))
-
 import mirrormanager2.lib
 import tests
 
