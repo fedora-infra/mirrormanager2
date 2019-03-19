@@ -42,17 +42,17 @@ import mirrormanager2.lib.mirrormanager_pb2 as mm_pb2
 
 global_caches = dict(
     # key is directoryname
-    mirrorlist_cache = {},
+    mirrorlist_cache={},
     # key is strings in tuple (repo.prefix, arch)
-    repo_arch_to_directoryname = {},
+    repo_arch_to_directoryname={},
     # key is an IPy.IP structure, value is list of host ids
-    host_netblock_cache = {},
+    host_netblock_cache={},
     # key is hostid, value is list of countries to allow
-    host_country_allowed_cache = {},
-    host_country_cache = {},
-    host_bandwidth_cache = {},
-    host_asn_cache = {},
-    )
+    host_country_allowed_cache={},
+    host_country_cache={},
+    host_bandwidth_cache={},
+    host_asn_cache={},
+)
 
 
 def parent_dir(path):
@@ -109,11 +109,13 @@ def populate_directory_cache(session):
             if r.directory and r.version and r.arch:
                 append_value_to_cache(cache, r.directory.id, r)
         return cache
+
     def setup_version_ordered_mirrorlist_cache(session):
         cache = {}
         for v in mirrormanager2.lib.get_versions(session):
             cache[v.id] = v.ordered_mirrorlist
         return cache
+
     def setup_category_topdir_cache(session):
         cache = {}
         for c in mirrormanager2.lib.get_categories(session):
@@ -198,8 +200,8 @@ def populate_directory_cache(session):
 
 
 def name_to_ips(name):
-    result=[]
-    recordtypes=('A', 'AAAA')
+    result = []
+    recordtypes = ('A', 'AAAA')
     for r in recordtypes:
         try:
             records = dns.resolver.query(name, r)
@@ -246,8 +248,10 @@ def populate_host_max_connections_cache(cache, host):
 def populate_host_bandwidth_cache(cache, host):
     try:
         i = int(host.bandwidth_int)
-        if i < 1: i = 1
-        elif i > 100000: i = 100000 # max bandwidth 100Gb
+        if i < 1:
+            i = 1
+        elif i > 100000:
+            i = 100000  # max bandwidth 100Gb
         cache[host.id] = i
     except:
         cache[host.id] = 1
@@ -396,7 +400,8 @@ def dump_caches(session, filename="", protobuf_file=""):
         'host_bandwidth_cache': global_caches['host_bandwidth_cache'],
         'host_country_cache': global_caches['host_country_cache'],
         'host_max_connections_cache': global_caches['host_max_connections_cache'],
-        'asn_host_cache': global_caches['host_asn_cache'], # yeah I misnamed this
+        # yeah I misnamed this
+        'asn_host_cache': global_caches['host_asn_cache'],
         'repo_arch_to_directoryname': global_caches['repo_arch_to_directoryname'],
         'repo_redirect_cache': repository_redirect_cache(session),
         'country_continent_redirect_cache': country_continent_redirect_cache(session),
@@ -552,11 +557,11 @@ def dump_caches(session, filename="", protobuf_file=""):
                 if key == 'subpath':
                     mlc.Subpath = data[
                         'mirrorlist_cache'
-                        ][directory][key]
+                    ][directory][key]
                 if key == 'ordered_mirrorlist':
                     mlc.OrderedMirrorList = data[
                         'mirrorlist_cache'
-                        ][directory][key]
+                    ][directory][key]
                 if key == 'byCountry':
                     countries = data['mirrorlist_cache'][directory][key]
                     for country in countries:
