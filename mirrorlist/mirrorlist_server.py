@@ -40,6 +40,7 @@ from IPy import IP
 import geoip2.database
 import radix
 from weighted_shuffle import weighted_shuffle
+import mirrormanager_pb2
 
 # can be overridden on the command line
 pidfile = '/var/run/mirrormanager/mirrorlist_server.pid'
@@ -771,46 +772,181 @@ def read_caches():
     info = {}
 
     data = {}
-    try:
-        f = open(cachefile, 'r')
-        data = pickle.load(f)
-        f.close()
-    except:
-        pass
 
-    if 'mirrorlist_cache' in data:
-        info['mirrorlist_cache'] = data['mirrorlist_cache']
-    if 'host_netblock_cache' in data:
-        info['host_netblock_cache'] = data['host_netblock_cache']
-    if 'host_country_allowed_cache' in data:
-        info['host_country_allowed_cache'] = data['host_country_allowed_cache']
-    if 'repo_arch_to_directoryname' in data:
-        info['repo_arch_to_directoryname'] = data['repo_arch_to_directoryname']
-    if 'repo_redirect_cache' in data:
-        info['repo_redirect'] = data['repo_redirect_cache']
-    if 'country_continent_redirect_cache' in data:
-        info['country_continent_redirect_cache'] = data[
-            'country_continent_redirect_cache']
-    if 'disabled_repositories' in data:
-        info['disabled_repositories'] = data['disabled_repositories']
-    if 'host_bandwidth_cache' in data:
-        info['host_bandwidth_cache'] = data['host_bandwidth_cache']
-    if 'host_country_cache' in data:
-        info['host_country_cache'] = data['host_country_cache']
-    if 'file_details_cache' in data:
-        info['file_details_cache'] = data['file_details_cache']
-    if 'hcurl_cache' in data:
-        info['hcurl_cache'] = data['hcurl_cache']
-    if 'asn_host_cache' in data:
-        info['asn_host_cache'] = data['asn_host_cache']
-    if 'location_cache' in data:
-        info['location_cache'] = data['location_cache']
-    if 'netblock_country_cache' in data:
-        info['netblock_country_cache'] = data['netblock_country_cache']
-    if 'host_max_connections_cache' in data:
-        info['host_max_connections_cache'] = data['host_max_connections_cache']
-    if 'time' in data:
-        info['time'] = data['time']
+    mirrorlist = mirrormanager_pb2.MirrorList()
+    protobuf = False
+
+    f = open(cachefile, 'rb')
+    try:
+        data = pickle.load(f)
+    except pickle.UnpicklingError:
+        # If it is not a pickle, then it probably is the
+        # protobuf based format.
+        f.seek(0)
+        mirrorlist.ParseFromString(f.read())
+        protobuf = True
+        del(data)
+        pass
+    f.close()
+
+    if protobuf:
+        # This transforms the protobuf input back to the
+        # same format as the pickle input.
+
+        info['time'] = datetime.datetime.fromtimestamp(mirrorlist.Time)
+
+        tmp = {}
+        for i, item in enumerate(mirrorlist.HostAsnCache):
+            if item.key not in tmp.keys():
+                tmp[item.key] = []
+            for v, value in enumerate(item.value):
+                tmp[item.key].append(value)
+        info['asn_host_cache'] = tmp
+
+        tmp = {}
+        for i, item in enumerate(mirrorlist.NetblockCountryCache):
+            tmp[
+                IP(item.key)] = item.value
+        info['netblock_country_cache'] = tmp
+
+        tmp = {}
+        for i, item in enumerate(mirrorlist.LocationCache):
+            if item.key not in tmp.keys():
+                tmp[item.key] = []
+            for v, value in enumerate(item.value):
+                tmp[item.key].append(value)
+        info['location_cache'] = tmp
+
+        tmp = {}
+        for i, item in enumerate(mirrorlist.HCUrlCache):
+            tmp[item.key] = item.value
+        info['hcurl_cache'] = tmp
+
+        tmp = {}
+        for i, item in enumerate(mirrorlist.FileDetailsCache):
+            if item.directory not in tmp.keys():
+                tmp[item.directory] = {}
+            fdcf = item.FileDetailsCacheFiles
+            for fd, file_details in enumerate(fdcf):
+                tmp[item.directory][file_details.filename] = []
+                details_list = file_details.FileDetails
+                for v, value in enumerate(details_list):
+                    fd = {}
+                    fd['timestamp'] = value.TimeStamp
+                    fd['size'] = value.Size
+                    fd['sha1'] = value.SHA1
+                    fd['md5'] = value.MD5
+                    fd['sha256'] = value.SHA256
+                    fd['sha512'] = value.SHA512
+                    tmp[item.directory][file_details.filename].append(fd)
+        info['file_details_cache'] = tmp
+
+        tmp = {}
+        for i, item in enumerate(mirrorlist.DisabledRepositoryCache):
+            tmp[item.key] = item.value
+        info['disabled_repositories'] = tmp
+        tmp = {}
+        for i, item in enumerate(mirrorlist.CountryContinentRedirectCache):
+            tmp[item.key] = item.value
+        info['country_continent_redirect_cache'] = tmp
+        tmp = {}
+        for i, item in enumerate(mirrorlist.RepositoryRedirectCache):
+            tmp[item.key] = item.value
+        info['repo_redirect'] = tmp
+
+        tmp = {}
+        for i, item in enumerate(mirrorlist.RepoArchToDirectoryName):
+            tmp[
+                (item.key.split('+')[0], item.key.split('+')[1])
+            ] = item.value
+        info['repo_arch_to_directoryname'] = tmp
+
+        tmp = {}
+        for i, item in enumerate(mirrorlist.HostMaxConnectionCache):
+            tmp[item.key] = item.value
+        info['host_max_connections_cache'] = tmp
+        tmp = {}
+        for i, item in enumerate(mirrorlist.HostCountryCache):
+            tmp[item.key] = item.value
+        info['host_country_cache'] = tmp
+        tmp = {}
+        for i, item in enumerate(mirrorlist.HostBandwidthCache):
+            tmp[item.key] = item.value
+        info['host_bandwidth_cache'] = tmp
+
+        tmp = {}
+        for i, item in enumerate(mirrorlist.HostNetblockCache):
+            if IP(item.key) not in tmp.keys():
+                tmp[IP(item.key)] = []
+            for v, value in enumerate(item.value):
+                tmp[IP(item.key)].append(value)
+        info['host_netblock_cache'] = tmp
+
+        tmp = {}
+        for i, item in enumerate(mirrorlist.MirrorListCache):
+            if item.directory not in tmp.keys():
+                tmp[item.directory] = {}
+            mc = tmp[item.directory]
+            mc['subpath'] = item.Subpath
+            mc['ordered_mirrorlist'] = item.OrderedMirrorList
+            mc['global'] = set()
+            for v, value in enumerate(item.Global):
+                mc['global'].add(value)
+            mc['byCountry'] = {}
+            for c, country in enumerate(item.ByCountry):
+                mc['byCountry'][country.key] = set()
+                for v, value in enumerate(country.value):
+                    mc['byCountry'][country.key].add(value)
+            mc['byCountryInternet2'] = {}
+            for c, country in enumerate(item.ByCountryInternet2):
+                mc['byCountryInternet2'][country.key] = set()
+                for v, value in enumerate(country.value):
+                    mc['byCountryInternet2'][country.key].add(value)
+            mc['byHostId'] = {}
+            for i, id in enumerate(item.ByHostId):
+                mc['byHostId'][id.key] = []
+                for h, hcurl in enumerate(id.value):
+                    mc['byHostId'][id.key].append(hcurl)
+        info['mirrorlist_cache'] = tmp
+        mirrorlist.Clear()
+
+    else:
+        if 'mirrorlist_cache' in data:
+            info['mirrorlist_cache'] = data['mirrorlist_cache']
+        if 'host_netblock_cache' in data:
+            info['host_netblock_cache'] = data['host_netblock_cache']
+        if 'host_country_allowed_cache' in data:
+            info['host_country_allowed_cache'] = data[
+                'host_country_allowed_cache']
+        if 'repo_arch_to_directoryname' in data:
+            info['repo_arch_to_directoryname'] = data[
+                'repo_arch_to_directoryname']
+        if 'repo_redirect_cache' in data:
+            info['repo_redirect'] = data['repo_redirect_cache']
+        if 'country_continent_redirect_cache' in data:
+            info['country_continent_redirect_cache'] = data[
+                'country_continent_redirect_cache']
+        if 'disabled_repositories' in data:
+            info['disabled_repositories'] = data['disabled_repositories']
+        if 'host_bandwidth_cache' in data:
+            info['host_bandwidth_cache'] = data['host_bandwidth_cache']
+        if 'host_country_cache' in data:
+            info['host_country_cache'] = data['host_country_cache']
+        if 'file_details_cache' in data:
+            info['file_details_cache'] = data['file_details_cache']
+        if 'hcurl_cache' in data:
+            info['hcurl_cache'] = data['hcurl_cache']
+        if 'asn_host_cache' in data:
+            info['asn_host_cache'] = data['asn_host_cache']
+        if 'location_cache' in data:
+            info['location_cache'] = data['location_cache']
+        if 'netblock_country_cache' in data:
+            info['netblock_country_cache'] = data['netblock_country_cache']
+        if 'host_max_connections_cache' in data:
+            info['host_max_connections_cache'] = data[
+                'host_max_connections_cache']
+        if 'time' in data:
+            info['time'] = data['time']
 
     setup_continents(info)
 
@@ -841,20 +977,21 @@ class MirrorlistHandler(StreamRequestHandler):
             readlen = 0
             size = ''
             while readlen < 10:
-                size += self.rfile.read(10 - readlen)
+                size += self.rfile.read(10 - readlen).decode()
                 readlen = len(size)
             size = int(size)
+            print(size)
 
             # read the pickle
             readlen = 0
-            p = ''
+            p = b''
             while readlen < size:
                 p += self.rfile.read(size - readlen)
                 readlen = len(p)
             d = pickle.loads(p)
             self.connection.shutdown(socket.SHUT_RD)
         except:
-            pass
+            raise
 
         try:
             try:
@@ -884,7 +1021,7 @@ class MirrorlistHandler(StreamRequestHandler):
                 'resulttype':resulttype,
                 'results':results,
                 'returncode':returncode})
-            self.connection.sendall(str(len(p)).zfill(10))
+            self.connection.sendall(str(len(p)).encode().zfill(10))
 
             self.connection.sendall(p)
             self.connection.shutdown(socket.SHUT_WR)
