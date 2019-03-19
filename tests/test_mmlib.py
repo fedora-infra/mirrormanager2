@@ -142,7 +142,7 @@ class MMLibtests(tests.Modeltests):
         tests.create_hosts(self.session)
 
         results = mirrormanager2.lib.get_hosts(self.session)
-        self.assertEqual(len(results), 3)
+        self.assertEqual(len(results), 4)
         self.assertEqual(results[0].name, 'mirror.localhost')
         self.assertEqual(results[0].country, 'US')
         self.assertEqual(results[1].name, 'mirror2.localhost')
@@ -689,7 +689,7 @@ class MMLibtests(tests.Modeltests):
         tests.create_repository(self.session)
 
         results = mirrormanager2.lib.get_repositories(self.session)
-        self.assertEqual(len(results), 3)
+        self.assertEqual(len(results), 4)
         self.assertEqual(
             results[0].name, 'pub/fedora/linux/updates/testing/25/x86_64')
         self.assertEqual(results[0].arch.name, 'x86_64')
@@ -777,6 +777,20 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(results[0].netblock, '127.0.0.0/24')
         self.assertEqual(results[0].country, 'AU')
 
+    def check_results_host(self, results):
+        for result in results:
+            if result.id == 1:
+                self.assertEqual(result.name, 'mirror.localhost')
+            elif result.id == 2:
+                self.assertEqual(result.name, 'mirror2.localhost')
+            elif result.id == 3:
+                self.assertEqual(result.name, 'private.localhost')
+            elif result.id == 4:
+                self.assertEqual(result.name, 'Another test entry')
+            else:
+                self.assertTrue(False)
+
+
     def test_get_mirrors(self):
         """ Test the get_mirrors function of mirrormanager2.lib.
         """
@@ -794,10 +808,8 @@ class MMLibtests(tests.Modeltests):
         tests.create_netblockcountry(self.session)
 
         results = mirrormanager2.lib.get_mirrors(self.session)
-        self.assertEqual(len(results), 3)
-        self.assertEqual(results[0].name, 'mirror2.localhost')
-        self.assertEqual(results[1].name, 'private.localhost')
-        self.assertEqual(results[2].name, 'mirror.localhost')
+        self.assertEqual(len(results), 4)
+        self.check_results_host(results)
 
         results = mirrormanager2.lib.get_mirrors(self.session, private=True)
         self.assertEqual(len(results), 1)
@@ -811,10 +823,8 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(len(results), 0)
         results = mirrormanager2.lib.get_mirrors(
             self.session, internet2_clients=False)
-        self.assertEqual(len(results), 3)
-        self.assertEqual(results[0].name, 'mirror2.localhost')
-        self.assertEqual(results[1].name, 'private.localhost')
-        self.assertEqual(results[2].name, 'mirror.localhost')
+        self.assertEqual(len(results), 4)
+        self.check_results_host(results)
 
         results = mirrormanager2.lib.get_mirrors(
             self.session, asn_clients=True)
@@ -822,29 +832,24 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(results[0].name, 'mirror2.localhost')
         results = mirrormanager2.lib.get_mirrors(
             self.session, asn_clients=False)
-        self.assertEqual(len(results), 2)
-        self.assertEqual(results[0].name, 'private.localhost')
-        self.assertEqual(results[1].name, 'mirror.localhost')
+        self.assertEqual(len(results), 3)
+        self.check_results_host(results)
 
         results = mirrormanager2.lib.get_mirrors(
             self.session, admin_active=False)
         self.assertEqual(len(results), 0)
         results = mirrormanager2.lib.get_mirrors(
             self.session, admin_active=True)
-        self.assertEqual(len(results), 3)
-        self.assertEqual(results[0].name, 'mirror2.localhost')
-        self.assertEqual(results[1].name, 'private.localhost')
-        self.assertEqual(results[2].name, 'mirror.localhost')
+        self.assertEqual(len(results), 4)
+        self.check_results_host(results)
 
         results = mirrormanager2.lib.get_mirrors(
             self.session, user_active=False)
         self.assertEqual(len(results), 0)
         results = mirrormanager2.lib.get_mirrors(
             self.session, user_active=True)
-        self.assertEqual(len(results), 3)
-        self.assertEqual(results[0].name, 'mirror2.localhost')
-        self.assertEqual(results[1].name, 'private.localhost')
-        self.assertEqual(results[2].name, 'mirror.localhost')
+        self.assertEqual(len(results), 4)
+        self.check_results_host(results)
 
         results = mirrormanager2.lib.get_mirrors(
             self.session, host_category_url_private=True)
@@ -859,60 +864,48 @@ class MMLibtests(tests.Modeltests):
         self.assertEqual(len(results), 0)
         results = mirrormanager2.lib.get_mirrors(
             self.session, last_crawl_duration=False)
-        self.assertEqual(len(results), 3)
-        self.assertEqual(results[0].name, 'mirror2.localhost')
-        self.assertEqual(results[1].name, 'private.localhost')
-        self.assertEqual(results[2].name, 'mirror.localhost')
+        self.assertEqual(len(results), 4)
+        self.check_results_host(results)
 
         results = mirrormanager2.lib.get_mirrors(
             self.session, last_crawled=True)
         self.assertEqual(len(results), 0)
         results = mirrormanager2.lib.get_mirrors(
             self.session, last_crawled=False)
-        self.assertEqual(len(results), 3)
-        self.assertEqual(results[0].name, 'mirror2.localhost')
-        self.assertEqual(results[1].name, 'private.localhost')
-        self.assertEqual(results[2].name, 'mirror.localhost')
+        self.assertEqual(len(results), 4)
+        self.check_results_host(results)
 
         results = mirrormanager2.lib.get_mirrors(
             self.session, last_checked_in=True)
         self.assertEqual(len(results), 0)
         results = mirrormanager2.lib.get_mirrors(
             self.session, last_checked_in=False)
-        self.assertEqual(len(results), 3)
-        self.assertEqual(results[0].name, 'mirror2.localhost')
-        self.assertEqual(results[1].name, 'private.localhost')
-        self.assertEqual(results[2].name, 'mirror.localhost')
+        self.assertEqual(len(results), 4)
+        self.check_results_host(results)
 
         results = mirrormanager2.lib.get_mirrors(
             self.session, site_private=True)
-        self.assertEqual(len(results), 0)
+        self.assertEqual(len(results), 1)
         results = mirrormanager2.lib.get_mirrors(
             self.session, site_private=False)
         self.assertEqual(len(results), 3)
-        self.assertEqual(results[0].name, 'mirror2.localhost')
-        self.assertEqual(results[1].name, 'private.localhost')
-        self.assertEqual(results[2].name, 'mirror.localhost')
+        self.check_results_host(results)
 
         results = mirrormanager2.lib.get_mirrors(
             self.session, site_user_active=False)
         self.assertEqual(len(results), 0)
         results = mirrormanager2.lib.get_mirrors(
             self.session, site_user_active=True)
-        self.assertEqual(len(results), 3)
-        self.assertEqual(results[0].name, 'mirror2.localhost')
-        self.assertEqual(results[1].name, 'private.localhost')
-        self.assertEqual(results[2].name, 'mirror.localhost')
+        self.assertEqual(len(results), 4)
+        self.check_results_host(results)
 
         results = mirrormanager2.lib.get_mirrors(
             self.session, site_admin_active=False)
         self.assertEqual(len(results), 0)
         results = mirrormanager2.lib.get_mirrors(
             self.session, site_admin_active=True)
-        self.assertEqual(len(results), 3)
-        self.assertEqual(results[0].name, 'mirror2.localhost')
-        self.assertEqual(results[1].name, 'private.localhost')
-        self.assertEqual(results[2].name, 'mirror.localhost')
+        self.assertEqual(len(results), 4)
+        self.check_results_host(results)
 
         results = mirrormanager2.lib.get_mirrors(
             self.session, up2date=True)
@@ -925,7 +918,7 @@ class MMLibtests(tests.Modeltests):
             self.session, version_id=1)
         self.assertEqual(len(results), 0)
         results = mirrormanager2.lib.get_mirrors(
-            self.session, version_id=3)
+            self.session, version_id=4)
 
         tests.create_version(self.session)
         tests.create_repository(self.session)
@@ -938,8 +931,7 @@ class MMLibtests(tests.Modeltests):
         results = mirrormanager2.lib.get_mirrors(
             self.session, version_id=3)
         self.assertEqual(len(results), 2)
-        self.assertEqual(results[0].name, 'mirror2.localhost')
-        self.assertEqual(results[1].name, 'mirror.localhost')
+        self.check_results_host(results)
 
         results = mirrormanager2.lib.get_mirrors(
             self.session, arch_id=1)
@@ -947,8 +939,7 @@ class MMLibtests(tests.Modeltests):
         results = mirrormanager2.lib.get_mirrors(
             self.session, arch_id=3)
         self.assertEqual(len(results), 2)
-        self.assertEqual(results[0].name, 'mirror2.localhost')
-        self.assertEqual(results[1].name, 'mirror.localhost')
+        self.check_results_host(results)
 
     def test_get_user_sites(self):
         """ Test the get_user_sites function of mirrormanager2.lib.

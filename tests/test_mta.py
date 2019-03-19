@@ -119,7 +119,7 @@ class MTATest(tests.Modeltests):
         # Before the script
 
         results = mirrormanager2.lib.get_repositories(self.session)
-        self.assertEqual(len(results), 3)
+        self.assertEqual(len(results), 4)
         self.assertEqual(results[0].prefix, 'updates-testing-f25')
         self.assertEqual(
             results[0].directory.name,
@@ -194,7 +194,7 @@ class MTATest(tests.Modeltests):
         self.assertEqual(stderr, '')
 
         results = mirrormanager2.lib.get_repositories(self.session)
-        self.assertEqual(len(results), 3)
+        self.assertEqual(len(results), 4)
         self.assertEqual(results[0].prefix, 'updates-testing-f25')
         self.assertEqual(
             results[0].directory.name,

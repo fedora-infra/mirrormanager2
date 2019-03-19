@@ -342,7 +342,7 @@ class FlaskUiAdminTest(tests.Modeltests):
                 '<a href="/admin/host(view)?/\?sort=[0-9]" '
                 'title="Sort by Name">Name</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (3)</a>' in data)
+                '<a href="javascript:void(0)">List (4)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_hostaclipview(self, login_func):
@@ -663,7 +663,7 @@ class FlaskUiAdminTest(tests.Modeltests):
                 '<a href="/admin/repository(view)?/\?sort=[0-4]" '
                 'title="Sort by Name">Name</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (3)</a>' in data)
+                '<a href="javascript:void(0)">List (4)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_repositoryredirectview(self, login_func):
