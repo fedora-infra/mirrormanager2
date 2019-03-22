@@ -25,7 +25,7 @@ sudo docker exec `sed -e "s,:,-," <<< ${1}` \
 	else \
 		${PKG} -y install dnf-plugins-core; \
 	fi; \
-	${PKG} -y install rsync rpm-build && \
+	${PKG} -y install rsync rpm-build protobuf-compiler && \
 	cd /tmp/test && \
 	${BUILDDEP} -y utility/mirrormanager2.spec && \
 	${PKG} -y install ${TEST_PKGS}; \
