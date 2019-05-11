@@ -176,7 +176,7 @@ def get_stats(conf, section):
             try:
                 f = open(fn, 'r')
                 contents = contents + f.readlines()
-                statsdata[name] = json.dumps(contents, -1)
+                statsdata[name] = json.dumps(contents)
                 f.close()
             except IOError:
                 pass
@@ -283,7 +283,7 @@ def main():
         if not config(options.config, item, crawl=True):
             sys.exit(1)
 
-    p = json.dumps(item.config, -1)
+    p = json.dumps(item.config)
 
     if options.debug:
         pp = pprint.PrettyPrinter(indent=4)
