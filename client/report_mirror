@@ -10,7 +10,10 @@ try:
 except ImportError:
     import ConfigParser as configparser
 import pprint
-import xmlrpclib
+try:
+    import xmlrpclib
+except ImportError:
+    import xmlrpc.client as xmlrpclib
 import base64
 import bz2
 import socket
@@ -305,7 +308,7 @@ def main():
         #  print("Connecting to %s" % item.config['global']['server'])
         server = xmlrpclib.ServerProxy(item.config['global']['server'])
 
-        data = base64.urlsafe_b64encode(bz2.compress(p))
+        data = base64.urlsafe_b64encode(bz2.compress(p.encode())).decode()
 
         if data is not None:
             try:
