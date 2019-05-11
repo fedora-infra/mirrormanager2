@@ -46,16 +46,20 @@ XMLRPC.connect(APP, '/xmlrpc')
 
 @XMLRPC.register
 def checkin(pickledata):
+    is_pickle = False
     uncompressed = bz2.decompress(base64.urlsafe_b64decode(pickledata))
     try:
         config = json.loads(uncompressed)
     except ValueError:
         logging.info("Fell back to pickle")
+        is_pickle = True
         config = pickle.loads(uncompressed)
-    r, message = read_host_config(SESSION, config)
+    r, host, message = read_host_config(SESSION, config)
     if r is not None:
-        logging.info("Checkin succesful: %s" % message)
+        logging.info("Checkin for host %s (pickle:%s) succesful: %s" %
+                (host, is_pickle, message))
         return message + 'checked in successful'
     else:
-        logging.error("Error during checkin: %s" % message)
+        logging.error("Error for host %s (pickle:%s) during checkin: %s" %
+                (host, is_pickle, message))
         return message + 'error checking in'

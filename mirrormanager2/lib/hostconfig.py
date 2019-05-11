@@ -85,18 +85,27 @@ def validate_config(config):
 def read_host_config(session, config):
     rc, message = validate_config(config)
     if not rc:
-        return (None, message + 'Invalid config file provided, please '
+        return (None, '', message + 'Invalid config file provided, please '
                 'check your report_mirror.conf.')
 
     csite = config['site']
     chost = config['host']
+    chostname = chost['name']
 
     site = mirrormanager2.lib.get_site_by_name(session, csite['name'])
     if not site:
-        return (None, 'Config file site name or password incorrect.\n')
+        return (
+                None,
+                chostname,
+                'Config file site name or password incorrect.\n'
+        )
 
     if csite['password'] != site.password:
-        return (None, 'Config file site name or password incorrect.\n')
+        return (
+                None,
+                chostname,
+                'Config file site name or password incorrect.\n'
+        )
 
     host = None
     for tmp_host in site.hosts:
@@ -105,7 +114,7 @@ def read_host_config(session, config):
             break
 
     if not host:
-        return (None, 'Config file host name for site not found.\n')
+        return (None, chostname, 'Config file host name for site not found.\n')
 
     # handle the optional arguments
     if 'user_active' in config['host']:
@@ -115,4 +124,4 @@ def read_host_config(session, config):
             host.user_active = False
 
     message = mirrormanager2.lib.uploaded_config(session, host, config)
-    return (True, message)
+    return (True, chostname, message)
