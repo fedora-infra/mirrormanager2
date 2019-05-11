@@ -29,12 +29,13 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def validate_config(config):
     message = ''
     if type(config) != dict:
         logging.critical("NON-DICT SUBMITTED: %s" % config)
         message += 'config file is not a dict.\n'\
-        'Please update your copy of report_mirror.\n'
+            'Please update your copy of report_mirror.\n'
         return (False, message)
     if 'version' not in config:
         message += 'config file has no version field.\n'
@@ -66,7 +67,7 @@ def validate_config(config):
     host = config['host']
     for opt in ['name']:
         if opt not in host:
-            message +=  'section [host] missing required option %s.\n' % (
+            message += 'section [host] missing required option %s.\n' % (
                 opt)
             return (False, message)
 
