@@ -28,23 +28,6 @@ class HostConfig(object):
                         }
 
 
-_translation = [chr(_x) for _x in range(256)]
-def _translate(s, altchars):
-    translation = _translation[:]
-    for k, v in altchars.items():
-        translation[ord(k)] = v
-    return s.translate(''.join(translation))
-
-
-def urlsafe_b64encode(s):
-   import binascii
-   altchars = '-_'
-   encoded = binascii.b2a_base64(s)[:-1]
-   if altchars is not None:
-      return _translate(encoded, {'+': altchars[0], '/': altchars[1]})
-   return encoded
-
-
 def get_exclude_dir_patterns_from_file(options):
     global exclude_list
     if options.exclude_from:
@@ -317,11 +300,8 @@ def main():
     if not options.no_send:
         #   print "Connecting to %s" % item.config['global']['server']
         server = xmlrpclib.ServerProxy(item.config['global']['server'])
-        data = None
-        try:
-            data = base64.urlsafe_b64encode(bz2.compress(p))
-        except AttributeError:
-            data = urlsafe_b64encode(bz2.compress(p))
+
+        data = base64.urlsafe_b64encode(bz2.compress(p))
 
         if data is not None:
             try:
