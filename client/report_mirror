@@ -1,14 +1,19 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-import os, sys
+import os
+import sys
+import copy
 import json
 try:
     import configparser
 except ImportError:
     import ConfigParser as configparser
 import pprint
-import xmlrpclib
+try:
+    import xmlrpclib
+except ImportError:
+    import xmlrpc.client as xmlrpclib
 import base64
 import bz2
 import socket
@@ -20,29 +25,13 @@ exclude_list = []
 class HostConfig(object):
     """Holder for config info from the configuration file"""
     def __init__(self):
-        self.config = { 'version' : 0,
-                        'global': {},
-                        'site': {},
-                        'host': {},
-                        'stats': {},
-                        }
-
-
-_translation = [chr(_x) for _x in range(256)]
-def _translate(s, altchars):
-    translation = _translation[:]
-    for k, v in altchars.items():
-        translation[ord(k)] = v
-    return s.translate(''.join(translation))
-
-
-def urlsafe_b64encode(s):
-   import binascii
-   altchars = '-_'
-   encoded = binascii.b2a_base64(s)[:-1]
-   if altchars is not None:
-      return _translate(encoded, {'+': altchars[0], '/': altchars[1]})
-   return encoded
+        self.config = {
+            'version': 0,
+            'global': {},
+            'site': {},
+            'host': {},
+            'stats': {},
+        }
 
 
 def get_exclude_dir_patterns_from_file(options):
@@ -51,18 +40,18 @@ def get_exclude_dir_patterns_from_file(options):
         f = open(options.exclude_from, 'r')
         for line in f:
             line = line.strip()
-            if line.startswith(u'#'): continue
+            if line.startswith(u'#'):
+                continue
             exclude_list.append(line)
         f.close()
 
 
-import copy
 def exclude_dirs(root, dirs):
     global exclude_list
     copydirs = copy.copy(dirs)
     # iterate over the copy so we can modify the original
     for d in copydirs:
-        #keep trailing /, we know it's a directory
+        # keep trailing /, we know it's a directory
         testdir = os.path.join(root, d, '')
         for pattern in exclude_list:
             if pattern in testdir:
@@ -153,7 +142,7 @@ def parse_section(conf, section, item, required_options,
 
 
 def parse_global(conf, section, item):
-    required_options = [ 'enabled', 'server' ]
+    required_options = ['enabled', 'server']
     if not parse_section(conf, section, item, required_options):
         errorprint(
             'missing required options (server AND enabled) in [%s] section'
@@ -163,13 +152,13 @@ def parse_global(conf, section, item):
 
 
 def parse_site(conf, section, item):
-    required_options = [ 'enabled', 'name', 'password' ]
+    required_options = ['enabled', 'name', 'password']
     return parse_section(conf, section, item, required_options)
 
 
 def parse_host(conf, section, item):
-    required_options = [ 'enabled', 'name' ]
-    optional_options = [ 'user_active' ]
+    required_options = ['enabled', 'name']
+    optional_options = ['user_active']
     return parse_section(
         conf, section, item, required_options,
         optional_options=optional_options)
@@ -185,20 +174,20 @@ def get_stats(conf, section):
             continue
         filenames = parse_value(conf.get(section, name))
         if type(filenames) != list:
-            filenames = [ filenames ]
+            filenames = [filenames]
         for fn in filenames:
             try:
                 f = open(fn, 'r')
                 contents = contents + f.readlines()
-                statsdata[name] = json.dumps(contents, -1)
+                statsdata[name] = json.dumps(contents)
                 f.close()
-            except:
+            except IOError:
                 pass
     return statsdata
 
 
 def parse_category(conf, section, item, crawl):
-    required_options = [ 'enabled', 'path' ]
+    required_options = ['enabled', 'path']
     if not parse_section(conf, section, item, required_options):
         return False
 
@@ -224,7 +213,7 @@ def config(cfg, item, crawl=True):
                 ('global', parse_global),
                 ('site', parse_site),
                 ('host', parse_host)
-            ]:
+                ]:
             if conf.has_section(section):
                 if not parsefunc(conf, section, item):
                     return False
@@ -235,7 +224,7 @@ def config(cfg, item, crawl=True):
                 sys.exit(1)
 
         for section in conf.sections():
-            if section in [ 'global', 'site', 'host', 'stats']:
+            if section in ['global', 'site', 'host', 'stats']:
                 continue
             parse_category(conf, section, item, crawl)
 
@@ -245,12 +234,13 @@ def config(cfg, item, crawl=True):
 
     return True
 
-options=None
+
+options = None
 
 
 def main():
     from optparse import OptionParser
-    parser = OptionParser(usage= sys.argv[0] + " [options]")
+    parser = OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option("-c", "--config",
                       dest="config",
                       default='/etc/mirrormanager-client/report_mirror.conf',
@@ -296,7 +286,7 @@ def main():
         if not config(options.config, item, crawl=True):
             sys.exit(1)
 
-    p = json.dumps(item.config, -1)
+    p = json.dumps(item.config)
 
     if options.debug:
         pp = pprint.PrettyPrinter(indent=4)
@@ -315,13 +305,10 @@ def main():
         sys.exit(1)
 
     if not options.no_send:
-        #   print "Connecting to %s" % item.config['global']['server']
+        #  print("Connecting to %s" % item.config['global']['server'])
         server = xmlrpclib.ServerProxy(item.config['global']['server'])
-        data = None
-        try:
-            data = base64.urlsafe_b64encode(bz2.compress(p))
-        except AttributeError:
-            data = urlsafe_b64encode(bz2.compress(p))
+
+        data = base64.urlsafe_b64encode(bz2.compress(p.encode())).decode()
 
         if data is not None:
             try:
