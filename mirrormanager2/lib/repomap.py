@@ -30,6 +30,7 @@ def repo_prefix(path, category, ver):
     isDevelopment = is_development(path) is not None
     isSource = u'source' in path or u'SRPMS' in path
     isUpdatesTesting = u'updates/testing' in path
+    isPlayground = u'playground' in path
     isTesting = u'testing' in path
     isReleases = u'releases' in path
     isUpdatesReleased = False
@@ -70,6 +71,13 @@ def repo_prefix(path, category, ver):
                 prefix = u'testing-source-epel%s' % version
             else:
                 prefix = u'testing-epel%s' % version
+        elif isPlayground:
+            if isDebug:
+                prefix = u'playground-debug-epel%s' % version
+            elif isSource:
+                prefix = u'playground-source-epel%s' % version
+            else:
+                prefix = u'playground-epel%s' % version
         else:
             if isDebug:
                 prefix = u'epel-debug-%s' % version
