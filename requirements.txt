@@ -12,3 +12,4 @@ python-openid-cla
 python-openid-teams
 IPy
 dnspython
+protobuf

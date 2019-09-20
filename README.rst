@@ -68,6 +68,11 @@ Next, install your dependencies::
 
     (my-MirrorMan-env)$ pip install -r requirements.txt
 
+Now the protobuf deinition needs to be compiled to Python::
+
+    (my-MirrorMan-env)$ protoc --python_out=mirrorlist mirrormanager.proto
+    (my-MirrorMan-env)$ protoc --python_out=mirrormanager2/lib mirrormanager.proto
+
 You should then create your own sqlite database for your development instance of
 mirrormanager2::
 

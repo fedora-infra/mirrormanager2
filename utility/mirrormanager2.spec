@@ -40,6 +40,7 @@ BuildRequires:  python%{python_pkgversion}-fedora-flask >= 0.3.33
 BuildRequires:  python%{python_pkgversion}-setuptools
 BuildRequires:  python%{python_pkgversion}-psutil
 BuildRequires:  python%{python_pkgversion}-alembic
+BuildRequires:  protobuf-compiler
 # Mirrorlist
 BuildRequires:  python%{python_pkgversion}-geoip2
 BuildRequires:  python%{python_pkgversion}-webob
@@ -55,8 +56,10 @@ BuildRequires:  python%{python_pkgversion}-pyrpmmd
 %if 0%{?rhel} && 0%{?rhel} <= 7
 BuildRequires:  python2-rpm-macros
 BuildRequires:  py-radix
+BuildRequires:  protobuf-python
 Requires:  mod_wsgi
 %else
+BuildRequires:  python%{python_pkgversion}-protobuf
 BuildRequires:  python%{python_pkgversion}-py-radix
 Requires:  python%{python3_pkgversion}-mod_wsgi
 %endif
@@ -96,6 +99,11 @@ Requires:  python%{python_pkgversion}-IPy
 Requires:  python%{python_pkgversion}-dns
 Requires:  python%{python_pkgversion}-sqlalchemy >= 0.7
 Requires:  python%{python_pkgversion}-pyrpmmd
+%if 0%{?rhel} && 0%{?rhel} <= 7
+Requires:  protobuf-python
+%else
+Requires:  python%{python_pkgversion}-protobuf
+%endif
 
 %description lib
 Library to interact with MirrorManager's database
@@ -114,9 +122,11 @@ Requires:  httpd
 %if 0%{?rhel} && 0%{?rhel} <= 7
 Requires:  py-radix
 Requires:  mod_wsgi
+Requires:  protobuf-python
 %else
 Requires:  python%{python_pkgversion}-py-radix
 Requires:  python%{python_pkgversion}-mod_wsgi
+Requires:  python%{python_pkgversion}-protobuf
 %endif
 Requires:  systemd
 Requires(pre):  shadow-utils
@@ -206,6 +216,9 @@ Base directories used by multiple subpackages
 
 
 %build
+# Recreating protobuf output
+protoc --python_out=mirrorlist mirrormanager.proto
+protoc --python_out=mirrormanager2/lib mirrormanager.proto
 %py_build
 
 
@@ -263,6 +276,8 @@ install -m 644 mirrorlist/mirrorlist_server.py \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrorlist_server.py
 install -m 644 mirrorlist/weighted_shuffle.py \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/weighted_shuffle.py
+install -m 644 mirrorlist/mirrormanager_pb2.py \
+    $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrormanager_pb2.py
 
 # Install the createdb script
 install -m 644 createdb.py \

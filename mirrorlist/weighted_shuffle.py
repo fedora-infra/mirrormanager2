@@ -3,11 +3,13 @@
 # Licensed under the MIT/X11 license
 
 from __future__ import print_function
+from functools import total_ordering
 
 import random
 import bisect
 
 
+@total_ordering
 class WeightedListItem:
     def __init__(self, weight, data, start=0):
         self.data = data
@@ -22,10 +24,18 @@ class WeightedListItem:
     def __contains__(self, val):
         return (val >= self.start and val < (self.start + self.weight))
 
-    def __cmp__(self, other):
+    def __eq__(self, other):
         if other.start in self:
-            return 0
-        return cmp(self.start, other.start)
+            return false
+        return (self.start == other.start)
+
+    def __ne__(self, other):
+        return not (self.start == other.start)
+
+    def __lt__(self, other):
+        if other.start in self:
+            return False
+        return ((self.start, self.weight) < (other.start, other.weight))
 
     def __repr__(self):
         return "(%s, %s)" % (self.start, self.weight)

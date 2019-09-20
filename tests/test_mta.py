@@ -11,11 +11,6 @@ import unittest
 import subprocess
 import sys
 import os
-
-
-sys.path.insert(0, os.path.join(os.path.dirname(
-    os.path.abspath(__file__)), '..'))
-
 import mirrormanager2.lib
 import mirrormanager2.lib.model as model
 import tests
@@ -119,7 +114,7 @@ class MTATest(tests.Modeltests):
         # Before the script
 
         results = mirrormanager2.lib.get_repositories(self.session)
-        self.assertEqual(len(results), 3)
+        self.assertEqual(len(results), 4)
         self.assertEqual(results[0].prefix, 'updates-testing-f25')
         self.assertEqual(
             results[0].directory.name,
@@ -194,7 +189,7 @@ class MTATest(tests.Modeltests):
         self.assertEqual(stderr, '')
 
         results = mirrormanager2.lib.get_repositories(self.session)
-        self.assertEqual(len(results), 3)
+        self.assertEqual(len(results), 4)
         self.assertEqual(results[0].prefix, 'updates-testing-f25')
         self.assertEqual(
             results[0].directory.name,

@@ -17,10 +17,6 @@ import os
 
 from contextlib import contextmanager
 from flask import appcontext_pushed, g
-
-sys.path.insert(0, os.path.join(os.path.dirname(
-    os.path.abspath(__file__)), '..'))
-
 from mirrormanager2.app import APP, FAS, LOG
 from mirrormanager2.lib import model
 
@@ -374,8 +370,40 @@ def create_hosts(session):
     )
     session.add(item)
 
+    session.add(item)
+    item = model.Host(
+        name='Another test entry',
+        site_id=3,
+        robot_email=None,
+        admin_active=True,
+        user_active=True,
+        country='HR',
+        bandwidth_int=300,
+        comment='Public mirror',
+        private=False,
+        internet2=False,
+        internet2_clients=False,
+        asn=None,
+        asn_clients=False,
+        max_connections=10,
+    )
+    session.add(item)
+
     session.commit()
 
+
+def create_host_country_allowed(session):
+    item = model.HostCountryAllowed(
+        country='HR',
+        host_id=4,
+    )
+    session.add(item)
+    item = model.HostCountryAllowed(
+        country='US',
+        host_id=4,
+    )
+    session.add(item)
+    session.commit()
 
 def create_hostaclip(session):
     ''' Create some HostAclIp to play with for the tests
@@ -728,6 +756,16 @@ def create_repository(session):
         disabled=False
     )
     session.add(item)
+    item = model.Repository(
+        name='pub/fedora/linux/updates/27/x86_64',
+        prefix='updates-released-f27',
+        category_id=1,
+        version_id=3,
+        arch_id=3,
+        directory_id=5,
+        disabled=False
+    )
+    session.add(item)
 
     session.commit()
 
@@ -848,6 +886,17 @@ def create_directoryexclusivehost(session):
 def create_filedetail(session):
     ''' Create some FileDetail to play with for the tests
     '''
+    item = model.FileDetail(
+        filename='repomd.xml',
+        directory_id=4,
+        timestamp=1351758825,
+        size=2972,
+        sha1='foo_sha1',
+        md5='foo_md5',
+        sha256='foo_sha256',
+        sha512='foo_sha512',
+    )
+    session.add(item)
     item = model.FileDetail(
         filename='repomd.xml',
         directory_id=7,
