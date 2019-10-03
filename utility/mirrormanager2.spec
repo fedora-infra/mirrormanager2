@@ -14,7 +14,7 @@
 %endif
 
 Name:           mirrormanager2
-Version:        0.9.0
+Version:        0.10
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -91,7 +91,6 @@ of fallback heuristics (such as network, country or continent).
 
 %package lib
 Summary:        Library to interact with MirrorManager's database
-Group:          Development/Tools
 BuildArch:      noarch
 
 Requires:  %{name}-filesystem = %{version}-%{release}
@@ -111,7 +110,6 @@ Library to interact with MirrorManager's database
 
 %package mirrorlist
 Summary:        MirrorList serving mirrors to yum/dnf
-Group:          Development/Tools
 BuildArch:      noarch
 
 Requires:  %{name}-filesystem = %{version}-%{release}
@@ -140,7 +138,6 @@ Sub-part of mirrormanager serving mirrors to yum/dnf
 
 %package crawler
 Summary:        Crawler for MirrorManager
-Group:          Development/Tools
 BuildArch:      noarch
 
 Requires:  %{name}-filesystem = %{version}-%{release}
@@ -156,7 +153,6 @@ if they are up to date or not
 
 %package backend
 Summary:        Backend scripts for MirrorManager
-Group:          Development/Tools
 BuildArch:      noarch
 
 Requires:  %{name}-filesystem = %{version}-%{release}
@@ -169,7 +165,6 @@ run MirrorManager.
 
 %package client
 Summary:        Fedora mirror management system downstream mirror tools
-Group:          Applications/Internet
 BuildArch:      noarch
 
 Requires:  %{name}-filesystem = %{version}-%{release}
@@ -186,7 +181,6 @@ mirror.
 
 %package statistics
 Summary:        Scripts to generate MirrorManager statistics
-Group:          Applications/Internet
 BuildArch:      noarch
 
 Requires:  %{name}-filesystem = %{version}-%{release}
@@ -408,9 +402,11 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 %{_datadir}/mirrormanager2/mirrorlist_client.wsgi
 %{_datadir}/mirrormanager2/mirrorlist_server.py*
 %{_datadir}/mirrormanager2/weighted_shuffle.py*
+%{_datadir}/mirrormanager2/mirrormanager_pb2.py*
 %if ! (0%{?rhel} && 0%{?rhel} <= 7)
 %{_datadir}/mirrormanager2/__pycache__/mirrorlist_server.*.py*
 %{_datadir}/mirrormanager2/__pycache__/weighted_shuffle.*.py*
+%{_datadir}/mirrormanager2/__pycache__/mirrormanager_pb2.*.py*
 %endif
 
 
@@ -455,6 +451,17 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Thu Oct 03 2019 Adrian Reber <adrian@lisas.de> - 0.10-1
+- Update to 0.10
+- crawler: correctly auto-disable mirrors
+  https://github.com/fedora-infra/mirrormanager2/pull/265
+- Use protobuf instead of pickle for backend - mirrorlist data exchange
+  https://github.com/fedora-infra/mirrormanager2/pull/266
+- Fix report_mirror with python3
+  https://github.com/fedora-infra/mirrormanager2/pull/269
+- repomap: add playground support
+  https://github.com/fedora-infra/mirrormanager2/pull/270
+
 * Tue Jan 15 2019 Adrian Reber <adrian@lisas.de> - 0.9.0-1
 - Update to 0.9.0
 - crawler: Correctly calculate the remaining time
