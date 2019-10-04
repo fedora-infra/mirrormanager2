@@ -1,24 +1,14 @@
 #!/usr/bin/env python
 
 """
-This script changes the directory path from the development tree to the
-released tree once the release has been published.
-
-In principle it should be run about a week after the said release has been
-published.
-
-This implies that for a week, users will be actually hitting the development
-tree (which is hardlinked to the release tree and thus will have the same
-content)
-
-TODO: test IRL
+Create input for the mirrorlist servers.
 """
 
 import sys
 import re
 import os
+import argparse
 
-from optparse import OptionParser
 
 sys.path.insert(0, os.path.join(os.path.dirname(
     os.path.abspath(__file__)), '..'))
@@ -26,28 +16,47 @@ import mirrormanager2.lib.mirrorlist
 
 
 def main():
-    parser = OptionParser(usage=sys.argv[0] + " [options]")
-    parser.add_option(
+    default_pkl = '/var/lib/mirrormanager/mirrorlist_cache.pkl'
+    default_proto = '/var/lib/mirrormanager/mirrorlist_cache.proto'
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument(
         "-c", "--config",
         dest="config",
         default='/etc/mirrormanager/mirrormanager2.cfg',
         help="Configuration file to use "
-            "(default=/etc/mirrormanager/mirrormanager2.cfg)")
-    parser.add_option(
+        "(default=/etc/mirrormanager/mirrormanager2.cfg)")
+    parser.add_argument(
         "-o", "--output",
-        dest="output", default='/var/lib/mirrormanager/mirrorlist_cache.pkl',
-        help="output file")
+        const=default_pkl,
+        dest="output", nargs='?',
+        help="pkl output file")
+    parser.add_argument(
+        "-p", "--protobuf",
+        const=default_proto,
+        dest="proto", nargs='?',
+        help="proto output file")
 
-    (options, args) = parser.parse_args()
+    args = parser.parse_args()
 
     d = dict()
-    with open(options.config) as config_file:
-        exec(compile(config_file.read(), options.config, 'exec'), d)
+    with open(args.config) as config_file:
+        exec(compile(config_file.read(), args.config, 'exec'), d)
 
     session = mirrormanager2.lib.create_session(d['DB_URL'])
 
+    if args.output is None:
+        output = default_pkl
+    else:
+        output = args.output
+
     mirrormanager2.lib.mirrorlist.populate_all_caches(session)
-    mirrormanager2.lib.mirrorlist.dump_caches(session, options.output)
+    if output != "None":
+        mirrormanager2.lib.mirrorlist.dump_caches(session, filename=output)
+    if args.proto is not None:
+        mirrormanager2.lib.mirrorlist.dump_caches(
+            session,
+            protobuf_file=args.proto
+        )
 
     return 0
 
