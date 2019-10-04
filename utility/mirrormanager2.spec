@@ -14,7 +14,7 @@
 %endif
 
 Name:           mirrormanager2
-Version:        0.10
+Version:        0.11
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -451,6 +451,10 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Fri Oct 04 2019 Adrian Reber <adrian@lisas.de> - 0.11-1
+- Update to 0.11
+- Offer protobuf output in refresh mirrorlist cache script
+
 * Thu Oct 03 2019 Adrian Reber <adrian@lisas.de> - 0.10-1
 - Update to 0.10
 - crawler: correctly auto-disable mirrors
