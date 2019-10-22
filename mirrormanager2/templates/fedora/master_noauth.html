@@ -85,18 +85,6 @@
     <script type="text/javascript" src="https://apps.fedoraproject.org/global/fedora-bootstrap-1.0.2/fedora-bootstrap.js">
     </script>
 
-
-    {% if config['FEDMENU_URL'] %}
-    <script src="{{ config['FEDMENU_URL'] }}/js/fedmenu.js"></script>
-    <script>
-      fedmenu({
-          'url': '{{ config["FEDMENU_DATA_URL"] }}',
-          'mimeType': 'application/javascript',
-          'position': 'bottom-right',
-      });
-    </script>
-    {% endif %}
-
     {% endblock %}
 </body>
 </html>
