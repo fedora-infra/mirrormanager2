@@ -301,6 +301,10 @@ class FlaskUiAppTest(tests.Modeltests):
             data = output.get_data(as_text=True)
             self.assertTrue('<p>Site not found</p>' in data)
 
+            # Test if accessing other sites is not allowed
+            output = self.app.get('/site/1')
+            self.assertEqual(output.status_code, 403)
+
             output = self.app.get('/site/2')
             self.assertEqual(output.status_code, 200)
             data = output.get_data(as_text=True)
@@ -645,12 +649,16 @@ class FlaskUiAppTest(tests.Modeltests):
             data = output.get_data(as_text=True)
             self.assertTrue('<p>Host not found</p>' in data)
 
+            # Test if accessing other hosts is not allowed
             output = self.app.get('/host/3')
+            self.assertEqual(output.status_code, 403)
+
+            output = self.app.get('/host/2')
             self.assertEqual(output.status_code, 200)
             data = output.get_data(as_text=True)
             self.assertTrue(
-                '<h2>Host private.localhost' in data)
-            self.assertTrue('Back to <a href="/site/1">' in data)
+                '<h2>Host mirror2.localhost' in data)
+            self.assertTrue('Back to <a href="/site/2">' in data)
 
             csrf_token = data.split(
                 'name="csrf_token" type="hidden" value="')[1].split('">')[0]
@@ -660,13 +668,13 @@ class FlaskUiAppTest(tests.Modeltests):
                 'name': 'private.localhost.1',
             }
 
-            output = self.app.post('/host/3', data=post_data,
+            output = self.app.post('/host/2', data=post_data,
                                    follow_redirects=True)
             self.assertEqual(output.status_code, 200)
             data = output.get_data(as_text=True)
             self.assertTrue(
-                '<h2>Host private.localhost' in data)
-            self.assertTrue('Back to <a href="/site/1">' in data)
+                '<h2>Host mirror2.localhost' in data)
+            self.assertTrue('Back to <a href="/site/2">' in data)
             self.assertEqual(data.count('field is required.'), 3)
 
             post_data = {
@@ -682,25 +690,25 @@ class FlaskUiAppTest(tests.Modeltests):
 
             # Check CSRF protection
 
-            output = self.app.post('/host/3', data=post_data,
+            output = self.app.post('/host/2', data=post_data,
                                    follow_redirects=True)
             self.assertEqual(output.status_code, 200)
             data = output.get_data(as_text=True)
             self.assertTrue(
-                '<h2>Host private.localhost' in data)
-            self.assertTrue('Back to <a href="/site/1">' in data)
+                '<h2>Host mirror2.localhost' in data)
+            self.assertTrue('Back to <a href="/site/2">' in data)
 
             # Update site
 
             post_data['csrf_token'] = csrf_token
 
-            output = self.app.post('/host/3', data=post_data,
+            output = self.app.post('/host/2', data=post_data,
                                    follow_redirects=True)
             self.assertEqual(output.status_code, 200)
             data = output.get_data(as_text=True)
             self.assertTrue(
                 '<h2>Host private.localhost.1' in data)
-            self.assertTrue('Back to <a href="/site/1">' in data)
+            self.assertTrue('Back to <a href="/site/2">' in data)
 
     def test_host_netblock_new(self):
         """ Test the host_netblock_new endpoint. """
