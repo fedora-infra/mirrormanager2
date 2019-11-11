@@ -139,7 +139,9 @@ APPLICATION_URL = None
 # in front of the application).
 CHECK_SESSION_IP = True
 
-
+# This is a list of directories which MirrorManager will ignore while guessing
+# the version and architecture from a path.
+SKIP_PATHS_FOR_VERSION = ['pub/alt']
 
 ###
 # Configuration options used by the crons
