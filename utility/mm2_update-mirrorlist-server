@@ -29,6 +29,6 @@ rm -rf ${CACHEDIR}/old
 mkdir -p ${CACHEDIR}/old
 cp -ar ${CACHEDIR}/*  ${CACHEDIR}/old/ 2>/dev/null
 
-/usr/bin/mm2_refresh_mirrorlist_cache
+/usr/bin/mm2_refresh_mirrorlist_cache $@
 
 exit 0

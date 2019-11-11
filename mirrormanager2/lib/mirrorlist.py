@@ -54,6 +54,7 @@ global_caches = dict(
     host_asn_cache={},
 )
 
+data = dict()
 
 def parent_dir(path):
     return os.path.dirname(path)
@@ -381,18 +382,9 @@ def populate_host_caches(session):
 
 
 def populate_all_caches(session):
+    global data
     populate_host_caches(session)
     populate_directory_cache(session)
-
-
-def dump_caches(session, filename="", protobuf_file=""):
-    ''' This function writes the previously collected
-    information (via populate_all_caches()) to a file.
-    The output format can be a Python pickle or Protobuf.
-    The reason to also offer Protobuf is to be independent
-    of Python's pickle format which does not always work
-    with different versions of Python and used libraries.'''
-
     data = {
         'mirrorlist_cache': global_caches['mirrorlist_cache'],
         'host_netblock_cache': global_caches['host_netblock_cache'],
@@ -412,6 +404,15 @@ def dump_caches(session, filename="", protobuf_file=""):
         'netblock_country_cache': netblock_country_cache(session),
         'time': datetime.datetime.utcnow(),
     }
+
+
+def dump_caches(session, filename="", protobuf_file=""):
+    ''' This function writes the previously collected
+    information (via populate_all_caches()) to a file.
+    The output format can be a Python pickle or Protobuf.
+    The reason to also offer Protobuf is to be independent
+    of Python's pickle format which does not always work
+    with different versions of Python and used libraries.'''
 
     if filename != "":
         try:
