@@ -341,6 +341,10 @@ def site_view(site_id):
     if siteobj is None:
         flask.abort(404, 'Site not found')
 
+    if not (is_site_admin(flask.g.fas_user, siteobj)
+            or is_mirrormanager_admin(flask.g.fas_user)):
+        flask.abort(403, 'Access denied')
+
     form = forms.AddSiteForm(obj=siteobj)
     if form.validate_on_submit():
         admin_active = siteobj.admin_active
@@ -608,6 +612,10 @@ def host_view(host_id):
     if hostobj is None:
         flask.abort(404, 'Host not found')
 
+    if not (is_site_admin(flask.g.fas_user, hostobj.site)
+            or is_mirrormanager_admin(flask.g.fas_user)):
+        flask.abort(403, 'Access denied')
+
     form = forms.AddHostForm(obj=hostobj)
     if form.validate_on_submit():
         admin_active = hostobj.admin_active
@@ -824,6 +832,10 @@ def host_asn_new(host_id):
     if hostobj is None:
         flask.abort(404, 'Host not found')
 
+    if not (is_site_admin(flask.g.fas_user, hostobj.site)
+            or is_mirrormanager_admin(flask.g.fas_user)):
+        flask.abort(403, 'Access denied')
+
     form = forms.AddHostAsnForm()
     if form.validate_on_submit():
         host_asn = model.HostPeerAsn()
@@ -866,6 +878,10 @@ def host_asn_delete(host_id, host_asn_id):
 
         if hostobj is None:
             flask.abort(404, 'Host not found')
+
+        if not (is_site_admin(flask.g.fas_user, hostobj.site)
+                or is_mirrormanager_admin(flask.g.fas_user)):
+            flask.abort(403, 'Access denied')
 
         hostasnobj = mmlib.get_host_peer_asn(SESSION, host_asn_id)
 
