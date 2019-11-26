@@ -66,15 +66,15 @@ class ConfirmationForm(FlaskForm):
 
 class AddSiteForm(FlaskForm):
     """ Form to add or edit a site. """
-    name = wtforms.TextField(
+    name = wtforms.StringField(
         'Site name',
         [wtforms.validators.InputRequired()]
     )
-    password = wtforms.TextField(
+    password = wtforms.StringField(
         'Site Password',
         [wtforms.validators.InputRequired()]
     )
-    org_url = wtforms.TextField(
+    org_url = wtforms.StringField(
         'Organisation URL',
         [wtforms.validators.InputRequired()],
     )
@@ -94,14 +94,14 @@ class AddSiteForm(FlaskForm):
         'All sites can pull from me?',
         default=False
     )
-    downstream_comments = wtforms.TextAreaField(
+    downstream_comments = wtforms.StringField(
         'Comments for downstream siteadmins',
     )
 
 
 class AddHostForm(FlaskForm):
     """ Form to add or edit a host. """
-    name = wtforms.TextField(
+    name = wtforms.StringField(
         'Host name  <span class="error">*</span>',
         [wtforms.validators.InputRequired()]
     )
@@ -113,18 +113,18 @@ class AddHostForm(FlaskForm):
         'User active',
         default=True
     )
-    disable_reason = wtforms.TextField(
+    disable_reason = wtforms.StringField(
         'Disable Reason',
         [wtforms.validators.Optional()],
     )
-    country = wtforms.TextField(
+    country = wtforms.StringField(
         'Country  <span class="error">*</span>',
         [
             wtforms.validators.InputRequired(),
             wtforms.validators.Regexp(COUNTRY_REGEX, flags=re.IGNORECASE),
         ]
     )
-    bandwidth_int = wtforms.TextField(
+    bandwidth_int = wtforms.StringField(
         'Bandwidth  <span class="error">*</span>',
         [wtforms.validators.InputRequired(), is_number],
     )
@@ -141,7 +141,7 @@ class AddHostForm(FlaskForm):
         'Internet2 clients',
         default=False
     )
-    asn = wtforms.TextField(
+    asn = wtforms.StringField(
         'ASN',
         [wtforms.validators.Optional(), is_number],
     )
@@ -149,15 +149,15 @@ class AddHostForm(FlaskForm):
         'ASN Clients?',
         default=True
     )
-    robot_email = wtforms.TextField(
+    robot_email = wtforms.StringField(
         'Robot email',
         [wtforms.validators.Optional()],
     )
-    comment = wtforms.TextField(
+    comment = wtforms.StringField(
         'Comment',
         [wtforms.validators.Optional()],
     )
-    max_connections = wtforms.TextField(
+    max_connections = wtforms.StringField(
         'Max connections  <span class="error">*</span>',
         [wtforms.validators.InputRequired(), is_number],
         default=1
@@ -166,7 +166,7 @@ class AddHostForm(FlaskForm):
 
 class AddHostAclIpForm(FlaskForm):
     """ Form to add or edit a host_acl_ip. """
-    ip = wtforms.TextField(
+    ip = wtforms.StringField(
         'IP  <span class="error">*</span>',
         [wtforms.validators.InputRequired()]
     )
@@ -196,11 +196,11 @@ def validate_netblocks(form, field):
 
 class AddHostNetblockForm(FlaskForm):
     """ Form to add or edit a host_netblock. """
-    name = wtforms.TextField(
+    name = wtforms.StringField(
         'Name  <span class="error">*</span>',
         [wtforms.validators.InputRequired()]
     )
-    netblock = wtforms.TextField(
+    netblock = wtforms.StringField(
         'Netblock  <span class="error">*</span>',
         [wtforms.validators.InputRequired(), validate_netblocks]
     )
@@ -208,11 +208,11 @@ class AddHostNetblockForm(FlaskForm):
 
 class AddHostAsnForm(FlaskForm):
     """ Form to add or edit a host_peer_asn. """
-    name = wtforms.TextField(
+    name = wtforms.StringField(
         'Name  <span class="error">*</span>',
         [wtforms.validators.InputRequired()]
     )
-    asn = wtforms.TextField(
+    asn = wtforms.StringField(
         'ASN  <span class="error">*</span>',
         [wtforms.validators.InputRequired(), is_number]
     )
@@ -220,7 +220,7 @@ class AddHostAsnForm(FlaskForm):
 
 class AddHostCountryForm(FlaskForm):
     """ Form to add or edit a host_country. """
-    country = wtforms.TextField(
+    country = wtforms.StringField(
         'Country  <span class="error">*</span>',
         [
             wtforms.validators.InputRequired(),
@@ -265,7 +265,7 @@ class EditHostCategoryForm(FlaskForm):
 class AddHostCategoryUrlForm(FlaskForm):
     """ Form to add a host_category_url. """
     p = APP.config.get('MM_PROTOCOL_REGEX', '')
-    url = wtforms.TextField(
+    url = wtforms.StringField(
         'URL  <span class="error">*</span>',
         [
             wtforms.validators.InputRequired(),
