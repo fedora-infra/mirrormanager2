@@ -120,7 +120,14 @@ def setup_arch_version_cache(session):
         version_cache = mirrormanager2.lib.get_versions(session)
 
 
-def guess_ver_arch_from_path(session, category, path):
+def guess_ver_arch_from_path(session, category, path, config=None):
+    if config:
+        dname = os.path.join(category.topdir.name, path)
+        skip_dirs = config.get('SKIP_PATHS_FOR_VERSION', [])
+        for skip in skip_dirs:
+            if dname.startswith(skip):
+                return (None, None)
+
     arch = None
     if 'SRPMS' in path:
         arch = mirrormanager2.lib.get_arch_by_name(session, 'source')
@@ -317,7 +324,13 @@ def make_repo_file_details(session, config, relativeDName, D, category, target):
         session.flush()
 
 
-def make_repository(session, directory, relativeDName, category, target):
+def make_repository(
+        session,
+        directory,
+        relativeDName,
+        category,
+        target,
+        config=None):
 
     logger.info(
         "Checking into Repo %s - %s - cat: %s - target: %s"
@@ -333,7 +346,7 @@ def make_repository(session, directory, relativeDName, category, target):
 
     if target == 'repomd.xml':
         (ver, arch) = guess_ver_arch_from_path(
-            session, category, relativeDName)
+            session, category, relativeDName, config)
         if ver is None or arch is None:
             logger.warning("%s: could not guess version and arch %r, %r" % (
                 warning, ver, arch))

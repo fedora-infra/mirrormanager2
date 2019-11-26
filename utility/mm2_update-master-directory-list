@@ -610,7 +610,7 @@ def sync_category_directory(
         skip_dir = [ u'Cloud', u'Workstation', u'Server' ]
         if not any(x in relativeDName for x in skip_dir):
             umdl.make_repository(
-                session, D, relativeDName, category, 'repomd.xml')
+                session, D, relativeDName, category, 'repomd.xml', config)
 
     if ('repomd.xml' in files) and (set_ctime or created):
         umdl.make_repo_file_details(
