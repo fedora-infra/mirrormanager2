@@ -63,28 +63,33 @@ def repo_prefix(path, category, ver):
 
     if isEpel:
         # epel-
+        modular = u''
+        if isModular:
+            modular = u'modular-'
         if isTesting:
             # testing-
             if isDebug:
-                prefix = u'testing-debug-epel%s' % version
+                prefix = u'testing-%sdebug-epel%s' % (modular, version)
             elif isSource:
-                prefix = u'testing-source-epel%s' % version
+                prefix = u'testing-%ssource-epel%s' % (modular, version)
+            elif isSource:
+                prefix = u'testing-%ssource-epel%s' % (modular, version)
             else:
-                prefix = u'testing-epel%s' % version
+                prefix = u'testing-%sepel%s' % (modular, version)
         elif isPlayground:
             if isDebug:
-                prefix = u'playground-debug-epel%s' % version
+                prefix = u'playground-%sdebug-epel%s' % (modular, version)
             elif isSource:
-                prefix = u'playground-source-epel%s' % version
+                prefix = u'playground-%ssource-epel%s' % (modular, version)
             else:
-                prefix = u'playground-epel%s' % version
+                prefix = u'playground-%sepel%s' % (modular, version)
         else:
             if isDebug:
-                prefix = u'epel-debug-%s' % version
+                prefix = u'epel-%sdebug-%s' % (modular, version)
             elif isSource:
-                prefix = u'epel-source-%s' % version
+                prefix = u'epel-%ssource-%s' % (modular, version)
             else:
-                prefix = u'epel-%s' % version
+                prefix = u'epel-%s%s' % (modular, version)
 
     elif isFedoraLinux or isFedoraSecondary or isFedoraArchive:
         if isReleases or isDevelopment:
