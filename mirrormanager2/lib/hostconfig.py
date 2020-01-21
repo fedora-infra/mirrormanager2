@@ -108,6 +108,13 @@ def read_host_config(session, config):
                 'Config file site name or password incorrect.\n'
         )
 
+    if site.private == False:
+        return (
+                None,
+                chostname,
+                'Only private mirrors are allowed to use report_mirror.\n'
+        )
+
     host = None
     for tmp_host in site.hosts:
         if tmp_host.name == chost['name']:
@@ -116,6 +123,13 @@ def read_host_config(session, config):
 
     if not host:
         return (None, chostname, 'Config file host name for site not found.\n')
+
+    if host.private == False:
+        return (
+                None,
+                chostname,
+                'Only private mirrors are allowed to use report_mirror.\n'
+        )
 
     # handle the optional arguments
     if 'user_active' in config['host']:
