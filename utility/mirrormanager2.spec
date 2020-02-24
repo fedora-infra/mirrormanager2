@@ -451,6 +451,23 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Mon Feb 24 2020 Adrian Reber <adrian@lisas.de> - 0.12-1
+- Handle modular in EPEL
+- Disable report_mirror for public mirrors
+  https://github.com/fedora-infra/mirrormanager2/pull/281
+- Fix typo in propagation URL
+  https://github.com/fedora-infra/mirrormanager2/pull/280
+- Fix WTForms deprecation warnings
+  https://github.com/fedora-infra/mirrormanager2/pull/279
+- umdl: skip certain paths for version detection
+  https://github.com/fedora-infra/mirrormanager2/pull/278
+- Disallow users accessing other hosts and sites
+  https://github.com/fedora-infra/mirrormanager2/pull/277
+- Remove jquery which was brought in for fedmenu
+  https://github.com/fedora-infra/mirrormanager2/pull/274
+- Only query database once for mirrorlist export
+  https://github.com/fedora-infra/mirrormanager2/pull/273
+
 * Fri Oct 04 2019 Adrian Reber <adrian@lisas.de> - 0.11-1
 - Update to 0.11
 - Offer protobuf output in refresh mirrorlist cache script
