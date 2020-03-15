@@ -483,13 +483,13 @@ class hostState:
                 del self.httpconn[netloc]
 
         elif scheme == 'https':
-            if netlock in self.httpsconn:
+            if netloc in self.httpsconn:
                 self.httpsconn[netloc].close()
                 del self.httpsconn[netloc]
 
     def close_ftp(self, url):
         scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
-        if netlock in self.ftpconn:
+        if netloc in self.ftpconn:
             try:
                 self.ftpconn[netloc].quit()
             except:
