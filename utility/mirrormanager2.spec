@@ -14,7 +14,7 @@
 %endif
 
 Name:           mirrormanager2
-Version:        0.11
+Version:        0.13
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -451,6 +451,10 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Fri Mar 20 2020 Adrian Reber <adrian@lisas.de> - 0.13-1
+- Fix https crawling
+- Revert removal of jquery
+
 * Mon Feb 24 2020 Adrian Reber <adrian@lisas.de> - 0.12-1
 - Handle modular in EPEL
 - Disable report_mirror for public mirrors

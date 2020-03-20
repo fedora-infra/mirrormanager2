@@ -3,13 +3,13 @@ Contributors to MirrorManager
 
 MirrorManager2 would be nothing without its contributors.
 
-On February 24, 2020 (release 0.12), the list looks as follow:
+On March 20, 2020 (release 0.13), the list looks as follow:
 
 =================  ===========
 Number of commits  Contributor
 =================  ===========
    907              Pierre-Yves Chibon <pingou@pingoured.fr>
-   333              Adrian Reber <adrian@lisas.de>
+   336              Adrian Reber <adrian@lisas.de>
     58              Ralph Bean <rbean@redhat.com>
     19              Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl>
     14              Luke Macken <lmacken@redhat.com>
