@@ -71,7 +71,7 @@ def _get_version_from_path(path):
     if m is not None:
         return m.group(1)
     # Fedora versioning
-    s = r'/?(([\.\d]+)([-_]\w+)?)/'
+    s = r'/(([\.\d]+)([-_]\w+)?)/'
     m = re.search(re.compile(s), path)
     if m is not None:
         return m.group(1)
