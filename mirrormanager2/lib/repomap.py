@@ -55,6 +55,8 @@ def repo_prefix(path, category, ver):
     isCentOS = (category.name == u'CentOS')
     isRhel = (category.name == u'RHEL')
 
+    isCodecs = (category.name == u'Fedora Codecs')
+
     version = u'unknown'
     if not isRawhide and ver is not None:
         version = ver.name
@@ -358,5 +360,11 @@ def repo_prefix(path, category, ver):
 
     elif isCentOS:
         prefix = centos_prefix(path)
+
+    elif isCodecs:
+        debug = u''
+        if isDebug:
+            debug = u'debug-'
+        prefix = 'fedora-cisco-openh264-%s%s' % (debug, version)
 
     return prefix
