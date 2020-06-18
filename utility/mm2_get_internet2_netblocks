@@ -49,7 +49,7 @@ function get_i2_netblocks()
     local last
 
     for ROUTER in ${ROUTERS}; do
-        URL="https://routes.net.internet2.edu/bgp/RIBS/${ROUTER}/${YEAR}/${MONTH}/${DAY}"
+        URL="http://routes.net.internet2.edu/bgp/RIBS/${ROUTER}/${YEAR}/${MONTH}/${DAY}"
         wget -q -O ${tmpdir}/index.html "${URL}/"
         last=$(last_rib)
         wget -O ${tmpdir}/rib -q "${URL}/${last}"
