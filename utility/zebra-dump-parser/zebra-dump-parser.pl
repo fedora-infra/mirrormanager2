@@ -71,6 +71,7 @@ use constant {
 	BGP_ATTR_MP_REACH_NLRI		=> 14,
 	BGP_ATTR_MP_UNREACH_NLRI	=> 15,
 	BGP_ATTR_EXT_COMMUNITIES	=> 16,
+	BGP_ATTR_LARGE_COMMUNITIES	=> 32,
 };
 
 my @BGP_ORIGIN = qw(IGP EGP Incomplete);
@@ -364,6 +365,12 @@ sub parse_attributes {
 				my $community = substr($attrib, 0, 4, '');
 				push(@{$attr[BGP_ATTR_COMMUNITIES]}, $community);
 			}
+		} elsif ($type == BGP_ATTR_LARGE_COMMUNITIES) {
+			$attr[BGP_ATTR_LARGE_COMMUNITIES] = [ ];
+			while (length $attrib > 0) {
+				my $community = substr($attrib, 0, 12, '');
+				push(@{$attr[BGP_ATTR_LARGE_COMMUNITIES]}, $community);
+			}
 		} elsif ($type == BGP_ATTR_MP_REACH_NLRI) {
 			# FIXME v2 uses a different format
 			my ($afi, $safi, $next_hop, $rest) = unpack('n C C/a a*', $attrib);
@@ -496,6 +503,9 @@ sub print_verbose_attributes {
 	print "COMMUNITIES: "
 			. print_communities(@{$attr->[BGP_ATTR_COMMUNITIES]}) . "\n"
 		if $attr->[BGP_ATTR_COMMUNITIES];
+	print "LARGE_COMMUNITIES: "
+			. print_large_communities(@{$attr->[BGP_ATTR_LARGE_COMMUNITIES]}) . "\n"
+		if $attr->[BGP_ATTR_LARGE_COMMUNITIES];
 }
 
 sub print_communities {
@@ -503,6 +513,16 @@ sub print_communities {
 	foreach my $community (@_) {
 		my ($hi, $low) = unpack('n n', $community);
 		push(@communities, "${hi}:${low}");
+	}
+
+	return join(' ', @communities);
+}
+
+sub print_large_communities {
+	my @communities;
+	foreach my $community (@_) {
+		my ($ga, $ldp1, $ldp2) = unpack('N N N', $community);
+		push(@communities, "${ga}:${ldp1}:${ldp2}");
 	}
 
 	return join(' ', @communities);
