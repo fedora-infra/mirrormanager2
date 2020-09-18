@@ -3,8 +3,8 @@
   dnf:
     name:
     - bash-completion
-    - dstat
     - htop
+    - pcp-system-tools
     - screen
     - tmux
     - tree
