@@ -1,22 +1,21 @@
 ---
 - name: Install dev packages
   dnf:
-      name: "{{ item }}"
-      state: present
-  with_items:
-      - gcc
-      - python
-      - python-devel
-      - python-alembic
-      - python-psycopg2
-      - redhat-rpm-config
-
+    name:
+    - gcc
+    - python
+    - python-devel
+    - python-alembic
+    - python-psycopg2
+    - redhat-rpm-config
+    state: present
 
 - name: Install python packages from requirements.txt
   pip:
-      requirements: /vagrant/requirements.txt
+    requirements: /vagrant/requirements.txt
 
-- command: python createdb.py
+- name: Create the database
+  command: python3 createdb.py
   args:
     chdir: /vagrant/
     creates: /vagrant/alembic.ini

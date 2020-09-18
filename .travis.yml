@@ -1,3 +1,4 @@
+---
 language: generic
 sudo: required
 
@@ -17,7 +18,9 @@ before_install:
   - sudo docker pull ${DISTRO}
 
 install:
-  - sudo docker run --detach --volume="${PWD}":/tmp/test --name `sed -e "s,:,-," <<< ${DISTRO}` ${DISTRO} sleep 600
+  - >
+    sudo docker run --detach --volume="${PWD}":/tmp/test
+    --name `sed -e "s,:,-," <<< ${DISTRO}` ${DISTRO} sleep 600
   - tests/setup_test_container.sh ${DISTRO}
 
 script:
