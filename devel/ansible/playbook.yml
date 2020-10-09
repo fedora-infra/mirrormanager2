@@ -3,5 +3,5 @@
   become: true
   become_method: sudo
   roles:
-    - core
-    - dev
+  - core
+  - dev

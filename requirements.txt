@@ -1,5 +1,6 @@
 # List of the dependencies for the mirrormanager flask server
 
+email_validator
 flask
 flask-admin
 flask-xml-rpc

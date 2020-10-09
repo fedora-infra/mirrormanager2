@@ -1,12 +1,11 @@
 ---
 - name: Install basic packages
   dnf:
-      name: "{{ item }}"
-      state: present
-  with_items:
-      - bash-completion
-      - dstat
-      - htop
-      - screen
-      - tmux
-      - tree
+    name:
+    - bash-completion
+    - htop
+    - pcp-system-tools
+    - screen
+    - tmux
+    - tree
+    state: present
