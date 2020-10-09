@@ -48,6 +48,8 @@ def lookup_host_locations(config, gi):
          list(config['EMBARGOED_COUNTRIES'])])
 
     for hcurl in hcurls:
+        if hcurl.host_category.host.private or hcurl.host_category.host.site.private:
+            continue
         hn = urlparse.urlsplit(hcurl.url)[1]
         if hn in tracking:
             continue
