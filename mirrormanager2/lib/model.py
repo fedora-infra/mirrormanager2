@@ -28,6 +28,8 @@ import collections
 import logging
 import time
 import os
+import json
+import pickle
 
 import sqlalchemy as sa
 from sqlalchemy import create_engine
@@ -273,6 +275,40 @@ class Host(BASE):
             and self.site.user_active
 
 
+class JsonDictTypeFilter(sa.types.TypeDecorator):
+    ''' This handles either JSON or a pickled dict from the database. '''
+
+    impl = sa.types.BLOB
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+
+        result = []
+
+        for i in value.keys():
+            temp = {}
+            temp['name'] = i
+            temp['size'] = int(value[i]['size'])
+            temp['timestamp'] = int(value[i]['stat'])
+            result.append(temp)
+
+        return json.dumps(result).encode()
+
+    def process_result_value(self, value, dialect):
+        result = {}
+        if value is None:
+            return result
+        try:
+            j = json.loads(value)
+            for i in j:
+                result[i['name']] = { 'size': i['size'], 'stat': i['timestamp'] }
+        except ValueError:
+            result = pickle.loads(value)
+
+        return result
+
+
 class Directory(BASE):
 
     __tablename__ = 'directory'
@@ -282,7 +318,7 @@ class Directory(BASE):
     # e.g. pub/epel
     # e.g. pub/fedora/linux
     name = sa.Column(sa.Text(), nullable=False, unique=True)
-    files = sa.Column(sa.PickleType(), nullable=True)
+    files = sa.Column(JsonDictTypeFilter(), nullable=True)
     readable = sa.Column(sa.Boolean(), default=True, nullable=False)
     ctime = sa.Column(sa.BigInteger, default=0, nullable=True)
 
