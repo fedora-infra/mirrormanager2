@@ -6,13 +6,13 @@ services:
   - docker
 
 env:
-  - DISTRO="centos:7"
-  - DISTRO="fedora:latest"
-  - DISTRO="fedora:rawhide"
+  - DISTRO="registry.centos.org/centos/centos:7"
+  - DISTRO="registry.fedoraproject.org/fedora:latest"
+  - DISTRO="registry.fedoraproject.org/fedora:rawhide"
 
 matrix:
   allow_failures:
-    - env: DISTRO="fedora:rawhide"
+    - env: DISTRO="registry.fedoraproject.org/fedora:rawhide"
 
 before_install:
   - sudo docker pull ${DISTRO}
@@ -20,11 +20,11 @@ before_install:
 install:
   - >
     sudo docker run --detach --volume="${PWD}":/tmp/test
-    --name `sed -e "s,:,-," <<< ${DISTRO}` ${DISTRO} sleep 600
+    --name `sed -E -e "s,[:/\.],-,g" <<< ${DISTRO}` ${DISTRO} sleep 600
   - tests/setup_test_container.sh ${DISTRO}
 
 script:
-  - sudo docker exec `sed -e "s,:,-," <<< ${DISTRO}` bash -c 'cd /tmp/test && ./runtests.sh -v'
+  - sudo docker exec `sed -E -e "s,[:/\.],-,g" <<< ${DISTRO}` bash -c 'cd /tmp/test && ./runtests.sh -v'
 
 after_script:
-  - sudo docker stop `sed -e "s,:,-," <<< ${DISTRO}`
+  - sudo docker stop `sed -E -e "s,[:/\.],-,g" <<< ${DISTRO}`
