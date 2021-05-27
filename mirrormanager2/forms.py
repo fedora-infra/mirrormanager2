@@ -234,7 +234,8 @@ class AddHostCategoryForm(FlaskForm):
     category_id = wtforms.SelectField(
         'Category',
         [wtforms.validators.InputRequired(), is_number],
-        choices=[(item, item) for item in []]
+        choices=[(item, item) for item in []],
+        coerce=int
     )
     always_up2date = wtforms.BooleanField(
         'Always up to date',

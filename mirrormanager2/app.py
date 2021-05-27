@@ -1018,8 +1018,8 @@ def host_category_new(host_id):
     if flask.request.method == 'POST':
         try:
             form.category_id.data = int(form.category_id.data)
-        except ValueError:
-            pass
+        except (ValueError, TypeError):
+            form.category_id.data = -1
 
     if form.validate_on_submit():
 
