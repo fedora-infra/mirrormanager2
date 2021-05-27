@@ -228,6 +228,26 @@ Fedora Other:Ending umdl
             results[20].name,
             'pub/fedora/linux/releases/20/Fedora/source/SRPMS/b')
 
+        self.assertEqual(results[19].files['index.html']['size'], 6)
+        self.assertEqual(
+                results[19].files[
+                    'abattis-cantarell-fonts-0.0.15-1.fc20.src.rpm'
+                ]['size'],
+                10
+        )
+        self.assertEqual(
+                results[19].files[
+                    'abiword-3.0.0-4.fc20.src.rpm'
+                ]['size'],
+                10
+        )
+        self.assertEqual(
+                results[19].files[
+                    'aalib-1.4.0-0.23.rc5.fc20.src.rpm'
+                ]['size'],
+                10
+        )
+
         results = mirrormanager2.lib.get_file_detail(
             self.session, 'repomd.xml', 7)
         self.assertEqual(results, None)
