@@ -1242,7 +1242,7 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertFalse(
                 'action="/host/2/category/1/delete">' in data)
             self.assertTrue(
-                'Not a valid choice<br />Field must contain a number'
+                'Invalid Choice: could not coerce<br />Not a valid choice'
                 in data)
 
             # Check CSRF protection

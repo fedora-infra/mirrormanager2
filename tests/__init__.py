@@ -59,7 +59,7 @@ class FakeFasUser(object):
     id = 100
     username = 'pingou'
     cla_done = True
-    groups = ['packager', 'cla_done']
+    groups = ['packager', 'signed_fpca']
     bugzilla_email = 'pingou@fp.o'
 
 
@@ -68,8 +68,9 @@ class AnotherFakeFasUser(object):
     id = 110
     username = 'kevin'
     cla_done = True
-    groups = ['packager', 'cla_done']
+    groups = ['packager', 'signed_fpca']
     bugzilla_email = 'kevin@fp.o'
+    signed_fpca = True
 
 
 class FakeFasUserAdmin(object):
@@ -77,7 +78,7 @@ class FakeFasUserAdmin(object):
     id = 1000
     username = 'admin'
     cla_done = True
-    groups = ['packager', 'cla_done', 'sysadmin-main']
+    groups = ['packager', 'sysadmin-main', 'signed_fpca']
 
 
 class Modeltests(unittest.TestCase):

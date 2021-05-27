@@ -113,7 +113,7 @@ def is_mirrormanager_admin(user):
     auth_method = APP.config.get('MM_AUTHENTICATION', None)
 
     if auth_method == 'fas':
-        if not user.cla_done or len(user.groups) < 1:
+        if 'signed_fpca' not in user.groups:
             return False
 
     if auth_method in ('fas', 'local'):
@@ -1018,8 +1018,8 @@ def host_category_new(host_id):
     if flask.request.method == 'POST':
         try:
             form.category_id.data = int(form.category_id.data)
-        except ValueError:
-            pass
+        except (ValueError, TypeError):
+            form.category_id.data = -1
 
     if form.validate_on_submit():
 
@@ -1359,7 +1359,7 @@ def auth_login():  # pragma: no cover
         else:
             return FAS.login(
                 return_url=next_url,
-                groups=APP.config['ADMIN_GROUP'])
+                groups=APP.config['ADMIN_GROUP'] + ["signed_fpca"])
     elif APP.config.get('MM_AUTHENTICATION', None) == 'local':
         form = forms.LoginForm()
         return flask.render_template(
