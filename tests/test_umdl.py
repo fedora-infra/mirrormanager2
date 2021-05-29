@@ -7,10 +7,8 @@ mirrormanager2 tests for the `Update Master Directory List` (UMDL) cron.
 from __future__ import print_function
 
 __requires__ = ['SQLAlchemy >= 0.7']
-import pkg_resources
 import unittest
 import subprocess
-import sys
 import os
 import mirrormanager2.lib
 import tests
@@ -90,7 +88,7 @@ class UMDLTest(tests.Modeltests):
 
         self.assertEqual(stdout, '')
         # Ignore for now
-        #self.assertEqual(stderr, '')
+        # self.assertEqual(stderr, '')
 
         with open(self.logfile) as stream:
             logs = stream.readlines()
@@ -100,11 +98,16 @@ class UMDLTest(tests.Modeltests):
         ])
         print(logs)
         exp = """N/A:Starting umdl
-Fedora EPEL:umdl_master_directories Category Fedora EPEL does not exist in the database, skipping
-Fedora Linux:umdl_master_directories Category Fedora Linux does not exist in the database, skipping
-Fedora Secondary Arches:umdl_master_directories Category Fedora Secondary Arches does not exist in the database, skipping
-Fedora Archive:umdl_master_directories Category Fedora Archive does not exist in the database, skipping
-Fedora Other:umdl_master_directories Category Fedora Other does not exist in the database, skipping
+Fedora EPEL:umdl_master_directories Category Fedora EPEL \
+does not exist in the database, skipping
+Fedora Linux:umdl_master_directories Category Fedora Linux \
+does not exist in the database, skipping
+Fedora Secondary Arches:umdl_master_directories Category Fedora \
+Secondary Arches does not exist in the database, skipping
+Fedora Archive:umdl_master_directories Category Fedora Archive does \
+not exist in the database, skipping
+Fedora Other:umdl_master_directories Category Fedora Other \
+does not exist in the database, skipping
 Fedora Other:Refresh the list of repomd.xml
 Fedora Other:Ending umdl
 """
@@ -129,7 +132,7 @@ Fedora Other:Ending umdl
 
         self.assertEqual(stdout, '')
         # Ignore for now
-        #self.assertEqual(stderr, '')
+        # self.assertEqual(stderr, '')
 
         with open(self.logfile) as stream:
             logs = stream.readlines()
@@ -162,7 +165,7 @@ Fedora Other:Ending umdl
         results = mirrormanager2.lib.get_versions(self.session)
         self.assertEqual(len(results), 2)
         for result in results:
-            version_names = [ '22', '20' ]
+            version_names = ['22', '20']
             self.assertTrue(result.name in version_names)
             if result.name == '22':
                 self.assertEqual(result.product.name, 'Fedora')
@@ -228,6 +231,26 @@ Fedora Other:Ending umdl
             results[20].name,
             'pub/fedora/linux/releases/20/Fedora/source/SRPMS/b')
 
+        self.assertEqual(results[19].files['index.html']['size'], 6)
+        self.assertEqual(
+                results[19].files[
+                    'abattis-cantarell-fonts-0.0.15-1.fc20.src.rpm'
+                ]['size'],
+                10
+        )
+        self.assertEqual(
+                results[19].files[
+                    'abiword-3.0.0-4.fc20.src.rpm'
+                ]['size'],
+                10
+        )
+        self.assertEqual(
+                results[19].files[
+                    'aalib-1.4.0-0.23.rc5.fc20.src.rpm'
+                ]['size'],
+                10
+        )
+
         results = mirrormanager2.lib.get_file_detail(
             self.session, 'repomd.xml', 7)
         self.assertEqual(results, None)
@@ -244,7 +267,9 @@ Fedora Other:Ending umdl
                 self.assertEqual(result.sha512, None)
                 self.assertEqual(
                     result.sha256,
-                    'f2eeed5102b8890e9e6f4b9053717fe73031e699c4b76dc7028749ab66e7f917')
+                    'f2eeed5102b8890e9e6f4b9053717f' +
+                    'e73031e699c4b76dc7028749ab66e7f917'
+                )
                 check_counter += 1
 
             elif result.filename == 'Fedora-20-x86_64-netinst.iso':
@@ -254,7 +279,9 @@ Fedora Other:Ending umdl
                 self.assertEqual(result.sha512, None)
                 self.assertEqual(
                     result.sha256,
-                    '376be7d4855ad6281cb139430606a782fd6189dcb01d7b61448e915802cc350f')
+                    '376be7d4855ad6281cb139430606a7'
+                    '82fd6189dcb01d7b61448e915802cc350f'
+                )
                 check_counter += 1
 
             elif result.filename == 'Fedora-Live-Desktop-x86_64-20-1.iso':
@@ -264,7 +291,9 @@ Fedora Other:Ending umdl
                 self.assertEqual(result.sha512, None)
                 self.assertEqual(
                     result.sha256,
-                    'cc0333be93c7ff2fb3148cb29360d2453f78913cc8aa6c6289ae6823372a77d2')
+                    'cc0333be93c7ff2fb3148cb29360'
+                    'd2453f78913cc8aa6c6289ae6823372a77d2'
+                )
                 check_counter += 1
 
             elif result.filename == 'Fedora-Live-KDE-x86_64-20-1.iso':
@@ -274,7 +303,9 @@ Fedora Other:Ending umdl
                 self.assertEqual(result.sha512, None)
                 self.assertEqual(
                     result.sha256,
-                    '08360a253b4a40dff948e568dba1d2ae9d931797f57aa08576b8b9f1ef7e4745')
+                    '08360a253b4a40dff948e568dba1d'
+                    '2ae9d931797f57aa08576b8b9f1ef7e4745'
+                )
                 check_counter += 1
 
             elif result.md5 == 'd0fb87891c3bfbdaf7a225f57e9ba6ee':
@@ -284,11 +315,15 @@ Fedora Other:Ending umdl
                     'pub/fedora/linux/development/22/x86_64/os/repodata')
                 self.assertEqual(
                     result.sha256,
-                    '860f0f832f7a641cf8f7e27172ef9b2492ce849388e43f372af7e512aa646677')
+                    '860f0f832f7a641cf8f7e27172ef9'
+                    'b2492ce849388e43f372af7e512aa646677'
+                )
                 self.assertEqual(
                     result.sha512,
-                    '7bb9a0bae076ccbbcd086163a1d4f33b62321aa6991d135c42bf3f6c42c4eb'
-                    '465a0b42c62efa809708543fcd69511cb19cd7111d5ff295a50253b9c7659b'
+                    '7bb9a0bae076ccbbcd086163a1d4f33b62321aa69'
+                    '91d135c42bf3f6c42c4eb'
+                    '465a0b42c62efa809708543fcd69511cb19cd7111'
+                    'd5ff295a50253b9c7659b'
                     'b9d6')
                 check_counter += 1
 
@@ -296,15 +331,21 @@ Fedora Other:Ending umdl
                 self.assertEqual(result.filename, 'repomd.xml')
                 self.assertEqual(
                     result.directory.name,
-                    'pub/fedora/linux/releases/20/Fedora/source/SRPMS/repodata')
+                    'pub/fedora/linux/releases/20/Fedora/source/SRPMS/repodata'
+                )
                 self.assertEqual(
                     result.sha256,
-                    '9a4738934092cf17e4540ee9cab741e922eb8306875ae5621feb01ebeb1f67f2')
+                    '9a4738934092cf17e4540ee9cab'
+                    '741e922eb8306875ae5621feb01ebeb1f67f2'
+                )
                 self.assertEqual(
                     result.sha512,
-                    '3351c7a6b1d2bd94e375d09324a9280b8becfe4dea40a227c3b270ddcedb19'
-                    'f420eec3f2c6a39a1edcdf52f80d31eb47a0ba25057ced2e3182dd212bc746'
-                    '6ba2')
+                    '3351c7a6b1d2bd94e375d09324a9280b8becf'
+                    'e4dea40a227c3b270ddcedb19'
+                    'f420eec3f2c6a39a1edcdf52f80d31eb47a0b'
+                    'a25057ced2e3182dd212bc746'
+                    '6ba2'
+                )
                 check_counter += 1
 
             elif result.md5 == '49db42c616518f465014c3605de4414d':
@@ -314,12 +355,17 @@ Fedora Other:Ending umdl
                     'pub/fedora/linux/releases/20/Fedora/x86_64/os/repodata')
                 self.assertEqual(
                     result.sha256,
-                    '108b4102829c0839c7712832577fe7da24f0a9491f4dc25d4145efe6aced2ebf')
+                    '108b4102829c0839c7712832577fe'
+                    '7da24f0a9491f4dc25d4145efe6aced2ebf'
+                )
                 self.assertEqual(
                     result.sha512,
-                    '50ed8cb8f4daf8bcd1d0ccee1710b8a87ee8de5861fb15a1023d6558328795'
-                    'f42dade3e025c09c20ade36c77a3a82d9cdce1a2e2ad171f9974bc1889b591'
-                    '8020')
+                    '50ed8cb8f4daf8bcd1d0ccee1710b8a87ee8'
+                    'de5861fb15a1023d6558328795'
+                    'f42dade3e025c09c20ade36c77a3a82d9cdc'
+                    'e1a2e2ad171f9974bc1889b591'
+                    '8020'
+                )
                 check_counter += 1
 
         self.assertEqual(check_counter, 7)
