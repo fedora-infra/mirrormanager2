@@ -14,7 +14,7 @@
 %endif
 
 Name:           mirrormanager2
-Version:        0.14
+Version:        0.15
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -451,6 +451,9 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Sat May 28 2021 Adrian Reber <adrian@lisas.de> - 0.15-1
+- Update to 0.15
+
 * Sun Jun 14 2020 Adrian Reber <adrian@lisas.de> - 0.14-1
 - Hide last crawled/checked-in if private/public
 - Only block report_mirror for private Hosts
