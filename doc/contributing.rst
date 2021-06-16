@@ -15,4 +15,4 @@ If you're submitting patches to MirrorManager2, please observe the following:
    idea but don't know how to implement it, you just have something bugging
    you?
 
-   Come to see us on IRC: ``#fedora-apps`` on irc.freenode.net
+   Come to see us on IRC: ``#fedora-apps`` on irc.libera.chat
