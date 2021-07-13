@@ -6,6 +6,7 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         container: ["registry.centos.org/centos/centos:7", "registry.fedoraproject.org/fedora:latest", "registry.fedoraproject.org/fedora:rawhide"]
 

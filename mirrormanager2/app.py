@@ -1011,13 +1011,23 @@ def host_category_new(host_id):
             or is_mirrormanager_admin(flask.g.fas_user)):
         flask.abort(403, 'Access denied')
 
-    categories = mmlib.get_categories(SESSION)
+    categories = mmlib.get_categories(
+        SESSION,
+        not is_mirrormanager_admin(flask.g.fas_user),
+    )
 
     form = forms.AddHostCategoryForm(categories=categories)
 
     if flask.request.method == 'POST':
         try:
+            id_found = False
             form.category_id.data = int(form.category_id.data)
+            for cat in categories:
+                if cat.id == form.category_id.data:
+                    id_found = True
+                    break
+            if not id_found:
+                form.category_id.data = -1
         except (ValueError, TypeError):
             form.category_id.data = -1
 

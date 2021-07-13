@@ -130,7 +130,7 @@ class FlaskUiAdminTest(tests.Modeltests):
                 '<a href="/admin/category(view)?/\?sort=[02]" '
                 'title="Sort by Name">Name</a>', data))
             self.assertTrue(
-                '<a href="javascript:void(0)">List (2)</a>' in data)
+                '<a href="javascript:void(0)">List (3)</a>' in data)
 
     @patch('mirrormanager2.app.is_mirrormanager_admin')
     def test_admin_country(self, login_func):

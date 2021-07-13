@@ -427,6 +427,7 @@ class Category(BASE):
         default='http://download.fedora.redhat.com')
     publiclist = sa.Column(sa.Boolean(), default=True, nullable=False)
     geo_dns_domain = sa.Column(sa.Text(), nullable=True)
+    admin_only = sa.Column(sa.Boolean(), default=False, nullable=True)
     product_id = sa.Column(
         sa.Integer, sa.ForeignKey('product.id'), nullable=True)
     topdir_id = sa.Column(

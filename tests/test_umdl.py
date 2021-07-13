@@ -173,6 +173,12 @@ Fedora Other:Ending umdl
                 self.assertEqual(result.product.name, 'Fedora')
 
         results = mirrormanager2.lib.get_categories(self.session)
+        self.assertEqual(len(results), 3)
+        self.assertEqual(results[0].name, 'Fedora Linux')
+        self.assertEqual(results[1].name, 'Fedora EPEL')
+        self.assertEqual(results[2].name, 'Fedora Codecs')
+
+        results = mirrormanager2.lib.get_categories(self.session, True)
         self.assertEqual(len(results), 2)
         self.assertEqual(results[0].name, 'Fedora Linux')
         self.assertEqual(results[1].name, 'Fedora EPEL')

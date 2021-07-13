@@ -313,6 +313,10 @@ sed -e "s|#!/usr/bin/env python|#!%{__python}|" -i \
 # Switch interpreter for systemd units
 sed -e "s|/usr/bin/python|%{__python}|g" -i $RPM_BUILD_ROOT/%{_unitdir}/*.service
 
+# Byte-compile Python files outside the standard location
+# https://fedoraproject.org/wiki/Changes/No_more_automagic_Python_bytecompilation_phase_3
+%py_byte_compile %{python3} $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2
+
 
 %pre mirrorlist
 getent group mirrormanager >/dev/null || groupadd -r mirrormanager
@@ -451,7 +455,7 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 %{_bindir}/mirrorlist_statistics
 
 %changelog
-* Sat May 28 2021 Adrian Reber <adrian@lisas.de> - 0.15-1
+* Sat May 29 2021 Adrian Reber <adrian@lisas.de> - 0.15-1
 - Update to 0.15
 
 * Sun Jun 14 2020 Adrian Reber <adrian@lisas.de> - 0.14-1
