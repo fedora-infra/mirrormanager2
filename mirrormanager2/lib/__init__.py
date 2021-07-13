@@ -469,7 +469,7 @@ def get_arch_by_name(session, arch_name):
     return query.first()
 
 
-def get_categories(session):
+def get_categories(session, skip_admin=False):
     ''' Return the list of all the categories in the database.
 
     :arg session: the session with which to connect to the database.
@@ -478,6 +478,14 @@ def get_categories(session):
     query = session.query(
         model.Category
     )
+
+    if skip_admin:
+        query = query.filter(
+            sqlalchemy.or_(
+                model.Category.admin_only.is_(None),
+                model.Category.admin_only == False,
+            )
+        )
 
     return query.all()
 
