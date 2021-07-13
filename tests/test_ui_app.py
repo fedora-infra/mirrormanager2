@@ -1143,8 +1143,10 @@ class FlaskUiAppTest(tests.Modeltests):
 
             # Check CSRF protection
 
-            output = self.app.post('/host/1/host_country/1/delete', data=post_data,
-                                   follow_redirects=True)
+            output = self.app.post(
+                '/host/1/host_country/1/delete',
+                data=post_data,
+                follow_redirects=True)
             self.assertEqual(output.status_code, 200)
             data = output.get_data(as_text=True)
             self.assertTrue('<h2>Host mirror.localhost' in data)
@@ -1159,15 +1161,19 @@ class FlaskUiAppTest(tests.Modeltests):
             post_data['csrf_token'] = csrf_token
 
             # Invalid site identifier
-            output = self.app.post('/host/5/host_country/1/delete', data=post_data,
-                                   follow_redirects=True)
+            output = self.app.post(
+                '/host/5/host_country/1/delete',
+                data=post_data,
+                follow_redirects=True)
             self.assertEqual(output.status_code, 404)
             data = output.get_data(as_text=True)
             self.assertTrue('<p>Host not found</p>' in data)
 
             # Invalid Host Country identifier
-            output = self.app.post('/host/1/host_country/5/delete', data=post_data,
-                                   follow_redirects=True)
+            output = self.app.post(
+                '/host/1/host_country/5/delete',
+                data=post_data,
+                follow_redirects=True)
             self.assertEqual(output.status_code, 404)
             data = output.get_data(as_text=True)
             self.assertTrue('<p>Host Country not found</p>' in data)
@@ -1314,6 +1320,83 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue(
                 'action="/host/2/category/4/delete">' in data)
 
+    def test_host_category_new_as_admin(self):
+        """ Test the host_category_new endpoint. """
+        output = self.app.get('/host/5/category/new')
+        self.assertEqual(output.status_code, 302)
+
+        output = self.app.get('/host/5/category/new', follow_redirects=True)
+        self.assertEqual(output.status_code, 200)
+        data = output.get_data(as_text=True)
+        if self.network_tests:
+            self.assertTrue(
+                '<title>OpenID transaction in progress</title>'
+                in data)
+
+        user = tests.FakeFasUserAdmin()
+        with tests.user_set(mirrormanager2.app.APP, user):
+            output = self.app.get('/host/50/category/new')
+            self.assertEqual(output.status_code, 404)
+            data = output.get_data(as_text=True)
+            self.assertTrue('<p>Host not found</p>' in data)
+
+            output = self.app.get('/host/2/category/new')
+            self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
+            self.assertTrue(
+                '<h2>Add host category</h2>' in data)
+            self.assertTrue('Back to <a href="/host/2">' in data)
+            self.assertTrue(
+                '<title>New Host Category - MirrorManager</title>'
+                in data)
+            self.assertFalse(
+                'action="/host/2/category/1/delete">' in data)
+
+            csrf_token = data.split(
+                'name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+            post_data = {}
+            post_data['csrf_token'] = csrf_token
+            output = self.app.post(
+                '/host/2/category/4/delete', data=post_data,
+                follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+
+            # Add Category
+
+            post_data['csrf_token'] = csrf_token
+            # 3 is an admin only category
+            post_data['category_id'] = '3'
+
+            output = self.app.post('/host/2/category/new', data=post_data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
+            self.assertTrue(
+                '<li class="message">Host Category added</li>' in data)
+            self.assertTrue('<h2>Host category</h2>' in data)
+            self.assertTrue('Back to <a href="/site/2">' in data)
+            self.assertTrue(
+                '<title>Host Category - MirrorManager</title>' in data)
+
+            # Try adding the same Category -- fails
+
+            output = self.app.post('/host/2/category/new', data=post_data,
+                                   follow_redirects=True)
+            self.assertEqual(output.status_code, 200)
+            data = output.get_data(as_text=True)
+            self.assertTrue(
+                '<li class="message">Could not add Category to the host</li>'
+                in data)
+            self.assertTrue(
+                '<h2>Add host category</h2>' in data)
+            self.assertTrue('Back to <a href="/host/2">' in data)
+            self.assertTrue(
+                '<title>New Host Category - MirrorManager</title>'
+                in data)
+            self.assertFalse(
+                'action="/host/2/category/1/delete">' in data)
+
     def test_host_category_delete(self):
         """ Test the host_category_delete endpoint. """
         output = self.app.post('/host/1/category/1/delete')
@@ -1372,8 +1455,10 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue('<p>Host not found</p>' in data)
 
             # Invalid Host Category identifier
-            output = self.app.post('/host/2/category/50/delete', data=post_data,
-                                   follow_redirects=True)
+            output = self.app.post(
+                '/host/2/category/50/delete',
+                data=post_data,
+                follow_redirects=True)
             self.assertEqual(output.status_code, 404)
             data = output.get_data(as_text=True)
             self.assertTrue('<p>Host/Category not found</p>' in data)
@@ -1458,8 +1543,10 @@ class FlaskUiAppTest(tests.Modeltests):
 
             # Check CSRF protection
 
-            output = self.app.post('/host/2/category/3/url/new', data=post_data,
-                                   follow_redirects=True)
+            output = self.app.post(
+                '/host/2/category/3/url/new',
+                data=post_data,
+                follow_redirects=True)
             self.assertEqual(output.status_code, 200)
             data = output.get_data(as_text=True)
             self.assertTrue(
@@ -1476,8 +1563,10 @@ class FlaskUiAppTest(tests.Modeltests):
 
             post_data['csrf_token'] = csrf_token
 
-            output = self.app.post('/host/2/category/3/url/new', data=post_data,
-                                   follow_redirects=True)
+            output = self.app.post(
+                '/host/2/category/3/url/new',
+                data=post_data,
+                follow_redirects=True)
             self.assertEqual(output.status_code, 200)
             data = output.get_data(as_text=True)
             self.assertTrue(
@@ -1495,8 +1584,10 @@ class FlaskUiAppTest(tests.Modeltests):
 
             post_data['csrf_token'] = csrf_token
 
-            output = self.app.post('/host/2/category/3/url/new', data=post_data,
-                                   follow_redirects=True)
+            output = self.app.post(
+                '/host/2/category/3/url/new',
+                data=post_data,
+                follow_redirects=True)
             self.assertEqual(output.status_code, 200)
             data = output.get_data(as_text=True)
             self.assertTrue(
@@ -1795,7 +1886,6 @@ class FlaskUiAppTest(tests.Modeltests):
             self.assertTrue(
                 '<title>Host Category - MirrorManager</title>'
                 in data)
-
 
     def test_toggle_private_flag_site(self):
         """

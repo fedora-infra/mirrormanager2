@@ -505,6 +505,18 @@ def create_category(session):
 
     session.commit()
 
+    item = model.Category(
+        name='Fedora Codecs',
+        product_id=2,
+        canonicalhost='http://codecs.fedoraproject.org',
+        topdir_id=4,
+        publiclist=False,
+        admin_only = True
+    )
+    session.add(item)
+
+    session.commit()
+
 
 def create_hostcategory(session):
     ''' Create some HostCategory to play with for the tests
