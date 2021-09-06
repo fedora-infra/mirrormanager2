@@ -14,7 +14,7 @@
 %endif
 
 Name:           mirrormanager2
-Version:        0.15
+Version:        0.16
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -455,6 +455,11 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Mon Sep 06 2021 Adrian Reber <adrian@lisas.de> - 0.16-1
+- Update to 0.16
+- Added support for admin only categories
+- Added support for empty top dirs ('')
+
 * Sat May 29 2021 Adrian Reber <adrian@lisas.de> - 0.15-1
 - Update to 0.15
 
