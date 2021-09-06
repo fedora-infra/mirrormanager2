@@ -732,7 +732,10 @@ def sync_hcds(session, host, host_category_dirs, options):
             continue
 
         topname = hc.category.topdir.name
-        path = d.name[len(topname)+1:]
+        toplen = len(topname)
+        if d.name.startswith('/'):
+            toplen += 1
+        path = d.name[toplen:]
 
         hcd = mirrormanager2.lib.get_hostcategorydir_by_hostcategoryid_and_path(
             session, host_category_id=hc.id, path=path)
@@ -1307,7 +1310,9 @@ def per_host(session, host, options, config):
         categoryUrl = method_pref(host_category_urls)
         if categoryUrl is None:
             continue
-        categoryPrefixLen = len(category.topdir.name)+1
+        categoryPrefixLen = len(category.topdir.name)
+        if categoryPrefixLen > 0:
+            categoryPrefixLen += 1
 
         if options.continents:
             # Only check for continent if something specified
