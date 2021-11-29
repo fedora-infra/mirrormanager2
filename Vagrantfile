@@ -2,8 +2,8 @@
 # vi: set ft=ruby :
 
 Vagrant.configure(2) do |config|
-  config.vm.box_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/32/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-32-1.6.x86_64.vagrant-libvirt.box"
-  config.vm.box = "f32-cloud-libvirt"
+  config.vm.box_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/35/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-35-1.2.x86_64.vagrant-libvirt.box"
+  config.vm.box = "f35-cloud-libvirt"
   config.vm.network "forwarded_port", guest: 5000, host: 5000
   config.vm.synced_folder ".", "/vagrant", type: "sshfs"
 
