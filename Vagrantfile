@@ -1,20 +1,29 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+
 Vagrant.configure(2) do |config|
-  config.vm.box_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/35/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-35-1.2.x86_64.vagrant-libvirt.box"
-  config.vm.box = "f35-cloud-libvirt"
-  config.vm.network "forwarded_port", guest: 5000, host: 5000
-  config.vm.synced_folder ".", "/vagrant", type: "sshfs"
+  config.hostmanager.enabled = true
+  config.hostmanager.manage_host = true
+  config.hostmanager.manage_guest = true
 
-  config.vm.provider :libvirt do |libvirt|
-    libvirt.cpus = 2
-    libvirt.memory = 2048
+  config.vm.define "mirrormanager2" do |mirrormanager2|
+    mirrormanager2.vm.box_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/35/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-35-1.2.x86_64.vagrant-libvirt.box"
+    mirrormanager2.vm.box = "f35-cloud-libvirt"
+    mirrormanager2.vm.hostname = "mirrormanager2.tinystage.test"
+
+    mirrormanager2.vm.synced_folder ".", "/vagrant", type: "sshfs"
+
+
+    mirrormanager2.vm.provider :libvirt do |libvirt|
+      libvirt.cpus = 2
+      libvirt.memory = 2048
+    end
+
+    mirrormanager2.vm.provision "ansible" do |ansible|
+      ansible.playbook = "devel/ansible/playbook.yml"
+      # ansible.config_file = "devel/ansible/ansible.cfg"
+      ansible.verbose = true
+    end
   end
-
-  config.vm.provision "ansible" do |ansible|
-    ansible.playbook = "devel/ansible/playbook.yml"
-    ansible.config_file = "ansible.cfg"
-  end
-
 end

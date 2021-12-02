@@ -8,9 +8,8 @@ flask-wtf
 wtforms
 SQLAlchemy>=0.7
 python-fedora
-python-openid
-python-openid-cla
-python-openid-teams
+flask-oidc
 IPy
 dnspython
 protobuf
+munch
