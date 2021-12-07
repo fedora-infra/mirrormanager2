@@ -1,4 +1,4 @@
-Fedora MirrorManager
+Fedoras MirrorManager
 ====================
 
 MirrorManager2 is a rewrite of `mirrormanager <https://pagure.io/mirrormanager/>`_
