@@ -17,7 +17,7 @@ if [[ "${1}" == *cento* ]]; then
 else
 	export PKG="dnf --best --allowerasing"
 	export BUILDDEP="dnf builddep"
-	export TEST_PKGS="python3-mock python3-blinker python3-fedmsg-core python3-pytest-cov python3-email-validator"
+	export TEST_PKGS="python3-mock python3-blinker python3-fedmsg-core python3-pytest-cov python3-email-validator python3-flask"
 	${PKG} -y install dnf-plugins-core
 fi
 
