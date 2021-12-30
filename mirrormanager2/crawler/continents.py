@@ -80,14 +80,48 @@ def check_continent(config, options, session, categoryUrl):
     hostname = hostname.split(":")[0]
 
     try:
-        hostname = socket.gethostbyname(hostname)
-    except Exception as e:
+        addrinfo = socket.getaddrinfo(hostname, None)
+    except socket.gaierror:
         # Name resolution failed. This means
         # that the base URL is broken.
         raise BrokenBaseUrl() from e
 
-    country = gi.country(hostname).country.iso_code
-    if not country:
+    # Extract the IPv4 and IPv6 address from the tuples returned by getaddrinfo.
+    addresses = set()
+    for family, socktype, proto, canonname, sockaddr in addrinfo:
+        # The GeoIP2 databases contain only information for IPv4 and IPv6
+        # addresses. Therefore, other, unusual address families are ignored.
+        if family == socket.AF_INET:
+            address, port = sockaddr
+            addresses.add(address)
+        elif family == socket.AF_INET6:
+            address, port, flowinfo, scope_id = sockaddr
+            addresses.add(address)
+    # Retrieve the ISO 3166-1 code for each address.
+    countries = []
+    for address in addresses:
+        try:
+            country = gi.country(address)
+        except geoip2.errors.AddressNotFoundError:
+            # If no country object is found for an IPv4 or IPv6 address,
+            # the address is ignored.
+            pass
+        else:
+            iso_code = country.country.iso_code
+            # If the ISO 3166-1 code is not available, the country cannot be
+            # matched to continent. Therefore, the country object is ignored.
+            if iso_code is not None:
+                countries.append(iso_code)
+    # The GeoIP2 databases are not perfect and fully accurate. Therefore,
+    # multiple countries might be returned for hosts with multiple addresses. It
+    # seems best to use the most frequently occuring country if a host has
+    # multiple addresses.
+    country_counter = collections.Counter(countries)
+    if country_counter:
+        # most_common(1) returns a list with one element that is tuple that
+        # consists of the item and its count.
+        country = country_counter.most_common(1)[0][0]
+    else:
         # For hosts with no country in the GeoIP database
         # the default is 'US' as that is where most of
         # Fedora infrastructure systems are running

@@ -37,9 +37,55 @@ def main(config, verbose):
             hostname = urlsplit(hcurl.url)[1]
             if host.id in tracking:
                 continue
+            gir = None
             try:
-                ip = socket.gethostbyname(hostname)
-                gir = gi.city(ip)
+                addrinfo = socket.getaddrinfo(hn, None)
+                # Extract the IPv4 and IPv6 address from the tuples returned by
+                # getaddrinfo.
+                addresses = set()
+                for family, socktype, proto, canonname, sockaddr in addrinfo:
+                    # The GeoIP2 databases contain only information for IPv4 and
+                    # IPv6 addresses. Therefore, other, unusual address families
+                    # are ignored.
+                    if family == socket.AF_INET:
+                        address, port = sockaddr
+                        addresses.add(address)
+                    elif family == socket.AF_INET6:
+                        address, port, flowinfo, scope_id = sockaddr
+                        addresses.add(address)
+                # Retrieve the city object for each address.
+                cities = []
+                for address in addresses:
+                    try:
+                        city = gi.city(address)
+                    except geoip2.errors.AddressNotFoundError:
+                        # If no city object was found for an IPv4 or IPv6
+                        # address, the address is ignored.
+                        pass
+                    else:
+                        # It seems that an empty city record is returned when no
+                        # city was found. If no city has been found for an IPv4
+                        # or IPv6 address, the address is ignored.
+                        if city.city.name is not None:
+                            cities.append(city)
+                # If no city objects were found, the location of a host cannot
+                # be determined.
+                if not cities:
+                    continue
+                city_names = (city.city.name for city in cities)
+                # Only the GeoIP2 Enterprise database has a confidence score for
+                # each city record. Therefore, it seems best to use the most
+                # frequently occuring city if a host has multiple addresses.
+                city_name_counter = collections.Counter(city_names)
+                # most_common(1) returns a list with one element that is tuple
+                # that consists of the item and its count.
+                most_common_city_name = city_name_counter.most_common(1)[0][0]
+                # Find a city object for the most common city name. Any city
+                # object should equivalent for a given city name.
+                for city in cities:
+                    if most_common_city_name == city.city.name:
+                        gir = city
+                        break
             except Exception:
                 continue
             if gir is None:
