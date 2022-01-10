@@ -14,10 +14,11 @@ import logging
 import unittest
 import sys
 import os
+import mock
 
 from contextlib import contextmanager
 from flask import appcontext_pushed, g
-from mirrormanager2.app import APP, FAS, LOG
+from mirrormanager2.app import APP, LOG
 from mirrormanager2.lib import model
 
 # DB_PATH = 'sqlite:///:memory:'
@@ -49,6 +50,8 @@ def user_set(APP, user):
 
     def handler(sender, **kwargs):
         g.fas_user = user
+        g.oidc_id_token = "TOKEN"
+
 
     with appcontext_pushed.connected_to(handler, APP):
         yield
@@ -99,7 +102,6 @@ class Modeltests(unittest.TestCase):
         self.session = model.create_tables(DB_PATH, debug=False)
         APP.logger.handlers = []
         APP.logger.setLevel(logging.CRITICAL)
-        APP.before_request(FAS._check_session)
 
     # pylint: disable=C0103
     def tearDown(self):

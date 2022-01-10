@@ -24,6 +24,8 @@ MirrorManager2 default configuration api.
 '''
 
 from datetime import timedelta
+import os
+
 
 # Set the time after which the session expires. Flask's default is 31 days.
 # Default: ``timedelta(hours=1)`` corresponds to 1 hour.
@@ -49,7 +51,12 @@ THEME_FOLDER = 'fedora'
 
 # Which authentication method to use, defaults to `fas` can be or `local`
 # Default: ``fas``.
+# Note that this previously used openid, now it uses openid connect oidc
 MM_AUTHENTICATION = 'fas'
+
+OIDC_CLIENT_SECRETS = os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), 'client_secrets.json')
+OIDC_SCOPES = ['openid', 'email', 'profile', 'https://id.fedoraproject.org/scope/groups', 'https://id.fedoraproject.org/scope/agreements']
 
 # If the authentication method is `fas`, groups in which should be the user
 # to be recognized as an admin.

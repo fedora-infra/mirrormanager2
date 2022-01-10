@@ -2,6 +2,7 @@
 - name: Install dev packages
   dnf:
     name:
+    - freeipa-client
     - gcc
     - python3
     - python3-devel
@@ -9,15 +10,88 @@
     # This breaks with Python 3 when installed from pip, it's terribly outdated.
     - python3-flask-xml-rpc
     - python3-psycopg2
+    - python3-flask-oidc
     - redhat-rpm-config
+    # deps for running the tests
+    - protobuf-compiler
+    - python3-pytest
+    - python3-pytest-cov
+    - python3-pytest-mock
+    - python-mock
+    - python-blinker
     state: present
 
 - name: Install python packages from requirements.txt
   pip:
     requirements: /vagrant/requirements.txt
 
+- name: Enroll system as IPA client
+  shell: ipa-client-install --hostname mirrormanager2.tinystage.test --domain tinystage.test --realm TINYSTAGE.TEST --server ipa.tinystage.test -p admin -w password -U -N --force-join
+
+- name: Generate and get SSL cert
+  shell: ipa-getcert request -f /etc/pki/tls/certs/server.pem -k /etc/pki/tls/private/server.key -K HTTP/mirrormanager2.tinystage.test
+
+- name: Check the cert is there
+  wait_for:
+    path: /etc/pki/tls/certs/server.pem
+    state: present
+
+- name: Check the key is there
+  wait_for:
+    path: /etc/pki/tls/private/server.key
+    state: present
+
+- name: install oidc_register with pip
+  pip:
+    name: oidc-register
+
+- name: Determine Python version
+  command:
+    argv:
+      - python3
+      - -c
+      - "from sys import version_info as vi; print(f'{vi[0]}.{vi[1]}')"
+  register: _python3_version_result
+  changed_when: False
+
+- name: Set Python version fact
+  set_fact:
+    py3ver: "{{ _python3_version_result.stdout | trim }}"
+
+# not sure of how to do this another way, but without this, oidc_register fails
+- name: Put tinystage root CA in the list of CA's for httplib2
+  shell: cat /etc/ipa/ca.crt >> /usr/lib/python{{ py3ver }}/site-packages/httplib2/cacerts.txt
+
+- name: register the application with oidc-register
+  shell: oidc-register --debug https://ipsilon.tinystage.test/idp/openidc/ https://mirrormanager2.tinystage.test/oidc_callback
+  become: yes
+  become_user: vagrant
+  args:
+    chdir: /home/vagrant/
+
+- name: Install the config file
+  copy:
+    src: mirrormanager2.cfg
+    dest: /home/vagrant/mirrormanager2.cfg
+    mode: 0644
+
 - name: Create the database
   command: python3 createdb.py
   args:
     chdir: /vagrant/
     creates: /vagrant/alembic.ini
+  environment:
+    MM2_CONFIG: '/home/vagrant/mirrormanager2.cfg'
+
+- name: Install the systemd unit file for mirrormanager2 service
+  copy:
+    src: mirrormanager2.service
+    dest: /etc/systemd/system/mirrormanager2.service
+    mode: 0644
+
+- name: Start mirrormanager2 service using systemd
+  systemd:
+    state: started
+    name: mirrormanager2
+    daemon_reload: yes
+    enabled: yes

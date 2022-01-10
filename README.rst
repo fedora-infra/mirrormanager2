@@ -20,11 +20,7 @@ Hacking with Vagrant
 Quickly start hacking on mirrormanager2 using the vagrant setup that is included
 in the repo is super simple.
 
-First, make a copy of the Vagrantfile example::
-
-    $ cp Vagrantfile.example Vagrantfile
-
-Next, install Ansible, Vagrant and the vagrant-libvirt plugin from the official Fedora
+Install Ansible, Vagrant and the vagrant-libvirt plugin from the official Fedora
 repos::
 
     $ sudo dnf install ansible vagrant vagrant-libvirt vagrant-sshfs

@@ -33,6 +33,7 @@ import datetime
 import werkzeug
 
 import flask
+import munch
 
 from functools import wraps
 from flask_admin import Admin
@@ -87,12 +88,13 @@ LOG = APP.logger
 
 
 if APP.config.get('MM_AUTHENTICATION') == 'fas':
-    # Use FAS for authentication
+    # Use FAS/ipsion oidc for authentication
     try:
-        from flask_fas_openid import FAS
-        FAS = FAS(APP)
+        from flask_oidc import OpenIDConnect
+        OIDC = OpenIDConnect(APP, credentials_store=flask.session)
+        # FAS = FAS(APP)
     except ImportError:
-        APP.logger.exception("Couldn't import flask-fas-openid")
+        APP.logger.exception("Couldn't import flask_oidc")
 
 
 import mirrormanager2
@@ -1352,6 +1354,12 @@ def rsyncFilter():
         includes=includes, excludes=excludes, message=message)
 
 
+@APP.route('/oidc_login')
+@OIDC.require_login
+def oidc_login():  # pragma: no cover
+    return flask.redirect(flask.request.values['next'])
+    
+
 @APP.route('/login', methods=['GET', 'POST'])
 def auth_login():  # pragma: no cover
     """ Login mechanism for this application.
@@ -1364,12 +1372,7 @@ def auth_login():  # pragma: no cover
         next_url = flask.url_for('index')
 
     if APP.config.get('MM_AUTHENTICATION', None) == 'fas':
-        if hasattr(flask.g, 'fas_user') and flask.g.fas_user is not None:
-            return flask.redirect(next_url)
-        else:
-            return FAS.login(
-                return_url=next_url,
-                groups=APP.config['ADMIN_GROUP'] + ["signed_fpca"])
+        return flask.redirect(flask.url_for('oidc_login', next=next_url))
     elif APP.config.get('MM_AUTHENTICATION', None) == 'local':
         form = forms.LoginForm()
         return flask.render_template(
@@ -1388,7 +1391,7 @@ def auth_logout():
 
     if APP.config.get('MM_AUTHENTICATION', None) == 'fas':
         if hasattr(flask.g, 'fas_user') and flask.g.fas_user is not None:
-            FAS.logout()
+            OIDC.logout()
             flask.flash("You are no longer logged-in")
     elif APP.config.get('MM_AUTHENTICATION', None) == 'local':
         login.logout()
@@ -1417,6 +1420,21 @@ def shutdown_session(exception=None):
 def set_session():
     """ Set the flask session as permanent. """
     flask.session.permanent = True
+
+    if APP.config.get('MM_AUTHENTICATION') == 'fas':
+        if OIDC.user_loggedin:
+            if not hasattr(flask.session, 'fas_user') or not flask.session.fas_user:
+                flask.session.fas_user = munch.Munch({
+                    'username': OIDC.user_getfield('nickname'),
+                    'email': OIDC.user_getfield('email'),
+                    'timezone': OIDC.user_getfield('zoneinfo'),
+                    "cla_done": "signed_fpca" in (OIDC.user_getfield("groups") or []),
+                    'groups': OIDC.user_getfield('groups'),
+                })
+            flask.g.fas_user = flask.session.fas_user
+        else:
+            flask.session.fas_user = None
+            flask.g.fas_user = None
 
 
 def statistics_file_name(date, cat, ext):
