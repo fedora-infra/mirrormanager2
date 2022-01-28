@@ -1522,7 +1522,12 @@ def propagation(prefix='development'):
     prefix = os.path.basename(prefix)
     # Right now propagation statistics are only generated
     # for the 'development' prefix and 'fxx_updates' prefix.
-    if not prefix.startswith('f') and not prefix.startswith('d'):
+    if (
+        not prefix.startswith('f')
+        and not prefix.startswith('d')
+        and not prefix.startswith('epel')
+        and not prefix.startswith('centos')
+    ):
         prefix = 'development'
 
     prop_base = APP.config['PROPAGATION_BASE']
@@ -1532,7 +1537,7 @@ def propagation(prefix='development'):
     if not os.access(stat_file, os.R_OK):
         prefix = 'oops'
 
-    props = glob.glob(os.path.join(prop_base, '[fd]*-repomd-propagation.svg'))
+    props = glob.glob(os.path.join(prop_base, '[cdef]*-repomd-propagation.svg'))
 
     for i, prop in enumerate(props):
         try:
