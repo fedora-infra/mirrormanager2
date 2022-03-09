@@ -1216,12 +1216,9 @@ def check_continent(categoryUrl):
     return 8
 
 
-def check_propagation(session, catname, host_category_urls, path):
+def check_propagation(session, catname, topdir, host_category_urls, path):
     # Print out information about the repomd.xml status
-    if catname != 'Fedora Linux':
-        return 9
-    # Right now propagation test mode only supports the category "Fedora Linux"
-    base = "pub/fedora/linux/" + path
+    base = os.path.join(topdir, path)
     url = None
     for u in host_category_urls:
         if not u.endswith('/'):
@@ -1231,6 +1228,8 @@ def check_propagation(session, catname, host_category_urls, path):
     if not url:
         return 9
     d = mirrormanager2.lib.get_directory_by_name(session, base)
+    if d is None:
+        return 9
     fd = mirrormanager2.lib.get_file_detail(session, 'repomd.xml', d.id, reverse=True)
     url += path
     url += '/repomd.xml'
@@ -1304,8 +1303,13 @@ def per_host(session, host, options, config):
         host_category_urls = [hcurl.url for hcurl in hc.urls]
 
         if options.propagation:
-            return check_propagation(session, category.name,
-                host_category_urls, options.proppath)
+            return check_propagation(
+                session,
+                category.name,
+                category.topdir.name,
+                host_category_urls,
+                options.proppath,
+            )
 
         categoryUrl = method_pref(host_category_urls)
         if categoryUrl is None:
