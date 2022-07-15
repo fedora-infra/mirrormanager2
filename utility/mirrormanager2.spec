@@ -1,7 +1,3 @@
-# This package depends on automagic byte compilation
-# https://fedoraproject.org/wiki/Changes/No_more_automagic_Python_bytecompilation_phase_2
-%global _python_bytecompile_extra 1
-
 %if (0%{?rhel} && 0%{?rhel} <= 7)
 # Since the Python 3 stack in EPEL is missing too many dependencies,
 # we're sticking with Python 2 there for now.
@@ -14,7 +10,7 @@
 %endif
 
 Name:           mirrormanager2
-Version:        0.16
+Version:        0.17
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -23,14 +19,13 @@ Summary:        Mirror management application
 # to generate the worldmaps are licensed under GPLv2 and GPLv2+
 License:        MIT and GPLv2+ and GPLv2
 URL:            https://github.com/fedora-infra/mirrormanager2/
-Source0:        %{url}/archive/%{version}/%{name}-%{version}.tar.gz
+Source0:        mirrormanager2-0.17.tar.gz
 
 BuildArch:      noarch
 
 BuildRequires:  python%{python_pkgversion}-devel
 BuildRequires:  python%{python_pkgversion}-flask
 BuildRequires:  python%{python_pkgversion}-flask-admin
-BuildRequires:  python%{python_pkgversion}-flask-oidc
 BuildRequires:  python%{python_pkgversion}-flask-xml-rpc
 BuildRequires:  python%{python_pkgversion}-flask-wtf
 BuildRequires:  python%{python_pkgversion}-wtforms
@@ -70,7 +65,6 @@ BuildRequires:  python%{python_pkgversion}-coverage
 
 Requires:  python%{python_pkgversion}-flask
 Requires:  python%{python_pkgversion}-flask-admin
-Requires:  python%{python_pkgversion}-flask-oidc
 Requires:  python%{python_pkgversion}-flask-xml-rpc
 Requires:  python%{python_pkgversion}-flask-wtf
 Requires:  python%{python_pkgversion}-wtforms
@@ -159,6 +153,7 @@ BuildArch:      noarch
 
 Requires:  %{name}-filesystem = %{version}-%{release}
 Requires:  %{name}-lib = %{version}-%{release}
+Requires:  logrotate
 Requires(pre):  shadow-utils
 
 %description backend
@@ -187,6 +182,7 @@ BuildArch:      noarch
 
 Requires:  %{name}-filesystem = %{version}-%{release}
 Requires:  %{name}-lib = %{version}-%{release}
+Requires:  logrotate
 Requires:  python%{python_pkgversion}-geoip2
 Requires:  python%{python_pkgversion}-matplotlib
 Requires:  python%{python_pkgversion}-basemap
@@ -208,7 +204,7 @@ Base directories used by multiple subpackages
 
 
 %prep
-%setup -q
+%setup -q -n mirrormanager2-0.17
 
 
 %build
@@ -236,8 +232,6 @@ mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/mirrormanager
 mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/lib/mirrormanager
 # Lock files
 mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/lock/mirrormanager
-# Stores lock and pid info
-mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/run/mirrormanager
 # Log files
 mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/log/mirrormanager/crawler
 # Stores the service file for systemd
@@ -255,20 +249,20 @@ install -m 644 utility/mirrormanager2.cfg.sample \
 
 # Install crawler logrotate definition
 install -m 644 utility/mm2_crawler.logrotate \
-    $RPM_BUILD_ROOT/%{_sysconfdir}/logrotate.d/mm2_crawler
+    $RPM_BUILD_ROOT/%{_sysconfdir}/logrotate.d/mirrormanager2-crawler
 
 # Install umdl logrotate definition
-install -m 644 utility/mm2_umdl.logrotate \
-    $RPM_BUILD_ROOT/%{_sysconfdir}/logrotate.d/mm2_umdl
+install -m 755 utility/mm2_umdl.logrotate \
+    $RPM_BUILD_ROOT/%{_sysconfdir}/logrotate.d/mirrormanager2-backend
 
 # Install WSGI file
 install -m 644 utility/mirrormanager2.wsgi \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrormanager2.wsgi
-install -m 644 mirrorlist/mirrorlist_client.wsgi \
+install -m 755 mirrorlist/mirrorlist_client.wsgi \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrorlist_client.wsgi
 
 # Install the mirrorlist server
-install -m 644 mirrorlist/mirrorlist_server.py \
+install -m 755 mirrorlist/mirrorlist_server.py \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrorlist_server.py
 install -m 644 mirrorlist/weighted_shuffle.py \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/weighted_shuffle.py
@@ -276,7 +270,7 @@ install -m 644 mirrorlist/mirrormanager_pb2.py \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrormanager_pb2.py
 
 # Install the createdb script
-install -m 644 createdb.py \
+install -m 755 createdb.py \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrormanager2_createdb.py
 
 # Install the tmpfile creating the /run/mirrormanager folder upon reboot
@@ -315,10 +309,11 @@ sed -e "s|#!/usr/bin/env python|#!%{__python}|" -i \
 # Switch interpreter for systemd units
 sed -e "s|/usr/bin/python|%{__python}|g" -i $RPM_BUILD_ROOT/%{_unitdir}/*.service
 
+%if ! (0%{?rhel} && 0%{?rhel} <= 7)
 # Byte-compile Python files outside the standard location
 # https://fedoraproject.org/wiki/Changes/No_more_automagic_Python_bytecompilation_phase_3
 %py_byte_compile %{python3} $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2
-
+%endif
 
 %pre mirrorlist
 getent group mirrormanager >/dev/null || groupadd -r mirrormanager
@@ -401,8 +396,7 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 
 %files mirrorlist
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrorlist-server.conf
-%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/run/mirrormanager
-%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/mirrormanager/
+%attr(755,root,root) %dir %{_localstatedir}/lib/mirrormanager/
 %{_tmpfilesdir}/%{name}-mirrorlist.conf
 %{_unitdir}/mirrorlist-server.service
 %{_datadir}/mirrormanager2/mirrorlist_client.wsgi
@@ -417,19 +411,19 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 
 
 %files crawler
-%config(noreplace) %{_sysconfdir}/logrotate.d/mm2_crawler
+%config(noreplace) %{_sysconfdir}/logrotate.d/mirrormanager2-crawler
 %attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/mirrormanager
-%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/log/mirrormanager
-%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/log/mirrormanager/crawler
+%attr(755,root,root) %dir %{_localstatedir}/log/mirrormanager
+%attr(755,root,root) %dir %{_localstatedir}/log/mirrormanager/crawler
 %{_bindir}/mm2_crawler
 
 
 %files backend
-%config(noreplace) %{_sysconfdir}/logrotate.d/mm2_umdl
-%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lock/mirrormanager
+%config(noreplace) %{_sysconfdir}/logrotate.d/mirrormanager2-backend
+%attr(755,mirrormanager,mirrormanager) %dir %{_sharedstatedir}/mirrormanager
 %attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/mirrormanager
-%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/log/mirrormanager
-%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/run/mirrormanager
+%attr(755,root,root) %dir %{_localstatedir}/log/mirrormanager
+%attr(755,mirrormanager,mirrormanager) %dir %{_sharedstatedir}/mirrormanager
 %{_tmpfilesdir}/%{name}-backend.conf
 %{_datadir}/mirrormanager2/zebra-dump-parser/
 %{_bindir}/mm2_emergency-expire-repo
@@ -457,18 +451,50 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Thu Jun 16 2022 Lenka Segura <lsegura@redhat.com> - 0.17-1
+- Add packit
+- Allow using propagation with all categories (Adrian Reber)
+- oidc support (Ryan Lerch)
+- Update Vagrant setup to f35 (Ryan Lerch)
+- Install python3-flask explicitly for rawhide testing (Adrian Reber)
+
+* Thu Jan 20 2022 Fedora Release Engineering <releng@fedoraproject.org> - 0.16-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
+
 * Mon Sep 06 2021 Adrian Reber <adrian@lisas.de> - 0.16-1
 - Update to 0.16
 - Added support for admin only categories
 - Added support for empty top dirs ('')
 
-* Sat May 29 2021 Adrian Reber <adrian@lisas.de> - 0.15-1
+* Thu Jul 22 2021 Fedora Release Engineering <releng@fedoraproject.org> - 0.15-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_35_Mass_Rebuild
+
+* Fri Jun 04 2021 Python Maint <python-maint@redhat.com> - 0.15-3
+- Rebuilt for Python 3.10
+
+* Sat May 29 2021 Adrian Reber <adrian@lisas.de> - 0.15-2
 - Update to 0.15
+
+* Tue Mar 02 2021 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 0.14-5
+- Rebuilt for updated systemd-rpm-macros
+  See https://pagure.io/fesco/issue/2583.
+
+* Tue Jan 26 2021 Fedora Release Engineering <releng@fedoraproject.org> - 0.14-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_34_Mass_Rebuild
+
+* Tue Jul 28 2020 Fedora Release Engineering <releng@fedoraproject.org> - 0.14-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_33_Mass_Rebuild
+
+* Thu Jun 18 2020 Nils Philippsen <nils@redhat.com> - 0.14-2
+- explicitly byte-compile Python files outside of the standard locations
 
 * Sun Jun 14 2020 Adrian Reber <adrian@lisas.de> - 0.14-1
 - Hide last crawled/checked-in if private/public
 - Only block report_mirror for private Hosts
 - Add support to handle fedora-cisco-openh264-*
+
+* Tue May 26 2020 Miro Hrončok <mhroncok@redhat.com> - 0.13-2
+- Rebuilt for Python 3.9
 
 * Fri Mar 20 2020 Adrian Reber <adrian@lisas.de> - 0.13-1
 - Fix https crawling
@@ -491,6 +517,9 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 - Only query database once for mirrorlist export
   https://github.com/fedora-infra/mirrormanager2/pull/273
 
+* Wed Jan 29 2020 Fedora Release Engineering <releng@fedoraproject.org> - 0.11-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
+
 * Fri Oct 04 2019 Adrian Reber <adrian@lisas.de> - 0.11-1
 - Update to 0.11
 - Offer protobuf output in refresh mirrorlist cache script
@@ -505,6 +534,23 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
   https://github.com/fedora-infra/mirrormanager2/pull/269
 - repomap: add playground support
   https://github.com/fedora-infra/mirrormanager2/pull/270
+
+* Thu Oct 03 2019 Miro Hrončok <mhroncok@redhat.com> - 0.9.0-6
+- Rebuilt for Python 3.8.0rc1 (#1748018)
+
+* Mon Aug 19 2019 Miro Hrončok <mhroncok@redhat.com> - 0.9.0-5
+- Rebuilt for Python 3.8
+
+* Thu Jul 25 2019 Fedora Release Engineering <releng@fedoraproject.org> - 0.9.0-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_31_Mass_Rebuild
+
+* Tue May 07 2019 Jason L Tibbitts III <tibbs@math.uh.edu> - 0.9.0-3
+- Patch requirements.txt to avoid an autogenerated dependency on
+  python3.7dist(python-openid) which cannot be satisfied.  Fixes
+  https://bugzilla.redhat.com/show_bug.cgi?id=1707550
+
+* Fri Feb 01 2019 Fedora Release Engineering <releng@fedoraproject.org> - 0.9.0-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_30_Mass_Rebuild
 
 * Tue Jan 15 2019 Adrian Reber <adrian@lisas.de> - 0.9.0-1
 - Update to 0.9.0
@@ -531,6 +577,15 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 - Toggle private
   https://github.com/fedora-infra/mirrormanager2/pull/257
 
+* Sun Jul 22 2018 Adrian Reber <adrian@lisas.de> - 0.8.4-4
+- Disable tests requiring network access
+
+* Fri Jul 13 2018 Fedora Release Engineering <releng@fedoraproject.org> - 0.8.4-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
+
+* Sun Mar 04 2018 Adrian Reber <adrian@lisas.de> - 0.8.4-2
+- Handle mod_wsgi on Fedora 27 requirement
+
 * Sun Mar 04 2018 Adrian Reber <adrian@lisas.de> - 0.8.4-1
 - Update to 0.8.4
 - Sync with Fedora's specfile
@@ -551,6 +606,13 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 - publiclist: hide disabled arches and products
   https://github.com/fedora-infra/mirrormanager2/pull/223
 
+* Thu Mar 01 2018 Iryna Shcherbina <ishcherb@redhat.com> - 0.8.3-3
+- Update Python 2 dependency declarations to new packaging standards
+  (See https://fedoraproject.org/wiki/FinalizingFedoraSwitchtoPython3)
+
+* Thu Feb 08 2018 Fedora Release Engineering <releng@fedoraproject.org> - 0.8.3-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_28_Mass_Rebuild
+
 * Tue Sep 26 2017 Adrian Reber <adrian@lisas.de> - 0.8.3-1
 - Update to 0.8.3
 - umdl: fix 'modular' repository detection
@@ -565,6 +627,9 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 - Correctly detect repositories
   https://github.com/fedora-infra/mirrormanager2/pull/218
 
+* Sun Aug 27 2017 Adrian Reber <adrian@lisas.de> - 0.8.1-2
+- handle python-basemap -> python2-basemap rename
+
 * Mon Aug 07 2017 Adrian Reber <adrian@lisas.de> - 0.8.1-1
 - Update to 0.8.1
 - Revert namespace changes
@@ -575,6 +640,9 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
   https://github.com/fedora-infra/mirrormanager2/pull/204
 - umdl: various fixes found in production
   https://github.com/fedora-infra/mirrormanager2/pull/211
+
+* Wed Jul 26 2017 Fedora Release Engineering <releng@fedoraproject.org> - 0.8-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
 
 * Fri Jun 02 2017 Adrian Reber <adrian@lisas.de> - 0.8-1
 - Update to 0.8
@@ -599,8 +667,25 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 - umdl: add fullfiletimelist-* based master scanning
   https://github.com/fedora-infra/mirrormanager2/issues/206
 
+* Fri Feb 10 2017 Fedora Release Engineering <releng@fedoraproject.org> - 0.7.3-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
+
+* Tue Oct 11 2016 Patrick Uiterwijk <puiterwijk@redhat.com> - 0.7.3-4
+- Obsolete and provide mirrormanager-client
+
+* Mon Oct 10 2016 Patrick Uiterwijk <puiterwijk@redhat.com> - 0.7.3-3
+- Changed everything to buildroot
+- Added dependencies for needed directories
+- Added filesystem subpackage to own the directories
+- Added license macro to license files
+
 * Sat Oct 08 2016 Patrick Uiterwijk <puiterwijk@redhat.com> - 0.7.3-2
-- Remove <0.80 requirement on IPy
+- Remove <0.80 requirement from IPy
+- Moved back from systemd-devel to systemd dependency
+- Removed RHEL6 conditionals
+- Use py2_install and py2_build
+- Fixed lib dependency
+- Updated URL and Source
 
 * Thu Jun 23 2016 Adrian Reber <adrian@lisas.de> - 0.7.3-1
 - Update to 0.7.3

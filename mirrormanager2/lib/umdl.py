@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 This script crawls the local copy of the master mirrors (which in our case
 is just a nfs mount of the master mirror content). According to what it
