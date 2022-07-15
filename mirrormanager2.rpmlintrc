@@ -1,0 +1,3 @@
+from Config import *
+addFilter("non-executable-script (/usr/share/mirrormanager2/mirrorlist_client.wsgi 644 /usr/bin/env python2)");
+addFilter("incoherent-logrotate-file (/etc/logrotate.d/mm2_crawler)");

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-#
 # Copyright (c) 2014 Red Hat, Inc.
 # Copyright (c) 2007-2013 Dell, Inc.
 #  by Matt Domsch <Matt_Domsch@dell.com>
