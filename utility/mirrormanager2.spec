@@ -1,7 +1,3 @@
-# This package depends on automagic byte compilation
-# https://fedoraproject.org/wiki/Changes/No_more_automagic_Python_bytecompilation_phase_2
-%global _python_bytecompile_extra 1
-
 %if (0%{?rhel} && 0%{?rhel} <= 7)
 # Since the Python 3 stack in EPEL is missing too many dependencies,
 # we're sticking with Python 2 there for now.
@@ -14,7 +10,7 @@
 %endif
 
 Name:           mirrormanager2
-Version:        0.16
+Version:        0.17
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -159,6 +155,7 @@ BuildArch:      noarch
 
 Requires:  %{name}-filesystem = %{version}-%{release}
 Requires:  %{name}-lib = %{version}-%{release}
+Requires:  logrotate
 Requires(pre):  shadow-utils
 
 %description backend
@@ -187,6 +184,7 @@ BuildArch:      noarch
 
 Requires:  %{name}-filesystem = %{version}-%{release}
 Requires:  %{name}-lib = %{version}-%{release}
+Requires:  logrotate
 Requires:  python%{python_pkgversion}-geoip2
 Requires:  python%{python_pkgversion}-matplotlib
 Requires:  python%{python_pkgversion}-basemap
@@ -236,8 +234,6 @@ mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/mirrormanager
 mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/lib/mirrormanager
 # Lock files
 mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/lock/mirrormanager
-# Stores lock and pid info
-mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/run/mirrormanager
 # Log files
 mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/log/mirrormanager/crawler
 # Stores the service file for systemd
@@ -258,8 +254,8 @@ install -m 644 utility/mm2_crawler.logrotate \
     $RPM_BUILD_ROOT/%{_sysconfdir}/logrotate.d/mm2_crawler
 
 # Install umdl logrotate definition
-install -m 644 utility/mm2_umdl.logrotate \
-    $RPM_BUILD_ROOT/%{_sysconfdir}/logrotate.d/mm2_umdl
+install -m 755 utility/mm2_umdl.logrotate \
+    $RPM_BUILD_ROOT/%{_sysconfdir}/logrotate.d/mirrormanager2-backend
 
 # Install WSGI file
 install -m 644 utility/mirrormanager2.wsgi \
@@ -268,7 +264,7 @@ install -m 644 mirrorlist/mirrorlist_client.wsgi \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrorlist_client.wsgi
 
 # Install the mirrorlist server
-install -m 644 mirrorlist/mirrorlist_server.py \
+install -m 755 mirrorlist/mirrorlist_server.py \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrorlist_server.py
 install -m 644 mirrorlist/weighted_shuffle.py \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/weighted_shuffle.py
@@ -276,7 +272,7 @@ install -m 644 mirrorlist/mirrormanager_pb2.py \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrormanager_pb2.py
 
 # Install the createdb script
-install -m 644 createdb.py \
+install -m 755 createdb.py \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrormanager2_createdb.py
 
 # Install the tmpfile creating the /run/mirrormanager folder upon reboot
@@ -315,10 +311,11 @@ sed -e "s|#!/usr/bin/env python|#!%{__python}|" -i \
 # Switch interpreter for systemd units
 sed -e "s|/usr/bin/python|%{__python}|g" -i $RPM_BUILD_ROOT/%{_unitdir}/*.service
 
+%if ! (0%{?rhel} && 0%{?rhel} <= 7)
 # Byte-compile Python files outside the standard location
 # https://fedoraproject.org/wiki/Changes/No_more_automagic_Python_bytecompilation_phase_3
 %py_byte_compile %{python3} $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2
-
+%endif
 
 %pre mirrorlist
 getent group mirrormanager >/dev/null || groupadd -r mirrormanager
@@ -401,7 +398,6 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 
 %files mirrorlist
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrorlist-server.conf
-%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/run/mirrormanager
 %attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/mirrormanager/
 %{_tmpfilesdir}/%{name}-mirrorlist.conf
 %{_unitdir}/mirrorlist-server.service
@@ -419,17 +415,17 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 %files crawler
 %config(noreplace) %{_sysconfdir}/logrotate.d/mm2_crawler
 %attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/mirrormanager
-%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/log/mirrormanager
-%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/log/mirrormanager/crawler
+%attr(755,root,root) %dir %{_localstatedir}/log/mirrormanager
+%attr(755,root,root) %dir %{_localstatedir}/log/mirrormanager/crawler
 %{_bindir}/mm2_crawler
 
 
 %files backend
-%config(noreplace) %{_sysconfdir}/logrotate.d/mm2_umdl
-%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lock/mirrormanager
+%config(noreplace) %{_sysconfdir}/logrotate.d/mirrormanager2-backend
+%attr(755,mirrormanager,mirrormanager) %dir %{_sharedstatedir}/mirrormanager
 %attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/mirrormanager
-%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/log/mirrormanager
-%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/run/mirrormanager
+%attr(755,root,root) %dir %{_localstatedir}/log/mirrormanager
+%attr(755,mirrormanager,mirrormanager) %dir %{_sharedstatedir}/mirrormanager
 %{_tmpfilesdir}/%{name}-backend.conf
 %{_datadir}/mirrormanager2/zebra-dump-parser/
 %{_bindir}/mm2_emergency-expire-repo
@@ -457,6 +453,13 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Thu Jun 16 2022 Lenka Segura <lsegura@redhat.com> - 0.17-1
+- Add packit
+- Allow using propagation with all categories (Adrian Reber)
+- oidc support (Ryan Lerch)
+- Update Vagrant setup to f35 (Ryan Lerch)
+- Install python3-flask explicitly for rawhide testing (Adrian Reber)
+
 * Mon Sep 06 2021 Adrian Reber <adrian@lisas.de> - 0.16-1
 - Update to 0.16
 - Added support for admin only categories
