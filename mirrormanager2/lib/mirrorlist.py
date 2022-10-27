@@ -176,24 +176,27 @@ def populate_directory_cache(session):
                 category_topdir_cache[category_id]:]
             del repos
 
+        countries = []
         if country is not None:
             country = country.upper()
+            countries = country.split(u',')
 
         if not siteprivate and not hostprivate:
             add_host_to_set(cache[directoryname]['global'], hostid)
 
-            if country is not None:
+            for country in countries:
                 if country not in cache[directoryname]['byCountry']:
                     cache[directoryname]['byCountry'][country] = set()
                 add_host_to_set(
                     cache[directoryname]['byCountry'][country], hostid)
 
-        if country is not None and i2 and \
+        for country in countries:
+            if i2 and \
                 ((not siteprivate and not hostprivate) or i2_clients):
-            if country not in cache[directoryname]['byCountryInternet2']:
-                cache[directoryname]['byCountryInternet2'][country] = set()
-            add_host_to_set(
-                cache[directoryname]['byCountryInternet2'][country], hostid)
+                if country not in cache[directoryname]['byCountryInternet2']:
+                    cache[directoryname]['byCountryInternet2'][country] = set()
+                add_host_to_set(
+                    cache[directoryname]['byCountryInternet2'][country], hostid)
 
         append_value_to_cache(cache[directoryname]['byHostId'], hostid, hcurl)
 
@@ -261,7 +264,11 @@ def populate_host_bandwidth_cache(cache, host):
 
 
 def populate_host_country_cache(cache, host):
-    cache[host.id] = host.country
+    if u',' in host.country:
+        country = host.country.split(u',')[0]
+    else:
+        country = host.country
+    cache[host.id] = country.strip()
     return cache
 
 
