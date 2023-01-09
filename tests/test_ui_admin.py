@@ -106,7 +106,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/arch(view)?/\?sort=0" '
+                r'<a href="/admin/arch(view)?/\?sort=0" '
                 'title="Sort by Name">Name</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (4)</a>' in data)
@@ -127,7 +127,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/category(view)?/\?sort=[02]" '
+                r'<a href="/admin/category(view)?/\?sort=[02]" '
                 'title="Sort by Name">Name</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (3)</a>' in data)
@@ -149,7 +149,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/country(view)?/\?sort=0" '
+                r'<a href="/admin/country(view)?/\?sort=0" '
                 'title="Sort by Code">Code</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (2)</a>' in data)
@@ -173,7 +173,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/countrycontinentredirect(view)?/\?sort=0" '
+                r'<a href="/admin/countrycontinentredirect(view)?/\?sort=0" '
                 'title="Sort by Country">Country</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (3)</a>' in data)
@@ -196,7 +196,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/embargoedcountry(view)?/\?sort=0" '
+                r'<a href="/admin/embargoedcountry(view)?/\?sort=0" '
                 'title="Sort by Country Code">Country Code</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (0)</a>' in data)
@@ -219,7 +219,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/directory(view)?/\?sort=0" '
+                r'<a href="/admin/directory(view)?/\?sort=0" '
                 'title="Sort by Name">Name</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (9)</a>' in data)
@@ -265,7 +265,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/filedetail(view)?/\?sort=[01]" '
+                r'<a href="/admin/filedetail(view)?/\?sort=[01]" '
                 'title="Sort by Filename">Filename</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (0)</a>' in data)
@@ -311,7 +311,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/filegroup(view)?/\?sort=0" '
+                r'<a href="/admin/filegroup(view)?/\?sort=0" '
                 'title="Sort by Name">Name</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (0)</a>' in data)
@@ -334,7 +334,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/host(view)?/\?sort=[0-9]" '
+                r'<a href="/admin/host(view)?/\?sort=[0-9]" '
                 'title="Sort by Name">Name</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (4)</a>' in data)
@@ -357,7 +357,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/hostaclip(view)?/\?sort=[01]" '
+                r'<a href="/admin/hostaclip(view)?/\?sort=[01]" '
                 'title="Sort by Ip">Ip</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (0)</a>' in data)
@@ -380,7 +380,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/hostcategory(view)?/\?sort=[02]" '
+                r'<a href="/admin/hostcategory(view)?/\?sort=[02]" '
                 'title="Sort by Always Up2Date">Always Up2Date</a>',
                 data))
             self.assertTrue(
@@ -404,7 +404,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/hostcategorydir(view)?/\?sort=[02]" '
+                r'<a href="/admin/hostcategorydir(view)?/\?sort=[02]" '
                 'title="Sort by Path">Path</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (2)</a>' in data)
@@ -427,7 +427,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/hostcategoryurl(view)?/\?sort=[01]" '
+                r'<a href="/admin/hostcategoryurl(view)?/\?sort=[01]" '
                 'title="Sort by Url">Url</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (8)</a>' in data)
@@ -472,7 +472,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/hostcountryallowed(view)?/\?sort=[01]" '
+                r'<a href="/admin/hostcountryallowed(view)?/\?sort=[01]" '
                 'title="Sort by Country">Country</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (0)</a>' in data)
@@ -517,7 +517,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/hostnetblock(view)?/\?sort=[02]" '
+                r'<a href="/admin/hostnetblock(view)?/\?sort=[02]" '
                 'title="Sort by Name">Name</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (0)</a>' in data)
@@ -540,7 +540,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/hostpeerasn(view)?/\?sort=[02]" '
+                r'<a href="/admin/hostpeerasn(view)?/\?sort=[02]" '
                 'title="Sort by Name">Name</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (0)</a>' in data)
@@ -563,7 +563,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/hoststats(view)?/\?sort=[02]" '
+                r'<a href="/admin/hoststats(view)?/\?sort=[02]" '
                 'title="Sort by Type">Type</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (0)</a>' in data)
@@ -586,7 +586,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/location(view)?/\?sort=0" '
+                r'<a href="/admin/location(view)?/\?sort=0" '
                 'title="Sort by Name">Name</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (3)</a>' in data)
@@ -609,7 +609,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/netblockcountry(view)?/\?sort=0" '
+                r'<a href="/admin/netblockcountry(view)?/\?sort=0" '
                 'title="Sort by Netblock">Netblock</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (1)</a>' in data)
@@ -632,7 +632,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/product(view)?/\?sort=0" '
+                r'<a href="/admin/product(view)?/\?sort=0" '
                 'title="Sort by Name">Name</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (2)</a>' in data)
@@ -655,7 +655,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/repository(view)?/\?sort=[0-4]" '
+                r'<a href="/admin/repository(view)?/\?sort=[0-4]" '
                 'title="Sort by Name">Name</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (4)</a>' in data)
@@ -678,7 +678,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/repositoryredirect(view)?/\?sort=0" '
+                r'<a href="/admin/repositoryredirect(view)?/\?sort=0" '
                 'title="Sort by To Repo">To Repo</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (3)</a>' in data)
@@ -701,7 +701,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/site(view)?/\?sort=0" '
+                r'<a href="/admin/site(view)?/\?sort=0" '
                 'title="Sort by Name">Name</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (3)</a>' in data)
@@ -724,7 +724,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/siteadmin(view)?/\?sort=[01]" '
+                r'<a href="/admin/siteadmin(view)?/\?sort=[01]" '
                 'title="Sort by Username">Username</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (5)</a>' in data)
@@ -747,7 +747,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/sitetosite(view)?/\?sort=[0-2]" '
+                r'<a href="/admin/sitetosite(view)?/\?sort=[0-2]" '
                 'title="Sort by Username">Username</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (0)</a>' in data)
@@ -770,7 +770,7 @@ class FlaskUiAdminTest(tests.Modeltests):
             self.assertTrue(re.search(
                 '<a href="/admin/category(view)?/">Category</a>', data))
             self.assertTrue(re.search(
-                '<a href="/admin/version(view)?/\?sort=[01]" '
+                r'<a href="/admin/version(view)?/\?sort=[01]" '
                 'title="Sort by Name">Name</a>', data))
             self.assertTrue(
                 '<a href="javascript:void(0)">List (6)</a>' in data)

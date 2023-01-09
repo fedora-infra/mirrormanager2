@@ -1,8 +1,5 @@
 # Example cronjobs for mirrormanager
 # adjust frequency according to how often your content changes
-#
-# refresh the mirrorlist cache at the top of the hour
-55 * * * * root /usr/bin/mm2_update-mirrorlist-server > /dev/null 2>&1
 
 # update master directory list
 # logs sent to /var/log/mirrormanager/umdl.log by default

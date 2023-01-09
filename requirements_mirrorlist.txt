@@ -1,6 +1,0 @@
-# List of dependencies for the mirrormanager repolist server
-
-geoip2
-protobuf
-py-radix>0.8
-webob

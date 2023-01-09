@@ -113,12 +113,6 @@ active and b/ public) and crawls through their content to determine using the
 information in the database (filled in by the UMDL script) if the mirror is up
 to date or not (and mark it as such).
 
-* **refresh_mirrorlist_cache**
-This script generates a pickle file (with only basic python object) containing
-all the available mirrors listed in the database.
-This pickle file is loaded by MirrorList which uses it as data-source when
-returning the list of mirrors available to an user.
-
 * **update-EC2-netblocks**
 This script downloads information from amazon EC2 to keep an up to date list
 of which IPs are on amazon's EC2 thus allowing them to use the mirror

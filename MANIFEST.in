@@ -1,8 +1,7 @@
-include LICENSE-MIT-X11 LICENSE-GPLv2 README.rst requirements.txt requirements_mirrorlist.txt
+include LICENSE-MIT-X11 LICENSE-GPLv2 README.rst requirements.txt
 include runtests.sh createdb.py mirrormanager.proto
 recursive-include mirrormanager2 *
 recursive-include utility *
-recursive-include mirrorlist *
 recursive-include tests *
 recursive-include testdata *
 recursive-include alembic *

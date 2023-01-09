@@ -9,8 +9,12 @@ and over 300 private mirrors, that carry Fedora, EPEL, and RHEL content, and is 
 by rpmfusion.org, a third party repository. It automatically selects the "best"
 mirror for a given user based on a set of fallback heuristics.
 
-:Github mirror: https://github.com/fedora-infra/mirrormanager2
-:Mailing list for announcements and discussions: https://lists.fedoraproject.org/archives/list/mirror-admin@lists.fedoraproject.org/
+The complete MirrorManager functionality requires `generate-mirrorlist-cache`
+and `mirrorlist-server` which can be found at
+https://github.com/adrianreber/mirrorlist-server.
+
+Mailing list for announcements and discussions:
+https://lists.fedoraproject.org/archives/list/mirror-admin@lists.fedoraproject.org/
 
 Hacking
 -------
@@ -63,11 +67,6 @@ operating in an active virtualenv.
 Next, install your dependencies::
 
     (my-MirrorMan-env)$ pip install -r requirements.txt
-
-Now the protobuf deinition needs to be compiled to Python::
-
-    (my-MirrorMan-env)$ protoc --python_out=mirrorlist mirrormanager.proto
-    (my-MirrorMan-env)$ protoc --python_out=mirrormanager2/lib mirrormanager.proto
 
 You should then create your own sqlite database for your development instance of
 mirrormanager2::
