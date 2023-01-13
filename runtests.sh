@@ -2,9 +2,6 @@
 
 set -e
 
-protoc --python_out=mirrorlist mirrormanager.proto
-protoc --python_out=mirrormanager2/lib mirrormanager.proto
-
 # Run Python 2 if it's available
 if [ -x /usr/bin/py.test-2.7 ]; then
 	PYTHONPATH=mirrormanager2 MM2_CONFIG=../tests/mirrormanager2.cfg py.test-2.7 --cov=mirrormanager2 $*

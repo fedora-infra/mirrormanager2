@@ -37,12 +37,7 @@ BuildRequires:  python%{python_pkgversion}-fedora-flask >= 0.3.33
 BuildRequires:  python%{python_pkgversion}-setuptools
 BuildRequires:  python%{python_pkgversion}-psutil
 BuildRequires:  python%{python_pkgversion}-alembic
-BuildRequires:  protobuf-compiler
-# Mirrorlist
-BuildRequires:  python%{python_pkgversion}-geoip2
-BuildRequires:  python%{python_pkgversion}-webob
-BuildRequires:  systemd
-BuildRequires:  python%{python_pkgversion}-sqlalchemy >= 0.7
+BuildRequires:  systemd-rpm-macros
 # Testing
 BuildRequires:  python%{python_pkgversion}-fedmsg-core
 BuildRequires:  python%{python_pkgversion}-mock
@@ -53,10 +48,8 @@ BuildRequires:  python%{python_pkgversion}-pyrpmmd
 %if 0%{?rhel} && 0%{?rhel} <= 7
 BuildRequires:  python2-rpm-macros
 BuildRequires:  py-radix
-BuildRequires:  protobuf-python
 Requires:  mod_wsgi
 %else
-BuildRequires:  python%{python_pkgversion}-protobuf
 BuildRequires:  python%{python_pkgversion}-py-radix
 Requires:  python%{python3_pkgversion}-mod_wsgi
 %endif
@@ -96,42 +89,9 @@ Requires:  python%{python_pkgversion}-IPy
 Requires:  python%{python_pkgversion}-dns
 Requires:  python%{python_pkgversion}-sqlalchemy >= 0.7
 Requires:  python%{python_pkgversion}-pyrpmmd
-%if 0%{?rhel} && 0%{?rhel} <= 7
-Requires:  protobuf-python
-%else
-Requires:  python%{python_pkgversion}-protobuf
-%endif
 
 %description lib
 Library to interact with MirrorManager's database
-
-
-%package mirrorlist
-Summary:        MirrorList serving mirrors to yum/dnf
-BuildArch:      noarch
-
-Requires:  %{name}-filesystem = %{version}-%{release}
-Requires:  python%{python_pkgversion}-geoip2
-Requires:  python%{python_pkgversion}-webob
-Requires:  python%{python_pkgversion}-IPy
-Requires:  httpd
-%if 0%{?rhel} && 0%{?rhel} <= 7
-Requires:  py-radix
-Requires:  mod_wsgi
-Requires:  protobuf-python
-%else
-Requires:  python%{python_pkgversion}-py-radix
-Requires:  python%{python_pkgversion}-mod_wsgi
-Requires:  python%{python_pkgversion}-protobuf
-%endif
-Requires:  systemd
-Requires(pre):  shadow-utils
-Requires(post): systemd
-Requires(preun): systemd
-Requires(postun): systemd
-
-%description mirrorlist
-Sub-part of mirrormanager serving mirrors to yum/dnf
 
 
 %package crawler
@@ -210,9 +170,6 @@ Base directories used by multiple subpackages
 
 
 %build
-# Recreating protobuf output
-protoc --python_out=mirrorlist mirrormanager.proto
-protoc --python_out=mirrormanager2/lib mirrormanager.proto
 %py_build
 
 
@@ -240,8 +197,6 @@ mkdir -p $RPM_BUILD_ROOT/%{_localstatedir}/log/mirrormanager/crawler
 mkdir -p $RPM_BUILD_ROOT/%{_unitdir}
 
 # Install apache configuration file
-install -m 644 mirrorlist/apache/mirrorlist-server.conf \
-    $RPM_BUILD_ROOT/%{_sysconfdir}/httpd/conf.d/mirrorlist-server.conf
 install -m 644 utility/mirrormanager.conf.sample \
     $RPM_BUILD_ROOT/%{_sysconfdir}/httpd/conf.d/mirrormanager.conf
 
@@ -260,16 +215,6 @@ install -m 755 utility/mm2_umdl.logrotate \
 # Install WSGI file
 install -m 644 utility/mirrormanager2.wsgi \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrormanager2.wsgi
-install -m 644 mirrorlist/mirrorlist_client.wsgi \
-    $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrorlist_client.wsgi
-
-# Install the mirrorlist server
-install -m 755 mirrorlist/mirrorlist_server.py \
-    $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrorlist_server.py
-install -m 644 mirrorlist/weighted_shuffle.py \
-    $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/weighted_shuffle.py
-install -m 644 mirrorlist/mirrormanager_pb2.py \
-    $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrormanager_pb2.py
 
 # Install the createdb script
 install -m 755 createdb.py \
@@ -277,14 +222,8 @@ install -m 755 createdb.py \
 
 # Install the tmpfile creating the /run/mirrormanager folder upon reboot
 mkdir -p %{buildroot}%{_tmpfilesdir}
-install -m 0644 mirrorlist/systemd/mirrormanager_tempfile.conf \
-    $RPM_BUILD_ROOT/%{_tmpfilesdir}/%{name}-mirrorlist.conf
 install -m 0644 utility/backend_tempfile.conf \
     $RPM_BUILD_ROOT/%{_tmpfilesdir}/%{name}-backend.conf
-
-# Install the systemd service file
-install -m 644 mirrorlist/systemd/mirrorlist-server.service \
-    $RPM_BUILD_ROOT/%{_unitdir}/mirrorlist-server.service
 
 # Install the alembic files
 cp -r alembic $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
@@ -308,21 +247,11 @@ sed -e "s|#!/usr/bin/env python|#!%{__python}|" -i \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/*.py \
     $RPM_BUILD_ROOT/%{python_sitelib}/mirrormanager2/lib/umdl.py
 
-# Switch interpreter for systemd units
-sed -e "s|/usr/bin/python|%{__python}|g" -i $RPM_BUILD_ROOT/%{_unitdir}/*.service
-
 %if ! (0%{?rhel} && 0%{?rhel} <= 7)
 # Byte-compile Python files outside the standard location
 # https://fedoraproject.org/wiki/Changes/No_more_automagic_Python_bytecompilation_phase_3
 %py_byte_compile %{python3} $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2
 %endif
-
-%pre mirrorlist
-getent group mirrormanager >/dev/null || groupadd -r mirrormanager
-getent passwd mirrormanager >/dev/null || \
-    useradd -r -g mirrormanager -d %{_localstatedir}/lib/mirrormanager -s /sbin/nologin \
-    -c "MirrorManager" mirrormanager
-exit 0
 
 %pre crawler
 getent group mirrormanager >/dev/null || groupadd -r mirrormanager
@@ -337,15 +266,6 @@ getent passwd mirrormanager >/dev/null || \
     useradd -r -g mirrormanager -d %{_localstatedir}/lib/mirrormanager -s /sbin/nologin \
     -c "MirrorManager" mirrormanager
 exit 0
-
-%post mirrorlist
-%systemd_post mirrorlist-server.service
-
-%preun mirrorlist
-%systemd_preun mirrorlist-server.service
-
-%postun mirrorlist
-%systemd_postun_with_restart mirrorlist-server.service
 
 %check
 # Exclude test_ui_app.py as it requires network connectivity
@@ -396,22 +316,6 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 %endif
 
 
-%files mirrorlist
-%config(noreplace) %{_sysconfdir}/httpd/conf.d/mirrorlist-server.conf
-%attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/mirrormanager/
-%{_tmpfilesdir}/%{name}-mirrorlist.conf
-%{_unitdir}/mirrorlist-server.service
-%{_datadir}/mirrormanager2/mirrorlist_client.wsgi
-%{_datadir}/mirrormanager2/mirrorlist_server.py*
-%{_datadir}/mirrormanager2/weighted_shuffle.py*
-%{_datadir}/mirrormanager2/mirrormanager_pb2.py*
-%if ! (0%{?rhel} && 0%{?rhel} <= 7)
-%{_datadir}/mirrormanager2/__pycache__/mirrorlist_server.*.py*
-%{_datadir}/mirrormanager2/__pycache__/weighted_shuffle.*.py*
-%{_datadir}/mirrormanager2/__pycache__/mirrormanager_pb2.*.py*
-%endif
-
-
 %files crawler
 %config(noreplace) %{_sysconfdir}/logrotate.d/mm2_crawler
 %attr(755,mirrormanager,mirrormanager) %dir %{_localstatedir}/lib/mirrormanager
@@ -433,11 +337,9 @@ MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
 %{_bindir}/mm2_get_internet2_netblocks
 %{_bindir}/mm2_move-devel-to-release
 %{_bindir}/mm2_move-to-archive
-%{_bindir}/mm2_refresh_mirrorlist_cache
 %{_bindir}/mm2_update-EC2-netblocks
 %{_bindir}/mm2_update-master-directory-list
 %{_bindir}/mm2_umdl2
-%{_bindir}/mm2_update-mirrorlist-server
 %{_bindir}/mm2_create_install_repo
 %{_bindir}/mm2_upgrade-install-repo
 

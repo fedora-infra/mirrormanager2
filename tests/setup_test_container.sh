@@ -21,6 +21,6 @@ else
 	${PKG} -y install dnf-plugins-core
 fi
 
-${PKG} -y install rsync rpm-build protobuf-compiler
+${PKG} -y install rsync rpm-build
 ${BUILDDEP} -y utility/mirrormanager2.spec
 ${PKG} -y install ${TEST_PKGS}

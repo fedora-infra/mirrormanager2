@@ -51,8 +51,7 @@ setup(
     url='https://github.com/fedora-infra/mirrormanager2/',
     packages=['mirrormanager2'],
     include_package_data=True,
-    install_requires=get_requirements() + get_requirements(
-        'requirements_mirrorlist.txt'),
+    install_requires=get_requirements(),
     scripts = [
         'client/report_mirror',
         'mirrorlist/mirrorlist_statistics',
@@ -64,11 +63,9 @@ setup(
         'utility/mm2_move-devel-to-release',
         'utility/mm2_move-to-archive',
         'utility/mm2_propagation',
-        'utility/mm2_refresh_mirrorlist_cache',
         'utility/mm2_update-EC2-netblocks',
         'utility/mm2_update-master-directory-list',
         'utility/mm2_umdl2',
-        'utility/mm2_update-mirrorlist-server',
         'utility/mm2_create_install_repo',
         'utility/mm2_upgrade-install-repo',
     ],

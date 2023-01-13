@@ -14,5 +14,3 @@ _build/
 mirrormanager2_tests.cfg
 mirrormanager2_tests_mdtr.cfg
 /.pytest_cache/
-mirrorlist/mirrormanager_pb2.py
-mirrormanager2/lib/mirrormanager_pb2.py
