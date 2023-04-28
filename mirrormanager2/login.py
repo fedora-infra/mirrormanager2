@@ -58,7 +58,7 @@ def new_user():
 
         password = '%s%s' % (
             form.password.data, APP.config.get('PASSWORD_SEED', None))
-        form.password.data = hashlib.sha512(password).hexdigest()
+        form.password.data = hashlib.sha512(password.encode('utf-8')).hexdigest()
 
         token = mirrormanager2.lib.id_generator(40)
 
@@ -69,7 +69,7 @@ def new_user():
 
         try:
             SESSION.flush()
-            send_confirmation_email(user)
+            #send_confirmation_email(user)
             flask.flash(
                 'User created, please check your email to activate the '
                 'account')
@@ -102,7 +102,7 @@ def do_login():
         username = form.username.data
         password = '%s%s' % (
             form.password.data, APP.config.get('PASSWORD_SEED', None))
-        password = hashlib.sha512(password).hexdigest()
+        password = hashlib.sha512(password.encode('utf-8')).hexdigest()
 
         user_obj = mirrormanager2.lib.get_user_by_username(SESSION, username)
         if not user_obj or user_obj.password != password:
@@ -230,7 +230,7 @@ def reset_password(token):
 
         password = '%s%s' % (
             form.password.data, APP.config.get('PASSWORD_SEED', None))
-        user_obj.password = hashlib.sha512(password).hexdigest()
+        user_obj.password = hashlib.sha512(password.encode('utf-8')).hexdigest()
         user_obj.token = None
         SESSION.add(user_obj)
 
@@ -368,6 +368,10 @@ def _check_session_cookie():
                         'please report this error to an admin', 'error')
                     APP.logger.exception(err)
 
+    #print("    _check_session_cookie = ", user)
+    #print("    ", flask.request.cookies)
+    #print("    _check_session_cookie end ...... ")
+
     flask.g.fas_session_id = session_id
     flask.g.fas_user = user
 
@@ -377,10 +381,17 @@ def _send_session_cookie(response):
     cookie_name = APP.config.get('MM_COOKIE_NAME', 'MirrorManager')
     secure = APP.config.get('MM_COOKIE_REQUIRES_HTTPS', True)
 
+    #if flask.g.fas_session_id or '':
+    #print("   _send_session_cookie start ....")
+    #print("     name = ", cookie_name, "value = ", flask.g.fas_session_id or '')
+    #print("   _send_session_cookie start end ....")
+
+
     response.set_cookie(
         key=cookie_name,
         value=flask.g.fas_session_id or '',
-        secure=secure,
+        secure=secure, # don't set secure to True when start server with http
         httponly=True,
     )
+
     return response

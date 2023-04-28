@@ -160,6 +160,17 @@ CRAWLER_AUTO_DISABLE = 4
 
 umdl_master_directories = [
     {
+        'type':'file',
+        'url':'/mm/utility/master/openEuler-20.03-LTS',
+        'category': 'openeuler'
+    }
+#    {
+#        'type':'rsync',
+#        'url':'rsync://repo.openeuler.openatom.cn/openeuler/',
+#        'category': 'openeuler'
+#    }
+
+    {
         'type': 'directory',
         'path': '../testdata/pub/epel/',
         'category': 'Fedora EPEL'

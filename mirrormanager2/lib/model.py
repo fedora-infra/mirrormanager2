@@ -278,7 +278,7 @@ class Host(BASE):
 class JsonDictTypeFilter(sa.types.TypeDecorator):
     ''' This handles either JSON or a pickled dict from the database. '''
 
-    impl = sa.types.BLOB
+    impl = sa.types.LargeBinary #BLOB
 
     def process_bind_param(self, value, dialect):
         if value is None:
@@ -289,7 +289,7 @@ class JsonDictTypeFilter(sa.types.TypeDecorator):
         for i in value.keys():
             temp = {}
             temp['name'] = i
-            temp['size'] = int(value[i]['size'])
+            temp['size'] = int(value[i]['size'].replace(',',''))
             temp['timestamp'] = int(value[i]['stat'])
             result.append(temp)
 
@@ -398,10 +398,12 @@ class Product(BASE):
     @property
     def displayed_versions(self):
         versions = {}
+        print("self.versions = ", self.versions)
         for version in self.versions:
             if version.display:
                 versions[version.name] = version
 
+        print("versions = ", versions)
         # Try to "smartly" sort versions for display.
         # Return a tuple for sorting to avoid str↔int comparisons under python3
         def intify(item):
@@ -411,7 +413,9 @@ class Product(BASE):
             except ValueError:
                 return (1, k)
 
-        return [v for k,v in sorted(versions.items(), reverse=True, key=intify)]
+        r =  [v for k,v in sorted(versions.items(), reverse=True, key=intify)]
+        print("r = ", r)
+        return r
 
 
 class Category(BASE):
@@ -607,6 +611,7 @@ class CategoryDirectory(BASE):
     directory_id = sa.Column(
         sa.Integer, sa.ForeignKey('directory.id'), primary_key=True)
 
+    '''
     category = relation(
         'Category',
         foreign_keys=[category_id], remote_side=[Category.id],
@@ -622,6 +627,7 @@ class CategoryDirectory(BASE):
             single_parent=True
         )
     )
+    '''
 
     def __repr__(self):
         ''' Return a string representation of the object. '''
@@ -820,6 +826,7 @@ class Version(BASE):
         repositories.
         '''
         arches = set()
+        print("self.repositories = ", self.repositories)
         for repo in self.repositories:
             arches.add(repo.arch.name)
         return arches

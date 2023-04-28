@@ -336,7 +336,10 @@ def make_repository(session, directory, relativeDName, category, target):
         return None
 
     repo = None
-    prefix = repo_prefix(relativeDName, category, ver)
+    #prefix = repo_prefix(relativeDName, category, ver)
+    prefix = relativeDName.replace("/"+arch.name, '')
+    logger.info("arch =%r, ver=%r, prefix=%r" % (arch, ver, prefix))
+
     repo = mirrormanager2.lib.get_repo_prefix_arch(
         session, prefix, arch.name)
 
@@ -361,6 +364,8 @@ def make_repository(session, directory, relativeDName, category, target):
         session.add(repo)
         session.flush()
     else:
+        logger.info("will do nothing, repo=%r" % vars(repo))
+
         if repo.prefix != prefix:
             repo.prefix = prefix
 
@@ -417,7 +422,7 @@ def fill_category_directories_from_rsync(
         line, category, topdirName, category_directories):
     readable = True
     relativeDName = line.split()[4]
-    if re.compile('^\.$').match(d):
+    if re.compile('^\.$').match(relativeDName):
         directoryname = topdirName
     else:
         directoryname = os.path.join(topdirName, relativeDName)
@@ -443,7 +448,7 @@ def fill_category_directories_from_rsync(
         'readable':readable,
         'ctime':ctime,
         'changed':True}
-    if d.endswith('repodata'):
+    if relativeDName.endswith('repodata'):
         parent_relativeDName = umdl.parent_dir(relativeDName)
         try:
             category_directories[parent_relativeDName]['isRepository'] = True
@@ -619,13 +624,17 @@ def sync_category_directory(
 def sync_category_directories(
         session, config, diskpath, category, category_directories):
 
-    logger.debug("  sync_directories_directories %r" % category)
+    logger.info("  sync_directories_directories %r" % category)
+    print("category.top_dir = ", category.topdir.name)
 
     for relativeDName in sorted(category_directories.keys()):
         value = category_directories[relativeDName]
         set_readable = False
         set_ctime = False
         set_files = False
+
+        print("relativeDName = ", relativeDName)
+
 
         if relativeDName in category.directory_cache:
             d = category.directory_cache[relativeDName]
@@ -634,7 +643,9 @@ def sync_category_directories(
             if d['ctime'] != value['ctime']:
                 set_ctime = True
             D = mirrormanager2.lib.get_directory_by_id(session, d.id)
+            print("from db")
         else:
+            print("from custom")
             if relativeDName == u'':
                 D = category.topdir
             else:
@@ -652,6 +663,8 @@ def sync_category_directories(
             session.add(D)
             # And flush so that we can already start using it
             session.flush()
+            #print("D = ", vars(D))
+            #print("category = ", vars(category))
             # Refresh the cache
             category.directory_cache = cache_directories(category)
             d = category.directory_cache[relativeDName]
@@ -667,6 +680,7 @@ def sync_category_directories(
             if set_files:
                 if D.files != short_filelist(value['files']):
                     D.files = short_filelist(value['files'])
+        print("D1 = ", vars(D))
         session.add(D)
         session.commit()
         make_file_details_from_checksums(session, config, D)
@@ -685,7 +699,9 @@ def sync_category_directories(
             target = None
 
         if value['isRepository'] or value['isAtomic']:
+            logger.warning("make_repository, relativeDName = %s" % relativeDName)
             make_repository(session, D, relativeDName, category, target)
+            logger.warning("    make_repository end, relativeDName = %s\n" % relativeDName)
 
         if 'repomd.xml' in value['files']:
             target = 'repomd.xml'
@@ -708,6 +724,7 @@ def parse_rsync_listing(session, config, category, f):
         if not line: break
         line.strip()
         l = line.split()
+        print("line =", l, "=")
         if line.startswith('d') and len(l) == 5 and len(l[0]) == 10:
             # good guess it's a directory line
             if re.compile('^\.$').match(line):
@@ -719,8 +736,9 @@ def parse_rsync_listing(session, config, category, f):
         else:
             add_file_to_directory(line, category_directories)
 
+    diskpath = os.path.join(config.get('UMDL_PREFIX', ''), topdirName)
     sync_category_directories(
-        session, config, None, category, category_directories)
+        session, config, diskpath, category, category_directories)
 
 
 def sync_directories_using_rsync(session, config, rsyncpath, category):
@@ -739,7 +757,7 @@ def sync_directories_using_rsync(session, config, rsyncpath, category):
 
 def sync_directories_from_file(session, config, filename, category):
     f = open(filename, 'r')
-    parse_rsync_listing(session, config, None, category, f)
+    parse_rsync_listing(session, config, category, f)
     f.close()
 
 
@@ -747,9 +765,11 @@ def cache_directories(category):
     cache = dict()
     topdirName = category.topdir.name
     for directory in list(category.directories):
+        #print("cache_directories = ", directory.name)
         relativeDName = umdl.remove_category_topdir(
             topdirName, directory.name).strip(u'/')
         cache[relativeDName] = directory
+    #print("cache = ", cache)
     return cache
 
 
@@ -1098,6 +1118,7 @@ def main():
 
         if i['type'] == 'file':
             sync_directories_from_file(session, config, i['url'], category)
+
         if i['type'] == 'directory':
             found = False
             if not options.skip_fullfiletimelist:

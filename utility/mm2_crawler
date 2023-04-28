@@ -6,7 +6,7 @@ import datetime
 import ftplib
 from ftplib import FTP
 import hashlib
-import httplib
+import http.client as httplib
 import signal
 import logging
 import multiprocessing.pool
@@ -16,8 +16,8 @@ import socket
 import sys
 import threading
 import time
-import urllib2
-import urlparse
+import urllib.request as urllib2
+import urllib.parse as urlparse
 import gc
 import geoip2.database
 
@@ -46,7 +46,7 @@ shutdown=False
 
 # our own private copy of country_continents to be edited
 country_continents = {}
-gi = geoip2.database.Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb')
+gi = geoip2.database.Reader('./config/GeoLite2-Country.mmdb')
 # hard coded list of continents; let's hope this does not change all the time
 # this is according to GeoIP
 continents = ['AF', 'AN', 'AS', 'EU', 'NA', 'OC', 'SA', '--' ]
@@ -91,12 +91,12 @@ def sigalrm_handler(signal, stackframe):
 
 def thread_id():
     """ Silly util that returns a git-style short-hash id of the thread. """
-    return hashlib.md5(str(threading.current_thread().ident)).hexdigest()[:7]
+    return hashlib.md5(str(threading.current_thread().ident).encode('utf-8')).hexdigest()[:7]
 
 # Add the information from the country_continent_redirect table to
 # country_continents information from GeoIP
 def handle_country_continent_redirect(session):
-    country_continent_csv = '/usr/share/mirrormanager2/country_continent.csv'
+    country_continent_csv = './config/country_continent.csv'
     new_country_continents = {}
     with open(country_continent_csv, mode='r') as infile:
         reader = csv.reader(infile)
@@ -169,6 +169,8 @@ def doit(options, config):
         admin_active=True, user_active=True, site_private=False,
         site_user_active=True, site_admin_active=True)
 
+    print("hosts = ", hosts)
+
     # Get a list of host names for fedmsg
     host_names = [
         host.name for host in hosts if (
@@ -187,6 +189,8 @@ def doit(options, config):
     all_hosts = len(hosts)
     threads = options.threads
 
+    print("hosts=", hosts)
+
     # And then, for debugging, only do one host
     #hosts = [hosts.next()]
 
@@ -198,6 +202,8 @@ def doit(options, config):
     # Before we do work, chdir to /var/tmp/.  mirrormanager1 did this and I'm
     # not totally sure why...
     os.chdir('/var/tmp')
+
+    #worker(options, config, hosts[0])
 
     signal.signal(signal.SIGALRM, sigalrm_handler)
     # Then create a threadpool to handle as many at a time as we like
@@ -295,7 +301,7 @@ def main():
 
     parser.add_argument(
         "--stopid", type=int, metavar="ID",
-        dest="stopid", default=sys.maxint,
+        dest="stopid", default=sys.maxsize,
         help="Stop crawling before host ID (default=maxint)")
 
     parser.add_argument(
@@ -363,19 +369,19 @@ class myHTTPResponse(httplib.HTTPResponse):
     def keepalive_ok(self):
         # HTTP/1.1 connections stay open until closed
         if self.version == 11:
-            ka = self.msg.getheader('connection')
+            ka = self.msg.get('connection')
             if ka and "close" in ka.lower():
                 return False
             else:
                 return True
 
         # other HTTP connections may have a connection: keep-alive header
-        ka = self.msg.getheader('connection')
+        ka = self.msg.get('connection')
         if ka and "keep-alive" in ka.lower():
             return True
 
         try:
-            ka = self.msg.getheader('keep-alive')
+            ka = self.msg.get('keep-alive')
             if ka is not None:
                 maxidx = ka.index('max=')
                 maxval = ka[maxidx+4:]
@@ -383,7 +389,7 @@ class myHTTPResponse(httplib.HTTPResponse):
                     return False
                 return True
             else:
-                ka = self.msg.getheader('connection')
+                ka = self.msg.get('connection')
                 if ka and "keep-alive" in ka.lower():
                     return True
                 return False
@@ -623,6 +629,8 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
     if len(fragment) > 0:
         reqpath += "#%s" % fragment
 
+    logger.info("check_head, reqpath=%s", reqpath)
+
     r = None
     try:
         conn.request('HEAD', reqpath,
@@ -634,6 +642,9 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
         r = conn.getresponse()
         status = r.status
     except:
+        #print("check_head, send request failed...")
+        logger.warning("check_head, send request failed")
+
         if retry == 0:
             # If the above attempt to connect to the mirror fails, the crawler
             # will retry once. One possible reason for a connection failure is
@@ -647,14 +658,22 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
             raise HTTPUnknown()
 
     conn.end_request()
-    keepalive_ok = r.keepalive_ok()
+
+    try:
+        keepalive_ok = r.keepalive_ok()
+    except Exception as ex:
+        print("fuck, ex = ", ex)
+
     if keepalive_ok:
         hoststate.keepalives_available = True
     if not keepalive_ok:
         hoststate.close_http(url)
 
     content_length = r.getheader('Content-Length')
+
     #last_modified  = r.getheader('Last-Modified')
+
+    logger.info("check_head, status=%d", status)
 
     if status >= 200 and status < 300:
         # lighttpd returns a Content-Length for directories
@@ -826,6 +845,8 @@ def add_parents(session, host_category_dirs, hc, d):
     if parentDir is not None:
         if (hc, parentDir) not in host_category_dirs:
             host_category_dirs[(hc, parentDir)] = None
+            logger.info("add_parents, parent is none: %s" % parentDir.name)
+
         if parentDir != hc.category.topdir: # stop at top of the category
             return add_parents(session, host_category_dirs, hc, parentDir)
 
@@ -943,7 +964,7 @@ def try_per_category(
         fields = line.split()
         try:
             rsync[fields[4]] = {
-                'mode': fields[0], 'size': fields[1],
+                'mode': fields[0], 'size': fields[1].replace(',', ''),
                 'date': fields[2], 'time': fields[3]}
         except IndexError:
             logger.debug("invalid rsync line: %s\n" % line)
@@ -957,12 +978,14 @@ def try_per_category(
         return False
     # for all directories in this category
     for d in trydirs:
+        logger.debug(d.name)
         # Check if maximum crawl time for this host has been reached
         timeout_check()
 
         # ignore unreadable directories - we can't really know about them
         if not d.readable:
             host_category_dirs[(hc, d)] = None
+            logger.debug("unreadable")
             continue
 
         all_files = True
@@ -973,6 +996,7 @@ def try_per_category(
         # of the current directory. umdl copies the pickled dict
         # into the database. It is either a dict or nothing.
         if not isinstance(d.files, dict):
+            logger.debug("files is not dict")
             return False
         for filename in sorted(d.files):
             if len(name) == 0:
@@ -991,7 +1015,8 @@ def try_per_category(
                     all_files = False
                     break
             except ValueError:  # one of the conversion to float() failed
-                msg = 'Invalid size value for file %s\n' % key
+                msg = 'Invalid size value for file %s, expect=%s, actual=%s\n' % ( \
+                    key, rsync[key]['size'], d.files[filename]['size'])
                 logger.debug(msg)
                 all_files = False
                 break
@@ -1009,6 +1034,7 @@ def try_per_category(
         if all_files is False:
             host_category_dirs[(hc, d)] = False
         else:
+            logger.debug("it is true")
             host_category_dirs[(hc, d)] = True
             host_category_dirs = add_parents(
                 session, host_category_dirs, hc, d)
@@ -1375,11 +1401,15 @@ def per_host(session, host, options, config):
         # change preferred protocol if necessary to http or ftp
         categoryUrl = method_pref(host_category_urls, categoryUrl)
 
+        logger.info("check by non-rsync")
+
         try_later_delay = 1
         for d in trydirs:
+            logger.debug(d.name)
             timeout_check()
 
             if not d.readable:
+                logger.debug("unreadable")
                 continue
 
             if options.repodata:
@@ -1393,15 +1423,20 @@ def per_host(session, host, options, config):
                 has_all_files = try_per_dir(d, hoststate, url)
                 if has_all_files is None:
                     has_all_files = try_per_file(d, hoststate, url)
+
+                logger.debug("has_all_files = %r" % has_all_files)
+
                 if has_all_files == False:
                     logger.warning("Not up2date: %s" % (d.name))
                     host_category_dirs[(hc, d)] = False
+
                 elif has_all_files == True:
                     host_category_dirs[(hc, d)] = True
                     logger.info(url)
                     # make sure our parent dirs appear on the list too
                     host_category_dirs = add_parents(
                         session, host_category_dirs, hc, d)
+
                 else:
                     # could be a dir with no files, or an unreadable dir.
                     # defer decision on this dir, let a child decide.

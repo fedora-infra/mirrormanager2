@@ -32,18 +32,18 @@ import os
 PERMANENT_SESSION_LIFETIME = timedelta(hours=1)
 
 # url to the database server:
-DB_URL = 'sqlite:////var/tmp/mirrormanager2_dev.sqlite'
+DB_URL = '{DB_URL}'
 
 # the number of items to display on the search pages
 # Default: ``50``.
 ITEMS_PER_PAGE = 50
 
 # secret key used to generate unique csrf token
-SECRET_KEY = '<insert here your own key>'
+SECRET_KEY = '{SECRET_KEY}'
 
 # Seed used to make the password harder to brute force in case of leaking
 # This should be kept really secret!
-PASSWORD_SEED = "You'd better change it and keep it secret"
+PASSWORD_SEED = "{PASSWORD_SEED}"
 
 # Folder containing the theme to use.
 # Default: ``fedora``.
@@ -56,7 +56,7 @@ MM_AUTHENTICATION = 'fas'
 
 OIDC_CLIENT_SECRETS = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), 'client_secrets.json')
-OIDC_SCOPES = ['openid', 'email', 'profile', 'https://id.fedoraproject.org/scope/groups', 'https://id.fedoraproject.org/scope/agreements']
+OIDC_SCOPES = ['openid', 'email', 'profile']
 
 # If the authentication method is `fas`, groups in which should be the user
 # to be recognized as an admin.

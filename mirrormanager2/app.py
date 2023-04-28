@@ -142,6 +142,7 @@ def is_site_admin(user, site):
 
 def is_authenticated():
     """ Returns whether the user is currently authenticated or not. """
+    print(flask.g.fas_user)
     return hasattr(flask.g, 'fas_user') and flask.g.fas_user is not None
 
 
@@ -152,6 +153,7 @@ def login_required(function):
         ''' Wrapped function actually checking if the user is logged in.
         '''
         if not is_authenticated():
+            print("fuck unauthorized")
             return flask.redirect(flask.url_for(
                 'auth_login', next=flask.request.url))
         return function(*args, **kwargs)
@@ -199,6 +201,7 @@ def index():
     products = mmlib.get_products(SESSION, publiclist=True)
     arches = mmlib.get_arches(SESSION, publiclist=True)
     arches_name = [arch.name for arch in arches]
+    print("arches_name = ", arches_name)
 
     return flask.render_template(
         'index.html',
@@ -1358,7 +1361,7 @@ def rsyncFilter():
 @OIDC.require_login
 def oidc_login():  # pragma: no cover
     return flask.redirect(flask.request.values['next'])
-    
+
 
 @APP.route('/login', methods=['GET', 'POST'])
 def auth_login():  # pragma: no cover
@@ -1374,7 +1377,7 @@ def auth_login():  # pragma: no cover
     if APP.config.get('MM_AUTHENTICATION', None) == 'fas':
         return flask.redirect(flask.url_for('oidc_login', next=next_url))
     elif APP.config.get('MM_AUTHENTICATION', None) == 'local':
-        form = forms.LoginForm()
+        form = login_forms.LoginForm()
         return flask.render_template(
             'login.html',
             next_url=next_url,
@@ -1403,7 +1406,7 @@ from . import xml_rpc
 
 # Only import the login controller if the app is set up for local login
 if APP.config.get('MM_AUTHENTICATION', None) == 'local':
-    import mirrormanager2.login
+    from mirrormanager2 import login
     APP.before_request(login._check_session_cookie)
     APP.after_request(login._send_session_cookie)
 

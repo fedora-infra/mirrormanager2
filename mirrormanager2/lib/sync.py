@@ -114,4 +114,8 @@ def run_rsync(rsyncpath, extra_rsync_args=None, logger=None, timeout=None):
 
     tmpfile.flush()
     tmpfile.seek(0)
+
+    #import shutil
+    #shutil.copyfile(tmpfile.name, "/mm/chenzeng_epol")
+
     return (result, tmpfile)

@@ -38,6 +38,9 @@ if args.config:
         here = os.path.join(os.path.dirname(os.path.abspath(__file__)))
         config = os.path.join(here, config)
     os.environ['MM2_CONFIG'] = config
+    print(config)
+
+print("os.environ = ", os.environ)
 
 from mirrormanager2.app import APP
 
