@@ -36,7 +36,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import scoped_session
-from sqlalchemy.orm import relation
+from sqlalchemy.orm import relationship as relation
 from sqlalchemy.orm import backref
 from sqlalchemy.orm import deferred
 

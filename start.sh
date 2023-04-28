@@ -9,7 +9,7 @@ f=mirrormanager2/client_secrets.json
 sed -i "s|{OIDC_CLIENT_ID}|$OIDC_CLIENT_ID|"  $f
 sed -i "s|{OIDC_CLIENT_SECRET}|$OIDC_CLIENT_SECRET|"  $f
 sed -i "s|{OIDC_AUTH_URI}|$OIDC_AUTH_URI|"  $f
-sed -i "s|{OIDC_TOKEN_URI}|$OIDC_TOKEN_URI|"  $f
+sed -i "s|{OIDC_TOKEN_URI}|$OIDC_TOKEN_URI_FUCK|"  $f
 sed -i "s|{MM_ENDPOINT}|$MM_ENDPOINT|"  $f
 sed -i "s|{OIDC_USERINFO_URI}|$OIDC_USERINFO_URI|"  $f
 sed -i "s|{OIDC_ISSUER}|$OIDC_ISSUER|"  $f
