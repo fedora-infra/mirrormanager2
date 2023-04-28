@@ -114,9 +114,11 @@ def is_mirrormanager_admin(user):
         return False
     auth_method = APP.config.get('MM_AUTHENTICATION', None)
 
+    '''
     if auth_method == 'fas':
         if 'signed_fpca' not in user.groups:
             return False
+    '''
 
     if auth_method in ('fas', 'local'):
         admins = APP.config['ADMIN_GROUP']
@@ -124,7 +126,8 @@ def is_mirrormanager_admin(user):
             admins = [admins]
         admins = set(admins)
 
-        return len(admins.intersection(set(user.groups))) > 0
+        #return len(admins.intersection(set(user.groups))) > 0
+        return len(admins.intersection(set([user.username]))) > 0
     else:
         return user in APP.config['ADMIN_GROUP']
 

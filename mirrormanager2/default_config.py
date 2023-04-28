@@ -60,7 +60,7 @@ OIDC_SCOPES = ['openid', 'email', 'profile']
 
 # If the authentication method is `fas`, groups in which should be the user
 # to be recognized as an admin.
-ADMIN_GROUP = ['sysadmin-main']
+ADMIN_GROUP = [{ADMIN_GROUP}]
 
 # Email of the admin to which send notification or error
 ADMIN_EMAIL = 'admin@fedoraproject.org'
