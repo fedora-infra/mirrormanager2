@@ -6,10 +6,13 @@ flask-admin
 flask-xml-rpc
 flask-wtf
 wtforms
-SQLAlchemy>=0.7
+SQLAlchemy>1.4.30
 python-fedora
 flask-oidc
 IPy
 dnspython
 protobuf
 munch
+itsdangerous==2.0.1
+flask-xml-rpc-re
+psycopg2-binary

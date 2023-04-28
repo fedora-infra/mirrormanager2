@@ -1,0 +1,9 @@
+* Sat Aug 12 10:10:05 EDT 2017 Neal Gompa <ngompa@fedoraproject.org> - 0.1.1
+- Fix FSF address in copyright notices
+- Switch to absolute imports
+- Add __init__.py for legacy Python compatibility
+- Add ChangeLog file
+
+* Sun May 14 14:53:56 EDT 2017 Neal Gompa <ngompa@fedoraproject.org> - 0.1.0
+- Ported to run on Python 2 and Python 3
+- Initial release forked from Yum
