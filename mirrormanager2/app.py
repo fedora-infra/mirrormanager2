@@ -1431,7 +1431,7 @@ def set_session():
         if OIDC.user_loggedin:
             if not hasattr(flask.session, 'fas_user') or not flask.session.fas_user:
                 flask.session.fas_user = munch.Munch({
-                    'username': OIDC.user_getfield('nickname'),
+                    'username': OIDC.user_getfield('username'),
                     'email': OIDC.user_getfield('email'),
                     'timezone': OIDC.user_getfield('zoneinfo'),
                     "cla_done": "signed_fpca" in (OIDC.user_getfield("groups") or []),

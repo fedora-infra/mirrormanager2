@@ -56,7 +56,8 @@ MM_AUTHENTICATION = 'fas'
 
 OIDC_CLIENT_SECRETS = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), 'client_secrets.json')
-OIDC_SCOPES = ['openid', 'email', 'profile']
+OIDC_SCOPES = ['openid', 'email', 'profile', 'username']
+OIDC_USER_INFO_ENABLED = True
 
 # If the authentication method is `fas`, groups in which should be the user
 # to be recognized as an admin.
