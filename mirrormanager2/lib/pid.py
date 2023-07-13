@@ -52,7 +52,7 @@ def manage_pidfile(pidfile):
     try:
         with open(pidfile, 'r') as stream:
             oldpid = stream.read()
-    except IOError as err:
+    except IOError:
         return 1
 
     # is the oldpid process still running?
