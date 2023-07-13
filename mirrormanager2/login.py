@@ -25,14 +25,12 @@ import hashlib
 import datetime
 
 import flask
-from flask_admin import BaseView, expose
-from flask_admin.contrib.sqla import ModelView
 from sqlalchemy.exc import SQLAlchemyError
 
 import mirrormanager2.login_forms as forms
 import mirrormanager2.lib
 import mirrormanager2.lib.notifications
-from mirrormanager2.app import APP, SESSION, is_mirrormanager_admin
+from mirrormanager2.app import APP, SESSION
 from mirrormanager2.lib import model
 
 

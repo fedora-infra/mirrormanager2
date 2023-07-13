@@ -349,7 +349,7 @@ def site_view(site_id):
     if form.validate_on_submit():
         admin_active = siteobj.admin_active
         private = siteobj.private
-        obj = form.populate_obj(obj=siteobj)
+        form.populate_obj(obj=siteobj)
 
         # If the user is *not* an admin, keep the current admin_active flag
         if not is_mirrormanager_admin(flask.g.fas_user):
@@ -1130,8 +1130,6 @@ def host_category(host_id, hc_id):
     if hcobj.id not in host_cat_ids:
         flask.abort(404, 'Category not associated with this host')
 
-    categories = mmlib.get_categories(SESSION)
-
     form = forms.EditHostCategoryForm(obj=hcobj)
 
     if form.validate_on_submit() and is_mirrormanager_admin(flask.g.fas_user):
@@ -1185,8 +1183,6 @@ def host_category_url_new(host_id, hc_id):
 
     if hcobj.id not in host_cat_ids:
         flask.abort(404, 'Category not associated with this host')
-
-    categories = mmlib.get_categories(SESSION)
 
     form = forms.AddHostCategoryUrlForm()
 
@@ -1356,7 +1352,7 @@ def rsyncFilter():
 @OIDC.require_login
 def oidc_login():  # pragma: no cover
     return flask.redirect(flask.request.values['next'])
-    
+
 
 @APP.route('/login', methods=['GET', 'POST'])
 def auth_login():  # pragma: no cover
@@ -1395,9 +1391,6 @@ def auth_logout():
         login.logout()
     return flask.redirect(next_url)
 
-from . import admin
-from . import api
-from . import xml_rpc
 
 # Only import the login controller if the app is set up for local login
 if APP.config.get('MM_AUTHENTICATION', None) == 'local':

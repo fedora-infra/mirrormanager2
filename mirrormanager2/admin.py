@@ -22,7 +22,6 @@ MirrorManager2 admin flask controller.
 '''
 
 import flask
-from flask_admin import BaseView, expose
 from flask_admin.contrib.sqla import ModelView
 
 from mirrormanager2.app import APP, ADMIN, SESSION, is_mirrormanager_admin

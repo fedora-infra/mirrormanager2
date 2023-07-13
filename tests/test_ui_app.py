@@ -2,14 +2,10 @@
 mirrormanager2 tests for the Flask application.
 '''
 
-import json
 import unittest
-import sys
 import os
-from unittest.mock import patch
 import mirrormanager2.admin
 import mirrormanager2.app
-from mirrormanager2.lib import model
 import tests
 
 

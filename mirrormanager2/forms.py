@@ -53,8 +53,8 @@ def is_number(form, field):
     '''
     try:
         float(field.data)
-    except ValueError:
-        raise wtforms.ValidationError('Field must contain a number')
+    except ValueError as e:
+        raise wtforms.ValidationError('Field must contain a number') from e
 
 
 class ConfirmationForm(FlaskForm):

@@ -115,7 +115,7 @@ def read_host_config(session, config):
     if not host:
         return (None, chostname, 'Config file host name for site not found.\n')
 
-    if host.private == False:
+    if host.private is False:
         return (
                 None,
                 chostname,

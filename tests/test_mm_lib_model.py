@@ -3,8 +3,6 @@ mirrormanager2 model tests.
 '''
 
 import unittest
-import sys
-import os
 import mirrormanager2.lib
 import mirrormanager2.lib.model as model
 import tests

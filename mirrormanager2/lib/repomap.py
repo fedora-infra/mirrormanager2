@@ -39,9 +39,7 @@ def repo_prefix(path, category, ver):
     isAtomic = 'atomic' in path
     isEverything = 'Everything' in path
     isFedora = 'Fedora' in path
-    isServer = 'Server' in path
     isModular = 'Modular' in path
-
 
     isEpel = (category.name == 'Fedora EPEL')
     isFedoraLinux = (category.name == 'Fedora Linux')

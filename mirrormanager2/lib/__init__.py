@@ -29,8 +29,6 @@ import sqlalchemy
 
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import scoped_session
-from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.exc import SQLAlchemyError
 
 from mirrormanager2.lib import model
 
@@ -481,7 +479,7 @@ def get_categories(session, skip_admin=False):
         query = query.filter(
             sqlalchemy.or_(
                 model.Category.admin_only.is_(None),
-                model.Category.admin_only == False,
+                model.Category.admin_only is False,
             )
         )
 
@@ -758,9 +756,9 @@ def get_mirrors(
     if last_crawl_duration is True:
         query = query.filter(model.Host.last_crawl_duration > 0)
     if last_crawled is True:
-        query = query.filter(model.Host.last_crawled != None)
+        query = query.filter(model.Host.last_crawled is not None)
     if last_checked_in is True:
-        query = query.filter(model.Host.last_checked_in != None)
+        query = query.filter(model.Host.last_checked_in is not None)
 
     if site_private is not None:
         query = query.filter(
@@ -1062,7 +1060,7 @@ def uploaded_config(session, host, config):
         deleted = 0
         added = 0
         # and now one HostCategoryDir for each dir in the dirtree
-        for dirname,files in list(config[cat_name]['dirtree'].items()):
+        for dirname,_files in list(config[cat_name]['dirtree'].items()):
             d = dirname.strip('/')
             hcdir = get_hostcategorydir_by_hostcategoryid_and_path(
                 session, host_category_id=hc.id, path=d)
@@ -1075,7 +1073,7 @@ def uploaded_config(session, host, config):
                 # In contrast to report_mirror the crawler also
                 # checks for the actual files in the directory.
                 marked_up2date += 1
-                if hcdir.up2date != True:
+                if hcdir.up2date is not True:
                     hcdir.up2date = True
                     session.add(hcdir)
                     session.commit()
@@ -1104,7 +1102,8 @@ def uploaded_config(session, host, config):
             # handle disappearing hcdirs, deleted by other processes
             try:
                 hcdirpath = hcdir.path
-            except: continue
+            except:
+                continue
             if hcdirpath not in list(config[cat_name]['dirtree'].keys()):
                 try:
                     session.delete(hcdir)
@@ -1113,7 +1112,9 @@ def uploaded_config(session, host, config):
                     pass
                 deleted += 1
 
-        message += "Category %s directories updated: %s  added: %s  deleted %s\n" % (cat.category.name, marked_up2date, added, deleted)
+        message += "Category %s directories updated: %s  added: %s  deleted %s\n" % (
+            cat.category.name, marked_up2date, added, deleted
+        )
         host.last_checked_in = datetime.datetime.utcnow()
         session.add(hc)
         session.commit()
@@ -1140,15 +1141,15 @@ def query_directories(session):
         model.Host.internet2.label('internet2'),
         model.Host.internet2_clients.label('internet2_clients'),
     ).filter(
-        model.Host.user_active == True
+        model.Host.user_active is True
     ).filter(
-        model.Host.admin_active == True
+        model.Host.admin_active is True
     ).filter(
         model.Host.site_id == model.Site.id
     ).filter(
-        model.Site.user_active == True
+        model.Site.user_active is True
     ).filter(
-        model.Site.admin_active == True
+        model.Site.admin_active is True
     ).filter(
         model.Host.id == model.HostCategory.host_id
     ).filter(
@@ -1158,7 +1159,7 @@ def query_directories(session):
     ).filter(
         model.HostCategory.id == model.HostCategoryUrl.host_category_id
     ).filter(
-        model.HostCategoryUrl.private == False
+        model.HostCategoryUrl.private is False
     )
 
     q1 = query.filter(
@@ -1166,11 +1167,11 @@ def query_directories(session):
     ).filter(
         model.HostCategoryDir.directory_id == model.Directory.id
     ).filter(
-        model.HostCategoryDir.up2date == True
+        model.HostCategoryDir.up2date is True
     )
 
     q2 = query.filter(
-        model.HostCategory.always_up2date == True
+        model.HostCategory.always_up2date is True
     )
 
     q = session.query(
