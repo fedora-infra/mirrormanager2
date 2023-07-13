@@ -5,9 +5,7 @@ mirrormanager2 tests.
 import datetime
 import logging
 import unittest
-import sys
 import os
-from unittest import mock
 
 from contextlib import contextmanager
 from flask import appcontext_pushed, g

@@ -29,8 +29,7 @@ import logging
 
 from flask_xmlrpcre.xmlrpcre import XMLRPCHandler
 
-from mirrormanager2.app import APP, ADMIN, SESSION
-from mirrormanager2.lib import model
+from mirrormanager2.app import APP, SESSION
 from mirrormanager2.lib.hostconfig import read_host_config
 
 logging.basicConfig(level=logging.INFO)

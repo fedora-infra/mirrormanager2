@@ -22,13 +22,10 @@ directory (/pub/fedora/linux/updates/....)
 import glob
 import logging
 import re
-import optparse
 import os
 import stat
 import sys
 import rpmmd.repoMDObject
-import datetime
-import time
 import hashlib
 
 
@@ -36,14 +33,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(
     os.path.abspath(__file__)), '..'))
 import mirrormanager2.lib
 from mirrormanager2.lib.model import (
-    Arch, Directory, Repository, Version, FileDetail)
+    Directory, Repository, Version, FileDetail)
 from mirrormanager2.lib.repomap import repo_prefix
-from mirrormanager2.lib.sync import run_rsync
 
 
 delete_directories=False
 logger = logging.getLogger('umdl')
-stdexcludes=['.*\.snapshot', '.*/\.~tmp~']
+stdexcludes=['.*\\.snapshot', '.*/\\.~tmp~']
 PREFIX = '/srv/'
 
 
@@ -415,13 +411,16 @@ def short_filelist(config, relativeDName, files):
     hdrs=0
     drpms=0
     for f in files:
-        if f.endswith('.html'):  html += 1
-        if f.endswith('.rpm'):   rpms += 1
-        if f.endswith('.hdr'):   hdrs += 1
-        if f.endswith('.drpm'): drpms += 1
+        if f.endswith('.html'):
+            html += 1
+        if f.endswith('.rpm'):
+            rpms += 1
+        if f.endswith('.hdr'):
+            hdrs += 1
+        if f.endswith('.drpm'):
+            drpms += 1
     if html>10 or rpms > 10 or hdrs > 10 or drpms > 10:
         date_file_list = []
-        rc = {}
         for k in files:
             try:
                 s = os.stat(os.path.join(
@@ -452,10 +451,6 @@ def sync_category_directory(
         relativeDName = relativeDName[1:]
     if relativeDName in category.directory_cache:
         d = category.directory_cache[relativeDName]
-        if d['readable'] != readable:
-            set_readable = True
-        if d['ctime'] != ctime:
-            set_ctime = True
         D = mirrormanager2.lib.get_directory_by_id(session, d.id)
     else:
         if relativeDName == '':

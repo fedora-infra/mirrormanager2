@@ -3,13 +3,8 @@ mirrormanager2 tests.
 '''
 
 import unittest
-import sys
-import os
 import mirrormanager2.lib
 import tests
-import tempfile
-import datetime
-from IPy import IP
 
 
 class MMLibtests(tests.Modeltests):

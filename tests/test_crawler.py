@@ -16,10 +16,7 @@ mirrormanager2 tests for the crawler.
 '''
 
 import unittest
-import subprocess
-import sys
 import os
-import mirrormanager2.lib
 from mirrormanager2.lib.sync import run_rsync
 import tests
 

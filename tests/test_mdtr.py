@@ -5,7 +5,6 @@ mirrormanager2 tests for the `Move Devel To Release` (MDTL) script.
 
 import unittest
 import subprocess
-import sys
 import os
 import mirrormanager2.lib
 import mirrormanager2.lib.model as model
