@@ -52,7 +52,7 @@ def parent_dir(path):
     try:
         parent = os.path.join(*sdir)
     except TypeError: #
-        parent = u''
+        parent = ''
     return parent
 
 
@@ -83,7 +83,7 @@ def create_version_from_path(session, category, path):
     ver = None
     vname = _get_version_from_path(path)
     if vname is not None and vname != '':
-        test_paths = [ u'/test/', u'/stage/']
+        test_paths = [ '/test/', '/stage/']
         if any(x in path for x in test_paths):
             isTest = True
         else:
@@ -211,13 +211,13 @@ def make_file_details_from_checksums(session, config, relativeDName, D):
         config, relativeDName, sha512_globs, 128)
 
     files = set()
-    for k in md5dict.keys():
+    for k in list(md5dict.keys()):
         files.add(k)
-    for k in sha1dict.keys():
+    for k in list(sha1dict.keys()):
         files.add(k)
-    for k in sha256dict.keys():
+    for k in list(sha256dict.keys()):
         files.add(k)
-    for k in sha512dict.keys():
+    for k in list(sha512dict.keys()):
         files.add(k)
 
     for f in files:
@@ -458,14 +458,14 @@ def sync_category_directory(
             set_ctime = True
         D = mirrormanager2.lib.get_directory_by_id(session, d.id)
     else:
-        if relativeDName == u'':
+        if relativeDName == '':
             D = category.topdir
         else:
             # Can't find the new directory, just add it
             dname = os.path.join(category.topdir.name, relativeDName)
             D = Directory(name=dname, readable=readable, ctime=ctime)
             logger.debug(
-                u'Created Directory(%s, readable=%s, ctime=%s)'
+                'Created Directory(%s, readable=%s, ctime=%s)'
                 % (dname, readable, ctime))
             created = True
         # Add this category to the directory

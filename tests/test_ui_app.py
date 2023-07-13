@@ -1,17 +1,12 @@
-# -*- coding: utf-8 -*-
-
 '''
 mirrormanager2 tests for the Flask application.
 '''
-
-__requires__ = ['SQLAlchemy >= 0.7']
-import pkg_resources
 
 import json
 import unittest
 import sys
 import os
-from mock import patch
+from unittest.mock import patch
 import mirrormanager2.admin
 import mirrormanager2.app
 from mirrormanager2.lib import model
@@ -23,7 +18,7 @@ class FlaskUiAppTest(tests.Modeltests):
 
     def setUp(self):
         """ Set up the environnment, ran before every test. """
-        super(FlaskUiAppTest, self).setUp()
+        super().setUp()
 
         skip = os.getenv('MM2_SKIP_NETWORK_TESTS', 0)
         self.network_tests = not bool(skip)

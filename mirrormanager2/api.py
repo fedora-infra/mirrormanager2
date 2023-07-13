@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # Copyright © 2015  Red Hat, Inc.
 #
 # This copyrighted material is made available to anyone wishing to use,

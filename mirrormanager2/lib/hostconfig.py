@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # Copyright © 2014  Red Hat, Inc.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -71,7 +69,7 @@ def validate_config(config):
                 opt)
             return (False, message)
 
-    for category in config.keys():
+    for category in list(config.keys()):
         if category in ['global', 'site', 'host', 'version', 'stats']:
             continue
 

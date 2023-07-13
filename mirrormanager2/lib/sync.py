@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # Copyright © 2014  Red Hat, Inc.
 # Copyright © 2017  Adrian Reber
 #

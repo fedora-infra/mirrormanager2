@@ -1,12 +1,7 @@
-# -*- coding: utf-8 -*-
-
 '''
 mirrormanager2 tests for the `Update Master Directory List` (UMDL) cron.
 '''
 
-from __future__ import print_function
-
-__requires__ = ['SQLAlchemy >= 0.7']
 import unittest
 import subprocess
 import os
@@ -58,7 +53,7 @@ class UMDLTest(tests.Modeltests):
 
     def setUp(self):
         """ Set up the environnment, ran before every test. """
-        super(UMDLTest, self).setUp()
+        super().setUp()
 
         self.logfile = os.path.join(FOLDER, 'umdl.log')
         if os.path.exists(self.logfile):

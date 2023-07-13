@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # Copyright © 2017  Adrian Reber
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -17,9 +15,6 @@
 mirrormanager2 tests for the crawler.
 '''
 
-__requires__ = ['SQLAlchemy >= 0.7']
-import pkg_resources
-
 import unittest
 import subprocess
 import sys
@@ -34,10 +29,6 @@ FOLDER = os.path.dirname(os.path.abspath(__file__))
 
 class CrawlerTest(tests.Modeltests):
     """ Crawler tests. """
-
-    def setUp(self):
-        """ Set up the environnment, ran before every test. """
-        super(CrawlerTest, self).setUp()
 
     def test_run_rsync(self):
         """ Test the run_rsync function"""

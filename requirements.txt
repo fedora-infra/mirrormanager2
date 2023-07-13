@@ -3,7 +3,7 @@
 email_validator
 flask
 flask-admin
-flask-xml-rpc
+flask-xml-rpc-re
 flask-wtf
 wtforms
 SQLAlchemy>=0.7

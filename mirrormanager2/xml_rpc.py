@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # Copyright © 2014  Red Hat, Inc.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -29,8 +27,7 @@ import json
 import bz2
 import logging
 
-import flask
-from flaskext.xmlrpc import XMLRPCHandler, Fault
+from flask_xmlrpcre.xmlrpcre import XMLRPCHandler
 
 from mirrormanager2.app import APP, ADMIN, SESSION
 from mirrormanager2.lib import model

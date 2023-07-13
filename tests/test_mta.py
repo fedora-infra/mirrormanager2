@@ -1,11 +1,6 @@
-# -*- coding: utf-8 -*-
-
 '''
 mirrormanager2 tests for the `Move To Archive` (MTA) script.
 '''
-
-__requires__ = ['SQLAlchemy >= 0.7']
-import pkg_resources
 
 import unittest
 import subprocess
@@ -33,7 +28,7 @@ class MTATest(tests.Modeltests):
 
     def setUp(self):
         """ Set up the environnment, ran before every test. """
-        super(MTATest, self).setUp()
+        super().setUp()
 
         self.configfile = os.path.join(
             FOLDER, 'mirrormanager2_tests_mdtr.cfg')

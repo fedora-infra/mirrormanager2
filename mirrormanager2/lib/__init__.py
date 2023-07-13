@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # Copyright © 2014, 2015  Red Hat, Inc.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -1019,7 +1017,7 @@ def uploaded_config(session, host, config):
         if config is not None:
             return [
                 key
-                for key in config.keys()
+                for key in list(config.keys())
                 if key not in noncategories
             ]
         else:
@@ -1031,7 +1029,7 @@ def uploaded_config(session, host, config):
         dfiles = hcdir.directory.files
         if len(dfiles) == 0 and len(files) == 0:
             return True
-        for fname, fdata in dfiles.items():
+        for fname, fdata in list(dfiles.items()):
             if fname not in files:
                 return False
             if fdata['size'] != files[fname]:
@@ -1064,7 +1062,7 @@ def uploaded_config(session, host, config):
         deleted = 0
         added = 0
         # and now one HostCategoryDir for each dir in the dirtree
-        for dirname,files in config[cat_name]['dirtree'].items():
+        for dirname,files in list(config[cat_name]['dirtree'].items()):
             d = dirname.strip('/')
             hcdir = get_hostcategorydir_by_hostcategoryid_and_path(
                 session, host_category_id=hc.id, path=d)
@@ -1107,7 +1105,7 @@ def uploaded_config(session, host, config):
             try:
                 hcdirpath = hcdir.path
             except: continue
-            if hcdirpath not in config[cat_name]['dirtree'].keys():
+            if hcdirpath not in list(config[cat_name]['dirtree'].keys()):
                 try:
                     session.delete(hcdir)
                     session.commit()
