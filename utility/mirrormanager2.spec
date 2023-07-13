@@ -1,13 +1,5 @@
-%if (0%{?rhel} && 0%{?rhel} <= 7)
-# Since the Python 3 stack in EPEL is missing too many dependencies,
-# we're sticking with Python 2 there for now.
-%global __python %{__python2}
-%global python_pkgversion %{nil}
-%else
-# Default to Python 3 when not EL
 %global __python %{__python3}
 %global python_pkgversion %{python3_pkgversion}
-%endif
 
 Name:           mirrormanager2
 Version:        0.17
@@ -27,7 +19,7 @@ BuildRequires:  python%{python_pkgversion}-devel
 BuildRequires:  python%{python_pkgversion}-flask
 BuildRequires:  python%{python_pkgversion}-flask-admin
 BuildRequires:  python%{python_pkgversion}-flask-oidc
-BuildRequires:  python%{python_pkgversion}-flask-xml-rpc
+BuildRequires:  python%{python_pkgversion}-flask-xml-rpc-re
 BuildRequires:  python%{python_pkgversion}-flask-wtf
 BuildRequires:  python%{python_pkgversion}-wtforms
 BuildRequires:  python%{python_pkgversion}-IPy
@@ -40,19 +32,12 @@ BuildRequires:  python%{python_pkgversion}-alembic
 BuildRequires:  systemd-rpm-macros
 # Testing
 BuildRequires:  python%{python_pkgversion}-fedmsg-core
-BuildRequires:  python%{python_pkgversion}-mock
 BuildRequires:  python%{python_pkgversion}-blinker
 BuildRequires:  rsync
 BuildRequires:  python%{python_pkgversion}-pyrpmmd
 
-%if 0%{?rhel} && 0%{?rhel} <= 7
-BuildRequires:  python2-rpm-macros
-BuildRequires:  py-radix
-Requires:  mod_wsgi
-%else
 BuildRequires:  python%{python_pkgversion}-py-radix
 Requires:  python%{python3_pkgversion}-mod_wsgi
-%endif
 # Testing
 BuildRequires:  python%{python_pkgversion}-nose
 BuildRequires:  python%{python_pkgversion}-coverage
@@ -60,7 +45,7 @@ BuildRequires:  python%{python_pkgversion}-coverage
 Requires:  python%{python_pkgversion}-flask
 Requires:  python%{python_pkgversion}-flask-admin
 Requires:  python%{python_pkgversion}-flask-oidc
-Requires:  python%{python_pkgversion}-flask-xml-rpc
+Requires:  python%{python_pkgversion}-flask-xml-rpc-re
 Requires:  python%{python_pkgversion}-flask-wtf
 Requires:  python%{python_pkgversion}-wtforms
 Requires:  python%{python_pkgversion}-fedora >= 0.3.33

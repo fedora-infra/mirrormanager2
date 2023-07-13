@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # Copyright © 2014  Red Hat, Inc.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -247,7 +245,7 @@ class AddHostCategoryForm(FlaskForm):
         uses the list of collection provided to fill the choices of the
         drop-down list.
         """
-        super(AddHostCategoryForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if 'categories' in kwargs:
             self.category_id.choices = [
                 (cat.id, cat.name)
@@ -275,7 +273,7 @@ class AddHostCategoryUrlForm(FlaskForm):
             wtforms.validators.Regexp(
                 p,
                 flags=re.IGNORECASE,
-                message=u'Unsupported URL'
+                message='Unsupported URL'
             ),
         ]
     )

@@ -1,13 +1,7 @@
-# -*- coding: utf-8 -*-
-
 '''
 mirrormanager2 tests for the `Move Devel To Release` (MDTL) script.
 '''
 
-from __future__ import print_function
-
-__requires__ = ['SQLAlchemy >= 0.7']
-import pkg_resources
 
 import unittest
 import subprocess
@@ -35,7 +29,7 @@ class MDTLTest(tests.Modeltests):
 
     def setUp(self):
         """ Set up the environnment, ran before every test. """
-        super(MDTLTest, self).setUp()
+        super().setUp()
 
         self.configfile = os.path.join(
             FOLDER, 'mirrormanager2_tests_mdtr.cfg')

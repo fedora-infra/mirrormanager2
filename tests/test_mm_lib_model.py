@@ -1,11 +1,6 @@
-# -*- coding: utf-8 -*-
-
 '''
 mirrormanager2 model tests.
 '''
-
-__requires__ = ['SQLAlchemy >= 0.7']
-import pkg_resources
 
 import unittest
 import sys
@@ -65,7 +60,7 @@ class MMLibModeltests(tests.Modeltests):
                 'asn_clients': False,
                 'bandwidth_int': 100,
                 'comment': None,
-                'country': u'US',
+                'country': 'US',
                 'id': 1,
                 'internet2': False,
                 'internet2_clients': False,
@@ -73,9 +68,9 @@ class MMLibModeltests(tests.Modeltests):
                 'last_crawl_duration': 0,
                 'last_crawled': None,
                 'max_connections': 10,
-                'name': u'mirror.localhost',
+                'name': 'mirror.localhost',
                 'private': False,
-                'site': {'id': 1, 'name': u'test-mirror'},
+                'site': {'id': 1, 'name': 'test-mirror'},
                 'user_active': True
             }
         )
@@ -88,7 +83,7 @@ class MMLibModeltests(tests.Modeltests):
                 'asn_clients': False,
                 'bandwidth_int': 100,
                 'comment': 'My own private mirror',
-                'country': u'NL',
+                'country': 'NL',
                 'id': 3,
                 'internet2': False,
                 'internet2_clients': False,
@@ -96,9 +91,9 @@ class MMLibModeltests(tests.Modeltests):
                 'last_crawl_duration': 0,
                 'last_crawled': None,
                 'max_connections': 10,
-                'name': u'private.localhost',
+                'name': 'private.localhost',
                 'private': True,
-                'site': {'id': 1, 'name': u'test-mirror'},
+                'site': {'id': 1, 'name': 'test-mirror'},
                 'user_active': True
             }
         )
@@ -254,11 +249,11 @@ class MMLibModeltests(tests.Modeltests):
         tests.create_repository(self.session)
 
         item = model.Version.get(self.session, 1)
-        self.assertEqual(item.arches, set([u'x86_64']))
+        self.assertEqual(item.arches, set(['x86_64']))
         item = model.Version.get(self.session, 2)
         self.assertEqual(item.arches, set([]))
         item = model.Version.get(self.session, 3)
-        self.assertEqual(item.arches, set([u'x86_64']))
+        self.assertEqual(item.arches, set(['x86_64']))
 
     def test_group_repr(self):
         """ Test the Group.__repr__ object of mirrormanager2.lib.model.

@@ -22,7 +22,7 @@ import socket
 exclude_list = []
 
 
-class HostConfig(object):
+class HostConfig:
     """Holder for config info from the configuration file"""
     def __init__(self):
         self.config = {

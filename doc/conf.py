@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # MirrorManager documentation build configuration file, created by
 # sphinx-quickstart on Tue Nov 26 20:30:13 2013.
 #
@@ -55,8 +53,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'MirrorManager2'
-copyright = u'2014, Pierre-Yves Chibon <pingou@pingoured.fr>'
+project = 'MirrorManager2'
+copyright = '2014, Pierre-Yves Chibon <pingou@pingoured.fr>'
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -251,8 +249,8 @@ latex_elements = {
 # [howto/manual]).
 latex_documents = [
     (
-        'index', 'mirrormanager2.tex', u'MirrorManager2 Documentation',
-        u'Pierre-Yves Chibon \\textless{}pingou@pingoured.fr\\textgreater{}',
+        'index', 'mirrormanager2.tex', 'MirrorManager2 Documentation',
+        'Pierre-Yves Chibon \\textless{}pingou@pingoured.fr\\textgreater{}',
         'manual'
     ),
 ]
@@ -283,8 +281,8 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     (
-        'index', 'MirrorManager2', u'MirrorManager2 Documentation',
-        [u'Pierre-Yves Chibon <pingou@pingoured.fr>'],
+        'index', 'MirrorManager2', 'MirrorManager2 Documentation',
+        ['Pierre-Yves Chibon <pingou@pingoured.fr>'],
         1
     )
 ]
@@ -300,8 +298,8 @@ man_pages = [
 # dir menu entry, description, category)
 texinfo_documents = [
     (
-        'index', 'MirrorManager2', u'MirrorManager2 Documentation',
-        u'Pierre-Yves Chibon <pingou@pingoured.fr>', 'MirrorManager2',
+        'index', 'MirrorManager2', 'MirrorManager2 Documentation',
+        'Pierre-Yves Chibon <pingou@pingoured.fr>', 'MirrorManager2',
         'Manage your mirrors',
         'Miscellaneous'
     ),

@@ -1,18 +1,13 @@
-# -*- coding: utf-8 -*-
-
 '''
 mirrormanager2 tests for the Flask UI Admin controller.
 '''
-
-__requires__ = ['SQLAlchemy >= 0.7']
-import pkg_resources
 
 import json
 import unittest
 import sys
 import os
 import re
-from mock import patch
+from unittest.mock import patch
 import mirrormanager2.admin
 import mirrormanager2.app
 from mirrormanager2.lib import model
@@ -33,7 +28,7 @@ class FlaskUiAdminTest(tests.Modeltests):
 
     def setUp(self):
         """ Set up the environnment, ran before every test. """
-        super(FlaskUiAdminTest, self).setUp()
+        super().setUp()
 
         mirrormanager2.app.APP.config['TESTING'] = True
         mirrormanager2.app.SESSION = self.session

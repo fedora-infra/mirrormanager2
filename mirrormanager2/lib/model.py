@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # Copyright © 2014  Red Hat, Inc.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -41,7 +39,7 @@ from sqlalchemy.orm import backref
 from sqlalchemy.orm import deferred
 
 
-class MirrorManagerBaseMixin(object):
+class MirrorManagerBaseMixin:
     """ Base mixin for mirrormanager2 models.
 
     This base class mixin grants sqlalchemy models dict-like access so that
@@ -286,7 +284,7 @@ class JsonDictTypeFilter(sa.types.TypeDecorator):
 
         result = []
 
-        for i in value.keys():
+        for i in list(value.keys()):
             temp = {}
             temp['name'] = i
             temp['size'] = int(value[i]['size'])
@@ -365,7 +363,7 @@ class Directory(BASE):
         stale = t - (60 * 60 * 24 * max_stale)
         propogation = t - (60 * 60 * 24 * max_propogation)
 
-        for k, fds in cls.file_details_cache.items():
+        for k, fds in list(cls.file_details_cache.items()):
             (directory_id, filename) = k
             if len(fds) > 1:
                 start = 2
@@ -411,7 +409,7 @@ class Product(BASE):
             except ValueError:
                 return (1, k)
 
-        return [v for k,v in sorted(versions.items(), reverse=True, key=intify)]
+        return [v for k,v in sorted(list(versions.items()), reverse=True, key=intify)]
 
 
 class Category(BASE):

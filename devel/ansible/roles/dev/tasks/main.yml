@@ -17,8 +17,7 @@
     - python3-pytest
     - python3-pytest-cov
     - python3-pytest-mock
-    - python-mock
-    - python-blinker
+    - python3-blinker
     state: present
 
 - name: Install python packages from requirements.txt

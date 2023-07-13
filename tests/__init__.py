@@ -1,20 +1,13 @@
-# -*- coding: utf-8 -*-
-
 '''
 mirrormanager2 tests.
 '''
-
-from __future__ import print_function
-
-__requires__ = ['SQLAlchemy >= 0.7']
-import pkg_resources
 
 import datetime
 import logging
 import unittest
 import sys
 import os
-import mock
+from unittest import mock
 
 from contextlib import contextmanager
 from flask import appcontext_pushed, g
@@ -57,7 +50,7 @@ def user_set(APP, user):
         yield
 
 
-class FakeFasUser(object):
+class FakeFasUser:
     """ Fake FAS user used for the tests. """
     id = 100
     username = 'pingou'
@@ -66,7 +59,7 @@ class FakeFasUser(object):
     bugzilla_email = 'pingou@fp.o'
 
 
-class AnotherFakeFasUser(object):
+class AnotherFakeFasUser:
     """ Fake FAS user used for the tests. """
     id = 110
     username = 'kevin'
@@ -76,7 +69,7 @@ class AnotherFakeFasUser(object):
     signed_fpca = True
 
 
-class FakeFasUserAdmin(object):
+class FakeFasUserAdmin:
     """ Fake FAS user used for the tests. """
     id = 1000
     username = 'admin'

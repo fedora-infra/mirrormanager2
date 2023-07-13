@@ -1,11 +1,6 @@
-# -*- coding: utf-8 -*-
-
 '''
 mirrormanager2 tests.
 '''
-
-__requires__ = ['SQLAlchemy >= 0.7']
-import pkg_resources
 
 import unittest
 import sys

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # Copyright © 2014, 2015  Red Hat, Inc.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -23,7 +21,7 @@
 MirrorManager2 main flask controller.
 '''
 
-from __future__ import absolute_import
+
 import logging
 import logging.handlers
 import glob
@@ -1314,13 +1312,13 @@ def rsyncFilter():
     # not transfer anything if there is no new content or if
     # a mistake was made in the URL.
     message = None
-    excludes = [u'*']
+    excludes = ['*']
     cat = flask.request.args.get('categories')
     since = flask.request.args.get('since')
     stripprefix = flask.request.args.get('stripprefix')
 
     if cat is None or since is None or stripprefix is None:
-        message = u'Missing categories, since, or stripprefix arguments'
+        message = 'Missing categories, since, or stripprefix arguments'
         return flask.render_template(
             'rsync_filter.html', excludes=excludes, message=message)
 
@@ -1328,7 +1326,7 @@ def rsyncFilter():
     try:
         since = int(since)
     except:
-        message = u'value of argument since is not an integer'
+        message = 'value of argument since is not an integer'
         return flask.render_template(
             'rsync_filter.html', excludes=excludes, message=message)
 
@@ -1347,7 +1345,7 @@ def rsyncFilter():
     includes = sorted(includes)
     # add trailing slash as rsync wants it
     for i in range(len(includes)):
-        includes[i] += u'/'
+        includes[i] += '/'
 
     return flask.render_template(
         'rsync_filter.html',
