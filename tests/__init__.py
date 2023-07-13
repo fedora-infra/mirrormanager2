@@ -17,17 +17,6 @@ from mirrormanager2.lib import model
 # DB_PATH = 'sqlite:///:memory:'
 # A file database is required to check the integrity, don't ask
 DB_PATH = 'sqlite:////tmp/test.sqlite'
-FAITOUT_URL = 'http://faitout.fedorainfracloud.org/'
-
-if os.environ.get('BUILD_ID'):
-    try:
-        import requests
-        req = requests.get('%s/new' % FAITOUT_URL)
-        if req.status_code == 200:
-            DB_PATH = req.text
-            print('Using faitout at: %s' % DB_PATH)
-    except:
-        pass
 
 LOG.handlers = []
 
@@ -106,15 +95,6 @@ class Modeltests(unittest.TestCase):
 
         self.session.rollback()
         self.session.close()
-
-        #if DB_PATH.startswith('postgres'):
-            #if 'localhost' in DB_PATH:
-                #model.drop_tables(DB_PATH, self.session.bind)
-            #else:
-                #db_name = DB_PATH.rsplit('/', 1)[1]
-                #req = requests.get(
-                    #'%s/clean/%s' % (FAITOUT_URL, db_name))
-                #print req.text
 
 
 def create_base_items(session):
