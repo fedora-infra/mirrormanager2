@@ -31,11 +31,10 @@ import pickle
 
 import sqlalchemy as sa
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import scoped_session
-from sqlalchemy.orm import relation
-from sqlalchemy.orm import backref
+from sqlalchemy.orm import relationship
 from sqlalchemy.orm import deferred
 
 
@@ -156,6 +155,17 @@ class Site(BASE):
     email_on_drop = sa.Column(sa.Boolean(), default=False, nullable=False)
     email_on_add = sa.Column(sa.Boolean(), default=False, nullable=False)
 
+    hosts = relationship(
+        "Host",
+        back_populates="site",
+        cascade="delete, delete-orphan",
+    )
+    admins = relationship(
+        "SiteAdmin",
+        back_populates="site",
+        cascade="delete, delete-orphan",
+    )
+
     def __repr__(self):
         ''' Return a string representation of the object. '''
         return '<Site(%s - %s)>' % (self.id, self.name)
@@ -215,13 +225,44 @@ class Host(BASE):
     last_crawls = deferred(sa.Column(sa.PickleType(), nullable=True))
 
     # Relations
-    site = relation(
-        'Site',
-        foreign_keys=[site_id], remote_side=[Site.id],
-        backref=backref(
-            'hosts', cascade="delete, delete-orphan", single_parent=True
-        )
+    site = relationship('Site', back_populates="hosts")
+    categories = relationship(
+        "HostCategory",
+        back_populates="host",
+        cascade="delete, delete-orphan",
     )
+    acl_ips = relationship(
+        "HostAclIp",
+        back_populates="host",
+        cascade="delete, delete-orphan",
+    )
+    countries_allowed = relationship(
+        "HostCountryAllowed",
+        back_populates="host",
+        cascade="delete, delete-orphan",
+    )
+    netblocks = relationship(
+        "HostNetblock",
+        back_populates="host",
+        cascade="delete, delete-orphan",
+        order_by='HostNetblock.netblock',
+    )
+    peer_asns = relationship(
+        "HostPeerAsn",
+        back_populates="host",
+        cascade="delete, delete-orphan",
+    )
+    locations = relationship(
+        "HostLocation",
+        back_populates="host",
+        cascade="delete, delete-orphan",
+    )
+    countries = relationship(
+        "HostCountry",
+        back_populates="host",
+        cascade="delete, delete-orphan",
+    )
+
 
     # exclusive_dirs = MultipleJoin('DirectoryExclusiveHost')
     # locations = SQLRelatedJoin('Location')
@@ -320,6 +361,32 @@ class Directory(BASE):
     readable = sa.Column(sa.Boolean(), default=True, nullable=False)
     ctime = sa.Column(sa.BigInteger, default=0, nullable=True)
 
+    host_category_dirs = relationship(
+        "HostCategoryDir",
+        back_populates="directory",
+        cascade="delete, delete-orphan",
+    )
+    categories = relationship(
+        "Category",
+        secondary="category_directory",
+        back_populates="directories",
+        # cascade="delete, delete-orphan",
+    )
+    # categorydir = relationship(
+    #     'CategoryDirectory',
+    #     #back_populates='directory',
+    #     cascade="delete, delete-orphan",
+    # )
+    repositories = relationship(
+        "Repository",
+        back_populates="directory",
+    )
+    fileDetails = relationship(
+        "FileDetail",
+        back_populates="directory",
+        cascade="delete, delete-orphan",
+    )
+
     def __repr__(self):
         ''' Return a string representation of the object. '''
         return '<Directory(%s - %s)>' % (self.id, self.name)
@@ -389,6 +456,9 @@ class Product(BASE):
     name = sa.Column(sa.Text(), nullable=False, unique=True)
     publiclist = sa.Column(sa.Boolean(), default=True, nullable=False)
 
+    categories = relationship("Category", back_populates="product")
+    versions = relationship("Version", back_populates="product")
+
     def __repr__(self):
         ''' Return a string representation of the object. '''
         return '<Product(%s - %s)>' % (self.id, self.name)
@@ -432,23 +502,23 @@ class Category(BASE):
         sa.Integer, sa.ForeignKey('directory.id'), nullable=True)
 
     # Relations
-    product = relation(
-        'Product',
-        foreign_keys=[product_id], remote_side=[Product.id],
-        backref=backref('categories')
-    )
-    topdir = relation(
-        'Directory',
-        foreign_keys=[topdir_id], remote_side=[Directory.id],
-    )
-
+    product = relationship('Product', back_populates='categories')
+    topdir = relationship('Directory')
+    host_categories = relationship("HostCategory", cascade="delete, delete-orphan")
+    repositories = relationship("Repository", back_populates="category")
+    # categorydir = relationship(
+    #     'CategoryDirectory',
+    # #     back_populates='category',
+    #     cascade="delete, delete-orphan",
+    # )
     # all the directories that are part of this category
-    directories = relation(
+    directories = relationship(
         "Directory",
         secondary="category_directory",
-        primaryjoin="category.c.id==category_directory.c.category_id",
-        secondaryjoin="category_directory.c.directory_id==directory.c.id",
-        backref="categories",
+        # primaryjoin="category.c.id==category_directory.c.category_id",
+        # secondaryjoin="category_directory.c.directory_id==directory.c.id",
+        back_populates="categories",
+        # cascade="delete, delete-orphan",
     )
 
     def __repr__(self):
@@ -469,14 +539,8 @@ class SiteToSite(BASE):
         sa.Integer, sa.ForeignKey('site.id'), nullable=False)
 
     # Relations
-    upstream_site = relation(
-        'Site',
-        foreign_keys=[upstream_site_id], remote_side=[Site.id],
-    )
-    downstream_site = relation(
-        'Site',
-        foreign_keys=[downstream_site_id], remote_side=[Site.id],
-    )
+    upstream_site = relationship('Site', foreign_keys=[upstream_site_id])
+    downstream_site = relationship('Site', foreign_keys=[downstream_site_id])
 
     # Constraints
     __table_args__ = (
@@ -499,11 +563,9 @@ class SiteAdmin(BASE):
         sa.Integer, sa.ForeignKey('site.id'), nullable=False)
 
     # Relation
-    site = relation(
+    site = relationship(
         'Site',
-        foreign_keys=[site_id], remote_side=[Site.id],
-        backref=backref('admins', cascade="delete, delete-orphan",
-                        single_parent=True),
+        back_populates="admins",
     )
 
 
@@ -521,21 +583,20 @@ class HostCategory(BASE):
     always_up2date = sa.Column(sa.Boolean(), default=False, nullable=False)
 
     # Relations
-    category = relation(
-        'Category',
-        foreign_keys=[category_id], remote_side=[Category.id],
-        backref=backref(
-            'host_categories', cascade="delete, delete-orphan",
-            single_parent=True)
+    category = relationship('Category', back_populates="host_categories")
+    host = relationship('Host', back_populates='categories')
+    directories = relationship(
+        "HostCategoryDir",
+        back_populates="host_category",
+        cascade="delete, delete-orphan",
+        order_by="HostCategoryDir.path",
+    )
+    urls = relationship(
+        "HostCategoryUrl",
+        back_populates="host_category",
+        cascade="delete, delete-orphan",
     )
 
-    host = relation(
-        'Host',
-        foreign_keys=[host_id], remote_side=[Host.id],
-        backref=backref(
-            'categories', cascade="delete, delete-orphan",
-            single_parent=True)
-    )
 
     # Constraints
     __table_args__ = (
@@ -573,21 +634,8 @@ class HostCategoryDir(BASE):
     __mapper_args__ = {'confirm_deleted_rows': False}
 
     # Relations
-    directory = relation(
-        'Directory',
-        foreign_keys=[directory_id], remote_side=[Directory.id],
-        backref=backref(
-            'host_category_dirs', cascade="delete, delete-orphan",
-            single_parent=True),
-    )
-
-    host_category = relation(
-        'HostCategory',
-        foreign_keys=[host_category_id], remote_side=[HostCategory.id],
-        backref=backref(
-            'directories', order_by=path, cascade="delete, delete-orphan",
-            single_parent=True),
-    )
+    directory = relationship('Directory', back_populates='host_category_dirs')
+    host_category = relationship('HostCategory', back_populates="directories")
 
     # Constraints
     __table_args__ = (
@@ -604,22 +652,16 @@ class CategoryDirectory(BASE):
         sa.Integer, sa.ForeignKey('category.id'), primary_key=True)
     directory_id = sa.Column(
         sa.Integer, sa.ForeignKey('directory.id'), primary_key=True)
-
-    category = relation(
-        'Category',
-        foreign_keys=[category_id], remote_side=[Category.id],
-        backref=backref('categorydir')
-    )
-
-    directory = relation(
-        'Directory',
-        foreign_keys=[directory_id], remote_side=[Directory.id],
-        backref=backref(
-            'categorydir',
-            cascade="delete, delete-orphan",
-            single_parent=True
-        )
-    )
+    # category = relationship(
+    #     'Category',
+    #     # back_populates='categorydir',
+    #     # cascade="delete, delete-orphan",
+    # )
+    # directory = relationship(
+    #     'Directory',
+    #     # back_populates='categorydir',
+    #     # cascade="delete, delete-orphan",
+    # )
 
     def __repr__(self):
         ''' Return a string representation of the object. '''
@@ -643,12 +685,7 @@ class HostCategoryUrl(BASE):
     __mapper_args__ = {'confirm_deleted_rows': False}
 
     # Relations
-    host_category = relation(
-        'HostCategory',
-        foreign_keys=[host_category_id], remote_side=[HostCategory.id],
-        backref=backref(
-            'urls', cascade="delete, delete-orphan", single_parent=True),
-    )
+    host_category = relationship('HostCategory', back_populates="urls")
 
     # Constraints
     __table_args__ = (
@@ -667,13 +704,7 @@ class HostAclIp(BASE):
         sa.Integer, sa.ForeignKey('host.id'), nullable=True)
 
     # Relation
-    host = relation(
-        'Host',
-        foreign_keys=[host_id], remote_side=[Host.id],
-        backref=backref(
-            'acl_ips', order_by='HostAclIp.ip',
-            cascade="delete, delete-orphan", single_parent=True),
-    )
+    host = relationship('Host', back_populates="acl_ips")
 
     # Constraints
     __table_args__ = (
@@ -692,13 +723,7 @@ class HostCountryAllowed(BASE):
         sa.Integer, sa.ForeignKey('host.id'), nullable=True)
 
     # Relation
-    host = relation(
-        'Host',
-        foreign_keys=[host_id], remote_side=[Host.id],
-        backref=backref(
-            'countries_allowed', cascade="delete, delete-orphan",
-            single_parent=True),
-    )
+    host = relationship('Host', back_populates="countries_allowed")
 
 
 class HostNetblock(BASE):
@@ -712,13 +737,7 @@ class HostNetblock(BASE):
         sa.Integer, sa.ForeignKey('host.id'), nullable=True)
 
     # Relation
-    host = relation(
-        'Host',
-        foreign_keys=[host_id], remote_side=[Host.id],
-        backref=backref(
-            'netblocks', order_by='HostNetblock.netblock',
-            cascade="delete, delete-orphan", single_parent=True),
-    )
+    host = relationship('Host', back_populates="netblocks")
 
 
 class HostPeerAsn(BASE):
@@ -732,13 +751,7 @@ class HostPeerAsn(BASE):
         sa.Integer, sa.ForeignKey('host.id'), nullable=True)
 
     # Relation
-    host = relation(
-        'Host',
-        foreign_keys=[host_id], remote_side=[Host.id],
-        backref=backref(
-            'peer_asns', cascade="delete, delete-orphan",
-            single_parent=True),
-    )
+    host = relationship('Host', back_populates="peer_asns")
 
     # Constraints
     __table_args__ = (
@@ -760,10 +773,7 @@ class HostStats(BASE):
         sa.Integer, sa.ForeignKey('host.id'), nullable=True)
 
     # Relation
-    host = relation(
-        'Host',
-        foreign_keys=[host_id], remote_side=[Host.id],
-    )
+    host = relationship('Host')
 
 
 class Arch(BASE):
@@ -774,6 +784,8 @@ class Arch(BASE):
     name = sa.Column(sa.Text(), nullable=False, unique=True)
     publiclist = sa.Column(sa.Boolean(), default=True, nullable=False)
     primary_arch = sa.Column(sa.Boolean(), default=True, nullable=False)
+
+    repositories = relationship("Repository", back_populates="arch")
 
     def __repr__(self):
         ''' Return a string representation of the object. '''
@@ -796,11 +808,8 @@ class Version(BASE):
         sa.Integer, sa.ForeignKey('product.id'), nullable=True)
 
     # Relations
-    product = relation(
-        'Product',
-        foreign_keys=[product_id], remote_side=[Product.id],
-        backref=backref('versions'),
-    )
+    product = relationship('Product', back_populates="versions")
+    repositories = relationship("Repository", back_populates="version")
 
     # Constraints
     __table_args__ = (
@@ -841,25 +850,10 @@ class Repository(BASE):
     disabled = sa.Column(sa.Boolean(), default=False, nullable=False)
 
     # Relations
-    category = relation(
-        'Category',
-        foreign_keys=[category_id], remote_side=[Category.id],
-        backref=backref('repositories')
-    )
-    version = relation(
-        'Version',
-        foreign_keys=[version_id], remote_side=[Version.id],
-        backref=backref('repositories')
-    )
-    arch = relation(
-        'Arch',
-        foreign_keys=[arch_id], remote_side=[Arch.id],
-    )
-    directory = relation(
-        'Directory',
-        foreign_keys=[directory_id], remote_side=[Directory.id],
-        backref=backref('repositories'),
-    )
+    category = relationship('Category', back_populates='repositories')
+    version = relationship('Version', back_populates='repositories')
+    arch = relationship('Arch', back_populates='repositories')
+    directory = relationship('Directory', back_populates='repositories')
 
     # Constraints
     __table_args__ = (
@@ -926,14 +920,11 @@ class FileDetail(BASE):
         sa.Integer, sa.ForeignKey('directory.id'), nullable=False)
 
     # Relations
-    directory = relation(
-        'Directory',
-        foreign_keys=[directory_id], remote_side=[Directory.id],
-        backref=backref(
-            'fileDetails',
-            cascade="delete, delete-orphan",
-            single_parent=True
-        )
+    directory = relationship('Directory', back_populates='fileDetails')
+    fileGroups = relationship(
+        'FileGroup',
+        back_populates='files',
+        secondary="file_detail_file_group",
     )
 
 
@@ -982,14 +973,8 @@ class DirectoryExclusiveHost(BASE):
         sa.Integer, sa.ForeignKey('host.id'), nullable=False)
 
     # Relations
-    directory = relation(
-        'Directory',
-        foreign_keys=[directory_id], remote_side=[Directory.id],
-    )
-    host = relation(
-        'Host',
-        foreign_keys=[host_id], remote_side=[Host.id],
-    )
+    directory = relationship('Directory')
+    host = relationship('Host')
 
     # Constraints
     __table_args__ = (
@@ -1023,17 +1008,8 @@ class HostLocation(BASE):
         sa.Integer, sa.ForeignKey('host.id'), nullable=False)
 
     # Relations
-    host = relation(
-        'Host',
-        foreign_keys=[host_id], remote_side=[Host.id],
-        backref=backref(
-            'locations', cascade="delete, delete-orphan",
-            single_parent=True)
-    )
-    location = relation(
-        'Location',
-        foreign_keys=[location_id], remote_side=[Location.id],
-    )
+    host = relationship('Host', back_populates="locations")
+    location = relationship('Location')
 
     # Constraints
     __table_args__ = (
@@ -1050,14 +1026,12 @@ class FileGroup(BASE):
     name = sa.Column(sa.Text(), nullable=False, unique=True)
 
     # all the files related to this group
-    files = relation(
+    files = relationship(
         "FileDetail",
         secondary="file_detail_file_group",
-        primaryjoin="file_detail.c.id=="
-        "file_detail_file_group.c.file_detail_id",
-        secondaryjoin="file_detail_file_group.c.file_group_id=="
-        "file_group.c.id",
-        backref="fileGroups",
+        # primaryjoin="file_detail.c.id==file_detail_file_group.c.file_detail_id",
+        # secondaryjoin="file_detail_file_group.c.file_group_id==file_group.c.id",
+        back_populates="fileGroups",
     )
 
 
@@ -1083,18 +1057,8 @@ class HostCountry(BASE):
         sa.Integer, sa.ForeignKey('host.id'), nullable=False)
 
     # Relations
-    host = relation(
-        'Host',
-        foreign_keys=[host_id], remote_side=[Host.id],
-        backref=backref(
-            'countries', cascade="delete, delete-orphan",
-            single_parent=True)
-    )
-    country = relation(
-        'Country',
-        foreign_keys=[country_id], remote_side=[Country.id],
-        # backref=backref('hosts')
-    )
+    host = relationship('Host', back_populates="countries")
+    country = relationship('Country')
 
     # Constraints
     __table_args__ = (
@@ -1129,6 +1093,8 @@ class UserVisit(BASE):
         sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
     expiry = sa.Column(sa.DateTime)
 
+    user = relationship("User", back_populates="session")
+
 
 class Group(BASE):
     """
@@ -1144,6 +1110,12 @@ class Group(BASE):
     display_name = sa.Column(sa.String(255), nullable=True)
     created = sa.Column(
         sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
+
+    users = relationship(
+        "User",
+        secondary="mm_user_group",
+        back_populates="group_objs"
+    )
 
     def __repr__(self):
         ''' Return a string representation of this object. '''
@@ -1202,14 +1174,14 @@ class User(BASE):
         onupdate=sa.func.now())
 
     # Relations
-    group_objs = relation(
+    group_objs = relationship(
         "Group",
         secondary="mm_user_group",
-        primaryjoin="mm_user.c.id==mm_user_group.c.user_id",
-        secondaryjoin="mm_group.c.id==mm_user_group.c.group_id",
-        backref="users",
+        # primaryjoin="mm_user.c.id==mm_user_group.c.user_id",
+        # secondaryjoin="mm_group.c.id==mm_user_group.c.group_id",
+        back_populates="users",
     )
-    session = relation("UserVisit", backref="user")
+    session = relationship("UserVisit", back_populates="user")
 
     @property
     def username(self):
