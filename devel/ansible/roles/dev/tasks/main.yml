@@ -25,10 +25,14 @@
     requirements: /vagrant/requirements.txt
 
 - name: Enroll system as IPA client
-  shell: ipa-client-install --hostname mirrormanager2.tinystage.test --domain tinystage.test --realm TINYSTAGE.TEST --server ipa.tinystage.test -p admin -w password -U -N --force-join
+  shell: ipa-client-install --hostname mirrormanager2.tinystage.test --domain tinystage.test --realm TINYSTAGE.TEST --server ipa.tinystage.test -p admin -w password -U -N --force-join --force
+  args:
+    creates: /etc/ipa/default.conf
 
 - name: Generate and get SSL cert
   shell: ipa-getcert request -f /etc/pki/tls/certs/server.pem -k /etc/pki/tls/private/server.key -K HTTP/mirrormanager2.tinystage.test
+  args:
+    creates: /etc/pki/tls/certs/server.pem
 
 - name: Check the cert is there
   wait_for:
@@ -58,15 +62,22 @@
     py3ver: "{{ _python3_version_result.stdout | trim }}"
 
 # not sure of how to do this another way, but without this, oidc_register fails
+- name: Get the content of the CA cert
+  slurp:
+    src: /etc/ipa/ca.crt
+  register: ca_crt
 - name: Put tinystage root CA in the list of CA's for httplib2
-  shell: cat /etc/ipa/ca.crt >> /usr/lib/python{{ py3ver }}/site-packages/httplib2/cacerts.txt
+  blockinfile:
+    block: "{{ ca_crt.content | b64decode }}"
+    path: /usr/lib/python{{ py3ver }}/site-packages/httplib2/cacerts.txt
 
 - name: register the application with oidc-register
-  shell: oidc-register --debug https://ipsilon.tinystage.test/idp/openidc/ https://mirrormanager2.tinystage.test/oidc_callback
+  shell: oidc-register --debug https://ipsilon.tinystage.test/idp/openidc/ https://mirrormanager2.tinystage.test/authorize
   become: yes
   become_user: vagrant
   args:
     chdir: /home/vagrant/
+    creates: /home/vagrant/client_secrets.json
 
 - name: Install the config file
   copy:
@@ -78,7 +89,7 @@
   command: python3 createdb.py
   args:
     chdir: /vagrant/
-    creates: /vagrant/alembic.ini
+    creates: /var/tmp/mirrormanager2_dev.sqlite
   environment:
     MM2_CONFIG: '/home/vagrant/mirrormanager2.cfg'
 

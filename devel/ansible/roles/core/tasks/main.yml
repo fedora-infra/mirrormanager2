@@ -8,4 +8,5 @@
     - screen
     - tmux
     - tree
+    - vim
     state: present

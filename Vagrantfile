@@ -8,8 +8,8 @@ Vagrant.configure(2) do |config|
   config.hostmanager.manage_guest = true
 
   config.vm.define "mirrormanager2" do |mirrormanager2|
-    mirrormanager2.vm.box_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/35/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-35-1.2.x86_64.vagrant-libvirt.box"
-    mirrormanager2.vm.box = "f35-cloud-libvirt"
+    mirrormanager2.vm.box_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/37/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-37-1.7.x86_64.vagrant-libvirt.box"
+    mirrormanager2.vm.box = "f37-cloud-libvirt"
     mirrormanager2.vm.hostname = "mirrormanager2.tinystage.test"
 
     mirrormanager2.vm.synced_folder ".", "/vagrant", type: "sshfs"
