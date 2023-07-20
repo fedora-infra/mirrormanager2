@@ -5,6 +5,7 @@ Wants=network-online.target
 
 [Service]
 Environment=MM2_CONFIG=/home/vagrant/mirrormanager2.cfg
+Environment=PYTHONUNBUFFERED=1
 Environment=FLASK_DEBUG=1
 Environment=FLASK_APP=/vagrant/mirrormanager2/app.py
 User=root
