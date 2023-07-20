@@ -38,6 +38,7 @@ from flask_admin import Admin
 from sqlalchemy.exc import SQLAlchemyError
 
 from mirrormanager2 import __version__
+from mirrormanager2.oidc import FedoraAuthCompat
 
 APP = flask.Flask(__name__)
 
@@ -86,13 +87,9 @@ LOG = APP.logger
 
 
 if APP.config.get('MM_AUTHENTICATION') == 'fas':
-    # Use FAS/ipsion oidc for authentication
-    try:
-        from flask_oidc import OpenIDConnect
-        OIDC = OpenIDConnect(APP, credentials_store=flask.session)
-        # FAS = FAS(APP)
-    except ImportError:
-        APP.logger.exception("Couldn't import flask_oidc")
+    from .auth import FedoraAuthCompat
+    OIDC = FedoraAuthCompat()
+    OIDC.init_app(APP)
 
 
 import mirrormanager2
@@ -1385,8 +1382,7 @@ def auth_logout():
 
     if APP.config.get('MM_AUTHENTICATION', None) == 'fas':
         if hasattr(flask.g, 'fas_user') and flask.g.fas_user is not None:
-            OIDC.logout()
-            flask.flash("You are no longer logged-in")
+            return OIDC.logout(next_url)
     elif APP.config.get('MM_AUTHENTICATION', None) == 'local':
         login.logout()
     return flask.redirect(next_url)
@@ -1394,7 +1390,7 @@ def auth_logout():
 
 # Only import the login controller if the app is set up for local login
 if APP.config.get('MM_AUTHENTICATION', None) == 'local':
-    import mirrormanager2.login
+    from mirrormanager2 import login
     APP.before_request(login._check_session_cookie)
     APP.after_request(login._send_session_cookie)
 

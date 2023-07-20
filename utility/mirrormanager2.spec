@@ -29,6 +29,7 @@ BuildRequires:  python%{python_pkgversion}-fedora-flask >= 0.3.33
 BuildRequires:  python%{python_pkgversion}-setuptools
 BuildRequires:  python%{python_pkgversion}-psutil
 BuildRequires:  python%{python_pkgversion}-alembic
+BuildRequires:  python%{python_pkgversion}-authlib
 BuildRequires:  systemd-rpm-macros
 # Testing
 BuildRequires:  python%{python_pkgversion}-fedmsg-core
@@ -53,6 +54,7 @@ Requires:  python%{python_pkgversion}-fedora-flask >= 0.3.33
 Requires:  python%{python_pkgversion}-setuptools
 Requires:  python%{python_pkgversion}-psutil
 Requires:  python%{python_pkgversion}-alembic
+Requires:  python%{python_pkgversion}-authlib
 
 Requires:  %{name}-lib = %{version}-%{release}
 Requires:  %{name}-filesystem = %{version}-%{release}

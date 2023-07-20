@@ -13,3 +13,4 @@ IPy
 dnspython
 protobuf
 munch
+authlib
