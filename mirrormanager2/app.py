@@ -33,12 +33,12 @@ import werkzeug
 import flask
 import munch
 
-from functools import wraps
 from flask_admin import Admin
 from sqlalchemy.exc import SQLAlchemyError
 
 from mirrormanager2 import __version__
 from mirrormanager2.oidc import FedoraAuthCompat
+from mirrormanager2.admin import register_views as register_admin_views
 
 APP = flask.Flask(__name__)
 
@@ -102,71 +102,10 @@ import mirrormanager2.lib.model as model
 SESSION = mmlib.create_session(APP.config['DB_URL'])
 
 
-def is_mirrormanager_admin(user):
-    """ Is the user a mirrormanager admin.
-    """
-    if not user:
-        return False
-    auth_method = APP.config.get('MM_AUTHENTICATION', None)
-
-    if auth_method == 'fas':
-        if 'signed_fpca' not in user.groups:
-            return False
-
-    if auth_method in ('fas', 'local'):
-        admins = APP.config['ADMIN_GROUP']
-        if isinstance(admins, str):
-            admins = [admins]
-        admins = set(admins)
-
-        return len(admins.intersection(set(user.groups))) > 0
-    else:
-        return user in APP.config['ADMIN_GROUP']
+register_admin_views(APP, ADMIN, SESSION)
 
 
-def is_site_admin(user, site):
-    """ Is the user an admin of this site.
-    """
-    if not user:
-        return False
-
-    admins = [admin.username for admin in site.admins]
-
-    return user.username in admins
-
-
-def is_authenticated():
-    """ Returns whether the user is currently authenticated or not. """
-    return hasattr(flask.g, 'fas_user') and flask.g.fas_user is not None
-
-
-def login_required(function):
-    """ Flask decorator to ensure that the user is logged in. """
-    @wraps(function)
-    def decorated_function(*args, **kwargs):
-        ''' Wrapped function actually checking if the user is logged in.
-        '''
-        if not is_authenticated():
-            return flask.redirect(flask.url_for(
-                'auth_login', next=flask.request.url))
-        return function(*args, **kwargs)
-    return decorated_function
-
-
-def admin_required(function):
-    """ Flask decorator to ensure that the user is logged in. """
-    @wraps(function)
-    def decorated_function(*args, **kwargs):
-        ''' Wrapped function actually checking if the user is logged in.
-        '''
-        if not is_authenticated():
-            return flask.redirect(flask.url_for(
-                'auth_login', next=flask.request.url))
-        elif not is_mirrormanager_admin(flask.g.fas_user):
-            flask.flash('You are not an admin', 'error')
-            return flask.redirect(flask.url_for('index'))
-        return function(*args, **kwargs)
-    return decorated_function
+from .perms import login_required, admin_required, is_mirrormanager_admin, is_site_admin
 
 
 # # Flask application
