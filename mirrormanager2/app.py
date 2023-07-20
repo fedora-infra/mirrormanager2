@@ -1522,7 +1522,7 @@ def propagation(prefix='development'):
         prefix = 'development'
 
     prop_base = APP.config['PROPAGATION_BASE']
-    stat_file = werkzeug.secure_filename(prefix + "-repomd-propagation.svg")
+    stat_file = werkzeug.utils.secure_filename(prefix + "-repomd-propagation.svg")
     stat_file = os.path.join(prop_base, stat_file)
 
     if not os.access(stat_file, os.R_OK):

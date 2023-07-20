@@ -479,7 +479,7 @@ def get_categories(session, skip_admin=False):
         query = query.filter(
             sqlalchemy.or_(
                 model.Category.admin_only.is_(None),
-                model.Category.admin_only is False,
+                model.Category.admin_only.is_(False),
             )
         )
 
@@ -756,9 +756,9 @@ def get_mirrors(
     if last_crawl_duration is True:
         query = query.filter(model.Host.last_crawl_duration > 0)
     if last_crawled is True:
-        query = query.filter(model.Host.last_crawled is not None)
+        query = query.filter(sqlalchemy.not_(model.Host.last_crawled.is_(None)))
     if last_checked_in is True:
-        query = query.filter(model.Host.last_checked_in is not None)
+        query = query.filter(sqlalchemy.not_(model.Host.last_checked_in.is_(None)))
 
     if site_private is not None:
         query = query.filter(
@@ -1141,15 +1141,15 @@ def query_directories(session):
         model.Host.internet2.label('internet2'),
         model.Host.internet2_clients.label('internet2_clients'),
     ).filter(
-        model.Host.user_active is True
+        model.Host.user_active.is_(True)
     ).filter(
-        model.Host.admin_active is True
+        model.Host.admin_active.is_(True)
     ).filter(
         model.Host.site_id == model.Site.id
     ).filter(
-        model.Site.user_active is True
+        model.Site.user_active.is_(True)
     ).filter(
-        model.Site.admin_active is True
+        model.Site.admin_active.is_(True)
     ).filter(
         model.Host.id == model.HostCategory.host_id
     ).filter(
@@ -1159,7 +1159,7 @@ def query_directories(session):
     ).filter(
         model.HostCategory.id == model.HostCategoryUrl.host_category_id
     ).filter(
-        model.HostCategoryUrl.private is False
+        model.HostCategoryUrl.private.is_(False)
     )
 
     q1 = query.filter(
@@ -1167,11 +1167,11 @@ def query_directories(session):
     ).filter(
         model.HostCategoryDir.directory_id == model.Directory.id
     ).filter(
-        model.HostCategoryDir.up2date is True
+        model.HostCategoryDir.up2date.is_(True)
     )
 
     q2 = query.filter(
-        model.HostCategory.always_up2date is True
+        model.HostCategory.always_up2date.is_(True)
     )
 
     q = session.query(
