@@ -45,7 +45,7 @@ APP.config.from_object('mirrormanager2.default_config')
 if 'MM2_CONFIG' in os.environ:  # pragma: no cover
     APP.config.from_envvar('MM2_CONFIG')
 
-ADMIN = Admin(APP)
+ADMIN = Admin(APP, template_mode="bootstrap3")
 
 
 # Points the template and static folders to the desired theme
