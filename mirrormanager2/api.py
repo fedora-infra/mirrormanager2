@@ -24,11 +24,13 @@ MirrorManager2 API controller.
 import flask
 
 import mirrormanager2.lib as mmlib
-from mirrormanager2.app import APP, SESSION
 
 
-@APP.route('/api/mirroradmins/')
-@APP.route('/api/mirroradmins')
+views = flask.Blueprint("api", __name__)
+
+
+@views.route('/mirroradmins/')
+@views.route('/mirroradmins')
 def api_mirroradmins():
     '''
     List the admins of a mirror
@@ -65,13 +67,13 @@ def api_mirroradmins():
     if not name:
         admins = set(
             [admin.username
-             for admin in mmlib.get_siteadmins(SESSION)]
+             for admin in mmlib.get_siteadmins(flask.g.db)]
         )
     else:
         site = None
-        host = mmlib.get_host_by_name(SESSION, name)
+        host = mmlib.get_host_by_name(flask.g.db, name)
         if not host:
-            site = mmlib.get_site_by_name(SESSION, name)
+            site = mmlib.get_site_by_name(flask.g.db, name)
         else:
             site = host.site
 
@@ -95,8 +97,8 @@ def api_mirroradmins():
     return jsonout
 
 
-@APP.route('/api/repositories/')
-@APP.route('/api/repositories')
+@views.route('/repositories/')
+@views.route('/repositories')
 def api_repositories():
     '''
     List the repositories
@@ -133,7 +135,7 @@ def api_repositories():
 
     '''
 
-    repositories = mmlib.get_repositories(SESSION)
+    repositories = mmlib.get_repositories(flask.g.db)
     repos = []
     for repository in repositories:
         if not repository:

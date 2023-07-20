@@ -49,7 +49,7 @@ def login_required(function):
         '''
         if not is_authenticated():
             return redirect(url_for(
-                'auth_login', next=request.url))
+                'auth.login', next=request.url))
         return function(*args, **kwargs)
     return decorated_function
 
@@ -62,9 +62,9 @@ def admin_required(function):
         '''
         if not is_authenticated():
             return redirect(url_for(
-                'auth_login', next=request.url))
+                'auth.login', next=request.url))
         elif not is_mirrormanager_admin(g.fas_user):
             flash('You are not an admin', 'error')
-            return redirect(url_for('index'))
+            return redirect(url_for('base.index'))
         return function(*args, **kwargs)
     return decorated_function

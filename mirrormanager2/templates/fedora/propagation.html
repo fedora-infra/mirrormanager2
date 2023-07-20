@@ -16,12 +16,12 @@
             <ul>
             {%- for prop in props -%}
                 {%- if prop != prefix %}
-                   <li><a href="{{url_for('propagation')}}/{{prop}}">{{prop}}</a></li>
+                   <li><a href="{{url_for('base.propagation')}}/{{prop}}">{{prop}}</a></li>
                 {%- endif -%}
             {%- endfor -%}
             </ul>
         {%- endif -%}
-        <img src="{{url_for('index')}}data/propagation/{{prefix}}-repomd-propagation.svg" border="0" alt="alt" class="centered"/>
+        <img src="{{url_for('base.index')}}data/propagation/{{prefix}}-repomd-propagation.svg" border="0" alt="alt" class="centered"/>
     {%- endif -%}
 
 {% else -%}

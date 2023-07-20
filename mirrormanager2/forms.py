@@ -38,11 +38,10 @@ try:
 except ImportError:
     from flask_wtf import Form as FlaskForm
 
-from flask import g
+from flask import g, current_app
 
 import IPy
 
-from mirrormanager2.app import APP
 
 COUNTRY_REGEX = '^[a-zA-Z][a-zA-Z]$'
 
@@ -170,8 +169,8 @@ class AddHostAclIpForm(FlaskForm):
     )
 
 def validate_netblocks(form, field):
-    max_ipv4_netblock_size = APP.config.get('MM_IPV4_NETBLOCK_SIZE', '/16')
-    max_ipv6_netblock_size = APP.config.get('MM_IPV6_NETBLOCK_SIZE', '/32')
+    max_ipv4_netblock_size = current_app.config.get('MM_IPV4_NETBLOCK_SIZE', '/16')
+    max_ipv6_netblock_size = current_app.config.get('MM_IPV6_NETBLOCK_SIZE', '/32')
 
     emsg = "Error: IPv4 netblocks larger than %s" % max_ipv4_netblock_size
     emsg += ", and IPv6 netblocks larger than %s" % max_ipv6_netblock_size
@@ -263,7 +262,6 @@ class EditHostCategoryForm(FlaskForm):
 
 class AddHostCategoryUrlForm(FlaskForm):
     """ Form to add a host_category_url. """
-    p = APP.config.get('MM_PROTOCOL_REGEX', '')
     url = wtforms.StringField(
         'URL  <span class="error">*</span>',
         [
@@ -271,8 +269,9 @@ class AddHostCategoryUrlForm(FlaskForm):
             # private mirrors might have unusual URLs
             wtforms.validators.URL(require_tld=False),
             wtforms.validators.Regexp(
-                p,
-                flags=re.IGNORECASE,
+                # Will be filled with current_app.config['MM_PROTOCOL_REGEX'] in the view
+                # because we don't have access to current_app here.
+                '',
                 message='Unsupported URL'
             ),
         ]

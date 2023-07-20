@@ -17,7 +17,7 @@
 {% endif %}
 
 <p class="buttons indent">
-  <a href="{{ url_for('site_new') }}">
+  <a href="{{ url_for('base.site_new') }}">
     <input type="button" value="Register a new site" class="button">
   </a>
 </p>
@@ -36,7 +36,7 @@
   {% for site in sites %}
   <tr>
     <td rowspan="{% if site.hosts %}{{ site.hosts | length }}{% endif %}" class="matrix_section">
-      <a href="{{ url_for('site_view', site_id=site.id) }}">
+      <a href="{{ url_for('base.site_view', site_id=site.id) }}">
         {{ site.name }}
       </a>
     </td>
@@ -59,7 +59,7 @@
         {% else %}
           <td class="{{ loop.cycle('matrix_odd', 'matrix_even') }}">
         {% endif %}
-          <a href="{{ url_for('host_view', host_id=host.id) }}">
+          <a href="{{ url_for('base.host_view', host_id=host.id) }}">
             {{host.name}}
           </a>
         </td>

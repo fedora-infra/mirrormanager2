@@ -8,7 +8,7 @@
 <h2>Add host Peer ASNs</h2>
 
 <p>
-  Back to <a href="{{ url_for('host_view', host_id=host.id) }}">
+  Back to <a href="{{ url_for('base.host_view', host_id=host.id) }}">
     {{ host.name }}</a>
 </p>
 
@@ -20,14 +20,14 @@
   create new entries here.
 </p>
 
-<form action="{{ url_for('host_asn_new', host_id=host.id) }}" method="POST">
+<form action="{{ url_for('base.host_asn_new', host_id=host.id) }}" method="POST">
   <table>
     {{ render_field_in_row(form.asn) }}
     {{ render_field_in_row(form.name) }}
   </table>
   <p class="buttons indent">
     <input type="submit" class="submit positive button" value="Create">
-    <a href="{{ url_for('host_view', host_id=host.id) }}">
+    <a href="{{ url_for('base.host_view', host_id=host.id) }}">
       <input type="button" value="Cancel" class="button">
     </a>
     {{ form.csrf_token }}
