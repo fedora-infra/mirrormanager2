@@ -27,17 +27,15 @@ import json
 import bz2
 import logging
 
+import flask
 from flask_xmlrpcre.xmlrpcre import XMLRPCHandler
 
-from mirrormanager2.app import APP, SESSION
 from mirrormanager2.lib.hostconfig import read_host_config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 XMLRPC = XMLRPCHandler('xmlrpc')
-XMLRPC.connect(APP, '/xmlrpc')
 
 
 @XMLRPC.register
@@ -50,7 +48,7 @@ def checkin(pickledata):
         logging.info("Fell back to pickle")
         is_pickle = True
         config = pickle.loads(uncompressed)
-    r, host, message = read_host_config(SESSION, config)
+    r, host, message = read_host_config(flask.g.db, config)
     if r is not None:
         logging.info("Checkin for host %s (pickle:%s) succesful: %s" %
                 (host, is_pickle, message))

@@ -13,8 +13,8 @@
 <h2>Host category</h2>
 
 <p>
-  Back to <a href="{{ url_for('site_view', site_id=host.site_id) }}">
-    {{ host.site.name }}</a> / <a href="{{ url_for('host_view', host_id=host.id) }}">
+  Back to <a href="{{ url_for('base.site_view', site_id=host.site_id) }}">
+    {{ host.site.name }}</a> / <a href="{{ url_for('base.host_view', host_id=host.id) }}">
     {{ host.name }}</a>
 </p>
 
@@ -24,7 +24,7 @@
 </p>
 
 {% if is_admin %}
-<form action="{{ url_for('host_category', host_id=host.id,
+<form action="{{ url_for('base.host_category', host_id=host.id,
                  hc_id=hostcategory.id) }}" method="POST">
   <table>
     {{ render_field_in_row(form.always_up2date) }}
@@ -47,7 +47,7 @@
 </p>
 
 <a class="icon icon-plus-sign blue"
-  href="{{ url_for('host_category_url_new', host_id=host.id,
+  href="{{ url_for('base.host_category_url_new', host_id=host.id,
            hc_id=hostcategory.id) }}"> [add]</a>
 
 {% if hostcategory.urls %}
@@ -55,7 +55,7 @@
   {% for urls in hostcategory.urls %}
   <li>
     <form class="icon" method="POST"
-        action="{{ url_for('host_category_url_delete', host_id=host.id,
+        action="{{ url_for('base.host_category_url_delete', host_id=host.id,
                    hc_id=hostcategory.id, host_category_url_id=urls.id) }}">
       {{ urls.url }}
       {{ form.csrf_token }}

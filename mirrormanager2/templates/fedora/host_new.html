@@ -8,7 +8,7 @@
 <h2>Create new host</h2>
 
 <p>
-  Back to <a href="{{ url_for('site_view', site_id=site.id) }}">
+  Back to <a href="{{ url_for('base.site_view', site_id=site.id) }}">
     {{ site.name }}</a>
 </p>
 
@@ -48,7 +48,7 @@
   </table>
   <p class="buttons indent">
     <input type="submit" class="submit positive button" value="Create">
-    <a href="{{ url_for('index') }}">
+    <a href="{{ url_for('base.index') }}">
       <input type="button" value="Cancel" class="button">
     </a>
     {{ form.csrf_token }}

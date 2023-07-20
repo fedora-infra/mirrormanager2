@@ -12,7 +12,7 @@
 {% block content %}
 <h2>Host {{ host.name }}
   <form class="icon inline" method="POST"
-    action="{{ url_for('host_drop', host_id=host.id) }}">
+    action="{{ url_for('base.host_drop', host_id=host.id) }}">
   {{ form.csrf_token }}
     <button
       onclick="return confirm('You sure you want to delete this host?');"
@@ -23,7 +23,7 @@
 </h2>
 
 <p>
-  Back to <a href="{{ url_for('site_view', site_id=host.site_id) }}">
+  Back to <a href="{{ url_for('base.site_view', site_id=host.site_id) }}">
     {{ host.site.name }}
   </a>
 </p>
@@ -67,7 +67,7 @@
   </table>
   <p class="buttons indent">
     <input type="submit" class="submit positive button" value="Update">
-    <a href="{{ url_for('index') }}">
+    <a href="{{ url_for('base.index') }}">
       <input type="button" value="Cancel" class="button">
     </a>
     {{ form.csrf_token }}
@@ -77,7 +77,7 @@
 <p>
 {% if host.private %}Last Checked In: {{ host.last_checked_in or '-' }} <br />{% endif %}
 {% if not host.private %}Last Crawled: {% if host.last_crawled %} {{ host.last_crawled
-  }} <a href="{{url_for('index')}}crawler/{{host.id}}.log">[Log]</a> {% else %} - {% endif %} <br />
+  }} <a href="{{url_for('base.index')}}crawler/{{host.id}}.log">[Log]</a> {% else %} - {% endif %} <br />
 Last Crawl Duration: {{ host.last_crawl_duration }} seconds
 {% if host.crawl_failures > 0 %}<br/>Number of consecutive crawl failures: {{ host.crawl_failures }} {% endif %}{% endif %}
 </p>
@@ -93,13 +93,13 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
 </p>
 
 <a class="icon icon-plus-sign blue"
-  href="{{ url_for('host_acl_ip_new', host_id=host.id) }}"> [add]</a>
+  href="{{ url_for('base.host_acl_ip_new', host_id=host.id) }}"> [add]</a>
 {% if host.acl_ips %}
   <ul>
   {% for acl in host.acl_ips %}
   <li>
       <form class="icon" method="POST"
-        action="{{ url_for('host_acl_ip_delete', host_id=host.id, host_acl_ip_id=acl.id) }}">
+        action="{{ url_for('base.host_acl_ip_delete', host_id=host.id, host_acl_ip_id=acl.id) }}">
       {{ acl.ip }}
       {{ form.csrf_token }}
         <button
@@ -127,13 +127,13 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
 </p>
 
 <a class="icon icon-plus-sign blue"
-  href="{{ url_for('host_netblock_new', host_id=host.id) }}"> [add]</a>
+  href="{{ url_for('base.host_netblock_new', host_id=host.id) }}"> [add]</a>
 {% if host.netblocks %}
   <ul>
   {% for netblock in host.netblocks %}
     <li>
       <form class="icon" method="POST"
-        action="{{ url_for('host_netblock_delete', host_id=host.id,
+        action="{{ url_for('base.host_netblock_delete', host_id=host.id,
                    host_netblock_id=netblock.id) }}">
       {{ netblock.netblock }}
       {{ form.csrf_token }}
@@ -161,7 +161,7 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
 
 {% if is_admin %}
 <a class="icon icon-plus-sign blue"
-  href="{{ url_for('host_asn_new', host_id=host.id) }}"> [add]</a>
+  href="{{ url_for('base.host_asn_new', host_id=host.id) }}"> [add]</a>
 {% endif %}
 {% if host.peer_asns %}
   <ul>
@@ -169,7 +169,7 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
     <li>
     {% if is_admin %}
       <form class="icon" method="POST"
-        action="{{ url_for('host_asn_delete', host_id=host.id,
+        action="{{ url_for('base.host_asn_delete', host_id=host.id,
                    host_asn_id=asn.id) }}">
         {{ asn.asn }}
         {{ form.csrf_token }}
@@ -198,13 +198,13 @@ Last Crawl Duration: {{ host.last_crawl_duration }} seconds
 </p>
 
 <a class="icon icon-plus-sign blue"
-  href="{{ url_for('host_country_new', host_id=host.id) }}"> [add]</a>
+  href="{{ url_for('base.host_country_new', host_id=host.id) }}"> [add]</a>
 {% if host.countries %}
   <ul>
   {% for country in host.countries %}
     <li>
       <form class="icon" method="POST"
-        action="{{ url_for('host_country_delete', host_id=host.id,
+        action="{{ url_for('base.host_country_delete', host_id=host.id,
                    host_country_id=country.id) }}">
       {{ country.country.code }}
       {{ form.csrf_token }}
@@ -230,15 +230,15 @@ Categories Carried
 </p>
 
 <a class="icon icon-plus-sign blue"
-  href="{{ url_for('host_category_new', host_id=host.id) }}"> [add]</a>
+  href="{{ url_for('base.host_category_new', host_id=host.id) }}"> [add]</a>
 {% if host.categories %}
   <ul>
   {% for category in host.categories %}
     <li>
       <form class="icon" method="POST"
-        action="{{ url_for('host_category_delete', host_id=host.id,
+        action="{{ url_for('base.host_category_delete', host_id=host.id,
                    hc_id=category.id) }}">
-        <a href="{{ url_for('host_category', host_id=host.id,
+        <a href="{{ url_for('base.host_category', host_id=host.id,
                     hc_id=category.id) }}">
         {{ category.category.name }}
         </a>

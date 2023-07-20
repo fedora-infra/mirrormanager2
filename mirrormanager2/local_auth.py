@@ -30,11 +30,13 @@ from sqlalchemy.exc import SQLAlchemyError
 import mirrormanager2.login_forms as forms
 import mirrormanager2.lib
 import mirrormanager2.lib.notifications
-from mirrormanager2.app import APP, SESSION
 from mirrormanager2.lib import model
 
 
-@APP.route('/user/new', methods=['GET', 'POST'])
+views = flask.Blueprint("local_auth", __name__)
+
+
+@views.route('/user/new', methods=['GET', 'POST'])
 def new_user():
     """ Create a new user.
     """
@@ -43,17 +45,17 @@ def new_user():
 
         username = form.user_name.data
         if mirrormanager2.lib.get_user_by_username(
-                SESSION, username):
+                flask.g.db, username):
             flask.flash('Username already taken.', 'error')
             return flask.redirect(flask.request.url)
 
         email = form.email_address.data
-        if mirrormanager2.lib.get_user_by_email(SESSION, email):
+        if mirrormanager2.lib.get_user_by_email(flask.g.db, email):
             flask.flash('Email address already taken.', 'error')
             return flask.redirect(flask.request.url)
 
         password = '%s%s' % (
-            form.password.data, APP.config.get('PASSWORD_SEED', None))
+            form.password.data, flask.current_app.config.get('PASSWORD_SEED', None))
         form.password.data = hashlib.sha512(password).hexdigest()
 
         token = mirrormanager2.lib.id_generator(40)
@@ -61,23 +63,23 @@ def new_user():
         user = model.User()
         user.token = token
         form.populate_obj(obj=user)
-        SESSION.add(user)
+        flask.g.db.add(user)
 
         try:
-            SESSION.flush()
+            flask.g.db.flush()
             send_confirmation_email(user)
             flask.flash(
                 'User created, please check your email to activate the '
                 'account')
         except SQLAlchemyError as err:
-            SESSION.rollback()
+            flask.g.db.rollback()
             flask.flash('Could not create user.')
-            APP.logger.debug('Could not create user.')
-            APP.logger.exception(err)
+            flask.current_app.logger.debug('Could not create user.')
+            flask.current_app.logger.exception(err)
 
-        SESSION.commit()
+        flask.g.db.commit()
 
-        return flask.redirect(flask.url_for('auth_login'))
+        return flask.redirect(flask.url_for('auth.login'))
 
     return flask.render_template(
         'user_new.html',
@@ -85,33 +87,33 @@ def new_user():
     )
 
 
-@APP.route('/dologin', methods=['POST'])
+@views.route('/dologin', methods=['POST'])
 def do_login():
     """ Lo the user in user.
     """
     form = forms.LoginForm()
     next_url = flask.request.args.get('next_url')
     if not next_url or next_url == 'None':
-        next_url = flask.url_for('index')
+        next_url = flask.url_for('base.index')
 
     if form.validate_on_submit():
         username = form.username.data
         password = '%s%s' % (
-            form.password.data, APP.config.get('PASSWORD_SEED', None))
+            form.password.data, flask.current_app.config.get('PASSWORD_SEED', None))
         password = hashlib.sha512(password).hexdigest()
 
-        user_obj = mirrormanager2.lib.get_user_by_username(SESSION, username)
+        user_obj = mirrormanager2.lib.get_user_by_username(flask.g.db, username)
         if not user_obj or user_obj.password != password:
             flask.flash('Username or password invalid.', 'error')
-            return flask.redirect(flask.url_for('auth_login'))
+            return flask.redirect(flask.url_for('auth.login'))
         elif user_obj.token:
             flask.flash(
                 'Invalid user, did you confirm the creation with the url '
                 'provided by email?', 'error')
-            return flask.redirect(flask.url_for('auth_login'))
+            return flask.redirect(flask.url_for('auth.login'))
         else:
             visit_key = mirrormanager2.lib.id_generator(40)
-            expiry = datetime.datetime.now() + APP.config.get(
+            expiry = datetime.datetime.now() + flask.current_app.config.get(
                 'PERMANENT_SESSION_LIFETIME')
             session = model.UserVisit(
                 user_id=user_obj.id,
@@ -119,9 +121,9 @@ def do_login():
                 visit_key=visit_key,
                 expiry=expiry,
             )
-            SESSION.add(session)
+            flask.g.db.add(session)
             try:
-                SESSION.commit()
+                flask.g.db.commit()
                 flask.g.fas_user = user_obj
                 flask.g.fas_session_id = visit_key
                 flask.flash('Welcome %s' % user_obj.username)
@@ -129,39 +131,39 @@ def do_login():
                 flask.flash(
                     'Could not set the session in the db, '
                     'please report this error to an admin', 'error')
-                APP.logger.exception(err)
+                flask.current_app.logger.exception(err)
 
         return flask.redirect(next_url)
     else:
         flask.flash('Insufficient information provided', 'error')
-    return flask.redirect(flask.url_for('auth_login'))
+    return flask.redirect(flask.url_for('auth.login'))
 
 
-@APP.route('/confirm/<token>')
+@views.route('/confirm/<token>')
 def confirm_user(token):
     """ Confirm a user account.
     """
-    user_obj = mirrormanager2.lib.get_user_by_token(SESSION, token)
+    user_obj = mirrormanager2.lib.get_user_by_token(flask.g.db, token)
     if not user_obj:
         flask.flash('No user associated with this token.', 'error')
     else:
         user_obj.token = None
-        SESSION.add(user_obj)
+        flask.g.db.add(user_obj)
 
         try:
-            SESSION.commit()
+            flask.g.db.commit()
             flask.flash('Email confirmed, account activated')
-            return flask.redirect(flask.url_for('auth_login'))
+            return flask.redirect(flask.url_for('auth.login'))
         except SQLAlchemyError as err:  # pragma: no cover
             flask.flash(
                 'Could not set the account as active in the db, '
                 'please report this error to an admin', 'error')
-            APP.logger.exception(err)
+            flask.current_app.logger.exception(err)
 
-    return flask.redirect(flask.url_for('index'))
+    return flask.redirect(flask.url_for('base.index'))
 
 
-@APP.route('/password/lost', methods=['GET', 'POST'])
+@views.route('/password/lost', methods=['GET', 'POST'])
 def lost_password():
     """ Method to allow a user to change his/her password assuming the email
     is not compromised.
@@ -170,35 +172,35 @@ def lost_password():
     if form.validate_on_submit():
 
         username = form.username.data
-        user_obj = mirrormanager2.lib.get_user_by_username(SESSION, username)
+        user_obj = mirrormanager2.lib.get_user_by_username(flask.g.db, username)
         if not user_obj:
             flask.flash('Username invalid.', 'error')
-            return flask.redirect(flask.url_for('auth_login'))
+            return flask.redirect(flask.url_for('auth.login'))
         elif user_obj.token:
             flask.flash(
                 'Invalid user, did you confirm the creation with the url '
                 'provided by email? Or did you already ask for a password '
                 'change?', 'error')
-            return flask.redirect(flask.url_for('auth_login'))
+            return flask.redirect(flask.url_for('auth.login'))
 
         token = mirrormanager2.lib.id_generator(40)
         user_obj.token = token
-        SESSION.add(user_obj)
+        flask.g.db.add(user_obj)
 
         try:
-            SESSION.commit()
+            flask.g.db.commit()
             send_lostpassword_email(user_obj)
             flask.flash(
                 'Check your email to finish changing your password')
         except SQLAlchemyError as err:
-            SESSION.rollback()
+            flask.g.db.rollback()
             flask.flash(
                 'Could not set the token allowing changing a password.',
                 'error')
-            APP.logger.debug('Password lost change - Error setting token.')
-            APP.logger.exception(err)
+            flask.current_app.logger.debug('Password lost change - Error setting token.')
+            flask.current_app.logger.exception(err)
 
-        return flask.redirect(flask.url_for('auth_login'))
+        return flask.redirect(flask.url_for('auth.login'))
 
     return flask.render_template(
         'password_change.html',
@@ -206,42 +208,42 @@ def lost_password():
     )
 
 
-@APP.route('/password/reset/<token>', methods=['GET', 'POST'])
+@views.route('/password/reset/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     """ Method to allow a user to reset his/her password.
     """
     form = forms.ResetPasswordForm()
 
-    user_obj = mirrormanager2.lib.get_user_by_token(SESSION, token)
+    user_obj = mirrormanager2.lib.get_user_by_token(flask.g.db, token)
     if not user_obj:
         flask.flash('No user associated with this token.', 'error')
-        return flask.redirect(flask.url_for('auth_login'))
+        return flask.redirect(flask.url_for('auth.login'))
     elif not user_obj.token:
         flask.flash(
             'Invalid user, this user never asked for a password change',
             'error')
-        return flask.redirect(flask.url_for('auth_login'))
+        return flask.redirect(flask.url_for('auth.login'))
 
     if form.validate_on_submit():
 
         password = '%s%s' % (
-            form.password.data, APP.config.get('PASSWORD_SEED', None))
+            form.password.data, flask.current_app.config.get('PASSWORD_SEED', None))
         user_obj.password = hashlib.sha512(password).hexdigest()
         user_obj.token = None
-        SESSION.add(user_obj)
+        flask.g.db.add(user_obj)
 
         try:
-            SESSION.commit()
+            flask.g.db.commit()
             flask.flash(
                 'Password changed')
         except SQLAlchemyError as err:
-            SESSION.rollback()
+            flask.g.db.rollback()
             flask.flash('Could not set the new password.', 'error')
-            APP.logger.debug(
+            flask.current_app.logger.debug(
                 'Password lost change - Error setting password.')
-            APP.logger.exception(err)
+            flask.current_app.logger.exception(err)
 
-        return flask.redirect(flask.url_for('auth_login'))
+        return flask.redirect(flask.url_for('auth.login'))
 
     return flask.render_template(
         'password_reset.html',
@@ -259,7 +261,7 @@ def send_confirmation_email(user):
     address.
     """
 
-    url = APP.config.get('APPLICATION_URL', flask.request.url_root)
+    url = flask.current_app.config.get('APPLICATION_URL', flask.request.url_root)
 
     message = """ Dear %(username)s,
 
@@ -276,15 +278,15 @@ Your MirrorManager admin.
 """ % (
         {
             'username': user.username, 'url': url or flask.request.url_root,
-            'confirm_root': flask.url_for('confirm_user', token=user.token)
+            'confirm_root': flask.url_for('local_auth.confirm_user', token=user.token)
         })
 
     mirrormanager2.lib.notifications.email_publish(
         to_email=user.email_address,
         subject='[MirrorManager] Confirm your user account',
         message=message,
-        from_email=APP.config.get('EMAIL_FROM', 'nobody@fedoraproject.org'),
-        smtp_server=APP.config.get('SMTP_SERVER', 'localhost')
+        from_email=flask.current_app.config.get('EMAIL_FROM', 'nobody@fedoraproject.org'),
+        smtp_server=flask.current_app.config.get('SMTP_SERVER', 'localhost')
     )
 
 
@@ -292,7 +294,7 @@ def send_lostpassword_email(user):
     """ Sends the email with the information on how to reset his/her password
     to the user.
     """
-    url = APP.config.get('APPLICATION_URL', flask.request.url_root)
+    url = flask.current_app.config.get('APPLICATION_URL', flask.request.url_root)
 
     message = """ Dear %(username)s,
 
@@ -309,7 +311,7 @@ Your MirrorManager admin.
 """ % (
         {
             'username': user.username, 'url': url or flask.request.url_root,
-            'confirm_root': flask.url_for('reset_password', token=user.token),
+            'confirm_root': flask.url_for('local_auth.reset_password', token=user.token),
             'ip': flask.request.remote_addr,
         })
 
@@ -317,8 +319,8 @@ Your MirrorManager admin.
         to_email=user.email_address,
         subject='[MirrorManager] Confirm your password change',
         message=message,
-        from_email=APP.config.get('EMAIL_FROM', 'nobody@fedoraproject.org'),
-        smtp_server=APP.config.get('SMTP_SERVER', 'localhost')
+        from_email=flask.current_app.config.get('EMAIL_FROM', 'nobody@fedoraproject.org'),
+        smtp_server=flask.current_app.config.get('SMTP_SERVER', 'localhost')
     )
 
 
@@ -334,20 +336,20 @@ def logout():
 def _check_session_cookie():
     """ Set the user into flask.g if the user is logged in.
     """
-    cookie_name = APP.config.get('MM_COOKIE_NAME', 'MirrorManager')
+    cookie_name = flask.current_app.config.get('MM_COOKIE_NAME', 'MirrorManager')
     session_id = None
     user = None
 
     if cookie_name and cookie_name in flask.request.cookies:
         sessionid = flask.request.cookies[cookie_name]
         session = mirrormanager2.lib.get_session_by_visitkey(
-            SESSION, sessionid)
+            flask.g.db, sessionid)
         if session and session.user:
             now = datetime.datetime.now()
-            new_expiry = now + APP.config.get('PERMANENT_SESSION_LIFETIME')
+            new_expiry = now + flask.current_app.config.get('PERMANENT_SESSION_LIFETIME')
             if now > session.expiry:
                 flask.flash('Session timed-out', 'error')
-            elif APP.config.get('CHECK_SESSION_IP', True) \
+            elif flask.current_app.config.get('CHECK_SESSION_IP', True) \
                     and session.user_ip != flask.request.remote_addr:
                 flask.flash('Session expired', 'error')
             else:
@@ -355,14 +357,14 @@ def _check_session_cookie():
                 user = session.user
 
                 session.expiry = new_expiry
-                SESSION.add(session)
+                flask.g.db.add(session)
                 try:
-                    SESSION.commit()
+                    flask.g.db.commit()
                 except SQLAlchemyError as err:  # pragma: no cover
                     flask.flash(
                         'Could not prolong the session in the db, '
                         'please report this error to an admin', 'error')
-                    APP.logger.exception(err)
+                    flask.current_app.logger.exception(err)
 
     flask.g.fas_session_id = session_id
     flask.g.fas_user = user
@@ -370,8 +372,8 @@ def _check_session_cookie():
 
 def _send_session_cookie(response):
     """ Set the session cookie if the user is authenticated. """
-    cookie_name = APP.config.get('MM_COOKIE_NAME', 'MirrorManager')
-    secure = APP.config.get('MM_COOKIE_REQUIRES_HTTPS', True)
+    cookie_name = flask.current_app.config.get('MM_COOKIE_NAME', 'MirrorManager')
+    secure = flask.current_app.config.get('MM_COOKIE_REQUIRES_HTTPS', True)
 
     response.set_cookie(
         key=cookie_name,

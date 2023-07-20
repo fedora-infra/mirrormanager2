@@ -2,11 +2,11 @@
 
 {% block nav %}
     {% if g.fas_user %}
-    <li id="mysitesTab"><a href="{{url_for('mysite')}}">My Sites</a></li>
+    <li id="mysitesTab"><a href="{{url_for('base.mysite')}}">My Sites</a></li>
     {% endif %}
     {% if is_admin %}
     <li id="adminTab"><a href="{{url_for('admin.index')}}">Admin</a></li>
-    <li id="allSitesTab"><a href="{{url_for('all_sites')}}">All sites</a></li>
+    <li id="allSitesTab"><a href="{{url_for('base.all_sites')}}">All sites</a></li>
     {% endif %}
 {% endblock %}
 
@@ -22,19 +22,19 @@
             <strong>{{ g.fas_user.username }}</strong>
         </div>
         <div class="dropdown-divider"></div>
-        <a class="dropdown-item" href="{{url_for('mysite')}}">My Sites</a>
-        <a class="dropdown-item" href="{{ url_for('auth_logout') }}?next={{request.url}}">Log Out</a>
+        <a class="dropdown-item" href="{{url_for('base.mysite')}}">My Sites</a>
+        <a class="dropdown-item" href="{{ url_for('auth.logout') }}?next={{request.url}}">Log Out</a>
         {% if is_admin %}
         <div class="dropdown-divider"></div>
         <div class="dropdown-header">
             <strong>Admin Options</strong>
         </div>
         <a class="dropdown-item" href="{{url_for('admin.index')}}">Admin Panel</a>
-        <a class="dropdown-item" href="{{url_for('all_sites')}}">All sites</a>
+        <a class="dropdown-item" href="{{url_for('base.all_sites')}}">All sites</a>
         {% endif %}
     </div>
 </li>
 {% else %}
-<a class="btn btn-primary ml-2" href="{{ url_for('auth_login') }}?next={{request.url}}">Login</a>
+<a class="btn btn-primary ml-2" href="{{ url_for('auth.login') }}?next={{request.url}}">Login</a>
 {% endif %}
 {% endblock %}

@@ -63,7 +63,7 @@ Created by: {{ site.created_by }}
 <table>
   <tr>
     <th class="matrix_section" rowspan="{{ site.admins | length or 1}}">
-      Admins <a href="{{ url_for('siteadmin_new', site_id=site.id) }}">[add]</a>
+      Admins <a href="{{ url_for('base.siteadmin_new', site_id=site.id) }}">[add]</a>
     </th>
     {% for admin in site.admins %}
     {% if not loop.first %}
@@ -72,7 +72,7 @@ Created by: {{ site.created_by }}
     {% endif %}
       <td class="matrix_section {{ loop.cycle('matrix_odd', 'matrix_even') }}">
       <form class="icon" method="POST"
-        action="{{ url_for('siteadmin_delete', site_id=site.id, admin_id=admin.id) }}">
+        action="{{ url_for('base.siteadmin_delete', site_id=site.id, admin_id=admin.id) }}">
           {{ admin.username }}
           {{ form.csrf_token }}
           <button
@@ -86,7 +86,7 @@ Created by: {{ site.created_by }}
   </tr>
   <tr>
     <th rowspan="{{ site.hosts | length or 1}}" class="matrix_section">
-      Hosts <a href="{{ url_for('host_new', site_id=site.id) }}">[add]</a>
+      Hosts <a href="{{ url_for('base.host_new', site_id=site.id) }}">[add]</a>
     </th>
       {% for host in site.hosts %}
       {% if not loop.first %}
@@ -94,7 +94,7 @@ Created by: {{ site.created_by }}
       <tr>
       {% endif %}
       <td class="matrix_section {{ loop.cycle('matrix_odd', 'matrix_even') }}">
-        <a href="{{ url_for('host_view', host_id=host.id) }}">
+        <a href="{{ url_for('base.host_view', host_id=host.id) }}">
         {{ host.name }}</a> <br />
       </td>
       {% else %}
@@ -105,7 +105,7 @@ Created by: {{ site.created_by }}
       <th>Delete site</th>
       <td>
         <form class="icon inline" method="POST"
-          action="{{ url_for('site_drop', site_id=site.id) }}">
+          action="{{ url_for('base.site_drop', site_id=site.id) }}">
         {{ form.csrf_token }}
           <button
             onclick="return confirm('You sure you want to delete this site?');"

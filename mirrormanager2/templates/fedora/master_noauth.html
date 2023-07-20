@@ -19,7 +19,7 @@
       <div class="container">
           <div class="row">
               <div class="col-sm-3">
-                <a href="{{url_for('index')}}">
+                <a href="{{url_for('base.index')}}">
                   <img src="{{ url_for('static', filename='mirrormanager-logo.png') }}"
                     alt="MirrorManager Logo" height=40px />
                 </a>
@@ -28,16 +28,16 @@
                   <nav class="navbar navbar-light p-0 float-xs-right">
                       <ul class="nav navbar-nav">
                           <li class="nav-item">
-                              <a class="nav-link" href="{{url_for('list_mirrors')}}">Mirrors</a>
+                              <a class="nav-link" href="{{url_for('base.list_mirrors')}}">Mirrors</a>
                           </li>
                           {% if config['SHOW_STATISTICS'] %}
-                          <li class="nav-item"><a class="nav-link" href="{{url_for('statistics')}}">Statistics</a></li>
+                          <li class="nav-item"><a class="nav-link" href="{{url_for('base.statistics')}}">Statistics</a></li>
                           {% endif %}
                           {% if config['SHOW_MAPS'] %}
-                          <li class="nav-item"><a class="nav-link" href="{{url_for('maps')}}">Maps</a></li>
+                          <li class="nav-item"><a class="nav-link" href="{{url_for('base.maps')}}">Maps</a></li>
                           {% endif %}
                           {% if config['SHOW_PROPAGATION'] %}
-                          <li class="nav-item"><a class="nav-link" href="{{url_for('propagation')}}">Propagation</a></li>
+                          <li class="nav-item"><a class="nav-link" href="{{url_for('base.propagation')}}">Propagation</a></li>
                           {% endif %}
 
                           {% block loginstatus %}

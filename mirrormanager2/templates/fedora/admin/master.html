@@ -34,14 +34,14 @@
         <div id="mainNav">
           <h4 class="hide">Main Site Links:</h4>
           <ul>
-            <li id="homeTab"><a href="{{url_for('index')}}">Home</a></li>
-            <li id="mirrorsTab"><a href="{{url_for('list_mirrors')}}">Mirrors</a></li>
+            <li id="homeTab"><a href="{{url_for('base.index')}}">Home</a></li>
+            <li id="mirrorsTab"><a href="{{url_for('base.list_mirrors')}}">Mirrors</a></li>
             {% if g.fas_user %}
-            <li id="mysitesTab"><a href="{{url_for('mysite')}}">My Sites</a></li>
+            <li id="mysitesTab"><a href="{{url_for('base.mysite')}}">My Sites</a></li>
             {% endif %}
             {% if is_admin %}
             <li id="adminTabSelected"><a href="{{url_for('admin.index')}}">Admin</a></li>
-            <li id="allSitesTab"><a href="{{url_for('all_sites')}}">All sites</a></li>
+            <li id="allSitesTab"><a href="{{url_for('base.all_sites')}}">All sites</a></li>
             {% endif %}
           </ul>
         </div><!-- end mainNav -->
@@ -50,9 +50,9 @@
           {% if g.fas_user %}
             <span class="text">logged in as </span>
             {{ g.fas_user.username }} |
-            <a href="{{ url_for('auth_logout') }}?next={{request.url}}">log out</a>
+            <a href="{{ url_for('auth.logout') }}?next={{request.url}}">log out</a>
           {% else %}
-        <a href="{{ url_for('auth_login') }}?next={{request.url}}">login</a>
+        <a href="{{ url_for('auth.login') }}?next={{request.url}}">login</a>
           {% endif %}
         </span>
 
