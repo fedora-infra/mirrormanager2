@@ -17,66 +17,67 @@
 # of Red Hat, Inc.
 #
 
-'''
+"""
 MirrorManager2 Host configuration.
-'''
+"""
 
 import mirrormanager2.lib
 
 import logging
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 def validate_config(config):
-    message = ''
+    message = ""
     if type(config) != dict:
         logging.critical("NON-DICT SUBMITTED: %s" % config)
-        message += 'config file is not a dict.\n'\
-            'Please update your copy of report_mirror.\n'
+        message += (
+            "config file is not a dict.\n" "Please update your copy of report_mirror.\n"
+        )
         return (False, message)
-    if 'version' not in config:
-        message += 'config file has no version field.\n'
+    if "version" not in config:
+        message += "config file has no version field.\n"
         return (False, message)
     # this field is an integer
-    if config['version'] != 0:
-        message += 'config file version is not 0, is %s.\n' % (
-            config['version'])
+    if config["version"] != 0:
+        message += "config file version is not 0, is %s.\n" % (config["version"])
         return (False, message)
 
-    for section in ['global', 'site', 'host']:
+    for section in ["global", "site", "host"]:
         if section not in config:
-            message += 'config file missing section %s.\n' % (section)
+            message += "config file missing section %s.\n" % (section)
             return (False, message)
 
-    globl = config['global']
+    globl = config["global"]
     # this field is a string as it comes from the config file
-    if 'enabled' not in globl or globl['enabled'] != '1':
-        message += 'config file section [global] not enabled.\n'
+    if "enabled" not in globl or globl["enabled"] != "1":
+        message += "config file section [global] not enabled.\n"
         return (False, message)
 
-    site = config['site']
-    for opt in ['name', 'password']:
+    site = config["site"]
+    for opt in ["name", "password"]:
         if opt not in site:
-            message += 'config file [site] missing required option %s.'\
-                '\n' % (opt)
+            message += "config file [site] missing required option %s." "\n" % (opt)
             return (False, message)
 
-    host = config['host']
-    for opt in ['name']:
+    host = config["host"]
+    for opt in ["name"]:
         if opt not in host:
-            message += 'section [host] missing required option %s.\n' % (
-                opt)
+            message += "section [host] missing required option %s.\n" % (opt)
             return (False, message)
 
     for category in list(config.keys()):
-        if category in ['global', 'site', 'host', 'version', 'stats']:
+        if category in ["global", "site", "host", "version", "stats"]:
             continue
 
-        for opt in ['dirtree']:
+        for opt in ["dirtree"]:
             if opt not in config[category]:
-                message += 'section [%s] missing required option %s.\n' % (
-                    category, opt)
+                message += "section [%s] missing required option %s.\n" % (
+                    category,
+                    opt,
+                )
                 return (False, message)
     return (True, message)
 
@@ -84,47 +85,43 @@ def validate_config(config):
 def read_host_config(session, config):
     rc, message = validate_config(config)
     if not rc:
-        return (None, '', message + 'Invalid config file provided, please '
-                'check your report_mirror.conf.')
+        return (
+            None,
+            "",
+            message + "Invalid config file provided, please "
+            "check your report_mirror.conf.",
+        )
 
-    csite = config['site']
-    chost = config['host']
-    chostname = chost['name']
+    csite = config["site"]
+    chost = config["host"]
+    chostname = chost["name"]
 
-    site = mirrormanager2.lib.get_site_by_name(session, csite['name'])
+    site = mirrormanager2.lib.get_site_by_name(session, csite["name"])
     if not site:
-        return (
-                None,
-                chostname,
-                'Config file site name or password incorrect.\n'
-        )
+        return (None, chostname, "Config file site name or password incorrect.\n")
 
-    if csite['password'] != site.password:
-        return (
-                None,
-                chostname,
-                'Config file site name or password incorrect.\n'
-        )
+    if csite["password"] != site.password:
+        return (None, chostname, "Config file site name or password incorrect.\n")
 
     host = None
     for tmp_host in site.hosts:
-        if tmp_host.name == chost['name']:
+        if tmp_host.name == chost["name"]:
             host = tmp_host
             break
 
     if not host:
-        return (None, chostname, 'Config file host name for site not found.\n')
+        return (None, chostname, "Config file host name for site not found.\n")
 
     if host.private is False:
         return (
-                None,
-                chostname,
-                'Only private mirrors are allowed to use report_mirror.\n'
+            None,
+            chostname,
+            "Only private mirrors are allowed to use report_mirror.\n",
         )
 
     # handle the optional arguments
-    if 'user_active' in config['host']:
-        if config['host']['user_active'] in ['true', '1', 't', 'y', 'yes']:
+    if "user_active" in config["host"]:
+        if config["host"]["user_active"] in ["true", "1", "t", "y", "yes"]:
             host.user_active = True
         else:
             host.user_active = False

@@ -17,8 +17,8 @@
 # of Red Hat, Inc.
 #
 
-'''
+"""
 MirrorManager2 module placeholder.
-'''
+"""
 
-__version__ = '0.17'
+__version__ = "0.17"

@@ -12,14 +12,14 @@ from authlib.integrations.flask_client import OAuth
 auth_routes = Blueprint("fedora_auth", __name__)
 
 
-@auth_routes.route('/login')
+@auth_routes.route("/login")
 def login():
-    redirect_uri = url_for('fedora_auth.authorize', _external=True)
+    redirect_uri = url_for("fedora_auth.authorize", _external=True)
     session["next"] = request.args.get("next", request.root_url)
     return g._fedora_auth.authorize_redirect(redirect_uri)
 
 
-@auth_routes.route('/authorize')
+@auth_routes.route("/authorize")
 def authorize():
     try:
         token = g._fedora_auth.authorize_access_token()
@@ -36,7 +36,7 @@ def authorize():
     return redirect(return_to)
 
 
-@auth_routes.route('/logout')
+@auth_routes.route("/logout")
 def logout():
     """
     Request the browser to please forget the cookie we set, to clear the
@@ -86,28 +86,34 @@ class FedoraAuth:
     def init_app(self, app):
         for required_conf in ("FEDORA_CLIENT_ID", "FEDORA_CLIENT_SECRET"):
             if required_conf not in app.config:
-                app.logger.warning(f"You must define the {required_conf} configuration value.")
-        scopes = app.config.setdefault("FEDORA_SCOPES", [
-            'openid',
-            'email',
-            'profile',
-            'https://id.fedoraproject.org/scope/groups',
-            'https://id.fedoraproject.org/scope/agreements'
-        ])
-        if 'openid' not in app.config['FEDORA_SCOPES']:
+                app.logger.warning(
+                    f"You must define the {required_conf} configuration value."
+                )
+        scopes = app.config.setdefault(
+            "FEDORA_SCOPES",
+            [
+                "openid",
+                "email",
+                "profile",
+                "https://id.fedoraproject.org/scope/groups",
+                "https://id.fedoraproject.org/scope/agreements",
+            ],
+        )
+        if "openid" not in app.config["FEDORA_SCOPES"]:
             raise ValueError('The value "openid" must be in the FEDORA_SCOPES')
         provider_url = app.config.setdefault(
-            "FEDORA_PROVIDER_URL",
-            "https://id.fedoraproject.org/openidc/"
+            "FEDORA_PROVIDER_URL", "https://id.fedoraproject.org/openidc/"
         )
         app.config.setdefault("FEDORA_INTROSPECTION_AUTH_METHOD", "client_secret_post")
         app.register_blueprint(auth_routes, url_prefix=self._prefix)
         self.oauth.init_app(app)
         self.oauth.register(
-            'fedora',
+            "fedora",
             client_kwargs={
-                'scope': " ".join(scopes),
-                'token_endpoint_auth_method': app.config["FEDORA_INTROSPECTION_AUTH_METHOD"],
+                "scope": " ".join(scopes),
+                "token_endpoint_auth_method": app.config[
+                    "FEDORA_INTROSPECTION_AUTH_METHOD"
+                ],
             },
             server_metadata_url=f"{provider_url}.well-known/openid-configuration",
         )
@@ -160,7 +166,9 @@ class FedoraAuthCompat:
             self.init_app(app)
 
     def init_app(self, app):
-        secrets = self.load_secrets(app.config.get('OIDC_CLIENT_SECRETS', "client_secrets.json"))
+        secrets = self.load_secrets(
+            app.config.get("OIDC_CLIENT_SECRETS", "client_secrets.json")
+        )
         client_secrets = list(secrets.values())[0]
 
         app.config.setdefault("OIDC_VALID_ISSUERS", client_secrets["issuer"])
@@ -171,7 +179,7 @@ class FedoraAuthCompat:
         app.config.setdefault("OIDC_CALLBACK_ROUTE", "/oidc_callback")
 
         app.config.setdefault("OIDC_SCOPES", "openid profile email")
-        if 'openid' not in app.config['OIDC_SCOPES']:
+        if "openid" not in app.config["OIDC_SCOPES"]:
             raise ValueError('The value "openid" must be in the OIDC_SCOPES')
 
         for varname in ("CLIENT_ID", "CLIENT_SECRET", "INTROSPECTION_AUTH_METHOD"):
@@ -194,14 +202,14 @@ class FedoraAuthCompat:
         g.oidc_id_token = WarningDescriptor(
             session.get("fedora_auth_token"),
             "The g.oidc_id_token property is deprecated, please use session['fedora_auth_token']",
-            DeprecationWarning
+            DeprecationWarning,
         )
 
     def _oidc_callback(self):
         warnings.warn(
             "The /oidc_callback route is deprecated, please use /authorize",
             DeprecationWarning,
-            stacklevel=2
+            stacklevel=2,
         )
         return redirect(url_for("fedora_auth.authorize"))
 
@@ -218,7 +226,7 @@ class FedoraAuthCompat:
         warnings.warn(
             "The user_loggedin property has been replaced with is_logged_in",
             DeprecationWarning,
-            stacklevel=2
+            stacklevel=2,
         )
         return self.auth.is_logged_in
 
@@ -267,10 +275,10 @@ class FedoraAuthCompat:
         warnings.warn(
             "The user_getinfo method is deprecated, please use session['fedora_auth_profile']",
             DeprecationWarning,
-            stacklevel=2
+            stacklevel=2,
         )
         if not self.auth.is_logged_in:
-            raise Exception('User was not authenticated')
+            raise Exception("User was not authenticated")
         return session.get("fedora_auth_profile", {})
 
     def get_access_token(self):

@@ -18,9 +18,9 @@
 # of Red Hat, Inc.
 #
 
-'''
+"""
 MirrorManager2 internal api to manage sync.
-'''
+"""
 
 import subprocess
 import tempfile
@@ -47,9 +47,7 @@ def check_timeout(logger, p, timeout, e):
         try:
             p.kill()
             if logger:
-                logger.info(
-                    'Error: process taking too long to complete - terminated'
-                )
+                logger.info("Error: process taking too long to complete - terminated")
         except OSError as err:
             if err.errno != errno.ESRCH:
                 # if there is such process
@@ -72,14 +70,14 @@ def run_rsync(rsyncpath, extra_rsync_args=None, logger=None, timeout=None):
     :returns: return code, file descriptor
     """
 
-    tmpfile = tempfile.SpooledTemporaryFile(mode='w+t')
+    tmpfile = tempfile.SpooledTemporaryFile(mode="w+t")
     cmd = "rsync --temp-dir=/tmp -r --exclude=.snapshot --exclude='*.~tmp~'"
     if extra_rsync_args is not None:
-        cmd += ' ' + extra_rsync_args
-    cmd += ' ' + rsyncpath
+        cmd += " " + extra_rsync_args
+    cmd += " " + rsyncpath
     if logger is not None:
         logger.info("About to run following rsync command: " + cmd)
-    devnull = open('/dev/null', 'r+')
+    devnull = open("/dev/null", "r+")
     p = subprocess.Popen(
         cmd,
         shell=True,
@@ -87,7 +85,7 @@ def run_rsync(rsyncpath, extra_rsync_args=None, logger=None, timeout=None):
         stdout=tmpfile,
         stderr=devnull,
         close_fds=True,
-        bufsize=-1
+        bufsize=-1,
     )
 
     timeout_thread = None
@@ -97,8 +95,7 @@ def run_rsync(rsyncpath, extra_rsync_args=None, logger=None, timeout=None):
         # seconds. If the process is still running then, kill it.
         e = threading.Event()
         timeout_thread = threading.Thread(
-            target=check_timeout,
-            args=[logger, p, timeout, e]
+            target=check_timeout, args=[logger, p, timeout, e]
         )
         timeout_thread.start()
 

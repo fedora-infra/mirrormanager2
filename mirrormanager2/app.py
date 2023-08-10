@@ -17,9 +17,9 @@
 # of Red Hat, Inc.
 #
 
-'''
+"""
 MirrorManager2 main flask controller.
-'''
+"""
 
 
 import logging
@@ -46,35 +46,35 @@ DB = Database()
 def inject_variables():
     """Inject some variables into every template."""
     admin = False
-    if hasattr(flask.g, 'fas_user') and flask.g.fas_user:
+    if hasattr(flask.g, "fas_user") and flask.g.fas_user:
         admin = is_mirrormanager_admin(flask.g.fas_user)
-    return dict(
-        is_admin=admin,
-        version=__version__
-    )
+    return dict(is_admin=admin, version=__version__)
 
 
 def create_app(config=None):
     app = flask.Flask(__name__)
 
     # Config
-    app.config.from_object('mirrormanager2.default_config')
-    if 'MM2_CONFIG' in os.environ:  # pragma: no cover
-        app.config.from_envvar('MM2_CONFIG')
+    app.config.from_object("mirrormanager2.default_config")
+    if "MM2_CONFIG" in os.environ:  # pragma: no cover
+        app.config.from_envvar("MM2_CONFIG")
     app.config.update(config or {})
 
     # Points the template and static folders to the desired theme
-    app.template_folder = os.path.join(app.template_folder, app.config['THEME_FOLDER'])
-    app.static_folder = os.path.join(app.static_folder, app.config['THEME_FOLDER'])
+    app.template_folder = os.path.join(app.template_folder, app.config["THEME_FOLDER"])
+    app.static_folder = os.path.join(app.static_folder, app.config["THEME_FOLDER"])
 
     # Set up the logger
     # Send emails for big exception
     MAIL_HANDLER = logging.handlers.SMTPHandler(
-        app.config.get('SMTP_SERVER', '127.0.0.1'),
-        'nobody@fedoraproject.org',
-        app.config.get('MAIL_ADMIN', 'admin@fedoraproject.org'),
-        'MirrorManager2 error')
-    MAIL_HANDLER.setFormatter(logging.Formatter('''
+        app.config.get("SMTP_SERVER", "127.0.0.1"),
+        "nobody@fedoraproject.org",
+        app.config.get("MAIL_ADMIN", "admin@fedoraproject.org"),
+        "MirrorManager2 error",
+    )
+    MAIL_HANDLER.setFormatter(
+        logging.Formatter(
+            """
         Message type:       %(levelname)s
         Location:           %(pathname)s:%(lineno)d
         Module:             %(module)s
@@ -84,7 +84,9 @@ def create_app(config=None):
         Message:
 
         %(message)s
-    '''))
+    """
+        )
+    )
     MAIL_HANDLER.setLevel(logging.ERROR)
     if not app.debug:
         app.logger.addHandler(MAIL_HANDLER)
@@ -98,9 +100,9 @@ def create_app(config=None):
     DB.init_app(app)
 
     # Auth
-    if app.config.get('MM_AUTHENTICATION') == 'fas':
+    if app.config.get("MM_AUTHENTICATION") == "fas":
         OIDC.init_app(app)
-    elif app.config.get('MM_AUTHENTICATION') == 'local':
+    elif app.config.get("MM_AUTHENTICATION") == "local":
         app.register_blueprint(local_auth.views, prefix="auth")
 
     # Admin UI
@@ -120,12 +122,16 @@ def create_app(config=None):
 
     # Views
     from mirrormanager2.auth import views as auth_views
+
     app.register_blueprint(auth_views)
     from mirrormanager2.views import views as base_views
+
     app.register_blueprint(base_views)
     from mirrormanager2.api import views as api_views
+
     app.register_blueprint(api_views, prefix="api")
     from mirrormanager2.xml_rpc import XMLRPC
-    XMLRPC.connect(app, '/xmlrpc')
+
+    XMLRPC.connect(app, "/xmlrpc")
 
     return app

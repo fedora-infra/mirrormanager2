@@ -17,9 +17,9 @@
 # of Red Hat, Inc.
 #
 
-'''
+"""
 MirrorManager2 admin flask controller.
-'''
+"""
 
 import flask
 from flask_admin.contrib.sqla import ModelView
@@ -29,61 +29,62 @@ from mirrormanager2.perms import is_mirrormanager_admin
 
 
 class MMModelView(ModelView):
-    ''' Base class for the Mirrormanager preventing access to the admin
+    """Base class for the Mirrormanager preventing access to the admin
     interface to non-admin.
-    '''
+    """
+
     def is_accessible(self):
-        ''' Prevent access to non-admin user. '''
+        """Prevent access to non-admin user."""
         admin = False
-        if hasattr(flask.g, 'fas_user') and flask.g.fas_user:
+        if hasattr(flask.g, "fas_user") and flask.g.fas_user:
             admin = is_mirrormanager_admin(flask.g.fas_user)
         return admin
 
 
 class DirectoryView(MMModelView):
-    ''' View of the Host table specifying which field of the table should
+    """View of the Host table specifying which field of the table should
     be shown (and their order).
-    '''
+    """
 
     # Override displayed fields
-    column_list = ('name', 'readable', 'ctime')
+    column_list = ("name", "readable", "ctime")
 
 
 def get_views(config, db_session):
     views = [
         MMModelView(model.Arch, db_session),
         MMModelView(model.Category, db_session),
-        MMModelView(model.Country, db_session, category='Country'),
-        MMModelView(model.CountryContinentRedirect, db_session, category='Country'),
-        MMModelView(model.EmbargoedCountry, db_session, category='Country'),
-        DirectoryView(model.Directory, db_session, category='Directory'),
-        DirectoryView(model.DirectoryExclusiveHost, db_session, category='Directory'),
-        MMModelView(model.FileDetail, db_session, category='File'),
-        MMModelView(model.FileDetailFileGroup, db_session, category='File'),
-        MMModelView(model.FileGroup, db_session, category='File'),
-        MMModelView(model.Host, db_session, category='Host'),
-        MMModelView(model.HostAclIp, db_session, category='Host'),
-        MMModelView(model.HostCategory, db_session, category='Host'),
-        MMModelView(model.HostCategoryDir, db_session, category='Host'),
-        MMModelView(model.HostCategoryUrl, db_session, category='Host'),
-        MMModelView(model.HostCountry, db_session, category='Host'),
-        MMModelView(model.HostCountryAllowed, db_session, category='Host'),
-        MMModelView(model.HostLocation, db_session, category='Host'),
-        MMModelView(model.HostNetblock, db_session, category='Host'),
-        MMModelView(model.HostPeerAsn, db_session, category='Host'),
-        MMModelView(model.HostStats, db_session, category='Host'),
+        MMModelView(model.Country, db_session, category="Country"),
+        MMModelView(model.CountryContinentRedirect, db_session, category="Country"),
+        MMModelView(model.EmbargoedCountry, db_session, category="Country"),
+        DirectoryView(model.Directory, db_session, category="Directory"),
+        DirectoryView(model.DirectoryExclusiveHost, db_session, category="Directory"),
+        MMModelView(model.FileDetail, db_session, category="File"),
+        MMModelView(model.FileDetailFileGroup, db_session, category="File"),
+        MMModelView(model.FileGroup, db_session, category="File"),
+        MMModelView(model.Host, db_session, category="Host"),
+        MMModelView(model.HostAclIp, db_session, category="Host"),
+        MMModelView(model.HostCategory, db_session, category="Host"),
+        MMModelView(model.HostCategoryDir, db_session, category="Host"),
+        MMModelView(model.HostCategoryUrl, db_session, category="Host"),
+        MMModelView(model.HostCountry, db_session, category="Host"),
+        MMModelView(model.HostCountryAllowed, db_session, category="Host"),
+        MMModelView(model.HostLocation, db_session, category="Host"),
+        MMModelView(model.HostNetblock, db_session, category="Host"),
+        MMModelView(model.HostPeerAsn, db_session, category="Host"),
+        MMModelView(model.HostStats, db_session, category="Host"),
         MMModelView(model.Location, db_session),
         MMModelView(model.NetblockCountry, db_session),
         MMModelView(model.Product, db_session),
-        MMModelView(model.Repository, db_session, category='Repository'),
-        MMModelView(model.RepositoryRedirect, db_session, category='Repository'),
-        MMModelView(model.Site, db_session, category='Site'),
-        MMModelView(model.SiteAdmin, db_session, category='Site'),
-        MMModelView(model.SiteToSite, db_session, category='Site'),
+        MMModelView(model.Repository, db_session, category="Repository"),
+        MMModelView(model.RepositoryRedirect, db_session, category="Repository"),
+        MMModelView(model.Site, db_session, category="Site"),
+        MMModelView(model.SiteAdmin, db_session, category="Site"),
+        MMModelView(model.SiteToSite, db_session, category="Site"),
         MMModelView(model.Version, db_session),
     ]
 
-    if config.get('MM_AUTHENTICATION', None) == 'local':
+    if config.get("MM_AUTHENTICATION", None) == "local":
         views.append(MMModelView(model.User, db_session))
         views.append(MMModelView(model.Group, db_session))
         views.append(MMModelView(model.UserVisit, db_session))

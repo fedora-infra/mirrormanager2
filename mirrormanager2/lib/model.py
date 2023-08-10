@@ -17,9 +17,9 @@
 # of Red Hat, Inc.
 #
 
-'''
+"""
 MirrorManager2 database model.
-'''
+"""
 
 import datetime
 import collections
@@ -37,7 +37,7 @@ from sqlalchemy.orm import deferred
 
 
 class MirrorManagerBaseMixin:
-    """ Base mixin for mirrormanager2 models.
+    """Base mixin for mirrormanager2 models.
 
     This base class mixin grants sqlalchemy models dict-like access so that
     they behave somewhat similarly to SQLObject models (inherited from the TG1
@@ -57,14 +57,16 @@ class MirrorManagerBaseMixin:
     @classmethod
     def get(cls, session, pkey_value):
         primary_keys = [key.key for key in cls.__mapper__.primary_key]
-        return session.query(cls).filter(sa.or_(
-            getattr(cls, col) == pkey_value for col in primary_keys
-        )).one()
+        return (
+            session.query(cls)
+            .filter(sa.or_(getattr(cls, col) == pkey_value for col in primary_keys))
+            .one()
+        )
 
 
 BASE = declarative_base(cls=MirrorManagerBaseMixin)
 
-ERROR_LOG = logging.getLogger('mirrormanager2.lib.model')
+ERROR_LOG = logging.getLogger("mirrormanager2.lib.model")
 
 # # Apparently some of our methods have too few public methods
 # pylint: disable=R0903
@@ -80,7 +82,7 @@ ERROR_LOG = logging.getLogger('mirrormanager2.lib.model')
 
 
 def create_tables(db_url, alembic_ini=None, debug=False):
-    """ Create the tables in the database using the information from the
+    """Create the tables in the database using the information from the
     url obtained.
 
     :arg db_url, URL used to connect to the database. The URL contains
@@ -96,13 +98,14 @@ def create_tables(db_url, alembic_ini=None, debug=False):
     """
     engine = create_engine(db_url, echo=debug)
     BASE.metadata.create_all(engine)
-    if db_url.startswith('sqlite:'):
+    if db_url.startswith("sqlite:"):
         # Ignore the warning about con_record
         # pylint: disable=W0613
         def _fk_pragma_on_connect(dbapi_con, con_record):
-            ''' Tries to enforce referential constraints on sqlite. '''
-            dbapi_con.execute('pragma foreign_keys=ON')
-        sa.event.listen(engine, 'connect', _fk_pragma_on_connect)
+            """Tries to enforce referential constraints on sqlite."""
+            dbapi_con.execute("pragma foreign_keys=ON")
+
+        sa.event.listen(engine, "connect", _fk_pragma_on_connect)
 
     if alembic_ini is not None:  # pragma: no cover
         # then, load the Alembic configuration and generate the
@@ -112,12 +115,13 @@ def create_tables(db_url, alembic_ini=None, debug=False):
         # pylint: disable=F0401
         from alembic.config import Config
         from alembic import command
+
         alembic_cfg = Config(alembic_ini)
         command.stamp(alembic_cfg, "head")
 
 
 def drop_tables(db_url, engine):  # pragma: no cover
-    """ Drops the tables in the database using the information from the
+    """Drops the tables in the database using the information from the
     url obtained.
 
     :arg db_url, URL used to connect to the database. The URL contains
@@ -130,8 +134,7 @@ def drop_tables(db_url, engine):  # pragma: no cover
 
 
 class Site(BASE):
-
-    __tablename__ = 'site'
+    __tablename__ = "site"
 
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.Text(), nullable=False)
@@ -141,11 +144,11 @@ class Site(BASE):
     admin_active = sa.Column(sa.Boolean(), default=True, nullable=False)
     user_active = sa.Column(sa.Boolean(), default=True, nullable=False)
     created_at = sa.Column(
-        sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
+        sa.DateTime, nullable=False, default=datetime.datetime.utcnow
+    )
     created_by = sa.Column(sa.Text(), nullable=False)
     # allow all sites to pull from me
-    all_sites_can_pull_from_me = sa.Column(
-        sa.Boolean(), default=False, nullable=False)
+    all_sites_can_pull_from_me = sa.Column(sa.Boolean(), default=False, nullable=False)
     downstream_comments = sa.Column(sa.Text(), default=None, nullable=True)
     email_on_drop = sa.Column(sa.Boolean(), default=False, nullable=False)
     email_on_add = sa.Column(sa.Boolean(), default=False, nullable=False)
@@ -162,13 +165,12 @@ class Site(BASE):
     )
 
     def __repr__(self):
-        ''' Return a string representation of the object. '''
-        return '<Site(%s - %s)>' % (self.id, self.name)
+        """Return a string representation of the object."""
+        return "<Site(%s - %s)>" % (self.id, self.name)
 
 
 class Country(BASE):
-
-    __tablename__ = 'country'
+    __tablename__ = "country"
 
     id = sa.Column(sa.Integer, primary_key=True)
     code = sa.Column(sa.Text(), nullable=False, unique=True)
@@ -176,13 +178,11 @@ class Country(BASE):
 
 
 class Host(BASE):
-
-    __tablename__ = 'host'
+    __tablename__ = "host"
 
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.Text(), nullable=False)
-    site_id = sa.Column(
-        sa.Integer, sa.ForeignKey('site.id'), nullable=True)
+    site_id = sa.Column(sa.Integer, sa.ForeignKey("site.id"), nullable=True)
     robot_email = sa.Column(sa.Text(), nullable=True)
     admin_active = sa.Column(sa.Boolean(), default=True, nullable=False)
     user_active = sa.Column(sa.Boolean(), default=True, nullable=False)
@@ -220,7 +220,7 @@ class Host(BASE):
     last_crawls = deferred(sa.Column(sa.PickleType(), nullable=True))
 
     # Relations
-    site = relationship('Site', back_populates="hosts")
+    site = relationship("Site", back_populates="hosts")
     categories = relationship(
         "HostCategory",
         back_populates="host",
@@ -240,7 +240,7 @@ class Host(BASE):
         "HostNetblock",
         back_populates="host",
         cascade="delete, delete-orphan",
-        order_by='HostNetblock.netblock',
+        order_by="HostNetblock.netblock",
     )
     peer_asns = relationship(
         "HostPeerAsn",
@@ -258,20 +258,16 @@ class Host(BASE):
         cascade="delete, delete-orphan",
     )
 
-
     # exclusive_dirs = MultipleJoin('DirectoryExclusiveHost')
     # locations = SQLRelatedJoin('Location')
     # countries = SQLRelatedJoin('Country')
 
     # Constraints
-    __table_args__ = (
-        sa.UniqueConstraint(
-            'site_id', 'name', name='host_idx'),
-    )
+    __table_args__ = (sa.UniqueConstraint("site_id", "name", name="host_idx"),)
 
     def __repr__(self):
-        ''' Return a string representation of the object. '''
-        return '<Host(%s - %s)>' % (self.id, self.name)
+        """Return a string representation of the object."""
+        return "<Host(%s - %s)>" % (self.id, self.name)
 
     def __json__(self):
         return dict(
@@ -304,13 +300,11 @@ class Host(BASE):
         session.commit()
 
     def is_active(self):
-        return self.admin_active \
-            and self.user_active \
-            and self.site.user_active
+        return self.admin_active and self.user_active and self.site.user_active
 
 
 class JsonDictTypeFilter(sa.types.TypeDecorator):
-    ''' This handles either JSON or a pickled dict from the database. '''
+    """This handles either JSON or a pickled dict from the database."""
 
     impl = sa.types.BLOB
 
@@ -322,9 +316,9 @@ class JsonDictTypeFilter(sa.types.TypeDecorator):
 
         for i in list(value.keys()):
             temp = {}
-            temp['name'] = i
-            temp['size'] = int(value[i]['size'])
-            temp['timestamp'] = int(value[i]['stat'])
+            temp["name"] = i
+            temp["size"] = int(value[i]["size"])
+            temp["timestamp"] = int(value[i]["stat"])
             result.append(temp)
 
         return json.dumps(result).encode()
@@ -336,7 +330,7 @@ class JsonDictTypeFilter(sa.types.TypeDecorator):
         try:
             j = json.loads(value)
             for i in j:
-                result[i['name']] = { 'size': i['size'], 'stat': i['timestamp'] }
+                result[i["name"]] = {"size": i["size"], "stat": i["timestamp"]}
         except ValueError:
             result = pickle.loads(value)
 
@@ -344,8 +338,7 @@ class JsonDictTypeFilter(sa.types.TypeDecorator):
 
 
 class Directory(BASE):
-
-    __tablename__ = 'directory'
+    __tablename__ = "directory"
 
     id = sa.Column(sa.Integer, primary_key=True)
     # Full path
@@ -368,8 +361,8 @@ class Directory(BASE):
         # cascade="delete, delete-orphan",
     )
     categorydir = relationship(
-        'CategoryDirectory',
-        back_populates='directory',
+        "CategoryDirectory",
+        back_populates="directory",
         cascade="delete, delete-orphan",
         overlaps="categories",
     )
@@ -384,8 +377,8 @@ class Directory(BASE):
     )
 
     def __repr__(self):
-        ''' Return a string representation of the object. '''
-        return '<Directory(%s - %s)>' % (self.id, self.name)
+        """Return a string representation of the object."""
+        return "<Directory(%s - %s)>" % (self.id, self.name)
 
     @classmethod
     def age_file_details(cls, session, config):
@@ -394,15 +387,15 @@ class Directory(BASE):
 
     @classmethod
     def _fill_file_details_cache(cls, session, config):
-
         cache = collections.defaultdict(list)
 
         sql = sa.text(
-            'SELECT id, directory_id, filename, timestamp from file_detail '
-            'ORDER BY directory_id, filename, -timestamp')
+            "SELECT id, directory_id, filename, timestamp from file_detail "
+            "ORDER BY directory_id, filename, -timestamp"
+        )
         results = session.execute(sql)
 
-        for (id, directory_id, filename, timestamp) in results:
+        for id, directory_id, filename, timestamp in results:
             k = (directory_id, filename)
             v = dict(file_detail_id=id, timestamp=timestamp)
             cache[k].append(v)
@@ -421,8 +414,8 @@ class Directory(BASE):
         """
 
         t = int(time.time())
-        max_stale = config.get('mirrormanager.max_stale_days', 3)
-        max_propogation = config.get('mirrormanager.max_propogation_days', 2)
+        max_stale = config.get("mirrormanager.max_stale_days", 3)
+        max_propogation = config.get("mirrormanager.max_propogation_days", 2)
         stale = t - (60 * 60 * 24 * max_stale)
         propogation = t - (60 * 60 * 24 * max_propogation)
 
@@ -432,12 +425,12 @@ class Directory(BASE):
                 start = 2
                 # second-most recent only if most recent has had time to
                 # propogate
-                if fds[0]['timestamp'] < propogation:
+                if fds[0]["timestamp"] < propogation:
                     start = 1
                 # all others
                 for f in fds[start:]:
-                    if f['timestamp'] < stale:
-                        detail = FileDetail.get(session, f['file_detail_id'])
+                    if f["timestamp"] < stale:
+                        detail = FileDetail.get(session, f["file_detail_id"])
                         session.delete(detail)
 
         session.commit()
@@ -445,8 +438,7 @@ class Directory(BASE):
 
 # e.g. 'fedora' and 'epel'
 class Product(BASE):
-
-    __tablename__ = 'product'
+    __tablename__ = "product"
 
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.Text(), nullable=False, unique=True)
@@ -456,8 +448,8 @@ class Product(BASE):
     versions = relationship("Version", back_populates="product")
 
     def __repr__(self):
-        ''' Return a string representation of the object. '''
-        return '<Product(%s - %s)>' % (self.id, self.name)
+        """Return a string representation of the object."""
+        return "<Product(%s - %s)>" % (self.id, self.name)
 
     @property
     def displayed_versions(self):
@@ -475,36 +467,33 @@ class Product(BASE):
             except ValueError:
                 return (1, k)
 
-        return [v for k,v in sorted(list(versions.items()), reverse=True, key=intify)]
+        return [v for k, v in sorted(list(versions.items()), reverse=True, key=intify)]
 
 
 class Category(BASE):
-
-    __tablename__ = 'category'
+    __tablename__ = "category"
 
     id = sa.Column(sa.Integer, primary_key=True)
     # Top-level mirroring
     # e.g. 'Fedora Linux', 'Fedora Archive'
     name = sa.Column(sa.Text(), nullable=False, unique=True)
     canonicalhost = sa.Column(
-        sa.Text(), nullable=True,
-        default='http://download.fedora.redhat.com')
+        sa.Text(), nullable=True, default="http://download.fedora.redhat.com"
+    )
     publiclist = sa.Column(sa.Boolean(), default=True, nullable=False)
     geo_dns_domain = sa.Column(sa.Text(), nullable=True)
     admin_only = sa.Column(sa.Boolean(), default=False, nullable=True)
-    product_id = sa.Column(
-        sa.Integer, sa.ForeignKey('product.id'), nullable=True)
-    topdir_id = sa.Column(
-        sa.Integer, sa.ForeignKey('directory.id'), nullable=True)
+    product_id = sa.Column(sa.Integer, sa.ForeignKey("product.id"), nullable=True)
+    topdir_id = sa.Column(sa.Integer, sa.ForeignKey("directory.id"), nullable=True)
 
     # Relations
-    product = relationship('Product', back_populates='categories')
-    topdir = relationship('Directory')
+    product = relationship("Product", back_populates="categories")
+    topdir = relationship("Directory")
     host_categories = relationship("HostCategory", cascade="delete, delete-orphan")
     repositories = relationship("Repository", back_populates="category")
     categorydir = relationship(
-        'CategoryDirectory',
-        back_populates='category',
+        "CategoryDirectory",
+        back_populates="category",
         cascade="delete, delete-orphan",
         overlaps="categories",
     )
@@ -520,69 +509,61 @@ class Category(BASE):
     )
 
     def __repr__(self):
-        ''' Return a string representation of the object. '''
-        return '<Category(%s - %s)>' % (self.id, self.name)
+        """Return a string representation of the object."""
+        return "<Category(%s - %s)>" % (self.id, self.name)
 
 
 class SiteToSite(BASE):
-
-    __tablename__ = 'site_to_site'
+    __tablename__ = "site_to_site"
 
     id = sa.Column(sa.Integer, primary_key=True)
     username = sa.Column(sa.Text(), default=None, nullable=True)
     password = sa.Column(sa.Text(), default=None, nullable=True)
-    upstream_site_id = sa.Column(
-        sa.Integer, sa.ForeignKey('site.id'), nullable=False)
-    downstream_site_id = sa.Column(
-        sa.Integer, sa.ForeignKey('site.id'), nullable=False)
+    upstream_site_id = sa.Column(sa.Integer, sa.ForeignKey("site.id"), nullable=False)
+    downstream_site_id = sa.Column(sa.Integer, sa.ForeignKey("site.id"), nullable=False)
 
     # Relations
-    upstream_site = relationship('Site', foreign_keys=[upstream_site_id])
-    downstream_site = relationship('Site', foreign_keys=[downstream_site_id])
+    upstream_site = relationship("Site", foreign_keys=[upstream_site_id])
+    downstream_site = relationship("Site", foreign_keys=[downstream_site_id])
 
     # Constraints
     __table_args__ = (
         sa.UniqueConstraint(
-            'upstream_site_id', 'downstream_site_id',
-            name='site_to_site_idx'),
+            "upstream_site_id", "downstream_site_id", name="site_to_site_idx"
+        ),
         sa.UniqueConstraint(
-            'upstream_site_id', 'username',
-            name='site_to_site_username_idx'),
+            "upstream_site_id", "username", name="site_to_site_username_idx"
+        ),
     )
 
 
 class SiteAdmin(BASE):
-
-    __tablename__ = 'site_admin'
+    __tablename__ = "site_admin"
 
     id = sa.Column(sa.Integer, primary_key=True)
     username = sa.Column(sa.Text(), default=None, nullable=True)
-    site_id = sa.Column(
-        sa.Integer, sa.ForeignKey('site.id'), nullable=False)
+    site_id = sa.Column(sa.Integer, sa.ForeignKey("site.id"), nullable=False)
 
     # Relation
     site = relationship(
-        'Site',
+        "Site",
         back_populates="admins",
     )
 
 
 class HostCategory(BASE):
-
-    __tablename__ = 'host_category'
+    __tablename__ = "host_category"
 
     id = sa.Column(sa.Integer, primary_key=True)
-    host_id = sa.Column(sa.Integer, sa.ForeignKey('host.id'), nullable=True)
+    host_id = sa.Column(sa.Integer, sa.ForeignKey("host.id"), nullable=True)
     category_id = sa.Column(
-        sa.Integer,
-        sa.ForeignKey('category.id', ondelete='CASCADE'),
-        nullable=True
+        sa.Integer, sa.ForeignKey("category.id", ondelete="CASCADE"), nullable=True
     )
     always_up2date = sa.Column(sa.Boolean(), default=False, nullable=False)
 
     # Relations
-    category = relationship('Category', back_populates="host_categories")
-    host = relationship('Host', back_populates='categories')
+    category = relationship("Category", back_populates="host_categories")
+    host = relationship("Host", back_populates="categories")
     directories = relationship(
         "HostCategoryDir",
         back_populates="host_category",
@@ -595,188 +576,165 @@ class HostCategory(BASE):
         cascade="delete, delete-orphan",
     )
 
-
     # Constraints
     __table_args__ = (
-        sa.UniqueConstraint(
-            'host_id', 'category_id', name='host_category_hcindex'),
-        sa.Index('t_hostcategory_host_id_idx', 'host_id'),
-        sa.Index('t_hostcategory_category_id_idx', 'category_id'),
+        sa.UniqueConstraint("host_id", "category_id", name="host_category_hcindex"),
+        sa.Index("t_hostcategory_host_id_idx", "host_id"),
+        sa.Index("t_hostcategory_category_id_idx", "category_id"),
     )
 
     def __repr__(self):
-        ''' Return a string representation of the object. '''
-        return '<HostCategory(%s - %s)>' % (self.id, self.category)
+        """Return a string representation of the object."""
+        return "<HostCategory(%s - %s)>" % (self.id, self.category)
 
 
 class HostCategoryDir(BASE):
-
-    __tablename__ = 'host_category_dir'
+    __tablename__ = "host_category_dir"
 
     id = sa.Column(sa.Integer, primary_key=True)
     host_category_id = sa.Column(
         sa.Integer,
-        sa.ForeignKey(
-            'host_category.id', onupdate='CASCADE', ondelete='CASCADE'),
-        nullable=False)
+        sa.ForeignKey("host_category.id", onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
+    )
     # subset of the path starting below HostCategory.path
     path = sa.Column(sa.Text(), nullable=True)
-    up2date = sa.Column(
-        sa.Boolean, default=True, nullable=False, index=True)
+    up2date = sa.Column(sa.Boolean, default=True, nullable=False, index=True)
     directory_id = sa.Column(
-        sa.Integer,
-        sa.ForeignKey('directory.id', ondelete='CASCADE'),
-        nullable=True
+        sa.Integer, sa.ForeignKey("directory.id", ondelete="CASCADE"), nullable=True
     )
 
-    __mapper_args__ = {'confirm_deleted_rows': False}
+    __mapper_args__ = {"confirm_deleted_rows": False}
 
     # Relations
-    directory = relationship('Directory', back_populates='host_category_dirs')
-    host_category = relationship('HostCategory', back_populates="directories")
+    directory = relationship("Directory", back_populates="host_category_dirs")
+    host_category = relationship("HostCategory", back_populates="directories")
 
     # Constraints
     __table_args__ = (
         sa.UniqueConstraint(
-            'host_category_id', 'path', name='host_category_dir_hcdindex'),
+            "host_category_id", "path", name="host_category_dir_hcdindex"
+        ),
     )
 
 
 class CategoryDirectory(BASE):
+    __tablename__ = "category_directory"
 
-    __tablename__ = 'category_directory'
-
-    category_id = sa.Column(
-        sa.Integer, sa.ForeignKey('category.id'), primary_key=True)
+    category_id = sa.Column(sa.Integer, sa.ForeignKey("category.id"), primary_key=True)
     directory_id = sa.Column(
-        sa.Integer, sa.ForeignKey('directory.id'), primary_key=True)
+        sa.Integer, sa.ForeignKey("directory.id"), primary_key=True
+    )
     category = relationship(
-        'Category',
-        back_populates='categorydir',
+        "Category",
+        back_populates="categorydir",
         overlaps="categories,directories",
     )
     directory = relationship(
-        'Directory',
-        back_populates='categorydir',
+        "Directory",
+        back_populates="categorydir",
         overlaps="categories,directories",
     )
 
     def __repr__(self):
-        ''' Return a string representation of the object. '''
-        return '<CategoryDirectory(%s - %s)>' % (
-            self.category_id, self.directory_id)
+        """Return a string representation of the object."""
+        return "<CategoryDirectory(%s - %s)>" % (self.category_id, self.directory_id)
 
 
 class HostCategoryUrl(BASE):
-
-    __tablename__ = 'host_category_url'
+    __tablename__ = "host_category_url"
 
     id = sa.Column(sa.Integer, primary_key=True)
     host_category_id = sa.Column(
         sa.Integer,
-        sa.ForeignKey(
-            'host_category.id', onupdate='CASCADE', ondelete='CASCADE'),
-        nullable=False)
+        sa.ForeignKey("host_category.id", onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
+    )
     url = sa.Column(sa.Text(), nullable=False, unique=True)
     private = sa.Column(sa.Boolean(), default=False, nullable=False)
 
-    __mapper_args__ = {'confirm_deleted_rows': False}
+    __mapper_args__ = {"confirm_deleted_rows": False}
 
     # Relations
-    host_category = relationship('HostCategory', back_populates="urls")
+    host_category = relationship("HostCategory", back_populates="urls")
 
     # Constraints
     __table_args__ = (
         sa.UniqueConstraint(
-            'host_category_id', 'url', name='host_category_url_hcdindex'),
+            "host_category_id", "url", name="host_category_url_hcdindex"
+        ),
     )
 
 
 class HostAclIp(BASE):
-
-    __tablename__ = 'host_acl_ip'
+    __tablename__ = "host_acl_ip"
 
     id = sa.Column(sa.Integer, primary_key=True)
     ip = sa.Column(sa.Text(), nullable=True, unique=True)
-    host_id = sa.Column(
-        sa.Integer, sa.ForeignKey('host.id'), nullable=True)
+    host_id = sa.Column(sa.Integer, sa.ForeignKey("host.id"), nullable=True)
 
     # Relation
-    host = relationship('Host', back_populates="acl_ips")
+    host = relationship("Host", back_populates="acl_ips")
 
     # Constraints
     __table_args__ = (
-        sa.UniqueConstraint(
-            'host_id', 'ip', name='host_acl_ip_hipindex'),
+        sa.UniqueConstraint("host_id", "ip", name="host_acl_ip_hipindex"),
     )
 
 
 class HostCountryAllowed(BASE):
-
-    __tablename__ = 'host_country_allowed'
+    __tablename__ = "host_country_allowed"
 
     id = sa.Column(sa.Integer, primary_key=True)
     country = sa.Column(sa.Text(), nullable=False, unique=True)
-    host_id = sa.Column(
-        sa.Integer, sa.ForeignKey('host.id'), nullable=True)
+    host_id = sa.Column(sa.Integer, sa.ForeignKey("host.id"), nullable=True)
 
     # Relation
-    host = relationship('Host', back_populates="countries_allowed")
+    host = relationship("Host", back_populates="countries_allowed")
 
 
 class HostNetblock(BASE):
-
-    __tablename__ = 'host_netblock'
+    __tablename__ = "host_netblock"
 
     id = sa.Column(sa.Integer, primary_key=True)
     netblock = sa.Column(sa.Text(), nullable=True)
     name = sa.Column(sa.Text(), nullable=True)
-    host_id = sa.Column(
-        sa.Integer, sa.ForeignKey('host.id'), nullable=True)
+    host_id = sa.Column(sa.Integer, sa.ForeignKey("host.id"), nullable=True)
 
     # Relation
-    host = relationship('Host', back_populates="netblocks")
+    host = relationship("Host", back_populates="netblocks")
 
 
 class HostPeerAsn(BASE):
-
-    __tablename__ = 'host_peer_asn'
+    __tablename__ = "host_peer_asn"
 
     id = sa.Column(sa.Integer, primary_key=True)
     asn = sa.Column(sa.Integer, nullable=False)
     name = sa.Column(sa.Text(), nullable=True)
-    host_id = sa.Column(
-        sa.Integer, sa.ForeignKey('host.id'), nullable=True)
+    host_id = sa.Column(sa.Integer, sa.ForeignKey("host.id"), nullable=True)
 
     # Relation
-    host = relationship('Host', back_populates="peer_asns")
+    host = relationship("Host", back_populates="peer_asns")
 
     # Constraints
-    __table_args__ = (
-        sa.UniqueConstraint(
-            'host_id', 'asn', name='host_peer_asn_idx'),
-    )
+    __table_args__ = (sa.UniqueConstraint("host_id", "asn", name="host_peer_asn_idx"),)
 
 
 class HostStats(BASE):
-
-    __tablename__ = 'host_stats'
+    __tablename__ = "host_stats"
 
     id = sa.Column(sa.Integer, primary_key=True)
-    timestamp = sa.Column(
-        sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
+    timestamp = sa.Column(sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
     type = sa.Column(sa.Text(), nullable=True)
     data = sa.Column(sa.PickleType(), nullable=True)
-    host_id = sa.Column(
-        sa.Integer, sa.ForeignKey('host.id'), nullable=True)
+    host_id = sa.Column(sa.Integer, sa.ForeignKey("host.id"), nullable=True)
 
     # Relation
-    host = relationship('Host')
+    host = relationship("Host")
 
 
 class Arch(BASE):
-
-    __tablename__ = 'arch'
+    __tablename__ = "arch"
 
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.Text(), nullable=False, unique=True)
@@ -786,13 +744,12 @@ class Arch(BASE):
     repositories = relationship("Repository", back_populates="arch")
 
     def __repr__(self):
-        ''' Return a string representation of the object. '''
-        return '<Arch(%s - %s)>' % (self.id, self.name)
+        """Return a string representation of the object."""
+        return "<Arch(%s - %s)>" % (self.id, self.name)
 
 
 class Version(BASE):
-
-    __tablename__ = 'version'
+    __tablename__ = "version"
 
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.Text(), nullable=True)
@@ -802,28 +759,24 @@ class Version(BASE):
     display_name = sa.Column(sa.Text(), nullable=True)
     ordered_mirrorlist = sa.Column(sa.Boolean(), default=True, nullable=False)
     sortorder = sa.Column(sa.Integer, default=0, nullable=False)
-    product_id = sa.Column(
-        sa.Integer, sa.ForeignKey('product.id'), nullable=True)
+    product_id = sa.Column(sa.Integer, sa.ForeignKey("product.id"), nullable=True)
 
     # Relations
-    product = relationship('Product', back_populates="versions")
+    product = relationship("Product", back_populates="versions")
     repositories = relationship("Repository", back_populates="version")
 
     # Constraints
-    __table_args__ = (
-        sa.UniqueConstraint(
-            'name', 'product_id', name='version_idx'),
-    )
+    __table_args__ = (sa.UniqueConstraint("name", "product_id", name="version_idx"),)
 
     def __repr__(self):
-        ''' Return a string representation of the object. '''
-        return '<Version(%s - %s)>' % (self.id, self.name)
+        """Return a string representation of the object."""
+        return "<Version(%s - %s)>" % (self.id, self.name)
 
     @property
     def arches(self):
-        ''' Return a list of arches this Version supports via its
+        """Return a list of arches this Version supports via its
         repositories.
-        '''
+        """
         arches = set()
         for repo in self.repositories:
             arches.add(repo.arch.name)
@@ -831,36 +784,30 @@ class Version(BASE):
 
 
 class Repository(BASE):
-
-    __tablename__ = 'repository'
+    __tablename__ = "repository"
 
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.Text(), nullable=False, unique=True)
     prefix = sa.Column(sa.Text(), nullable=True)
-    category_id = sa.Column(
-        sa.Integer, sa.ForeignKey('category.id'), nullable=True)
-    version_id = sa.Column(
-        sa.Integer, sa.ForeignKey('version.id'), nullable=True)
-    arch_id = sa.Column(
-        sa.Integer, sa.ForeignKey('arch.id'), nullable=True)
-    directory_id = sa.Column(
-        sa.Integer, sa.ForeignKey('directory.id'), nullable=True)
+    category_id = sa.Column(sa.Integer, sa.ForeignKey("category.id"), nullable=True)
+    version_id = sa.Column(sa.Integer, sa.ForeignKey("version.id"), nullable=True)
+    arch_id = sa.Column(sa.Integer, sa.ForeignKey("arch.id"), nullable=True)
+    directory_id = sa.Column(sa.Integer, sa.ForeignKey("directory.id"), nullable=True)
     disabled = sa.Column(sa.Boolean(), default=False, nullable=False)
 
     # Relations
-    category = relationship('Category', back_populates='repositories')
-    version = relationship('Version', back_populates='repositories')
-    arch = relationship('Arch', back_populates='repositories')
-    directory = relationship('Directory', back_populates='repositories')
+    category = relationship("Category", back_populates="repositories")
+    version = relationship("Version", back_populates="repositories")
+    arch = relationship("Arch", back_populates="repositories")
+    directory = relationship("Directory", back_populates="repositories")
 
     # Constraints
     __table_args__ = (
-        sa.UniqueConstraint(
-            'prefix', 'arch_id', name='repository_idx'),
-        sa.Index('t_repository_category_id_idx', 'category_id'),
-        sa.Index('t_repository_version_id_idx', 'version_id'),
-        sa.Index('t_repository_arch_id_idx', 'arch_id'),
-        sa.Index('t_repository_directory_id_idx', 'directory_id'),
+        sa.UniqueConstraint("prefix", "arch_id", name="repository_idx"),
+        sa.Index("t_repository_category_id_idx", "category_id"),
+        sa.Index("t_repository_version_id_idx", "version_id"),
+        sa.Index("t_repository_arch_id_idx", "arch_id"),
+        sa.Index("t_repository_directory_id_idx", "directory_id"),
     )
 
     def emergency_expire_old_file_details(self, session):
@@ -873,21 +820,20 @@ class Repository(BASE):
         if not self.directory:
             return False
 
-        subdirs = session.query(
-            Directory
-        ).filter(
-            Directory.name.like(self.directory.name + '%')
-        ).all()
+        subdirs = (
+            session.query(Directory)
+            .filter(Directory.name.like(self.directory.name + "%"))
+            .all()
+        )
 
         files_deleted = {}
         for directory in subdirs:
-            files = session.query(
-                FileDetail
-            ).filter_by(
-                directory_id=directory.id
-            ).order_by(
-                FileDetail.timestamp.desc()
-            ).all()
+            files = (
+                session.query(FileDetail)
+                .filter_by(directory_id=directory.id)
+                .order_by(FileDetail.timestamp.desc())
+                .all()
+            )
 
             for f in files:
                 full_filename = os.path.join(directory.name, f.filename)
@@ -903,8 +849,7 @@ class Repository(BASE):
 
 
 class FileDetail(BASE):
-
-    __tablename__ = 'file_detail'
+    __tablename__ = "file_detail"
 
     id = sa.Column(sa.Integer, primary_key=True)
     filename = sa.Column(sa.Text(), nullable=False)
@@ -914,21 +859,19 @@ class FileDetail(BASE):
     md5 = sa.Column(sa.Text(), nullable=True)
     sha256 = sa.Column(sa.Text(), nullable=True)
     sha512 = sa.Column(sa.Text(), nullable=True)
-    directory_id = sa.Column(
-        sa.Integer, sa.ForeignKey('directory.id'), nullable=False)
+    directory_id = sa.Column(sa.Integer, sa.ForeignKey("directory.id"), nullable=False)
 
     # Relations
-    directory = relationship('Directory', back_populates='fileDetails')
+    directory = relationship("Directory", back_populates="fileDetails")
     fileGroups = relationship(
-        'FileGroup',
-        back_populates='files',
+        "FileGroup",
+        back_populates="files",
         secondary="file_detail_file_group",
     )
 
 
 class RepositoryRedirect(BASE):
-
-    __tablename__ = 'repository_redirect'
+    __tablename__ = "repository_redirect"
 
     # Uses strings to allow for effective named aliases, and for repos
     # that may not exist yet
@@ -938,14 +881,12 @@ class RepositoryRedirect(BASE):
 
     # Constraints
     __table_args__ = (
-        sa.UniqueConstraint(
-            'from_repo', 'to_repo', name='repository_redirect_idx'),
+        sa.UniqueConstraint("from_repo", "to_repo", name="repository_redirect_idx"),
     )
 
 
 class CountryContinentRedirect(BASE):
-
-    __tablename__ = 'country_continent_redirect'
+    __tablename__ = "country_continent_redirect"
 
     id = sa.Column(sa.Integer, primary_key=True)
     country = sa.Column(sa.Text(), nullable=False, unique=True)
@@ -953,40 +894,37 @@ class CountryContinentRedirect(BASE):
 
 
 class EmbargoedCountry(BASE):
-
-    __tablename__ = 'embargoed_country'
+    __tablename__ = "embargoed_country"
 
     id = sa.Column(sa.Integer, primary_key=True)
     country_code = sa.Column(sa.Text(), nullable=False, unique=True)
 
 
 class DirectoryExclusiveHost(BASE):
-
-    __tablename__ = 'directory_exclusive_host'
+    __tablename__ = "directory_exclusive_host"
 
     id = sa.Column(sa.Integer, primary_key=True)
-    directory_id = sa.Column(
-        sa.Integer, sa.ForeignKey('directory.id'), nullable=False)
-    host_id = sa.Column(
-        sa.Integer, sa.ForeignKey('host.id'), nullable=False)
+    directory_id = sa.Column(sa.Integer, sa.ForeignKey("directory.id"), nullable=False)
+    host_id = sa.Column(sa.Integer, sa.ForeignKey("host.id"), nullable=False)
 
     # Relations
-    directory = relationship('Directory')
-    host = relationship('Host')
+    directory = relationship("Directory")
+    host = relationship("Host")
 
     # Constraints
     __table_args__ = (
         sa.UniqueConstraint(
-            'directory_id', 'host_id', name='directory_exclusive_host_idx'),
+            "directory_id", "host_id", name="directory_exclusive_host_idx"
+        ),
     )
 
 
 class Location(BASE):
     """For grouping hosts, perhaps across Site boundaries.  User queries
     may request hosts from a particular Location (such as an Amazon region),
-    which will be returned first in the mirror list. """
+    which will be returned first in the mirror list."""
 
-    __tablename__ = 'location'
+    __tablename__ = "location"
 
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.Text(), nullable=False, unique=True)
@@ -996,29 +934,24 @@ class Location(BASE):
 
 # manual creation of the RelatedJoin table so we can guarantee uniqueness
 class HostLocation(BASE):
-
-    __tablename__ = 'host_location'
+    __tablename__ = "host_location"
 
     id = sa.Column(sa.Integer, primary_key=True)
-    location_id = sa.Column(
-        sa.Integer, sa.ForeignKey('location.id'), nullable=False)
-    host_id = sa.Column(
-        sa.Integer, sa.ForeignKey('host.id'), nullable=False)
+    location_id = sa.Column(sa.Integer, sa.ForeignKey("location.id"), nullable=False)
+    host_id = sa.Column(sa.Integer, sa.ForeignKey("host.id"), nullable=False)
 
     # Relations
-    host = relationship('Host', back_populates="locations")
-    location = relationship('Location')
+    host = relationship("Host", back_populates="locations")
+    location = relationship("Location")
 
     # Constraints
     __table_args__ = (
-        sa.UniqueConstraint(
-            'location_id', 'host_id', name='host_location_hlidx'),
+        sa.UniqueConstraint("location_id", "host_id", name="host_location_hlidx"),
     )
 
 
 class FileGroup(BASE):
-
-    __tablename__ = 'file_group'
+    __tablename__ = "file_group"
 
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.Text(), nullable=False, unique=True)
@@ -1034,40 +967,36 @@ class FileGroup(BASE):
 
 
 class FileDetailFileGroup(BASE):
-
-    __tablename__ = 'file_detail_file_group'
+    __tablename__ = "file_detail_file_group"
 
     id = sa.Column(sa.Integer, primary_key=True)
     file_detail_id = sa.Column(
-        sa.Integer, sa.ForeignKey('file_detail.id'), nullable=False)
+        sa.Integer, sa.ForeignKey("file_detail.id"), nullable=False
+    )
     file_group_id = sa.Column(
-        sa.Integer, sa.ForeignKey('file_group.id'), nullable=False)
+        sa.Integer, sa.ForeignKey("file_group.id"), nullable=False
+    )
 
 
 class HostCountry(BASE):
-
-    __tablename__ = 'host_country'
+    __tablename__ = "host_country"
 
     id = sa.Column(sa.Integer, primary_key=True)
-    country_id = sa.Column(
-        sa.Integer, sa.ForeignKey('country.id'), nullable=False)
-    host_id = sa.Column(
-        sa.Integer, sa.ForeignKey('host.id'), nullable=False)
+    country_id = sa.Column(sa.Integer, sa.ForeignKey("country.id"), nullable=False)
+    host_id = sa.Column(sa.Integer, sa.ForeignKey("host.id"), nullable=False)
 
     # Relations
-    host = relationship('Host', back_populates="countries")
-    country = relationship('Country')
+    host = relationship("Host", back_populates="countries")
+    country = relationship("Country")
 
     # Constraints
     __table_args__ = (
-        sa.UniqueConstraint(
-            'host_id', 'country_id', name='host_country_hlidx'),
+        sa.UniqueConstraint("host_id", "country_id", name="host_country_hlidx"),
     )
 
 
 class NetblockCountry(BASE):
-
-    __tablename__ = 'netblock_country'
+    __tablename__ = "netblock_country"
 
     id = sa.Column(sa.Integer, primary_key=True)
     netblock = sa.Column(sa.Text(), nullable=False, unique=True)
@@ -1078,17 +1007,13 @@ class NetblockCountry(BASE):
 # These classes are only used if you're using the `local` authentication
 # method
 class UserVisit(BASE):
-
-    __tablename__ = 'mm_user_visit'
+    __tablename__ = "mm_user_visit"
 
     id = sa.Column(sa.Integer, primary_key=True)
-    user_id = sa.Column(
-        sa.Integer, sa.ForeignKey('mm_user.id'), nullable=False)
-    visit_key = sa.Column(
-        sa.String(40), nullable=False, unique=True, index=True)
+    user_id = sa.Column(sa.Integer, sa.ForeignKey("mm_user.id"), nullable=False)
+    visit_key = sa.Column(sa.String(40), nullable=False, unique=True, index=True)
     user_ip = sa.Column(sa.String(50), nullable=False)
-    created = sa.Column(
-        sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
+    created = sa.Column(sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
     expiry = sa.Column(sa.DateTime)
 
     user = relationship("User", back_populates="session")
@@ -1101,24 +1026,19 @@ class Group(BASE):
 
     # names like "Group", "Order" and "User" are reserved words in SQL
     # so we set the name to something safe for SQL
-    __tablename__ = 'mm_group'
+    __tablename__ = "mm_group"
 
     id = sa.Column(sa.Integer, primary_key=True)
     group_name = sa.Column(sa.String(16), nullable=False, unique=True)
     display_name = sa.Column(sa.String(255), nullable=True)
-    created = sa.Column(
-        sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
+    created = sa.Column(sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
 
-    users = relationship(
-        "User",
-        secondary="mm_user_group",
-        back_populates="group_objs"
-    )
+    users = relationship("User", secondary="mm_user_group", back_populates="group_objs")
 
     def __repr__(self):
-        ''' Return a string representation of this object. '''
+        """Return a string representation of this object."""
 
-        return 'Group: %s - name %s' % (self.id, self.group_name)
+        return "Group: %s - name %s" % (self.id, self.group_name)
 
     # collection of all permissions for this group
     # permissions = RelatedJoin("Permission", joinColumn="group_id",
@@ -1132,18 +1052,13 @@ class UserGroup(BASE):
     This allow linking users to groups.
     """
 
-    __tablename__ = 'mm_user_group'
+    __tablename__ = "mm_user_group"
 
-    user_id = sa.Column(
-        sa.Integer, sa.ForeignKey('mm_user.id'), primary_key=True)
-    group_id = sa.Column(
-        sa.Integer, sa.ForeignKey('mm_group.id'), primary_key=True)
+    user_id = sa.Column(sa.Integer, sa.ForeignKey("mm_user.id"), primary_key=True)
+    group_id = sa.Column(sa.Integer, sa.ForeignKey("mm_group.id"), primary_key=True)
 
     # Constraints
-    __table_args__ = (
-        sa.UniqueConstraint(
-            'user_id', 'group_id'),
-    )
+    __table_args__ = (sa.UniqueConstraint("user_id", "group_id"),)
 
 
 class User(BASE):
@@ -1151,9 +1066,10 @@ class User(BASE):
     Reasonably basic User definition. Probably would want additional
     attributes.
     """
+
     # names like "Group", "Order" and "User" are reserved words in SQL
     # so we set the name to something safe for SQL
-    __tablename__ = 'mm_user'
+    __tablename__ = "mm_user"
 
     id = sa.Column(sa.Integer, primary_key=True)
     user_name = sa.Column(sa.String(16), nullable=False, unique=True)
@@ -1161,15 +1077,10 @@ class User(BASE):
     display_name = sa.Column(sa.String(255), nullable=True)
     password = sa.Column(sa.Text, nullable=True)
     token = sa.Column(sa.String(50), nullable=True)
-    created = sa.Column(
-        sa.DateTime,
-        nullable=False,
-        default=sa.func.now())
+    created = sa.Column(sa.DateTime, nullable=False, default=sa.func.now())
     updated_on = sa.Column(
-        sa.DateTime,
-        nullable=False,
-        default=sa.func.now(),
-        onupdate=sa.func.now())
+        sa.DateTime, nullable=False, default=sa.func.now(), onupdate=sa.func.now()
+    )
 
     # Relations
     group_objs = relationship(
@@ -1183,15 +1094,15 @@ class User(BASE):
 
     @property
     def username(self):
-        ''' Return the username. '''
+        """Return the username."""
         return self.user_name
 
     @property
     def groups(self):
-        ''' Return the list of Group.group_name in which the user is. '''
+        """Return the list of Group.group_name in which the user is."""
         return [group.group_name for group in self.group_objs]
 
     def __repr__(self):
-        ''' Return a string representation of this object. '''
+        """Return a string representation of this object."""
 
-        return 'User: %s - name %s' % (self.id, self.user_name)
+        return "User: %s - name %s" % (self.id, self.user_name)
