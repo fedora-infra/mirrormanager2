@@ -24,6 +24,7 @@ def app(tmp_path):
             # A file database is required to check the integrity, don't ask
             "DB_URL": f"sqlite:///{tmp_path.as_posix()}/test.sqlite",
             "OIDC_CLIENT_SECRETS": os.path.join(HERE, "client_secrets.json"),
+            "USE_FEDORA_MESSAGING": False,
         }
     )
     app.logger.handlers = []

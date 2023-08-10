@@ -110,17 +110,10 @@ def notify(options, topic, msg):
     if not options.fedmsg:
         return
 
-    import fedmsg
-    kwargs = dict(
-        modname='mirrormanager',
-        topic='crawler.' + topic,
-        msg=msg,
-
-        # These direct us to talk to a fedmsg-relay living somewhere.
-        active=True,
-        name="relay_inbound",
+    mirrormanager2.lib.notifications.fedmsg_publish(
+        f"mirrormanager.crawler.{topic}",
+        msg,
     )
-    fedmsg.publish(**kwargs)
 
 
 def doit(options, config):
@@ -304,7 +297,7 @@ def main():
 
     parser.add_argument(
         "--disable-fedmsg", dest="fedmsg", action="store_false", default=True,
-        help="Disable fedmsg notifications at the beginning and end of crawl")
+        help="Disable fedora-messaging notifications at the beginning and end of crawl")
 
     parser.add_argument(
         "--canary", dest="canary", action="store_true", default=False,

@@ -58,18 +58,8 @@ get_global_netblocks
 get_ipv6_netblocks
 if [ -s ${listfile} ]; then
     cp -f ${listfile} "${outfile}"
-    echo "{\"type\": \"global\", \"success\": true}" | fedmsg-logger \
-        --cert-prefix mirrormanager \
-        --modname mirrormanager \
-        --topic "netblocks.get" \
-        --json-input
 else
     echo "unable to retrieve netblock list." >&2
-    echo "{\"type\": \"global\", \"success\": false}" | fedmsg-logger \
-        --cert-prefix mirrormanager \
-        --modname mirrormanager \
-        --topic "netblocks.get" \
-        --json-input
     exit 1
 fi
 exit 0

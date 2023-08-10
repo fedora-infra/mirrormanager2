@@ -237,7 +237,8 @@ def site_drop(site_id):
         try:
             flask.g.db.commit()
             flask.flash('Site "%s" dropped' % site_name)
-            fedmsg_publish(topic, message)
+            if flask.current_app.config["USE_FEDORA_MESSAGING"]:
+                fedmsg_publish(topic, message)
         except SQLAlchemyError as err:
             flask.g.db.rollback()
             flask.flash("Could not delete this site")
@@ -279,7 +280,8 @@ def host_new(site_id):
         try:
             flask.g.db.flush()
             flask.flash("Host added")
-            fedmsg_publish(topic, message)
+            if flask.current_app.config["USE_FEDORA_MESSAGING"]:
+                fedmsg_publish(topic, message)
         except SQLAlchemyError as err:
             flask.g.db.rollback()
             flask.flash("Could not create the new host")
@@ -326,7 +328,8 @@ def host_drop(host_id):
         try:
             flask.g.db.commit()
             flask.flash("Host dropped")
-            fedmsg_publish(topic, message)
+            if flask.current_app.config["USE_FEDORA_MESSAGING"]:
+                fedmsg_publish(topic, message)
         except SQLAlchemyError as err:
             flask.g.db.rollback()
             flask.flash("Could not delete this host")
@@ -468,7 +471,8 @@ def host_view(host_id):
         try:
             flask.g.db.flush()
             flask.flash("Host updated")
-            fedmsg_publish(topic, message)
+            if flask.current_app.config["USE_FEDORA_MESSAGING"]:
+                fedmsg_publish(topic, message)
         except SQLAlchemyError as err:  # pragma: no cover
             # We cannot check this because the code updates data therefore
             # the only situation where it could fail is a failure at the
