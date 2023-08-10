@@ -22,6 +22,8 @@ Contents:
 
    deployment
    development
+   structure
+   crawler
    contributing
    contributors
 

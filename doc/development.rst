@@ -37,8 +37,6 @@ Copy the configuration file::
  cp utility/mirrormanager2.cfg.sample mirrormanager2.cfg
 
 Adjust the configuration file (secret key, database URL, admin group...)
-See :doc:`configuration` for more detailed information about the
-configuration.
 
 
 Create the database scheme::
