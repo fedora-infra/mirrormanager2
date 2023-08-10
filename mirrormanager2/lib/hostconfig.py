@@ -74,10 +74,7 @@ def validate_config(config):
 
         for opt in ["dirtree"]:
             if opt not in config[category]:
-                message += "section [%s] missing required option %s.\n" % (
-                    category,
-                    opt,
-                )
+                message += f"section [{category}] missing required option {opt}.\n"
                 return (False, message)
     return (True, message)
 

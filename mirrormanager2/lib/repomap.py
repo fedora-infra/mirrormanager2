@@ -80,27 +80,27 @@ def repo_prefix(path, category, ver):
         if isTesting:
             # testing-
             if isDebug:
-                prefix = "testing-%sdebug-epel%s" % (modular, version)
+                prefix = f"testing-{modular}debug-epel{version}"
             elif isSource:
-                prefix = "testing-%ssource-epel%s" % (modular, version)
+                prefix = f"testing-{modular}source-epel{version}"
             elif isSource:
-                prefix = "testing-%ssource-epel%s" % (modular, version)
+                prefix = f"testing-{modular}source-epel{version}"
             else:
-                prefix = "testing-%sepel%s" % (modular, version)
+                prefix = f"testing-{modular}epel{version}"
         elif isPlayground:
             if isDebug:
-                prefix = "playground-%sdebug-epel%s" % (modular, version)
+                prefix = f"playground-{modular}debug-epel{version}"
             elif isSource:
-                prefix = "playground-%ssource-epel%s" % (modular, version)
+                prefix = f"playground-{modular}source-epel{version}"
             else:
-                prefix = "playground-%sepel%s" % (modular, version)
+                prefix = f"playground-{modular}epel{version}"
         else:
             if isDebug:
-                prefix = "epel-%sdebug-%s" % (modular, version)
+                prefix = f"epel-{modular}debug-{version}"
             elif isSource:
-                prefix = "epel-%ssource-%s" % (modular, version)
+                prefix = f"epel-{modular}source-{version}"
             else:
-                prefix = "epel-%s%s" % (modular, version)
+                prefix = f"epel-{modular}{version}"
 
     elif isFedoraLinux or isFedoraSecondary or isFedoraArchive:
         if isReleases or isDevelopment:
@@ -374,6 +374,6 @@ def repo_prefix(path, category, ver):
         debug = ""
         if isDebug:
             debug = "debug-"
-        prefix = "fedora-cisco-openh264-%s%s" % (debug, version)
+        prefix = f"fedora-cisco-openh264-{debug}{version}"
 
     return prefix

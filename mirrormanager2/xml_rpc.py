@@ -51,12 +51,11 @@ def checkin(pickledata):
     r, host, message = read_host_config(flask.g.db, config)
     if r is not None:
         logging.info(
-            "Checkin for host %s (pickle:%s) succesful: %s" % (host, is_pickle, message)
+            f"Checkin for host {host} (pickle:{is_pickle}) succesful: {message}"
         )
         return message + "checked in successful"
     else:
         logging.error(
-            "Error for host %s (pickle:%s) during checkin: %s"
-            % (host, is_pickle, message)
+            f"Error for host {host} (pickle:{is_pickle}) during checkin: {message}"
         )
         return message + "error checking in"

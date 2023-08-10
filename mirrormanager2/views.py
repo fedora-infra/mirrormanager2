@@ -146,8 +146,7 @@ def site_new():
             # fail is a failure at the DB server level itself.
             flask.g.db.rollback()
             flask.current_app.logger.debug(
-                'Could not add admin "%s" to site "%s"'
-                % (flask.g.fas_user.username, site)
+                f'Could not add admin "{flask.g.fas_user.username}" to site "{site}"'
             )
             flask.current_app.logger.exception(err)
 
@@ -1203,8 +1202,8 @@ def statistics_file_name(date, cat, ext):
     year = date.strftime("%Y")
     month = date.strftime("%m")
     day = date.strftime("%d")
-    name = "%s/%s/%s-" % (year, month, cat)
-    name = "%s%s-%s-%s.%s" % (name, year, month, day, ext)
+    name = f"{year}/{month}/{cat}-"
+    name = f"{name}{year}-{month}-{day}.{ext}"
     return name
 
 
@@ -1240,7 +1239,7 @@ def statistics(date=None, cat="countries"):
         tomorrow = None
 
     try:
-        with open(today_file, "r") as data:
+        with open(today_file) as data:
             table = data.read()
     except (OSError, TypeError):
         table = "N/A"

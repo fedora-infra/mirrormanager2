@@ -50,9 +50,9 @@ def manage_pidfile(pidfile):
 
     oldpid = ""
     try:
-        with open(pidfile, "r") as stream:
+        with open(pidfile) as stream:
             oldpid = stream.read()
-    except IOError:
+    except OSError:
         return 1
 
     # is the oldpid process still running?

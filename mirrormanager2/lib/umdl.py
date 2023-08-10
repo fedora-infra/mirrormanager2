@@ -86,8 +86,7 @@ def create_version_from_path(session, category, path):
         )
         if not ver:
             logger.info(
-                "Created Version(product=%s, name=%s, is_test=%s, "
-                % (category.product, vname, isTest)
+                f"Created Version(product={category.product}, name={vname}, is_test={isTest}, "
             )
             ver = Version(product=category.product, name=vname, is_test=isTest)
             session.add(ver)
@@ -161,7 +160,7 @@ def make_file_details_from_checksums(session, config, relativeDName, D):
     def _parse_checksum_file(relativeDName, checksumlen):
         r = {}
         try:
-            f = open(os.path.join(config.get("UMDL_PREFIX", ""), relativeDName), "r")
+            f = open(os.path.join(config.get("UMDL_PREFIX", ""), relativeDName))
             for line in f:
                 line = line.strip()
                 s = line.split()
@@ -251,7 +250,7 @@ def make_repo_file_details(session, config, relativeDName, D, category, target):
     # For yum repos and ostree repos
     allowed_targets = ["repomd.xml", "summary"]
     if target not in allowed_targets:
-        logger.warning("%s: %r not in %r" % (warning, target, allowed_targets))
+        logger.warning(f"{warning}: {target!r} not in {allowed_targets!r}")
         return
 
     absolutepath = os.path.join(
@@ -259,11 +258,11 @@ def make_repo_file_details(session, config, relativeDName, D, category, target):
     )
 
     if not os.path.exists(absolutepath):
-        logger.warning("%s: %r does not exist" % (warning, absolutepath))
+        logger.warning(f"{warning}: {absolutepath!r} does not exist")
         return
 
     try:
-        f = open(absolutepath, "r")
+        f = open(absolutepath)
         contents = f.read()
         f.close()
     except Exception:
@@ -313,8 +312,7 @@ def make_repo_file_details(session, config, relativeDName, D, category, target):
 
 def make_repository(session, directory, relativeDName, category, target, config=None):
     logger.info(
-        "Checking into Repo %s - %s - cat: %s - target: %s"
-        % (directory, relativeDName, category, target)
+        f"Checking into Repo {directory} - {relativeDName} - cat: {category} - target: {target}"
     )
 
     warning = "Won't make repository object"
@@ -322,14 +320,14 @@ def make_repository(session, directory, relativeDName, category, target, config=
     # For yum repos and ostree repos
     allowed_targets = ["repomd.xml", "summary"]
     if target not in allowed_targets:
-        logger.warning("%s: %r not in %r" % (warning, target, allowed_targets))
+        logger.warning(f"{warning}: {target!r} not in {allowed_targets!r}")
         return
 
     if target == "repomd.xml":
         (ver, arch) = guess_ver_arch_from_path(session, category, relativeDName, config)
         if ver is None or arch is None:
             logger.warning(
-                "%s: could not guess version and arch %r, %r" % (warning, ver, arch)
+                f"{warning}: could not guess version and arch {ver!r}, {arch!r}"
             )
             return None
     elif target == "summary":
@@ -377,9 +375,8 @@ def make_repository(session, directory, relativeDName, category, target, config=
             prefix=prefix,
         )
         logger.info(
-            "Created Repository(prefix=%s, version=%s, arch=%s, "
-            "category=%s) -> Directory %s"
-            % (prefix, ver.name, arch.name, category.name, directory.name)
+            f"Created Repository(prefix={prefix}, version={ver.name}, arch={arch.name}, "
+            f"category={category.name}) -> Directory {directory.name}"
         )
         session.add(repo)
         session.flush()
@@ -387,7 +384,7 @@ def make_repository(session, directory, relativeDName, category, target, config=
         if repo.prefix != prefix:
             repo.prefix = prefix
             logger.info(
-                "Adjusting prefix Repository(%s) %s -> %s" % (repo, repo.prefix, prefix)
+                f"Adjusting prefix Repository({repo}) {repo.prefix} -> {prefix}"
             )
 
     return repo
@@ -429,7 +426,7 @@ def short_filelist(config, relativeDName, files):
 
 
 def sync_category_directory(session, config, category, relativeDName, readable, ctime):
-    logger.debug("  sync_category_directory %s - %s" % (category, relativeDName))
+    logger.debug(f"  sync_category_directory {category} - {relativeDName}")
 
     created = False
     relativeDName = relativeDName.replace(category.topdir.name, "")
@@ -446,8 +443,7 @@ def sync_category_directory(session, config, category, relativeDName, readable, 
             dname = os.path.join(category.topdir.name, relativeDName)
             D = Directory(name=dname, readable=readable, ctime=ctime)
             logger.debug(
-                "Created Directory(%s, readable=%s, ctime=%s)"
-                % (dname, readable, ctime)
+                f"Created Directory({dname}, readable={readable}, ctime={ctime})"
             )
             created = True
         # Add this category to the directory

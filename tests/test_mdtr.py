@@ -17,16 +17,14 @@ FOLDER = os.path.dirname(os.path.abspath(__file__))
 @pytest.fixture()
 def configfile(tmp_path):
     path = tmp_path.joinpath("mirrormanager2_tests.cfg").as_posix()
-    contents = """
-DB_URL = 'sqlite:///{tmp_path}/test.sqlite'
+    contents = f"""
+DB_URL = 'sqlite:///{tmp_path.as_posix()}/test.sqlite'
 
 
 # Specify whether the crawler should send a report by email
 CRAWLER_SEND_EMAIL =  False
 
-    """.format(
-        tmp_path=tmp_path.as_posix()
-    )
+    """
     with open(path, "w") as stream:
         stream.write(contents)
     return path
