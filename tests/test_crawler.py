@@ -15,80 +15,70 @@
 mirrormanager2 tests for the crawler.
 '''
 
-import unittest
 import os
 from mirrormanager2.lib.sync import run_rsync
-import tests
 
 
 FOLDER = os.path.dirname(os.path.abspath(__file__))
 
 
-class CrawlerTest(tests.Modeltests):
-    """ Crawler tests. """
+def test_run_rsync():
+    """ Test the run_rsync function"""
 
-    def test_run_rsync(self):
-        """ Test the run_rsync function"""
+    # Test timeout if timeout works
 
-        # Test timeout if timeout works
+    # Travis needs a really small timeout value
+    result, fd = run_rsync('/', timeout=0.05)
+    fd.close()
+    assert result == -9
 
-        # Travis needs a really small timeout value
-        result, fd = run_rsync('/', timeout=0.05)
-        fd.close()
-        self.assertEqual(result, -9)
+    # Test if timeout does not trigger
+    result, fd = run_rsync('.', timeout=10)
+    fd.close()
+    assert result != -9
 
-        # Test if timeout does not trigger
-        result, fd = run_rsync('.', timeout=10)
-        fd.close()
-        self.assertNotEqual(result, -9)
+    # Test with non-existing directory
+    result, fd = run_rsync('this-is-not-here-i-hope--')
+    fd.close()
+    assert result == 23
+    assert result != 0
 
-        # Test with non-existing directory
-        result, fd = run_rsync('this-is-not-here-i-hope--')
-        fd.close()
-        self.assertEqual(result, 23)
-        self.assertNotEqual(result, 0)
+    # Test the 'normal' usage
+    dest = FOLDER + "/../testdata/"
+    result, fd = run_rsync(dest)
+    assert result == 0
+    output = ''
+    while True:
+        line = fd.readline()
+        if not line:
+            break
+        output += line
 
-        # Test the 'normal' usage
-        dest = FOLDER + "/../testdata/"
-        result, fd = run_rsync(dest)
-        self.assertEqual(result, 0)
-        output = ''
-        while True:
-            line = fd.readline()
-            if not line:
-                break
-            output += line
+    fd.close()
 
-        fd.close()
+    for i in [
+            '20/Live/x86_64/Fedora-Live-x86_64-20-CHECKSUM',
+            'pub/fedora/linux/releases/20/Fedora/',
+            'releases/20/Fedora/source/SRPMS/a/aalib-1.4.0-0.23',
+            'pub/fedora/linux/development/22/x86_64/os/repodata'
+    ]:
+        assert i in output
 
-        for i in [
-                '20/Live/x86_64/Fedora-Live-x86_64-20-CHECKSUM',
-                'pub/fedora/linux/releases/20/Fedora/',
-                'releases/20/Fedora/source/SRPMS/a/aalib-1.4.0-0.23',
-                'pub/fedora/linux/development/22/x86_64/os/repodata'
-        ]:
-            self.assertTrue(i in output)
+    # Test the 'extra_rsync_args'
+    extra = '--exclude *aalib*'
+    result, fd = run_rsync(dest, extra)
+    assert result == 0
+    output = ''
+    while True:
+        line = fd.readline()
+        if not line:
+            break
+        output += line
 
-        # Test the 'extra_rsync_args'
-        extra = '--exclude *aalib*'
-        result, fd = run_rsync(dest, extra)
-        self.assertEqual(result, 0)
-        output = ''
-        while True:
-            line = fd.readline()
-            if not line:
-                break
-            output += line
+    fd.close()
 
-        fd.close()
+    # Check that aalib is excluded
+    assert 'aalib' not in output
 
-        # Check that aalib is excluded
-        self.assertFalse('aalib' in output)
-
-        # Check that non-excluded files are still included
-        self.assertTrue('fedora/linux/development/22/' in output)
-
-
-if __name__ == '__main__':
-    SUITE = unittest.TestLoader().loadTestsFromTestCase(CrawlerTest)
-    unittest.TextTestRunner(verbosity=10).run(SUITE)
+    # Check that non-excluded files are still included
+    assert 'fedora/linux/development/22/' in output

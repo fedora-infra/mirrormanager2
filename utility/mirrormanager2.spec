@@ -22,6 +22,7 @@ BuildRequires:  python%{python_pkgversion}-flask-oidc
 BuildRequires:  python%{python_pkgversion}-flask-xml-rpc-re
 BuildRequires:  python%{python_pkgversion}-flask-wtf
 BuildRequires:  python%{python_pkgversion}-wtforms
+BuildRequires:  python%{python_pkgversion}-email-validator
 BuildRequires:  python%{python_pkgversion}-IPy
 BuildRequires:  python%{python_pkgversion}-dns
 BuildRequires:  python%{python_pkgversion}-fedora >= 0.3.33
@@ -40,7 +41,7 @@ BuildRequires:  python%{python_pkgversion}-pyrpmmd
 BuildRequires:  python%{python_pkgversion}-py-radix
 Requires:  python%{python3_pkgversion}-mod_wsgi
 # Testing
-BuildRequires:  python%{python_pkgversion}-nose
+BuildRequires:  python%{python_pkgversion}-pytest
 BuildRequires:  python%{python_pkgversion}-coverage
 
 Requires:  python%{python_pkgversion}-flask
@@ -49,6 +50,7 @@ Requires:  python%{python_pkgversion}-flask-oidc
 Requires:  python%{python_pkgversion}-flask-xml-rpc-re
 Requires:  python%{python_pkgversion}-flask-wtf
 Requires:  python%{python_pkgversion}-wtforms
+Requires:  python%{python_pkgversion}-email-validator
 Requires:  python%{python_pkgversion}-fedora >= 0.3.33
 Requires:  python%{python_pkgversion}-fedora-flask >= 0.3.33
 Requires:  python%{python_pkgversion}-setuptools
@@ -256,7 +258,7 @@ exit 0
 
 %check
 # Exclude test_ui_app.py as it requires network connectivity
-MM2_SKIP_NETWORK_TESTS=1 ./runtests.sh -v
+MM2_SKIP_NETWORK_TESTS=1 %{__python} -m pytest -v tests
 
 %files
 %doc README.rst doc/
