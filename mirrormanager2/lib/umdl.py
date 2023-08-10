@@ -173,7 +173,7 @@ def make_file_details_from_checksums(session, config, relativeDName, D):
                 s[1] = s[1].strip("*")
                 r[s[1]] = s[0]
             f.close()
-        except:
+        except Exception:
             pass
         return r
 
@@ -266,7 +266,7 @@ def make_repo_file_details(session, config, relativeDName, D, category, target):
         f = open(absolutepath, "r")
         contents = f.read()
         f.close()
-    except:
+    except Exception:
         return
 
     size = len(contents)
