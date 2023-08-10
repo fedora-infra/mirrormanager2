@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 import argparse
-import sys
 import os
+
+from mirrormanager2.app import APP
 
 
 parser = argparse.ArgumentParser(description="Run the mirrormanager2 app")
@@ -39,8 +40,6 @@ if args.config:
         here = os.path.join(os.path.dirname(os.path.abspath(__file__)))
         config = os.path.join(here, config)
     os.environ["MM2_CONFIG"] = config
-
-from mirrormanager2.app import APP
 
 if args.profile:
     from werkzeug.contrib.profiler import ProfilerMiddleware
