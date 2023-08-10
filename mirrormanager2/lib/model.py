@@ -367,11 +367,12 @@ class Directory(BASE):
         back_populates="directories",
         # cascade="delete, delete-orphan",
     )
-    # categorydir = relationship(
-    #     'CategoryDirectory',
-    #     #back_populates='directory',
-    #     cascade="delete, delete-orphan",
-    # )
+    categorydir = relationship(
+        'CategoryDirectory',
+        back_populates='directory',
+        cascade="delete, delete-orphan",
+        overlaps="categories",
+    )
     repositories = relationship(
         "Repository",
         back_populates="directory",
@@ -501,11 +502,12 @@ class Category(BASE):
     topdir = relationship('Directory')
     host_categories = relationship("HostCategory", cascade="delete, delete-orphan")
     repositories = relationship("Repository", back_populates="category")
-    # categorydir = relationship(
-    #     'CategoryDirectory',
-    # #     back_populates='category',
-    #     cascade="delete, delete-orphan",
-    # )
+    categorydir = relationship(
+        'CategoryDirectory',
+        back_populates='category',
+        cascade="delete, delete-orphan",
+        overlaps="categories",
+    )
     # all the directories that are part of this category
     directories = relationship(
         "Directory",
@@ -514,6 +516,7 @@ class Category(BASE):
         # secondaryjoin="category_directory.c.directory_id==directory.c.id",
         back_populates="categories",
         # cascade="delete, delete-orphan",
+        overlaps="categorydir",
     )
 
     def __repr__(self):
@@ -647,16 +650,16 @@ class CategoryDirectory(BASE):
         sa.Integer, sa.ForeignKey('category.id'), primary_key=True)
     directory_id = sa.Column(
         sa.Integer, sa.ForeignKey('directory.id'), primary_key=True)
-    # category = relationship(
-    #     'Category',
-    #     # back_populates='categorydir',
-    #     # cascade="delete, delete-orphan",
-    # )
-    # directory = relationship(
-    #     'Directory',
-    #     # back_populates='categorydir',
-    #     # cascade="delete, delete-orphan",
-    # )
+    category = relationship(
+        'Category',
+        back_populates='categorydir',
+        overlaps="categories,directories",
+    )
+    directory = relationship(
+        'Directory',
+        back_populates='categorydir',
+        overlaps="categories,directories",
+    )
 
     def __repr__(self):
         ''' Return a string representation of the object. '''
