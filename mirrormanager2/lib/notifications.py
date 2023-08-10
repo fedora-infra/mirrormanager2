@@ -42,7 +42,7 @@ def fedmsg_publish(*args, **kwargs):  # pragma: no cover
 
         fedmsg.publish(*args, **kwargs)
     except Exception as err:
-        warnings.warn(str(err))
+        warnings.warn(str(err), stacklevel=2)
 
 
 def email_publish(
