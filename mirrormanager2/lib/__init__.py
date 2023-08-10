@@ -922,20 +922,20 @@ def uploaded_config(session, host, config):
                     session.add(hcdir)
                     session.commit()
                     added += 1
-                except:
+                except Exception:
                     pass
 
         for hcdir in get_hostcategorydir_by_hostcategoryid(session, hc.id):
             # handle disappearing hcdirs, deleted by other processes
             try:
                 hcdirpath = hcdir.path
-            except:
+            except Exception:
                 continue
             if hcdirpath not in list(config[cat_name]["dirtree"].keys()):
                 try:
                     session.delete(hcdir)
                     session.commit()
-                except:
+                except Exception:
                     pass
                 deleted += 1
 
@@ -1026,7 +1026,7 @@ def get_rsync_filter_directories(session, categories, since):
 
     try:
         since = int(since)
-    except:
+    except Exception:
         return []
 
     if len(categories) == 0:
