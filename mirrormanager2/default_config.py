@@ -21,9 +21,8 @@
 MirrorManager2 default configuration api.
 """
 
-from datetime import timedelta
 import os
-
+from datetime import timedelta
 
 # Set the time after which the session expires. Flask's default is 31 days.
 # Default: ``timedelta(hours=1)`` corresponds to 1 hour.

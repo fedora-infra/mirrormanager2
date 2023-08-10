@@ -22,9 +22,9 @@
 MirrorManager2 internal api to manage sync.
 """
 
+import errno
 import subprocess
 import tempfile
-import errno
 import threading
 
 

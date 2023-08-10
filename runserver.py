@@ -5,7 +5,6 @@ import os
 
 from mirrormanager2.app import APP
 
-
 parser = argparse.ArgumentParser(description="Run the mirrormanager2 app")
 parser.add_argument("--config", "-c", dest="config", help="Configuration file to use.")
 parser.add_argument(

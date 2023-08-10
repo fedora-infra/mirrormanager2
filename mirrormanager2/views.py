@@ -7,17 +7,16 @@ import flask
 import werkzeug
 from sqlalchemy.exc import SQLAlchemyError
 
+from mirrormanager2 import forms, login_forms
 from mirrormanager2 import lib as mmlib
-from mirrormanager2.perms import (
-    login_required,
-    admin_required,
-    is_site_admin,
-    is_mirrormanager_admin,
-)
 from mirrormanager2.lib import model
 from mirrormanager2.lib.notifications import fedmsg_publish
-from mirrormanager2 import login_forms
-from mirrormanager2 import forms
+from mirrormanager2.perms import (
+    admin_required,
+    is_mirrormanager_admin,
+    is_site_admin,
+    login_required,
+)
 
 views = flask.Blueprint("base", __name__)
 

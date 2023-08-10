@@ -21,19 +21,17 @@
 MirrorManager2 database model.
 """
 
-import datetime
 import collections
-import logging
-import time
-import os
+import datetime
 import json
+import logging
+import os
 import pickle
+import time
 
 import sqlalchemy as sa
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import relationship
-from sqlalchemy.orm import deferred
+from sqlalchemy.orm import declarative_base, deferred, relationship
 
 
 class MirrorManagerBaseMixin:
@@ -113,8 +111,8 @@ def create_tables(db_url, alembic_ini=None, debug=False):
 
         # Ignore the warning missing alembic
         # pylint: disable=F0401
-        from alembic.config import Config
         from alembic import command
+        from alembic.config import Config
 
         alembic_cfg = Config(alembic_ini)
         command.stamp(alembic_cfg, "head")

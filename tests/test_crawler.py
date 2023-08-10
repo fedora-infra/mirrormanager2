@@ -16,8 +16,8 @@ mirrormanager2 tests for the crawler.
 """
 
 import os
-from mirrormanager2.lib.sync import run_rsync
 
+from mirrormanager2.lib.sync import run_rsync
 
 FOLDER = os.path.dirname(os.path.abspath(__file__))
 

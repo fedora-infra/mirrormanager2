@@ -8,11 +8,10 @@ import os
 
 import pytest
 
-from mirrormanager2.app import create_app, DB
+from mirrormanager2.app import DB, create_app
 from mirrormanager2.lib import model
 
-from .auth import FakeFasUser, user_set, FakeFasUserAdmin, AnotherFakeFasUser
-
+from .auth import AnotherFakeFasUser, FakeFasUser, FakeFasUserAdmin, user_set
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 

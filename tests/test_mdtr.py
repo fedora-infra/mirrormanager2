@@ -3,13 +3,13 @@ mirrormanager2 tests for the `Move Devel To Release` (MDTL) script.
 """
 
 
-import subprocess
 import os
-import mirrormanager2.lib
-import mirrormanager2.lib.model as model
+import subprocess
 
 import pytest
 
+import mirrormanager2.lib
+import mirrormanager2.lib.model as model
 
 FOLDER = os.path.dirname(os.path.abspath(__file__))
 

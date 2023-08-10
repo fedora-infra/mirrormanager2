@@ -2,12 +2,12 @@
 mirrormanager2 tests for the `Update Master Directory List` (UMDL) cron.
 """
 
-import subprocess
 import os
-import mirrormanager2.lib
+import subprocess
 
 import pytest
 
+import mirrormanager2.lib
 
 FOLDER = os.path.dirname(os.path.abspath(__file__))
 

@@ -22,10 +22,10 @@ MirrorManager2 xmlrpc controller.
 """
 
 import base64
-import pickle
-import json
 import bz2
+import json
 import logging
+import pickle
 
 import flask
 from flask_xmlrpcre.xmlrpcre import XMLRPCHandler
