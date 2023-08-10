@@ -6,7 +6,6 @@ flask-admin
 flask-xml-rpc-re
 flask-wtf
 wtforms
-email_validator
 SQLAlchemy>=0.7
 python-fedora
 flask-oidc
