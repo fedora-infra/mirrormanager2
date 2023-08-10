@@ -167,3 +167,6 @@ CRAWLER_AUTO_DISABLE = 4
 # This is a list of directories which MirrorManager will ignore while guessing
 # the version and architecture from a path.
 SKIP_PATHS_FOR_VERSION = ["pub/alt"]
+
+# Whether to use Fedora Messaging for notifications
+USE_FEDORA_MESSAGING = True

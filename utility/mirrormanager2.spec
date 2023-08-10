@@ -31,9 +31,10 @@ BuildRequires:  python%{python_pkgversion}-setuptools
 BuildRequires:  python%{python_pkgversion}-psutil
 BuildRequires:  python%{python_pkgversion}-alembic
 BuildRequires:  python%{python_pkgversion}-authlib
+BuildRequires:  python%{python_pkgversion}-backoff
 BuildRequires:  systemd-rpm-macros
 # Testing
-BuildRequires:  python%{python_pkgversion}-fedmsg-core
+BuildRequires:  python%{python_pkgversion}-fedora-messaging
 BuildRequires:  python%{python_pkgversion}-blinker
 BuildRequires:  rsync
 BuildRequires:  python%{python_pkgversion}-pyrpmmd
@@ -57,6 +58,7 @@ Requires:  python%{python_pkgversion}-setuptools
 Requires:  python%{python_pkgversion}-psutil
 Requires:  python%{python_pkgversion}-alembic
 Requires:  python%{python_pkgversion}-authlib
+Requires:  python%{python_pkgversion}-backoff
 
 Requires:  %{name}-lib = %{version}-%{release}
 Requires:  %{name}-filesystem = %{version}-%{release}

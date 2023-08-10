@@ -20,28 +20,33 @@
 """
 MirrorManager2 notification code.
 
-These methods are used to send email or fedmsg message or any other
-notifications we could use.
+These methods are used to send email or fedora-messaging message or
+any other notifications we could use.
 """
 
 
 import smtplib
-import warnings
 from email.mime.text import MIMEText
 
+import backoff
+from fedora_messaging.api import publish as fm_publish
+from fedora_messaging.exceptions import ConnectionException, PublishTimeout
+from fedora_messaging.message import Message
 
-def fedmsg_publish(*args, **kwargs):  # pragma: no cover
+
+@backoff.on_exception(
+    backoff.expo,
+    (ConnectionException, PublishTimeout),
+    max_tries=3,
+)
+def safe_publish(msg: Message):
+    fm_publish(msg)
+
+
+def fedmsg_publish(topic, content):  # pragma: no cover
     """Try to publish a message on the fedmsg bus."""
-    # We catch Exception if we want :-p
-    # pylint: disable=W0703
-    # Ignore message about fedmsg import
-    # pylint: disable=F0401
-    try:
-        import fedmsg
-
-        fedmsg.publish(*args, **kwargs)
-    except Exception as err:
-        warnings.warn(str(err), stacklevel=2)
+    msg = Message(body=content, topic=f"mirrormanager.{topic}")
+    safe_publish(msg)
 
 
 def email_publish(

@@ -14,3 +14,5 @@ dnspython
 protobuf
 munch
 authlib
+backoff
+fedora-messaging

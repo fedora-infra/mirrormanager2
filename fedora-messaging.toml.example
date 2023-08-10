@@ -1,0 +1,57 @@
+# A sample configuration for fedora-messaging. This file is in the TOML format.
+amqp_url = "amqp://"
+passive_declares = false
+publish_exchange = "amq.topic"
+topic_prefix = ""
+
+[tls]
+ca_cert = "/etc/fedora-messaging/cacert.pem"
+keyfile = "/etc/fedora-messaging/mirrormanager2-key.pem"
+certfile = "/etc/fedora-messaging/mirrormanager2-cert.pem"
+
+[client_properties]
+app = "MirrorManager2"
+
+[exchanges."amq.topic"]
+type = "topic"
+durable = true
+auto_delete = false
+arguments = {}
+
+[consumer_config]
+excluded_lists = []
+
+[log_config]
+version = 1
+disable_existing_loggers = true
+
+[log_config.formatters.simple]
+format = "[%(levelname)s %(name)s] %(message)s"
+
+[log_config.handlers.console]
+class = "logging.StreamHandler"
+formatter = "simple"
+stream = "ext://sys.stdout"
+
+[log_config.loggers.fedora_messaging]
+level = "INFO"
+propagate = false
+handlers = ["console"]
+
+# Twisted is the asynchronous framework that manages the TCP/TLS connection, as well
+# as the consumer event loop. When debugging you may want to lower this log level.
+[log_config.loggers.twisted]
+level = "INFO"
+propagate = false
+handlers = ["console"]
+
+# Pika is the underlying AMQP client library. When debugging you may want to
+# lower this log level.
+[log_config.loggers.pika]
+level = "WARNING"
+propagate = false
+handlers = ["console"]
+
+[log_config.root]
+level = "ERROR"
+handlers = ["console"]
