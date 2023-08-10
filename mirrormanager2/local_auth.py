@@ -51,7 +51,7 @@ def new_user():
             flask.flash("Email address already taken.", "error")
             return flask.redirect(flask.request.url)
 
-        password = "%s%s" % (
+        password = "{}{}".format(
             form.password.data,
             flask.current_app.config.get("PASSWORD_SEED", None),
         )
@@ -96,7 +96,7 @@ def do_login():
 
     if form.validate_on_submit():
         username = form.username.data
-        password = "%s%s" % (
+        password = "{}{}".format(
             form.password.data,
             flask.current_app.config.get("PASSWORD_SEED", None),
         )
@@ -232,7 +232,7 @@ def reset_password(token):
         return flask.redirect(flask.url_for("auth.login"))
 
     if form.validate_on_submit():
-        password = "%s%s" % (
+        password = "{}{}".format(
             form.password.data,
             flask.current_app.config.get("PASSWORD_SEED", None),
         )
@@ -272,24 +272,22 @@ def send_confirmation_email(user):
 
     url = flask.current_app.config.get("APPLICATION_URL", flask.request.url_root)
 
-    message = """ Dear %(username)s,
+    message = """ Dear {username},
 
-Thank you for registering on MirrorManager at %(url)s.
+Thank you for registering on MirrorManager at {url}.
 
 To finish your registration, please click on the following link or copy/paste
 it in your browser:
-  %(url)s/%(confirm_root)s
+  {url}/{confirm_root}
 
 You account will not be activated until you finish this step.
 
 Sincerely,
 Your MirrorManager admin.
-""" % (
-        {
-            "username": user.username,
-            "url": url or flask.request.url_root,
-            "confirm_root": flask.url_for("local_auth.confirm_user", token=user.token),
-        }
+""".format(
+        username=user.username,
+        url=url or flask.request.url_root,
+        confirm_root=flask.url_for("local_auth.confirm_user", token=user.token),
     )
 
     mirrormanager2.lib.notifications.email_publish(
@@ -309,27 +307,23 @@ def send_lostpassword_email(user):
     """
     url = flask.current_app.config.get("APPLICATION_URL", flask.request.url_root)
 
-    message = """ Dear %(username)s,
+    message = """ Dear {username},
 
-The IP address %(ip)s has requested a password change for this account.
+The IP address {ip} has requested a password change for this account.
 
 If you wish to change your password, please click on the following link or
 copy/paste it in your browser:
-  %(url)s/%(confirm_root)s
+  {url}/{confirm_root}
 
 If you did not request this change, please inform an admin immediately!
 
 Sincerely,
 Your MirrorManager admin.
-""" % (
-        {
-            "username": user.username,
-            "url": url or flask.request.url_root,
-            "confirm_root": flask.url_for(
-                "local_auth.reset_password", token=user.token
-            ),
-            "ip": flask.request.remote_addr,
-        }
+""".format(
+        username=user.username,
+        url=url or flask.request.url_root,
+        confirm_root=flask.url_for("local_auth.reset_password", token=user.token),
+        ip=flask.request.remote_addr,
     )
 
     mirrormanager2.lib.notifications.email_publish(

@@ -22,9 +22,9 @@ def logfile(tmp_path):
 @pytest.fixture()
 def configfile(tmp_path):
     path = tmp_path.joinpath("mirrormanager2_tests.cfg").as_posix()
-    contents = """
-DB_URL = 'sqlite:///{tmp_path}/test.sqlite'
-UMDL_PREFIX = '{folder}/../testdata/'
+    contents = f"""
+DB_URL = 'sqlite:///{tmp_path.as_posix()}/test.sqlite'
+UMDL_PREFIX = '{FOLDER}/../testdata/'
 
 # Specify whether the crawler should send a report by email
 CRAWLER_SEND_EMAIL =  False
@@ -32,33 +32,31 @@ CRAWLER_SEND_EMAIL =  False
 umdl_master_directories = [
     {{
         'type': 'directory',
-        'path': '{folder}/../testdata/pub/epel/',
+        'path': '{FOLDER}/../testdata/pub/epel/',
         'category': 'Fedora EPEL'
     }},
     {{
         'type': 'directory',
-        'path': '{folder}/../testdata/pub/fedora/linux/',
+        'path': '{FOLDER}/../testdata/pub/fedora/linux/',
         'category': 'Fedora Linux'
     }},
     {{
         'type': 'directory',
-        'path': '{folder}/../testdata/pub/fedora-secondary/',
+        'path': '{FOLDER}/../testdata/pub/fedora-secondary/',
         'category': 'Fedora Secondary Arches'
     }},
     {{
         'type': 'directory',
-        'path': '{folder}/../testdata/pub/archive/',
+        'path': '{FOLDER}/../testdata/pub/archive/',
         'category': 'Fedora Archive'
     }},
     {{
         'type': 'directory',
-        'path': '{folder}/../testdata/pub/alt/',
+        'path': '{FOLDER}/../testdata/pub/alt/',
         'category': 'Fedora Other'
     }}
 ]
-    """.format(
-        folder=FOLDER, tmp_path=tmp_path.as_posix()
-    )
+    """
     with open(path, "w") as stream:
         stream.write(contents)
     return path

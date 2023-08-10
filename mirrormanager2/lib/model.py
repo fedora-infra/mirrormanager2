@@ -166,7 +166,7 @@ class Site(BASE):
 
     def __repr__(self):
         """Return a string representation of the object."""
-        return "<Site(%s - %s)>" % (self.id, self.name)
+        return f"<Site({self.id} - {self.name})>"
 
 
 class Country(BASE):
@@ -267,7 +267,7 @@ class Host(BASE):
 
     def __repr__(self):
         """Return a string representation of the object."""
-        return "<Host(%s - %s)>" % (self.id, self.name)
+        return f"<Host({self.id} - {self.name})>"
 
     def __json__(self):
         return dict(
@@ -378,7 +378,7 @@ class Directory(BASE):
 
     def __repr__(self):
         """Return a string representation of the object."""
-        return "<Directory(%s - %s)>" % (self.id, self.name)
+        return f"<Directory({self.id} - {self.name})>"
 
     @classmethod
     def age_file_details(cls, session, config):
@@ -449,7 +449,7 @@ class Product(BASE):
 
     def __repr__(self):
         """Return a string representation of the object."""
-        return "<Product(%s - %s)>" % (self.id, self.name)
+        return f"<Product({self.id} - {self.name})>"
 
     @property
     def displayed_versions(self):
@@ -510,7 +510,7 @@ class Category(BASE):
 
     def __repr__(self):
         """Return a string representation of the object."""
-        return "<Category(%s - %s)>" % (self.id, self.name)
+        return f"<Category({self.id} - {self.name})>"
 
 
 class SiteToSite(BASE):
@@ -585,7 +585,7 @@ class HostCategory(BASE):
 
     def __repr__(self):
         """Return a string representation of the object."""
-        return "<HostCategory(%s - %s)>" % (self.id, self.category)
+        return f"<HostCategory({self.id} - {self.category})>"
 
 
 class HostCategoryDir(BASE):
@@ -638,7 +638,7 @@ class CategoryDirectory(BASE):
 
     def __repr__(self):
         """Return a string representation of the object."""
-        return "<CategoryDirectory(%s - %s)>" % (self.category_id, self.directory_id)
+        return f"<CategoryDirectory({self.category_id} - {self.directory_id})>"
 
 
 class HostCategoryUrl(BASE):
@@ -745,7 +745,7 @@ class Arch(BASE):
 
     def __repr__(self):
         """Return a string representation of the object."""
-        return "<Arch(%s - %s)>" % (self.id, self.name)
+        return f"<Arch({self.id} - {self.name})>"
 
 
 class Version(BASE):
@@ -770,7 +770,7 @@ class Version(BASE):
 
     def __repr__(self):
         """Return a string representation of the object."""
-        return "<Version(%s - %s)>" % (self.id, self.name)
+        return f"<Version({self.id} - {self.name})>"
 
     @property
     def arches(self):
@@ -1038,7 +1038,7 @@ class Group(BASE):
     def __repr__(self):
         """Return a string representation of this object."""
 
-        return "Group: %s - name %s" % (self.id, self.group_name)
+        return f"Group: {self.id} - name {self.group_name}"
 
     # collection of all permissions for this group
     # permissions = RelatedJoin("Permission", joinColumn="group_id",
@@ -1105,4 +1105,4 @@ class User(BASE):
     def __repr__(self):
         """Return a string representation of this object."""
 
-        return "User: %s - name %s" % (self.id, self.user_name)
+        return f"User: {self.id} - name {self.user_name}"

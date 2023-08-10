@@ -907,7 +907,7 @@ def uploaded_config(session, host, config):
                     session.commit()
             else:
                 if len(d) > 0:
-                    dname = "%s/%s" % (hc.category.topdir.name, d)
+                    dname = f"{hc.category.topdir.name}/{d}"
                 else:
                     dname = hc.category.topdir.name
 
@@ -939,11 +939,13 @@ def uploaded_config(session, host, config):
                     pass
                 deleted += 1
 
-        message += "Category %s directories updated: %s  added: %s  deleted %s\n" % (
-            cat.category.name,
-            marked_up2date,
-            added,
-            deleted,
+        message += (
+            "Category {} directories updated: {}  added: {}  deleted {}\n".format(
+                cat.category.name,
+                marked_up2date,
+                added,
+                deleted,
+            )
         )
         host.last_checked_in = datetime.datetime.utcnow()
         session.add(hc)
