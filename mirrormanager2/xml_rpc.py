@@ -17,9 +17,9 @@
 # of Red Hat, Inc.
 #
 
-'''
+"""
 MirrorManager2 xmlrpc controller.
-'''
+"""
 
 import base64
 import pickle
@@ -35,7 +35,7 @@ from mirrormanager2.lib.hostconfig import read_host_config
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-XMLRPC = XMLRPCHandler('xmlrpc')
+XMLRPC = XMLRPCHandler("xmlrpc")
 
 
 @XMLRPC.register
@@ -50,10 +50,13 @@ def checkin(pickledata):
         config = pickle.loads(uncompressed)
     r, host, message = read_host_config(flask.g.db, config)
     if r is not None:
-        logging.info("Checkin for host %s (pickle:%s) succesful: %s" %
-                (host, is_pickle, message))
-        return message + 'checked in successful'
+        logging.info(
+            "Checkin for host %s (pickle:%s) succesful: %s" % (host, is_pickle, message)
+        )
+        return message + "checked in successful"
     else:
-        logging.error("Error for host %s (pickle:%s) during checkin: %s" %
-                (host, is_pickle, message))
-        return message + 'error checking in'
+        logging.error(
+            "Error for host %s (pickle:%s) during checkin: %s"
+            % (host, is_pickle, message)
+        )
+        return message + "error checking in"

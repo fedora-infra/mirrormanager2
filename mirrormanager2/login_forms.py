@@ -17,9 +17,9 @@
 # of Red Hat, Inc.
 #
 
-'''
+"""
 MirrorManager2 login forms.
-'''
+"""
 
 # # pylint cannot import flask extension correctly
 # pylint: disable=E0611,F0401
@@ -33,6 +33,7 @@ MirrorManager2 login forms.
 
 import flask_wtf as wtf
 import wtforms
+
 try:
     from flask_wtf import FlaskForm
 except ImportError:
@@ -40,63 +41,57 @@ except ImportError:
 
 
 def same_password(form, field):
-    ''' Check if the data in the field is the same as in the password field.
-    '''
+    """Check if the data in the field is the same as in the password field."""
     if field.data != form.password.data:
-        raise wtf.ValidationError('Both password fields should be equal')
+        raise wtf.ValidationError("Both password fields should be equal")
 
 
 class LostPasswordForm(FlaskForm):
-    """ Form to ask for a password change. """
+    """Form to ask for a password change."""
+
     username = wtforms.StringField(
-        'username  <span class="error">*</span>',
-        [wtforms.validators.InputRequired()]
+        'username  <span class="error">*</span>', [wtforms.validators.InputRequired()]
     )
 
 
 class ResetPasswordForm(FlaskForm):
-    """ Form to reset one's password in the local database. """
+    """Form to reset one's password in the local database."""
+
     password = wtforms.PasswordField(
-        'Password  <span class="error">*</span>',
-        [wtforms.validators.InputRequired()]
+        'Password  <span class="error">*</span>', [wtforms.validators.InputRequired()]
     )
     confirm_password = wtforms.PasswordField(
         'Confirm password  <span class="error">*</span>',
-        [wtforms.validators.InputRequired(), same_password]
+        [wtforms.validators.InputRequired(), same_password],
     )
 
 
 class LoginForm(FlaskForm):
-    """ Form to login via the local database. """
+    """Form to login via the local database."""
+
     username = wtforms.StringField(
-        'username  <span class="error">*</span>',
-        [wtforms.validators.InputRequired()]
+        'username  <span class="error">*</span>', [wtforms.validators.InputRequired()]
     )
     password = wtforms.PasswordField(
-        'Password  <span class="error">*</span>',
-        [wtforms.validators.InputRequired()]
+        'Password  <span class="error">*</span>', [wtforms.validators.InputRequired()]
     )
 
 
 class NewUserForm(FlaskForm):
-    """ Form to add a new user to the local database. """
+    """Form to add a new user to the local database."""
+
     user_name = wtforms.StringField(
-        'username  <span class="error">*</span>',
-        [wtforms.validators.InputRequired()]
+        'username  <span class="error">*</span>', [wtforms.validators.InputRequired()]
     )
-    display_name = wtforms.StringField(
-        'Full name',
-        [wtforms.validators.Optional()]
-    )
+    display_name = wtforms.StringField("Full name", [wtforms.validators.Optional()])
     email_address = wtforms.StringField(
         'Email address  <span class="error">*</span>',
-        [wtforms.validators.InputRequired(), wtforms.validators.Email()]
+        [wtforms.validators.InputRequired(), wtforms.validators.Email()],
     )
     password = wtforms.PasswordField(
-        'Password  <span class="error">*</span>',
-        [wtforms.validators.InputRequired()]
+        'Password  <span class="error">*</span>', [wtforms.validators.InputRequired()]
     )
     confirm_password = wtforms.PasswordField(
         'Confirm password  <span class="error">*</span>',
-        [wtforms.validators.InputRequired(), same_password]
+        [wtforms.validators.InputRequired(), same_password],
     )

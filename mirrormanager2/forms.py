@@ -17,9 +17,9 @@
 # of Red Hat, Inc.
 #
 
-'''
+"""
 MirrorManager2 forms.
-'''
+"""
 
 # # pylint cannot import flask extension correctly
 # pylint: disable=E0611,F0401
@@ -33,6 +33,7 @@ MirrorManager2 forms.
 
 import re
 import wtforms
+
 try:
     from flask_wtf import FlaskForm
 except ImportError:
@@ -43,75 +44,57 @@ from flask import g, current_app
 import IPy
 
 
-COUNTRY_REGEX = '^[a-zA-Z][a-zA-Z]$'
+COUNTRY_REGEX = "^[a-zA-Z][a-zA-Z]$"
 
 
 def is_number(form, field):
-    ''' Check if the data in the field is a number and raise an exception
+    """Check if the data in the field is a number and raise an exception
     if it is not.
-    '''
+    """
     try:
         float(field.data)
     except ValueError as e:
-        raise wtforms.ValidationError('Field must contain a number') from e
+        raise wtforms.ValidationError("Field must contain a number") from e
 
 
 class ConfirmationForm(FlaskForm):
-    """ Simple form, just used for CSRF protection. """
+    """Simple form, just used for CSRF protection."""
+
     pass
 
 
 class AddSiteForm(FlaskForm):
-    """ Form to add or edit a site. """
-    name = wtforms.StringField(
-        'Site name',
-        [wtforms.validators.InputRequired()]
-    )
+    """Form to add or edit a site."""
+
+    name = wtforms.StringField("Site name", [wtforms.validators.InputRequired()])
     password = wtforms.StringField(
-        'Site Password',
-        [wtforms.validators.InputRequired()]
+        "Site Password", [wtforms.validators.InputRequired()]
     )
     org_url = wtforms.StringField(
-        'Organisation URL',
+        "Organisation URL",
         [wtforms.validators.InputRequired()],
     )
-    private = wtforms.BooleanField(
-        'Private',
-        default=False
-    )
-    admin_active = wtforms.BooleanField(
-        'Admin active',
-        default=True
-    )
-    user_active = wtforms.BooleanField(
-        'User active',
-        default=True
-    )
+    private = wtforms.BooleanField("Private", default=False)
+    admin_active = wtforms.BooleanField("Admin active", default=True)
+    user_active = wtforms.BooleanField("User active", default=True)
     all_sites_can_pull_from_me = wtforms.BooleanField(
-        'All sites can pull from me?',
-        default=False
+        "All sites can pull from me?", default=False
     )
     downstream_comments = wtforms.StringField(
-        'Comments for downstream siteadmins',
+        "Comments for downstream siteadmins",
     )
 
 
 class AddHostForm(FlaskForm):
-    """ Form to add or edit a host. """
+    """Form to add or edit a host."""
+
     name = wtforms.StringField(
-        'Host name  <span class="error">*</span>',
-        [wtforms.validators.InputRequired()]
+        'Host name  <span class="error">*</span>', [wtforms.validators.InputRequired()]
     )
-    admin_active = wtforms.BooleanField(
-        'Admin active',
-        default=True
-    )
-    user_active = wtforms.BooleanField(
-        'User active',
-        default=True
-    )
+    admin_active = wtforms.BooleanField("Admin active", default=True)
+    user_active = wtforms.BooleanField("User active", default=True)
     disable_reason = wtforms.StringField(
-        'Disable Reason',
+        "Disable Reason",
         [wtforms.validators.Optional()],
     )
     country = wtforms.StringField(
@@ -119,149 +102,136 @@ class AddHostForm(FlaskForm):
         [
             wtforms.validators.InputRequired(),
             wtforms.validators.Regexp(COUNTRY_REGEX, flags=re.IGNORECASE),
-        ]
+        ],
     )
     bandwidth_int = wtforms.StringField(
         'Bandwidth  <span class="error">*</span>',
         [wtforms.validators.InputRequired(), is_number],
     )
-    private = wtforms.BooleanField(
-        'Private',
-        default=False
-    )
+    private = wtforms.BooleanField("Private", default=False)
 
-    internet2 = wtforms.BooleanField(
-        'Internet2',
-        default=False
-    )
-    internet2_clients = wtforms.BooleanField(
-        'Internet2 clients',
-        default=False
-    )
+    internet2 = wtforms.BooleanField("Internet2", default=False)
+    internet2_clients = wtforms.BooleanField("Internet2 clients", default=False)
     asn = wtforms.StringField(
-        'ASN',
+        "ASN",
         [wtforms.validators.Optional(), is_number],
     )
-    asn_clients = wtforms.BooleanField(
-        'ASN Clients?',
-        default=True
-    )
+    asn_clients = wtforms.BooleanField("ASN Clients?", default=True)
     robot_email = wtforms.StringField(
-        'Robot email',
+        "Robot email",
         [wtforms.validators.Optional()],
     )
     comment = wtforms.StringField(
-        'Comment',
+        "Comment",
         [wtforms.validators.Optional()],
     )
     max_connections = wtforms.StringField(
         'Max connections  <span class="error">*</span>',
         [wtforms.validators.InputRequired(), is_number],
-        default=1
+        default=1,
     )
 
 
 class AddHostAclIpForm(FlaskForm):
-    """ Form to add or edit a host_acl_ip. """
+    """Form to add or edit a host_acl_ip."""
+
     ip = wtforms.StringField(
-        'IP  <span class="error">*</span>',
-        [wtforms.validators.InputRequired()]
+        'IP  <span class="error">*</span>', [wtforms.validators.InputRequired()]
     )
 
+
 def validate_netblocks(form, field):
-    max_ipv4_netblock_size = current_app.config.get('MM_IPV4_NETBLOCK_SIZE', '/16')
-    max_ipv6_netblock_size = current_app.config.get('MM_IPV6_NETBLOCK_SIZE', '/32')
+    max_ipv4_netblock_size = current_app.config.get("MM_IPV4_NETBLOCK_SIZE", "/16")
+    max_ipv6_netblock_size = current_app.config.get("MM_IPV6_NETBLOCK_SIZE", "/32")
 
     emsg = "Error: IPv4 netblocks larger than %s" % max_ipv4_netblock_size
     emsg += ", and IPv6 netblocks larger than %s" % max_ipv6_netblock_size
     emsg += " can only be created by mirrormanager administrators."
     emsg += " Please ask the mirrormanager administrators for assistance."
 
-    ipv4_block = IPy.IP('10.0.0.0%s' % max_ipv4_netblock_size)
-    ipv6_block = IPy.IP('fec0::%s'   % max_ipv6_netblock_size)
+    ipv4_block = IPy.IP("10.0.0.0%s" % max_ipv4_netblock_size)
+    ipv6_block = IPy.IP("fec0::%s" % max_ipv6_netblock_size)
 
     try:
         ip = IPy.IP(field.data, make_net=True)
     except ValueError:
         # also accept DNS hostnames
         return
-    if (((ip.version() == 4 and ip.len() > ipv4_block.len()) or
-            (ip.version() == 6 and ip.len() > ipv6_block.len())) and
-             not g.is_mirrormanager_admin):
+    if (
+        (ip.version() == 4 and ip.len() > ipv4_block.len())
+        or (ip.version() == 6 and ip.len() > ipv6_block.len())
+    ) and not g.is_mirrormanager_admin:
         raise wtforms.validators.ValidationError(emsg)
 
 
 class AddHostNetblockForm(FlaskForm):
-    """ Form to add or edit a host_netblock. """
+    """Form to add or edit a host_netblock."""
+
     name = wtforms.StringField(
-        'Name  <span class="error">*</span>',
-        [wtforms.validators.InputRequired()]
+        'Name  <span class="error">*</span>', [wtforms.validators.InputRequired()]
     )
     netblock = wtforms.StringField(
         'Netblock  <span class="error">*</span>',
-        [wtforms.validators.InputRequired(), validate_netblocks]
+        [wtforms.validators.InputRequired(), validate_netblocks],
     )
 
 
 class AddHostAsnForm(FlaskForm):
-    """ Form to add or edit a host_peer_asn. """
+    """Form to add or edit a host_peer_asn."""
+
     name = wtforms.StringField(
-        'Name  <span class="error">*</span>',
-        [wtforms.validators.InputRequired()]
+        'Name  <span class="error">*</span>', [wtforms.validators.InputRequired()]
     )
     asn = wtforms.StringField(
         'ASN  <span class="error">*</span>',
-        [wtforms.validators.InputRequired(), is_number]
+        [wtforms.validators.InputRequired(), is_number],
     )
 
 
 class AddHostCountryForm(FlaskForm):
-    """ Form to add or edit a host_country. """
+    """Form to add or edit a host_country."""
+
     country = wtforms.StringField(
         'Country  <span class="error">*</span>',
         [
             wtforms.validators.InputRequired(),
             wtforms.validators.Regexp(COUNTRY_REGEX, flags=re.IGNORECASE),
-        ]
+        ],
     )
 
 
 class AddHostCategoryForm(FlaskForm):
-    """ Form to add a host_category. """
+    """Form to add a host_category."""
+
     category_id = wtforms.SelectField(
-        'Category',
+        "Category",
         [wtforms.validators.InputRequired(), is_number],
         choices=[(item, item) for item in []],
-        coerce=int
+        coerce=int,
     )
-    always_up2date = wtforms.BooleanField(
-        'Always up to date',
-        default=False
-    )
+    always_up2date = wtforms.BooleanField("Always up to date", default=False)
 
     def __init__(self, *args, **kwargs):
-        """ Calls the default constructor with the normal argument but
+        """Calls the default constructor with the normal argument but
         uses the list of collection provided to fill the choices of the
         drop-down list.
         """
         super().__init__(*args, **kwargs)
-        if 'categories' in kwargs:
+        if "categories" in kwargs:
             self.category_id.choices = [
-                (cat.id, cat.name)
-                for cat in kwargs['categories']
+                (cat.id, cat.name) for cat in kwargs["categories"]
             ]
 
 
 class EditHostCategoryForm(FlaskForm):
-    """ Form to edit a host_category. """
-    always_up2date = wtforms.BooleanField(
-        'Always up to date',
-        default=False
-    )
+    """Form to edit a host_category."""
+
+    always_up2date = wtforms.BooleanField("Always up to date", default=False)
 
 
 class AddHostCategoryUrlForm(FlaskForm):
-    """ Form to add a host_category_url. """
+    """Form to add a host_category_url."""
+
     url = wtforms.StringField(
         'URL  <span class="error">*</span>',
         [
@@ -271,12 +241,12 @@ class AddHostCategoryUrlForm(FlaskForm):
             wtforms.validators.Regexp(
                 # Will be filled with current_app.config['MM_PROTOCOL_REGEX'] in the view
                 # because we don't have access to current_app here.
-                '',
-                message='Unsupported URL'
+                "",
+                message="Unsupported URL",
             ),
-        ]
+        ],
     )
     private = wtforms.BooleanField(
-        'Private',
+        "Private",
         default=False,
     )

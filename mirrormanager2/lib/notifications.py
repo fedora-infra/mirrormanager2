@@ -17,12 +17,12 @@
 # of Red Hat, Inc.
 #
 
-'''
+"""
 MirrorManager2 notification code.
 
 These methods are used to send email or fedmsg message or any other
 notifications we could use.
-'''
+"""
 
 
 import smtplib
@@ -32,28 +32,32 @@ from email.mime.text import MIMEText
 
 
 def fedmsg_publish(*args, **kwargs):  # pragma: no cover
-    ''' Try to publish a message on the fedmsg bus. '''
+    """Try to publish a message on the fedmsg bus."""
     # We catch Exception if we want :-p
     # pylint: disable=W0703
     # Ignore message about fedmsg import
     # pylint: disable=F0401
     try:
         import fedmsg
+
         fedmsg.publish(*args, **kwargs)
     except Exception as err:
         warnings.warn(str(err))
 
 
 def email_publish(
-        to_email, subject, message,
-        from_email='nobody@fedoraproject.org',
-        smtp_server='localhost'):  # pragma: no cover
-    ''' Send notification by email. '''
+    to_email,
+    subject,
+    message,
+    from_email="nobody@fedoraproject.org",
+    smtp_server="localhost",
+):  # pragma: no cover
+    """Send notification by email."""
 
     msg = MIMEText(message)
-    msg['Subject'] = subject
-    msg['From'] = from_email
-    msg['To'] = to_email
+    msg["Subject"] = subject
+    msg["From"] = from_email
+    msg["To"] = to_email
 
     # Send the message via our own SMTP server, but don't include the
     # envelope header.

@@ -17,9 +17,9 @@
 # of Red Hat, Inc.
 #
 
-'''
+"""
 MirrorManager2 internal api to manage PID.
-'''
+"""
 
 import os
 
@@ -36,8 +36,8 @@ def create_pidfile_dir(pidfile):
 
 def write_pidfile(pidfile, pid):
     create_pidfile_dir(pidfile)
-    with open(pidfile, 'w') as stream:
-        stream.write(str(pid)+'\n')
+    with open(pidfile, "w") as stream:
+        stream.write(str(pid) + "\n")
     return 0
 
 
@@ -48,9 +48,9 @@ def manage_pidfile(pidfile):
     if not os.path.exists(pidfile):
         return write_pidfile(pidfile, pid)
 
-    oldpid = ''
+    oldpid = ""
     try:
-        with open(pidfile, 'r') as stream:
+        with open(pidfile, "r") as stream:
             oldpid = stream.read()
     except IOError:
         return 1

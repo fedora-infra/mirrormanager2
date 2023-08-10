@@ -1,6 +1,6 @@
-'''
+"""
 mirrormanager2 tests for the `Move Devel To Release` (MDTL) script.
-'''
+"""
 
 
 import subprocess
@@ -24,94 +24,105 @@ DB_URL = 'sqlite:///{tmp_path}/test.sqlite'
 # Specify whether the crawler should send a report by email
 CRAWLER_SEND_EMAIL =  False
 
-    """.format(tmp_path=tmp_path.as_posix())
-    with open(path, 'w') as stream:
+    """.format(
+        tmp_path=tmp_path.as_posix()
+    )
+    with open(path, "w") as stream:
         stream.write(contents)
     return path
 
 
 @pytest.fixture()
 def command(configfile):
-    script = os.path.join(
-        FOLDER, '..', 'utility', 'mm2_move-devel-to-release')
+    script = os.path.join(FOLDER, "..", "utility", "mm2_move-devel-to-release")
     return [script, "-c", configfile, "--version=27", "--category=Fedora Linux"]
 
 
 def test_mdtr_no_data_empty_db(command, db):
-    """ Test the mdtr script without the appropriate data in the
+    """Test the mdtr script without the appropriate data in the
     database.
     """
     process = subprocess.Popen(
         args=command,
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        universal_newlines=True)
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+    )
     stdout, stderr = process.communicate()
 
-    assert stdout == "Category 'Fedora Linux' not found, exiting\nAvailable categories:\n"
+    assert (
+        stdout == "Category 'Fedora Linux' not found, exiting\nAvailable categories:\n"
+    )
 
 
 def test_mdtr_no_data(command, db, base_items, directory, category, categorydirectory):
-    """ Test the mdtr script without the appropriate data in the
+    """Test the mdtr script without the appropriate data in the
     database.
     """
     process = subprocess.Popen(
         args=command,
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        universal_newlines=True)
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+    )
     stdout, stderr = process.communicate()
 
-    assert stdout == 'Version 27 not found for product Fedora\n'
+    assert stdout == "Version 27 not found for product Fedora\n"
 
 
-def test_mdtr_no_data_with_version(command, base_items, directory, category, categorydirectory, version):
-    """ Test the mdtr script without the appropriate data in the
+def test_mdtr_no_data_with_version(
+    command, base_items, directory, category, categorydirectory, version
+):
+    """Test the mdtr script without the appropriate data in the
     database.
     """
     process = subprocess.Popen(
         args=command,
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        universal_newlines=True)
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+    )
     stdout, stderr = process.communicate()
 
-    assert stdout == ''
+    assert stdout == ""
 
 
 def test_mdtr(command, db, base_items, directory, category, categorydirectory, version):
-    """ Test the mdtr script. """
+    """Test the mdtr script."""
     item = model.Directory(
-        name='pub/fedora/linux/releases/26/Everything/x86_64/os',
+        name="pub/fedora/linux/releases/26/Everything/x86_64/os",
         readable=True,
     )
     db.add(item)
     item = model.Directory(
-        name='pub/fedora/linux/releases/26/Everything/armhfp/os',
+        name="pub/fedora/linux/releases/26/Everything/armhfp/os",
         readable=True,
     )
     db.add(item)
     item = model.Directory(
-        name='pub/fedora-secondary/releases/26/Everything/ppc64le/os',
+        name="pub/fedora-secondary/releases/26/Everything/ppc64le/os",
         readable=True,
     )
     db.add(item)
     item = model.Directory(
-        name='pub/fedora-secondary/releases/26/Everything/sources/os',
+        name="pub/fedora-secondary/releases/26/Everything/sources/os",
         readable=True,
     )
     db.add(item)
     item = model.Directory(
-        name='pub/fedora/linux/development/27/Everything/x86_64/os',
+        name="pub/fedora/linux/development/27/Everything/x86_64/os",
         readable=True,
     )
     db.add(item)
     item = model.Directory(
-        name='pub/fedora/linux/releases/27/Everything/x86_64/os',
+        name="pub/fedora/linux/releases/27/Everything/x86_64/os",
         readable=True,
     )
     db.add(item)
 
     item = model.Repository(
-        name='pub/fedora/linux/development/27/Everything/x86_64/os',
-        prefix='fedora-27',
+        name="pub/fedora/linux/development/27/Everything/x86_64/os",
+        prefix="fedora-27",
         version_id=3,
         arch_id=3,
         directory_id=14,
@@ -119,7 +130,7 @@ def test_mdtr(command, db, base_items, directory, category, categorydirectory, v
     )
     db.add(item)
     item = model.Repository(
-        name='pub/fedora/linux/releases/26/Everything/x86_64/os',
+        name="pub/fedora/linux/releases/26/Everything/x86_64/os",
         prefix=None,
         version_id=1,
         arch_id=3,
@@ -129,11 +140,11 @@ def test_mdtr(command, db, base_items, directory, category, categorydirectory, v
     db.add(item)
 
     item = model.Category(
-        name='Fedora Secondary Arches',
+        name="Fedora Secondary Arches",
         product_id=2,
-        canonicalhost='http://download.fedora.redhat.com',
+        canonicalhost="http://download.fedora.redhat.com",
         topdir_id=1,
-        publiclist=True
+        publiclist=True,
     )
     db.add(item)
 
@@ -148,25 +159,26 @@ def test_mdtr(command, db, base_items, directory, category, categorydirectory, v
     # create_directory creates 9 directories
     # we create 6 more here, 9+6=15
     assert len(results) == 15
-    assert results[9].name == 'pub/fedora/linux/releases/26/Everything/x86_64/os'
-    assert results[10].name == 'pub/fedora/linux/releases/26/Everything/armhfp/os'
-    assert results[11].name == 'pub/fedora-secondary/releases/26/Everything/ppc64le/os'
-    assert results[12].name == 'pub/fedora-secondary/releases/26/Everything/sources/os'
-    assert results[13].name == 'pub/fedora/linux/development/27/Everything/x86_64/os'
-    assert results[14].name == 'pub/fedora/linux/releases/27/Everything/x86_64/os'
+    assert results[9].name == "pub/fedora/linux/releases/26/Everything/x86_64/os"
+    assert results[10].name == "pub/fedora/linux/releases/26/Everything/armhfp/os"
+    assert results[11].name == "pub/fedora-secondary/releases/26/Everything/ppc64le/os"
+    assert results[12].name == "pub/fedora-secondary/releases/26/Everything/sources/os"
+    assert results[13].name == "pub/fedora/linux/development/27/Everything/x86_64/os"
+    assert results[14].name == "pub/fedora/linux/releases/27/Everything/x86_64/os"
 
     # Run the script
 
     process = subprocess.Popen(
         args=command[:],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        universal_newlines=True)
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+    )
     stdout, stderr = process.communicate()
 
     assert (
-        stdout ==
-        'pub/fedora/linux/development/27/Everything/x86_64/os => '
-        'pub/fedora/linux/releases/27/Everything/x86_64/os\n'
+        stdout == "pub/fedora/linux/development/27/Everything/x86_64/os => "
+        "pub/fedora/linux/releases/27/Everything/x86_64/os\n"
     )
     # Ignore for now
     # assert stderr == ''
@@ -177,43 +189,45 @@ def test_mdtr(command, db, base_items, directory, category, categorydirectory, v
     assert len(results) == 2
 
     res = results[0]
-    assert res.prefix == 'fedora-27'
-    assert res.name == 'pub/fedora/linux/releases/27/Everything/x86_64/os'
-    assert res.category.name == 'Fedora Linux'
-    assert res.version.name == '27'
-    assert res.arch.name == 'x86_64'
-    assert res.directory.name == 'pub/fedora/linux/releases/27/Everything/x86_64/os'
+    assert res.prefix == "fedora-27"
+    assert res.name == "pub/fedora/linux/releases/27/Everything/x86_64/os"
+    assert res.category.name == "Fedora Linux"
+    assert res.version.name == "27"
+    assert res.arch.name == "x86_64"
+    assert res.directory.name == "pub/fedora/linux/releases/27/Everything/x86_64/os"
 
     res = results[1]
     assert res.prefix is None
-    assert res.name == 'pub/fedora/linux/releases/26/Everything/x86_64/os'
-    assert res.category.name == 'Fedora Linux'
-    assert res.version.name == '26'
-    assert res.arch.name == 'x86_64'
-    assert res.directory.name == 'pub/fedora/linux/releases/26/Everything/x86_64/os'
+    assert res.name == "pub/fedora/linux/releases/26/Everything/x86_64/os"
+    assert res.category.name == "Fedora Linux"
+    assert res.version.name == "26"
+    assert res.arch.name == "x86_64"
+    assert res.directory.name == "pub/fedora/linux/releases/26/Everything/x86_64/os"
 
     results = mirrormanager2.lib.get_directories(db)
     # create_directory creates 9 directories
     # we create 6 more here, 9+6=15
     assert len(results) == 15
-    assert results[9].name == 'pub/fedora/linux/releases/26/Everything/x86_64/os'
-    assert results[10].name == 'pub/fedora/linux/releases/26/Everything/armhfp/os'
-    assert results[11].name == 'pub/fedora-secondary/releases/26/Everything/ppc64le/os'
-    assert results[12].name == 'pub/fedora-secondary/releases/26/Everything/sources/os'
-    assert results[13].name == 'pub/fedora/linux/development/27/Everything/x86_64/os'
-    assert results[14].name == 'pub/fedora/linux/releases/27/Everything/x86_64/os'
+    assert results[9].name == "pub/fedora/linux/releases/26/Everything/x86_64/os"
+    assert results[10].name == "pub/fedora/linux/releases/26/Everything/armhfp/os"
+    assert results[11].name == "pub/fedora-secondary/releases/26/Everything/ppc64le/os"
+    assert results[12].name == "pub/fedora-secondary/releases/26/Everything/sources/os"
+    assert results[13].name == "pub/fedora/linux/development/27/Everything/x86_64/os"
+    assert results[14].name == "pub/fedora/linux/releases/27/Everything/x86_64/os"
 
     # Check non-existing version
 
     command = command[:]
-    command[3] = '--version=24'
+    command[3] = "--version=24"
     process = subprocess.Popen(
         args=command[:],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        universal_newlines=True)
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+    )
     stdout, stderr = process.communicate()
 
-    assert stdout == 'Version 24 not found for product Fedora\n'
+    assert stdout == "Version 24 not found for product Fedora\n"
     # Ignore for now
     # assert stderr == ''
 
@@ -223,28 +237,28 @@ def test_mdtr(command, db, base_items, directory, category, categorydirectory, v
     assert len(results) == 2
 
     res = results[0]
-    assert res.prefix == 'fedora-27'
-    assert res.name == 'pub/fedora/linux/releases/27/Everything/x86_64/os'
-    assert res.category.name == 'Fedora Linux'
-    assert res.version.name == '27'
-    assert res.arch.name == 'x86_64'
-    assert res.directory.name == 'pub/fedora/linux/releases/27/Everything/x86_64/os'
+    assert res.prefix == "fedora-27"
+    assert res.name == "pub/fedora/linux/releases/27/Everything/x86_64/os"
+    assert res.category.name == "Fedora Linux"
+    assert res.version.name == "27"
+    assert res.arch.name == "x86_64"
+    assert res.directory.name == "pub/fedora/linux/releases/27/Everything/x86_64/os"
 
     res = results[1]
     assert res.prefix is None
-    assert res.name == 'pub/fedora/linux/releases/26/Everything/x86_64/os'
-    assert res.category.name == 'Fedora Linux'
-    assert res.version.name == '26'
-    assert res.arch.name == 'x86_64'
-    assert res.directory.name == 'pub/fedora/linux/releases/26/Everything/x86_64/os'
+    assert res.name == "pub/fedora/linux/releases/26/Everything/x86_64/os"
+    assert res.category.name == "Fedora Linux"
+    assert res.version.name == "26"
+    assert res.arch.name == "x86_64"
+    assert res.directory.name == "pub/fedora/linux/releases/26/Everything/x86_64/os"
 
     results = mirrormanager2.lib.get_directories(db)
     # create_directory creates 9 directories
     # we create 6 more here, 9+6=15
     assert len(results) == 15
-    assert results[9].name == 'pub/fedora/linux/releases/26/Everything/x86_64/os'
-    assert results[10].name == 'pub/fedora/linux/releases/26/Everything/armhfp/os'
-    assert results[11].name == 'pub/fedora-secondary/releases/26/Everything/ppc64le/os'
-    assert results[12].name == 'pub/fedora-secondary/releases/26/Everything/sources/os'
-    assert results[13].name == 'pub/fedora/linux/development/27/Everything/x86_64/os'
-    assert results[14].name == 'pub/fedora/linux/releases/27/Everything/x86_64/os'
+    assert results[9].name == "pub/fedora/linux/releases/26/Everything/x86_64/os"
+    assert results[10].name == "pub/fedora/linux/releases/26/Everything/armhfp/os"
+    assert results[11].name == "pub/fedora-secondary/releases/26/Everything/ppc64le/os"
+    assert results[12].name == "pub/fedora-secondary/releases/26/Everything/sources/os"
+    assert results[13].name == "pub/fedora/linux/development/27/Everything/x86_64/os"
+    assert results[14].name == "pub/fedora/linux/releases/27/Everything/x86_64/os"

@@ -17,9 +17,9 @@
 # of Red Hat, Inc.
 #
 
-'''
+"""
 MirrorManager2 API controller.
-'''
+"""
 
 import flask
 
@@ -29,10 +29,10 @@ import mirrormanager2.lib as mmlib
 views = flask.Blueprint("api", __name__)
 
 
-@views.route('/mirroradmins/')
-@views.route('/mirroradmins')
+@views.route("/mirroradmins/")
+@views.route("/mirroradmins")
 def api_mirroradmins():
-    '''
+    """
     List the admins of a mirror
     ---------------------------
     Returns all the mirror admins or the admins of a specific mirror
@@ -61,14 +61,11 @@ def api_mirroradmins():
         "total": 2
       }
 
-    '''
+    """
 
-    name = flask.request.args.get('name', None)
+    name = flask.request.args.get("name", None)
     if not name:
-        admins = set(
-            [admin.username
-             for admin in mmlib.get_siteadmins(flask.g.db)]
-        )
+        admins = set([admin.username for admin in mmlib.get_siteadmins(flask.g.db)])
     else:
         site = None
         host = mmlib.get_host_by_name(flask.g.db, name)
@@ -78,8 +75,7 @@ def api_mirroradmins():
             site = host.site
 
         if not site:
-            jsonout = flask.jsonify(
-                {'message': 'No host or site found for %s' % name})
+            jsonout = flask.jsonify({"message": "No host or site found for %s" % name})
             jsonout.status_code = 400
             return jsonout
 
@@ -88,8 +84,8 @@ def api_mirroradmins():
             admins.add(admin.username)
 
     output = {
-        'total': len(admins),
-        'admins': list(admins),
+        "total": len(admins),
+        "admins": list(admins),
     }
 
     jsonout = flask.jsonify(output)
@@ -97,10 +93,10 @@ def api_mirroradmins():
     return jsonout
 
 
-@views.route('/repositories/')
-@views.route('/repositories')
+@views.route("/repositories/")
+@views.route("/repositories")
 def api_repositories():
-    '''
+    """
     List the repositories
     ---------------------
     Returns the list of repositories present in the database.
@@ -133,7 +129,7 @@ def api_repositories():
         "total": 2
       }
 
-    '''
+    """
 
     repositories = mmlib.get_repositories(flask.g.db)
     repos = []
@@ -142,14 +138,14 @@ def api_repositories():
             continue
 
         tmp = {
-            'name': repository.name,
-            'directory': repository.directory.name,
+            "name": repository.name,
+            "directory": repository.directory.name,
         }
         repos.append({repository.prefix: tmp})
 
     output = {
-        'total': len(repositories),
-        'repositories': repos,
+        "total": len(repositories),
+        "repositories": repos,
     }
 
     jsonout = flask.jsonify(output)

@@ -4,30 +4,28 @@ from flask import current_app, g, redirect, url_for, request, flash
 
 
 def is_mirrormanager_admin(user):
-    """ Is the user a mirrormanager admin.
-    """
+    """Is the user a mirrormanager admin."""
     if not user:
         return False
-    auth_method = current_app.config.get('MM_AUTHENTICATION', None)
+    auth_method = current_app.config.get("MM_AUTHENTICATION", None)
 
-    if auth_method == 'fas':
-        if 'signed_fpca' not in user.groups:
+    if auth_method == "fas":
+        if "signed_fpca" not in user.groups:
             return False
 
-    if auth_method in ('fas', 'local'):
-        admins = current_app.config['ADMIN_GROUP']
+    if auth_method in ("fas", "local"):
+        admins = current_app.config["ADMIN_GROUP"]
         if isinstance(admins, str):
             admins = [admins]
         admins = set(admins)
 
         return len(admins.intersection(set(user.groups))) > 0
     else:
-        return user in current_app.config['ADMIN_GROUP']
+        return user in current_app.config["ADMIN_GROUP"]
 
 
 def is_site_admin(user, site):
-    """ Is the user an admin of this site.
-    """
+    """Is the user an admin of this site."""
     if not user:
         return False
 
@@ -37,34 +35,34 @@ def is_site_admin(user, site):
 
 
 def is_authenticated():
-    """ Returns whether the user is currently authenticated or not. """
-    return hasattr(g, 'fas_user') and g.fas_user is not None
+    """Returns whether the user is currently authenticated or not."""
+    return hasattr(g, "fas_user") and g.fas_user is not None
 
 
 def login_required(function):
-    """ Flask decorator to ensure that the user is logged in. """
+    """Flask decorator to ensure that the user is logged in."""
+
     @wraps(function)
     def decorated_function(*args, **kwargs):
-        ''' Wrapped function actually checking if the user is logged in.
-        '''
+        """Wrapped function actually checking if the user is logged in."""
         if not is_authenticated():
-            return redirect(url_for(
-                'auth.login', next=request.url))
+            return redirect(url_for("auth.login", next=request.url))
         return function(*args, **kwargs)
+
     return decorated_function
 
 
 def admin_required(function):
-    """ Flask decorator to ensure that the user is logged in. """
+    """Flask decorator to ensure that the user is logged in."""
+
     @wraps(function)
     def decorated_function(*args, **kwargs):
-        ''' Wrapped function actually checking if the user is logged in.
-        '''
+        """Wrapped function actually checking if the user is logged in."""
         if not is_authenticated():
-            return redirect(url_for(
-                'auth.login', next=request.url))
+            return redirect(url_for("auth.login", next=request.url))
         elif not is_mirrormanager_admin(g.fas_user):
-            flash('You are not an admin', 'error')
-            return redirect(url_for('base.index'))
+            flash("You are not an admin", "error")
+            return redirect(url_for("base.index"))
         return function(*args, **kwargs)
+
     return decorated_function
