@@ -30,6 +30,7 @@ import sys
 import flask
 
 from flask_admin import Admin
+from sqlalchemy.orm import configure_mappers
 
 from mirrormanager2 import __version__
 from mirrormanager2.oidc import FedoraAuthCompat
@@ -106,6 +107,11 @@ def create_app(config=None):
     # Flask-Admin does not support having a single instance and multiple calls
     # to init_app() (it stores the app as an instance attribute)
     ADMIN = Admin(template_mode="bootstrap3")
+    # Force mapper configuration here because flask-admin does relationship
+    # introspection that will fail to recognize relationships if they haven't
+    # been configured (and if no query has been emitted yet).
+    configure_mappers()
+    # Now init Flask-Admin
     ADMIN.init_app(app)
     register_admin_views(app, ADMIN, DB.session)
 
