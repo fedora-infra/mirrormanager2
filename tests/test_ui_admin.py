@@ -457,7 +457,8 @@ def test_admin_netblockcountryview(client, admin_user):
     assert re.search('<a href="/admin/category(view)?/">Category</a>', data) is not None
     assert (
         re.search(
-            r'<a href="/admin/netblockcountry(view)?/\?sort=0" title="Sort by Netblock">Netblock</a>',
+            r'<a href="/admin/netblockcountry(view)?/\?sort=0" '
+            r'title="Sort by Netblock">Netblock</a>',
             data,
         )
         is not None
@@ -514,7 +515,8 @@ def test_admin_repositoryredirectview(client, admin_user):
     assert re.search('<a href="/admin/category(view)?/">Category</a>', data) is not None
     assert (
         re.search(
-            r'<a href="/admin/repositoryredirect(view)?/\?sort=0" title="Sort by To Repo">To Repo</a>',
+            r'<a href="/admin/repositoryredirect(view)?/\?sort=0" '
+            r'title="Sort by To Repo">To Repo</a>',
             data,
         )
         is not None
