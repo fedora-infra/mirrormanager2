@@ -84,14 +84,18 @@
     src: mirrormanager2.cfg
     dest: /home/vagrant/mirrormanager2.cfg
     mode: 0644
+    owner: vagrant
+    group: vagrant
 
-- name: Create the database
-  command: python3 createdb.py
+- name: Create and populate the database
+  command: python3 devel/populate.py
   args:
     chdir: /vagrant/
     creates: /var/tmp/mirrormanager2_dev.sqlite
   environment:
     MM2_CONFIG: '/home/vagrant/mirrormanager2.cfg'
+  become: yes
+  become_user: vagrant
 
 - name: Install the systemd unit file for mirrormanager2 service
   copy:
