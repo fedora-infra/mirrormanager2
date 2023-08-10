@@ -1,18 +1,17 @@
 import munch
 from flask import (
-    url_for,
-    redirect,
-    session,
-    request,
     Blueprint,
-    g,
     current_app,
+    g,
+    redirect,
     render_template,
+    request,
+    session,
+    url_for,
 )
 
+from mirrormanager2 import forms, local_auth
 from mirrormanager2.app import OIDC
-from mirrormanager2 import local_auth
-from mirrormanager2 import forms
 
 views = Blueprint("auth", __name__)
 

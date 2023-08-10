@@ -20,18 +20,17 @@ directory (/pub/fedora/linux/updates/....)
 """
 
 import glob
-import logging
-import re
-import os
-import stat
 import hashlib
+import logging
+import os
+import re
+import stat
 
 import rpmmd.repoMDObject
 
 import mirrormanager2.lib
-from mirrormanager2.lib.model import Directory, Repository, Version, FileDetail
+from mirrormanager2.lib.model import Directory, FileDetail, Repository, Version
 from mirrormanager2.lib.repomap import repo_prefix
-
 
 delete_directories = False
 logger = logging.getLogger("umdl")

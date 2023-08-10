@@ -25,7 +25,6 @@ import flask
 
 import mirrormanager2.lib as mmlib
 
-
 views = flask.Blueprint("api", __name__)
 
 

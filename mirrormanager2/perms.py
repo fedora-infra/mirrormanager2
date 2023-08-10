@@ -1,6 +1,6 @@
 from functools import wraps
 
-from flask import current_app, g, redirect, url_for, request, flash
+from flask import current_app, flash, g, redirect, request, url_for
 
 
 def is_mirrormanager_admin(user):

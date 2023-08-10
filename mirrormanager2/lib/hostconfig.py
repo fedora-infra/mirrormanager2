@@ -21,9 +21,9 @@
 MirrorManager2 Host configuration.
 """
 
-import mirrormanager2.lib
-
 import logging
+
+import mirrormanager2.lib
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

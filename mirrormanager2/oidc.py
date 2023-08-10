@@ -4,10 +4,9 @@ import warnings
 from functools import wraps
 from urllib.parse import quote_plus
 
-from flask import url_for, redirect, session, request, Blueprint, g, flash, abort
 from authlib.integrations.base_client.errors import OAuthError
 from authlib.integrations.flask_client import OAuth
-
+from flask import Blueprint, abort, flash, g, redirect, request, session, url_for
 
 auth_routes = Blueprint("fedora_auth", __name__)
 

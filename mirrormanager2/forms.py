@@ -32,6 +32,7 @@ MirrorManager2 forms.
 
 
 import re
+
 import wtforms
 
 try:
@@ -39,10 +40,8 @@ try:
 except ImportError:
     from flask_wtf import Form as FlaskForm
 
-from flask import g, current_app
-
 import IPy
-
+from flask import current_app, g
 
 COUNTRY_REGEX = "^[a-zA-Z][a-zA-Z]$"
 

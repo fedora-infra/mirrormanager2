@@ -27,7 +27,6 @@ notifications we could use.
 
 import smtplib
 import warnings
-
 from email.mime.text import MIMEText
 
 

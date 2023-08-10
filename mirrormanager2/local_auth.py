@@ -21,17 +21,16 @@
 MirrorManager2 local login flask controller.
 """
 
-import hashlib
 import datetime
+import hashlib
 
 import flask
 from sqlalchemy.exc import SQLAlchemyError
 
-import mirrormanager2.login_forms as forms
 import mirrormanager2.lib
 import mirrormanager2.lib.notifications
+import mirrormanager2.login_forms as forms
 from mirrormanager2.lib import model
-
 
 views = flask.Blueprint("local_auth", __name__)
 

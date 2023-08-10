@@ -3,7 +3,7 @@ mirrormanager2 tests for the Flask UI Admin controller.
 """
 
 import re
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 

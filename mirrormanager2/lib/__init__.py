@@ -26,9 +26,7 @@ import random
 import string
 
 import sqlalchemy
-
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import scoped_session
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 from mirrormanager2.lib import model
 
