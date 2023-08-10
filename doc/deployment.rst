@@ -20,7 +20,6 @@ Copy the configuration files::
   cp utility/mirrormanager2.cfg.sample mirrormanager2.cfg
 
 Adjust the configuration files (secret key, database URL, admin group...).
-See :doc:`configuration` for detailed information about the configuration.
 
 
 Create the database scheme::
@@ -38,7 +37,6 @@ Start by install mirrormanager2::
   yum install mirrormanager2
 
 Adjust the configuration files: ``/etc/mirrormanager2/mirrormanager2.cfg``.
-See :doc:`configuration` for detailed information about the configuration.
 
 Find the file used to create the database::
 

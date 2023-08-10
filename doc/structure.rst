@@ -95,8 +95,8 @@ These scripts rely on the data present on the database and either create or
 update it.
 
 * **mm2_update-master-directory-list** (UMDL)
-In short, this script calculates and stores what content the mirrors *should*
-have, by inspecting the master mirror.
+  In short, this script calculates and stores what content the mirrors *should*
+  have, by inspecting the master mirror.
 
 It browses the local copy of the mirror content and updates the database for
 each file and folder found in it. This information is crucial as it is what
@@ -105,8 +105,8 @@ addition, if mirrormanager presents some invalid version number of architecture
 this script will likely be the culprit.
 
 * **mm2_crawler**
-In short, this script calculates and stores what the mirrors *do* have (and
-compares that to what they should have).
+  In short, this script calculates and stores what the mirrors *do* have (and
+  compares that to what they should have).
 
 The crawler goes through all the mirrors listed in the database (that are a/
 active and b/ public) and crawls through their content to determine using the
@@ -114,30 +114,30 @@ information in the database (filled in by the UMDL script) if the mirror is up
 to date or not (and mark it as such).
 
 * **update-EC2-netblocks**
-This script downloads information from amazon EC2 to keep an up to date list
-of which IPs are on amazon's EC2 thus allowing them to use the mirror
-present there.
+  This script downloads information from amazon EC2 to keep an up to date list
+  of which IPs are on amazon's EC2 thus allowing them to use the mirror
+  present there.
 
 * **get_global_netblocks**
-This script gets global IPv4 and IPv6 netblocks from
-`routeviews.org<http://routeviews.org>`_ allowing mirrorlist to look up both a
-server and a client's network in the internet routing tables to determine
-"closest" mirror network-wise rather than geography-wise.
+  This script gets global IPv4 and IPv6 netblocks from
+  `routeviews.org <http://routeviews.org>`_ allowing mirrorlist to look up both a
+  server and a client's network in the internet routing tables to determine
+  "closest" mirror network-wise rather than geography-wise.
 
 * **get_internet2_netblocks**
-This script has the same logic as ``get_global_netblocks`` but for internet2.
+  This script has the same logic as ``get_global_netblocks`` but for internet2.
 
 * **move-devel-to-release**
-This script points the development tree of a released product to its release
-tree.
-At release day, more mirrors will be shipping the devel branch than the
-release one. So by pointing to the devel tree, we will spread the traffic
-over more mirrors.
-A few weeks after, most mirrors will have catched up and the devel
-repositories should thus be moved to the release tree, for which you can use
-this script.
+  This script points the development tree of a released product to its release
+  tree.
+  At release day, more mirrors will be shipping the devel branch than the
+  release one. So by pointing to the devel tree, we will spread the traffic
+  over more mirrors.
+  A few weeks after, most mirrors will have catched up and the devel
+  repositories should thus be moved to the release tree, for which you can use
+  this script.
 
 * **move-to-archive**
-This script moves a tree to archive.
-Few days after a release reaches End Of Life, one would want to point the
-tree of this release to the archives where it will remain, un-touched.
+  This script moves a tree to archive.
+  Few days after a release reaches End Of Life, one would want to point the
+  tree of this release to the archives where it will remain, un-touched.
