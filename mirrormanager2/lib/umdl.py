@@ -24,12 +24,10 @@ import logging
 import re
 import os
 import stat
-import sys
-import rpmmd.repoMDObject
 import hashlib
 
+import rpmmd.repoMDObject
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 import mirrormanager2.lib
 from mirrormanager2.lib.model import Directory, Repository, Version, FileDetail
 from mirrormanager2.lib.repomap import repo_prefix
