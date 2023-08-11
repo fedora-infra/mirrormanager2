@@ -158,6 +158,8 @@ Base directories used by multiple subpackages
 
 %prep
 %setup -q
+# Fix the shebang
+sed -e "s|#!/usr/bin/env python$|#!%{__python}|" -i *.py utility/mm2_* client/* mirrorlist/*
 
 
 %build
@@ -231,12 +233,6 @@ install -m 0644 client/report_mirror.conf \
 # Install the country_continent file from MaxMind
 install -m 0644 utility/country_continent.csv \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/country_continent.csv
-
-# Fix the shebang for various scripts
-sed -e "s|#!/usr/bin/env python|#!%{__python}|" -i \
-    $RPM_BUILD_ROOT/%{_bindir}/* \
-    $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/*.py \
-    $RPM_BUILD_ROOT/%{python_sitelib}/mirrormanager2/lib/umdl.py
 
 %if ! (0%{?rhel} && 0%{?rhel} <= 7)
 # Byte-compile Python files outside the standard location
