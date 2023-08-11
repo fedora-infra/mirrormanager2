@@ -19,7 +19,7 @@ BuildRequires:  python%{python_pkgversion}-devel
 BuildRequires:  python%{python_pkgversion}-flask
 BuildRequires:  python%{python_pkgversion}-flask-admin
 BuildRequires:  python%{python_pkgversion}-flask-oidc
-BuildRequires:  python%{python_pkgversion}-flask-xml-rpc-re
+BuildRequires:  python%{python_pkgversion}-flask-xml-rpc
 BuildRequires:  python%{python_pkgversion}-flask-wtf
 BuildRequires:  python%{python_pkgversion}-wtforms
 BuildRequires:  python%{python_pkgversion}-email-validator
@@ -48,7 +48,7 @@ BuildRequires:  python%{python_pkgversion}-coverage
 Requires:  python%{python_pkgversion}-flask
 Requires:  python%{python_pkgversion}-flask-admin
 Requires:  python%{python_pkgversion}-flask-oidc
-Requires:  python%{python_pkgversion}-flask-xml-rpc-re
+Requires:  python%{python_pkgversion}-flask-xml-rpc
 Requires:  python%{python_pkgversion}-flask-wtf
 Requires:  python%{python_pkgversion}-wtforms
 Requires:  python%{python_pkgversion}-email-validator
