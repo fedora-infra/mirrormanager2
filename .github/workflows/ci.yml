@@ -23,6 +23,8 @@ jobs:
     - uses: actions/checkout@v3
     - name: Install dependencies
       run: dnf install -y python-pyrpmmd python-tox git rsync
+    - name: Install dependencies for rawhide
+      run: dnf install -y gcc gcc-c++ libffi-devel python-devel python-greenlet
     - name: Mark the directory as safe for git
       run: git config --global --add safe.directory $PWD
     - name: Run Tests
