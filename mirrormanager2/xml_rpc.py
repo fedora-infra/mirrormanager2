@@ -28,9 +28,14 @@ import logging
 import pickle
 
 import flask
-from flask_xmlrpcre.xmlrpcre import XMLRPCHandler
 
 from mirrormanager2.lib.hostconfig import read_host_config
+
+try:
+    from flask_xmlrpcre.xmlrpcre import XMLRPCHandler
+except ImportError:
+    # flask-xml-rpc is patched in Fedora, and flask-xml-rpc-re is not packaged.
+    from flaskext.xmlrpc import XMLRPCHandler
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
