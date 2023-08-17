@@ -62,7 +62,7 @@ def login():  # pragma: no cover
         next_url = url_for("base.index")
 
     if current_app.config.get("MM_AUTHENTICATION", None) == "fas":
-        return redirect(url_for("fedora_auth.login", next=next_url))
+        return redirect(f"{url_for('oidc_auth.login')}?next={next_url}")
     elif current_app.config.get("MM_AUTHENTICATION", None) == "local":
         form = forms.LoginForm()
         return render_template(
@@ -81,7 +81,7 @@ def logout():
 
     if current_app.config.get("MM_AUTHENTICATION", None) == "fas":
         if hasattr(g, "fas_user") and g.fas_user is not None:
-            redirect(url_for("fedora_auth.logout"), next=next_url)
+            return redirect(f"{url_for('oidc_auth.logout')}?next={next_url}")
     elif current_app.config.get("MM_AUTHENTICATION", None) == "local":
         local_auth.logout()
     return redirect(next_url)
