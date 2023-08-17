@@ -4,6 +4,7 @@ mirrormanager2 tests for the `Move To Archive` (MTA) script.
 
 import os
 import subprocess
+import sys
 
 import pytest
 
@@ -32,7 +33,7 @@ CRAWLER_SEND_EMAIL =  False
 @pytest.fixture()
 def command(configfile):
     script = os.path.join(FOLDER, "..", "utility", "mm2_move-to-archive")
-    return [script, "-c", configfile, "--directoryRe=/26"]
+    return [sys.executable, script, "-c", configfile, "--directoryRe=/26"]
 
 
 def test_mta_empty_db(command, db):

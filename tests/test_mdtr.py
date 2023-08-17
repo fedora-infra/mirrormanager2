@@ -5,6 +5,7 @@ mirrormanager2 tests for the `Move Devel To Release` (MDTL) script.
 
 import os
 import subprocess
+import sys
 
 import pytest
 
@@ -33,7 +34,14 @@ CRAWLER_SEND_EMAIL =  False
 @pytest.fixture()
 def command(configfile):
     script = os.path.join(FOLDER, "..", "utility", "mm2_move-devel-to-release")
-    return [script, "-c", configfile, "--version=27", "--category=Fedora Linux"]
+    return [
+        sys.executable,
+        script,
+        "-c",
+        configfile,
+        "--version=27",
+        "--category=Fedora Linux",
+    ]
 
 
 def test_mdtr_no_data_empty_db(command, db):
@@ -48,6 +56,7 @@ def test_mdtr_no_data_empty_db(command, db):
     )
     stdout, stderr = process.communicate()
 
+    assert process.returncode == 1
     assert (
         stdout == "Category 'Fedora Linux' not found, exiting\nAvailable categories:\n"
     )
@@ -65,6 +74,7 @@ def test_mdtr_no_data(command, db, base_items, directory, category, categorydire
     )
     stdout, stderr = process.communicate()
 
+    assert process.returncode == 1
     assert stdout == "Version 27 not found for product Fedora\n"
 
 
@@ -82,6 +92,7 @@ def test_mdtr_no_data_with_version(
     )
     stdout, stderr = process.communicate()
 
+    assert process.returncode == 0, stderr
     assert stdout == ""
 
 
@@ -174,6 +185,7 @@ def test_mdtr(command, db, base_items, directory, category, categorydirectory, v
     )
     stdout, stderr = process.communicate()
 
+    assert process.returncode == 0, stderr
     assert (
         stdout == "pub/fedora/linux/development/27/Everything/x86_64/os => "
         "pub/fedora/linux/releases/27/Everything/x86_64/os\n"
@@ -216,7 +228,7 @@ def test_mdtr(command, db, base_items, directory, category, categorydirectory, v
     # Check non-existing version
 
     command = command[:]
-    command[3] = "--version=24"
+    command[4] = "--version=24"
     process = subprocess.Popen(
         args=command[:],
         stdout=subprocess.PIPE,
@@ -225,7 +237,8 @@ def test_mdtr(command, db, base_items, directory, category, categorydirectory, v
     )
     stdout, stderr = process.communicate()
 
-    assert stdout == "Version 24 not found for product Fedora\n"
+    assert process.returncode == 1
+    assert stdout == "Version 24 not found for product Fedora\n", stderr
     # Ignore for now
     # assert stderr == ''
 

@@ -4,6 +4,7 @@ mirrormanager2 tests for the `Update Master Directory List` (UMDL) cron.
 
 import os
 import subprocess
+import sys
 
 import pytest
 
@@ -67,7 +68,7 @@ def umdl_command(logfile, configfile):
     umdlscript = os.path.join(
         FOLDER, "..", "utility", "mm2_update-master-directory-list"
     )
-    return [umdlscript, "-c", configfile, f"--logfile={logfile}"]
+    return [sys.executable, umdlscript, "-c", configfile, f"--logfile={logfile}"]
 
 
 def test_0_umdl_empty_db(umdl_command, logfile, db):
@@ -81,7 +82,7 @@ def test_0_umdl_empty_db(umdl_command, logfile, db):
     )
     stdout, stderr = process.communicate()
 
-    assert process.returncode == 0
+    assert process.returncode == 0, stderr
     assert stdout == ""
     # Ignore for now
     # assert stderr == ''
@@ -122,7 +123,7 @@ def test_1_umdl(
     )
     stdout, stderr = process.communicate()
 
-    assert process.returncode == 0
+    assert process.returncode == 0, stderr
     assert stdout == ""
     # Ignore for now
     # assert stderr == ''
