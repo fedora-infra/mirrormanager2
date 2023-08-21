@@ -22,7 +22,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install dependencies
-      run: dnf install -y python-pyrpmmd python-tox git rsync
+      run: dnf install -y python-pyrpmmd python-tox git rsync poetry
     - name: Install dependencies for rawhide
       run: dnf install -y gcc gcc-c++ libffi-devel python-devel python-greenlet
     - name: Mark the directory as safe for git

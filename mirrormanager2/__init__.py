@@ -21,4 +21,6 @@
 MirrorManager2 module placeholder.
 """
 
-__version__ = "0.17"
+from importlib import metadata
+
+__version__ = metadata.version("mirrormanager2")
