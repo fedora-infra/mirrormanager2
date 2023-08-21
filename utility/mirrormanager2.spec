@@ -252,7 +252,7 @@ exit 0
 
 %check
 # Exclude test_ui_app.py as it requires network connectivity
-MM2_SKIP_NETWORK_TESTS=1 %{__python} -m pytest -v tests
+MM2_SKIP_NETWORK_TESTS=1 %{pytest} -v tests
 
 %files
 %doc README.rst doc/
