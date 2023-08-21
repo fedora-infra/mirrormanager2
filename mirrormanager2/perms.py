@@ -21,7 +21,7 @@ def is_mirrormanager_admin(user):
 
         return len(admins.intersection(set(user.groups))) > 0
     else:
-        return user in current_app.config["ADMIN_GROUP"]
+        return user.username in current_app.config["ADMIN_GROUP"]
 
 
 def is_site_admin(user, site):
