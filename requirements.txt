@@ -7,11 +7,10 @@ flask-xml-rpc-re
 flask-wtf
 wtforms
 SQLAlchemy>=0.7
-flask-oidc
+flask-oidc>=2.0.0
 IPy
 dnspython
 protobuf
 munch
-authlib
 backoff
 fedora-messaging

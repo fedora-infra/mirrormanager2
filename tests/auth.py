@@ -11,14 +11,14 @@ def user_set(client, user):
     # flask.g.fas_user.
     # app.before_request_funcs[None] = []
     with client.session_transaction() as session:
-        session["fedora_auth_token"] = {
+        session["oidc_auth_token"] = {
             "token_type": "Bearer",
             "access_token": "dummy_access_token",
             "refresh_token": "dummy_refresh_token",
             "expires_in": "3600",
             "expires_at": int(time.time()) + 3600,
         }
-        session["fedora_auth_profile"] = {
+        session["oidc_auth_profile"] = {
             "nickname": user.username,
             "email": user.email,
             "zoneinfo": None,
