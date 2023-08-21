@@ -25,14 +25,14 @@ def before_request():
     if current_app.config.get("MM_AUTHENTICATION") == "fas":
         if OIDC.user_loggedin:
             if not hasattr(session, "fas_user") or not session.fas_user:
+                userinfo = session.get("oidc_auth_profile")
                 session.fas_user = munch.Munch(
                     {
-                        "username": OIDC.user_getfield("nickname"),
-                        "email": OIDC.user_getfield("email"),
-                        "timezone": OIDC.user_getfield("zoneinfo"),
-                        "cla_done": "signed_fpca"
-                        in (OIDC.user_getfield("groups") or []),
-                        "groups": OIDC.user_getfield("groups"),
+                        "username": userinfo.get("nickname"),
+                        "email": userinfo.get("email"),
+                        "timezone": userinfo.get("zoneinfo"),
+                        "cla_done": "signed_fpca" in (userinfo.get("groups") or []),
+                        "groups": userinfo.get("groups"),
                     }
                 )
             g.fas_user = session.fas_user

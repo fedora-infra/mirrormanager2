@@ -2,7 +2,7 @@
 %global python_pkgversion %{python3_pkgversion}
 
 Name:           mirrormanager2
-Version:        0.17
+Version:        1.0.0
 Release:        1%{?dist}
 Summary:        Mirror management application
 
@@ -35,6 +35,7 @@ BuildRequires:  python%{python_pkgversion}-fedora-messaging
 BuildRequires:  python%{python_pkgversion}-blinker
 BuildRequires:  rsync
 BuildRequires:  python%{python_pkgversion}-pyrpmmd
+BuildRequires:  poetry
 
 BuildRequires:  python%{python_pkgversion}-py-radix
 Requires:  python%{python3_pkgversion}-mod_wsgi
@@ -151,17 +152,20 @@ Base directories used by multiple subpackages
 
 
 %prep
-%setup -q
+%autosetup -p1
 # Fix the shebang
 sed -e "s|#!/usr/bin/env python$|#!%{__python}|" -i *.py utility/mm2_* client/* mirrorlist/*
 
 
-%build
-%py_build
+%generate_buildrequires
+%pyproject_buildrequires -t
 
+
+%build
+%pyproject_wheel
 
 %install
-%py_install
+%pyproject_install
 
 # Create directories needed
 # Apache configuration files
@@ -336,6 +340,9 @@ MM2_SKIP_NETWORK_TESTS=1 %{__python} -m pytest -v tests
 %{_bindir}/mirrorlist_statistics
 
 %changelog
+* Mon Aug 21 2023 Aurelien Bompard <abompard@fedoraproject.org> - 1.0.0-1
+- Version 1.0.0
+
 * Thu Jun 16 2022 Lenka Segura <lsegura@redhat.com> - 0.17-1
 - Add packit
 - Allow using propagation with all categories (Adrian Reber)
