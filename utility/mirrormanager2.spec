@@ -25,8 +25,6 @@ BuildRequires:  python%{python_pkgversion}-wtforms
 BuildRequires:  python%{python_pkgversion}-email-validator
 BuildRequires:  python%{python_pkgversion}-IPy
 BuildRequires:  python%{python_pkgversion}-dns
-BuildRequires:  python%{python_pkgversion}-fedora >= 0.3.33
-BuildRequires:  python%{python_pkgversion}-fedora-flask >= 0.3.33
 BuildRequires:  python%{python_pkgversion}-setuptools
 BuildRequires:  python%{python_pkgversion}-psutil
 BuildRequires:  python%{python_pkgversion}-alembic
@@ -52,8 +50,6 @@ Requires:  python%{python_pkgversion}-flask-xml-rpc
 Requires:  python%{python_pkgversion}-flask-wtf
 Requires:  python%{python_pkgversion}-wtforms
 Requires:  python%{python_pkgversion}-email-validator
-Requires:  python%{python_pkgversion}-fedora >= 0.3.33
-Requires:  python%{python_pkgversion}-fedora-flask >= 0.3.33
 Requires:  python%{python_pkgversion}-setuptools
 Requires:  python%{python_pkgversion}-psutil
 Requires:  python%{python_pkgversion}-alembic
