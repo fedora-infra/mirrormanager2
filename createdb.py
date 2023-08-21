@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from mirrormanager2.app import create_app
 from mirrormanager2.lib import model

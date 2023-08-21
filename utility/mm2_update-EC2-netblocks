@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Synchronize Amazon AWS-published EC2 netblock lists per region into the
 MirrorManager database for Fedora Infrastructure-managed mirrors in S3.

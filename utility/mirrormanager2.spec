@@ -198,7 +198,7 @@ install -m 644 utility/mm2_crawler.logrotate \
     $RPM_BUILD_ROOT/%{_sysconfdir}/logrotate.d/mm2_crawler
 
 # Install umdl logrotate definition
-install -m 755 utility/mm2_umdl.logrotate \
+install -m 644 utility/mm2_umdl.logrotate \
     $RPM_BUILD_ROOT/%{_sysconfdir}/logrotate.d/mirrormanager2-backend
 
 # Install WSGI file
