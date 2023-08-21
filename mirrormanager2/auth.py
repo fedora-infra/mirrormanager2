@@ -1,4 +1,5 @@
-import munch
+from dataclasses import dataclass, field
+
 from flask import (
     Blueprint,
     current_app,
@@ -16,6 +17,15 @@ from mirrormanager2.app import OIDC
 views = Blueprint("auth", __name__)
 
 
+@dataclass
+class User:
+    username: str
+    email: str
+    timezone: str
+    cla_done: bool
+    groups: list[str] = field(default_factory=list)
+
+
 # pylint: disable=W0613
 @views.before_app_request
 def before_request():
@@ -26,14 +36,12 @@ def before_request():
         if OIDC.user_loggedin:
             if not hasattr(session, "fas_user") or not session.fas_user:
                 userinfo = session.get("oidc_auth_profile")
-                session.fas_user = munch.Munch(
-                    {
-                        "username": userinfo.get("nickname"),
-                        "email": userinfo.get("email"),
-                        "timezone": userinfo.get("zoneinfo"),
-                        "cla_done": "signed_fpca" in (userinfo.get("groups") or []),
-                        "groups": userinfo.get("groups"),
-                    }
+                session.fas_user = User(
+                    username=userinfo.get("nickname"),
+                    email=userinfo.get("email"),
+                    timezone=userinfo.get("zoneinfo"),
+                    cla_done=("signed_fpca" in (userinfo.get("groups") or [])),
+                    groups=userinfo.get("groups"),
                 )
             g.fas_user = session.fas_user
         else:

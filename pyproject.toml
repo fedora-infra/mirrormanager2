@@ -45,7 +45,6 @@ SQLAlchemy = "^1.4.41 || ^2.0.0"
 ipy = "^1.1"
 dnspython = "^2.4.2"
 protobuf = "^4.24.0"
-munch = "^4.0.0"
 backoff = "^2.2.1"
 fedora-messaging = "^3.3.0"
 
