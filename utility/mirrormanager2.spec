@@ -153,12 +153,10 @@ Base directories used by multiple subpackages
 
 %prep
 %autosetup -p1
-# Fix the shebang
-sed -e "s|#!/usr/bin/env python$|#!%{__python}|" -i *.py utility/mm2_* client/* mirrorlist/*
 
 
 %generate_buildrequires
-%pyproject_buildrequires -t
+%pyproject_buildrequires -R
 
 
 %build
