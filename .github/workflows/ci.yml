@@ -27,5 +27,13 @@ jobs:
       run: dnf install -y gcc gcc-c++ libffi-devel python-devel python-greenlet
     - name: Mark the directory as safe for git
       run: git config --global --add safe.directory $PWD
+    - name: "rawhide hack: patch poetry to accept RPM-installed packages"
+      run: |
+        dnf install -y patch
+        cd $(python3 -c "import poetry; print(poetry.__path__[-1])")
+        poetry_ver=$(poetry --version | sed -e 's/[^0-9.]//g')
+        echo ${poetry_ver}
+        echo https://abompard.fedorapeople.org/poetry-${poetry_ver}-system-packages.patch
+        curl https://abompard.fedorapeople.org/poetry-${poetry_ver}-system-packages.patch | patch -p3
     - name: Run Tests
       run: tox
