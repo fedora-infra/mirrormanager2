@@ -57,22 +57,22 @@ blinker = "^1.6.2"
 sphinxcontrib-httpdomain = "^1.8.1"
 cloud-sptheme = "^1.10.1.post20200504175005"
 
-# [tool.poetry.scripts]
-# report_mirror = { reference = "client/report_mirror", type = "file" }
-# mirrorlist_statistics = { reference = "mirrorlist/mirrorlist_statistics", type = "file" }
-# mm2_crawler = { reference = "utility/mm2_crawler", type = "file" }
-# mm2_emergency-expire-repo = { reference = "utility/mm2_emergency-expire-repo", type = "file" }
-# mm2_generate-worldmap = { reference = "utility/mm2_generate-worldmap", type = "file" }
-# mm2_get_global_netblocks = { reference = "utility/mm2_get_global_netblocks", type = "file" }
-# mm2_get_internet2_netblocks = { reference = "utility/mm2_get_internet2_netblocks", type = "file" }
-# mm2_move-devel-to-release = { reference = "utility/mm2_move-devel-to-release", type = "file" }
-# mm2_move-to-archive = { reference = "utility/mm2_move-to-archive", type = "file" }
-# mm2_propagation = { reference = "utility/mm2_propagation", type = "file" }
-# mm2_update-EC2-netblocks = { reference = "utility/mm2_update-EC2-netblocks", type = "file" }
-# mm2_update-master-directory-list = { reference = "utility/mm2_update-master-directory-list", type = "file" }
-# mm2_umdl2 = { reference = "utility/mm2_umdl2", type = "file" }
-# mm2_create_install_repo = { reference = "utility/mm2_create_install_repo", type = "file" }
-# mm2_upgrade-install-repo = { reference = "utility/mm2_upgrade-install-repo", type = "file" }
+[tool.poetry.scripts]
+report_mirror = { reference = "client/report_mirror", type = "file" }
+mirrorlist_statistics = { reference = "mirrorlist/mirrorlist_statistics", type = "file" }
+mm2_crawler = { reference = "utility/mm2_crawler", type = "file" }
+mm2_emergency-expire-repo = { reference = "utility/mm2_emergency-expire-repo", type = "file" }
+mm2_generate-worldmap = { reference = "utility/mm2_generate-worldmap", type = "file" }
+mm2_get_global_netblocks = { reference = "utility/mm2_get_global_netblocks", type = "file" }
+mm2_get_internet2_netblocks = { reference = "utility/mm2_get_internet2_netblocks", type = "file" }
+mm2_move-devel-to-release = { reference = "utility/mm2_move-devel-to-release", type = "file" }
+mm2_move-to-archive = { reference = "utility/mm2_move-to-archive", type = "file" }
+mm2_propagation = { reference = "utility/mm2_propagation", type = "file" }
+mm2_update-EC2-netblocks = { reference = "utility/mm2_update-EC2-netblocks", type = "file" }
+mm2_update-master-directory-list = { reference = "utility/mm2_update-master-directory-list", type = "file" }
+mm2_umdl2 = { reference = "utility/mm2_umdl2", type = "file" }
+mm2_create_install_repo = { reference = "utility/mm2_create_install_repo", type = "file" }
+mm2_upgrade-install-repo = { reference = "utility/mm2_upgrade-install-repo", type = "file" }
 
 
 [build-system]
