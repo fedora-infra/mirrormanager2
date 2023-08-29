@@ -280,7 +280,7 @@ MM2_SKIP_NETWORK_TESTS=1 %{pytest} -v tests
 %endif
 %{python_sitelib}/%{name}/templates/
 %{python_sitelib}/%{name}/static/
-%{python_sitelib}/%{name}*.egg-info
+%{python_sitelib}/%{name}*.dist-info
 
 %files filesystem
 %license LICENSE-MIT-X11 LICENSE-GPLv2
