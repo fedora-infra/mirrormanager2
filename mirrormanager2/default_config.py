@@ -52,7 +52,7 @@ THEME_FOLDER = "fedora"
 MM_AUTHENTICATION = "fas"
 
 OIDC_CLIENT_SECRETS = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "client_secrets.json"
+    os.path.dirname(os.path.abspath(__file__)), "..", "client_secrets.json"
 )
 OIDC_SCOPES = " ".join(
     [

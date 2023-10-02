@@ -3,7 +3,7 @@
 import argparse
 import os
 
-from mirrormanager2.app import APP
+from mirrormanager2.app import create_app
 
 parser = argparse.ArgumentParser(description="Run the mirrormanager2 app")
 parser.add_argument("--config", "-c", dest="config", help="Configuration file to use.")
@@ -32,6 +32,7 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
+app = create_app()
 
 if args.config:
     config = args.config
@@ -43,8 +44,8 @@ if args.config:
 if args.profile:
     from werkzeug.contrib.profiler import ProfilerMiddleware
 
-    APP.config["PROFILE"] = True
-    APP.wsgi_app = ProfilerMiddleware(APP.wsgi_app, restrictions=[30])
+    app.config["PROFILE"] = True
+    app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[30])
 
-APP.debug = True
-APP.run(port=int(args.port), host=args.host)
+app.debug = True
+app.run(port=int(args.port), host=args.host)

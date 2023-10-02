@@ -19,18 +19,32 @@ https://lists.fedoraproject.org/archives/list/mirror-admin@lists.fedoraproject.o
 Hacking
 -------
 
+Using Tinystage
+~~~~~~~~~~~~~~~
+MirrorManager2 authenticates using OpenID Connect. For this, it requires an
+OIDC provider, and the tiny-stage environment provides that.
+
+Download tiny-stage from Github with::
+
+    $ git clone https://github.com/fedora-infra/tiny-stage
+    $ cd tiny-stage
+
+Now install Ansible, Vagrant and the vagrant-libvirt plugin from the official
+Fedora repos, and startup tiny-stage::
+
+    $ sudo dnf install ansible vagrant vagrant-libvirt vagrant-sshfs
+    $ vagrant up ipa auth
+
+It takes a bit of time, but tiny-stage will now be installed, with dummy users
+and groups.
+
+
 Hacking with Vagrant
 ~~~~~~~~~~~~~~~~~~~~
 Quickly start hacking on mirrormanager2 using the vagrant setup that is included
 in the repo is super simple.
 
-Install Ansible, Vagrant and the vagrant-libvirt plugin from the official Fedora
-repos::
-
-    $ sudo dnf install ansible vagrant vagrant-libvirt vagrant-sshfs
-
-
-Now, from within main directory (the one with the Vagrantfile in it) of your git
+From within main directory (the one with the Vagrantfile in it) of your git
 checkout of mirrormanager2, run the ``vagrant up`` command to provision your dev
 environment::
 
@@ -47,40 +61,43 @@ your host to see your running mirrormanager test instance.
 
 Manual Setup
 ~~~~~~~~~~~~
-
-
 Here are some preliminary instructions about how to stand up your own instance
 of mirrormanager2. All required packages for MirrorManager2 are part of Fedora
 or RHEL/CentOS/EPEL. In the following example we will, however use a virtualenv
 and a sqlite database and we will install our dependencies from the Python
 Package Index (PyPI).
 
-First, set up a virtualenv::
+Note: this setup still needs tiny-stage running.
 
-    $ sudo yum install python-virtualenv
-    $ virtualenv my-MirrorMan-env
-    $ source my-MirrorMan-env/bin/activate
+First, install development dependencies::
 
-Issuing that last command should change your prompt to indicate that you are
-operating in an active virtualenv.
+    $ sudo dnf install poetry tox
 
-Next, install your dependencies::
+Next, install MirrorManager's dependencies::
 
-    (my-MirrorMan-env)$ pip install -r requirements.txt
+    $ poetry install
+
+You also need to install and run ``oidc-register`` to register mirrormanager2
+with tiny-stage. Tinystage has a self-signed certificate, it needs to be added
+to the known certificates::
+
+    $ poetry run pip install oidc-register
+    $ curl -k https://ipsilon.tinystage.test/ca.crt >> $(poetry run python -m certifi)
+    $ poetry run oidc-register https://ipsilon.tinystage.test/idp/openidc/ https://mirrormanager2.tinystage.test/authorize
 
 You should then create your own sqlite database for your development instance of
 mirrormanager2::
 
-    (my-MirrorMan-env)$ python createdb.py
+    $ poetry run ./createdb.py
 
 If all goes well, you can start a development instance of the server by
 running::
 
-    (my-MirrorMan-env)$ python runserver.py
+    $ poetry run ./runserver.py
 
 Open your browser and visit http://localhost:5000 to check it out.
 
 Once you made your changes please run the test suite to verify that nothing
 covered by tests has been broken::
 
-    (my-MirrorMan-env)$ ./runtests.sh
+    $ tox

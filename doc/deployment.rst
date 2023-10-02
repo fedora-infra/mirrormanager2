@@ -6,14 +6,9 @@ From sources
 
 Clone the source::
 
- git clone http://git.fedorahosted.org/git/mirrormanager2.git
+ git clone https://github.com/fedora-infra/mirrormanager2.git
 
-Install the dependencies listed in the ``requirements.txt`` file.
-
-.. note:: The ``requirements.txt`` file require flask>=0.10 but this is only
-          required for the unit-tests and in fact flask<0.10 is **required** for
-          python-fedora to work at the moment.
-          The next release of python-fedora should fix this problem.
+Install Poetry and run ``poetry install`` to install the dependencies.
 
 Copy the configuration files::
 
@@ -34,7 +29,7 @@ From system-wide packages
 
 Start by install mirrormanager2::
 
-  yum install mirrormanager2
+  dnf install mirrormanager2
 
 Adjust the configuration files: ``/etc/mirrormanager2/mirrormanager2.cfg``.
 
@@ -54,7 +49,7 @@ Set-up WSGI
 
 Start by installing ``mod_wsgi``::
 
-  yum install mod_wsgi
+  dnf install mod_wsgi
 
 
 Then configure apache::
