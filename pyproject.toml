@@ -31,6 +31,16 @@ packages = [
     { include = "tests", format = "sdist" },
 ]
 
+include = [
+    "createdb.py",
+    "runserver.py",
+    "mirrormanager.proto",
+    "doc",
+    "testdata",
+    "alembic",
+    "client/report_mirror.conf",
+]
+
 
 [tool.poetry.dependencies]
 python = "^3.9"

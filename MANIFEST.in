@@ -1,9 +1,0 @@
-include LICENSE-MIT-X11 LICENSE-GPLv2 README.rst requirements.txt
-include createdb.py mirrormanager.proto
-recursive-include mirrormanager2 *
-recursive-include utility *
-recursive-include tests *
-recursive-include testdata *
-recursive-include alembic *
-include doc/*
-include client/report_mirror.conf
