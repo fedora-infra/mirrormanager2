@@ -2,6 +2,14 @@
 - hosts: all
   become: true
   become_method: sudo
+
+  vars:
+    ipa_admin_user: admin
+    ipa_admin_password: password
+    krb_realm: TINYSTAGE.TEST
+
   roles:
   - core
+  - ipa-client
+  - cert
   - dev

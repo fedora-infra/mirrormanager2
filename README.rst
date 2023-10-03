@@ -77,11 +77,9 @@ Next, install MirrorManager's dependencies::
 
     $ poetry install
 
-You also need to install and run ``oidc-register`` to register mirrormanager2
-with tiny-stage. Tinystage has a self-signed certificate, it needs to be added
-to the known certificates::
+Tinystage has a self-signed certificate, it needs to be added to the known
+certificates::
 
-    $ poetry run pip install oidc-register
     $ curl -k https://ipsilon.tinystage.test/ca.crt >> $(poetry run python -m certifi)
     $ poetry run oidc-register https://ipsilon.tinystage.test/idp/openidc/ https://mirrormanager2.tinystage.test/authorize
 

@@ -10,7 +10,7 @@ Environment=FLASK_DEBUG=1
 Environment=FLASK_APP=/vagrant/mirrormanager2/app.py
 User=root
 WorkingDirectory=/vagrant/
-ExecStart=flask run -p 443 -h "0.0.0.0" --cert=/etc/pki/tls/certs/server.pem --key=/etc/pki/tls/private/server.key
+ExecStart=poetry run flask run -p 443 -h "0.0.0.0" --cert=/etc/pki/tls/certs/server.pem --key=/etc/pki/tls/private/server.key
 
 [Install]
 WantedBy=multi-user.target

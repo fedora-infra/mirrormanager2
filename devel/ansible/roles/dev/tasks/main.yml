@@ -2,81 +2,47 @@
 - name: Install dev packages
   dnf:
     name:
-    - freeipa-client
     - gcc
+    - libpq-devel
     - python3
     - python3-devel
-    - python3-alembic  # This pulls in python3-sqlalchemy
+    - poetry
     # This breaks with Python 3 when installed from pip, it's terribly outdated.
     - python3-flask-xml-rpc
-    - python3-psycopg2
-    - python3-flask-oidc
     - redhat-rpm-config
     # deps for running the tests
     - protobuf-compiler
-    - python3-pytest
-    - python3-pytest-cov
-    - python3-pytest-mock
-    - python3-blinker
     state: present
 
-- name: Install python packages from requirements.txt
-  pip:
-    requirements: /vagrant/requirements.txt
-
-- name: Enroll system as IPA client
-  shell: ipa-client-install --hostname mirrormanager2.tinystage.test --domain tinystage.test --realm TINYSTAGE.TEST --server ipa.tinystage.test -p admin -w password -U -N --force-join --force
-  args:
-    creates: /etc/ipa/default.conf
-
-- name: Generate and get SSL cert
-  shell: ipa-getcert request -f /etc/pki/tls/certs/server.pem -k /etc/pki/tls/private/server.key -K HTTP/mirrormanager2.tinystage.test
-  args:
-    creates: /etc/pki/tls/certs/server.pem
-
-- name: Check the cert is there
-  wait_for:
-    path: /etc/pki/tls/certs/server.pem
-    state: present
-
-- name: Check the key is there
-  wait_for:
-    path: /etc/pki/tls/private/server.key
-    state: present
-
-- name: install oidc_register with pip
-  pip:
-    name: oidc-register
-
-- name: Determine Python version
+- name: Install python packages
   command:
-    argv:
-      - python3
-      - -c
-      - "from sys import version_info as vi; print(f'{vi[0]}.{vi[1]}')"
-  register: _python3_version_result
-  changed_when: False
+    cmd: poetry install
+    chdir: /vagrant
 
-- name: Set Python version fact
-  set_fact:
-    py3ver: "{{ _python3_version_result.stdout | trim }}"
+# Trust IPA's CA
 
-# not sure of how to do this another way, but without this, oidc_register fails
 - name: Get the content of the CA cert
   slurp:
     src: /etc/ipa/ca.crt
   register: ca_crt
-- name: Put tinystage root CA in the list of CA's for httplib2
+
+- name: Get the CA certs file from certifi
+  command: poetry run python -m certifi
+  args:
+    chdir: /vagrant
+  register: certifi_cacert
+
+- name: Put tinystage root CA in the list of CA's for certifi
   blockinfile:
     block: "{{ ca_crt.content | b64decode }}"
-    path: /usr/lib/python{{ py3ver }}/site-packages/httplib2/cacerts.txt
+    path: "{{ certifi_cacert.stdout }}"
+
+#
 
 - name: register the application with oidc-register
-  shell: oidc-register --debug https://ipsilon.tinystage.test/idp/openidc/ https://mirrormanager2.tinystage.test/authorize
-  become: yes
-  become_user: vagrant
+  shell: poetry run oidc-register --debug --output-file /home/vagrant/client_secrets.json https://ipsilon.tinystage.test/idp/openidc/ https://mirrormanager2.tinystage.test/authorize
   args:
-    chdir: /home/vagrant/
+    chdir: /vagrant
     creates: /home/vagrant/client_secrets.json
 
 - name: Install the config file
@@ -88,14 +54,12 @@
     group: vagrant
 
 - name: Create and populate the database
-  command: python3 devel/populate.py
+  command: poetry run python devel/populate.py
   args:
     chdir: /vagrant/
     creates: /var/tmp/mirrormanager2_dev.sqlite
   environment:
     MM2_CONFIG: '/home/vagrant/mirrormanager2.cfg'
-  become: yes
-  become_user: vagrant
 
 - name: Install the systemd unit file for mirrormanager2 service
   copy:
