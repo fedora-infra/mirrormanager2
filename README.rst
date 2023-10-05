@@ -53,10 +53,10 @@ environment::
 When this command is completed (it may take a while) you will be able to the
 command to start the mirrormanager server::
 
-    $ vagrant ssh -c "pushd /vagrant/; python runserver.py --host '0.0.0.0'"
+    $ vagrant ssh -c "sudo systemctl restart mirrormanager2"
 
-Once that is running, simply go to http://localhost:5000/ in your browser on
-your host to see your running mirrormanager test instance.
+Once that is running, simply go to https://mirrormanager2.tinystage.test/ in
+your browser on your host to see your running mirrormanager test instance.
 
 
 Manual Setup
@@ -81,7 +81,7 @@ Tinystage has a self-signed certificate, it needs to be added to the known
 certificates::
 
     $ curl -k https://ipsilon.tinystage.test/ca.crt >> $(poetry run python -m certifi)
-    $ poetry run oidc-register https://ipsilon.tinystage.test/idp/openidc/ https://mirrormanager2.tinystage.test/authorize
+    $ poetry run oidc-register https://ipsilon.tinystage.test/idp/openidc/ http://localhost:5000/authorize
 
 You should then create your own sqlite database for your development instance of
 mirrormanager2::
