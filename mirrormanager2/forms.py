@@ -66,9 +66,7 @@ class AddSiteForm(FlaskForm):
     """Form to add or edit a site."""
 
     name = wtforms.StringField("Site name", [wtforms.validators.InputRequired()])
-    password = wtforms.StringField(
-        "Site Password", [wtforms.validators.InputRequired()]
-    )
+    password = wtforms.StringField("Site Password", [wtforms.validators.InputRequired()])
     org_url = wtforms.StringField(
         "Organisation URL",
         [wtforms.validators.InputRequired()],
@@ -76,9 +74,7 @@ class AddSiteForm(FlaskForm):
     private = wtforms.BooleanField("Private", default=False)
     admin_active = wtforms.BooleanField("Admin active", default=True)
     user_active = wtforms.BooleanField("User active", default=True)
-    all_sites_can_pull_from_me = wtforms.BooleanField(
-        "All sites can pull from me?", default=False
-    )
+    all_sites_can_pull_from_me = wtforms.BooleanField("All sites can pull from me?", default=False)
     downstream_comments = wtforms.StringField(
         "Comments for downstream siteadmins",
     )
@@ -217,9 +213,7 @@ class AddHostCategoryForm(FlaskForm):
         """
         super().__init__(*args, **kwargs)
         if "categories" in kwargs:
-            self.category_id.choices = [
-                (cat.id, cat.name) for cat in kwargs["categories"]
-            ]
+            self.category_id.choices = [(cat.id, cat.name) for cat in kwargs["categories"]]
 
 
 class EditHostCategoryForm(FlaskForm):

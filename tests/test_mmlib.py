@@ -197,9 +197,7 @@ def test_get_host_category_empty(db):
     assert results is None
 
 
-def test_get_host_category(
-    db, base_items, site, hosts, directory, category, hostcategory
-):
+def test_get_host_category(db, base_items, site, hosts, directory, category, hostcategory):
     """Test the get_host_category function of mirrormanager2.lib."""
     results = mirrormanager2.lib.get_host_category(db, 1)
     assert results.host.name == "mirror.localhost"
@@ -218,9 +216,7 @@ def test_get_host_category(
 
 
 def test_get_host_category_by_hostid_category_empty(db):
-    results = mirrormanager2.lib.get_host_category_by_hostid_category(
-        db, 1, "Fedora Linux"
-    )
+    results = mirrormanager2.lib.get_host_category_by_hostid_category(db, 1, "Fedora Linux")
     assert results == []
 
 
@@ -230,23 +226,17 @@ def test_get_host_category_by_hostid_category(
     """Test the get_host_category_by_hostid_category function of
     mirrormanager2.lib.
     """
-    results = mirrormanager2.lib.get_host_category_by_hostid_category(
-        db, 1, "Fedora Linux"
-    )
+    results = mirrormanager2.lib.get_host_category_by_hostid_category(db, 1, "Fedora Linux")
     assert len(results) == 1
     assert results[0].host.name == "mirror.localhost"
     assert results[0].host.country == "US"
 
-    results = mirrormanager2.lib.get_host_category_by_hostid_category(
-        db, 2, "Fedora Linux"
-    )
+    results = mirrormanager2.lib.get_host_category_by_hostid_category(db, 2, "Fedora Linux")
     assert len(results) == 1
     assert results[0].host.name == "mirror2.localhost"
     assert results[0].host.country == "FR"
 
-    results = mirrormanager2.lib.get_host_category_by_hostid_category(
-        db, 3, "Fedora Linux"
-    )
+    results = mirrormanager2.lib.get_host_category_by_hostid_category(db, 3, "Fedora Linux")
     assert results == []
 
 
@@ -536,22 +526,16 @@ def test_get_products(db, base_items):
 
 
 def test_get_repo_prefix_arch_empty(db):
-    results = mirrormanager2.lib.get_repo_prefix_arch(
-        db, "updates-testing-f20", "x86_64"
-    )
+    results = mirrormanager2.lib.get_repo_prefix_arch(db, "updates-testing-f20", "x86_64")
     assert results is None
 
 
 def test_get_repo_prefix_arch(db, base_items, version, directory, category, repository):
     """Test the get_repo_prefix_arch function of mirrormanager2.lib."""
-    results = mirrormanager2.lib.get_repo_prefix_arch(
-        db, "updates-testing-f26", "x86_64"
-    )
+    results = mirrormanager2.lib.get_repo_prefix_arch(db, "updates-testing-f26", "x86_64")
     assert results.name == "pub/fedora/linux/updates/testing/26/x86_64"
 
-    results = mirrormanager2.lib.get_repo_prefix_arch(
-        db, "updates-testing-f27", "x86_64"
-    )
+    results = mirrormanager2.lib.get_repo_prefix_arch(db, "updates-testing-f27", "x86_64")
     assert results.name == "pub/fedora/linux/updates/testing/27/x86_64"
 
     results = mirrormanager2.lib.get_repo_prefix_arch(db, "updates-testing-f20", "i386")
@@ -559,42 +543,30 @@ def test_get_repo_prefix_arch(db, base_items, version, directory, category, repo
 
 
 def test_get_repo_by_name_empty(db):
-    results = mirrormanager2.lib.get_repo_by_name(
-        db, "pub/fedora/linux/updates/testing/19/x86_64"
-    )
+    results = mirrormanager2.lib.get_repo_by_name(db, "pub/fedora/linux/updates/testing/19/x86_64")
     assert results is None
 
 
 def test_get_repo_by_name(db, base_items, version, directory, category, repository):
     """Test the get_repo_by_name function of mirrormanager2.lib."""
-    results = mirrormanager2.lib.get_repo_by_name(
-        db, "pub/fedora/linux/updates/testing/25/x86_64"
-    )
+    results = mirrormanager2.lib.get_repo_by_name(db, "pub/fedora/linux/updates/testing/25/x86_64")
     assert results.name == "pub/fedora/linux/updates/testing/25/x86_64"
 
-    results = mirrormanager2.lib.get_repo_by_name(
-        db, "pub/fedora/linux/updates/testing/26/x86_64"
-    )
+    results = mirrormanager2.lib.get_repo_by_name(db, "pub/fedora/linux/updates/testing/26/x86_64")
     assert results.name == "pub/fedora/linux/updates/testing/26/x86_64"
 
-    results = mirrormanager2.lib.get_repo_by_name(
-        db, "pub/fedora/linux/updates/testing/19/i386"
-    )
+    results = mirrormanager2.lib.get_repo_by_name(db, "pub/fedora/linux/updates/testing/19/i386")
     assert results is None
 
 
 def test_get_repo_by_dir_empty(db):
-    results = mirrormanager2.lib.get_repo_by_dir(
-        db, "pub/fedora/linux/updates/testing/21/x86_64"
-    )
+    results = mirrormanager2.lib.get_repo_by_dir(db, "pub/fedora/linux/updates/testing/21/x86_64")
     assert results == []
 
 
 def test_get_repo_by_dir(db, base_items, version, directory, category, repository):
     """Test the get_repo_by_dir function of mirrormanager2.lib."""
-    results = mirrormanager2.lib.get_repo_by_dir(
-        db, "pub/fedora/linux/updates/testing/27/x86_64"
-    )
+    results = mirrormanager2.lib.get_repo_by_dir(db, "pub/fedora/linux/updates/testing/27/x86_64")
     assert len(results) == 1
     assert results[0].name == "pub/fedora/linux/updates/testing/27/x86_64"
     assert results[0].arch.name == "x86_64"
@@ -992,23 +964,17 @@ def test_get_file_detail(db, directory, filedetail):
     assert results.md5 == "foo_md5"
     assert results.directory.name == "pub/fedora/linux/updates/testing/25/x86_64"
 
-    results = mirrormanager2.lib.get_file_detail(
-        db, "repomd.xml", 7, sha256="foo_sha256"
-    )
+    results = mirrormanager2.lib.get_file_detail(db, "repomd.xml", 7, sha256="foo_sha256")
     assert results.md5 == "foo_md5"
     assert results.directory.name == "pub/fedora/linux/updates/testing/25/x86_64"
 
-    results = mirrormanager2.lib.get_file_detail(
-        db, "repomd.xml", 7, sha512="foo_sha512"
-    )
+    results = mirrormanager2.lib.get_file_detail(db, "repomd.xml", 7, sha512="foo_sha512")
     assert results.md5 == "foo_md5"
     assert results.directory.name == "pub/fedora/linux/updates/testing/25/x86_64"
 
     results = mirrormanager2.lib.get_file_detail(db, "repomd.xml", 7, size=2973)
     assert results is None
 
-    results = mirrormanager2.lib.get_file_detail(
-        db, "repomd.xml", 7, timestamp=1357758825
-    )
+    results = mirrormanager2.lib.get_file_detail(db, "repomd.xml", 7, timestamp=1357758825)
     assert results.md5 == "foo_md5"
     assert results.directory.name == "pub/fedora/linux/updates/testing/25/x86_64"

@@ -65,9 +65,7 @@ umdl_master_directories = [
 
 @pytest.fixture()
 def umdl_command(logfile, configfile):
-    umdlscript = os.path.join(
-        FOLDER, "..", "utility", "mm2_update-master-directory-list"
-    )
+    umdlscript = os.path.join(FOLDER, "..", "utility", "mm2_update-master-directory-list")
     return [sys.executable, umdlscript, "-c", configfile, f"--logfile={logfile}"]
 
 
@@ -108,9 +106,7 @@ Fedora Other:Ending umdl
     assert logs == exp
 
 
-def test_1_umdl(
-    db, umdl_command, logfile, base_items, directory, category, categorydirectory
-):
+def test_1_umdl(db, umdl_command, logfile, base_items, directory, category, categorydirectory):
     """Test the umdl cron."""
 
     # Run the UDML
@@ -194,9 +190,7 @@ def test_1_umdl(
             assert result.category.name == "Fedora Linux"
             assert result.version.name == "20"
             assert result.arch.name == "x86_64"
-            assert (
-                result.directory.name == "pub/fedora/linux/releases/20/Fedora/x86_64/os"
-            )
+            assert result.directory.name == "pub/fedora/linux/releases/20/Fedora/x86_64/os"
             assert result.prefix == "fedora-install-20"
             check_counter += 1
 
@@ -223,9 +217,7 @@ def test_1_umdl(
     assert results[20].name == "pub/fedora/linux/releases/20/Fedora/source/SRPMS/b"
 
     assert results[19].files["index.html"]["size"] == 6
-    assert (
-        results[19].files["abattis-cantarell-fonts-0.0.15-1.fc20.src.rpm"]["size"] == 10
-    )
+    assert results[19].files["abattis-cantarell-fonts-0.0.15-1.fc20.src.rpm"]["size"] == 10
     assert results[19].files["abiword-3.0.0-4.fc20.src.rpm"]["size"] == 10
     assert results[19].files["aalib-1.4.0-0.23.rc5.fc20.src.rpm"]["size"] == 10
 
@@ -238,26 +230,18 @@ def test_1_umdl(
     check_counter = 0
     for result in results:
         if result.filename == "Fedora-20-x86_64-DVD.iso":
-            assert (
-                result.directory.name
-                == "pub/fedora/linux/releases/20/Fedora/x86_64/iso"
-            )
+            assert result.directory.name == "pub/fedora/linux/releases/20/Fedora/x86_64/iso"
             assert result.sha512 is None
             assert (
-                result.sha256
-                == "f2eeed5102b8890e9e6f4b9053717fe73031e699c4b76dc7028749ab66e7f917"
+                result.sha256 == "f2eeed5102b8890e9e6f4b9053717fe73031e699c4b76dc7028749ab66e7f917"
             )
             check_counter += 1
 
         elif result.filename == "Fedora-20-x86_64-netinst.iso":
-            assert (
-                result.directory.name
-                == "pub/fedora/linux/releases/20/Fedora/x86_64/iso"
-            )
+            assert result.directory.name == "pub/fedora/linux/releases/20/Fedora/x86_64/iso"
             assert result.sha512 is None
             assert (
-                result.sha256
-                == "376be7d4855ad6281cb139430606a782fd6189dcb01d7b61448e915802cc350f"
+                result.sha256 == "376be7d4855ad6281cb139430606a782fd6189dcb01d7b61448e915802cc350f"
             )
             check_counter += 1
 
@@ -265,8 +249,7 @@ def test_1_umdl(
             assert result.directory.name == "pub/fedora/linux/releases/20/Live/x86_64"
             assert result.sha512 is None
             assert (
-                result.sha256
-                == "cc0333be93c7ff2fb3148cb29360d2453f78913cc8aa6c6289ae6823372a77d2"
+                result.sha256 == "cc0333be93c7ff2fb3148cb29360d2453f78913cc8aa6c6289ae6823372a77d2"
             )
             check_counter += 1
 
@@ -274,24 +257,18 @@ def test_1_umdl(
             assert result.directory.name == "pub/fedora/linux/releases/20/Live/x86_64"
             assert result.sha512 is None
             assert (
-                result.sha256
-                == "08360a253b4a40dff948e568dba1d2ae9d931797f57aa08576b8b9f1ef7e4745"
+                result.sha256 == "08360a253b4a40dff948e568dba1d2ae9d931797f57aa08576b8b9f1ef7e4745"
             )
             check_counter += 1
 
         elif result.md5 == "d0fb87891c3bfbdaf7a225f57e9ba6ee":
             assert result.filename == "repomd.xml"
+            assert result.directory.name == "pub/fedora/linux/development/22/x86_64/os/repodata"
             assert (
-                result.directory.name
-                == "pub/fedora/linux/development/22/x86_64/os/repodata"
+                result.sha256 == "860f0f832f7a641cf8f7e27172ef9b2492ce849388e43f372af7e512aa646677"
             )
             assert (
-                result.sha256
-                == "860f0f832f7a641cf8f7e27172ef9b2492ce849388e43f372af7e512aa646677"
-            )
-            assert (
-                result.sha512
-                == "7bb9a0bae076ccbbcd086163a1d4f33b62321aa6991d135c42bf3f6c42c4eb"
+                result.sha512 == "7bb9a0bae076ccbbcd086163a1d4f33b62321aa6991d135c42bf3f6c42c4eb"
                 "465a0b42c62efa809708543fcd69511cb19cd7111d5ff295a50253b9c7659bb9d6"
             )
             check_counter += 1
@@ -299,33 +276,25 @@ def test_1_umdl(
         elif result.md5 == "082970dfa804fdcfaed2e15e2e5fba7d":
             assert result.filename == "repomd.xml"
             assert (
-                result.directory.name
-                == "pub/fedora/linux/releases/20/Fedora/source/SRPMS/repodata"
+                result.directory.name == "pub/fedora/linux/releases/20/Fedora/source/SRPMS/repodata"
             )
             assert (
-                result.sha256
-                == "9a4738934092cf17e4540ee9cab741e922eb8306875ae5621feb01ebeb1f67f2"
+                result.sha256 == "9a4738934092cf17e4540ee9cab741e922eb8306875ae5621feb01ebeb1f67f2"
             )
             assert (
-                result.sha512
-                == "3351c7a6b1d2bd94e375d09324a9280b8becfe4dea40a227c3b270ddcedb19"
+                result.sha512 == "3351c7a6b1d2bd94e375d09324a9280b8becfe4dea40a227c3b270ddcedb19"
                 "f420eec3f2c6a39a1edcdf52f80d31eb47a0ba25057ced2e3182dd212bc7466ba2"
             )
             check_counter += 1
 
         elif result.md5 == "49db42c616518f465014c3605de4414d":
             assert result.filename == "repomd.xml"
+            assert result.directory.name == "pub/fedora/linux/releases/20/Fedora/x86_64/os/repodata"
             assert (
-                result.directory.name
-                == "pub/fedora/linux/releases/20/Fedora/x86_64/os/repodata"
+                result.sha256 == "108b4102829c0839c7712832577fe7da24f0a9491f4dc25d4145efe6aced2ebf"
             )
             assert (
-                result.sha256
-                == "108b4102829c0839c7712832577fe7da24f0a9491f4dc25d4145efe6aced2ebf"
-            )
-            assert (
-                result.sha512
-                == "50ed8cb8f4daf8bcd1d0ccee1710b8a87ee8de5861fb15a1023d6558328795"
+                result.sha512 == "50ed8cb8f4daf8bcd1d0ccee1710b8a87ee8de5861fb15a1023d6558328795"
                 "f42dade3e025c09c20ade36c77a3a82d9cdce1a2e2ad171f9974bc1889b5918020"
             )
             check_counter += 1

@@ -19,9 +19,7 @@ def setup_all(db_items):
 @pytest.fixture(autouse=True)
 def mock_oidc():
     with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
-        rsps.get(
-            "https://id.example.com/openidc/.well-known/openid-configuration", json={}
-        )
+        rsps.get("https://id.example.com/openidc/.well-known/openid-configuration", json={})
         yield
 
 
@@ -86,8 +84,7 @@ def test_admin_category(client, admin_user):
     assert re.search('<a href="/admin/category(view)?/">Category</a>', data) is not None
     assert (
         re.search(
-            r'<a href="/admin/category(view)?/\?sort=[02]" '
-            'title="Sort by Name">Name</a>',
+            r'<a href="/admin/category(view)?/\?sort=[02]" ' 'title="Sort by Name">Name</a>',
             data,
         )
         is not None
@@ -267,8 +264,7 @@ def test_admin_hostaclipview(client, admin_user):
     assert re.search('<a href="/admin/category(view)?/">Category</a>', data) is not None
     assert (
         re.search(
-            r'<a href="/admin/hostaclip(view)?/\?sort=[01]" '
-            'title="Sort by Ip">Ip</a>',
+            r'<a href="/admin/hostaclip(view)?/\?sort=[01]" ' 'title="Sort by Ip">Ip</a>',
             data,
         )
         is not None
@@ -544,9 +540,7 @@ def test_admin_siteview(client, admin_user):
     assert re.search('<a href="/admin/arch(view)?/">Arch</a>', data) is not None
     assert re.search('<a href="/admin/category(view)?/">Category</a>', data) is not None
     assert (
-        re.search(
-            r'<a href="/admin/site(view)?/\?sort=0" title="Sort by Name">Name</a>', data
-        )
+        re.search(r'<a href="/admin/site(view)?/\?sort=0" title="Sort by Name">Name</a>', data)
         is not None
     )
     assert '<a href="javascript:void(0)">List (3)</a>' in data
@@ -602,8 +596,7 @@ def test_admin_versionview(client, admin_user):
     assert re.search('<a href="/admin/category(view)?/">Category</a>', data) is not None
     assert (
         re.search(
-            r'<a href="/admin/version(view)?/\?sort=[01]" '
-            'title="Sort by Name">Name</a>',
+            r'<a href="/admin/version(view)?/\?sort=[01]" ' 'title="Sort by Name">Name</a>',
             data,
         )
         is not None

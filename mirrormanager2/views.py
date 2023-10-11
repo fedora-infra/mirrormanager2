@@ -167,10 +167,7 @@ def site_view(site_id):
     if siteobj is None:
         flask.abort(404, "Site not found")
 
-    if not (
-        is_site_admin(flask.g.fas_user, siteobj)
-        or is_mirrormanager_admin(flask.g.fas_user)
-    ):
+    if not (is_site_admin(flask.g.fas_user, siteobj) or is_mirrormanager_admin(flask.g.fas_user)):
         flask.abort(403, "Access denied")
 
     form = forms.AddSiteForm(obj=siteobj)
@@ -220,18 +217,13 @@ def site_drop(site_id):
     if siteobj is None:
         flask.abort(404, "Site not found")
 
-    if not (
-        is_site_admin(flask.g.fas_user, siteobj)
-        or is_mirrormanager_admin(flask.g.fas_user)
-    ):
+    if not (is_site_admin(flask.g.fas_user, siteobj) or is_mirrormanager_admin(flask.g.fas_user)):
         flask.abort(403, "Access denied")
 
     form = forms.ConfirmationForm()
     site_name = siteobj.name
     if form.validate_on_submit():
-        message = dict(
-            site_id=siteobj.id, site_name=siteobj.name, org_url=siteobj.org_url
-        )
+        message = dict(site_id=siteobj.id, site_name=siteobj.name, org_url=siteobj.org_url)
 
         flask.g.db.delete(siteobj)
         try:
@@ -259,10 +251,7 @@ def host_new(site_id):
     if siteobj is None:
         flask.abort(404, "Site not found")
 
-    if not (
-        is_site_admin(flask.g.fas_user, siteobj)
-        or is_mirrormanager_admin(flask.g.fas_user)
-    ):
+    if not (is_site_admin(flask.g.fas_user, siteobj) or is_mirrormanager_admin(flask.g.fas_user)):
         flask.abort(403, "Access denied")
 
     form = forms.AddHostForm()
@@ -309,8 +298,7 @@ def host_drop(host_id):
         flask.abort(404, "Site not found")
 
     if not (
-        is_site_admin(flask.g.fas_user, hostobj.site)
-        or is_mirrormanager_admin(flask.g.fas_user)
+        is_site_admin(flask.g.fas_user, hostobj.site) or is_mirrormanager_admin(flask.g.fas_user)
     ):
         flask.abort(403, "Access denied")
 
@@ -348,10 +336,7 @@ def siteadmin_new(site_id):
     if siteobj is None:
         flask.abort(404, "Site not found")
 
-    if not (
-        is_site_admin(flask.g.fas_user, siteobj)
-        or is_mirrormanager_admin(flask.g.fas_user)
-    ):
+    if not (is_site_admin(flask.g.fas_user, siteobj) or is_mirrormanager_admin(flask.g.fas_user)):
         flask.abort(403, "Access denied")
 
     form = login_forms.LostPasswordForm()
@@ -395,8 +380,7 @@ def siteadmin_delete(site_id, admin_id):
             flask.abort(404, "Site not found")
 
         if not (
-            is_site_admin(flask.g.fas_user, siteobj)
-            or is_mirrormanager_admin(flask.g.fas_user)
+            is_site_admin(flask.g.fas_user, siteobj) or is_mirrormanager_admin(flask.g.fas_user)
         ):
             flask.abort(403, "Access denied")
 
@@ -440,8 +424,7 @@ def host_view(host_id):
         flask.abort(404, "Host not found")
 
     if not (
-        is_site_admin(flask.g.fas_user, hostobj.site)
-        or is_mirrormanager_admin(flask.g.fas_user)
+        is_site_admin(flask.g.fas_user, hostobj.site) or is_mirrormanager_admin(flask.g.fas_user)
     ):
         flask.abort(403, "Access denied")
 
@@ -502,8 +485,7 @@ def host_acl_ip_new(host_id):
         flask.abort(404, "Host not found")
 
     if not (
-        is_site_admin(flask.g.fas_user, hostobj.site)
-        or is_mirrormanager_admin(flask.g.fas_user)
+        is_site_admin(flask.g.fas_user, hostobj.site) or is_mirrormanager_admin(flask.g.fas_user)
     ):
         flask.abort(403, "Access denied")
 
@@ -583,8 +565,7 @@ def host_netblock_new(host_id):
         flask.abort(404, "Host not found")
 
     if not (
-        is_site_admin(flask.g.fas_user, hostobj.site)
-        or is_mirrormanager_admin(flask.g.fas_user)
+        is_site_admin(flask.g.fas_user, hostobj.site) or is_mirrormanager_admin(flask.g.fas_user)
     ):
         flask.abort(403, "Access denied")
 
@@ -617,9 +598,7 @@ def host_netblock_new(host_id):
     )
 
 
-@views.route(
-    "/host/<host_id>/host_netblock/<host_netblock_id>/delete", methods=["POST"]
-)
+@views.route("/host/<host_id>/host_netblock/<host_netblock_id>/delete", methods=["POST"])
 @login_required
 def host_netblock_delete(host_id, host_netblock_id):
     """Delete a host_netblock."""
@@ -667,8 +646,7 @@ def host_asn_new(host_id):
         flask.abort(404, "Host not found")
 
     if not (
-        is_site_admin(flask.g.fas_user, hostobj.site)
-        or is_mirrormanager_admin(flask.g.fas_user)
+        is_site_admin(flask.g.fas_user, hostobj.site) or is_mirrormanager_admin(flask.g.fas_user)
     ):
         flask.abort(403, "Access denied")
 
@@ -751,8 +729,7 @@ def host_country_new(host_id):
         flask.abort(404, "Host not found")
 
     if not (
-        is_site_admin(flask.g.fas_user, hostobj.site)
-        or is_mirrormanager_admin(flask.g.fas_user)
+        is_site_admin(flask.g.fas_user, hostobj.site) or is_mirrormanager_admin(flask.g.fas_user)
     ):
         flask.abort(403, "Access denied")
 
@@ -847,8 +824,7 @@ def host_category_new(host_id):
         flask.abort(404, "Host not found")
 
     if not (
-        is_site_admin(flask.g.fas_user, hostobj.site)
-        or is_mirrormanager_admin(flask.g.fas_user)
+        is_site_admin(flask.g.fas_user, hostobj.site) or is_mirrormanager_admin(flask.g.fas_user)
     ):
         flask.abort(403, "Access denied")
 
@@ -883,9 +859,7 @@ def host_category_new(host_id):
             flask.g.db.commit()
             flask.flash("Host Category added")
             return flask.redirect(
-                flask.url_for(
-                    "base.host_category", host_id=hostobj.id, hc_id=host_category.id
-                )
+                flask.url_for("base.host_category", host_id=hostobj.id, hc_id=host_category.id)
             )
         except SQLAlchemyError as err:
             flask.g.db.rollback()
@@ -957,8 +931,7 @@ def host_category(host_id, hc_id):
         flask.abort(404, "Host not found")
 
     if not (
-        is_site_admin(flask.g.fas_user, hostobj.site)
-        or is_mirrormanager_admin(flask.g.fas_user)
+        is_site_admin(flask.g.fas_user, hostobj.site) or is_mirrormanager_admin(flask.g.fas_user)
     ):
         flask.abort(403, "Access denied")
 
@@ -1012,8 +985,7 @@ def host_category_url_new(host_id, hc_id):
         flask.abort(404, "Host not found")
 
     if not (
-        is_site_admin(flask.g.fas_user, hostobj.site)
-        or is_mirrormanager_admin(flask.g.fas_user)
+        is_site_admin(flask.g.fas_user, hostobj.site) or is_mirrormanager_admin(flask.g.fas_user)
     ):
         flask.abort(403, "Access denied")
 
@@ -1059,9 +1031,7 @@ def host_category_url_new(host_id, hc_id):
             flask.current_app.logger.exception(err)
 
         flask.g.db.commit()
-        return flask.redirect(
-            flask.url_for("base.host_category", host_id=host_id, hc_id=hc_id)
-        )
+        return flask.redirect(flask.url_for("base.host_category", host_id=host_id, hc_id=hc_id))
 
     return flask.render_template(
         "host_category_url_new.html",
@@ -1101,9 +1071,7 @@ def host_category_url_delete(host_id, hc_id, host_category_url_id):
         if hcobj.id not in host_cat_ids:
             flask.abort(404, "Category not associated with this host")
 
-        hostcaturlobj = mmlib.get_host_category_url_by_id(
-            flask.g.db, host_category_url_id
-        )
+        hostcaturlobj = mmlib.get_host_category_url_by_id(flask.g.db, host_category_url_id)
 
         if hostcaturlobj is None:
             flask.abort(404, "Host category URL not found")
@@ -1127,9 +1095,7 @@ def host_category_url_delete(host_id, hc_id, host_category_url_id):
             flask.current_app.logger.debug("Could not delete category URL of the host")
             flask.current_app.logger.exception(err)
 
-    return flask.redirect(
-        flask.url_for("base.host_category", host_id=host_id, hc_id=hc_id)
-    )
+    return flask.redirect(flask.url_for("base.host_category", host_id=host_id, hc_id=hc_id))
 
 
 @views.route("/rsyncFilter")
@@ -1165,24 +1131,18 @@ def rsyncFilter():
 
     if cat is None or since is None or stripprefix is None:
         message = "Missing categories, since, or stripprefix arguments"
-        return flask.render_template(
-            "rsync_filter.html", excludes=excludes, message=message
-        )
+        return flask.render_template("rsync_filter.html", excludes=excludes, message=message)
 
     num_prefix = num_prefix_components(stripprefix)
     try:
         since = int(since)
     except (ValueError, TypeError):
         message = "value of argument since is not an integer"
-        return flask.render_template(
-            "rsync_filter.html", excludes=excludes, message=message
-        )
+        return flask.render_template("rsync_filter.html", excludes=excludes, message=message)
 
     includes = set()
     categories_requested = cat.split(",")
-    newer_dirs = mmlib.get_rsync_filter_directories(
-        flask.g.db, categories_requested, since
-    )
+    newer_dirs = mmlib.get_rsync_filter_directories(flask.g.db, categories_requested, since)
 
     for i in range(len(newer_dirs)):
         newer_dirs[i] = strip_prefix(num_prefix, newer_dirs[i])

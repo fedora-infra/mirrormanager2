@@ -33,9 +33,7 @@ def validate_config(config):
     message = ""
     if type(config) != dict:
         logging.critical("NON-DICT SUBMITTED: %s" % config)
-        message += (
-            "config file is not a dict.\n" "Please update your copy of report_mirror.\n"
-        )
+        message += "config file is not a dict.\n" "Please update your copy of report_mirror.\n"
         return (False, message)
     if "version" not in config:
         message += "config file has no version field.\n"
@@ -85,8 +83,7 @@ def read_host_config(session, config):
         return (
             None,
             "",
-            message + "Invalid config file provided, please "
-            "check your report_mirror.conf.",
+            message + "Invalid config file provided, please " "check your report_mirror.conf.",
         )
 
     csite = config["site"]

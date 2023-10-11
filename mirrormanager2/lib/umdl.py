@@ -80,9 +80,7 @@ def create_version_from_path(session, category, path):
         else:
             isTest = False
 
-        ver = mirrormanager2.lib.get_version_by_name_version(
-            session, category.product.name, vname
-        )
+        ver = mirrormanager2.lib.get_version_by_name_version(session, category.product.name, vname)
         if not ver:
             logger.info(
                 f"Created Version(product={category.product}, name={vname}, is_test={isTest}, "
@@ -325,9 +323,7 @@ def make_repository(session, directory, relativeDName, category, target, config=
     if target == "repomd.xml":
         (ver, arch) = guess_ver_arch_from_path(session, category, relativeDName, config)
         if ver is None or arch is None:
-            logger.warning(
-                f"{warning}: could not guess version and arch {ver!r}, {arch!r}"
-            )
+            logger.warning(f"{warning}: could not guess version and arch {ver!r}, {arch!r}")
             return None
     elif target == "summary":
         # For ostree, we someday need to actually extract the arch information
@@ -339,9 +335,7 @@ def make_repository(session, directory, relativeDName, category, target, config=
         # Furthermore, we'll grab the version piece from the path which looks
         # like atomic/rawhide or atomic/21.
         ver = relativeDName.rstrip("/").split("/")[-1]
-        ver = mirrormanager2.lib.get_version_by_name_version(
-            session, category.product.name, ver
-        )
+        ver = mirrormanager2.lib.get_version_by_name_version(session, category.product.name, ver)
         if ver is None:
             if not relativeDName.endswith("/"):
                 relativeDName += "/"
@@ -382,9 +376,7 @@ def make_repository(session, directory, relativeDName, category, target, config=
     else:
         if repo.prefix != prefix:
             repo.prefix = prefix
-            logger.info(
-                f"Adjusting prefix Repository({repo}) {repo.prefix} -> {prefix}"
-            )
+            logger.info(f"Adjusting prefix Repository({repo}) {repo.prefix} -> {prefix}")
 
     return repo
 
@@ -407,9 +399,7 @@ def short_filelist(config, relativeDName, files):
         date_file_list = []
         for k in files:
             try:
-                s = os.stat(
-                    os.path.join(config.get("UMDL_PREFIX", ""), relativeDName, k)
-                )
+                s = os.stat(os.path.join(config.get("UMDL_PREFIX", ""), relativeDName, k))
             except OSError:
                 continue
 
@@ -441,9 +431,7 @@ def sync_category_directory(session, config, category, relativeDName, readable, 
             # Can't find the new directory, just add it
             dname = os.path.join(category.topdir.name, relativeDName)
             D = Directory(name=dname, readable=readable, ctime=ctime)
-            logger.debug(
-                f"Created Directory({dname}, readable={readable}, ctime={ctime})"
-            )
+            logger.debug(f"Created Directory({dname}, readable={readable}, ctime={ctime})")
             created = True
         # Add this category to the directory
         D.categories.append(category)
@@ -466,9 +454,7 @@ def sync_category_directory(session, config, category, relativeDName, readable, 
 
     if "repodata" in dirfiles:
         make_repository(session, D, relativeDName, category, "repomd.xml")
-        make_repo_file_details(
-            session, config, relativeDName, D, category, "repomd.xml"
-        )
+        make_repo_file_details(session, config, relativeDName, D, category, "repomd.xml")
     elif "summary" in dirfiles:
         make_repository(session, D, relativeDName, category, "summary")
         make_repo_file_details(session, config, relativeDName, D, category, "summary")

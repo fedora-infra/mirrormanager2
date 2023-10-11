@@ -141,9 +141,7 @@ class Site(BASE):
     private = sa.Column(sa.Boolean(), default=False, nullable=False)
     admin_active = sa.Column(sa.Boolean(), default=True, nullable=False)
     user_active = sa.Column(sa.Boolean(), default=True, nullable=False)
-    created_at = sa.Column(
-        sa.DateTime, nullable=False, default=datetime.datetime.utcnow
-    )
+    created_at = sa.Column(sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
     created_by = sa.Column(sa.Text(), nullable=False)
     # allow all sites to pull from me
     all_sites_can_pull_from_me = sa.Column(sa.Boolean(), default=False, nullable=False)
@@ -475,9 +473,7 @@ class Category(BASE):
     # Top-level mirroring
     # e.g. 'Fedora Linux', 'Fedora Archive'
     name = sa.Column(sa.Text(), nullable=False, unique=True)
-    canonicalhost = sa.Column(
-        sa.Text(), nullable=True, default="http://download.fedora.redhat.com"
-    )
+    canonicalhost = sa.Column(sa.Text(), nullable=True, default="http://download.fedora.redhat.com")
     publiclist = sa.Column(sa.Boolean(), default=True, nullable=False)
     geo_dns_domain = sa.Column(sa.Text(), nullable=True)
     admin_only = sa.Column(sa.Boolean(), default=False, nullable=True)
@@ -526,12 +522,8 @@ class SiteToSite(BASE):
 
     # Constraints
     __table_args__ = (
-        sa.UniqueConstraint(
-            "upstream_site_id", "downstream_site_id", name="site_to_site_idx"
-        ),
-        sa.UniqueConstraint(
-            "upstream_site_id", "username", name="site_to_site_username_idx"
-        ),
+        sa.UniqueConstraint("upstream_site_id", "downstream_site_id", name="site_to_site_idx"),
+        sa.UniqueConstraint("upstream_site_id", "username", name="site_to_site_username_idx"),
     )
 
 
@@ -610,9 +602,7 @@ class HostCategoryDir(BASE):
 
     # Constraints
     __table_args__ = (
-        sa.UniqueConstraint(
-            "host_category_id", "path", name="host_category_dir_hcdindex"
-        ),
+        sa.UniqueConstraint("host_category_id", "path", name="host_category_dir_hcdindex"),
     )
 
 
@@ -620,9 +610,7 @@ class CategoryDirectory(BASE):
     __tablename__ = "category_directory"
 
     category_id = sa.Column(sa.Integer, sa.ForeignKey("category.id"), primary_key=True)
-    directory_id = sa.Column(
-        sa.Integer, sa.ForeignKey("directory.id"), primary_key=True
-    )
+    directory_id = sa.Column(sa.Integer, sa.ForeignKey("directory.id"), primary_key=True)
     category = relationship(
         "Category",
         back_populates="categorydir",
@@ -658,9 +646,7 @@ class HostCategoryUrl(BASE):
 
     # Constraints
     __table_args__ = (
-        sa.UniqueConstraint(
-            "host_category_id", "url", name="host_category_url_hcdindex"
-        ),
+        sa.UniqueConstraint("host_category_id", "url", name="host_category_url_hcdindex"),
     )
 
 
@@ -675,9 +661,7 @@ class HostAclIp(BASE):
     host = relationship("Host", back_populates="acl_ips")
 
     # Constraints
-    __table_args__ = (
-        sa.UniqueConstraint("host_id", "ip", name="host_acl_ip_hipindex"),
-    )
+    __table_args__ = (sa.UniqueConstraint("host_id", "ip", name="host_acl_ip_hipindex"),)
 
 
 class HostCountryAllowed(BASE):
@@ -819,9 +803,7 @@ class Repository(BASE):
             return False
 
         subdirs = (
-            session.query(Directory)
-            .filter(Directory.name.like(self.directory.name + "%"))
-            .all()
+            session.query(Directory).filter(Directory.name.like(self.directory.name + "%")).all()
         )
 
         files_deleted = {}
@@ -878,9 +860,7 @@ class RepositoryRedirect(BASE):
     from_repo = sa.Column(sa.Text(), nullable=False, unique=True)
 
     # Constraints
-    __table_args__ = (
-        sa.UniqueConstraint("from_repo", "to_repo", name="repository_redirect_idx"),
-    )
+    __table_args__ = (sa.UniqueConstraint("from_repo", "to_repo", name="repository_redirect_idx"),)
 
 
 class CountryContinentRedirect(BASE):
@@ -911,9 +891,7 @@ class DirectoryExclusiveHost(BASE):
 
     # Constraints
     __table_args__ = (
-        sa.UniqueConstraint(
-            "directory_id", "host_id", name="directory_exclusive_host_idx"
-        ),
+        sa.UniqueConstraint("directory_id", "host_id", name="directory_exclusive_host_idx"),
     )
 
 
@@ -943,9 +921,7 @@ class HostLocation(BASE):
     location = relationship("Location")
 
     # Constraints
-    __table_args__ = (
-        sa.UniqueConstraint("location_id", "host_id", name="host_location_hlidx"),
-    )
+    __table_args__ = (sa.UniqueConstraint("location_id", "host_id", name="host_location_hlidx"),)
 
 
 class FileGroup(BASE):
@@ -968,12 +944,8 @@ class FileDetailFileGroup(BASE):
     __tablename__ = "file_detail_file_group"
 
     id = sa.Column(sa.Integer, primary_key=True)
-    file_detail_id = sa.Column(
-        sa.Integer, sa.ForeignKey("file_detail.id"), nullable=False
-    )
-    file_group_id = sa.Column(
-        sa.Integer, sa.ForeignKey("file_group.id"), nullable=False
-    )
+    file_detail_id = sa.Column(sa.Integer, sa.ForeignKey("file_detail.id"), nullable=False)
+    file_group_id = sa.Column(sa.Integer, sa.ForeignKey("file_group.id"), nullable=False)
 
 
 class HostCountry(BASE):
@@ -988,9 +960,7 @@ class HostCountry(BASE):
     country = relationship("Country")
 
     # Constraints
-    __table_args__ = (
-        sa.UniqueConstraint("host_id", "country_id", name="host_country_hlidx"),
-    )
+    __table_args__ = (sa.UniqueConstraint("host_id", "country_id", name="host_country_hlidx"),)
 
 
 class NetblockCountry(BASE):

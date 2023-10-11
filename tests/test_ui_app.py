@@ -397,9 +397,7 @@ def test_siteadmin_delete_auth(client, user):
 
     # Check CSRF protection
 
-    output = client.post(
-        "/site/2/admin/3/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/site/2/admin/3/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<h2>Information site: test-mirror2</h2>" in data
@@ -412,33 +410,25 @@ def test_siteadmin_delete_auth(client, user):
     post_data["csrf_token"] = csrf_token
 
     # Invalid site identifier
-    output = client.post(
-        "/site/5/admin/3/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/site/5/admin/3/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Site not found</p>" in data
 
     # Invalid site admin identifier
-    output = client.post(
-        "/site/2/admin/9/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/site/2/admin/9/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Site Admin not found</p>" in data
 
     # Valid site admin but not for this site
-    output = client.post(
-        "/site/2/admin/1/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/site/2/admin/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Site Admin not related to this Site</p>" in data
 
     # Delete Site Admin
-    output = client.post(
-        "/site/2/admin/3/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/site/2/admin/3/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<h2>Information site: test-mirror2</h2>" in data
@@ -447,14 +437,10 @@ def test_siteadmin_delete_auth(client, user):
     assert data.count("ralph") == 0
 
     # Trying to delete the only admin
-    output = client.post(
-        "/site/2/admin/4/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/site/2/admin/4/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert (
-        '<li class="error">There is only one admin set, you cannot ' "delete it.</li>"
-    ) in data
+    assert ('<li class="error">There is only one admin set, you cannot ' "delete it.</li>") in data
 
 
 def test_host_view(client):
@@ -602,9 +588,7 @@ def test_host_netblock_delete_auth(client, another_user):
 
     # Check CSRF protection
 
-    output = client.post(
-        "/host/3/host_netblock/1/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/3/host_netblock/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<h2>Host private.localhost" in data
@@ -617,25 +601,19 @@ def test_host_netblock_delete_auth(client, another_user):
     post_data["csrf_token"] = csrf_token
 
     # Invalid site identifier
-    output = client.post(
-        "/host/5/host_netblock/1/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/5/host_netblock/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host not found</p>" in data
 
     # Invalid site admin identifier
-    output = client.post(
-        "/host/3/host_netblock/2/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/3/host_netblock/2/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host netblock not found</p>" in data
 
     # Delete Site Admin
-    output = client.post(
-        "/host/3/host_netblock/1/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/3/host_netblock/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert '<li class="message">Host netblock deleted</li>' in data
@@ -722,9 +700,7 @@ def test_host_asn_delete_auth(client, admin_user):
 
     # Check CSRF protection
 
-    output = client.post(
-        "/host/3/host_asn/1/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/3/host_asn/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<h2>Host private.localhost" in data
@@ -737,25 +713,19 @@ def test_host_asn_delete_auth(client, admin_user):
     post_data["csrf_token"] = csrf_token
 
     # Invalid site identifier
-    output = client.post(
-        "/host/5/host_asn/1/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/5/host_asn/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host not found</p>" in data
 
     # Invalid Host ASN identifier
-    output = client.post(
-        "/host/3/host_asn/2/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/3/host_asn/2/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host Peer ASN not found</p>" in data
 
     # Delete Host ASN
-    output = client.post(
-        "/host/3/host_asn/1/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/3/host_asn/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert '<li class="message">Host Peer ASN deleted</li>' in data
@@ -854,9 +824,7 @@ def test_host_country_delete_auth(client, another_user):
 
     # Check CSRF protection
 
-    output = client.post(
-        "/host/1/host_country/1/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/1/host_country/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<h2>Host mirror.localhost" in data
@@ -869,25 +837,19 @@ def test_host_country_delete_auth(client, another_user):
     post_data["csrf_token"] = csrf_token
 
     # Invalid site identifier
-    output = client.post(
-        "/host/5/host_country/1/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/5/host_country/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host not found</p>" in data
 
     # Invalid Host Country identifier
-    output = client.post(
-        "/host/1/host_country/5/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/1/host_country/5/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host Country not found</p>" in data
 
     # Delete Host Country
-    output = client.post(
-        "/host/1/host_country/1/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/1/host_country/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert '<li class="message">Host Country deleted</li>' in data
@@ -950,9 +912,7 @@ def test_host_category_new_auth(client, user):
 
     post_data["csrf_token"] = csrf_token
 
-    output = client.post(
-        "/host/2/category/4/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/2/category/4/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
 
     # Add Category
@@ -1015,9 +975,7 @@ def test_host_category_new_as_admin_auth(client, admin_user):
 
     post_data = {}
     post_data["csrf_token"] = csrf_token
-    output = client.post(
-        "/host/2/category/4/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/2/category/4/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
 
     # Add Category
@@ -1070,9 +1028,7 @@ def test_host_category_delete_auth(client, user):
 
     # Check CSRF protection
 
-    output = client.post(
-        "/host/2/category/1/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/2/category/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<h2>Host mirror2.localhost" in data
@@ -1085,33 +1041,25 @@ def test_host_category_delete_auth(client, user):
     post_data["csrf_token"] = csrf_token
 
     # Invalid site identifier
-    output = client.post(
-        "/host/5/category/1/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/5/category/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host not found</p>" in data
 
     # Invalid Host Category identifier
-    output = client.post(
-        "/host/2/category/50/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/2/category/50/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host/Category not found</p>" in data
 
     # Invalid Host/Category association
-    output = client.post(
-        "/host/2/category/1/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/2/category/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Category not associated with this host</p>" in data
 
     # Delete Host Category
-    output = client.post(
-        "/host/2/category/3/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/2/category/3/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert '<li class="message">Host Category deleted</li>' in data
@@ -1161,9 +1109,7 @@ def test_host_category_url_new_auth(client, user):
 
     # Check CSRF protection
 
-    output = client.post(
-        "/host/2/category/3/url/new", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/2/category/3/url/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<h2>Add host category URL</h2>" in data
@@ -1175,9 +1121,7 @@ def test_host_category_url_new_auth(client, user):
 
     post_data["csrf_token"] = csrf_token
 
-    output = client.post(
-        "/host/2/category/3/url/new", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/2/category/3/url/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert '<li class="message">Host Category URL added</li>' in data
@@ -1190,9 +1134,7 @@ def test_host_category_url_new_auth(client, user):
 
     post_data["csrf_token"] = csrf_token
 
-    output = client.post(
-        "/host/2/category/3/url/new", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/2/category/3/url/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert 'class="message">Could not add Category URL to the host</li>' in data
@@ -1226,9 +1168,7 @@ def test_host_category_url_delete_auth(client, user):
 
     # Check CSRF protection
 
-    output = client.post(
-        "/host/2/category/3/url/5/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/2/category/3/url/5/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<h2>Host category</h2>" in data
@@ -1241,49 +1181,37 @@ def test_host_category_url_delete_auth(client, user):
     post_data["csrf_token"] = csrf_token
 
     # Invalid site identifier
-    output = client.post(
-        "/host/5/category/5/url/5/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/5/category/5/url/5/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host not found</p>" in data
 
     # Invalid Host Category identifier
-    output = client.post(
-        "/host/2/category/50/url/5/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/2/category/50/url/5/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host/Category not found</p>" in data
 
     # Invalid Host/Category association
-    output = client.post(
-        "/host/2/category/3/url/4/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/2/category/3/url/4/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Category URL not associated with this host</p>" in data
 
     # Invalid Category/URL
-    output = client.post(
-        "/host/2/category/3/url/50/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/2/category/3/url/50/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host category URL not found</p>" in data
 
     # Invalid Category/URL association
-    output = client.post(
-        "/host/2/category/2/url/4/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/2/category/2/url/4/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Category not associated with this host</p>" in data
 
     # Delete Host Category URL
-    output = client.post(
-        "/host/2/category/3/url/5/delete", data=post_data, follow_redirects=True
-    )
+    output = client.post("/host/2/category/3/url/5/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert '<li class="message">Host category URL deleted</li>' in data

@@ -94,9 +94,7 @@ def run_rsync(rsyncpath, extra_rsync_args=None, logger=None, timeout=None):
         # Start a thread to check the status of the process after ``timeout``
         # seconds. If the process is still running then, kill it.
         e = threading.Event()
-        timeout_thread = threading.Thread(
-            target=check_timeout, args=[logger, p, timeout, e]
-        )
+        timeout_thread = threading.Thread(target=check_timeout, args=[logger, p, timeout, e])
         timeout_thread.start()
 
     p.wait()

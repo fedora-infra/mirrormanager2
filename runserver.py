@@ -21,9 +21,7 @@ parser.add_argument(
     default=False,
     help="Profile the web application.",
 )
-parser.add_argument(
-    "--port", "-p", default=5000, help="Port for the flask application."
-)
+parser.add_argument("--port", "-p", default=5000, help="Port for the flask application.")
 parser.add_argument(
     "--host",
     default="127.0.0.1",

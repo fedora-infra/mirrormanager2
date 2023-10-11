@@ -57,9 +57,7 @@ def test_mdtr_no_data_empty_db(command, db):
     stdout, stderr = process.communicate()
 
     assert process.returncode == 1
-    assert (
-        stdout == "Category 'Fedora Linux' not found, exiting\nAvailable categories:\n"
-    )
+    assert stdout == "Category 'Fedora Linux' not found, exiting\nAvailable categories:\n"
 
 
 def test_mdtr_no_data(command, db, base_items, directory, category, categorydirectory):

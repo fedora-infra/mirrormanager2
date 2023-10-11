@@ -147,9 +147,7 @@ def test_category_repr(db, base_items, directory, category):
     assert str(item) == "<Category(2 - Fedora EPEL)>"
 
 
-def test_hostcategory_repr(
-    db, base_items, directory, category, site, hosts, hostcategory
-):
+def test_hostcategory_repr(db, base_items, directory, category, site, hosts, hostcategory):
     """Test the HostCategory.__repr__ object of mirrormanager2.lib.model."""
     item = model.HostCategory.get(db, 1)
     assert str(item) == "<HostCategory(1 - <Category(1 - Fedora Linux)>)>"

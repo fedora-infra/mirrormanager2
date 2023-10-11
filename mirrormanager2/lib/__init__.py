@@ -153,9 +153,7 @@ def get_host_netblock(session, host_netblock_id):
     :arg session: the session with which to connect to the database.
 
     """
-    query = session.query(model.HostNetblock).filter(
-        model.HostNetblock.id == host_netblock_id
-    )
+    query = session.query(model.HostNetblock).filter(model.HostNetblock.id == host_netblock_id)
 
     return query.first()
 
@@ -177,9 +175,7 @@ def get_host_country(session, host_country_id):
     :arg session: the session with which to connect to the database.
 
     """
-    query = session.query(model.HostCountry).filter(
-        model.HostCountry.id == host_country_id
-    )
+    query = session.query(model.HostCountry).filter(model.HostCountry.id == host_country_id)
 
     return query.first()
 
@@ -190,9 +186,7 @@ def get_host_category(session, host_category_id):
     :arg session: the session with which to connect to the database.
 
     """
-    query = session.query(model.HostCategory).filter(
-        model.HostCategory.id == host_category_id
-    )
+    query = session.query(model.HostCategory).filter(model.HostCategory.id == host_category_id)
 
     return query.first()
 
@@ -311,9 +305,7 @@ def get_session_by_visitkey(session, sessionid):
     :arg session: the session with which to connect to the database.
 
     """
-    query = session.query(model.UserVisit).filter(
-        model.UserVisit.visit_key == sessionid
-    )
+    query = session.query(model.UserVisit).filter(model.UserVisit.visit_key == sessionid)
 
     return query.first()
 
@@ -404,9 +396,7 @@ def get_category_directory(session):
     :arg session: the session with which to connect to the database.
 
     """
-    query = session.query(model.CategoryDirectory).order_by(
-        model.CategoryDirectory.directory_id
-    )
+    query = session.query(model.CategoryDirectory).order_by(model.CategoryDirectory.directory_id)
     return query.all()
 
 
@@ -505,9 +495,7 @@ def get_reporedirect(session):
     :arg session: the session with which to connect to the database.
 
     """
-    query = session.query(model.RepositoryRedirect).order_by(
-        model.RepositoryRedirect.id
-    )
+    query = session.query(model.RepositoryRedirect).order_by(model.RepositoryRedirect.id)
 
     return query.all()
 
@@ -937,13 +925,11 @@ def uploaded_config(session, host, config):
                     pass
                 deleted += 1
 
-        message += (
-            "Category {} directories updated: {}  added: {}  deleted {}\n".format(
-                cat.category.name,
-                marked_up2date,
-                added,
-                deleted,
-            )
+        message += "Category {} directories updated: {}  added: {}  deleted {}\n".format(
+            cat.category.name,
+            marked_up2date,
+            added,
+            deleted,
         )
         host.last_checked_in = datetime.datetime.utcnow()
         session.add(hc)

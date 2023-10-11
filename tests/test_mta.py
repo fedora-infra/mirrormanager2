@@ -50,9 +50,7 @@ def test_mta_empty_db(command, db):
     assert stdout == "No category could be found by the name: Fedora Linux\n"
 
 
-def test_mta(
-    command, db, base_items, directory, category, categorydirectory, version, repository
-):
+def test_mta(command, db, base_items, directory, category, categorydirectory, version, repository):
     """Test the mta script."""
     process = subprocess.Popen(
         args=command,
@@ -167,10 +165,7 @@ def test_mta(
     assert results[0].prefix == "updates-testing-f25"
     assert results[0].directory.name == "pub/fedora/linux/updates/testing/25/x86_64"
     assert results[1].prefix == "updates-testing-f26"
-    assert (
-        results[1].directory.name
-        == "pub/archive/fedora/linux/updates/testing/26/x86_64"
-    )
+    assert results[1].directory.name == "pub/archive/fedora/linux/updates/testing/26/x86_64"
     assert results[2].prefix == "updates-testing-f27"
     assert results[2].directory.name == "pub/fedora/linux/updates/testing/27/x86_64"
 
