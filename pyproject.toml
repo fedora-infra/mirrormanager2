@@ -32,13 +32,15 @@ packages = [
 ]
 
 include = [
-    "createdb.py",
-    "runserver.py",
-    "mirrormanager.proto",
-    "doc",
-    "testdata",
-    "alembic",
-    "client/report_mirror.conf",
+    { path = "createdb.py", format = "sdist" },
+    { path = "runserver.py", format = "sdist" },
+    { path = "mirrormanager.proto", format = "sdist" },
+    { path = "doc", format = "sdist" },
+    { path = "tox.ini", format = "sdist" },
+    { path = "testdata", format = "sdist" },
+    { path = "alembic", format = "sdist" },
+    { path = "client/report_mirror.conf", format = "sdist" },
+    { path = "utility", format = "sdist" },
 ]
 
 
