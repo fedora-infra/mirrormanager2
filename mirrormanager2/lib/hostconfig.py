@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 def validate_config(config):
     message = ""
-    if type(config) != dict:
+    if not isinstance(config, dict):
         logging.critical("NON-DICT SUBMITTED: %s" % config)
         message += "config file is not a dict.\n" "Please update your copy of report_mirror.\n"
         return (False, message)
