@@ -21,37 +21,39 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-from __future__ import print_function
 import argparse
 import glob
+
 import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import numpy as np
+
+matplotlib.use("Agg")
 import os
 import sys
-import time
 
+import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib import rc
 
-font = {'size': 9}
+font = {"size": 9}
 
-rc('font', **font)
+rc("font", **font)
 
 
 def list_adder(a, b):
     return [i + j for i, j in zip(a, b)]
 
 
-def label_bars_size(rects, fmt, offset=[], last=False):
+def label_bars_size(rects, fmt, offset=None, last=False):
+    if offset is None:
+        offset = []
     i = 0
     for rect in rects:
-        width = int(rect.get_width())
+        int(rect.get_width())
 
         xloc = rect.get_x() + rect.get_width() / 2.0
         try:
             plus = offset[i]
-        except:
+        except Exception:
             plus = 0
 
         if rect.get_height() > 8:
@@ -63,24 +65,24 @@ def label_bars_size(rects, fmt, offset=[], last=False):
             ax.text(
                 xloc,
                 yloc,
-                fmt %
-                rect.get_height(),
-                horizontalalignment='center',
-                rotation='horizontal',
-                verticalalignment='top',
-                color='white')
+                fmt % rect.get_height(),
+                horizontalalignment="center",
+                rotation="horizontal",
+                verticalalignment="top",
+                color="white",
+            )
         i += 1
 
         if last:
             ax.text(
                 xloc,
                 rect.get_height() + plus + 6,
-                fmt %
-                float(plus + rect.get_height()),
-                horizontalalignment='center',
-                rotation='horizontal',
-                verticalalignment='top',
-                color='black')
+                fmt % float(plus + rect.get_height()),
+                horizontalalignment="center",
+                rotation="horizontal",
+                verticalalignment="top",
+                color="black",
+            )
 
 
 repomd_same = []
@@ -98,27 +100,33 @@ hosts_older_1 = {}
 hosts_older_2 = {}
 
 parser = argparse.ArgumentParser(
-    usage=sys.argv[0] + " [options]",
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    usage=sys.argv[0] + " [options]", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+)
 
 parser.add_argument(
-    "--logfiles", dest="logfiles",
+    "--logfiles",
+    dest="logfiles",
     default="/var/log/mirrormanager/propagation/propagation*",
-    help="Glob pattern for input logfiles")
+    help="Glob pattern for input logfiles",
+)
 
 parser.add_argument(
-    "--prefix", dest='prefix',
-    default='development',
-    help="Specify a prefix which should be added to the output files")
+    "--prefix",
+    dest="prefix",
+    default="development",
+    help="Specify a prefix which should be added to the output files",
+)
 
 parser.add_argument(
-    "--outdir", dest='outdir', required=True,
-    help="Specifiy directory into which the output should be placed")
+    "--outdir",
+    dest="outdir",
+    required=True,
+    help="Specifiy directory into which the output should be placed",
+)
 
 parser.add_argument(
-    "--debug", dest='debug', default=False,
-    action='store_true',
-    help="Print debug output during")
+    "--debug", dest="debug", default=False, action="store_true", help="Print debug output during"
+)
 
 args = parser.parse_args()
 
@@ -140,15 +148,15 @@ proppath = None
 for filename in sorted(glob.glob(args.logfiles)):
     for line in open(filename):
         line = line.rstrip()
-        line = line.split('::')
+        line = line.split("::")
         try:
             if not proppath:
                 proppath = line[7]
-            if not line[5] in sha256sums:
+            if line[5] not in sha256sums:
                 if len(line[5]) == 64:
                     # sha256sum is 64 character long
                     sha256sums.append(line[5])
-        except:
+        except Exception:
             pass
 
 for filename in sorted(glob.glob(args.logfiles)):
@@ -168,19 +176,19 @@ for filename in sorted(glob.glob(args.logfiles)):
 
     for line in open(filename):
         line = line.rstrip()
-        line = line.split('::')
+        line = line.split("::")
         if len(line) <= 6:
             continue
         try:
-            date = line[4].split('-')
-            scandate = "%s-%s-%s\n%s-%s-%s" % tuple(date)
-        except:
+            date = line[4].split("-")
+            scandate = "{}-{}-{}\n{}-{}-{}".format(*tuple(date))
+        except Exception:
             continue
-        if line[3] == 'NOSUM':
+        if line[3] == "NOSUM":
             none += 1
             try:
                 hosts_broken[line[1]] += 1
-            except:
+            except Exception:
                 hosts_broken[line[1]] = 1
         elif line[6] != "200":
             continue
@@ -196,13 +204,13 @@ for filename in sorted(glob.glob(args.logfiles)):
                 one_day += 1
                 try:
                     hosts_older_1[line[1]] += 1
-                except:
+                except Exception:
                     hosts_older_1[line[1]] = 1
             elif sha256sums.index(line[3]) == offset - 2:
                 two_day += 1
                 try:
                     hosts_older_2[line[1]] += 1
-                except:
+                except Exception:
                     hosts_older_2[line[1]] = 1
             else:
                 other += 1
@@ -210,7 +218,7 @@ for filename in sorted(glob.glob(args.logfiles)):
             other += 1
             try:
                 hosts_older[line[1]] += 1
-            except:
+            except Exception:
                 hosts_older[line[1]] = 1
     if none + same + other + one_day + two_day > maximum:
         maximum = none + same + other + one_day + two_day
@@ -225,15 +233,12 @@ for filename in sorted(glob.glob(args.logfiles)):
 if args.debug:
     print("%d data points used" % len(repomd_same))
 
-fd = open('%s-repomd-report.txt' % args.prefix, 'w')
+fd = open("%s-repomd-report.txt" % args.prefix, "w")
 
 if args.debug:
     print("Hosts broken")
 fd.write("Hosts broken\n")
-for url, count in sorted(
-        hosts_broken.items(),
-        key=lambda x: (int(x[1])),
-        reverse=True):
+for url, count in sorted(hosts_broken.items(), key=lambda x: (int(x[1])), reverse=True):
     if args.debug:
         print("%s: %d" % (url, count))
     fd.write("%s: %d\n" % (url, count))
@@ -241,10 +246,7 @@ for url, count in sorted(
 if args.debug:
     print("Hosts older")
 fd.write("Hosts older\n")
-for url, count in sorted(
-        hosts_older.items(),
-        key=lambda x: (int(x[1])),
-        reverse=True):
+for url, count in sorted(hosts_older.items(), key=lambda x: (int(x[1])), reverse=True):
     if args.debug:
         print("%s: %d" % (url, count))
     fd.write("%s: %d\n" % (url, count))
@@ -252,10 +254,7 @@ for url, count in sorted(
 if args.debug:
     print("Hosts older - 1")
 fd.write("Hosts older - 1\n")
-for url, count in sorted(
-        hosts_older_1.items(),
-        key=lambda x: (int(x[1])),
-        reverse=True):
+for url, count in sorted(hosts_older_1.items(), key=lambda x: (int(x[1])), reverse=True):
     if args.debug:
         print("%s: %d" % (url, count))
     fd.write("%s: %d\n" % (url, count))
@@ -263,10 +262,7 @@ fd.write("Hosts older - 2\n")
 
 if args.debug:
     print("Hosts older - 2")
-for url, count in sorted(
-        hosts_older_2.items(),
-        key=lambda x: (int(x[1])),
-        reverse=True):
+for url, count in sorted(hosts_older_2.items(), key=lambda x: (int(x[1])), reverse=True):
     if args.debug:
         print("%s: %d" % (url, count))
     fd.write("%s: %d\n" % (url, count))
@@ -279,32 +275,25 @@ width = 0.62
 fig = plt.figure(figsize=(14, 7))
 ax = fig.add_subplot(111)
 
-rects = ax.bar(ind, repomd_same, width, color='g', label="synced")
-label_bars_size(rects, '%.0f')
+rects = ax.bar(ind, repomd_same, width, color="g", label="synced")
+label_bars_size(rects, "%.0f")
 
-rects = ax.bar(ind, repomd_one_day, width, bottom=repomd_same,
-               color='mediumvioletred',
-               label='synced - 1')
-label_bars_size(rects, '%.0f', repomd_same)
+rects = ax.bar(
+    ind, repomd_one_day, width, bottom=repomd_same, color="mediumvioletred", label="synced - 1"
+)
+label_bars_size(rects, "%.0f", repomd_same)
 
 bottom = list_adder(repomd_same, repomd_one_day)
-rects = ax.bar(ind, repomd_two_day, width, bottom=bottom, color='b',
-               label='synced - 2')
-label_bars_size(rects, '%.0f', bottom)
+rects = ax.bar(ind, repomd_two_day, width, bottom=bottom, color="b", label="synced - 2")
+label_bars_size(rects, "%.0f", bottom)
 
 bottom = list_adder(bottom, repomd_two_day)
-rects = ax.bar(
-    ind,
-    repomd_other,
-    width,
-    bottom=bottom,
-    color='red',
-    label='older')
-label_bars_size(rects, '%.0f', bottom)
+rects = ax.bar(ind, repomd_other, width, bottom=bottom, color="red", label="older")
+label_bars_size(rects, "%.0f", bottom)
 
 bottom = list_adder(bottom, repomd_other)
-rects = ax.bar(ind, repomd_none, width, bottom=bottom, color='y', label='N/A')
-label_bars_size(rects, '%.0f', bottom, True)
+rects = ax.bar(ind, repomd_none, width, bottom=bottom, color="y", label="N/A")
+label_bars_size(rects, "%.0f", bottom, True)
 
 
 ax.set_ylim(0, maximum + 40)
@@ -318,18 +307,19 @@ plt.legend(loc=2, shadow=True, fancybox=True, ncol=3)
 plt.title("repomd.xml propagation for %s" % proppath)
 
 plt.savefig(
-    "%-s-%s-repomd-propagation.pdf" %
-    (args.prefix, labels[len(labels) - 1].split('\n')[0]),
-    bbox_inches='tight')
+    "{:<}-{}-repomd-propagation.pdf".format(args.prefix, labels[len(labels) - 1].split("\n")[0]),
+    bbox_inches="tight",
+)
 
 plt.savefig(
-    "%s-%s-repomd-propagation.svg" %
-    (args.prefix, labels[len(labels) - 1].split('\n')[0]),
-    bbox_inches='tight')
+    "{}-{}-repomd-propagation.svg".format(args.prefix, labels[len(labels) - 1].split("\n")[0]),
+    bbox_inches="tight",
+)
 
 if args.debug:
-    print(("%s-%s-repomd-propagation.pdf" %
-          (args.prefix, labels[len(labels) - 1].split('\n')[0])))
+    print(
+        "{}-{}-repomd-propagation.pdf".format(args.prefix, labels[len(labels) - 1].split("\n")[0])
+    )
 
-plt.savefig("%s-repomd-propagation.pdf" % args.prefix, bbox_inches='tight')
-plt.savefig("%s-repomd-propagation.svg" % args.prefix, bbox_inches='tight')
+plt.savefig("%s-repomd-propagation.pdf" % args.prefix, bbox_inches="tight")
+plt.savefig("%s-repomd-propagation.svg" % args.prefix, bbox_inches="tight")

@@ -4,32 +4,34 @@ import argparse
 import csv
 import datetime
 import ftplib
-from ftplib import FTP
+import gc
 import hashlib
-import httplib
-import signal
 import logging
 import multiprocessing.pool
 import os
+import signal
 import smtplib
 import socket
 import sys
 import threading
 import time
+from ftplib import FTP
+
+import geoip2.database
+import httplib
 import urllib2
 import urlparse
-import gc
-import geoip2.database
 
-sys.path.append('..')
+sys.path.append("..")
 import mirrormanager2.lib
 from mirrormanager2.lib.model import HostCategoryDir
 from mirrormanager2.lib.sync import run_rsync
 
-
 logger = logging.getLogger("crawler")
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-master_formatter = "%(levelname)s:%(name)s:%(hosts)s:%(threads)s:%(hostid)s:%(hostname)s:%(message)s"
+master_formatter = (
+    "%(levelname)s:%(name)s:%(hosts)s:%(threads)s:%(hostid)s:%(hostname)s:%(message)s"
+)
 current_host = 0
 all_hosts = 0
 threads = 0
@@ -39,22 +41,23 @@ check_start = time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
 
 # This is the global timeout variable, so that it can be
 # decreased by the signal handler and thus change in all threads.
-timeout=120
+timeout = 120
 
 # Variable used to coordinate graceful shutdown of all threads
-shutdown=False
+shutdown = False
 
 # our own private copy of country_continents to be edited
 country_continents = {}
-gi = geoip2.database.Reader('/usr/share/GeoIP/GeoLite2-Country.mmdb')
+gi = geoip2.database.Reader("/usr/share/GeoIP/GeoLite2-Country.mmdb")
 # hard coded list of continents; let's hope this does not change all the time
 # this is according to GeoIP
-continents = ['AF', 'AN', 'AS', 'EU', 'NA', 'OC', 'SA', '--' ]
+continents = ["AF", "AN", "AS", "EU", "NA", "OC", "SA", "--"]
 
 # This is a "thread local" object that allows us to store the start time of
 # each worker thread (so they can measure and check if they should time out or
 # not...)
 threadlocal = threading.local()
+
 
 # To insert information about the number of hosts and threads in each master
 # log message this filter is necessary
@@ -65,10 +68,11 @@ class MasterFilter(logging.Filter):
         try:
             record.hostid = threadlocal.hostid
             record.hostname = threadlocal.hostname
-        except:
+        except Exception:
             record.hostid = 0
-            record.hostname = 'master'
+            record.hostname = "master"
         return True
+
 
 # This filter is necessary to enable logging per thread into a separate file
 # Based on http://plumberjack.blogspot.de/2010/09/configuring-logging-for-web.html
@@ -79,8 +83,9 @@ class InjectingFilter(logging.Filter):
     def filter(self, record):
         try:
             return threadlocal.thread_id == self.thread_id
-        except:
+        except Exception:
             return False
+
 
 def sigalrm_handler(signal, stackframe):
     global timeout
@@ -89,22 +94,25 @@ def sigalrm_handler(signal, stackframe):
     timeout = -1
     shutdown = True
 
+
 def thread_id():
-    """ Silly util that returns a git-style short-hash id of the thread. """
+    """Silly util that returns a git-style short-hash id of the thread."""
     return hashlib.md5(str(threading.current_thread().ident)).hexdigest()[:7]
+
 
 # Add the information from the country_continent_redirect table to
 # country_continents information from GeoIP
 def handle_country_continent_redirect(session):
-    country_continent_csv = '/usr/share/mirrormanager2/country_continent.csv'
+    country_continent_csv = "/usr/share/mirrormanager2/country_continent.csv"
     new_country_continents = {}
-    with open(country_continent_csv, mode='r') as infile:
+    with open(country_continent_csv) as infile:
         reader = csv.reader(infile)
         new_country_continents = {rows[0]: rows[1] for rows in reader}
     for c in mirrormanager2.lib.get_country_continent_redirect(session):
         new_country_continents[c.country] = c.continent
     global country_continents
     country_continents = new_country_continents
+
 
 def notify(options, topic, msg):
     if not options.fedmsg:
@@ -131,9 +139,9 @@ def doit(options, config):
 
     # Fill continent list
     if options.continents:
-        if any(item.startswith('^') for item in options.continents):
+        if any(item.startswith("^") for item in options.continents):
             for item in options.continents:
-                if item.startswith('^'):
+                if item.startswith("^"):
                     try:
                         continents.remove(item[1:].upper())
                     except ValueError:
@@ -151,29 +159,35 @@ def doit(options, config):
 
         continents = [x.upper() for x in continents]
 
-    session = mirrormanager2.lib.create_session(config['DB_URL'])
+    session = mirrormanager2.lib.create_session(config["DB_URL"])
 
     # load country_continent mapping
     handle_country_continent_redirect(session)
 
     # Get *all* of the mirrors
     hosts = mirrormanager2.lib.get_mirrors(
-        session, private=False, order_by_crawl_duration=True,
-        admin_active=True, user_active=True, site_private=False,
-        site_user_active=True, site_admin_active=True)
+        session,
+        private=False,
+        order_by_crawl_duration=True,
+        admin_active=True,
+        user_active=True,
+        site_private=False,
+        site_user_active=True,
+        site_admin_active=True,
+    )
 
     # Get a list of host names for fedmsg
     host_names = [
-        host.name for host in hosts if (
-            not host.id < options.startid and
-            not host.id >= options.stopid)
+        host.name
+        for host in hosts
+        if (not host.id < options.startid and not host.id >= options.stopid)
     ]
 
     # Limit our host list down to only the ones we really want to crawl
     hosts = [
-        host.id for host in hosts if (
-            not host.id < options.startid and
-            not host.id >= options.stopid)
+        host.id
+        for host in hosts
+        if (not host.id < options.startid and not host.id >= options.stopid)
     ]
 
     session.close()
@@ -181,21 +195,23 @@ def doit(options, config):
     threads = options.threads
 
     # And then, for debugging, only do one host
-    #hosts = [hosts.next()]
+    # hosts = [hosts.next()]
 
     hostlist = [dict(id=id, host=host) for id, host in zip(hosts, host_names)]
     msg = dict(hosts=hostlist)
-    msg['options'] = dict(options._get_kwargs())
-    notify(options, 'start', msg)
+    msg["options"] = dict(options._get_kwargs())
+    notify(options, "start", msg)
 
     # Before we do work, chdir to /var/tmp/.  mirrormanager1 did this and I'm
     # not totally sure why...
-    os.chdir('/var/tmp')
+    os.chdir("/var/tmp")
 
     signal.signal(signal.SIGALRM, sigalrm_handler)
     # Then create a threadpool to handle as many at a time as we like
     threadpool = multiprocessing.pool.ThreadPool(processes=options.threads)
-    fn = lambda host_id: worker(options, config, host_id)
+
+    def fn(host_id):
+        return worker(options, config, host_id)
 
     # Here's the big operation
     result = threadpool.map_async(fn, hosts)
@@ -220,7 +236,6 @@ def doit(options, config):
                 break
 
     try:
-
         logger.info("Retrieving results.")
         # Only waiting 60 seconds for the results.
         # We already waited SHUTDOWN_TIMEOUT minutes above.
@@ -230,20 +245,21 @@ def doit(options, config):
         # There are threads which did not finish during the timeout.
         # Put bogus results in return_codes.
         logger.info("Retrieving results failed. Inventing return codes.")
-        return_codes = [42]*len(hosts)
+        return_codes = [42] * len(hosts)
 
     # Put a bow on the results for fedmsg
-    results = [dict(rc=rc, host=host, id=id)
-               for rc, host, id in zip(return_codes, host_names, hosts)]
+    results = [
+        dict(rc=rc, host=host, id=id) for rc, host, id in zip(return_codes, host_names, hosts)
+    ]
 
-    notify(options, 'complete', dict(results=results))
+    notify(options, "complete", dict(results=results))
 
     if options.canary:
-        mode = ' in canary mode'
+        mode = " in canary mode"
     elif options.repodata:
-        mode = ' in repodata mode'
+        mode = " in repodata mode"
     else:
-        mode = ''
+        mode = ""
 
     logger.info("%d of %d hosts failed%s" % (hosts_failed, current_host, mode))
     return results
@@ -261,71 +277,127 @@ def setup_logging(debug):
 
 
 def main():
-
     starttime = time.time()
     parser = argparse.ArgumentParser(usage=sys.argv[0] + " [options]")
     parser.add_argument(
-        "-c", "--config",
-        dest="config", default='/etc/mirrormanager/mirrormanager2.cfg',
-        help="Configuration file to use")
+        "-c",
+        "--config",
+        dest="config",
+        default="/etc/mirrormanager/mirrormanager2.cfg",
+        help="Configuration file to use",
+    )
 
     parser.add_argument(
         "--include-private",
-        action="store_true", dest="include_private", default=False,
-        help="Include hosts marked 'private' in the crawl")
+        action="store_true",
+        dest="include_private",
+        default=False,
+        help="Include hosts marked 'private' in the crawl",
+    )
 
     parser.add_argument(
-        "-t", "--threads", type=int, dest="threads", default=10,
-        help="max threads to start in parallel")
+        "-t",
+        "--threads",
+        type=int,
+        dest="threads",
+        default=10,
+        help="max threads to start in parallel",
+    )
 
     parser.add_argument(
-        "--timeout-minutes", type=int, dest="timeout_minutes", default=120,
-        help="per-host timeout, in minutes")
+        "--timeout-minutes",
+        type=int,
+        dest="timeout_minutes",
+        default=120,
+        help="per-host timeout, in minutes",
+    )
 
     parser.add_argument(
-        "--startid", type=int, metavar="ID", dest="startid", default=0,
-        help="Start crawling at host ID (default=0)")
+        "--startid",
+        type=int,
+        metavar="ID",
+        dest="startid",
+        default=0,
+        help="Start crawling at host ID (default=0)",
+    )
 
     parser.add_argument(
-        "--stopid", type=int, metavar="ID",
-        dest="stopid", default=sys.maxint,
-        help="Stop crawling before host ID (default=maxint)")
+        "--stopid",
+        type=int,
+        metavar="ID",
+        dest="stopid",
+        default=sys.maxint,
+        help="Stop crawling before host ID (default=maxint)",
+    )
 
     parser.add_argument(
-        "--category", dest="categories", action="append", default=[],
-        help="Category to scan (default=all), can be repeated")
+        "--category",
+        dest="categories",
+        action="append",
+        default=[],
+        help="Category to scan (default=all), can be repeated",
+    )
 
     parser.add_argument(
-        "--disable-fedmsg", dest="fedmsg", action="store_false", default=True,
-        help="Disable fedora-messaging notifications at the beginning and end of crawl")
+        "--disable-fedmsg",
+        dest="fedmsg",
+        action="store_false",
+        default=True,
+        help="Disable fedora-messaging notifications at the beginning and end of crawl",
+    )
 
     parser.add_argument(
-        "--canary", dest="canary", action="store_true", default=False,
-        help="Fast crawl by only checking if mirror can be reached")
+        "--canary",
+        dest="canary",
+        action="store_true",
+        default=False,
+        help="Fast crawl by only checking if mirror can be reached",
+    )
 
     parser.add_argument(
-        "--repodata", dest="repodata", action="store_true", default=False,
-        help="Fast crawl by only checking if the repodata is up to date")
+        "--repodata",
+        dest="repodata",
+        action="store_true",
+        default=False,
+        help="Fast crawl by only checking if the repodata is up to date",
+    )
 
     parser.add_argument(
-        "--continent", dest="continents", action="append", default=[],
-        help="Limit crawling by continent. Exclude by prefixing with'^'")
+        "--continent",
+        dest="continents",
+        action="append",
+        default=[],
+        help="Limit crawling by continent. Exclude by prefixing with'^'",
+    )
 
     parser.add_argument(
-        "--debug", "-d", dest="debug", action="store_true", default=False,
-        help="enable printing of debug-level messages")
+        "--debug",
+        "-d",
+        dest="debug",
+        action="store_true",
+        default=False,
+        help="enable printing of debug-level messages",
+    )
 
     parser.add_argument(
-        "--propagation", "-p", dest="propagation", action="store_true", default=False,
+        "--propagation",
+        "-p",
+        dest="propagation",
+        action="store_true",
+        default=False,
         help="Print out information about repomd.xml propagation "
-            "Defaults to development/rawhide/x86_64/os/repodata "
-            "Only the category 'Fedora Linux' is supported")
+        "Defaults to development/rawhide/x86_64/os/repodata "
+        "Only the category 'Fedora Linux' is supported",
+    )
 
     parser.add_argument(
-        "--proppath", dest="proppath", metavar='PATH',
+        "--proppath",
+        dest="proppath",
+        metavar="PATH",
         default="development/rawhide/x86_64/os/repodata",
         help="Use another path for propgation check  "
-            "Defaults to development/rawhide/x86_64/os/repodata")
+        "Defaults to development/rawhide/x86_64/os/repodata",
+    )
 
     options = parser.parse_args()
 
@@ -333,7 +405,7 @@ def main():
 
     config = dict()
     with open(options.config) as config_file:
-        exec(compile(config_file.read(), options.config, 'exec'), config)
+        exec(compile(config_file.read(), options.config, "exec"), config)
 
     doit(options, config)
     logger.info("Crawler finished after %d seconds" % (time.time() - starttime))
@@ -356,31 +428,31 @@ class myHTTPResponse(httplib.HTTPResponse):
     def keepalive_ok(self):
         # HTTP/1.1 connections stay open until closed
         if self.version == 11:
-            ka = self.msg.getheader('connection')
+            ka = self.msg.getheader("connection")
             if ka and "close" in ka.lower():
                 return False
             else:
                 return True
 
         # other HTTP connections may have a connection: keep-alive header
-        ka = self.msg.getheader('connection')
+        ka = self.msg.getheader("connection")
         if ka and "keep-alive" in ka.lower():
             return True
 
         try:
-            ka = self.msg.getheader('keep-alive')
+            ka = self.msg.getheader("keep-alive")
             if ka is not None:
-                maxidx = ka.index('max=')
-                maxval = ka[maxidx+4:]
-                if maxval == '1':
+                maxidx = ka.index("max=")
+                maxval = ka[maxidx + 4 :]
+                if maxval == "1":
                     return False
                 return True
             else:
-                ka = self.msg.getheader('connection')
+                ka = self.msg.getheader("connection")
                 if ka and "keep-alive" in ka.lower():
                     return True
                 return False
-        except:
+        except Exception:
             return False
         return False
 
@@ -420,30 +492,30 @@ class hostState:
         self.ftp_dir_results = None
         self.keepalives_available = False
         # ftplib and httplib take the timeout in seconds
-        self.timeout = timeout_minutes*60
+        self.timeout = timeout_minutes * 60
 
     def get_connection(self, url):
         scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
-        if scheme == 'ftp':
+        if scheme == "ftp":
             if netloc in self.ftpconn:
                 return self.ftpconn[netloc]
-        elif scheme == 'http':
+        elif scheme == "http":
             if netloc in self.httpconn:
                 return self.httpconn[netloc]
-        elif scheme == 'https':
+        elif scheme == "https":
             if netloc in self.httpsconn:
                 return self.httspconn[netloc]
         return None
 
     def open_http(self, url):
         scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
-        if scheme == 'http':
+        if scheme == "http":
             if netloc not in self.httpconn:
                 self.httpconn[netloc] = myHTTPConnection(netloc, timeout=self.timeout)
                 self.httpconn[netloc].set_debuglevel(self.http_debuglevel)
             return self.httpconn[netloc]
 
-        elif scheme == 'https':
+        elif scheme == "https":
             if netloc not in self.httpsconn:
                 self.httpsconn[netloc] = myHTTPSConnection(netloc, timeout=self.timeout)
                 self.httpsconn[netloc].set_debuglevel(self.http_debuglevel)
@@ -467,15 +539,14 @@ class hostState:
         self.ftp_dir_results = []
         c.dir(path, self.check_ftp_dir_callback)
 
-
     def close_http(self, url):
         scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
-        if scheme == 'http':
+        if scheme == "http":
             if netloc in self.httpconn:
                 self.httpconn[netloc].close()
                 del self.httpconn[netloc]
 
-        elif scheme == 'https':
+        elif scheme == "https":
             if netloc in self.httpsconn:
                 self.httpsconn[netloc].close()
                 del self.httpsconn[netloc]
@@ -485,7 +556,7 @@ class hostState:
         if netloc in self.ftpconn:
             try:
                 self.ftpconn[netloc].quit()
-            except:
+            except Exception:
                 pass
             del self.ftpconn[netloc]
 
@@ -500,12 +571,28 @@ class hostState:
             self.close_ftp(c)
 
 
-class TryLater(Exception): pass
-class ForbiddenExpected(Exception): pass
-class TimeoutException(Exception): pass
-class WrongContinent(Exception): pass
-class HTTPUnknown(Exception): pass
-class HTTP500(Exception): pass
+class TryLater(Exception):
+    pass
+
+
+class ForbiddenExpected(Exception):
+    pass
+
+
+class TimeoutException(Exception):
+    pass
+
+
+class WrongContinent(Exception):
+    pass
+
+
+class HTTPUnknown(Exception):
+    pass
+
+
+class HTTP500(Exception):
+    pass
 
 
 def get_ftp_dir(hoststate, url, readable, i=0):
@@ -516,49 +603,49 @@ def get_ftp_dir(hoststate, url, readable, i=0):
         hoststate.ftp_dir(url)
     except ftplib.error_perm as e:
         # Returned by Princeton University when directory does not exist
-        if str(e).startswith('550'):
+        if str(e).startswith("550"):
             return []
         # Returned by Princeton University when directory isn't readable
         # (pre-bitflip)
-        if str(e).startswith('553'):
+        if str(e).startswith("553"):
             if readable:
                 return []
             else:
-                raise ForbiddenExpected()
+                raise ForbiddenExpected() from e
         # Returned by ftp2.surplux.net when cannot log in due to connection
         # restrictions
-        if str(e).startswith('530'):
+        if str(e).startswith("530"):
             hoststate.close_ftp(url)
-            return get_ftp_dir(hoststate, url, readable, i+1)
-        if str(e).startswith('500'): # Oops
-            raise TryLater()
+            return get_ftp_dir(hoststate, url, readable, i + 1)
+        if str(e).startswith("500"):  # Oops
+            raise TryLater() from e
         else:
-            logger.error("unknown permanent error %s on %s" % (e, url))
+            logger.error(f"unknown permanent error {e} on {url}")
             raise
     except ftplib.error_temp as e:
         # Returned by Boston University when directory does not exist
-        if str(e).startswith('450'):
+        if str(e).startswith("450"):
             return []
         # Returned by Princeton University when cannot log in due to
         # connection restrictions
-        if str(e).startswith('421'):
+        if str(e).startswith("421"):
             logger.info("Connections Exceeded %s" % url)
-            raise TryLater()
-        if str(e).startswith('425'):
+            raise TryLater() from e
+        if str(e).startswith("425"):
             logger.info("Failed to establish connection on %s" % url)
-            raise TryLater()
+            raise TryLater() from e
         else:
-            logger.error("unknown error %s on %s" % (e, url))
+            logger.error(f"unknown error {e} on {url}")
             raise
-    except (EOFError, socket.error):
+    except (OSError, EOFError):
         hoststate.close_ftp(url)
-        return get_ftp_dir(hoststate, url, readable, i+1)
+        return get_ftp_dir(hoststate, url, readable, i + 1)
 
     return hoststate.ftp_dir_results
 
 
 def check_ftp_file(hoststate, url, filedata, readable):
-    if url.endswith('/'):
+    if url.endswith("/"):
         url = url[:-1]
     try:
         results = get_ftp_dir(hoststate, url, readable)
@@ -576,29 +663,29 @@ def check_ftp_file(hoststate, url, filedata, readable):
         if filedata is None:
             # The file/directory seems to exist
             return True
-        if float(line[4]) == float(filedata['size']):
+        if float(line[4]) == float(filedata["size"]):
             return True
     return False
 
 
 def check_url(hoststate, url, filedata, recursion, readable):
-    if url.startswith(('http:', 'https:')):
+    if url.startswith(("http:", "https:")):
         return check_head(hoststate, url, filedata, recursion, readable)
-    elif url.startswith('ftp:'):
+    elif url.startswith("ftp:"):
         return check_ftp_file(hoststate, url, filedata, readable)
 
 
 def handle_redirect(hoststate, url, location, filedata, recursion, readable):
     if recursion > 10:
         raise HTTPUnknown()
-    if location.startswith('/'):
+    if location.startswith("/"):
         scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
-        location = '%s:%s%s' % (scheme, netloc, location)
-    return check_url(hoststate, location, filedata, recursion+1, readable)
+        location = f"{scheme}:{netloc}{location}"
+    return check_url(hoststate, location, filedata, recursion + 1, readable)
 
 
 def check_head(hoststate, url, filedata, recursion, readable, retry=0):
-    """ Returns tuple:
+    """Returns tuple:
     True - URL exists
     False - URL doesn't exist
     None - we don't know
@@ -606,7 +693,7 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
 
     try:
         conn = hoststate.open_http(url)
-    except:
+    except Exception:
         return None
 
     scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
@@ -618,15 +705,19 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
 
     r = None
     try:
-        conn.request('HEAD', reqpath,
-                     headers={
-                         'Connection': 'Keep-Alive',
-                         'Pragma': 'no-cache',
-                         'User-Agent': 'mirrormanager-crawler/0.1 (+https://'
-                         'github.com/fedora-infra/mirrormanager2/)'})
+        conn.request(
+            "HEAD",
+            reqpath,
+            headers={
+                "Connection": "Keep-Alive",
+                "Pragma": "no-cache",
+                "User-Agent": "mirrormanager-crawler/0.1 (+https://"
+                "github.com/fedora-infra/mirrormanager2/)",
+            },
+        )
         r = conn.getresponse()
         status = r.status
-    except:
+    except Exception as e:
         if retry == 0:
             # If the above attempt to connect to the mirror fails, the crawler
             # will retry once. One possible reason for a connection failure is
@@ -634,10 +725,9 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
             # has been closed by the remote end. Therefore we are closing
             # the connection and are restarting the whole operation.
             hoststate.close_http(url)
-            return check_head(
-                hoststate, url, filedata, recursion, readable, retry=1)
+            return check_head(hoststate, url, filedata, recursion, readable, retry=1)
         else:
-            raise HTTPUnknown()
+            raise HTTPUnknown() from e
 
     conn.end_request()
     keepalive_ok = r.keepalive_ok()
@@ -646,8 +736,8 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
     if not keepalive_ok:
         hoststate.close_http(url)
 
-    content_length = r.getheader('Content-Length')
-    #last_modified  = r.getheader('Last-Modified')
+    content_length = r.getheader("Content-Length")
+    # last_modified  = r.getheader('Last-Modified')
 
     if status >= 200 and status < 300:
         # lighttpd returns a Content-Length for directories
@@ -659,8 +749,7 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
             # The file/directory seems to exist
             return True
         # fixme should check last_modified too
-        if float(filedata['size']) == float(content_length) \
-                or content_length is None:
+        if float(filedata["size"]) == float(content_length) or content_length is None:
             # handle no content-length header, streaming/chunked return
             # or zero-length file
             return True
@@ -668,16 +757,16 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
             return False
     if status >= 300 and status < 400:
         return handle_redirect(
-            hoststate, url, r.getheader('Location'), filedata, recursion,
-            readable)
+            hoststate, url, r.getheader("Location"), filedata, recursion, readable
+        )
     elif status >= 400 and status < 500:
-        if status == 403: # forbidden
+        if status == 403:  # forbidden
             # may be a hidden dir still
             if readable:
                 return False
             else:
                 raise ForbiddenExpected()
-        elif status == 404 or status == 410: # not found / gone
+        elif status == 404 or status == 410:  # not found / gone
             return False
         # we don't know
         return None
@@ -689,73 +778,83 @@ def check_head(hoststate, url, filedata, recursion, readable, retry=0):
 
 
 def report_stats(stats):
-    msg = "Crawl duration: %d seconds" % stats['duration']
+    msg = "Crawl duration: %d seconds" % stats["duration"]
     logger.info(msg)
-    msg = "Total directories: %d" % stats['numkeys']
+    msg = "Total directories: %d" % stats["numkeys"]
     logger.info(msg)
-    msg = "Unreadable directories: %d" % stats['unreadable']
+    msg = "Unreadable directories: %d" % stats["unreadable"]
     logger.info(msg)
-    msg = "Changed to up2date: %d" % stats['up2date']
+    msg = "Changed to up2date: %d" % stats["up2date"]
     logger.info(msg)
-    msg = "Changed to not up2date: %d" % stats['not_up2date']
+    msg = "Changed to not up2date: %d" % stats["not_up2date"]
     logger.info(msg)
-    msg = "Unchanged: %d" % stats['unchanged']
+    msg = "Unchanged: %d" % stats["unchanged"]
     logger.info(msg)
-    msg = "Unknown disposition: %d" % stats['unknown']
+    msg = "Unknown disposition: %d" % stats["unknown"]
     logger.info(msg)
-    msg = "New HostCategoryDirs created: %d" % stats['newdir']
+    msg = "New HostCategoryDirs created: %d" % stats["newdir"]
     logger.info(msg)
-    msg = "HostCategoryDirs now deleted on the master, marked not "\
-        "up2date: %d" % stats['deleted_on_master']
+    msg = (
+        "HostCategoryDirs now deleted on the master, marked not "
+        "up2date: %d" % stats["deleted_on_master"]
+    )
     logger.info(msg)
 
 
 def sync_hcds(session, host, host_category_dirs, options):
-    stats = dict(up2date=0, not_up2date=0, unchanged=0, unreadable=0,
-                 unknown=0, newdir=0, deleted_on_master=0, duration=0)
+    stats = dict(
+        up2date=0,
+        not_up2date=0,
+        unchanged=0,
+        unreadable=0,
+        unknown=0,
+        newdir=0,
+        deleted_on_master=0,
+        duration=0,
+    )
     current_hcds = {}
-    stats['duration'] = time.time() -  threadlocal.starttime
+    stats["duration"] = time.time() - threadlocal.starttime
     keys = host_category_dirs.keys()
-    keys = sorted(keys, key = lambda t: t[1].name)
-    stats['numkeys'] = len(keys)
-    for (hc, d) in keys:
+    keys = sorted(keys, key=lambda t: t[1].name)
+    stats["numkeys"] = len(keys)
+    for hc, d in keys:
         up2date = host_category_dirs[(hc, d)]
         if up2date is None:
-            stats['unknown'] += 1
+            stats["unknown"] += 1
             continue
 
         topname = hc.category.topdir.name
         toplen = len(topname)
-        if d.name.startswith('/'):
+        if d.name.startswith("/"):
             toplen += 1
         path = d.name[toplen:]
 
         hcd = mirrormanager2.lib.get_hostcategorydir_by_hostcategoryid_and_path(
-            session, host_category_id=hc.id, path=path)
+            session, host_category_id=hc.id, path=path
+        )
         if len(hcd) > 0:
             hcd = hcd[0]
         else:
             # don't create HCDs for directories which aren't up2date on the
             # mirror chances are the mirror is excluding that directory
-            if not up2date: continue
-            hcd = HostCategoryDir(
-                host_category_id=hc.id, path=path, directory_id=d.id)
-            stats['newdir'] += 1
+            if not up2date:
+                continue
+            hcd = HostCategoryDir(host_category_id=hc.id, path=path, directory_id=d.id)
+            stats["newdir"] += 1
 
         if hcd.directory is None:
             hcd.directory = d
         if hcd.up2date != up2date:
             hcd.up2date = up2date
             session.add(hcd)
-            if up2date == False:
-                logger.info(
-                    "Directory %s is not up-to-date on this host." % d.name)
-                stats['not_up2date'] += 1
+            if up2date is False:
+                logger.info("Directory %s is not up-to-date on this host." % d.name)
+                stats["not_up2date"] += 1
             else:
                 logger.info(d.name)
-                stats['up2date'] += 1
+                stats["up2date"] += 1
         else:
-            stats['unchanged'] += 1
+            stats["unchanged"] += 1
 
         current_hcds[hcd] = True
 
@@ -764,18 +863,17 @@ def sync_hcds(session, host, host_category_dirs, options):
     if not options.repodata:
         # now-historical HostCategoryDirs are not up2date
         # we wait for a cascading Directory delete to delete this
-        host_categories_to_scan = select_host_categories_to_scan(
-            session, options, host)
+        host_categories_to_scan = select_host_categories_to_scan(session, options, host)
         for hc in host_categories_to_scan:
             for hcd in list(hc.directories):
                 if hcd.directory is not None and not hcd.directory.readable:
-                    stats['unreadable'] += 1
+                    stats["unreadable"] += 1
                     continue
                 if hcd not in current_hcds:
-                    if hcd.up2date != False:
+                    if hcd.up2date is not False:
                         hcd.up2date = False
                         session.add(hcd)
-                        stats['deleted_on_master'] += 1
+                        stats["deleted_on_master"] += 1
     session.commit()
     report_stats(stats)
     del current_hcds
@@ -783,21 +881,21 @@ def sync_hcds(session, host, host_category_dirs, options):
 
 
 def method_pref(urls, prev=""):
-    """ return which of the hosts connection method should be used
-    rsync > http(s) > ftp """
+    """return which of the hosts connection method should be used
+    rsync > http(s) > ftp"""
     pref = None
     for u in urls:
-        if prev.startswith('rsync:'):
+        if prev.startswith("rsync:"):
             break
-        if u.startswith('rsync:'):
+        if u.startswith("rsync:"):
             return u
     for u in urls:
-        if u.startswith(('http:', 'https:')):
+        if u.startswith(("http:", "https:")):
             pref = u
             break
     if pref is None:
         for u in urls:
-            if u.startswith('ftp:'):
+            if u.startswith("ftp:"):
                 pref = u
                 break
     logger.info("Crawling with URL %s" % pref)
@@ -806,11 +904,10 @@ def method_pref(urls, prev=""):
 
 def parent(session, directory):
     parentDir = None
-    splitpath = directory.name.split(u'/')
+    splitpath = directory.name.split("/")
     if len(splitpath[:-1]) > 0:
-        parentPath = u'/'.join(splitpath[:-1])
-        parentDir = mirrormanager2.lib.get_directory_by_name(
-            session, parentPath)
+        parentPath = "/".join(splitpath[:-1])
+        parentDir = mirrormanager2.lib.get_directory_by_name(session, parentPath)
     return parentDir
 
 
@@ -819,14 +916,14 @@ def add_parents(session, host_category_dirs, hc, d):
     if parentDir is not None:
         if (hc, parentDir) not in host_category_dirs:
             host_category_dirs[(hc, parentDir)] = None
-        if parentDir != hc.category.topdir: # stop at top of the category
+        if parentDir != hc.category.topdir:  # stop at top of the category
             return add_parents(session, host_category_dirs, hc, parentDir)
 
     return host_category_dirs
 
 
 def compare_sha256(d, filename, graburl):
-    """ looks for a FileDetails object that matches the given URL """
+    """looks for a FileDetails object that matches the given URL"""
     found = False
     s = urllib2.urlopen(graburl)
     sha256 = hashlib.sha256(s.read()).hexdigest()
@@ -851,11 +948,10 @@ def try_per_file(d, hoststate, url):
         # Check if maximum crawl time for this host has been reached
         timeout_check()
         exists = None
-        graburl = "%s/%s" % (url, filename)
+        graburl = f"{url}/{filename}"
         try:
-            exists = check_url(
-                hoststate, graburl, d.files[filename], 0, d.readable)
-            if exists == False:
+            exists = check_url(hoststate, graburl, d.files[filename], 0, d.readable)
+            if exists is False:
                 return False
         except TryLater:
             raise
@@ -864,15 +960,15 @@ def try_per_file(d, hoststate, url):
         except ftplib.all_errors:
             hoststate.close_ftp(url)
             return None
-        except:
+        except Exception:
             return None
 
-        if filename == 'repomd.xml':
+        if filename == "repomd.xml":
             try:
                 exists = compare_sha256(d, filename, graburl)
-            except:
+            except Exception:
                 pass
-            if exists == False:
+            if exists is False:
                 return False
 
     if exists is None:
@@ -882,20 +978,20 @@ def try_per_file(d, hoststate, url):
 
 
 def try_per_category(
-        session, trydirs, url, host_category_dirs, hc, host,
-        categoryPrefixLen, config):
-    """ In addition to the crawls using http and ftp, this rsync crawl
+    session, trydirs, url, host_category_dirs, hc, host, categoryPrefixLen, config
+):
+    """In addition to the crawls using http and ftp, this rsync crawl
     scans the complete category with one connection instead perdir (ftp)
-    or perfile(http). """
+    or perfile(http)."""
 
-    if not url.startswith('rsync'):
+    if not url.startswith("rsync"):
         return False
 
     # rsync URL available, let's use it; it requires only one network
     # connection instead of multiples like with http and ftp
     rsync = {}
-    if not url.endswith('/'):
-        url += '/'
+    if not url.endswith("/"):
+        url += "/"
 
     timeout_check()
 
@@ -910,11 +1006,11 @@ def try_per_category(
     local_timeout = int(remaining * 0.9)
 
     rsync_start_time = datetime.datetime.utcnow()
-    params = config.get('CRAWLER_RSYNC_PARAMETERS', '--no-motd')
+    params = config.get("CRAWLER_RSYNC_PARAMETERS", "--no-motd")
     try:
         result, listing = run_rsync(url, params, logger, local_timeout)
-    except:
-        logger.exception('Failed to run rsync.', exc_info = True)
+    except Exception:
+        logger.exception("Failed to run rsync.", exc_info=True)
         return False
     rsync_stop_time = datetime.datetime.utcnow()
     msg = "rsync time: %s" % str(rsync_stop_time - rsync_start_time)
@@ -922,22 +1018,26 @@ def try_per_category(
     if result == 10:
         # no rsync content, fail!
         logger.warning(
-            'Connection to host %s Refused.  Please check that the URL is '
-            'correct and that the host has an rsync module still available.'
-            % host.name)
+            "Connection to host %s Refused.  Please check that the URL is "
+            "correct and that the host has an rsync module still available." % host.name
+        )
         return False
     if result > 0:
-        logger.info('rsync returned exit code %d' % result)
+        logger.info("rsync returned exit code %d" % result)
 
     # put the rsync listing in a dict for easy access
     while True:
         line = listing.readline()
-        if not line: break
+        if not line:
+            break
         fields = line.split()
         try:
             rsync[fields[4]] = {
-                'mode': fields[0], 'size': fields[1],
-                'date': fields[2], 'time': fields[3]}
+                "mode": fields[0],
+                "size": fields[1],
+                "date": fields[2],
+                "time": fields[3],
+            }
         except IndexError:
             logger.debug("invalid rsync line: %s\n" % line)
 
@@ -973,27 +1073,29 @@ def try_per_category(
             else:
                 key = os.path.join(name, filename)
             try:
-                logger.debug('trying with key %s' % key)
-                if float(rsync[key]['size']) != float(d.files[filename]['size']) \
-                        and not rsync[key]['mode'].startswith('l'):
+                logger.debug("trying with key %s" % key)
+                if float(rsync[key]["size"]) != float(d.files[filename]["size"]) and not rsync[key][
+                    "mode"
+                ].startswith("l"):
                     # ignore symlink size differences
                     logger.debug(
-                        'rsync: file size mismatch %s %s != %s\n'
-                        % (filename, d.files[filename]['size'],
-                           rsync[key]['size']))
+                        "rsync: file size mismatch {} {} != {}\n".format(
+                            filename, d.files[filename]["size"], rsync[key]["size"]
+                        )
+                    )
                     all_files = False
                     break
             except ValueError:  # one of the conversion to float() failed
-                msg = 'Invalid size value for file %s\n' % key
+                msg = "Invalid size value for file %s\n" % key
                 logger.debug(msg)
                 all_files = False
                 break
             except KeyError:  # file is not in the rsync listing
-                msg = 'Missing remote file %s\n' % key
+                msg = "Missing remote file %s\n" % key
                 logger.debug(msg)
                 all_files = False
                 break
-            except:  # something else went wrong
+            except Exception:  # something else went wrong
                 exception_msg = "Exception caught in try_per_category()\n"
                 logger.exception(exception_msg)
                 all_files = False
@@ -1003,8 +1105,7 @@ def try_per_category(
             host_category_dirs[(hc, d)] = False
         else:
             host_category_dirs[(hc, d)] = True
-            host_category_dirs = add_parents(
-                session, host_category_dirs, hc, d)
+            host_category_dirs = add_parents(session, host_category_dirs, hc, d)
 
     del rsync
 
@@ -1012,20 +1113,23 @@ def try_per_category(
         return True
 
     mark_not_up2date(
-        session, config,
-        None, host, "No host category directories found.  "
-        "Check that your Host Category URLs are correct.")
+        session,
+        config,
+        None,
+        host,
+        "No host category directories found.  " "Check that your Host Category URLs are correct.",
+    )
     return False
 
 
 def try_per_dir(d, hoststate, url):
     if d.files is None:
         return None
-    if not url.startswith('ftp'):
+    if not url.startswith("ftp"):
         return None
     results = {}
-    if not url.endswith('/'):
-        url += '/'
+    if not url.endswith("/"):
+        url += "/"
     listing = get_ftp_dir(hoststate, url, d.readable)
     if listing is None:
         return None
@@ -1037,12 +1141,14 @@ def try_per_dir(d, hoststate, url):
     timeout_check()
 
     for line in listing:
-        if line.startswith('total'): # some servers first include a line starting with the word 'total' that we can ignore
+        if line.startswith(
+            "total"
+        ):  # some servers first include a line starting with the word 'total' that we can ignore
             continue
         fields = line.split()
         try:
-            results[fields[8]] = {'size': fields[4]}
-        except IndexError: # line doesn't have 8 fields, it's not a dir line
+            results[fields[8]] = {"size": fields[4]}
+        except IndexError:  # line doesn't have 8 fields, it's not a dir line
             pass
 
     # d.files is a dict which contains the last (maybe 10) files
@@ -1052,54 +1158,53 @@ def try_per_dir(d, hoststate, url):
         return False
     for filename in d.files:
         try:
-            if (float(results[filename]['size']) !=
-                    float(d.files[filename]['size'])):
+            if float(results[filename]["size"]) != float(d.files[filename]["size"]):
                 return False
-        except:
+        except Exception:
             return False
     return True
 
 
 def send_email(config, host, report_str, exc):
-    if not config.get('CRAWLER_SEND_EMAIL', False):
+    if not config.get("CRAWLER_SEND_EMAIL", False):
         return
 
     SMTP_DATE_FORMAT = "%a, %d %b %Y %H:%M:%S %z"
-    msg = """From: %s
-To: %s
-Subject: %s MirrorManager crawler report
-Date: %s
+    msg = """From: {}
+To: {}
+Subject: {} MirrorManager crawler report
+Date: {}
 
-""" % (config.get('EMAIL_FROM'),
-       config.get('ADMIN_EMAIL'),
-       host.name,
-       time.strftime(SMTP_DATE_FORMAT))
+""".format(
+        config.get("EMAIL_FROM"),
+        config.get("ADMIN_EMAIL"),
+        host.name,
+        time.strftime(SMTP_DATE_FORMAT),
+    )
 
-    msg += report_str + '\n'
-    msg += 'Log can be found at %s/%s.log\n' % (config.get('crawler.logdir'), str(host.id))
+    msg += report_str + "\n"
+    msg += "Log can be found at {}/{}.log\n".format(config.get("crawler.logdir"), str(host.id))
     if exc is not None:
-        msg += "Exception info: type %s; value %s\n" % (exc[0], exc[1])
+        msg += f"Exception info: type {exc[0]}; value {exc[1]}\n"
         msg += str(exc[2])
     try:
-        smtp = smtplib.SMTP(config.get('SMTP_SERVER'))
+        smtp = smtplib.SMTP(config.get("SMTP_SERVER"))
 
-        username = config.get('SMTP_USERNAME')
-        password = config.get('SMTP_PASSWORD')
+        username = config.get("SMTP_USERNAME")
+        password = config.get("SMTP_PASSWORD")
 
         if username and password:
             smtp.login(username, password)
 
-        smtp.sendmail(config.get('SMTP_SERVER'),
-                      config.get('ADMIN_EMAIL'),
-                      msg)
-    except:
+        smtp.sendmail(config.get("SMTP_SERVER"), config.get("ADMIN_EMAIL"), msg)
+    except Exception:
         logger.exception("Error sending email")
         logger.debug("Email message follows:")
         logger.debug(msg)
 
     try:
         smtp.quit()
-    except:
+    except Exception:
         pass
 
 
@@ -1111,10 +1216,10 @@ def mark_not_up2date(session, config, exc, host, reason="Unknown"):
     # Watch out: set_not_up2date(session) is commiting all changes
     # in this thread to the database
     host.set_not_up2date(session)
-    msg = "Host %s marked not up2date: %s" % (host.id, reason)
+    msg = f"Host {host.id} marked not up2date: {reason}"
     logger.warning(msg)
     if exc is not None:
-        logger.debug("%s %s %s" % (exc[0], exc[1], exc[2]))
+        logger.debug(f"{exc[0]} {exc[1]} {exc[2]}")
     send_email(config, host, msg, exc)
 
 
@@ -1123,7 +1228,8 @@ def select_host_categories_to_scan(session, options, host):
     if options.categories:
         for category in options.categories:
             hc = mirrormanager2.lib.get_host_category_by_hostid_category(
-                session, host_id=host.id, category=category)
+                session, host_id=host.id, category=category
+            )
             for entry in hc:
                 result.append(entry)
     else:
@@ -1140,19 +1246,19 @@ def check_for_base_dir(hoststate, urls):
     """
     exists = False
     for u in urls:
-        if not u.endswith('/'):
-            u += '/'
-        if u.startswith(('http:', 'https:')):
+        if not u.endswith("/"):
+            u += "/"
+        if u.startswith(("http:", "https:")):
             try:
                 exists = check_head(hoststate, u, None, False, True)
-            except:
+            except Exception:
                 exists = False
             if not exists:
                 logger.warning("Base URL %s does not exist." % u)
                 continue
             # The base http URL seems to work. Good!
             return True
-        if u.startswith('ftp:'):
+        if u.startswith("ftp:"):
             try:
                 exists = get_ftp_dir(hoststate, u, True)
             except TryLater:
@@ -1179,18 +1285,18 @@ def check_continent(categoryUrl):
     # for the decision on which continent the mirror is.
     try:
         hostname = urlparse.urlsplit(categoryUrl)[1]
-    except:
+    except Exception:
         # Not being able the split the URL is strange.
         # Something is broken. '5' is the start for auto-disablement
         return 5
 
     # The function urlsplit() does not remove ':' in case someone
     # specified a port. Only look at the first element before ':'
-    hostname = hostname.split(':')[0]
+    hostname = hostname.split(":")[0]
 
     try:
         hostname = socket.gethostbyname(hostname)
-    except:
+    except Exception:
         # Name resolution failed. Returning '5' as this means
         # that the base URL is broken.
         return 5
@@ -1200,7 +1306,7 @@ def check_continent(categoryUrl):
         # For hosts with no country in the GeoIP database
         # the default is 'US' as that is where most of
         # Fedora infrastructure systems are running
-        country = 'US'
+        country = "US"
     if country_continents[country] in continents:
         return 0
     # And another return value. '8' is used for mirrors on
@@ -1214,38 +1320,41 @@ def check_propagation(session, catname, topdir, host_category_urls, path):
     base = os.path.join(topdir, path)
     url = None
     for u in host_category_urls:
-        if not u.endswith('/'):
-            u += '/'
-        if u.startswith('http:'):
+        if not u.endswith("/"):
+            u += "/"
+        if u.startswith("http:"):
             url = u
     if not url:
         return 9
     d = mirrormanager2.lib.get_directory_by_name(session, base)
     if d is None:
         return 9
-    fd = mirrormanager2.lib.get_file_detail(session, 'repomd.xml', d.id, reverse=True)
+    fd = mirrormanager2.lib.get_file_detail(session, "repomd.xml", d.id, reverse=True)
     url += path
-    url += '/repomd.xml'
+    url += "/repomd.xml"
     import requests
+
     ses = requests.Session()
     try:
         contents = ses.get(url, timeout=30)
     except requests.exceptions.ConnectionError:
         logger.info(
-            "URL::%s::SHA256::%s::%s::%s::503::%s"
-             % (url, 'NOSUM', check_start, fd.sha256, path))
+            "URL::{}::SHA256::{}::{}::{}::503::{}".format(
+                url, "NOSUM", check_start, fd.sha256, path
+            )
+        )
         return 9
     has = hashlib.sha256()
     has.update(contents.content)
     csum = has.hexdigest()
     logger.info(
-        "URL::%s::SHA256::%s::%s::%s::%s::%s"
-        % (url, csum, check_start, fd.sha256, contents.status_code, path))
+        f"URL::{url}::SHA256::{csum}::{check_start}::{fd.sha256}::{contents.status_code}::{path}"
+    )
     return 9
 
 
 def per_host(session, host, options, config):
-    """ This function scans all categories a host has defined.
+    """This function scans all categories a host has defined.
     If a RSYNC URL is available it tries to scan the host requiring
     only single network connection. If this is not possible or fails
     it tries to scan whole directories using FTP and if that also
@@ -1275,11 +1384,11 @@ def per_host(session, host, options, config):
         # ...(if it is not given, the global default timeout setting is used)...
         # Setting this to '1' should limit the connection establishment to
         # to 1 minute.
-        timeout_minutes=1)
+        timeout_minutes=1,
+    )
 
-    categoryUrl = ''
-    host_categories_to_scan = select_host_categories_to_scan(
-        session, options, host)
+    categoryUrl = ""
+    host_categories_to_scan = select_host_categories_to_scan(session, options, host)
 
     if not host_categories_to_scan:
         # If the host has no categories do not auto-disable it.
@@ -1351,8 +1460,15 @@ def per_host(session, host, options, config):
             # check the complete category in one go with rsync
             try:
                 has_all_files = try_per_category(
-                    session, trydirs, categoryUrl, host_category_dirs, hc,
-                    host, categoryPrefixLen, config)
+                    session,
+                    trydirs,
+                    categoryUrl,
+                    host_category_dirs,
+                    hc,
+                    host,
+                    categoryPrefixLen,
+                    config,
+                )
             except TimeoutException:
                 # If the crawl of only one category fails, the host
                 # is completely marked as not being up to date.
@@ -1376,25 +1492,24 @@ def per_host(session, host, options, config):
                 continue
 
             if options.repodata:
-                if not d.name.endswith('/repodata'):
+                if not d.name.endswith("/repodata"):
                     continue
 
             dirname = d.name[categoryPrefixLen:]
-            url = '%s/%s' % (categoryUrl, dirname)
+            url = f"{categoryUrl}/{dirname}"
 
             try:
                 has_all_files = try_per_dir(d, hoststate, url)
                 if has_all_files is None:
                     has_all_files = try_per_file(d, hoststate, url)
-                if has_all_files == False:
+                if has_all_files is False:
                     logger.warning("Not up2date: %s" % (d.name))
                     host_category_dirs[(hc, d)] = False
-                elif has_all_files == True:
+                elif has_all_files is True:
                     host_category_dirs[(hc, d)] = True
                     logger.info(url)
                     # make sure our parent dirs appear on the list too
-                    host_category_dirs = add_parents(
-                        session, host_category_dirs, hc, d)
+                    host_category_dirs = add_parents(session, host_category_dirs, hc, d)
                 else:
                     # could be a dir with no files, or an unreadable dir.
                     # defer decision on this dir, let a child decide.
@@ -1404,14 +1519,13 @@ def per_host(session, host, options, config):
                 if try_later_delay > 1:
                     try_later_delay = try_later_delay >> 1
             except TryLater:
-                msg = "Server load exceeded on %r - try later (%s seconds)" % (
-                    host, try_later_delay)
+                msg = f"Server load exceeded on {host!r} - try later ({try_later_delay} seconds)"
                 logger.warning(msg)
-                if categoryUrl.startswith('http') \
-                        and not hoststate.keepalives_available:
+                if categoryUrl.startswith("http") and not hoststate.keepalives_available:
                     logger.warning(
                         "Host %s (id=%d) does not have HTTP Keep-Alives "
-                        "enabled." % (host.name, host.id))
+                        "enabled." % (host.name, host.id)
+                    )
 
                 time.sleep(try_later_delay)
                 if try_later_delay < 60:
@@ -1420,18 +1534,21 @@ def per_host(session, host, options, config):
                 # If the crawl of only one category fails, the host
                 # is completely marked as not being up to date.
                 raise
-            except:
+            except Exception:
                 logger.exception("Unhandled exception raised.")
                 mark_not_up2date(
-                    session, config,
-                    sys.exc_info(), host, "Unhandled exception raised.  "
-                    "This is a bug in the MM crawler.")
+                    session,
+                    config,
+                    sys.exc_info(),
+                    host,
+                    "Unhandled exception raised.  " "This is a bug in the MM crawler.",
+                )
                 rc = 1
                 break
-        if categoryUrl.startswith('http') and not hoststate.keepalives_available:
+        if categoryUrl.startswith("http") and not hoststate.keepalives_available:
             logger.warning(
-                "Host %s (id=%d) does not have HTTP Keep-Alives enabled."
-                % (host.name, host.id))
+                "Host %s (id=%d) does not have HTTP Keep-Alives enabled." % (host.name, host.id)
+            )
     hoststate.close()
 
     if successful_categories == 0:
@@ -1454,34 +1571,34 @@ def per_host(session, host, options, config):
 
 
 def count_crawl_failures(host, config):
-   try:
-       host.crawl_failures += 1
-   except TypeError:
-       host.crawl_failures = 1
+    try:
+        host.crawl_failures += 1
+    except TypeError:
+        host.crawl_failures = 1
 
-   auto_disable = config.get('CRAWLER_AUTO_DISABLE', 4)
-   if host.crawl_failures >= auto_disable:
+    auto_disable = config.get("CRAWLER_AUTO_DISABLE", 4)
+    if host.crawl_failures >= auto_disable:
         host.disable_reason = (
             "Host has been disabled (user_active) after %d"
-            " consecutive crawl failures" % auto_disable )
+            " consecutive crawl failures" % auto_disable
+        )
         host.user_active = False
 
-def thread_file_logger(log_dir, host_id, debug):
 
+def thread_file_logger(log_dir, host_id, debug):
     # check if the directory exists
     if log_dir is not None:
         log_dir += "/crawler"
         if not os.path.isdir(log_dir):
             # MM_LOG_DIR/crawler seems to be configured but does not exist
             # not logging
-            logger.warning("Directory " + log_dir + " does not exists."
-                           " Not logging per host")
+            logger.warning("Directory " + log_dir + " does not exists." " Not logging per host")
             log_dir = None
 
     log_file = None
     fh = None
     if log_dir is not None:
-        log_file = log_dir + "/" + str(host_id) + '.log'
+        log_file = log_dir + "/" + str(host_id) + ".log"
         fh = logging.FileHandler(log_file)
         threadlocal.thread_id = thread_id()
         f = InjectingFilter(thread_id())
@@ -1496,6 +1613,7 @@ def thread_file_logger(log_dir, host_id, debug):
 
     return log_file, fh
 
+
 def worker(options, config, host_id):
     global current_host
     global threads_active
@@ -1507,7 +1625,7 @@ def worker(options, config, host_id):
         # And another new return value: 7 -> SIGARLM
         return 7
 
-    session = mirrormanager2.lib.create_session(config['DB_URL'])
+    session = mirrormanager2.lib.create_session(config["DB_URL"])
     host = mirrormanager2.lib.get_host(session, host_id)
 
     threads_active = threads_active + 1
@@ -1518,11 +1636,9 @@ def worker(options, config, host_id):
     log_file = None
     fh = None
     if not options.propagation:
-        log_file, fh = thread_file_logger(config.get('MM_LOG_DIR', None),
-            host.id, options.debug)
+        log_file, fh = thread_file_logger(config.get("MM_LOG_DIR", None), host.id, options.debug)
 
-    logger.info("Worker %r starting on host %r" % (thread_id(), host))
-
+    logger.info(f"Worker {thread_id()!r} starting on host {host!r}")
 
     try:
         rc = per_host(session, host.id, options, config)
@@ -1535,17 +1651,21 @@ def worker(options, config, host_id):
             return 0
 
         last_crawled = datetime.datetime.utcnow()
-        last_crawl_duration = time.time() -  threadlocal.starttime
+        last_crawl_duration = time.time() - threadlocal.starttime
         if rc == 5:
             # rc == 5 has been defined as a problem with all categories
             count_crawl_failures(host, config)
             hosts_failed += 1
-        elif rc ==6:
+        elif rc == 6:
             # rc == 6: canary mode has failed for all categories.
             # Let's mark the complete mirror as not being up to date.
-            mark_not_up2date(session, config, None, host,
-                             "Canary mode failed for all categories. "
-                             "Marking host as not up to date.")
+            mark_not_up2date(
+                session,
+                config,
+                None,
+                host,
+                "Canary mode failed for all categories. " "Marking host as not up to date.",
+            )
             hosts_failed += 1
         elif rc == 12:
             # rc == 12: no category to crawl found. This is to make sure,
@@ -1571,12 +1691,14 @@ def worker(options, config, host_id):
     except TimeoutException:
         rc = 2
         mark_not_up2date(
-            session, config,
-            None, host,
-            "Crawler timed out before completing.  "
-            "Host is likely overloaded.")
+            session,
+            config,
+            None,
+            host,
+            "Crawler timed out before completing.  " "Host is likely overloaded.",
+        )
         host.last_crawled = datetime.datetime.utcnow()
-        host.last_crawl_duration = time.time() -  threadlocal.starttime
+        host.last_crawl_duration = time.time() - threadlocal.starttime
         count_crawl_failures(host, config)
         hosts_failed += 1
         session.commit()
@@ -1588,10 +1710,10 @@ def worker(options, config, host_id):
         if log_file:
             os.unlink(log_file)
     except Exception:
-        logger.exception("Failure in thread %r, host %r" % (thread_id(), host))
+        logger.exception(f"Failure in thread {thread_id()!r}, host {host!r}")
         rc = 3
 
-    logger.info("Ending crawl of %r with status %r" % (host, rc))
+    logger.info(f"Ending crawl of {host!r} with status {rc!r}")
     if fh:
         logger.removeHandler(fh)
         fh.close()

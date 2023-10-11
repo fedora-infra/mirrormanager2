@@ -21,34 +21,28 @@ directory (/pub/fedora/linux/updates/....)
 
 """
 
-import glob
 import logging
 import logging.handlers
-import re
 import optparse
 import os
+import re
 import stat
 import sys
-import datetime
-import time
-import hashlib
 
-
-sys.path.insert(0, os.path.join(os.path.dirname(
-    os.path.abspath(__file__)), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 import mirrormanager2.lib
 import mirrormanager2.lib.umdl as umdl
+from mirrormanager2.lib.model import Directory
 
+logger = logging.getLogger("umdl")
+stdexcludes = [r".*\.snapshot", r".*/\.~tmp~"]
 
-logger = logging.getLogger('umdl')
-stdexcludes=['.*\.snapshot', '.*/\.~tmp~']
 
 def cache_directories(category):
     cache = dict()
     topdirName = category.topdir.name
     for directory in list(category.directories):
-        relativeDName = umdl.remove_category_topdir(
-            topdirName, directory.name).strip(u'/')
+        relativeDName = umdl.remove_category_topdir(topdirName, directory.name).strip("/")
         cache[relativeDName] = directory
     return cache
 
@@ -60,18 +54,15 @@ def is_excluded(path, excludes):
     return False
 
 
-def sync_directories_from_fullfilelist(
-    session, config, diskpath, category, excludes=None):
-
+def sync_directories_from_fullfilelist(session, config, diskpath, category, excludes=None):
     excludes = excludes or []
     logger.debug("sync_directories_from_fullfilelist %r" % diskpath)
     category.unreadable_dirs = set()
     # drop any trailing slashes from diskpath
-    diskpath = diskpath.rstrip(u'/')
-    category_directories = {}
+    diskpath = diskpath.rstrip("/")
 
     seen = set()
-    with open(diskpath + '/fullfilelist') as stream:
+    with open(diskpath + "/fullfilelist") as stream:
         for row in stream:
             row = os.path.dirname(os.path.join(diskpath, row.strip()))
             if os.path.splitext(row)[1]:
@@ -80,9 +71,8 @@ def sync_directories_from_fullfilelist(
             if row in seen:
                 continue
             seen.add(row)
-            relativeDName = os.path.join(diskpath, row).replace(
-                config.get('UMDL_PREFIX', ''), '')
-            relativeDName = relativeDName.rstrip('/')
+            relativeDName = os.path.join(diskpath, row).replace(config.get("UMDL_PREFIX", ""), "")
+            relativeDName = relativeDName.rstrip("/")
             logger.debug("  walking %r" % relativeDName)
             if is_excluded(relativeDName, stdexcludes + excludes):
                 logger.info("excluding %s" % (relativeDName))
@@ -90,36 +80,30 @@ def sync_directories_from_fullfilelist(
 
             # avoid disappearing directories
             try:
-                s = os.stat(os.path.join(
-                    config.get('UMDL_PREFIX', ''), relativeDName))
+                s = os.stat(os.path.join(config.get("UMDL_PREFIX", ""), relativeDName))
                 ctime = s[stat.ST_CTIME]
             except OSError:
                 logger.debug("Avoiding %r, dissappeared." % relativeDName)
                 continue
 
             mode = s.st_mode
-            readable = not not (mode & stat.S_IRWXO & (stat.S_IROTH|stat.S_IXOTH))
-            if not readable \
-                or umdl.parent_dir(relativeDName) in category.unreadable_dirs:
+            readable = not not (mode & stat.S_IRWXO & (stat.S_IROTH | stat.S_IXOTH))
+            if not readable or umdl.parent_dir(relativeDName) in category.unreadable_dirs:
                 category.unreadable_dirs.add(relativeDName)
 
-            umdl.sync_category_directory(
-                session, config, category, relativeDName, readable, ctime)
+            umdl.sync_category_directory(session, config, category, relativeDName, readable, ctime)
             session.commit()
 
 
-def sync_directories_from_disk(
-    session, config, diskpath, category, excludes=None):
-
+def sync_directories_from_disk(session, config, diskpath, category, excludes=None):
     excludes = excludes or []
     logger.debug("sync_directories_from_disk %r" % diskpath)
     category.unreadable_dirs = set()
     # drop any trailing slashes from diskpath
-    diskpath = diskpath.rstrip(u'/')
-    category_directories = {}
+    diskpath = diskpath.rstrip("/")
 
-    for dirpath, dirnames, filenames in os.walk(diskpath, topdown=True):
-        relativeDName = dirpath.replace(config.get('UMDL_PREFIX', ''), '')
+    for dirpath, _dirnames, _filenames in os.walk(diskpath, topdown=True):
+        relativeDName = dirpath.replace(config.get("UMDL_PREFIX", ""), "")
         logger.debug("  walking %r" % relativeDName)
 
         if is_excluded(relativeDName, stdexcludes + excludes):
@@ -128,33 +112,29 @@ def sync_directories_from_disk(
 
         # avoid disappearing directories
         try:
-            s = os.stat(os.path.join(
-                config.get('UMDL_PREFIX', ''), relativeDName))
+            s = os.stat(os.path.join(config.get("UMDL_PREFIX", ""), relativeDName))
             ctime = s[stat.ST_CTIME]
         except OSError:
             logger.debug("Avoiding %r, dissappeared." % relativeDName)
             continue
 
         mode = s.st_mode
-        readable = not not (mode & stat.S_IRWXO & (stat.S_IROTH|stat.S_IXOTH))
-        if not readable \
-                or umdl.parent_dir(relativeDName) in category.unreadable_dirs:
+        readable = not not (mode & stat.S_IRWXO & (stat.S_IROTH | stat.S_IXOTH))
+        if not readable or umdl.parent_dir(relativeDName) in category.unreadable_dirs:
             category.unreadable_dirs.add(relativeDName)
 
-        umdl.sync_category_directory(
-            session, config, category, relativeDName, readable, ctime)
+        umdl.sync_category_directory(session, config, category, relativeDName, readable, ctime)
     session.commit()
 
 
 def setup_logging(config, options):
-    log_dir = config.get('MM_LOG_DIR', None)
+    log_dir = config.get("MM_LOG_DIR", None)
     # check if the directory exists
     if log_dir is not None:
         if not os.path.isdir(log_dir):
             # MM_LOG_DIR seems to be configured but does not exist
             # Logging into cwd.
-            logger.warning("Directory " + log_dir + " does not exists."
-                           " Logging into CWD.")
+            logger.warning("Directory " + log_dir + " does not exists." " Logging into CWD.")
             log_dir = None
 
     if log_dir is not None:
@@ -162,8 +142,8 @@ def setup_logging(config, options):
     else:
         log_file = options.logfile
 
-    fmt = '%(asctime)s %(message)s'
-    datefmt = '%m/%d/%Y %I:%M:%S %p'
+    fmt = "%(asctime)s %(message)s"
+    datefmt = "%m/%d/%Y %I:%M:%S %p"
     formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
     handler = logging.handlers.WatchedFileHandler(log_file, "a+b")
     handler.setFormatter(formatter)
@@ -182,42 +162,49 @@ def setup_logging(config, options):
 def main():
     parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option(
-        "-c", "--config",
-        dest="config", default='/etc/mirrormanager/mirrormanager2.cfg',
-        help="Configuration file to use")
+        "-c",
+        "--config",
+        dest="config",
+        default="/etc/mirrormanager/mirrormanager2.cfg",
+        help="Configuration file to use",
+    )
     parser.add_option(
-        "--logfile",
-        dest="logfile", default='umdl.log',
-        metavar="FILE", help="write logs to FILE")
+        "--logfile", dest="logfile", default="umdl.log", metavar="FILE", help="write logs to FILE"
+    )
     parser.add_option(
         "--list",
-        dest="list_categories", default=False, action="store_true",
-        help="list existing categories and exit")
+        dest="list_categories",
+        default=False,
+        action="store_true",
+        help="list existing categories and exit",
+    )
     parser.add_option(
-        "--category", metavar="CATEGORY",
-        dest="categories", default=None,
-        help="only scan category CATEGORY")
+        "--category",
+        metavar="CATEGORY",
+        dest="categories",
+        default=None,
+        help="only scan category CATEGORY",
+    )
     parser.add_option(
-        "--debug",
-        dest="debug", default=False, action="store_true",
-        help="enable debugging")
+        "--debug", dest="debug", default=False, action="store_true", help="enable debugging"
+    )
     parser.add_option(
         "--delete-directories",
         dest="delete_directories",
         default=False,
         action="store_true",
-        help="delete directories from the database that are no longer "
-            "on disk")
+        help="delete directories from the database that are no longer " "on disk",
+    )
     parser.add_option(
-        "--start-at", dest="path", default=None,
-        help="Specify the path at which to start the run")
+        "--start-at", dest="path", default=None, help="Specify the path at which to start the run"
+    )
 
     (options, args) = parser.parse_args()
     config = dict()
     with open(options.config) as config_file:
-        exec(compile(config_file.read(), options.config, 'exec'), config)
+        exec(compile(config_file.read(), options.config, "exec"), config)
 
-    session = mirrormanager2.lib.create_session(config['DB_URL'])
+    session = mirrormanager2.lib.create_session(config["DB_URL"])
 
     setup_logging(config, options)
 
@@ -234,65 +221,65 @@ def main():
     umdl.setup_arch_version_cache(session)
     check_categories = []
     if options.categories is None:
-        check_categories = config.get('umdl_master_directories')
+        check_categories = config.get("umdl_master_directories")
     else:
-        for i in config.get('umdl_master_directories'):
-            if i['category'] == options.categories:
+        for i in config.get("umdl_master_directories"):
+            if i["category"] == options.categories:
                 check_categories.append(i)
 
     for i in check_categories:
-        cname = i['category']
+        cname = i["category"]
 
         category = mirrormanager2.lib.get_category_by_name(session, cname)
         if not category:
             logger.error(
-                'umdl_master_directories Category %s does not exist in the '
-                'database, skipping' % (cname))
+                "umdl_master_directories Category %s does not exist in the "
+                "database, skipping" % (cname)
+            )
             continue
 
         if category.product is None:
             logger.error(
-                'umdl_master_directories Category %s has null Product, '
-                'skipping' % (cname))
+                "umdl_master_directories Category %s has null Product, " "skipping" % (cname)
+            )
             continue
 
-        category.excludes = i.get('excludes', [])
-        category.extra_rsync_options = i.get('options')
+        category.excludes = i.get("excludes", [])
+        category.extra_rsync_options = i.get("options")
         category.directory_cache = cache_directories(category)
 
-        path = i['path']
+        path = i["path"]
         if len(check_categories) == 1:
-            path = options.path or i['path']
+            path = options.path or i["path"]
 
-        if i['type'] == 'directory':
-            #import cProfile, pstats, StringIO
-            #pr = cProfile.Profile()
-            #pr.enable()
+        if i["type"] == "directory":
+            # import cProfile, pstats, StringIO
+            # pr = cProfile.Profile()
+            # pr.enable()
             sync_directories_from_disk(session, config, path, category)
-            #pr.disable()
+            # pr.disable()
 
-            #s = StringIO.StringIO()
-            #sortby = 'cumulative'
-            #ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-            #ps.print_stats(.1)
-            #print s.getvalue()
-        elif i['type'] == 'fullfilelist':
-            #import cProfile, pstats, StringIO
-            #pr = cProfile.Profile()
-            #pr.enable()
-            sync_directories_from_fullfilelist(
-                session, config, path, category)
-            #pr.disable()
+            # s = StringIO.StringIO()
+            # sortby = 'cumulative'
+            # ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+            # ps.print_stats(.1)
+            # print s.getvalue()
+        elif i["type"] == "fullfilelist":
+            # import cProfile, pstats, StringIO
+            # pr = cProfile.Profile()
+            # pr.enable()
+            sync_directories_from_fullfilelist(session, config, path, category)
+            # pr.disable()
 
-            #s = StringIO.StringIO()
-            #sortby = 'cumulative'
-            #ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-            #ps.print_stats(.1)
-            #print s.getvalue()
+            # s = StringIO.StringIO()
+            # sortby = 'cumulative'
+            # ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+            # ps.print_stats(.1)
+            # print s.getvalue()
         else:
-            logger.info('Un-supported type: %s' % i['type'])
+            logger.info("Un-supported type: %s" % i["type"])
 
-    logger.info('Refresh the list of repomd.xml')
+    logger.info("Refresh the list of repomd.xml")
     Directory.age_file_details(session, config)
 
     logger.info("Ending umdl")

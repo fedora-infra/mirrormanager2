@@ -37,4 +37,3 @@ This list is generated using
 ::
 
   git shortlog -s -n -e
-

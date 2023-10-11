@@ -107,3 +107,6 @@ target-version = "py39"
 "doc/conf.py" = ["E402"]
 "mirrormanager2/app.py" = ["E402"]
 "mirrormanager2/default_config.py" = ["S105"]
+"utility/*" = ["E402"]
+"client/report_mirror" = ["E402"]
+"mirrorlist/mirrorlist_statistics" = ["E402"]

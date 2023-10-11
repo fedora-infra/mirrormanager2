@@ -76,4 +76,3 @@ For testing
 -----------
 
 See :doc:`development` if you want to run mirrormanager2 just to test it.
-

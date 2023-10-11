@@ -12,16 +12,15 @@ tree (which is hardlinked to the release tree and thus will have the same
 content)
 """
 
-from __future__ import print_function
-import sys
-import re
 import os
+import re
+import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(
-    os.path.abspath(__file__)), '..'))
-import mirrormanager2.lib
-from mirrormanager2.lib.model import RepositoryRedirect, Repository
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from optparse import OptionParser
+
+import mirrormanager2.lib
+
 
 def fixup_repos(session, version, repo, new_dir):
     """
@@ -66,15 +65,13 @@ def move_devel_repo(session, category, version):
         print_categories(session)
         sys.exit(1)
 
-    v = mirrormanager2.lib.get_version_by_name_version(
-        session, c.product.name, version)
+    v = mirrormanager2.lib.get_version_by_name_version(session, c.product.name, version)
     if not v:
-        print('Version %s not found for product %s' % (
-            version, c.product.name))
+        print(f"Version {version} not found for product {c.product.name}")
         sys.exit(1)
 
-    oldpattern = os.path.join('development', version)
-    newpattern = os.path.join('releases', version)
+    oldpattern = os.path.join("development", version)
+    newpattern = os.path.join("releases", version)
     oldRe = re.compile(oldpattern)
     for r in c.repositories:
         if not r.prefix:
@@ -92,8 +89,7 @@ def move_devel_repo(session, category, version):
             t = d.name.replace(oldpattern, newpattern)
             new_d = mirrormanager2.lib.get_directory_by_name(session, t)
             if new_d is None:
-                sys.stderr.write(
-                    "target Directory(%s) not found, ignoring.\n" % t)
+                sys.stderr.write("target Directory(%s) not found, ignoring.\n" % t)
                 sys.stderr.flush()
                 continue
 
@@ -102,7 +98,8 @@ def move_devel_repo(session, category, version):
                 # thus lead to a duplicate key value violation.
                 continue
             fixup_repos(session, v, r, new_d)
-            print("%s => %s" % (d.name, t))
+            print(f"{d.name} => {t}")
+
 
 def print_categories(session):
     print("Available categories:")
@@ -112,37 +109,43 @@ def print_categories(session):
 
 def main():
     global options
-    parser = OptionParser(
-        usage=sys.argv[0] + " [options]")
+    parser = OptionParser(usage=sys.argv[0] + " [options]")
     parser.add_option(
-        "-c", "--config", dest="config",
-        default='/etc/mirrormanager/mirrormanager2.cfg',
-        help="Configuration file to use "
-            "(default=/etc/mirrormanager/mirrormanager2.cfg)")
+        "-c",
+        "--config",
+        dest="config",
+        default="/etc/mirrormanager/mirrormanager2.cfg",
+        help="Configuration file to use " "(default=/etc/mirrormanager/mirrormanager2.cfg)",
+    )
     parser.add_option(
-        "--version", dest="version", type="string",
-        help="OS version to move (e.g. '14') [required]", default=None)
+        "--version",
+        dest="version",
+        type="string",
+        help="OS version to move (e.g. '14') [required]",
+        default=None,
+    )
     parser.add_option(
-        "--category", dest="category", type="string",
-        help="Category (e.g. 'Fedora Linux') [required]", default=None)
+        "--category",
+        dest="category",
+        type="string",
+        help="Category (e.g. 'Fedora Linux') [required]",
+        default=None,
+    )
 
     (options, args) = parser.parse_args()
 
     d = dict()
     with open(options.config) as config_file:
-        exec(compile(config_file.read(), options.config, 'exec'), d)
+        exec(compile(config_file.read(), options.config, "exec"), d)
 
-    session = mirrormanager2.lib.create_session(d['DB_URL'])
+    session = mirrormanager2.lib.create_session(d["DB_URL"])
 
     if options.version is None or options.category is None:
         parser.print_help()
         print_categories(session)
         sys.exit(1)
 
-    move_devel_repo(
-        session,
-        options.category,
-        options.version)
+    move_devel_repo(session, options.category, options.version)
 
     return 0
 

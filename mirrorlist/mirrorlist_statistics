@@ -22,22 +22,24 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-from __future__ import print_function
 import sys
+
 import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import time
-import gzip
+
+matplotlib.use("Agg")
 import getopt
+import gzip
 import os
+import time
+
+import matplotlib.pyplot as plt
 
 start = time.clock()
 
 logfile = None
 dest = None
 offset = 0
-configuration = '/etc/mirrormanager/mirrormanager2.cfg'
+configuration = "/etc/mirrormanager/mirrormanager2.cfg"
 embargoed_countries = []
 
 
@@ -65,8 +67,9 @@ def parse_args():
     global offset
     global configuration
     global embargoed_countries
-    opts, args = getopt.getopt(sys.argv[1:], "c:l:d:ho:",
-                               ["conf=", "log=", "dest=", "help", "offset"])
+    opts, args = getopt.getopt(
+        sys.argv[1:], "c:l:d:ho:", ["conf=", "log=", "dest=", "help", "offset"]
+    )
     for option, argument in opts:
         if option in ("-c", "--conf"):
             configuration = argument
@@ -87,11 +90,11 @@ def parse_args():
 
     d = dict()
     with open(configuration) as config_file:
-        exec(compile(config_file.read(), configuration, 'exec'), d)
+        exec(compile(config_file.read(), configuration, "exec"), d)
 
-    if 'EMBARGOED_COUNTRIES' in d:
-        if isinstance(d['EMBARGOED_COUNTRIES'], list):
-            embargoed_countries = d['EMBARGOED_COUNTRIES']
+    if "EMBARGOED_COUNTRIES" in d:
+        if isinstance(d["EMBARGOED_COUNTRIES"], list):
+            embargoed_countries = d["EMBARGOED_COUNTRIES"]
 
 
 parse_args()
@@ -103,7 +106,7 @@ if logfile is None or dest is None:
 
 
 def sort_dict(dict):
-    """ Sort dictionary by values and reverse. """
+    """Sort dictionary by values and reverse."""
     items = dict.items()
     sorteditems = sorted([[v[1], v[0]] for v in items])
     sorteditems.reverse()
@@ -127,36 +130,36 @@ i = 0
 for line in gzip.open(logfile):
     arguments = line.split()
     try:
-        y, m, d = arguments[3][:10].split('-')
-    except:
+        y, m, d = arguments[3][:10].split("-")
+    except Exception:
         continue
     if not ((int(y) == y1) and (int(m) == m1) and (int(d) == d1)):
         continue
     try:
         if arguments[5][:2] in embargoed_countries:
-            countries['N/'] += 1
+            countries["N/"] += 1
         else:
             countries[arguments[5][:2]] += 1
-    except:
+    except Exception:
         if arguments[5][:2] in embargoed_countries:
-            countries['N/'] = 1
+            countries["N/"] = 1
         else:
             countries[arguments[5][:2]] = 1
     try:
         archs[arguments[9]] += 1
-    except:
+    except Exception:
         archs[arguments[9]] = 1
     try:
-        repositories[arguments[7][:len(arguments[7]) - 1]] += 1
-    except:
-        repositories[arguments[7][:len(arguments[7]) - 1]] = 1
+        repositories[arguments[7][: len(arguments[7]) - 1]] += 1
+    except Exception:
+        repositories[arguments[7][: len(arguments[7]) - 1]] = 1
     accesses += 1
     continue
 
 
 def do_pie(prefix, dict, accesses):
     plt.figure(1, figsize=(8, 8))
-    ax = plt.axes([0.1, 0.1, 0.8, 0.8])
+    plt.axes([0.1, 0.1, 0.8, 0.8])
 
     labels = []
     fracs = []
@@ -165,7 +168,7 @@ def do_pie(prefix, dict, accesses):
     for item in dict.keys():
         frac = dict[item]
 
-        if (float(frac) / float(accesses) > 0.01):
+        if float(frac) / float(accesses) > 0.01:
             labels.append(item)
             fracs.append(frac)
         else:
@@ -174,77 +177,69 @@ def do_pie(prefix, dict, accesses):
     i = 0
     changed = False
     for x in labels:
-        if x == 'undef':
+        if x == "undef":
             fracs[i] += rest
-            labels[i] = 'other'
+            labels[i] = "other"
             changed = True
         i += 1
 
     if not changed:
-        labels.append('other')
+        labels.append("other")
         fracs.append(rest)
 
-    plt.pie(
-        fracs,
-        labels=labels,
-        autopct='%1.1f%%',
-        pctdistance=0.75,
-        shadow=True)
-    plt.savefig('%s%s-%d-%02d-%02d.png' % (dest, prefix, y1, m1, d1))
+    plt.pie(fracs, labels=labels, autopct="%1.1f%%", pctdistance=0.75, shadow=True)
+    plt.savefig("%s%s-%d-%02d-%02d.png" % (dest, prefix, y1, m1, d1))
     plt.close(1)
 
 
 def background(html, css_class, toggle):
-    html.write('\t<tr')
+    html.write("\t<tr")
     if toggle:
         html.write(' class="%s"' % css_class)
         toggle = False
     else:
         toggle = True
-    html.write('>\n\t')
+    html.write(">\n\t")
     return toggle
 
 
 def do_html(prefix, dict, accesses):
-    html = open('%s%s-%d-%02d-%02d.txt' % (dest, prefix, y1, m1, d1), 'w')
-    html.write('<h2>Details</h2>\n')
+    html = open("%s%s-%d-%02d-%02d.txt" % (dest, prefix, y1, m1, d1), "w")
+    html.write("<h2>Details</h2>\n")
     html.write('<table align="center">\n')
     html.write('<tr id="matrixtitle"><th>Mirror Name</th><th>%</th>')
-    html.write('<th>#Requests</th></tr>\n')
+    html.write("<th>#Requests</th></tr>\n")
 
     toggle = False
 
     for item in sort_dict(dict):
         size = item[0]
-        toggle = background(html, 'matrix_even', toggle)
-        html.write('<td>%s</td>\n' % (item[1]))
-        html.write('\t<td align="right">%05.4lf %%</td>\n' %
-                   ((float(size) / float(accesses)) * 100))
+        toggle = background(html, "matrix_even", toggle)
+        html.write("<td>%s</td>\n" % (item[1]))
+        html.write(
+            '\t<td align="right">%05.4lf %%</td>\n' % ((float(size) / float(accesses)) * 100)
+        )
         html.write('<td align="right">')
-        html.write('%d' % (size))
-        html.write('</td></tr>\n')
+        html.write("%d" % (size))
+        html.write("</td></tr>\n")
 
     # print the overall information
-    background(html, 'total', True)
-    html.write('<th>Total</th><th>\n')
+    background(html, "total", True)
+    html.write("<th>Total</th><th>\n")
     html.write('</th><th align="right">%d' % (accesses))
-    html.write('</th></tr>\n')
+    html.write("</th></tr>\n")
 
-    html.write('</table>\n')
+    html.write("</table>\n")
     end = time.clock()
-    html.write(
-        '<p>Last updated: %s GMT' %
-        time.strftime(
-            "%a, %d %b %Y %H:%M:%S",
-            time.gmtime()))
-    html.write(' (runtime %ss)</p>\n' % (end - start))
+    html.write("<p>Last updated: %s GMT" % time.strftime("%a, %d %b %Y %H:%M:%S", time.gmtime()))
+    html.write(" (runtime %ss)</p>\n" % (end - start))
 
 
-do_pie('countries', countries, accesses)
-do_pie('archs', archs, accesses)
-do_pie('repositories', repositories, accesses)
+do_pie("countries", countries, accesses)
+do_pie("archs", archs, accesses)
+do_pie("repositories", repositories, accesses)
 
 
-do_html('countries', countries, accesses)
-do_html('archs', archs, accesses)
-do_html('repositories', repositories, accesses)
+do_html("countries", countries, accesses)
+do_html("archs", archs, accesses)
+do_html("repositories", repositories, accesses)

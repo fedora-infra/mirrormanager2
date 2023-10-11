@@ -179,7 +179,7 @@ sub decode_mrt_packet {
 				$peer_as = pretty_as($peer_as);
 
 				my $afi = $addrv6 ? AFI_IP6 : AFI_IP;
-				print "      PEER $peer_index: ID: $bgp_id, " 
+				print "      PEER $peer_index: ID: $bgp_id, "
 					. inet_ntop($afi, $peer_ip) . ", AS$peer_as\n"
 						if $format == 1;
 				$BGP_Peers[$peer_index++] = [
@@ -588,4 +588,3 @@ sub hexdump {
 	s/((?:.. ){8})/${1} /g;
 	print "  $_\n";
 }
-

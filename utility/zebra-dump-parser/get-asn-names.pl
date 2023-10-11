@@ -57,4 +57,3 @@ foreach (keys %obj) {
 	$d =~ s/\n.*$//mg;
 	print "$_ $obj{$_}->{'as-name'} $d\n";
 }
-

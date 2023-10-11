@@ -32,15 +32,14 @@ This will cause the metalink to not return any <alternates> entries, such that
 only the very latest version of the repo is considered as up-to-date.
 """
 
-import logging
 import argparse
+import logging
 import sys
 
 import mirrormanager2.lib
-from mirrormanager2.lib.model import Repository, Product, Version
+from mirrormanager2.lib.model import Product, Repository, Version
 
-
-logger = logging.getLogger('mm2')
+logger = logging.getLogger("mm2")
 
 
 def setup_logging(options):
@@ -52,41 +51,39 @@ def setup_logging(options):
 
 def main():
     parser = argparse.ArgumentParser(description="Expire old files for repos")
+    parser.add_argument("product", help="Product to clear old filedetails for (Fedora, EPEL)")
+    parser.add_argument("version", help="VERSION to clear old filedetails for (20, 21)")
     parser.add_argument(
-        'product',
-        help="Product to clear old filedetails for (Fedora, EPEL)")
-    parser.add_argument(
-        'version',
-        help="VERSION to clear old filedetails for (20, 21)")
-    parser.add_argument(
-        "-c", "--config",
-        dest="config", default='/etc/mirrormanager/mirrormanager2.cfg',
-        help="Configuration file to use")
+        "-c",
+        "--config",
+        dest="config",
+        default="/etc/mirrormanager/mirrormanager2.cfg",
+        help="Configuration file to use",
+    )
 
     options = parser.parse_args()
 
     config = dict()
     with open(options.config) as config_file:
-        exec(compile(config_file.read(), options.config, 'exec'), config)
+        exec(compile(config_file.read(), options.config, "exec"), config)
 
-    session = mirrormanager2.lib.create_session(config['DB_URL'])
+    session = mirrormanager2.lib.create_session(config["DB_URL"])
 
     setup_logging(options)
 
     product = session.query(Product).filter_by(name=options.product).first()
     if not product:
-        logger.error('No product %s found' % options.product)
+        logger.error("No product %s found" % options.product)
         return 1
 
-    version = session.query(Version).filter_by(name=options.version,
-                                               product_id=product.id).first()
+    version = session.query(Version).filter_by(name=options.version, product_id=product.id).first()
     if not version:
-        logger.error('No version %s found' % options.version)
+        logger.error("No version %s found" % options.version)
         return 1
 
     repos = session.query(Repository).filter_by(version_id=version.id).all()
     if len(repos) < 1:
-        logger.error('No repos found for %s version %s' % (product, version))
+        logger.error(f"No repos found for {product} version {version}")
         return 1
 
     for repo in repos:
@@ -96,11 +93,10 @@ def main():
         if not deleted:
             logger.info("Unused repo")
         else:
-            logger.info("Older versions deleted: %s",
-                        ', '.join([filename
-                                   for filename
-                                   in deleted
-                                   if deleted[filename] != 0]))
+            logger.info(
+                "Older versions deleted: %s",
+                ", ".join([filename for filename in deleted if deleted[filename] != 0]),
+            )
 
     logger.info("Done.")
     return 0
