@@ -7,6 +7,7 @@ import logging
 import os
 
 import pytest
+import responses
 
 from mirrormanager2.app import DB, create_app
 from mirrormanager2.lib import model
@@ -35,6 +36,12 @@ def app(tmp_path):
 @pytest.fixture()
 def client(app):
     return app.test_client()
+
+
+@pytest.fixture
+def mocked_responses():
+    with responses.RequestsMock() as rsps:
+        yield rsps
 
 
 @pytest.fixture()
