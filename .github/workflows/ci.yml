@@ -20,7 +20,7 @@ jobs:
       image: quay.io/${{ matrix.container }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Install dependencies
       run: dnf install -y python-pyrpmmd python-tox git rsync poetry
     - name: Install dependencies for rawhide
