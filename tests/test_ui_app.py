@@ -10,7 +10,7 @@ from mirrormanager2.lib import get_host
 
 
 @pytest.fixture(autouse=True)
-def setup_all(db_items):
+def setup_all(db_items, mock_oidc):
     skip = os.getenv("MM2_SKIP_NETWORK_TESTS", 0)
     if skip:
         raise pytest.skip("Skipping FlaskUiAppTest tests")

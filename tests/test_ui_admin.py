@@ -6,21 +6,13 @@ import re
 from unittest.mock import Mock, patch
 
 import pytest
-import responses
 
 # TODO: use parametrize
 
 
 @pytest.fixture(autouse=True)
-def setup_all(db_items):
+def setup_all(db_items, mock_oidc):
     pass
-
-
-@pytest.fixture(autouse=True)
-def mock_oidc():
-    with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
-        rsps.get("https://id.example.com/openidc/.well-known/openid-configuration", json={})
-        yield
 
 
 def handle_flask_admin_urls(client, url):
