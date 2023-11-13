@@ -86,7 +86,7 @@ certificates::
 You should then create your own sqlite database for your development instance of
 mirrormanager2::
 
-    $ poetry run ./createdb.py
+    $ poetry run flask -A mirrormanager2.app db sync
 
 If all goes well, you can start a development instance of the server by
 running::

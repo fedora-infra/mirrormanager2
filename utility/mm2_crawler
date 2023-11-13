@@ -24,6 +24,7 @@ import urlparse
 
 sys.path.append("..")
 import mirrormanager2.lib
+from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.model import HostCategoryDir
 from mirrormanager2.lib.sync import run_rsync
 
@@ -159,7 +160,8 @@ def doit(options, config):
 
         continents = [x.upper() for x in continents]
 
-    session = mirrormanager2.lib.create_session(config["DB_URL"])
+    db_manager = get_db_manager(config)
+    session = db_manager.Session()
 
     # load country_continent mapping
     handle_country_continent_redirect(session)
@@ -1625,7 +1627,8 @@ def worker(options, config, host_id):
         # And another new return value: 7 -> SIGARLM
         return 7
 
-    session = mirrormanager2.lib.create_session(config["DB_URL"])
+    db_manager = get_db_manager(config)
+    session = db_manager.Session()
     host = mirrormanager2.lib.get_host(session, host_id)
 
     threads_active = threads_active + 1

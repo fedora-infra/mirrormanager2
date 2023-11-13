@@ -24,12 +24,17 @@ MirrorManager2 default configuration api.
 import os
 from datetime import timedelta
 
+BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+
 # Set the time after which the session expires. Flask's default is 31 days.
 # Default: ``timedelta(hours=1)`` corresponds to 1 hour.
 PERMANENT_SESSION_LIFETIME = timedelta(hours=1)
 
 # url to the database server:
-DB_URL = "sqlite:////var/tmp/mirrormanager2_dev.sqlite"
+SQLALCHEMY_DATABASE_URI = "sqlite:////var/tmp/mirrormanager2_dev.sqlite"
+DB_MODELS_LOCATION = "mirrormanager2.lib.model"
+
+DB_ALEMBIC_LOCATION = os.path.join(BASE_PATH, "lib", "migrations")
 
 # the number of items to display on the search pages
 # Default: ``50``.
@@ -51,9 +56,7 @@ THEME_FOLDER = "fedora"
 # Note that this previously used openid, now it uses openid connect oidc
 MM_AUTHENTICATION = "fas"
 
-OIDC_CLIENT_SECRETS = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "..", "client_secrets.json"
-)
+OIDC_CLIENT_SECRETS = os.path.join(BASE_PATH, "..", "client_secrets.json")
 OIDC_SCOPES = " ".join(
     [
         "openid",

@@ -205,18 +205,10 @@ install -m 644 utility/mm2_umdl.logrotate \
 install -m 644 utility/mirrormanager2.wsgi \
     $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrormanager2.wsgi
 
-# Install the createdb script
-install -m 755 createdb.py \
-    $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/mirrormanager2_createdb.py
-
 # Install the tmpfile creating the /run/mirrormanager folder upon reboot
 mkdir -p %{buildroot}%{_tmpfilesdir}
 install -m 0644 utility/backend_tempfile.conf \
     $RPM_BUILD_ROOT/%{_tmpfilesdir}/%{name}-backend.conf
-
-# Install the alembic files
-cp -r alembic $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
-install -m 644 utility/alembic.ini $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager/alembic.ini
 
 # Install the zebra-dump-parser perl module
 cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
@@ -265,14 +257,7 @@ MM2_SKIP_NETWORK_TESTS=1 %{pytest} -v tests
 %dir %{python_sitelib}/%{name}/__pycache__
 %endif
 
-%{_sysconfdir}/mirrormanager/alembic.ini
-
 %{_datadir}/mirrormanager2/mirrormanager2.wsgi
-%{_datadir}/mirrormanager2/mirrormanager2_createdb.py*
-%if ! (0%{?rhel} && 0%{?rhel} <= 7)
-%{_datadir}/mirrormanager2/__pycache__/mirrormanager2_createdb.*.py*
-%endif
-%{_datadir}/mirrormanager2/alembic/
 
 %{python_sitelib}/%{name}/*.py*
 %if ! (0%{?rhel} && 0%{?rhel} <= 7)

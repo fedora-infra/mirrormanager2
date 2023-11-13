@@ -9,7 +9,8 @@ import os
 import pytest
 import responses
 
-from mirrormanager2.app import DB, create_app
+from mirrormanager2.app import create_app
+from mirrormanager2.database import DB
 from mirrormanager2.lib import model
 
 from .auth import AnotherFakeFasUser, FakeFasUser, FakeFasUserAdmin, user_set
@@ -23,14 +24,15 @@ def app(tmp_path):
         {
             "TESTING": True,
             # A file database is required to check the integrity, don't ask
-            "DB_URL": f"sqlite:///{tmp_path.as_posix()}/test.sqlite",
+            "SQLALCHEMY_DATABASE_URI": f"sqlite:///{tmp_path.as_posix()}/test.sqlite",
             "OIDC_CLIENT_SECRETS": os.path.join(HERE, "client_secrets.json"),
             "USE_FEDORA_MESSAGING": False,
         }
     )
     app.logger.handlers = []
     app.logger.setLevel(logging.CRITICAL)
-    yield app
+    with app.app_context():
+        yield app
 
 
 @pytest.fixture()
@@ -46,7 +48,7 @@ def mocked_responses():
 
 @pytest.fixture()
 def db(app):
-    model.create_tables(app.config["DB_URL"], debug=False)
+    DB.manager.sync()
     session = DB.session
     yield session
     session.rollback()

@@ -27,8 +27,7 @@ import json
 import logging
 import pickle
 
-import flask
-
+from mirrormanager2.database import DB
 from mirrormanager2.lib.hostconfig import read_host_config
 
 try:
@@ -53,7 +52,7 @@ def checkin(pickledata):
         logging.info("Fell back to pickle")
         is_pickle = True
         config = pickle.loads(uncompressed)
-    r, host, message = read_host_config(flask.g.db, config)
+    r, host, message = read_host_config(DB.session, config)
     if r is not None:
         logging.info(f"Checkin for host {host} (pickle:{is_pickle}) succesful: {message}")
         return message + "checked in successful"

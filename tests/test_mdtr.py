@@ -19,7 +19,9 @@ FOLDER = os.path.dirname(os.path.abspath(__file__))
 def configfile(tmp_path):
     path = tmp_path.joinpath("mirrormanager2_tests.cfg").as_posix()
     contents = f"""
-DB_URL = 'sqlite:///{tmp_path.as_posix()}/test.sqlite'
+SQLALCHEMY_DATABASE_URI = 'sqlite:///{tmp_path.as_posix()}/test.sqlite'
+import os
+DB_ALEMBIC_LOCATION = os.path.join("{FOLDER}", "..", "mirrormanager2", "lib", "migrations")
 
 
 # Specify whether the crawler should send a report by email
@@ -57,6 +59,7 @@ def test_mdtr_no_data_empty_db(command, db):
     stdout, stderr = process.communicate()
 
     assert process.returncode == 1
+    print(stderr)
     assert stdout == "Category 'Fedora Linux' not found, exiting\nAvailable categories:\n"
 
 
