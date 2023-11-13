@@ -24,7 +24,9 @@ def logfile(tmp_path):
 def configfile(tmp_path):
     path = tmp_path.joinpath("mirrormanager2_tests.cfg").as_posix()
     contents = f"""
-DB_URL = 'sqlite:///{tmp_path.as_posix()}/test.sqlite'
+SQLALCHEMY_DATABASE_URI = 'sqlite:///{tmp_path.as_posix()}/test.sqlite'
+import os
+DB_ALEMBIC_LOCATION = os.path.join("{FOLDER}", "..", "mirrormanager2", "lib", "migrations")
 UMDL_PREFIX = '{FOLDER}/../testdata/'
 
 # Specify whether the crawler should send a report by email

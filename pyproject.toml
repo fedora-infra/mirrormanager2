@@ -32,13 +32,11 @@ packages = [
 ]
 
 include = [
-    { path = "createdb.py", format = "sdist" },
     { path = "runserver.py", format = "sdist" },
     { path = "mirrormanager.proto", format = "sdist" },
     { path = "doc", format = "sdist" },
     { path = "tox.ini", format = "sdist" },
     { path = "testdata", format = "sdist" },
-    { path = "alembic", format = "sdist" },
     { path = "client/report_mirror.conf", format = "sdist" },
     { path = "utility", format = "sdist" },
 ]
@@ -53,11 +51,11 @@ flask-oidc = "^2.0.0"
 flask-xml-rpc-re = "^0.1.4"
 flask-wtf = "^1.1.1"
 wtforms = "^3.0.1"
-SQLAlchemy = "^1.4.41 || ^2.0.0"
 ipy = "^1.1"
 dnspython = "^2.3.0"
 backoff = "^2.2.1"
 fedora-messaging = "^3.3.0"
+sqlalchemy-helpers = "^0.12.1"
 
 [tool.poetry.group.dev.dependencies]
 black = ">=22.6.0"

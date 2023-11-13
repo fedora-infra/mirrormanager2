@@ -17,6 +17,7 @@ import geoip2.database
 import matplotlib
 
 import mirrormanager2.lib
+from mirrormanager2.lib.database import get_db_manager
 
 matplotlib.use("Agg")
 import codecs
@@ -38,7 +39,8 @@ def uniq(input):
 
 
 def lookup_host_locations(config, gi):
-    session = mirrormanager2.lib.create_session(config["DB_URL"])
+    db_manager = get_db_manager(config)
+    session = db_manager.Session()
     hcurls = mirrormanager2.lib.get_host_category_url(session)
 
     results = []

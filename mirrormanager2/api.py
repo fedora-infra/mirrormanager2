@@ -24,6 +24,7 @@ MirrorManager2 API controller.
 import flask
 
 import mirrormanager2.lib as mmlib
+from mirrormanager2.database import DB
 
 views = flask.Blueprint("api", __name__)
 
@@ -64,12 +65,12 @@ def api_mirroradmins():
 
     name = flask.request.args.get("name", None)
     if not name:
-        admins = set([admin.username for admin in mmlib.get_siteadmins(flask.g.db)])
+        admins = set([admin.username for admin in mmlib.get_siteadmins(DB.session)])
     else:
         site = None
-        host = mmlib.get_host_by_name(flask.g.db, name)
+        host = mmlib.get_host_by_name(DB.session, name)
         if not host:
-            site = mmlib.get_site_by_name(flask.g.db, name)
+            site = mmlib.get_site_by_name(DB.session, name)
         else:
             site = host.site
 
@@ -130,7 +131,7 @@ def api_repositories():
 
     """
 
-    repositories = mmlib.get_repositories(flask.g.db)
+    repositories = mmlib.get_repositories(DB.session)
     repos = []
     for repository in repositories:
         if not repository:

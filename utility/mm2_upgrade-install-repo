@@ -18,6 +18,7 @@ import sys
 from optparse import OptionParser
 
 import mirrormanager2.lib
+from mirrormanager2.lib.database import get_db_manager
 
 # moving from pub/fedora/linux/releases/test/22_Beta/Server/x86_64/os/
 # to          pub/fedora/linux/releases/22/Server/x86_64/os
@@ -134,7 +135,8 @@ def main():
     with open(options.config) as config_file:
         exec(compile(config_file.read(), options.config, "exec"), d)
 
-    session = mirrormanager2.lib.create_session(d["DB_URL"])
+    db_manager = get_db_manager(d)
+    session = db_manager.Session()
 
     if options.version is None:
         parser.print_help()

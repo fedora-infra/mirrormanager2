@@ -34,11 +34,10 @@ from sqlalchemy.orm import configure_mappers
 
 from mirrormanager2 import __version__, local_auth
 from mirrormanager2.admin import register_views as register_admin_views
-from mirrormanager2.database import Database
+from mirrormanager2.database import DB
 from mirrormanager2.perms import is_mirrormanager_admin
 
 OIDC = OpenIDConnect(prefix="oidc")
-DB = Database()
 
 
 def inject_variables():
@@ -113,7 +112,8 @@ def create_app(config=None):
     configure_mappers()
     # Now init Flask-Admin
     ADMIN.init_app(app)
-    register_admin_views(app, ADMIN, DB.session)
+    with app.app_context():
+        register_admin_views(app, ADMIN, DB.session)
 
     # Template variables
     app.context_processor(inject_variables)

@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from optparse import OptionParser
 
 import mirrormanager2.lib
+from mirrormanager2.lib.database import get_db_manager
 
 archiveCategory = "Fedora Archive"
 originalCategory = "Fedora Linux"
@@ -87,7 +88,8 @@ def main():
     with open(options.config) as config_file:
         exec(compile(config_file.read(), options.config, "exec"), d)
 
-    session = mirrormanager2.lib.create_session(d["DB_URL"])
+    db_manager = get_db_manager(d)
+    session = db_manager.Session()
 
     try:
         doit(session, options.originalCategory, options.archiveCategory, options.directoryRe)
