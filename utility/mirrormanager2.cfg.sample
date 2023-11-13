@@ -8,7 +8,7 @@ MirrorManager2 sample configuration.
 
 
 # url to the database server:
-DB_URL = 'sqlite:////var/tmp/mirrormanager2_dev.sqlite'
+SQLALCHEMY_DATABASE_URI = 'sqlite:////var/tmp/mirrormanager2_dev.sqlite'
 
 # the number of items to display on the search pages
 # Default: ``50``.

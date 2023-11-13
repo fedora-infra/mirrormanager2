@@ -19,7 +19,7 @@ Adjust the configuration files (secret key, database URL, admin group...).
 
 Create the database scheme::
 
-   MM2_CONFIG=/path/to/mirrormanager2.cfg python createdb.py
+   MM2_CONFIG=/path/to/mirrormanager2.cfg poetry run flask -A mirrormanager2.app db sync
 
 Set up the WSGI as described below.
 
@@ -33,13 +33,9 @@ Start by install mirrormanager2::
 
 Adjust the configuration files: ``/etc/mirrormanager2/mirrormanager2.cfg``.
 
-Find the file used to create the database::
-
-  rpm -ql mirrormanager22 |grep createdb.py
-
 Create the database scheme::
 
-   MM2_CONFIG=/etc/mirrormanager2/mirrormanager2.cfg python path/to/createdb.py
+   MM2_CONFIG=/etc/mirrormanager2/mirrormanager2.cfg poetry run flask -A mirrormanager2.app db sync
 
 Set up the WSGI as described below.
 

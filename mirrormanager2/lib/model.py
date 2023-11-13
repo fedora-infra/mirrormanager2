@@ -30,105 +30,11 @@ import pickle
 import time
 
 import sqlalchemy as sa
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, deferred, relationship
+from sqlalchemy.orm import deferred, relationship
 
-
-class MirrorManagerBaseMixin:
-    """Base mixin for mirrormanager2 models.
-
-    This base class mixin grants sqlalchemy models dict-like access so that
-    they behave somewhat similarly to SQLObject models (inherited from the TG1
-    codebase of mirrormanager1).  This was added with the intent to make the
-    porting of backend scripts from mirrormanager1 to mirrormanager2 easier.
-    """
-
-    def __getitem__(self, key):
-        return getattr(self, key)
-
-    def __setitem__(self, key, value):
-        setattr(self, key, value)
-
-    def __contains__(self, key):
-        return hasattr(self, key)
-
-    @classmethod
-    def get(cls, session, pkey_value):
-        primary_keys = [key.key for key in cls.__mapper__.primary_key]
-        return (
-            session.query(cls)
-            .filter(sa.or_(getattr(cls, col) == pkey_value for col in primary_keys))
-            .one()
-        )
-
-
-BASE = declarative_base(cls=MirrorManagerBaseMixin)
+from .database import BASE
 
 ERROR_LOG = logging.getLogger("mirrormanager2.lib.model")
-
-# # Apparently some of our methods have too few public methods
-# pylint: disable=R0903
-# # Others have too many attributes
-# pylint: disable=R0902
-# # Others have too many arguments
-# pylint: disable=R0913
-# # We use id for the identifier in our db but that's too short
-# pylint: disable=C0103
-# # Some of the object we use here have inherited methods which apparently
-# # pylint does not detect.
-# pylint: disable=E1101
-
-
-def create_tables(db_url, alembic_ini=None, debug=False):
-    """Create the tables in the database using the information from the
-    url obtained.
-
-    :arg db_url, URL used to connect to the database. The URL contains
-        information with regards to the database engine, the host to
-        connect to, the user and password and the database name.
-          ie: <engine>://<user>:<password>@<host>/<dbname>
-    :kwarg alembic_ini, path to the alembic ini file. This is necessary
-        to be able to use alembic correctly, but not for the unit-tests.
-    :kwarg debug, a boolean specifying wether we should have the verbose
-        output of sqlalchemy or not.
-    :return a session that can be used to query the database.
-
-    """
-    engine = create_engine(db_url, echo=debug)
-    BASE.metadata.create_all(engine)
-    if db_url.startswith("sqlite:"):
-        # Ignore the warning about con_record
-        # pylint: disable=W0613
-        def _fk_pragma_on_connect(dbapi_con, con_record):
-            """Tries to enforce referential constraints on sqlite."""
-            dbapi_con.execute("pragma foreign_keys=ON")
-
-        sa.event.listen(engine, "connect", _fk_pragma_on_connect)
-
-    if alembic_ini is not None:  # pragma: no cover
-        # then, load the Alembic configuration and generate the
-        # version table, "stamping" it with the most recent rev:
-
-        # Ignore the warning missing alembic
-        # pylint: disable=F0401
-        from alembic import command
-        from alembic.config import Config
-
-        alembic_cfg = Config(alembic_ini)
-        command.stamp(alembic_cfg, "head")
-
-
-def drop_tables(db_url, engine):  # pragma: no cover
-    """Drops the tables in the database using the information from the
-    url obtained.
-
-    :arg db_url, URL used to connect to the database. The URL contains
-    information with regards to the database engine, the host to connect
-    to, the user and password and the database name.
-      ie: <engine>://<user>:<password>@<host>/<dbname>
-    """
-    engine = create_engine(db_url)
-    BASE.metadata.drop_all(engine)
 
 
 class Site(BASE):
@@ -426,7 +332,7 @@ class Directory(BASE):
                 # all others
                 for f in fds[start:]:
                     if f["timestamp"] < stale:
-                        detail = FileDetail.get(session, f["file_detail_id"])
+                        detail = FileDetail.get_by_pk(f["file_detail_id"])
                         session.delete(detail)
 
         session.commit()

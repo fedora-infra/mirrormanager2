@@ -691,6 +691,7 @@ def test_get_mirrors(
     hostcategoryurl,
     categorydirectory,
     netblockcountry,
+    version,
     repository,
 ):
     """Test the get_mirrors function of mirrormanager2.lib."""
