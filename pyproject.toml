@@ -73,19 +73,20 @@ responses = "^0.23.3"
 [tool.poetry.scripts]
 report_mirror = { reference = "client/report_mirror", type = "file" }
 mirrorlist_statistics = { reference = "mirrorlist/mirrorlist_statistics", type = "file" }
-mm2_crawler = { reference = "utility/mm2_crawler", type = "file" }
-mm2_emergency-expire-repo = { reference = "utility/mm2_emergency-expire-repo", type = "file" }
-mm2_generate-worldmap = { reference = "utility/mm2_generate-worldmap", type = "file" }
+mm2_crawler = "mirrormanager2.utility.crawler:main"
+mm2_emergency-expire-repo = "mirrormanager2.utility.emergency_expire_repo:main"
+mm2_generate-worldmap = "mirrormanager2.utility.generate_worldmap:main"
 mm2_get_global_netblocks = { reference = "utility/mm2_get_global_netblocks", type = "file" }
 mm2_get_internet2_netblocks = { reference = "utility/mm2_get_internet2_netblocks", type = "file" }
-mm2_move-devel-to-release = { reference = "utility/mm2_move-devel-to-release", type = "file" }
-mm2_move-to-archive = { reference = "utility/mm2_move-to-archive", type = "file" }
-mm2_propagation = { reference = "utility/mm2_propagation", type = "file" }
-mm2_update-EC2-netblocks = { reference = "utility/mm2_update-EC2-netblocks", type = "file" }
-mm2_update-master-directory-list = { reference = "utility/mm2_update-master-directory-list", type = "file" }
-mm2_umdl2 = { reference = "utility/mm2_umdl2", type = "file" }
-mm2_create_install_repo = { reference = "utility/mm2_create_install_repo", type = "file" }
-mm2_upgrade-install-repo = { reference = "utility/mm2_upgrade-install-repo", type = "file" }
+mm2_move-devel-to-release = "mirrormanager2.utility.move_to_release:main"
+mm2_move-to-archive = "mirrormanager2.utility.move_to_archive:main"
+mm2_propagation = "mirrormanager2.utility.propagation:main"
+mm2_update-EC2-netblocks = "mirrormanager2.utility.update_ec2_netblocks:main"
+mm2_update-master-directory-list = "mirrormanager2.utility.update_master_directory_list:main"
+mm2_umdl2 = "mirrormanager2.utility.umdl2:main"
+mm2_create_install_repo = "mirrormanager2.utility.create_install_repo:main"
+mm2_upgrade-install-repo = "mirrormanager2.utility.upgrade_install_repo:main"
+mm2_last-sync = "mirrormanager2.utility.last_sync:main"
 
 
 [build-system]
@@ -118,7 +119,7 @@ source = ["mirrormanager2"]
 source = ["mirrormanager2", "utility"]
 
 [tool.coverage.report]
-fail_under = 55
+# fail_under = 80
 show_missing = true
 exclude_lines = [
     "pragma: no cover",

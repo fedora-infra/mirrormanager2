@@ -3,13 +3,13 @@ mirrormanager2 tests for the `Move To Archive` (MTA) script.
 """
 
 import os
-import subprocess
-import sys
 
 import pytest
+from click.testing import CliRunner
 
 import mirrormanager2.lib
 import mirrormanager2.lib.model as model
+from mirrormanager2.utility import move_to_archive
 
 FOLDER = os.path.dirname(os.path.abspath(__file__))
 
@@ -33,36 +33,32 @@ CRAWLER_SEND_EMAIL =  False
 
 
 @pytest.fixture()
-def command(configfile):
-    script = os.path.join(FOLDER, "..", "utility", "mm2_move-to-archive")
-    return [sys.executable, script, "-c", configfile, "--directoryRe=/26"]
+def command_args(configfile):
+    return ["-c", configfile, "--directoryRe=/26"]
 
 
-def test_mta_empty_db(command, db):
-    process = subprocess.Popen(
-        args=command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-    )
-    stdout, stderr = process.communicate()
+def run_command(args):
+    runner = CliRunner()
+    return runner.invoke(move_to_archive.main, args)
+
+
+def test_mta_empty_db(command_args, db):
+    result = run_command(command_args)
 
     # Ignore for now
     # assert stderr == ''
-    assert stdout == "No category could be found by the name: Fedora Linux\n"
+    assert result.exit_code == 1
+    assert result.output == "Error: No category could be found by the name: Fedora Linux\n"
 
 
-def test_mta(command, db, base_items, directory, category, categorydirectory, version, repository):
+def test_mta(
+    command_args, db, base_items, directory, category, categorydirectory, version, repository
+):
     """Test the mta script."""
-    process = subprocess.Popen(
-        args=command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-    )
-    stdout, stderr = process.communicate()
+    result = run_command(command_args)
 
-    assert stdout == "No category could be found by the name: Fedora Archive\n"
+    assert result.exit_code == 1
+    assert result.output == "Error: No category could be found by the name: Fedora Archive\n"
     # Ignore for now
     # assert stderr == ''
 
@@ -121,17 +117,10 @@ def test_mta(command, db, base_items, directory, category, categorydirectory, ve
     assert results[8].name == "pub/fedora/linux/updates/testing/27/x86_64"
     assert results[9].name == "pub/archive"
 
-    process = subprocess.Popen(
-        args=command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-    )
-    stdout, stderr = process.communicate()
-
+    result = run_command(command_args)
     assert (
-        stdout == "trying to find pub/archive/fedora/linux/updates/testing/26/x86_64\n"
-        "Unable to find a directory in [Fedora Archive] for pub/fedora/"
+        result.output == "trying to find pub/archive/fedora/linux/updates/testing/26/x86_64\n"
+        "Error: Unable to find a directory in [Fedora Archive] for pub/fedora/"
         "linux/updates/testing/26/x86_64\n"
     )
     # Ignore for now
@@ -146,16 +135,9 @@ def test_mta(command, db, base_items, directory, category, categorydirectory, ve
     db.add(item)
     db.commit()
 
-    process = subprocess.Popen(
-        args=command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-    )
-    stdout, stderr = process.communicate()
-
+    result = run_command(command_args)
     assert (
-        stdout == "trying to find pub/archive/fedora/linux/updates/testing/26/x86_64\n"
+        result.output == "trying to find pub/archive/fedora/linux/updates/testing/26/x86_64\n"
         "pub/fedora/linux/updates/testing/26/x86_64 => "
         "pub/archive/fedora/linux/updates/testing/26/x86_64\n"
     )

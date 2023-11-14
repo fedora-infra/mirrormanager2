@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 This script changes the directory path from the development tree to the
 released tree once the release has been published.
@@ -14,13 +12,13 @@ content)
 
 import os
 import re
-import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from optparse import OptionParser
+import click
 
 import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
+
+from .common import read_config
 
 
 def fixup_repos(session, version, repo, new_dir):
@@ -62,14 +60,13 @@ def move_devel_repo(session, category, version):
 
     c = mirrormanager2.lib.get_category_by_name(session, category)
     if c is None:
-        print("Category '%s' not found, exiting" % category)
-        print_categories(session)
-        sys.exit(1)
+        message = f"Category {category!r} not found, exiting.\n"
+        message += get_all_categories(session)
+        raise click.ClickException(message)
 
     v = mirrormanager2.lib.get_version_by_name_version(session, c.product.name, version)
     if not v:
-        print(f"Version {version} not found for product {c.product.name}")
-        sys.exit(1)
+        raise click.ClickException(f"Version {version} not found for product {c.product.name}")
 
     oldpattern = os.path.join("development", version)
     newpattern = os.path.join("releases", version)
@@ -90,8 +87,7 @@ def move_devel_repo(session, category, version):
             t = d.name.replace(oldpattern, newpattern)
             new_d = mirrormanager2.lib.get_directory_by_name(session, t)
             if new_d is None:
-                sys.stderr.write("target Directory(%s) not found, ignoring.\n" % t)
-                sys.stderr.flush()
+                click.echo(f"target Directory({t}) not found, ignoring.", err=True)
                 continue
 
             if new_d.repositories:
@@ -102,55 +98,36 @@ def move_devel_repo(session, category, version):
             print(f"{d.name} => {t}")
 
 
-def print_categories(session):
-    print("Available categories:")
+def get_all_categories(session):
+    lines = ["Available categories:"]
     for c in mirrormanager2.lib.get_categories(session):
-        print("\t%s" % c.name)
+        lines.append(f"\t{c.name}")
+    return "\n".join(lines)
 
 
-def main():
-    global options
-    parser = OptionParser(usage=sys.argv[0] + " [options]")
-    parser.add_option(
-        "-c",
-        "--config",
-        dest="config",
-        default="/etc/mirrormanager/mirrormanager2.cfg",
-        help="Configuration file to use " "(default=/etc/mirrormanager/mirrormanager2.cfg)",
-    )
-    parser.add_option(
-        "--version",
-        dest="version",
-        type="string",
-        help="OS version to move (e.g. '14') [required]",
-        default=None,
-    )
-    parser.add_option(
-        "--category",
-        dest="category",
-        type="string",
-        help="Category (e.g. 'Fedora Linux') [required]",
-        default=None,
-    )
-
-    (options, args) = parser.parse_args()
-
-    d = dict()
-    with open(options.config) as config_file:
-        exec(compile(config_file.read(), options.config, "exec"), d)
-
+@click.command()
+@click.option(
+    "-c",
+    "--config",
+    default="/etc/mirrormanager/mirrormanager2.cfg",
+    help="Configuration file to use " "(default=/etc/mirrormanager/mirrormanager2.cfg)",
+)
+@click.option(
+    "--version",
+    help="OS version to move (e.g. '14') [required]",
+    required=True,
+)
+@click.option(
+    "--category",
+    help="Category (e.g. 'Fedora Linux') [required]",
+    default=None,
+)
+def main(config, version, category):
+    d = read_config(config)
     db_manager = get_db_manager(d)
     session = db_manager.Session()
 
-    if options.version is None or options.category is None:
-        parser.print_help()
-        print_categories(session)
-        sys.exit(1)
+    if category is None:
+        raise click.BadParameter(get_all_categories(session))
 
-    move_devel_repo(session, options.category, options.version)
-
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+    move_devel_repo(session, category, version)

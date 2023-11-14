@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 This script is like the light-weight version of update-master-directory-list.
 Instead of crawling *all* files on the nfs mount of the master mirror content,
@@ -12,16 +11,16 @@ used by mm2 admins for surgery and quick regeneration of the pickle file.
 
 import hashlib
 import logging
-import optparse
 import os
-import sys
 
+import click
 import rpmmd.repoMDObject
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.model import FileDetail
+
+from .common import read_config
 
 logger = logging.getLogger("mm2")
 
@@ -37,61 +36,50 @@ def set_repomd_timestamp(yumrepo):
     return timestamp
 
 
-def setup_logging(options):
+def setup_logging(debug=False):
     format = "[%(asctime)s][%(name)10s %(levelname)7s] %(message)s"
     datefmt = "%m/%d/%Y %I:%M:%S %p"
     logging.basicConfig(format=format, datefmt=datefmt)
 
-    if options.debug:
+    if debug:
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
 
 
-def main():
-    parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
-    parser.add_option(
-        "-c",
-        "--config",
-        dest="config",
-        default="/etc/mirrormanager/mirrormanager2.cfg",
-        help="Configuration file to use",
-    )
-    parser.add_option(
-        "--category",
-        metavar="CATEGORY",
-        dest="categories",
-        default=None,
-        help="only scan category CATEGORY",
-    )
-    parser.add_option(
-        "--debug", dest="debug", default=False, action="store_true", help="enable debugging"
-    )
-    parser.add_option(
-        "--filename", metavar="FILENAME", dest="filename", default=None, help="path/to/file"
-    )
-
-    (options, args) = parser.parse_args()
-
-    config = dict()
-    with open(options.config) as config_file:
-        exec(compile(config_file.read(), options.config, "exec"), config)
-
+@click.command()
+@click.option(
+    "-c",
+    "--config",
+    default="/etc/mirrormanager/mirrormanager2.cfg",
+    help="Configuration file to use",
+)
+@click.option(
+    "--category",
+    "categories",
+    metavar="CATEGORY",
+    default=None,
+    help="only scan category CATEGORY",
+)
+@click.option("--debug", is_flag=True, default=False, help="enable debugging")
+@click.option("--filename", type=click.Path(), default=None, help="path/to/file")
+def main(config, categories, debug, filename):
+    config = read_config(config)
     db_manager = get_db_manager(config)
     session = db_manager.Session()
 
-    setup_logging(options)
+    setup_logging(debug=debug)
 
-    if not options.filename:
+    if not filename:
         logger.error("--filename is required")
         return 1
 
     check_categories = []
-    if options.categories is None:
+    if categories is None:
         check_categories = config.get("umdl_master_directories")
     else:
         for i in config.get("umdl_master_directories"):
-            if i["category"] == options.categories:
+            if i["category"] == categories:
                 check_categories.append(i)
 
     for i in check_categories:
@@ -100,22 +88,20 @@ def main():
 
         category = mirrormanager2.lib.get_category_by_name(session, cname)
         if not category:
-            logger.error("Category %s does not exist in the " "database, skipping" % (cname))
+            logger.error("Category %s does not exist in the database, skipping" % (cname))
             continue
 
         if category.product is None:
-            logger.error(
-                "umdl_master_directories Category %s has null Product, " "skipping" % (cname)
-            )
-            logger.error("Category %s has null Product, " "skipping" % (cname))
+            logger.error("umdl_master_directories Category %s has null Product, skipping" % (cname))
+            logger.error("Category %s has null Product, skipping" % (cname))
             continue
 
-        absolutepath = os.path.join(i["path"], options.filename)
+        absolutepath = os.path.join(i["path"], filename)
         dirname = "/".join(absolutepath.strip("/").split("/")[1:-1])
         directory = mirrormanager2.lib.get_directory_by_name(session, dirname)
 
         if not directory:
-            logger.error("Directory %s does not exist in the " "database, skipping" % (dirname))
+            logger.error("Directory %s does not exist in the database, skipping" % (dirname))
             continue
 
         warning = "Won't make repo file details"
@@ -125,7 +111,7 @@ def main():
             continue
 
         try:
-            f = open(absolutepath)
+            f = open(absolutepath, "rb")
             contents = f.read()
             f.close()
         except Exception:
@@ -138,7 +124,7 @@ def main():
         sha256 = hashlib.sha256(contents).hexdigest()
         sha512 = hashlib.sha512(contents).hexdigest()
 
-        target = options.filename.split("/")[-1]
+        target = filename.split("/")[-1]
 
         if target == "repomd.xml":
             yumrepo = rpmmd.repoMDObject.RepoMD("repoid", absolutepath)
@@ -172,15 +158,10 @@ def main():
                 timestamp=timestamp,
                 size=size,
             )
-            logger.info(f"Updating FileDetail {fd!r}, {absolutepath!r}")
+            logger.info(f"Updating FileDetail {fd.filename}, {absolutepath!r}")
             session.add(fd)
             session.commit()
         else:
-            logger.warning(f"FileDetail unchanged {absolutepath!r} {fd!r}")
+            logger.warning(f"FileDetail unchanged {absolutepath!r} ({fd.id})")
 
     logger.info("Done.")
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
