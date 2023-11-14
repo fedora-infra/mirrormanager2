@@ -1,18 +1,17 @@
-#!/usr/bin/env python3
-
 """
 This script creates the fedora-install repo for Fedora .
 """
 
 import logging
-import optparse
 import os
-import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+import click
+
 import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.model import Repository
+
+from .common import read_config
 
 logger = None
 
@@ -98,45 +97,21 @@ def setup_logger(debug):
         logger.setLevel(logging.DEBUG)
 
 
-def main():
-    global options
-    parser = optparse.OptionParser(usage=sys.argv[0] + " [options] parent-directory")
-    parser.add_option(
-        "-c",
-        "--config",
-        dest="config",
-        default="/etc/mirrormanager/mirrormanager2.cfg",
-        help="Configuration file to use",
-    )
-    parser.add_option("--version", dest="version", default="21", help="Version")
-    parser.add_option("--category", dest="category", default="Fedora Other")
-    parser.add_option("--debug", dest="debug", action="store_true", default=False)
-
-    (options, args) = parser.parse_args()
-
-    if len(args) != 1:
-        parser.error(
-            "Must specify the path to the base of the install repo\n"
-            "for example: mm2_create_install_repo --version=21 "
-            "--category='Fedora Linux' pub/fedora/linux/releases/21/"
-        )
-
-    parent = args[0]
-
-    config = dict()
-    with open(options.config) as config_file:
-        exec(compile(config_file.read(), options.config, "exec"), config)
-
+@click.command()
+@click.option(
+    "-c",
+    "--config",
+    default="/etc/mirrormanager/mirrormanager2.cfg",
+    help="Configuration file to use",
+)
+@click.option("--version", default="21", help="Version")
+@click.option("--category", default="Fedora Other")
+@click.option("--debug", is_flag=True, default=False)
+@click.argument("base_install_path")
+def main(config, version, category, debug, base_install_path):
+    config = read_config(config)
     db_manager = get_db_manager(config)
     session = db_manager.Session()
-
-    setup_logger(options.debug)
-    doit(session, options.version, options.category, parent)
-
+    setup_logger(debug)
+    doit(session, version, category, base_install_path)
     session.commit()
-
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())

@@ -1,20 +1,18 @@
-#!/usr/bin/env python3
 """
 Synchronize Amazon AWS-published EC2 netblock lists per region into the
 MirrorManager database for Fedora Infrastructure-managed mirrors in S3.
 """
 
 import json
-import optparse
-import os
-import sys
 
+import click
 import urlgrabber
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.model import HostNetblock
+
+from .common import read_config
 
 
 def parse_out_region(hostname):
@@ -103,30 +101,18 @@ def doit(session, dry_run):
                     session.delete(nb)
 
 
-def main():
-    parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
-    parser.add_option(
-        "-c",
-        "--config",
-        dest="config",
-        default="/etc/mirrormanager/mirrormanager2.cfg",
-        help="Config file to use",
-    )
-    parser.add_option("-n", "--dry-run", dest="dry_run", action="store_true", default=False)
-
-    (options, args) = parser.parse_args()
-
-    config = dict()
-    with open(options.config) as config_file:
-        exec(compile(config_file.read(), options.config, "exec"), config)
-
+@click.command()
+@click.option(
+    "-c",
+    "--config",
+    default="/etc/mirrormanager/mirrormanager2.cfg",
+    help="Config file to use",
+)
+@click.option("-n", "--dry-run", is_flag=True, default=False)
+def main(config, dry_run):
+    config = read_config(config)
     db_manager = get_db_manager(config)
     session = db_manager.Session()
 
-    doit(session, options.dry_run)
+    doit(session, dry_run)
     session.commit()
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())

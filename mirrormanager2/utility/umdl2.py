@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 This script crawls the local copy of the master mirrors (which in our case
 is just a nfs mount of the master mirror content). According to what it
@@ -23,17 +21,18 @@ directory (/pub/fedora/linux/updates/....)
 
 import logging
 import logging.handlers
-import optparse
 import os
 import re
 import stat
-import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+import click
+
 import mirrormanager2.lib
 import mirrormanager2.lib.umdl as umdl
 from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.model import Directory
+
+from .common import read_config
 
 logger = logging.getLogger("umdl")
 stdexcludes = [r".*\.snapshot", r".*/\.~tmp~"]
@@ -128,7 +127,7 @@ def sync_directories_from_disk(session, config, diskpath, category, excludes=Non
     session.commit()
 
 
-def setup_logging(config, options):
+def setup_logging(config, logfile, debug, list_categories):
     log_dir = config.get("MM_LOG_DIR", None)
     # check if the directory exists
     if log_dir is not None:
@@ -139,9 +138,9 @@ def setup_logging(config, options):
             log_dir = None
 
     if log_dir is not None:
-        log_file = log_dir + "/" + options.logfile
+        log_file = log_dir + "/" + logfile
     else:
-        log_file = options.logfile
+        log_file = logfile
 
     fmt = "%(asctime)s %(message)s"
     datefmt = "%m/%d/%Y %I:%M:%S %p"
@@ -151,7 +150,7 @@ def setup_logging(config, options):
     logger.addHandler(handler)
     # list_categories is a special case where the user wants to see something
     # on the console and not only in the log file
-    if options.debug or options.list_categories:
+    if debug or list_categories:
         sh = logging.StreamHandler()
         sh.setFormatter(formatter)
         logger.addHandler(sh)
@@ -160,59 +159,46 @@ def setup_logging(config, options):
         logger.setLevel(logging.INFO)
 
 
-def main():
-    parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
-    parser.add_option(
-        "-c",
-        "--config",
-        dest="config",
-        default="/etc/mirrormanager/mirrormanager2.cfg",
-        help="Configuration file to use",
-    )
-    parser.add_option(
-        "--logfile", dest="logfile", default="umdl.log", metavar="FILE", help="write logs to FILE"
-    )
-    parser.add_option(
-        "--list",
-        dest="list_categories",
-        default=False,
-        action="store_true",
-        help="list existing categories and exit",
-    )
-    parser.add_option(
-        "--category",
-        metavar="CATEGORY",
-        dest="categories",
-        default=None,
-        help="only scan category CATEGORY",
-    )
-    parser.add_option(
-        "--debug", dest="debug", default=False, action="store_true", help="enable debugging"
-    )
-    parser.add_option(
-        "--delete-directories",
-        dest="delete_directories",
-        default=False,
-        action="store_true",
-        help="delete directories from the database that are no longer " "on disk",
-    )
-    parser.add_option(
-        "--start-at", dest="path", default=None, help="Specify the path at which to start the run"
-    )
-
-    (options, args) = parser.parse_args()
-    config = dict()
-    with open(options.config) as config_file:
-        exec(compile(config_file.read(), options.config, "exec"), config)
-
+@click.command()
+@click.option(
+    "-c",
+    "--config",
+    default="/etc/mirrormanager/mirrormanager2.cfg",
+    help="Configuration file to use",
+)
+@click.option("--logfile", type=click.Path(), default="umdl.log", help="write logs to PATH")
+@click.option(
+    "--list",
+    "list_categories",
+    is_flag=True,
+    default=False,
+    help="list existing categories and exit",
+)
+@click.option(
+    "--category",
+    "categories",
+    metavar="CATEGORY",
+    default=None,
+    help="only scan category CATEGORY",
+)
+@click.option("--debug", is_flag=True, default=False, help="enable debugging")
+@click.option(
+    "--delete-directories",
+    is_flag=True,
+    default=False,
+    help="delete directories from the database that are no longer on disk",
+)
+@click.option("--start-at", "path", default=None, help="Specify the path at which to start the run")
+def main(config, logfile, list_categories, categories, debug, delete_directories, path):
+    config = read_config(config)
     db_manager = get_db_manager(config)
     session = db_manager.Session()
 
-    setup_logging(config, options)
+    setup_logging(config, logfile, debug, list_categories)
 
     logger.info("Starting umdl")
 
-    if options.list_categories:
+    if list_categories:
         categories = mirrormanager2.lib.get_categories(session)
         for c in categories:
             logger.info(c)
@@ -222,11 +208,11 @@ def main():
 
     umdl.setup_arch_version_cache(session)
     check_categories = []
-    if options.categories is None:
+    if categories is None:
         check_categories = config.get("umdl_master_directories")
     else:
         for i in config.get("umdl_master_directories"):
-            if i["category"] == options.categories:
+            if i["category"] == categories:
                 check_categories.append(i)
 
     for i in check_categories:
@@ -250,15 +236,15 @@ def main():
         category.extra_rsync_options = i.get("options")
         category.directory_cache = cache_directories(category)
 
-        path = i["path"]
+        category_path = i["path"]
         if len(check_categories) == 1:
-            path = options.path or i["path"]
+            category_path = path or i["path"]
 
         if i["type"] == "directory":
             # import cProfile, pstats, StringIO
             # pr = cProfile.Profile()
             # pr.enable()
-            sync_directories_from_disk(session, config, path, category)
+            sync_directories_from_disk(session, config, category_path, category)
             # pr.disable()
 
             # s = StringIO.StringIO()
@@ -270,7 +256,7 @@ def main():
             # import cProfile, pstats, StringIO
             # pr = cProfile.Profile()
             # pr.enable()
-            sync_directories_from_fullfilelist(session, config, path, category)
+            sync_directories_from_fullfilelist(session, config, category_path, category)
             # pr.disable()
 
             # s = StringIO.StringIO()
@@ -285,9 +271,3 @@ def main():
     Directory.age_file_details(session, config)
 
     logger.info("Ending umdl")
-
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())

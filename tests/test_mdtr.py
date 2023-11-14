@@ -4,13 +4,13 @@ mirrormanager2 tests for the `Move Devel To Release` (MDTL) script.
 
 
 import os
-import subprocess
-import sys
 
 import pytest
+from click.testing import CliRunner
 
 import mirrormanager2.lib
 import mirrormanager2.lib.model as model
+from mirrormanager2.utility import move_devel_to_release
 
 FOLDER = os.path.dirname(os.path.abspath(__file__))
 
@@ -34,70 +34,49 @@ CRAWLER_SEND_EMAIL =  False
 
 
 @pytest.fixture()
-def command(configfile):
-    script = os.path.join(FOLDER, "..", "utility", "mm2_move-devel-to-release")
-    return [
-        sys.executable,
-        script,
-        "-c",
-        configfile,
-        "--version=27",
-        "--category=Fedora Linux",
-    ]
+def command_args(configfile):
+    return ["-c", configfile, "--version=27", "--category=Fedora Linux"]
 
 
-def test_mdtr_no_data_empty_db(command, db):
+def run_command(args):
+    runner = CliRunner()
+    return runner.invoke(move_devel_to_release.main, args)
+
+
+def test_mdtr_no_data_empty_db(command_args, db):
     """Test the mdtr script without the appropriate data in the
     database.
     """
-    process = subprocess.Popen(
-        args=command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
+    result = run_command(command_args)
+    assert result.exit_code == 1
+    assert (
+        result.output
+        == "Error: Category 'Fedora Linux' not found, exiting.\nAvailable categories:\n"
     )
-    stdout, stderr = process.communicate()
-
-    assert process.returncode == 1
-    print(stderr)
-    assert stdout == "Category 'Fedora Linux' not found, exiting\nAvailable categories:\n"
 
 
-def test_mdtr_no_data(command, db, base_items, directory, category, categorydirectory):
+def test_mdtr_no_data(command_args, db, base_items, directory, category, categorydirectory):
     """Test the mdtr script without the appropriate data in the
     database.
     """
-    process = subprocess.Popen(
-        args=command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-    )
-    stdout, stderr = process.communicate()
+    result = run_command(command_args)
 
-    assert process.returncode == 1
-    assert stdout == "Version 27 not found for product Fedora\n"
+    assert result.exit_code == 1
+    assert result.output == "Error: Version 27 not found for product Fedora\n"
 
 
 def test_mdtr_no_data_with_version(
-    command, base_items, directory, category, categorydirectory, version
+    command_args, base_items, directory, category, categorydirectory, version
 ):
     """Test the mdtr script without the appropriate data in the
     database.
     """
-    process = subprocess.Popen(
-        args=command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-    )
-    stdout, stderr = process.communicate()
-
-    assert process.returncode == 0, stderr
-    assert stdout == ""
+    result = run_command(command_args)
+    assert result.exit_code == 0
+    assert result.output == ""
 
 
-def test_mdtr(command, db, base_items, directory, category, categorydirectory, version):
+def test_mdtr(command_args, db, base_items, directory, category, categorydirectory, version):
     """Test the mdtr script."""
     item = model.Directory(
         name="pub/fedora/linux/releases/26/Everything/x86_64/os",
@@ -178,17 +157,10 @@ def test_mdtr(command, db, base_items, directory, category, categorydirectory, v
 
     # Run the script
 
-    process = subprocess.Popen(
-        args=command[:],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-    )
-    stdout, stderr = process.communicate()
-
-    assert process.returncode == 0, stderr
+    result = run_command(command_args)
+    assert result.exit_code == 0
     assert (
-        stdout == "pub/fedora/linux/development/27/Everything/x86_64/os => "
+        result.output == "pub/fedora/linux/development/27/Everything/x86_64/os => "
         "pub/fedora/linux/releases/27/Everything/x86_64/os\n"
     )
     # Ignore for now
@@ -228,18 +200,11 @@ def test_mdtr(command, db, base_items, directory, category, categorydirectory, v
 
     # Check non-existing version
 
-    command = command[:]
-    command[4] = "--version=24"
-    process = subprocess.Popen(
-        args=command[:],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-    )
-    stdout, stderr = process.communicate()
-
-    assert process.returncode == 1
-    assert stdout == "Version 24 not found for product Fedora\n", stderr
+    args = command_args[:]
+    args[2] = "--version=24"
+    result = run_command(args)
+    assert result.exit_code == 1
+    assert result.output == "Error: Version 24 not found for product Fedora\n"
     # Ignore for now
     # assert stderr == ''
 

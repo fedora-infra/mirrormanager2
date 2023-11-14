@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-#
 # Copyright (C) 2015 by Red Hat, Inc.
 # Author: Patrick Uiterwijk <puiterwijk@redhat.com>
 #
@@ -32,60 +30,59 @@ This will cause the metalink to not return any <alternates> entries, such that
 only the very latest version of the repo is considered as up-to-date.
 """
 
-import argparse
 import logging
-import sys
+
+import click
 
 from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.model import Product, Repository, Version
 
+from .common import read_config
+
 logger = logging.getLogger("mm2")
 
 
-def setup_logging(options):
+def setup_logging():
     format = "[%(asctime)s][%(name)10s %(levelname)7s] %(message)s"
     logging.basicConfig(format=format)
 
     logger.setLevel(logging.INFO)
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Expire old files for repos")
-    parser.add_argument("product", help="Product to clear old filedetails for (Fedora, EPEL)")
-    parser.add_argument("version", help="VERSION to clear old filedetails for (20, 21)")
-    parser.add_argument(
-        "-c",
-        "--config",
-        dest="config",
-        default="/etc/mirrormanager/mirrormanager2.cfg",
-        help="Configuration file to use",
-    )
-
-    options = parser.parse_args()
-
-    config = dict()
-    with open(options.config) as config_file:
-        exec(compile(config_file.read(), options.config, "exec"), config)
+@click.command()
+@click.option(
+    "-c",
+    "--config",
+    default="/etc/mirrormanager/mirrormanager2.cfg",
+    help="Configuration file to use",
+)
+@click.argument("product", help="Product to clear old filedetails for (Fedora, EPEL)")
+@click.argument("version", help="VERSION to clear old filedetails for (20, 21)")
+def main(config, product, version):
+    config = read_config(config)
 
     db_manager = get_db_manager(config)
     session = db_manager.Session()
 
-    setup_logging(options)
+    setup_logging()
 
-    product = session.query(Product).filter_by(name=options.product).first()
+    product = session.query(Product).filter_by(name=product).first()
     if not product:
-        logger.error("No product %s found" % options.product)
-        return 1
+        message = f"No product {product} found"
+        logger.error(message)
+        raise click.BadArgumentUsage(message)
 
-    version = session.query(Version).filter_by(name=options.version, product_id=product.id).first()
+    version = session.query(Version).filter_by(name=version, product_id=product.id).first()
     if not version:
-        logger.error("No version %s found" % options.version)
-        return 1
+        message = f"No version {version} found"
+        logger.error(message)
+        raise click.BadArgumentUsage(message)
 
     repos = session.query(Repository).filter_by(version_id=version.id).all()
     if len(repos) < 1:
-        logger.error(f"No repos found for {product} version {version}")
-        return 1
+        message = f"No repos found for {product} version {version}"
+        logger.error(message)
+        raise click.BadArgumentUsage(message)
 
     for repo in repos:
         logger.info("Clearing for repo %s" % repo.name)
@@ -100,8 +97,3 @@ def main():
             )
 
     logger.info("Done.")
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())

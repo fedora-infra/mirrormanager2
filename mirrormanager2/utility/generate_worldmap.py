@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-#
 # Copyright (c) 2007-2012 Dell, Inc. by Matt Domsch <Matt_Domsch@dell.com>
 # Copyright (c) 2015,2018 Adrian Reber <adrian@lisas.de>
 #
@@ -9,27 +7,28 @@
 # while the rest of MirrorManager is licensed MIT/X11
 
 
+import codecs
 import os
-import sys
-from optparse import OptionParser
+import socket
+from urllib import urlparse
 
+import click
 import geoip2.database
 import matplotlib
 
 import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
 
-matplotlib.use("Agg")
-import codecs
-import socket
+from .common import read_config
 
-import urlparse
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from pylab import figure
+matplotlib.use("Agg")
+
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas  # noqa: E402
+from pylab import figure  # noqa: E402
 
 # this export sucks - basemap should do this automatically
 os.environ["BASEMAPDATA"] = "/usr/share/basemap"
-from mpl_toolkits.basemap import Basemap
+from mpl_toolkits.basemap import Basemap  # noqa: E402
 
 
 def uniq(input):
@@ -76,7 +75,7 @@ def lookup_host_locations(config, gi):
     return results
 
 
-def doit(options, config):
+def doit(output, config):
     gi = geoip2.database.Reader("/usr/share/GeoIP/GeoLite2-City.mmdb")
     m = Basemap(
         llcrnrlon=-180.0,
@@ -99,7 +98,7 @@ def doit(options, config):
     # use zorder=10 to make sure markers are drawn last.
     # (otherwise they are covered up when continents are filled)
     results = lookup_host_locations(config, gi)
-    fd = codecs.open(options.output + "/mirrors_location.txt", "w", "utf-8-sig")
+    fd = codecs.open(output + "/mirrors_location.txt", "w", "utf-8-sig")
     fd.write("lat\tlon\ttitle\tdescription\ticonSize\ticonOffset\ticon\n")
     for t in results:
         lat = t[0][2]
@@ -118,41 +117,23 @@ def doit(options, config):
     m.drawcoastlines(linewidth=0.5)
     m.drawcountries(linewidth=0.5)
     m.fillcontinents(color="green")
-    canvas.print_figure(options.output + "/map.png", dpi=100)
+    canvas.print_figure(output + "/map.png", dpi=100)
 
 
-def main():
-    parser = OptionParser(usage=sys.argv[0] + " [options]")
-    parser.add_option(
-        "-c",
-        "--config",
-        dest="config",
-        default="/etc/mirrormanager/mirrormanager2.cfg",
-        help="Configuration file to use",
-    )
-
-    parser.add_option(
-        "-o",
-        "--output",
-        metavar="DIR",
-        dest="output",
-        action="store",
-        type="string",
-        help="write output to DIR",
-    )
-
-    (options, args) = parser.parse_args()
-
-    if options.output is None:
-        parser.print_help()
-        sys.exit(1)
-
-    config = dict()
-    with open(options.config) as config_file:
-        exec(compile(config_file.read(), options.config, "exec"), config)
-
-    doit(options, config)
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+@click.command()
+@click.option(
+    "-c",
+    "--config",
+    default="/etc/mirrormanager/mirrormanager2.cfg",
+    help="Configuration file to use",
+)
+@click.option(
+    "-o",
+    "--output",
+    type=click.Path(),
+    required=True,
+    help="write output to DIR",
+)
+def main(config, output):
+    config = read_config(config)
+    doit(output, config)

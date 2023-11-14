@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import argparse
 import csv
 import datetime
 import ftplib
@@ -16,17 +15,19 @@ import sys
 import threading
 import time
 from ftplib import FTP
+from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
+from urllib.parse import urlparse
+from urllib.request import urlopen
 
+import click
 import geoip2.database
-import httplib
-import urllib2
-import urlparse
 
-sys.path.append("..")
 import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.model import HostCategoryDir
 from mirrormanager2.lib.sync import run_rsync
+
+from .common import read_config
 
 logger = logging.getLogger("crawler")
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
@@ -116,7 +117,7 @@ def handle_country_continent_redirect(session):
 
 
 def notify(options, topic, msg):
-    if not options.fedmsg:
+    if not options["fedmsg"]:
         return
 
     mirrormanager2.lib.notifications.fedmsg_publish(
@@ -136,12 +137,10 @@ def doit(options, config):
     # number of minutes to wait if a signal is received to shutdown the crawler
     SHUTDOWN_TIMEOUT = 5
 
-    timeout = options.timeout_minutes
-
     # Fill continent list
-    if options.continents:
-        if any(item.startswith("^") for item in options.continents):
-            for item in options.continents:
+    if options["continents"]:
+        if any(item.startswith("^") for item in options["continents"]):
+            for item in options["continents"]:
                 if item.startswith("^"):
                     try:
                         continents.remove(item[1:].upper())
@@ -156,7 +155,7 @@ def doit(options, config):
                         logger.warning(msg % continents)
                         pass
         else:
-            continents = options.continents
+            continents = options["continents"]
 
         continents = [x.upper() for x in continents]
 
@@ -182,26 +181,25 @@ def doit(options, config):
     host_names = [
         host.name
         for host in hosts
-        if (not host.id < options.startid and not host.id >= options.stopid)
+        if (not host.id < options["startid"] and not host.id >= options["stopid"])
     ]
 
     # Limit our host list down to only the ones we really want to crawl
     hosts = [
         host.id
         for host in hosts
-        if (not host.id < options.startid and not host.id >= options.stopid)
+        if (not host.id < options["startid"] and not host.id >= options["stopid"])
     ]
 
     session.close()
     all_hosts = len(hosts)
-    threads = options.threads
 
     # And then, for debugging, only do one host
     # hosts = [hosts.next()]
 
     hostlist = [dict(id=id, host=host) for id, host in zip(hosts, host_names)]
     msg = dict(hosts=hostlist)
-    msg["options"] = dict(options._get_kwargs())
+    msg["options"] = options
     notify(options, "start", msg)
 
     # Before we do work, chdir to /var/tmp/.  mirrormanager1 did this and I'm
@@ -210,7 +208,7 @@ def doit(options, config):
 
     signal.signal(signal.SIGALRM, sigalrm_handler)
     # Then create a threadpool to handle as many at a time as we like
-    threadpool = multiprocessing.pool.ThreadPool(processes=options.threads)
+    threadpool = multiprocessing.pool.ThreadPool(processes=threads)
 
     def fn(host_id):
         return worker(options, config, host_id)
@@ -256,9 +254,9 @@ def doit(options, config):
 
     notify(options, "complete", dict(results=results))
 
-    if options.canary:
+    if options["canary"]:
         mode = " in canary mode"
-    elif options.repodata:
+    elif options["repodata"]:
         mode = " in repodata mode"
     else:
         mode = ""
@@ -278,149 +276,132 @@ def setup_logging(debug):
     return logger
 
 
-def main():
+def set_global(ctx, param, value):
+    if not value or ctx.resilient_parsing:
+        return
+    globals()[param] = value
+
+
+@click.command()
+@click.option(
+    "-c",
+    "--config",
+    default="/etc/mirrormanager/mirrormanager2.cfg",
+    help="Configuration file to use",
+)
+@click.option(
+    "--include-private",
+    is_flag=True,
+    default=False,
+    help="Include hosts marked 'private' in the crawl",
+)
+@click.option(
+    "-t",
+    "--threads",
+    type=int,
+    default=10,
+    help="max threads to start in parallel",
+    expose_value=False,
+    callback=set_global,
+)
+@click.option(
+    "--timeout-minutes",
+    "timeout",
+    type=int,
+    default=120,
+    help="per-host timeout, in minutes",
+    expose_value=False,
+    callback=set_global,
+)
+@click.option(
+    "--startid",
+    type=int,
+    metavar="ID",
+    default=0,
+    help="Start crawling at host ID (default=0)",
+)
+@click.option(
+    "--stopid",
+    type=int,
+    metavar="ID",
+    default=sys.maxint,
+    help="Stop crawling before host ID (default=maxint)",
+)
+@click.option(
+    "--category",
+    "categories",
+    multiple=True,
+    help="Category to scan (default=all), can be repeated",
+)
+@click.option(
+    "--disable-fedmsg",
+    "fedmsg",
+    is_flag=True,
+    default=True,
+    help="Disable fedora-messaging notifications at the beginning and end of crawl",
+)
+@click.option(
+    "--canary",
+    is_flag=True,
+    default=False,
+    help="Fast crawl by only checking if mirror can be reached",
+)
+@click.option(
+    "--repodata",
+    is_flag=True,
+    default=False,
+    help="Fast crawl by only checking if the repodata is up to date",
+)
+@click.option(
+    "--continent",
+    "continents",
+    multiple=True,
+    help="Limit crawling by continent. Exclude by prefixing with'^'",
+)
+@click.option(
+    "--debug",
+    "-d",
+    is_flag=True,
+    default=False,
+    help="enable printing of debug-level messages",
+)
+@click.option(
+    "-p",
+    "--propagation",
+    is_flag=True,
+    default=False,
+    help="Print out information about repomd.xml propagation "
+    "Defaults to development/rawhide/x86_64/os/repodata "
+    "Only the category 'Fedora Linux' is supported",
+)
+@click.option(
+    "--proppath",
+    metavar="PATH",
+    default="development/rawhide/x86_64/os/repodata",
+    help="Use another path for propgation check  "
+    "Defaults to development/rawhide/x86_64/os/repodata",
+)
+@click.pass_context
+def main(
+    ctx,
+    config,
+    debug,
+):
     starttime = time.time()
-    parser = argparse.ArgumentParser(usage=sys.argv[0] + " [options]")
-    parser.add_argument(
-        "-c",
-        "--config",
-        dest="config",
-        default="/etc/mirrormanager/mirrormanager2.cfg",
-        help="Configuration file to use",
-    )
-
-    parser.add_argument(
-        "--include-private",
-        action="store_true",
-        dest="include_private",
-        default=False,
-        help="Include hosts marked 'private' in the crawl",
-    )
-
-    parser.add_argument(
-        "-t",
-        "--threads",
-        type=int,
-        dest="threads",
-        default=10,
-        help="max threads to start in parallel",
-    )
-
-    parser.add_argument(
-        "--timeout-minutes",
-        type=int,
-        dest="timeout_minutes",
-        default=120,
-        help="per-host timeout, in minutes",
-    )
-
-    parser.add_argument(
-        "--startid",
-        type=int,
-        metavar="ID",
-        dest="startid",
-        default=0,
-        help="Start crawling at host ID (default=0)",
-    )
-
-    parser.add_argument(
-        "--stopid",
-        type=int,
-        metavar="ID",
-        dest="stopid",
-        default=sys.maxint,
-        help="Stop crawling before host ID (default=maxint)",
-    )
-
-    parser.add_argument(
-        "--category",
-        dest="categories",
-        action="append",
-        default=[],
-        help="Category to scan (default=all), can be repeated",
-    )
-
-    parser.add_argument(
-        "--disable-fedmsg",
-        dest="fedmsg",
-        action="store_false",
-        default=True,
-        help="Disable fedora-messaging notifications at the beginning and end of crawl",
-    )
-
-    parser.add_argument(
-        "--canary",
-        dest="canary",
-        action="store_true",
-        default=False,
-        help="Fast crawl by only checking if mirror can be reached",
-    )
-
-    parser.add_argument(
-        "--repodata",
-        dest="repodata",
-        action="store_true",
-        default=False,
-        help="Fast crawl by only checking if the repodata is up to date",
-    )
-
-    parser.add_argument(
-        "--continent",
-        dest="continents",
-        action="append",
-        default=[],
-        help="Limit crawling by continent. Exclude by prefixing with'^'",
-    )
-
-    parser.add_argument(
-        "--debug",
-        "-d",
-        dest="debug",
-        action="store_true",
-        default=False,
-        help="enable printing of debug-level messages",
-    )
-
-    parser.add_argument(
-        "--propagation",
-        "-p",
-        dest="propagation",
-        action="store_true",
-        default=False,
-        help="Print out information about repomd.xml propagation "
-        "Defaults to development/rawhide/x86_64/os/repodata "
-        "Only the category 'Fedora Linux' is supported",
-    )
-
-    parser.add_argument(
-        "--proppath",
-        dest="proppath",
-        metavar="PATH",
-        default="development/rawhide/x86_64/os/repodata",
-        help="Use another path for propgation check  "
-        "Defaults to development/rawhide/x86_64/os/repodata",
-    )
-
-    options = parser.parse_args()
-
-    setup_logging(options.debug)
-
-    config = dict()
-    with open(options.config) as config_file:
-        exec(compile(config_file.read(), options.config, "exec"), config)
-
-    doit(options, config)
+    setup_logging(debug)
+    config = read_config(config)
+    doit(ctx.params, config)
     logger.info("Crawler finished after %d seconds" % (time.time() - starttime))
     return 0
 
 
 ################################################
-# overrides for httplib because we're
+# overrides for http.client because we're
 # handling keepalives ourself
 ################################################
-class myHTTPResponse(httplib.HTTPResponse):
+class myHTTPResponse(HTTPResponse):
     def begin(self):
-        httplib.HTTPResponse.begin(self)
+        HTTPResponse.begin(self)
         self.will_close = False
 
     def isclosed(self):
@@ -459,14 +440,14 @@ class myHTTPResponse(httplib.HTTPResponse):
         return False
 
 
-class myHTTPConnection(httplib.HTTPConnection):
+class myHTTPConnection(HTTPConnection):
     response_class = myHTTPResponse
 
     def end_request(self):
         self.__response = None
 
 
-class myHTTPSConnection(httplib.HTTPSConnection):
+class myHTTPSConnection(HTTPSConnection):
     response_class = myHTTPResponse
 
     def end_request(self):
@@ -862,7 +843,7 @@ def sync_hcds(session, host, host_category_dirs, options):
 
     # In repodata mode we only want to update the files actually scanned.
     # Do not mark files which have not been scanned as not being up to date.
-    if not options.repodata:
+    if not options["repodata"]:
         # now-historical HostCategoryDirs are not up2date
         # we wait for a cascading Directory delete to delete this
         host_categories_to_scan = select_host_categories_to_scan(session, options, host)
@@ -927,7 +908,7 @@ def add_parents(session, host_category_dirs, hc, d):
 def compare_sha256(d, filename, graburl):
     """looks for a FileDetails object that matches the given URL"""
     found = False
-    s = urllib2.urlopen(graburl)
+    s = urlopen(graburl)
     sha256 = hashlib.sha256(s.read()).hexdigest()
     for fd in list(d.fileDetails):
         if fd.filename == filename and fd.sha256 is not None:
@@ -1227,8 +1208,8 @@ def mark_not_up2date(session, config, exc, host, reason="Unknown"):
 
 def select_host_categories_to_scan(session, options, host):
     result = []
-    if options.categories:
-        for category in options.categories:
+    if options["categories"]:
+        for category in options["categories"]:
             hc = mirrormanager2.lib.get_host_category_by_hostid_category(
                 session, host_id=host.id, category=category
             )
@@ -1368,11 +1349,11 @@ def per_host(session, host, options, config):
     successful_categories = 0
     host = mirrormanager2.lib.get_host(session, host)
     host_category_dirs = {}
-    if host.private and not options.include_private:
+    if host.private and not options["include_private"]:
         return 1
     http_debuglevel = 0
     ftp_debuglevel = 0
-    if options.debug:
+    if options["debug"]:
         http_debuglevel = 2
         ftp_debuglevel = 2
 
@@ -1399,20 +1380,20 @@ def per_host(session, host, options, config):
 
     for hc in host_categories_to_scan:
         timeout_check()
-        if hc.always_up2date and not options.propagation:
+        if hc.always_up2date and not options["propagation"]:
             successful_categories += 1
             continue
         category = hc.category
 
         host_category_urls = [hcurl.url for hcurl in hc.urls]
 
-        if options.propagation:
+        if options["propagation"]:
             return check_propagation(
                 session,
                 category.name,
                 category.topdir.name,
                 host_category_urls,
-                options.proppath,
+                options["proppath"],
             )
 
         categoryUrl = method_pref(host_category_urls)
@@ -1422,7 +1403,7 @@ def per_host(session, host, options, config):
         if categoryPrefixLen > 0:
             categoryPrefixLen += 1
 
-        if options.continents:
+        if options["continents"]:
             # Only check for continent if something specified
             # on the command-line
             rc = check_continent(categoryUrl)
@@ -1431,9 +1412,9 @@ def per_host(session, host, options, config):
             if rc != 0:
                 return rc
 
-        if options.canary:
+        if options["canary"]:
             logger.info("canary scanning category %s" % category.name)
-        elif options.repodata:
+        elif options["repodata"]:
             logger.info("repodata scanning category %s" % category.name)
         else:
             logger.info("scanning category %s" % category.name)
@@ -1451,14 +1432,14 @@ def per_host(session, host, options, config):
         # which is accessible via http or ftp
         successful_categories += 1
 
-        if options.canary:
+        if options["canary"]:
             continue
 
         trydirs = list(hc.category.directories)
 
         # No rsync in canary mode, we only retrive a small subset of
         # existing files
-        if not options.repodata:
+        if not options["repodata"]:
             # check the complete category in one go with rsync
             try:
                 has_all_files = try_per_category(
@@ -1493,7 +1474,7 @@ def per_host(session, host, options, config):
             if not d.readable:
                 continue
 
-            if options.repodata:
+            if options["repodata"]:
                 if not d.name.endswith("/repodata"):
                     continue
 
@@ -1554,7 +1535,7 @@ def per_host(session, host, options, config):
     hoststate.close()
 
     if successful_categories == 0:
-        if options.canary:
+        if options["canary"]:
             # If running in canary mode do not auto disable mirrors
             # if they have failed. Therefore do not return '5' but
             # let's say '6'
@@ -1638,8 +1619,8 @@ def worker(options, config, host_id):
 
     log_file = None
     fh = None
-    if not options.propagation:
-        log_file, fh = thread_file_logger(config.get("MM_LOG_DIR", None), host.id, options.debug)
+    if not options["propagation"]:
+        log_file, fh = thread_file_logger(config.get("MM_LOG_DIR", None), host.id, options["debug"])
 
     logger.info(f"Worker {thread_id()!r} starting on host {host!r}")
 
@@ -1684,7 +1665,7 @@ def worker(options, config, host_id):
         # This duration is completely different from the real time
         # required to crawl the complete host so that it does not help
         # to remember it.
-        if not (options.repodata or options.canary):
+        if not (options["repodata"] or options["canary"]):
             if rc != 12:
                 # rc == 12: no category to crawl found. No need to
                 # update the crawl duration.
