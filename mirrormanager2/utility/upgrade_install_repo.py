@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 This script changes the directory path from the fedora-install-X repositories
 for a given version.
@@ -14,11 +12,13 @@ TODO: test IRL
 """
 
 import os
-import sys
-from optparse import OptionParser
+
+import click
 
 import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
+
+from .common import read_config
 
 # moving from pub/fedora/linux/releases/test/22_Beta/Server/x86_64/os/
 # to          pub/fedora/linux/releases/22/Server/x86_64/os
@@ -40,7 +40,7 @@ def move_install_repo(session, version, test=False, debug=False):
         if a.name == "source":
             continue
 
-        if options.version == "development":
+        if version == "development":
             # We do not change development repos
             continue
 
@@ -96,56 +96,33 @@ def move_install_repo(session, version, test=False, debug=False):
     session.commit()
 
 
-def main():
-    global options
-    parser = OptionParser(usage=sys.argv[0] + " [options]")
-    parser.add_option(
-        "-c",
-        "--config",
-        dest="config",
-        default="/etc/mirrormanager/mirrormanager2.cfg",
-        help="Configuration file to use " "(default=/etc/mirrormanager/mirrormanager2.cfg)",
-    )
-    parser.add_option(
-        "--version",
-        dest="version",
-        type="string",
-        help="OS version to move (e.g. '14') [required]",
-        default=None,
-    )
-
-    parser.add_option(
-        "--test",
-        dest="test",
-        default=False,
-        action="store_true",
-        help="Small flag used for the unit-tests to avoid one check",
-    )
-    parser.add_option(
-        "--debug",
-        dest="debug",
-        default=False,
-        action="store_true",
-        help="Output what changes but do not change anything",
-    )
-
-    (options, args) = parser.parse_args()
-
-    d = dict()
-    with open(options.config) as config_file:
-        exec(compile(config_file.read(), options.config, "exec"), d)
-
-    db_manager = get_db_manager(d)
+@click.command()
+@click.option(
+    "-c",
+    "--config",
+    default="/etc/mirrormanager/mirrormanager2.cfg",
+    help="Configuration file to use " "(default=/etc/mirrormanager/mirrormanager2.cfg)",
+)
+@click.option(
+    "--version",
+    help="OS version to move (e.g. '14') [required]",
+    required=True,
+)
+@click.option(
+    "--test",
+    is_flag=True,
+    default=False,
+    help="Small flag used for the unit-tests to avoid one check",
+)
+@click.option(
+    "--debug",
+    is_flag=True,
+    default=False,
+    help="Output what changes but do not change anything",
+)
+def main(config, version, test, debug):
+    conf = read_config(config)
+    db_manager = get_db_manager(conf)
     session = db_manager.Session()
 
-    if options.version is None:
-        parser.print_help()
-        sys.exit(1)
-
-    move_install_repo(session, options.version, test=options.test, debug=options.debug)
-
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+    move_install_repo(session, version, test=test, debug=debug)

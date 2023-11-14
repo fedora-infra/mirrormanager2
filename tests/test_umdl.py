@@ -3,14 +3,21 @@ mirrormanager2 tests for the `Update Master Directory List` (UMDL) cron.
 """
 
 import os
-import subprocess
-import sys
 
 import pytest
+from click.testing import CliRunner
 
 import mirrormanager2.lib
+from mirrormanager2.utility import update_master_directory_list
 
 FOLDER = os.path.dirname(os.path.abspath(__file__))
+
+
+@pytest.fixture(autouse=True)
+def reset_caches():
+    update_master_directory_list.cname = "N/A"
+    mirrormanager2.lib.umdl.arch_cache = None
+    mirrormanager2.lib.umdl.version_cache = None
 
 
 @pytest.fixture()
@@ -66,31 +73,27 @@ umdl_master_directories = [
 
 
 @pytest.fixture()
-def umdl_command(logfile, configfile):
-    umdlscript = os.path.join(FOLDER, "..", "utility", "mm2_update-master-directory-list")
-    return [sys.executable, umdlscript, "-c", configfile, f"--logfile={logfile}"]
+def command_args(logfile, configfile):
+    return ["-c", configfile, f"--logfile={logfile}"]
 
 
-def test_0_umdl_empty_db(umdl_command, logfile, db):
+def run_command(args):
+    runner = CliRunner()
+    return runner.invoke(update_master_directory_list.main, args)
+
+
+def test_0_umdl_empty_db(command_args, logfile, db):
     """Test the umdl cron against an empty database."""
+    result = run_command(command_args)
+    assert result.exit_code == 0
 
-    process = subprocess.Popen(
-        args=umdl_command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-    )
-    stdout, stderr = process.communicate()
-
-    assert process.returncode == 0, stderr
-    assert stdout == ""
+    # assert result.output == ""
     # Ignore for now
     # assert stderr == ''
 
     with open(logfile) as stream:
         logs = stream.readlines()
     logs = "".join([log.split(":", 3)[-1] for log in logs])
-    print(logs)
     exp = """N/A:Starting umdl
 Fedora EPEL:umdl_master_directories Category Fedora EPEL \
 does not exist in the database, skipping
@@ -108,21 +111,21 @@ Fedora Other:Ending umdl
     assert logs == exp
 
 
-def test_1_umdl(db, umdl_command, logfile, base_items, directory, category, categorydirectory):
+def test_1_umdl(
+    db,
+    command_args,
+    logfile,
+    base_items,
+    directory,
+    category,
+    categorydirectory,
+):
     """Test the umdl cron."""
 
     # Run the UDML
-
-    process = subprocess.Popen(
-        args=umdl_command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-    )
-    stdout, stderr = process.communicate()
-
-    assert process.returncode == 0, stderr
-    assert stdout == ""
+    result = run_command(command_args)
+    assert result.exit_code == 0
+    assert result.output == ""
     # Ignore for now
     # assert stderr == ''
 

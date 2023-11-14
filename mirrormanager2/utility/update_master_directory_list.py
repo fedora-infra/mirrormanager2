@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 This script crawls the local copy of the master mirrors (which in our case
 is just a nfs mount of the master mirror content). According to what it
@@ -27,16 +25,13 @@ import hashlib
 import logging
 import logging.handlers
 import mmap
-import optparse
 import os
 import re
 import stat
-import sys
 import time
 
+import click
 import rpmmd.repoMDObject
-
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 
 import mirrormanager2.lib
 import mirrormanager2.lib.umdl as umdl
@@ -44,6 +39,8 @@ from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.model import Directory, FileDetail, Repository
 from mirrormanager2.lib.repomap import repo_prefix
 from mirrormanager2.lib.sync import run_rsync
+
+from .common import read_config
 
 logger = logging.getLogger("umdl")
 stdexcludes = [r".*\.snapshot", r".*/\.~tmp~"]
@@ -962,7 +959,7 @@ def sync_directories_from_fullfiletimelist(session, config, diskpath, category):
     return True
 
 
-def setup_logging(config, options):
+def setup_logging(config, debug, logfile, list_categories):
     log_dir = config.get("MM_LOG_DIR", None)
     # check if the directory exists
     if log_dir is not None:
@@ -973,9 +970,9 @@ def setup_logging(config, options):
             log_dir = None
 
     if log_dir is not None:
-        log_file = log_dir + "/" + options.logfile
+        log_file = log_dir + "/" + logfile
     else:
-        log_file = options.logfile
+        log_file = logfile
 
     fmt = "%(asctime)s:%(category)s:%(message)s"
     datefmt = "%Y-%m-%d %H:%M:%S"
@@ -987,7 +984,7 @@ def setup_logging(config, options):
     logger.addFilter(f)
     # list_categories is a special case where the user wants to see something
     # on the console and not only in the log file
-    if options.debug or options.list_categories:
+    if debug or list_categories:
         sh = logging.StreamHandler()
         sh.setFormatter(formatter)
         logger.addHandler(sh)
@@ -996,64 +993,55 @@ def setup_logging(config, options):
         logger.setLevel(logging.INFO)
 
 
-def main():
+@click.command()
+@click.option(
+    "-c",
+    "--config",
+    default="/etc/mirrormanager/mirrormanager2.cfg",
+    help="Configuration file to use",
+)
+@click.option("--logfile", type=click.Path(), default="umdl.log", help="write logs to PATH")
+@click.option(
+    "--list",
+    "list_categories",
+    is_flag=True,
+    default=False,
+    help="list existing categories and exit",
+)
+@click.option(
+    "--category",
+    "categories",
+    metavar="CATEGORY",
+    default=None,
+    help="only scan category CATEGORY",
+)
+@click.option("--debug", is_flag=True, default=False, help="enable debugging")
+@click.option(
+    "--skip-fullfiletimelist",
+    is_flag=True,
+    default=False,
+    help="Do not look for a fullfiletimelist-*; actually scan the filesystem",
+)
+@click.option(
+    "--delete-directories",
+    is_flag=True,
+    default=False,
+    help="delete directories from the database that are no longer " "on disk",
+)
+def main(
+    config, logfile, list_categories, categories, debug, skip_fullfiletimelist, delete_directories
+):
     global cname
-    parser = optparse.OptionParser(usage=sys.argv[0] + " [options]")
-    parser.add_option(
-        "-c",
-        "--config",
-        dest="config",
-        default="/etc/mirrormanager/mirrormanager2.cfg",
-        help="Configuration file to use",
-    )
-    parser.add_option(
-        "--logfile", dest="logfile", default="umdl.log", metavar="FILE", help="write logs to FILE"
-    )
-    parser.add_option(
-        "--list",
-        dest="list_categories",
-        default=False,
-        action="store_true",
-        help="list existing categories and exit",
-    )
-    parser.add_option(
-        "--category",
-        metavar="CATEGORY",
-        dest="categories",
-        default=None,
-        help="only scan category CATEGORY",
-    )
-    parser.add_option(
-        "--debug", dest="debug", default=False, action="store_true", help="enable debugging"
-    )
-    parser.add_option(
-        "--skip-fullfiletimelist",
-        dest="skip_fullfiletimelist",
-        default=False,
-        action="store_true",
-        help="Do not look for a fullfiletimelist-*; actually scan the filesystem",
-    )
-    parser.add_option(
-        "--delete-directories",
-        dest="delete_directories",
-        default=False,
-        action="store_true",
-        help="delete directories from the database that are no longer " "on disk",
-    )
 
-    (options, args) = parser.parse_args()
-    config = dict()
-    with open(options.config) as config_file:
-        exec(compile(config_file.read(), options.config, "exec"), config)
-
+    config = read_config(config)
     db_manager = get_db_manager(config)
     session = db_manager.Session()
 
-    setup_logging(config, options)
+    setup_logging(config, debug, logfile, list_categories)
 
     logger.info("Starting umdl")
 
-    if options.list_categories:
+    if list_categories:
         categories = mirrormanager2.lib.get_categories(session)
         for c in categories:
             logger.info(c)
@@ -1063,11 +1051,11 @@ def main():
 
     umdl.setup_arch_version_cache(session)
     check_categories = []
-    if options.categories is None:
+    if categories is None:
         check_categories = config.get("umdl_master_directories")
     else:
         for i in config.get("umdl_master_directories"):
-            if i["category"] == options.categories:
+            if i["category"] == categories:
                 check_categories.append(i)
 
     for i in check_categories:
@@ -1090,7 +1078,7 @@ def main():
         category.excludes = i.get("excludes", [])
         category.extra_rsync_options = i.get("options")
         category.directory_cache = cache_directories(category)
-        category.delete_directories = options.delete_directories
+        category.delete_directories = delete_directories
 
         if i["type"] == "rsync":
             sync_directories_using_rsync(session, config, i["url"], category)
@@ -1099,10 +1087,10 @@ def main():
             sync_directories_from_file(session, config, i["url"], category)
         if i["type"] == "directory":
             found = False
-            if not options.skip_fullfiletimelist:
+            if not skip_fullfiletimelist:
                 found = sync_directories_from_fullfiletimelist(session, config, i["path"], category)
 
-            if options.skip_fullfiletimelist or not found:
+            if skip_fullfiletimelist or not found:
                 sync_directories_from_disk(session, config, i["path"], category)
 
     logger.info("Refresh the list of repomd.xml")
@@ -1111,9 +1099,3 @@ def main():
     session.commit()
 
     logger.info("Ending umdl")
-
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
