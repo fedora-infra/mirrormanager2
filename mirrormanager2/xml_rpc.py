@@ -36,7 +36,6 @@ except ImportError:
     # flask-xml-rpc is patched in Fedora, and flask-xml-rpc-re is not packaged.
     from flaskext.xmlrpc import XMLRPCHandler
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 XMLRPC = XMLRPCHandler("xmlrpc")
