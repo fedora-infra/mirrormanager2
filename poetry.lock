@@ -2641,14 +2641,14 @@ sqlcipher = ["sqlcipher3-binary"]
 
 [[package]]
 name = "sqlalchemy-helpers"
-version = "0.12.1"
+version = "0.13.0"
 description = "SQLAlchemy Helpers"
 category = "main"
 optional = false
 python-versions = ">=3.8.0,<4.0.0"
 files = [
-    {file = "sqlalchemy_helpers-0.12.1-py3-none-any.whl", hash = "sha256:6d588fc86471e4f22b1656c0b37b74a29c5ddcb53120a20fe07e6f49054e8ad6"},
-    {file = "sqlalchemy_helpers-0.12.1.tar.gz", hash = "sha256:e475750b710b6462c063cacce3f0e39aafbfb404a0b30a5cee8a6620bfc72180"},
+    {file = "sqlalchemy_helpers-0.13.0-py3-none-any.whl", hash = "sha256:15667669dfd4c0bef77287b471c0a25a0664d7194947b990848362a6b3a6fad0"},
+    {file = "sqlalchemy_helpers-0.13.0.tar.gz", hash = "sha256:0a7f170300f68f990a6ac485de3955ab9bc9e66d8272ce5772b8e7a6490a77a2"},
 ]
 
 [package.dependencies]
@@ -3059,4 +3059,4 @@ graph = ["matplotlib", "geoip2"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "5bc14df123f04c5a1ecf61e12f54d7ba73aaf3195199c0af4078cff84bbbb6a2"
+content-hash = "f51334b429afc0bf83c8394e0fb125e5e332e05aa23f92cf6e697fcb4366475f"
