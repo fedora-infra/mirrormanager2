@@ -13,6 +13,7 @@ jobs:
           # https://src.fedoraproject.org/rpms/python-pyrpmmd
           # - "centos/centos:stream8"
           # - "centos/centos:stream9"
+          - "fedora/fedora:38"
           - "fedora/fedora:latest"
           - "fedora/fedora:rawhide"
 
