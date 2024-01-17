@@ -31,11 +31,11 @@ Start by install mirrormanager2::
 
   dnf install mirrormanager2
 
-Adjust the configuration files: ``/etc/mirrormanager2/mirrormanager2.cfg``.
+Adjust the configuration files: ``/etc/mirrormanager/mirrormanager2.cfg``.
 
 Create the database scheme::
 
-   MM2_CONFIG=/etc/mirrormanager2/mirrormanager2.cfg poetry run flask -A mirrormanager2.app db sync
+   MM2_CONFIG=/etc/mirrormanager/mirrormanager2.cfg poetry run flask -A mirrormanager2.app db sync
 
 Set up the WSGI as described below.
 

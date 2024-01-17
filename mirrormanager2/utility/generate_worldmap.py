@@ -121,6 +121,7 @@ def doit(output, config):
 @click.option(
     "-c",
     "--config",
+    envvar="MM2_CONFIG",
     default="/etc/mirrormanager/mirrormanager2.cfg",
     help="Configuration file to use",
 )

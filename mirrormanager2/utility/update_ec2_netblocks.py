@@ -105,6 +105,7 @@ def doit(session, dry_run):
 @click.option(
     "-c",
     "--config",
+    envvar="MM2_CONFIG",
     default="/etc/mirrormanager/mirrormanager2.cfg",
     help="Config file to use",
 )
