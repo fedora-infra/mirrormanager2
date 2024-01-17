@@ -10,7 +10,7 @@
 import codecs
 import os
 import socket
-from urllib.parse import urlparse
+from urllib.parse import urlsplit
 
 import click
 import geoip2.database
@@ -46,7 +46,7 @@ def lookup_host_locations(config, gi):
     for hcurl in hcurls:
         if hcurl.host_category.host.private or hcurl.host_category.host.site.private:
             continue
-        hn = urlparse.urlsplit(hcurl.url)[1]
+        hn = urlsplit(hcurl.url)[1]
         if hn in tracking:
             continue
         try:
@@ -95,7 +95,8 @@ def doit(output, config):
     # use zorder=10 to make sure markers are drawn last.
     # (otherwise they are covered up when continents are filled)
     results = lookup_host_locations(config, gi)
-    fd = codecs.open(output + "/mirrors_location.txt", "w", "utf-8-sig")
+    os.makedirs(output)
+    fd = codecs.open(os.path.join(output, "mirrors_location.txt"), "w", "utf-8-sig")
     fd.write("lat\tlon\ttitle\tdescription\ticonSize\ticonOffset\ticon\n")
     for t in results:
         lat = t[0][2]
