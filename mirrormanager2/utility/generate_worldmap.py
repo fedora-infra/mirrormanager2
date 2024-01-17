@@ -10,7 +10,7 @@
 import codecs
 import os
 import socket
-from urllib import urlparse
+from urllib.parse import urlparse
 
 import click
 import geoip2.database
