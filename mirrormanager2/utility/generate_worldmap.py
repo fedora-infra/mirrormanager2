@@ -24,11 +24,8 @@ from .common import read_config
 matplotlib.use("Agg")
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas  # noqa: E402
-from pylab import figure  # noqa: E402
-
-# this export sucks - basemap should do this automatically
-os.environ["BASEMAPDATA"] = "/usr/share/basemap"
 from mpl_toolkits.basemap import Basemap  # noqa: E402
+from pylab import figure  # noqa: E402
 
 
 def uniq(input):
