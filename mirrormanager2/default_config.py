@@ -112,6 +112,9 @@ SHOW_PROPAGATION = True
 # Where to look for the above mentioned propagation images.
 PROPAGATION_BASE = "/var/www/mirrormanager-statistics/data/propagation"
 
+# Where the GeoIP database lives
+GEOIP_BASE = "/usr/share/GeoIP"
+
 # Disable master rsync server ACL
 # Fedora does not use it and therefore it is set to False
 MASTER_RSYNC_ACL = False

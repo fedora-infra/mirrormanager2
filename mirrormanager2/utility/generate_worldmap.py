@@ -76,7 +76,7 @@ def lookup_host_locations(config, gi):
 
 
 def doit(output, config):
-    gi = geoip2.database.Reader("/usr/share/GeoIP/GeoLite2-City.mmdb")
+    gi = geoip2.database.Reader(os.path.join(config["GEOIP_BASE"], "GeoLite2-City.mmdb"))
     m = Basemap(
         llcrnrlon=-180.0,
         llcrnrlat=-90,
