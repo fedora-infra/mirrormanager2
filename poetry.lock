@@ -316,6 +316,17 @@ files = [
 ]
 
 [[package]]
+name = "basemap-data-hires"
+version = "1.3.2"
+description = "High-resolution data assets for matplotlib basemap"
+optional = true
+python-versions = ">=2.6, !=3.0.*, !=3.1.*, <4"
+files = [
+    {file = "basemap_data_hires-1.3.2-py2.py3-none-any.whl", hash = "sha256:39c14c865f8b89c4254d68165a36f1d34dece9366b6cd344692ec02001df956e"},
+    {file = "basemap_data_hires-1.3.2.zip", hash = "sha256:0982eb95b2066ccbe10b6580bcd9c597e3a4e25016bf25afb65e1a96f6e3e97d"},
+]
+
+[[package]]
 name = "black"
 version = "23.9.1"
 description = "The uncompromising code formatter."
@@ -3119,9 +3130,9 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [extras]
 deploy = ["gunicorn", "psycopg2"]
-graph = ["basemap", "geoip2", "matplotlib"]
+graph = ["basemap", "basemap-data", "basemap-data-hires", "geoip2", "matplotlib"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9,<3.13"
-content-hash = "6617df14ffbd0b15c4e44eada53cda6d11b8cc816da93c3528dbc0a82e974095"
+content-hash = "7df6c86eb27c68d6f69564a04b0528d0a481d5486a5a050feef4e631851db898"
