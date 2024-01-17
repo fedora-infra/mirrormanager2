@@ -236,6 +236,86 @@ files = [
 ]
 
 [[package]]
+name = "basemap"
+version = "1.4.0"
+description = "Plot data on map projections with matplotlib"
+optional = true
+python-versions = ">=2.6, !=3.0.*, !=3.1.*, <3.13"
+files = [
+    {file = "basemap-1.4.0-cp27-cp27m-win32.whl", hash = "sha256:0da5d4d8e2bd77d7a06ca2f0750e8652acbf725064f518e6acec157d45abf393"},
+    {file = "basemap-1.4.0-cp27-cp27m-win_amd64.whl", hash = "sha256:e7748f4e892fb34ba47dd31cb50d7d7955723e65a3697e2b4e4462f669558ca9"},
+    {file = "basemap-1.4.0-cp27-cp27mu-manylinux1_i686.whl", hash = "sha256:967e5def861c8c152da9e4dedfb1f3ddfab040af5686ade5bed49bced2ff1176"},
+    {file = "basemap-1.4.0-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:f030517f32e90520555aa24871b342ac7a583a8254980a1816cd9b9cc1325899"},
+    {file = "basemap-1.4.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:b225b350f406be9d133ab2152a0ae3247d75b91520249b98ce4fd96bba518824"},
+    {file = "basemap-1.4.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:0927a7d3899035b71ac88dfaa3fd7c304e62316d3506c79010b28b0ded6db83f"},
+    {file = "basemap-1.4.0-cp310-cp310-manylinux1_i686.whl", hash = "sha256:b8c8337d4d8ce1f56c9942f4b7c66405948b4a203fa9a309845418e672c27d33"},
+    {file = "basemap-1.4.0-cp310-cp310-manylinux1_x86_64.whl", hash = "sha256:a50664872c72c6673ca135bff5a53fa6633cb0322a06453a61d500b4fa535345"},
+    {file = "basemap-1.4.0-cp310-cp310-win32.whl", hash = "sha256:e9e69b8ead48d5b8b841390bf7b6bbd5349354756c9643fee88fd54431b2092f"},
+    {file = "basemap-1.4.0-cp310-cp310-win_amd64.whl", hash = "sha256:b25fccf7c31f3b29fb7f22f4eebbf4ab986db0c300300dad32acf5bbe8e8c6ec"},
+    {file = "basemap-1.4.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:355efa84734cec51dd1565b86a91854e7d2654f57fc065472e8198ed99467512"},
+    {file = "basemap-1.4.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:f4ff492d65bdd7ed6d84b9789f9ed55cbc74dee236ebbb914767c976b7ffcf8e"},
+    {file = "basemap-1.4.0-cp311-cp311-manylinux1_i686.whl", hash = "sha256:1ea26cb43cb3809802968f6b222cc4c101161c62a2a844eba4d0f94d61533614"},
+    {file = "basemap-1.4.0-cp311-cp311-manylinux1_x86_64.whl", hash = "sha256:43f29704b0f6601bb569742386a1bce48019fbefe9a21a6f603eb3154de545ca"},
+    {file = "basemap-1.4.0-cp311-cp311-win32.whl", hash = "sha256:23c1dedd397e42b5f0eb0e11310e2a251001a6999b99438fe935d67ba799ddf2"},
+    {file = "basemap-1.4.0-cp311-cp311-win_amd64.whl", hash = "sha256:823848e92b91d7f9be764a8c0d2d253431eeb21a60d3c6601f5217ae270b0f6b"},
+    {file = "basemap-1.4.0-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:22a246f1aba6dad9d7da6c1a28157e8682a2a70779ed92c09026d5907791e295"},
+    {file = "basemap-1.4.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:a78411bf8e522028c367c5e36b4da7c2235910d80c7a987af7ee054203421999"},
+    {file = "basemap-1.4.0-cp312-cp312-manylinux1_i686.whl", hash = "sha256:a817bd7a493948c63cb31bf2b86f770ec213f355b9c5f2a7a440566b1b42fc83"},
+    {file = "basemap-1.4.0-cp312-cp312-manylinux1_x86_64.whl", hash = "sha256:550f435106339823bc0b4fb64bd89bd1ca8c05b083935d7f4cd46e8e4d1c5a5d"},
+    {file = "basemap-1.4.0-cp312-cp312-win32.whl", hash = "sha256:0ee1ebadb27255c6045ddfaafe01b1850a993cc054f15fd12eb3fb9a22b0ba5d"},
+    {file = "basemap-1.4.0-cp312-cp312-win_amd64.whl", hash = "sha256:7c24d437767f3df29fd9e3e7f0ec48d4541dfa2fde9953d898467ba59e341c9b"},
+    {file = "basemap-1.4.0-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:85881bd7ca3936f2c9d537c79be355f033383ac990d8013d0c7244939baf207b"},
+    {file = "basemap-1.4.0-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:3fd217669f989a936360049ec9da6763de811432c89456bfdf186daa60b4a143"},
+    {file = "basemap-1.4.0-cp35-cp35m-win32.whl", hash = "sha256:1df140c0c40f1cd5f154f80d5c4d962d314d4f5a62d2d619047be79f5415278f"},
+    {file = "basemap-1.4.0-cp35-cp35m-win_amd64.whl", hash = "sha256:83ec95264b67970a3d10e813317468dbe2031d55aee25d4f8dcffa8eba3cc705"},
+    {file = "basemap-1.4.0-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:d486119160c4485ed97618537279b2d662758acadc6cefe6323f6cdf7ca8873b"},
+    {file = "basemap-1.4.0-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:eb3cee3526b574b6cd9cdd8908a124c75ffbebf50b016740ec1181def72d44af"},
+    {file = "basemap-1.4.0-cp36-cp36m-win32.whl", hash = "sha256:28e79572eeaaf92cb3cca1bb88faee0eb25ca8d898795cb29bd6675fb0a09a48"},
+    {file = "basemap-1.4.0-cp36-cp36m-win_amd64.whl", hash = "sha256:6c69fead3fbc6aacb3f98e753607339c2dc6ae90cfc739812d6a895d12753409"},
+    {file = "basemap-1.4.0-cp37-cp37m-manylinux1_i686.whl", hash = "sha256:a7f50b7828ecb9dc86a90e0dffba93d7a4156babf245c55ad58a144c94944391"},
+    {file = "basemap-1.4.0-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:8818d274b8c81f764ab7aec423b9d1bd66e12e2e3093ca1ea27b1ad205c2e376"},
+    {file = "basemap-1.4.0-cp37-cp37m-win32.whl", hash = "sha256:3baba10a9f59e4be99cca507ce0b442c524703affa03871704b931a95c6aea15"},
+    {file = "basemap-1.4.0-cp37-cp37m-win_amd64.whl", hash = "sha256:8d528ec0f6c487003e072d10d49b599f9637ca65417f6c1c5ea349a238b1c66d"},
+    {file = "basemap-1.4.0-cp38-cp38-manylinux1_i686.whl", hash = "sha256:8ee6cbcc62908215342d34b50db3833b6262e8a00e678f68d7ac2aad778ea151"},
+    {file = "basemap-1.4.0-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:aab4279b727aef726e3f09e35c23760236f3599e8ee7b6d12ee3b7655275b10f"},
+    {file = "basemap-1.4.0-cp38-cp38-win32.whl", hash = "sha256:f64b4227415e13c0dbf79539959da49160245df40950f434561515bfafd1f0e3"},
+    {file = "basemap-1.4.0-cp38-cp38-win_amd64.whl", hash = "sha256:8e31f4a1752bce29101f3438a8a247edd82d4e6348e3f9f3b0f6b16c2ccf1919"},
+    {file = "basemap-1.4.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:10d45296ff9f1c7160290653bede4b1bd26d0e6d5cae32ea1b3823ebfe7f82cc"},
+    {file = "basemap-1.4.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:b7ddcf4b0138942459f2a7a43e2afe1e4b397cfc379b43074f72e6c6e79d4683"},
+    {file = "basemap-1.4.0-cp39-cp39-manylinux1_i686.whl", hash = "sha256:353cb3d186ff0cbb1e103f150a9a9e39d512020bc2b46824b4b307f13556b23d"},
+    {file = "basemap-1.4.0-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:195cdcd10c0a394cd57bf28211b1f322d93ba99829d05760eec2342ad894b3ce"},
+    {file = "basemap-1.4.0-cp39-cp39-win32.whl", hash = "sha256:6f8a2cb3c83f1320368ce09514628992d383098916a9106ca47db8069e150eb2"},
+    {file = "basemap-1.4.0-cp39-cp39-win_amd64.whl", hash = "sha256:ccf4810a829325013f409834d626e42e098ef0bd49282a41fb04bd6e63cf7a1f"},
+    {file = "basemap-1.4.0.zip", hash = "sha256:bb4f9dc1d8d0108fcab934571bafa3ebd5d445d44c728f2302f6fb5009705879"},
+]
+
+[package.dependencies]
+basemap-data = ">=1.3.2,<1.4"
+matplotlib = {version = ">=1.5,<3.9", markers = "python_version >= \"3.5\""}
+numpy = {version = ">=1.21,<1.27", markers = "python_version >= \"3.8\""}
+packaging = {version = ">=16.0,<24.0", markers = "python_version >= \"3.5\""}
+pyproj = {version = ">=1.9.3,<3.7.0", markers = "python_version >= \"3.5\""}
+pyshp = {version = ">=1.2,<2.4", markers = "python_version >= \"2.7\""}
+
+[package.extras]
+doc = ["cftime (>=1.4.0,<1.7.0)", "furo (>=2022.4.7,<2023.9.11)", "netCDF4 (>=1.5.6,<1.7.0)", "scipy (>=1.2,<1.12)", "sphinx (>=5.3,<7.2)"]
+lint = ["astroid (>=1.6,<2.0)", "astroid (>=2.4,<2.5)", "astroid (>=2.5,<2.7)", "astroid (>=2.8,<3.1)", "flake8 (>=2.6,<3.0)", "flake8 (>=2.6,<3.0)", "flake8 (>=2.6,<3.0)", "flake8 (>=2.6,<3.9)", "flake8 (>=2.6,<4.0)", "flake8 (>=2.6,<6.2)", "pylint (>=1.9,<2.0)", "pylint (>=2.11,<3.1)", "pylint (>=2.6,<2.7)", "pylint (>=2.7,<2.10)", "unittest2"]
+owslib = ["OWSLib (>=0.28.1,<0.30.0)", "OWSLib (>=0.8.0,<0.11.0)", "OWSLib (>=0.8.0,<0.11.0)", "OWSLib (>=0.8.0,<0.15.0)", "OWSLib (>=0.8.0,<0.18.0)", "OWSLib (>=0.8.0,<0.19.0)", "OWSLib (>=0.8.0,<0.20.0)", "ordereddict"]
+pillow = ["pillow (>=3.4.0,<4.0.0)", "pillow (>=3.4.0,<4.0.0)", "pillow (>=4.3.0,<5.0.0)", "pillow (>=5.4.0,<6.0.0)", "pillow (>=6.2.2,<7.0.0)", "pillow (>=7.1.0,<8.0.0)", "pillow (>=8.3.2,<9.0.0)", "pillow (>=9.4.0,<10.2.0)"]
+test = ["coverage (>=3.7,<4.0)", "coverage (>=4.5,<5.0)", "coverage (>=4.5,<5.0)", "coverage (>=4.5,<5.0)", "coverage (>=5.5,<6.0)", "coverage (>=5.5,<6.0)", "coverage (>=5.5,<7.4)", "pytest (>=2.9.0,<3.0)", "pytest (>=3.2.0,<3.3)", "pytest (>=3.2.0,<3.3)", "pytest (>=4.6.9,<5.0)", "pytest (>=4.6.9,<5.0)", "pytest (>=6.1.2,<6.2)", "pytest (>=6.2.5,<7.5)", "pytest-cov (>=2.5,<2.6)", "pytest-cov (>=2.5,<2.6)", "pytest-cov (>=2.5,<2.6)", "pytest-cov (>=2.5,<2.9)", "pytest-cov (>=2.9,<3.0)", "pytest-cov (>=2.9,<4.2)", "unittest2"]
+
+[[package]]
+name = "basemap-data"
+version = "1.3.2"
+description = "Data assets for matplotlib basemap"
+optional = true
+python-versions = ">=2.6, !=3.0.*, !=3.1.*, <4"
+files = [
+    {file = "basemap_data-1.3.2-py2.py3-none-any.whl", hash = "sha256:26e794556c496b26f7714658cdbea5c68cb47d6a8a9fb0e674844fa89c56fc59"},
+    {file = "basemap_data-1.3.2.zip", hash = "sha256:0072efd6f12c76e9f35e8fd718360d634b849ba988e74acccaf1ec536275f70b"},
+]
+
+[[package]]
 name = "black"
 version = "23.9.1"
 description = "The uncompromising code formatter."
@@ -1972,6 +2052,56 @@ files = [
 diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
+name = "pyproj"
+version = "3.6.1"
+description = "Python interface to PROJ (cartographic projections and coordinate transformations library)"
+optional = true
+python-versions = ">=3.9"
+files = [
+    {file = "pyproj-3.6.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:ab7aa4d9ff3c3acf60d4b285ccec134167a948df02347585fdd934ebad8811b4"},
+    {file = "pyproj-3.6.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:4bc0472302919e59114aa140fd7213c2370d848a7249d09704f10f5b062031fe"},
+    {file = "pyproj-3.6.1-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5279586013b8d6582e22b6f9e30c49796966770389a9d5b85e25a4223286cd3f"},
+    {file = "pyproj-3.6.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:80fafd1f3eb421694857f254a9bdbacd1eb22fc6c24ca74b136679f376f97d35"},
+    {file = "pyproj-3.6.1-cp310-cp310-win32.whl", hash = "sha256:c41e80ddee130450dcb8829af7118f1ab69eaf8169c4bf0ee8d52b72f098dc2f"},
+    {file = "pyproj-3.6.1-cp310-cp310-win_amd64.whl", hash = "sha256:db3aedd458e7f7f21d8176f0a1d924f1ae06d725228302b872885a1c34f3119e"},
+    {file = "pyproj-3.6.1-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:ebfbdbd0936e178091309f6cd4fcb4decd9eab12aa513cdd9add89efa3ec2882"},
+    {file = "pyproj-3.6.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:447db19c7efad70ff161e5e46a54ab9cc2399acebb656b6ccf63e4bc4a04b97a"},
+    {file = "pyproj-3.6.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e7e13c40183884ec7f94eb8e0f622f08f1d5716150b8d7a134de48c6110fee85"},
+    {file = "pyproj-3.6.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:65ad699e0c830e2b8565afe42bd58cc972b47d829b2e0e48ad9638386d994915"},
+    {file = "pyproj-3.6.1-cp311-cp311-win32.whl", hash = "sha256:8b8acc31fb8702c54625f4d5a2a6543557bec3c28a0ef638778b7ab1d1772132"},
+    {file = "pyproj-3.6.1-cp311-cp311-win_amd64.whl", hash = "sha256:38a3361941eb72b82bd9a18f60c78b0df8408416f9340521df442cebfc4306e2"},
+    {file = "pyproj-3.6.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:1e9fbaf920f0f9b4ee62aab832be3ae3968f33f24e2e3f7fbb8c6728ef1d9746"},
+    {file = "pyproj-3.6.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:6d227a865356f225591b6732430b1d1781e946893789a609bb34f59d09b8b0f8"},
+    {file = "pyproj-3.6.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:83039e5ae04e5afc974f7d25ee0870a80a6bd6b7957c3aca5613ccbe0d3e72bf"},
+    {file = "pyproj-3.6.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fffb059ba3bced6f6725961ba758649261d85ed6ce670d3e3b0a26e81cf1aa8d"},
+    {file = "pyproj-3.6.1-cp312-cp312-win32.whl", hash = "sha256:2d6ff73cc6dbbce3766b6c0bce70ce070193105d8de17aa2470009463682a8eb"},
+    {file = "pyproj-3.6.1-cp312-cp312-win_amd64.whl", hash = "sha256:7a27151ddad8e1439ba70c9b4b2b617b290c39395fa9ddb7411ebb0eb86d6fb0"},
+    {file = "pyproj-3.6.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:4ba1f9b03d04d8cab24d6375609070580a26ce76eaed54631f03bab00a9c737b"},
+    {file = "pyproj-3.6.1-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:18faa54a3ca475bfe6255156f2f2874e9a1c8917b0004eee9f664b86ccc513d3"},
+    {file = "pyproj-3.6.1-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:fd43bd9a9b9239805f406fd82ba6b106bf4838d9ef37c167d3ed70383943ade1"},
+    {file = "pyproj-3.6.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:50100b2726a3ca946906cbaa789dd0749f213abf0cbb877e6de72ca7aa50e1ae"},
+    {file = "pyproj-3.6.1-cp39-cp39-win32.whl", hash = "sha256:9274880263256f6292ff644ca92c46d96aa7e57a75c6df3f11d636ce845a1877"},
+    {file = "pyproj-3.6.1-cp39-cp39-win_amd64.whl", hash = "sha256:36b64c2cb6ea1cc091f329c5bd34f9c01bb5da8c8e4492c709bda6a09f96808f"},
+    {file = "pyproj-3.6.1-pp39-pypy39_pp73-macosx_10_9_x86_64.whl", hash = "sha256:fd93c1a0c6c4aedc77c0fe275a9f2aba4d59b8acf88cebfc19fe3c430cfabf4f"},
+    {file = "pyproj-3.6.1-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6420ea8e7d2a88cb148b124429fba8cd2e0fae700a2d96eab7083c0928a85110"},
+    {file = "pyproj-3.6.1.tar.gz", hash = "sha256:44aa7c704c2b7d8fb3d483bbf75af6cb2350d30a63b144279a09b75fead501bf"},
+]
+
+[package.dependencies]
+certifi = "*"
+
+[[package]]
+name = "pyshp"
+version = "2.3.1"
+description = "Pure Python read/write support for ESRI Shapefile format"
+optional = true
+python-versions = ">=2.7"
+files = [
+    {file = "pyshp-2.3.1-py2.py3-none-any.whl", hash = "sha256:67024c0ccdc352ba5db777c4e968483782dfa78f8e200672a90d2d30fd8b7b49"},
+    {file = "pyshp-2.3.1.tar.gz", hash = "sha256:4caec82fd8dd096feba8217858068bacb2a3b5950f43c048c6dc32a3489d5af1"},
+]
+
+[[package]]
 name = "pytest"
 version = "7.4.0"
 description = "pytest: simple powerful testing with Python"
@@ -2989,9 +3119,9 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [extras]
 deploy = ["gunicorn", "psycopg2"]
-graph = ["geoip2", "matplotlib"]
+graph = ["basemap", "geoip2", "matplotlib"]
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.9"
-content-hash = "7cba35f784f59903d3fcf5ca940694a8166aa452ec0e880d6666e1720ef00efb"
+python-versions = "^3.9,<3.13"
+content-hash = "6617df14ffbd0b15c4e44eada53cda6d11b8cc816da93c3528dbc0a82e974095"
