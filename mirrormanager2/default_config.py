@@ -99,10 +99,10 @@ EMBARGOED_COUNTRIES = ["CU", "IR", "KP", "SD", "SY"]
 SHOW_MAPS = True
 
 # Location of the static map displayed in the map tab.
-STATIC_MAP = "/map/map.png"
+STATIC_MAP = "map/map.png"
 
 # Location of the interactive openstreetmap based map.
-INTERACTIVE_MAP = "/map/mirrors.html"
+INTERACTIVE_MAP = "map/mirrors.html"
 
 # The crawler can generate propagation statistics which can be
 # converted into svg/pdf with mm2_propagation. These files
