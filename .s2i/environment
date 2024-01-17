@@ -1,0 +1,2 @@
+UPGRADE_PIP_TO_LATEST=true
+APP_MODULE=mirrormanager2.app:create_app()

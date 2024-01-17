@@ -1,0 +1,20 @@
+#!/bin/bash -e
+
+# The assemble script builds the application artifacts from a source and
+# places them into appropriate directories inside the image.
+
+# Execute the default S2I script
+. /usr/libexec/s2i/assemble
+
+set -e
+set -x
+
+install_tool "micropipenv" "[toml]"
+
+micropipenv install --deploy
+
+# Now install the root project too, micropipenv does not do that
+pip install . --no-deps
+
+# set permissions for any installed artifacts
+fix-permissions /opt/app-root -P
