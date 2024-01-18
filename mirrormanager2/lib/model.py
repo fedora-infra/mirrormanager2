@@ -980,3 +980,36 @@ class User(BASE):
         """Return a string representation of this object."""
 
         return f"User: {self.id} - name {self.user_name}"
+
+
+class AccessStatCategory(BASE):
+    """Mirror access statistics category"""
+
+    __tablename__ = "access_stat_category"
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    name = sa.Column(sa.String(255), nullable=False, unique=True)
+
+    access_stats = relationship("AccessStat", back_populates="category")
+
+
+class AccessStat(BASE):
+    """Mirror access statistics"""
+
+    # names like "Group", "Order" and "User" are reserved words in SQL
+    # so we set the name to something safe for SQL
+    __tablename__ = "access_stat"
+
+    category_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey("access_stat_category.id"),
+        nullable=False,
+        primary_key=True,
+        index=True,
+    )
+    date = sa.Column(sa.Date, nullable=False, primary_key=True, index=True)
+    name = sa.Column(sa.String(255), nullable=False, primary_key=True)
+    percent = sa.Column(sa.Float)
+    requests = sa.Column(sa.Integer)
+
+    category = relationship("AccessStatCategory", back_populates="access_stats")
