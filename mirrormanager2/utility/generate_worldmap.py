@@ -96,6 +96,7 @@ def doit(output, config):
     # (otherwise they are covered up when continents are filled)
     results = lookup_host_locations(config, gi)
     os.makedirs(output)
+    marker_url = config.get("APPLICATION_ROOT", "/") + "static/map/f-dot.png"
     fd = codecs.open(os.path.join(output, "mirrors_location.txt"), "w", "utf-8-sig")
     fd.write("lat\tlon\ttitle\tdescription\ticonSize\ticonOffset\ticon\n")
     for t in results:
@@ -107,7 +108,7 @@ def doit(output, config):
         fd.write(
             f"{t[0][2]}\t{t[0][3]}\t<a href='http://{t[0][0]}/' rel='noopener noreferrer' "
             f"target='_blank'>{t[0][0]}</a>"
-            f"\t{t[1]}\t21,25\t-10,-25\t./f-dot.png\n"
+            f"\t{t[1]}\t21,25\t-10,-25\t{marker_url}\n"
         )
 
     fd.close()
