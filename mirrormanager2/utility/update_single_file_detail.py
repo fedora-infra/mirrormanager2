@@ -77,9 +77,9 @@ def main(config, categories, debug, filename):
 
     check_categories = []
     if categories is None:
-        check_categories = config.get("umdl_master_directories")
+        check_categories = config.get("UMDL_MASTER_DIRECTORIES")
     else:
-        for i in config.get("umdl_master_directories"):
+        for i in config.get("UMDL_MASTER_DIRECTORIES"):
             if i["category"] == categories:
                 check_categories.append(i)
 
@@ -93,7 +93,7 @@ def main(config, categories, debug, filename):
             continue
 
         if category.product is None:
-            logger.error("umdl_master_directories Category %s has null Product, skipping" % (cname))
+            logger.error("UMDL_MASTER_DIRECTORIES Category %s has null Product, skipping" % (cname))
             logger.error("Category %s has null Product, skipping" % (cname))
             continue
 

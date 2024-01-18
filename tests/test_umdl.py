@@ -39,7 +39,7 @@ UMDL_PREFIX = '{FOLDER}/../testdata/'
 # Specify whether the crawler should send a report by email
 CRAWLER_SEND_EMAIL =  False
 
-umdl_master_directories = [
+UMDL_MASTER_DIRECTORIES = [
     {{
         'type': 'directory',
         'path': '{FOLDER}/../testdata/pub/epel/',
@@ -95,15 +95,15 @@ def test_0_umdl_empty_db(command_args, logfile, db):
         logs = stream.readlines()
     logs = "".join([log.split(":", 3)[-1] for log in logs])
     exp = """N/A:Starting umdl
-Fedora EPEL:umdl_master_directories Category Fedora EPEL \
+Fedora EPEL:UMDL_MASTER_DIRECTORIES Category Fedora EPEL \
 does not exist in the database, skipping
-Fedora Linux:umdl_master_directories Category Fedora Linux \
+Fedora Linux:UMDL_MASTER_DIRECTORIES Category Fedora Linux \
 does not exist in the database, skipping
-Fedora Secondary Arches:umdl_master_directories Category Fedora \
+Fedora Secondary Arches:UMDL_MASTER_DIRECTORIES Category Fedora \
 Secondary Arches does not exist in the database, skipping
-Fedora Archive:umdl_master_directories Category Fedora Archive does \
+Fedora Archive:UMDL_MASTER_DIRECTORIES Category Fedora Archive does \
 not exist in the database, skipping
-Fedora Other:umdl_master_directories Category Fedora Other \
+Fedora Other:UMDL_MASTER_DIRECTORIES Category Fedora Other \
 does not exist in the database, skipping
 Fedora Other:Refresh the list of repomd.xml
 Fedora Other:Ending umdl

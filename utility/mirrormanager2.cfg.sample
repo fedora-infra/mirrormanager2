@@ -170,7 +170,7 @@ CRAWLER_SEND_EMAIL =  True
 # Whether to use Fedora Messaging for notifications
 #USE_FEDORA_MESSAGING = True
 
-umdl_master_directories = [
+UMDL_MASTER_DIRECTORIES = [
     {
         'type': 'directory',
         'path': '../testdata/pub/epel/',
