@@ -185,3 +185,5 @@ SKIP_PATHS_FOR_VERSION = ["pub/alt"]
 
 # Whether to use Fedora Messaging for notifications
 USE_FEDORA_MESSAGING = True
+
+UMDL_MASTER_DIRECTORIES = []

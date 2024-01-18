@@ -210,9 +210,9 @@ def main(config, logfile, list_categories, categories, debug, delete_directories
     umdl.setup_arch_version_cache(session)
     check_categories = []
     if categories is None:
-        check_categories = config.get("umdl_master_directories")
+        check_categories = config.get("UMDL_MASTER_DIRECTORIES")
     else:
-        for i in config.get("umdl_master_directories"):
+        for i in config.get("UMDL_MASTER_DIRECTORIES"):
             if i["category"] == categories:
                 check_categories.append(i)
 
@@ -222,14 +222,14 @@ def main(config, logfile, list_categories, categories, debug, delete_directories
         category = mirrormanager2.lib.get_category_by_name(session, cname)
         if not category:
             logger.error(
-                "umdl_master_directories Category %s does not exist in the "
+                "UMDL_MASTER_DIRECTORIES Category %s does not exist in the "
                 "database, skipping" % (cname)
             )
             continue
 
         if category.product is None:
             logger.error(
-                "umdl_master_directories Category %s has null Product, " "skipping" % (cname)
+                "UMDL_MASTER_DIRECTORIES Category %s has null Product, " "skipping" % (cname)
             )
             continue
 
