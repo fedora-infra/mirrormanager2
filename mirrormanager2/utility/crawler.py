@@ -990,9 +990,8 @@ def try_per_category(
     local_timeout = int(remaining * 0.9)
 
     rsync_start_time = datetime.datetime.utcnow()
-    params = config.get("CRAWLER_RSYNC_PARAMETERS", "--no-motd")
     try:
-        result, listing = run_rsync(url, params, logger, local_timeout)
+        result, listing = run_rsync(url, config["CRAWLER_RSYNC_PARAMETERS"], logger, local_timeout)
     except Exception:
         logger.exception("Failed to run rsync.", exc_info=True)
         return False

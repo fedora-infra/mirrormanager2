@@ -109,8 +109,7 @@ def setup_arch_version_cache(session):
 def guess_ver_arch_from_path(session, category, path, config=None):
     if config:
         dname = os.path.join(category.topdir.name, path)
-        skip_dirs = config.get("SKIP_PATHS_FOR_VERSION", [])
-        for skip in skip_dirs:
+        for skip in config["SKIP_PATHS_FOR_VERSION"]:
             if dname.startswith(skip):
                 return (None, None)
 
@@ -157,7 +156,7 @@ def make_file_details_from_checksums(session, config, relativeDName, D):
     def _parse_checksum_file(relativeDName, checksumlen):
         r = {}
         try:
-            f = open(os.path.join(config.get("UMDL_PREFIX", ""), relativeDName))
+            f = open(os.path.join(config["UMDL_PREFIX"], relativeDName))
             for line in f:
                 line = line.strip()
                 s = line.split()
@@ -177,9 +176,7 @@ def make_file_details_from_checksums(session, config, relativeDName, D):
         d = {}
         checksum_files = []
         for g in globs:
-            checksum_files.extend(
-                glob.glob(os.path.join(config.get("UMDL_PREFIX", ""), relativeDName, g))
-            )
+            checksum_files.extend(glob.glob(os.path.join(config["UMDL_PREFIX"], relativeDName, g)))
         for f in checksum_files:
             d.update(_parse_checksum_file(f, checksumlen))
         return d
@@ -205,7 +202,7 @@ def make_file_details_from_checksums(session, config, relativeDName, D):
 
     for f in files:
         try:
-            s = os.stat(os.path.join(config.get("UMDL_PREFIX", ""), relativeDName, f))
+            s = os.stat(os.path.join(config["UMDL_PREFIX"], relativeDName, f))
         except OSError:
             # bail if the file doesn't actually exist
             continue
@@ -250,9 +247,7 @@ def make_repo_file_details(session, config, relativeDName, D, category, target):
         logger.warning(f"{warning}: {target!r} not in {allowed_targets!r}")
         return
 
-    absolutepath = os.path.join(
-        config.get("UMDL_PREFIX", ""), category.topdir.name, relativeDName, target
-    )
+    absolutepath = os.path.join(config["UMDL_PREFIX"], category.topdir.name, relativeDName, target)
 
     if not os.path.exists(absolutepath):
         logger.warning(f"{warning}: {absolutepath!r} does not exist")
@@ -399,7 +394,7 @@ def short_filelist(config, relativeDName, files):
         date_file_list = []
         for k in files:
             try:
-                s = os.stat(os.path.join(config.get("UMDL_PREFIX", ""), relativeDName, k))
+                s = os.stat(os.path.join(config["UMDL_PREFIX"], relativeDName, k))
             except OSError:
                 continue
 

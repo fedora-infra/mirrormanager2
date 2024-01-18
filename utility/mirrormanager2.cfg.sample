@@ -51,7 +51,7 @@ OIDC_CLIENT_SECRETS = "/etc/mirrormanager/client_secrets.json"
 # Email of the admin to which send notification or error
 ADMIN_EMAIL = "admin@fedoraproject.org"
 
-# Email address used in the 'From' field of the emails sent.
+# Email address used in the "From" field of the emails sent.
 # Default: ``nobody@fedoraproject.org``.
 #EMAIL_FROM = "nobody@fedoraproject.org"
 
@@ -126,7 +126,7 @@ ADMIN_EMAIL = "admin@fedoraproject.org"
 # for host category URLs at all.
 # The following is the default for Fedora to exclude FTP based
 # mirrors to be added. Removing this confguration option
-# or setting it to '' removes any protocol restrictions.
+# or setting it to "" removes any protocol restrictions.
 #MM_PROTOCOL_REGEX = "^(?!ftp)(.*)$"
 
 # The netblock size parameters define which netblock sizes can be
@@ -145,6 +145,15 @@ ADMIN_EMAIL = "admin@fedoraproject.org"
 # under certain setup it might not work (for example is there are proxies
 # in front of the application).
 #CHECK_SESSION_IP = True
+
+# Specify additional rsync parameters for the crawler
+# # --timeout 14400: abort rsync crawl after 4 hours
+# # --no-human-readable: because rsync made things pretty by default in 3.1.x
+#CRAWLER_RSYNC_PARAMETERS = "--no-motd"
+
+# This is a list of directories which MirrorManager will ignore while guessing
+# the version and architecture from a path.
+#SKIP_PATHS_FOR_VERSION = []
 
 ###
 # Configuration options used by the utilities
@@ -169,6 +178,8 @@ CRAWLER_SEND_EMAIL =  True
 
 # Whether to use Fedora Messaging for notifications
 #USE_FEDORA_MESSAGING = True
+
+UMDL_PREFIX = "/srv/"
 
 UMDL_MASTER_DIRECTORIES = [
     {

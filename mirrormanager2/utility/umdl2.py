@@ -71,7 +71,7 @@ def sync_directories_from_fullfilelist(session, config, diskpath, category, excl
             if row in seen:
                 continue
             seen.add(row)
-            relativeDName = os.path.join(diskpath, row).replace(config.get("UMDL_PREFIX", ""), "")
+            relativeDName = os.path.join(diskpath, row).replace(config["UMDL_PREFIX"], "")
             relativeDName = relativeDName.rstrip("/")
             logger.debug("  walking %r" % relativeDName)
             if is_excluded(relativeDName, stdexcludes + excludes):
@@ -80,7 +80,7 @@ def sync_directories_from_fullfilelist(session, config, diskpath, category, excl
 
             # avoid disappearing directories
             try:
-                s = os.stat(os.path.join(config.get("UMDL_PREFIX", ""), relativeDName))
+                s = os.stat(os.path.join(config["UMDL_PREFIX"], relativeDName))
                 ctime = s[stat.ST_CTIME]
             except OSError:
                 logger.debug("Avoiding %r, dissappeared." % relativeDName)
@@ -103,7 +103,7 @@ def sync_directories_from_disk(session, config, diskpath, category, excludes=Non
     diskpath = diskpath.rstrip("/")
 
     for dirpath, _dirnames, _filenames in os.walk(diskpath, topdown=True):
-        relativeDName = dirpath.replace(config.get("UMDL_PREFIX", ""), "")
+        relativeDName = dirpath.replace(config["UMDL_PREFIX"], "")
         logger.debug("  walking %r" % relativeDName)
 
         if is_excluded(relativeDName, stdexcludes + excludes):
@@ -112,7 +112,7 @@ def sync_directories_from_disk(session, config, diskpath, category, excludes=Non
 
         # avoid disappearing directories
         try:
-            s = os.stat(os.path.join(config.get("UMDL_PREFIX", ""), relativeDName))
+            s = os.stat(os.path.join(config["UMDL_PREFIX"], relativeDName))
             ctime = s[stat.ST_CTIME]
         except OSError:
             logger.debug("Avoiding %r, dissappeared." % relativeDName)

@@ -116,7 +116,7 @@ def make_file_details_from_checksums(session, config, D, files=None):
     def _parse_checksum_file(relativeDName, checksumlen):
         r = {}
         try:
-            with open(os.path.join(config.get("UMDL_PREFIX", ""), relativeDName)) as f:
+            with open(os.path.join(config["UMDL_PREFIX"], relativeDName)) as f:
                 for line in f:
                     filename, checksum = _handle_checksum_line(line, checksumlen)
                     if filename is not None:
@@ -146,7 +146,7 @@ def make_file_details_from_checksums(session, config, D, files=None):
                     if re.compile(g).match(f):
                         checksum_files.append(os.path.join(relativeDName, f))
             else:
-                for f in os.listdir(os.path.join(config.get("UMDL_PREFIX", ""), relativeDName)):
+                for f in os.listdir(os.path.join(config["UMDL_PREFIX"], relativeDName)):
                     if re.compile(g).match(f):
                         checksum_files.append(os.path.join(relativeDName, f))
         for f in checksum_files:
@@ -184,7 +184,7 @@ def make_file_details_from_checksums(session, config, D, files=None):
                 continue
         else:
             try:
-                s = os.stat(os.path.join(config.get("UMDL_PREFIX", ""), D.name, f))
+                s = os.stat(os.path.join(config["UMDL_PREFIX"], D.name, f))
             except OSError:
                 # bail if the file doesn't actually exist
                 continue
@@ -571,7 +571,7 @@ def sync_category_directory(session, config, category, relativeDName, ctime, fil
         # stating changed files to see if they are readable
         s = None
         try:
-            s = os.stat(os.path.join(config.get("UMDL_PREFIX", ""), topdir, relativeDName))
+            s = os.stat(os.path.join(config["UMDL_PREFIX"], topdir, relativeDName))
         except OSError:
             # The main reason for this execption is that the
             # file from the fullfiletimelist does not exist.
@@ -871,7 +871,7 @@ def sync_directories_from_fullfiletimelist(session, config, diskpath, category):
     # A set with a list of directories with a repository (repodata)
     repo = set()
 
-    umdl_prefix = config.get("UMDL_PREFIX", "")
+    umdl_prefix = config["UMDL_PREFIX"]
     # Not opening the file as stream and reading line by line as this breaks
     # if the file changes. As this can happen, the file is loaded once into
     # memory using mmap.
@@ -912,7 +912,7 @@ def sync_directories_from_fullfiletimelist(session, config, diskpath, category):
                     # get all directories and their ctime
                     tmp = os.path.join(diskpath, _handle_fedora_linux_category(col[3]))
 
-                    tmp = tmp.replace(config.get("UMDL_PREFIX", ""), "")
+                    tmp = tmp.replace(umdl_prefix, "")
                     tmp = str(tmp, "utf8")
                     ctimes[tmp] = int(col[0])
                     # Only if a directory contains a 'repodata' directory
