@@ -6,7 +6,7 @@
 {% block content %}
 <h1>Maps</h1>
 {%- if config['SHOW_MAPS'] -%}
-Map of all public mirrors - <a href="{{url_for('base.index')}}map/{{ config['INTERACTIVE_MAP'] }}">Interactive Map</a>
+Map of all public mirrors - <a href="{{url_for('base.maps_interactive')}}">Interactive Map</a>
 <img src="{{url_for('base.index')}}map/{{ config['STATIC_MAP'] }}" border="0" alt="alt" class="centered"/>
 {%- else -%}
 Actually, this is disabled and you should not be here. Go away!

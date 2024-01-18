@@ -1224,6 +1224,11 @@ def maps():
     return flask.render_template("maps.html")
 
 
+@views.route("/maps/interactive")
+def maps_interactive():
+    return flask.render_template("maps_interactive.html")
+
+
 @views.route("/propgation")
 def propgation():
     """Redirect for the old URL with typo."""
