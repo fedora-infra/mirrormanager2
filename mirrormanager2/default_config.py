@@ -165,6 +165,15 @@ APPLICATION_URL = None
 # in front of the application).
 CHECK_SESSION_IP = True
 
+# Specify additional rsync parameters for the crawler
+# # --timeout 14400: abort rsync crawl after 4 hours
+# # --no-human-readable: because rsync made things pretty by default in 3.1.x
+CRAWLER_RSYNC_PARAMETERS = "--no-motd"
+
+# This is a list of directories which MirrorManager will ignore while guessing
+# the version and architecture from a path.
+SKIP_PATHS_FOR_VERSION = []
+
 ###
 # Configuration options used by the utilities
 ###
@@ -185,5 +194,7 @@ SKIP_PATHS_FOR_VERSION = ["pub/alt"]
 
 # Whether to use Fedora Messaging for notifications
 USE_FEDORA_MESSAGING = True
+
+UMDL_PREFIX = ""
 
 UMDL_MASTER_DIRECTORIES = []
