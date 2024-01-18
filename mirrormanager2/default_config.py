@@ -98,11 +98,14 @@ EMBARGOED_COUNTRIES = ["CU", "IR", "KP", "SD", "SY"]
 # displays the maps generated with mm2_generate-worldmap.
 SHOW_MAPS = True
 
+# Where to look for maps
+MAPS_BASE = "/var/www/mirrormanager-statistics/map"
+
 # Location of the static map displayed in the map tab.
-STATIC_MAP = "map/map.png"
+STATIC_MAP = "map.png"
 
 # Location of the interactive openstreetmap based map.
-INTERACTIVE_MAP = "map/mirrors.html"
+INTERACTIVE_MAP = "mirrors.html"
 
 # The crawler can generate propagation statistics which can be
 # converted into svg/pdf with mm2_propagation. These files
@@ -161,6 +164,10 @@ APPLICATION_URL = None
 # under certain setup it might not work (for example is there are proxies
 # in front of the application).
 CHECK_SESSION_IP = True
+
+###
+# Configuration options used by the utilities
+###
 
 # Specify additional rsync parameters for the crawler
 # --timeout 14400: abort rsync crawl after 4 hours
