@@ -31,6 +31,7 @@ import flask
 from flask_admin import Admin
 from flask_oidc import OpenIDConnect
 from sqlalchemy.orm import configure_mappers
+from whitenoise import WhiteNoise
 
 from mirrormanager2 import __version__, local_auth
 from mirrormanager2.admin import register_views as register_admin_views
@@ -131,5 +132,11 @@ def create_app(config=None):
     from mirrormanager2.xml_rpc import XMLRPC
 
     XMLRPC.connect(app, "/xmlrpc")
+
+    # More static files
+    app.wsgi_app = WhiteNoise(app.wsgi_app)
+    app.wsgi_app.add_files(os.path.join(app.config["MM_LOG_DIR"], "crawler"), prefix="crawler/")
+    app.wsgi_app.add_files(app.config["STATISTICS_BASE"], prefix="data/")
+    app.wsgi_app.add_files(app.config["MAPS_BASE"], prefix="map/")
 
     return app
