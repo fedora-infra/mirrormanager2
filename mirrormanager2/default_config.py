@@ -89,7 +89,7 @@ SHOW_STATISTICS = True
 
 # This is the directory the code enabled by SHOW_STATISTICS will use
 # to locate the statistics files and display them.
-STATISTICS_BASE = "/var/www/mirrormanager-statistics/data"
+STATISTICS_BASE = "/var/lib/mirrormanager/statistics/data"
 
 # Countries which have to be excluded.
 EMBARGOED_COUNTRIES = ["CU", "IR", "KP", "SD", "SY"]
@@ -99,7 +99,7 @@ EMBARGOED_COUNTRIES = ["CU", "IR", "KP", "SD", "SY"]
 SHOW_MAPS = True
 
 # Where to look for maps
-MAPS_BASE = "/var/www/mirrormanager-statistics/map"
+MAPS_BASE = "/var/lib/mirrormanager/statistics/map"
 
 # Location of the static map displayed in the map tab.
 STATIC_MAP = "map.png"
@@ -113,7 +113,7 @@ INTERACTIVE_MAP = "mirrors.html"
 SHOW_PROPAGATION = True
 
 # Where to look for the above mentioned propagation images.
-PROPAGATION_BASE = "/var/www/mirrormanager-statistics/data/propagation"
+PROPAGATION_BASE = "/var/lib/mirrormanager/statistics/data/propagation"
 
 # Where the GeoIP database lives
 GEOIP_BASE = "/usr/share/GeoIP"
