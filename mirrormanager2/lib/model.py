@@ -1013,3 +1013,19 @@ class AccessStat(BASE):
     requests = sa.Column(sa.Integer)
 
     category = relationship("AccessStatCategory", back_populates="access_stats")
+
+
+class PropagationStat(BASE):
+    __tablename__ = "propagation_stat"
+
+    version_id = sa.Column(
+        sa.Integer, sa.ForeignKey("version.id"), nullable=True, primary_key=True, index=True
+    )
+    datetime = sa.Column(sa.DateTime, nullable=False, primary_key=True, index=True)
+    same_day = sa.Column(sa.Integer)
+    one_day = sa.Column(sa.Integer)
+    two_day = sa.Column(sa.Integer)
+    older = sa.Column(sa.Integer)
+    no_info = sa.Column(sa.Integer)
+
+    version = relationship("Version")
