@@ -216,8 +216,8 @@ def test_get_host_category(db, base_items, site, hosts, directory, category, hos
 
 
 def test_get_host_category_by_hostid_category_empty(db):
-    results = mirrormanager2.lib.get_host_category_by_hostid_category(db, 1, "Fedora Linux")
-    assert results == []
+    result = mirrormanager2.lib.get_host_category_by_hostid_category(db, 1, "Fedora Linux")
+    assert result is None
 
 
 def test_get_host_category_by_hostid_category(
@@ -226,18 +226,18 @@ def test_get_host_category_by_hostid_category(
     """Test the get_host_category_by_hostid_category function of
     mirrormanager2.lib.
     """
-    results = mirrormanager2.lib.get_host_category_by_hostid_category(db, 1, "Fedora Linux")
-    assert len(results) == 1
-    assert results[0].host.name == "mirror.localhost"
-    assert results[0].host.country == "US"
+    result = mirrormanager2.lib.get_host_category_by_hostid_category(db, 1, "Fedora Linux")
+    assert result is not None
+    assert result.host.name == "mirror.localhost"
+    assert result.host.country == "US"
 
-    results = mirrormanager2.lib.get_host_category_by_hostid_category(db, 2, "Fedora Linux")
-    assert len(results) == 1
-    assert results[0].host.name == "mirror2.localhost"
-    assert results[0].host.country == "FR"
+    result = mirrormanager2.lib.get_host_category_by_hostid_category(db, 2, "Fedora Linux")
+    assert result is not None
+    assert result.host.name == "mirror2.localhost"
+    assert result.host.country == "FR"
 
-    results = mirrormanager2.lib.get_host_category_by_hostid_category(db, 3, "Fedora Linux")
-    assert results == []
+    result = mirrormanager2.lib.get_host_category_by_hostid_category(db, 3, "Fedora Linux")
+    assert result is None
 
 
 def test_get_host_category_url_by_id_empty(db):
