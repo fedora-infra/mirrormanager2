@@ -214,7 +214,7 @@ def get_host_category_by_hostid_category(session, host_id, category):
         .filter(model.Category.name == category)
     )
 
-    return query.all()
+    return query.one_or_none()
 
 
 def get_host_category_url_by_id(session, host_category_url_id):
@@ -477,14 +477,29 @@ def get_repo_by_dir(session, path):
     return query.all()
 
 
-def get_repositories(session):
+def get_repositories(session, product_names=None, version_names=None, prefixes=None, arches=None):
     """Return all repositories in the database.
 
     :arg session: the session with which to connect to the database.
 
     """
-    query = session.query(model.Repository).order_by(model.Repository.id)
-
+    query = session.query(model.Repository)
+    if product_names:
+        query = (
+            query.join(model.Version)
+            .join(model.Product)
+            .filter(model.Product.name.in_(product_names))
+        )
+    if version_names:
+        if not product_names:
+            # Searching by product has already added this join
+            query = query.join(model.Version)
+        query = query.filter(model.Version.name.in_(version_names))
+    if prefixes:
+        query = query.filter(model.Repository.prefix.in_(prefixes))
+    if arches:
+        query = query.join(model.Arch).filter(model.Arch.name.in_(arches))
+    query = query.order_by(model.Repository.id)
     return query.all()
 
 
@@ -702,7 +717,7 @@ def get_directory_by_name(session, dirname):
     """
     query = session.query(model.Directory).filter(model.Directory.name == dirname)
 
-    return query.first()
+    return query.one_or_none()
 
 
 def get_file_detail(
@@ -761,6 +776,26 @@ def get_file_detail(
     return query.first()
 
 
+def get_file_detail_history(
+    session,
+    filename,
+    directory_id,
+):
+    """Return the history of FileDetail entries.
+
+    :arg session: the session with which to connect to the database.
+    :arg filename:
+    :arg directory_id:
+    """
+    query = (
+        session.query(model.FileDetail)
+        .filter(model.FileDetail.filename == filename)
+        .filter(model.FileDetail.directory_id == directory_id)
+    )
+    query = query.order_by(model.FileDetail.timestamp.desc())
+    return query.all()
+
+
 def get_file_details(session):
     """Return all the FileDetail object in the database.
 
@@ -770,6 +805,23 @@ def get_file_details(session):
     query = session.query(model.FileDetail).order_by(model.FileDetail.id)
 
     return query.all()
+
+
+def get_file_details_with_checksum(session, file_detail, checksum, age_threshold):
+    if len(checksum) != 64:
+        # Only SHA256 is supported yet.
+        return None
+    query = (
+        session.query(model.FileDetail)
+        .filter(
+            model.FileDetail.directory_id == file_detail.directory_id,
+            model.FileDetail.filename == file_detail.filename,
+            model.FileDetail.sha256 == checksum,
+            model.FileDetail.timestamp > int(age_threshold.timestamp()),
+        )
+        .order_by(model.FileDetail.timestamp.desc())
+    )
+    return query.first()
 
 
 def get_directories(session):

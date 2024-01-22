@@ -1018,14 +1018,14 @@ class AccessStat(BASE):
 class PropagationStat(BASE):
     __tablename__ = "propagation_stat"
 
-    version_id = sa.Column(
-        sa.Integer, sa.ForeignKey("version.id"), nullable=True, primary_key=True, index=True
+    repository_id = sa.Column(
+        sa.Integer, sa.ForeignKey("repository.id"), nullable=True, primary_key=True, index=True
     )
     datetime = sa.Column(sa.DateTime, nullable=False, primary_key=True, index=True)
-    same_day = sa.Column(sa.Integer)
-    one_day = sa.Column(sa.Integer)
-    two_day = sa.Column(sa.Integer)
-    older = sa.Column(sa.Integer)
-    no_info = sa.Column(sa.Integer)
+    same_day = sa.Column(sa.Integer, nullable=False, default=0)
+    one_day = sa.Column(sa.Integer, nullable=False, default=0)
+    two_day = sa.Column(sa.Integer, nullable=False, default=0)
+    older = sa.Column(sa.Integer, nullable=False, default=0)
+    no_info = sa.Column(sa.Integer, nullable=False, default=0)
 
-    version = relationship("Version")
+    repository = relationship("Repository")
