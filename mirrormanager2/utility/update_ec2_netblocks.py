@@ -113,7 +113,5 @@ def doit(session, dry_run):
 def main(config, dry_run):
     config = read_config(config)
     db_manager = get_db_manager(config)
-    session = db_manager.Session()
-
-    doit(session, dry_run)
-    session.commit()
+    with db_manager.Session() as session:
+        doit(session, dry_run)

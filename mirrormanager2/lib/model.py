@@ -412,6 +412,19 @@ class Category(BASE):
         """Return a string representation of the object."""
         return f"<Category({self.id} - {self.name})>"
 
+    @property
+    def directory_cache(self):
+        if not hasattr(self, "_directory_cache"):
+            self._directory_cache = dict()
+            topdirName = self.topdir.name
+            for directory in self.directories:
+                relative_path = directory.name[len(topdirName) + 1 :]
+                self._directory_cache[relative_path] = relative_path.strip("/")
+        return self._directory_cache
+
+    def directory_cache_clear(self):
+        delattr(self, "_directory_cache")
+
 
 class SiteToSite(BASE):
     __tablename__ = "site_to_site"
@@ -688,6 +701,11 @@ class Repository(BASE):
     version = relationship("Version", back_populates="repositories")
     arch = relationship("Arch", back_populates="repositories")
     directory = relationship("Directory", back_populates="repositories")
+    propagation_stats = relationship(
+        "PropagationStats",
+        back_populates="repository",
+        order_by="PropagationStats.datetime",
+    )
 
     # Constraints
     __table_args__ = (
@@ -1028,4 +1046,6 @@ class PropagationStat(BASE):
     older = sa.Column(sa.Integer, nullable=False, default=0)
     no_info = sa.Column(sa.Integer, nullable=False, default=0)
 
-    repository = relationship("Repository")
+    repository = relationship(
+        "Repository", back_populates="propagation_stats", cascade="delete, delete-orphan"
+    )
