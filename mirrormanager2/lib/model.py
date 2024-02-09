@@ -419,7 +419,8 @@ class Category(BASE):
             topdirName = self.topdir.name
             for directory in self.directories:
                 relative_path = directory.name[len(topdirName) + 1 :]
-                self._directory_cache[relative_path] = relative_path.strip("/")
+                relative_path = relative_path.strip("/")
+                self._directory_cache[relative_path] = directory
         return self._directory_cache
 
     def directory_cache_clear(self):
@@ -702,9 +703,10 @@ class Repository(BASE):
     arch = relationship("Arch", back_populates="repositories")
     directory = relationship("Directory", back_populates="repositories")
     propagation_stats = relationship(
-        "PropagationStats",
+        "PropagationStat",
         back_populates="repository",
-        order_by="PropagationStats.datetime",
+        order_by="PropagationStat.datetime",
+        cascade="delete, delete-orphan",
     )
 
     # Constraints
@@ -1046,6 +1048,4 @@ class PropagationStat(BASE):
     older = sa.Column(sa.Integer, nullable=False, default=0)
     no_info = sa.Column(sa.Integer, nullable=False, default=0)
 
-    repository = relationship(
-        "Repository", back_populates="propagation_stats", cascade="delete, delete-orphan"
-    )
+    repository = relationship("Repository", back_populates="propagation_stats")

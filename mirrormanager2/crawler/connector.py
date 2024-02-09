@@ -18,7 +18,7 @@ class SchemeNotAvailable(Exception):
 
 
 class FetchingFailed(Exception):
-    def __init__(self, response):
+    def __init__(self, response=None):
         self.response = response
 
 

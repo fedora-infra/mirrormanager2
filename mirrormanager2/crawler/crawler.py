@@ -1,7 +1,7 @@
+import datetime
 import logging
 import sys
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 import mirrormanager2.lib
@@ -10,8 +10,9 @@ from mirrormanager2.lib.model import HostCategoryDir
 
 from .connection_pool import ConnectionPool
 from .connector import FetchingFailed, SchemeNotAvailable
-from .constants import REPODATA_DIR, REPODATA_FILE
+from .constants import PROPAGATION_ARCH, REPODATA_DIR, REPODATA_FILE
 from .continents import BrokenBaseUrl, EmbargoedCountry, WrongContinent, check_continent
+from .propagation import PropagationResult, PropagationStatus
 from .reporter import Reporter
 from .threads import ThreadTimeout, get_thread_id, on_thread_started
 from .ui import ProgressTask
@@ -55,21 +56,6 @@ class CrawlResult:
     unknown: int | None = None
     hcds_created: int | None = None
     hcds_deleted: int | None = None
-
-
-class PropagationStatus(Enum):
-    SAME_DAY = "same_day"
-    ONE_DAY = "one_day"
-    TWO_DAY = "two_day"
-    OLDER = "older"
-    NO_INFO = "no_info"
-
-
-@dataclass
-class PropagationResult:
-    host_id: int
-    host_name: str
-    repo_status: dict[int, PropagationStatus]
 
 
 def get_preferred_urls(host_category):
@@ -390,6 +376,14 @@ class Crawler:
             self.timeout.check()
             topdir = repo.category.topdir.name
             url = self._get_http_url(hc)
+            if url is None:
+                logger.warning(
+                    "Could not find a HTTP(s) URL for %s and %s. URLs: %s",
+                    self.host,
+                    repo.category,
+                    repr(list(hc.urls)),
+                )
+                continue
             fd = mirrormanager2.lib.get_file_detail(
                 self.session, REPODATA_FILE, repodata_dir.id, reverse=True
             )
@@ -421,31 +415,38 @@ class Crawler:
         # fds = mirrormanager2.lib.get_file_detail_history(self.session, "repomd.xml", repo_dir.id)
         # sha256sums = {fd.sha256: fd.timestamp for fd in fds}
 
+        logger.debug("Base URL: %s. Path: %s", url, path)
         url = f"{url}{path}/{REPODATA_FILE}"
         connector = self.connection_pool.get(url)
         try:
             csum = connector.get_sha256(url)
         except FetchingFailed as e:
-            logger.info("Could not check %s: %s", url, e.response)
+            logger.info("Could not check %s: %s", url, e.response or "Connection error")
             return None
         return csum
 
     def _get_file_propagation_status(self, file_detail, checksum):
         if checksum is None:
             return PropagationStatus.NO_INFO
-        today = datetime.today()
-        age_threshold = today - timedelta(days=5)
+        today = datetime.datetime.combine(
+            datetime.date.today(),
+            datetime.time(hour=0, minute=0, second=0),
+            tzinfo=datetime.timezone.utc,
+        )
+        age_threshold = today - datetime.timedelta(days=5)
         previous_file_detail = mirrormanager2.lib.get_file_details_with_checksum(
             self.session, file_detail, checksum, age_threshold
         )
         if previous_file_detail is None:
             return PropagationStatus.OLDER
-        previous_ts = datetime.fromtimestamp(previous_file_detail.timestamp, tz=timezone.utc)
-        if today - previous_ts > timedelta(days=3):
+        previous_ts = datetime.datetime.fromtimestamp(
+            previous_file_detail.timestamp, tz=datetime.timezone.utc
+        )
+        if today - previous_ts > datetime.timedelta(days=3):
             return PropagationStatus.OLDER
-        elif today - previous_ts > timedelta(days=2):
+        elif today - previous_ts > datetime.timedelta(days=2):
             return PropagationStatus.TWO_DAY
-        elif today - previous_ts > timedelta(days=1):
+        elif today - previous_ts > datetime.timedelta(days=1):
             return PropagationStatus.ONE_DAY
         else:
             return PropagationStatus.SAME_DAY

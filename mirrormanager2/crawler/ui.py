@@ -1,10 +1,15 @@
+import typing
+
 from rich.console import Console
 from rich.table import Table
 from rich.text import Text
 
 from mirrormanager2.lib import model
 
-from .crawler import CrawlResult, PropagationStatus
+from .propagation import PropagationStatus
+
+if typing.TYPE_CHECKING:
+    from .crawler import CrawlResult
 
 
 class ProgressTask:

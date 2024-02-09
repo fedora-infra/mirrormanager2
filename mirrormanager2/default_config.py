@@ -170,9 +170,6 @@ CHECK_SESSION_IP = True
 # # --no-human-readable: because rsync made things pretty by default in 3.1.x
 CRAWLER_RSYNC_PARAMETERS = "--no-motd"
 
-# This is a list of directories which MirrorManager will ignore while guessing
-# the version and architecture from a path.
-SKIP_PATHS_FOR_VERSION = []
 
 ###
 # Configuration options used by the utilities

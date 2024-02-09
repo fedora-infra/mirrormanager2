@@ -29,8 +29,12 @@ import re
 import stat
 import time
 from contextlib import contextmanager
+from functools import partial
 
 import click
+from rich.console import Console
+from rich.logging import RichHandler
+from rich.progress import Progress
 
 import mirrormanager2.lib
 import mirrormanager2.lib.umdl as umdl
@@ -106,7 +110,7 @@ def short_filelist(files):
 # def sync_category_directory(session, config, category, relativeDName, ctime, files, is_repo):
 #     """
 #     This function is a re-implementation of the function
-#     sync_category_directories() using fullfiletimelist and (almost)
+#     sync_directories() using fullfiletimelist and (almost)
 #     no disk access. It checks if the directory :relativeDName: has
 #     a newer :ctime: than in the database. If it does it updates the
 #     directory information in the database. Including checksums and
@@ -215,20 +219,30 @@ class SyncImpossible(Exception):
 
 
 class DirSynchronizer:
-    def __init__(self, session, config, category, path, excludes=None, delete_directories=False):
+    def __init__(self, session, config, category, path, excludes=None):
         self.session = session
         self.config = config
         self.category = category
         # drop any trailing slashes from path
         self.path = path.rstrip("/")
         self.excludes = excludes or []
-        self.delete_directories = delete_directories
+        self.make_repo_file_details = True
+        self.progress_bar = None
 
-    def sync(self, **kwargs):
+    def _get_category_directories(self, **kwargs):
         raise NotImplementedError
 
+    def sync(self, **kwargs):
+        category_directories = self._get_category_directories(**kwargs)
+        self.sync_directories(category_directories)
+        self.sync_repos(category_directories)
+
+    def _get_relative_name(self, directory):
+        topdirName = self.category.topdir.name
+        return directory.name[len(topdirName) + 1 :]
+
     def _is_dir_gone(self, d, **kwargs):
-        relativeDName = umdl.remove_category_topdir(self.category.topdir.name, d.name)
+        relativeDName = self._get_relative_name(d)
         return not os.path.isdir(os.path.join(self.path, relativeDName))
 
     def nuke_gone_directories(self, **kwargs):
@@ -244,16 +258,24 @@ class DirSynchronizer:
             if gone and len(d.categories) == 1:  # safety, this should always trigger
                 logger.info("Deleting gone directory %s" % (d.name))
                 self.session.delete(d)
-                self.session.commit()
+                self.session.flush()
 
-    def sync_category_directories(self, category_directories, make_repo_file_details=True):
-        logger.debug("  sync_directories_directories %r" % self.category)
+    def sync_directories(self, category_directories):
+        logger.debug("  sync_directories %s", self.category)
+        if self.progress_bar is not None:
+            self.progress_bar.reset(
+                description=f"Syncing directories of {self.category.name}",
+                total=len(category_directories),
+            )
 
         for relativeDName in sorted(category_directories.keys()):
             value = category_directories[relativeDName]
             set_readable = False
             set_ctime = False
             set_files = False
+
+            if self.progress_bar is not None:
+                self.progress_bar.advance()
 
             if relativeDName in self.category.directory_cache:
                 d = self.category.directory_cache[relativeDName]
@@ -295,43 +317,46 @@ class DirSynchronizer:
                 if D.files != short_fl:
                     D.files = short_fl
             self.session.add(D)
-            self.session.commit()
+            self.session.flush()
             loader = umdl.FileDetailFromChecksumsLoader(self.session, self.config, D)
             loader.load()
 
-        # this has to be a second pass to be sure the child repodata/ dir is
-        # created in the db first
-        for relativeDName, value in category_directories.items():
+    def sync_repos(self, category_directories):
+        if self.progress_bar is not None:
+            self.progress_bar.reset(
+                description=f"Syncing repositories of {self.category.name}",
+                total=len(category_directories),
+            )
+        # this has to be a done after sync_directories to be sure the child repodata/
+        # dir is created in the db first
+        repomaker = umdl.RepoMaker(self.session, self.config)
+
+        for relativeDName, data in category_directories.items():
+            if self.progress_bar is not None:
+                self.progress_bar.advance()
+
             D = self.category.directory_cache[relativeDName]
             # D = mirrormanager2.lib.get_directory_by_id(self.session, d.id)
 
-            if value["isRepository"]:
-                target = "repomd.xml"
-            elif value["isAtomic"]:
-                target = "summary"
-            else:
-                target = None
-
-            if (
-                value["isRepository"]
-                or value["isAtomic"]
-                and not any(srd in relativeDName for srd in SKIP_REPO_DIRS)
+            if (data["isRepository"] or data["isAtomic"]) and not any(
+                srd in relativeDName for srd in SKIP_REPO_DIRS
             ):
-                repomaker = umdl.RepoMaker(self.session, self.config)
-                repomaker.make(D, relativeDName, self.category, target)
+                if data["isRepository"]:
+                    target = "repomd.xml"
+                elif data["isAtomic"]:
+                    target = "summary"
+                repomaker.make_repo(D, relativeDName, self.category, target)
 
-            if "repomd.xml" in value["files"]:
-                target = "repomd.xml"
-            elif "summary" in value["files"]:
-                target = "summary"
-            else:
-                continue
-
-            if make_repo_file_details:
-                umdl.make_repo_file_details(self.session, self.path, relativeDName, D, target)
+            for target in ("repomd.xml", "summary"):
+                if target in data["files"] and self.make_repo_file_details:
+                    repomaker.make_file_details(D, self.path, relativeDName, target)
 
 
 class RsyncDirSynchronizer(DirSynchronizer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.make_repo_file_details = False  # ab: not sure why
+
     @contextmanager
     def _get_rsync_listing(self, extra_rsync_options=None):
         try:
@@ -349,10 +374,9 @@ class RsyncDirSynchronizer(DirSynchronizer):
         # still, try to use the output listing if we can
         yield output
 
-    def sync(self, **kwargs):
+    def _get_category_directories(self, **kwargs):
         with self._get_rsync_listing(**kwargs) as output:
-            category_directories = self.parse_rsync_listing(output)
-        self.sync_category_directories(category_directories, make_repo_file_details=False)
+            return self.parse_rsync_listing(output)
 
     def fill_category_directories_from_rsync(self, line, category_directories, unreadable_dirs):
         topdirName = self.category.topdir.name
@@ -423,13 +447,10 @@ class RsyncDirSynchronizer(DirSynchronizer):
             relativeDName = ""
         category_directories[relativeDName]["files"][filename] = {"size": size, "stat": dt}
 
-    def parse_rsync_listing(self, category, f):
+    def parse_rsync_listing(self, f):
         category_directories = {}
         unreadable_dirs = set()
-        while True:
-            line = f.readline()
-            if not line:
-                break
+        for line in f:
             line.strip()
             splittedline = line.split()
             if line.startswith("d") and len(splittedline) == 5 and len(splittedline[0]) == 10:
@@ -454,7 +475,7 @@ class FileDirSynchronizer(RsyncDirSynchronizer):
 
 
 class DiskDirSynchronizer(DirSynchronizer):
-    def sync(self, **kwargs):
+    def _get_category_directories(self, **kwargs):
         logger.debug("sync_directories_from_disk %r", self.path)
         unreadable_dirs = set()
         category_directories = {}
@@ -518,10 +539,7 @@ class DiskDirSynchronizer(DirSynchronizer):
                         "stat": s[stat.ST_CTIME],
                     }
 
-        self.sync_category_directories(category_directories)
-
-        if self.delete_directories:
-            self.nuke_gone_directories()
+        return category_directories
 
 
 class FFTDirSynchronizer(DirSynchronizer):
@@ -530,7 +548,7 @@ class FFTDirSynchronizer(DirSynchronizer):
             return False
         return d.name not in ctimes
 
-    def sync(self, **kwargs):
+    def _parse_fullfiletimelist(self):
         """
         This functions tries to scan the master mirror by looking for
         'fullfiletimelist-*' and using its content instead of accessing
@@ -575,6 +593,12 @@ class FFTDirSynchronizer(DirSynchronizer):
 
         # blindly take the first file found by the glob
         logger.info("Loading and parsing %s", filelist[0])
+
+        if self.progress_bar is not None:
+            self.progress_bar.reset(
+                description=f"Reading fullfiletimelist of {self.category.name}", total=None
+            )
+
         # A hash with directories as key and ctime as value
         ctimes = {}
         # A hash with directories as key and
@@ -597,7 +621,8 @@ class FFTDirSynchronizer(DirSynchronizer):
             m = mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
             row = m.readline()
             while row:
-                col = row.split()
+                row = row.decode()
+                col = row.strip().split("\t")
                 row = m.readline()
                 # only rows with at least 4 columns are what we are looking for
                 # 'ctime\ttype\tsize\tname'
@@ -614,10 +639,7 @@ class FFTDirSynchronizer(DirSynchronizer):
                     # put all the information in a dict with path as key
                     tmp = os.path.dirname(_handle_fedora_linux_category(col[3]))
                     tmp = os.path.join(self.path, tmp).replace(umdl_prefix, "")
-                    tmp = str(tmp, "utf8")
-
                     tmp2 = os.path.basename(_handle_fedora_linux_category(col[3]))
-                    tmp2 = str(tmp2, "utf8")
 
                     if tmp in seen:
                         files[tmp].update({tmp2: {"stat": int(col[0]), "size": col[2]}})
@@ -635,7 +657,6 @@ class FFTDirSynchronizer(DirSynchronizer):
                     tmp = os.path.join(self.path, _handle_fedora_linux_category(col[3]))
 
                     tmp = tmp.replace(umdl_prefix, "")
-                    tmp = str(tmp, "utf8")
                     ctimes[tmp] = int(col[0])
                     # Only if a directory contains a 'repodata' directory
                     # it should be used for repository creation.
@@ -644,7 +665,7 @@ class FFTDirSynchronizer(DirSynchronizer):
                         # directory to the repo set().
                         # Remove '/repodata'
                         repo.add(tmp[:-9])
-                    if tmp.endwith("objects"):
+                    if tmp.endswith("objects"):
                         # There is a 'repodata' directory, add the parent
                         # directory to the has_objects set().
                         # Remove '/objects'
@@ -653,12 +674,27 @@ class FFTDirSynchronizer(DirSynchronizer):
         # add the root directory of the current category
         tmp = self.path.replace(umdl_prefix, "")
         ctimes[tmp] = 0
+        return {
+            "ctimes": ctimes,
+            "files": files,
+            "repo_dirs": repo,
+            "atomic_dirs": has_summary & has_objects,
+        }
+
+    def _get_category_directories(self, **kwargs):
+        data = self._parse_fullfiletimelist()
 
         logger.debug("sync_directories_from_fullfiletimelist %s", self.path)
+
+        if self.progress_bar is not None:
+            self.progress_bar.reset(
+                description=f"Building directory statuses of {self.category.name}", total=None
+            )
+
         seen = set()
 
         category_directories = {}
-        for dirname in ctimes.keys():
+        for dirname in data["ctimes"].keys():
             if dirname in seen:
                 logger.info("Skipping already seen directory %s", dirname)
                 continue
@@ -667,7 +703,7 @@ class FFTDirSynchronizer(DirSynchronizer):
                 logger.info("Excluding %s" % (dirname))
                 continue
             try:
-                file_dict = files[dirname]
+                file_dict = data["files"][dirname]
             except Exception:
                 # An empty directory is not part of files{}
                 file_dict = {}
@@ -682,22 +718,25 @@ class FFTDirSynchronizer(DirSynchronizer):
                 # we'll need to create it
                 db_ctime = 0
 
-            is_repo = dirname in repo
-            is_atomic = dirname in has_summary and dirname in has_objects
-            ctime = ctimes[dirname]
+            is_repo = dirname in data["repo_dirs"]
+            is_atomic = dirname in data["atomic_dirs"]
+            ctime = data["ctimes"][dirname]
             changed = db_ctime != ctime
             readable = None
             if changed:
                 try:
-                    s = os.stat(dirname)
-                except OSError:
+                    fullpath = os.path.join(self.config["UMDL_PREFIX"], dirname)
+                    s = os.stat(fullpath)
+                except OSError as e:
                     # The main reason for this execption is that the
                     # file from the fullfiletimelist does not exist.
                     logger.warning(
-                        "Hmm, stat()ing %s failed. Theoretically this cannot happen.", dirname
+                        "Hmm, stat()ing %s failed. Theoretically this cannot happen. %s",
+                        fullpath,
+                        e,
                     )
                 else:
-                    readable = s.st_mode & stat.S_IRWXO & (stat.S_IROTH | stat.S_IXOTH)
+                    readable = bool(s.st_mode & stat.S_IRWXO & (stat.S_IROTH | stat.S_IXOTH))
                 # the whole stat block can be removed once fullfiletimelist marks unreadable
                 # directories
 
@@ -710,16 +749,10 @@ class FFTDirSynchronizer(DirSynchronizer):
                 "changed": changed,
             }
 
-            # sync_category_directory(
-            #     self.session, self.config, category, dirname, ctimes[dirname], file_dict, is_repo
-            # )
-        self.sync_category_directories(category_directories)
-
-        if self.delete_directories:
-            self.nuke_gone_directories(ctimes=ctimes)
+        return category_directories
 
 
-def setup_logging(config, debug, logfile, list_categories):
+def setup_logging(config, debug, logfile, console):
     log_dir = config.get("MM_LOG_DIR", None)
     # check if the directory exists
     if log_dir is not None:
@@ -734,23 +767,34 @@ def setup_logging(config, debug, logfile, list_categories):
     else:
         log_file = logfile
 
-    fmt = "%(asctime)s:%(category)s:%(message)s"
+    fmt = "%(asctime)s : %(category)s : %(message)s"
     datefmt = "%Y-%m-%d %H:%M:%S"
     formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
+
     handler = logging.handlers.WatchedFileHandler(log_file, "a+")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+
     f = MasterFilter()
     logger.addFilter(f)
     # list_categories is a special case where the user wants to see something
     # on the console and not only in the log file
-    if debug or list_categories:
-        sh = logging.StreamHandler()
-        sh.setFormatter(formatter)
-        logger.addHandler(sh)
+    if debug:
+        handler = RichHandler(console=console, rich_tracebacks=True)
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
         logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
+
+
+class ProgressBar:
+    def __init__(self, progress):
+        self.progress = progress
+        self.task_id = progress.add_task("Processing")
+
+    def __getattr__(self, name):
+        return partial(getattr(self.progress, name), self.task_id)
 
 
 @click.command()
@@ -787,7 +831,7 @@ def setup_logging(config, debug, logfile, list_categories):
     "--delete-directories",
     is_flag=True,
     default=False,
-    help="delete directories from the database that are no longer " "on disk",
+    help="delete directories from the database that are no longer on disk",
 )
 def main(
     config,
@@ -798,10 +842,12 @@ def main(
     skip_fullfiletimelist,
     delete_directories,
 ):
+    global _current_cname
     config = read_config(config)
     db_manager = get_db_manager(config)
+    console = Console()
 
-    setup_logging(config, debug, logfile, list_categories)
+    setup_logging(config, debug or list_categories, logfile, console)
 
     if list_categories:
         with db_manager.Session() as session:
@@ -812,18 +858,30 @@ def main(
 
     logger.info("Starting umdl")
     with db_manager.Session() as session:
-        umdl.setup_arch_version_cache(session)
         check_categories = get_filtered_categories(config, session, only_category)
-        for master_dir in check_categories:
-            check_category(config, session, master_dir, delete_directories, skip_fullfiletimelist)
+        with Progress(console=console, refresh_per_second=2) as progress:
+            progress_bar = ProgressBar(progress)
+            for master_dir in check_categories:
+                check_category(
+                    config,
+                    session,
+                    master_dir,
+                    delete_directories,
+                    skip_fullfiletimelist,
+                    progress_bar,
+                )
 
-        logger.info("Refresh the list of repomd.xml")
+        logger.debug("Refresh the list of repomd.xml")
         Directory.age_file_details(session, config)
+        session.commit()
 
+    _current_cname = "N/A"
     logger.info("Ending umdl")
 
 
-def check_category(config, session, master_dir, delete_directories, skip_fullfiletimelist):
+def check_category(
+    config, session, master_dir, delete_directories, skip_fullfiletimelist, progress_bar
+):
     global _current_cname
     _current_cname = master_dir["category"]
     # category = mirrormanager2.lib.get_category_by_name(session, cname)
@@ -850,10 +908,13 @@ def check_category(config, session, master_dir, delete_directories, skip_fullfil
             category,
             path,
             excludes=master_dir.get("excludes"),
-            delete_directories=delete_directories,
         )
+        syncer.progress_bar = progress_bar
+        progress_bar.reset()
         try:
             syncer.sync(**extra_args)
+            if delete_directories and master_dir["type"] != "rsync":  # Why not rsync?
+                syncer.nuke_gone_directories()
         except SyncImpossible:
             continue
         break

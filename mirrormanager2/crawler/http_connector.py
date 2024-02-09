@@ -92,10 +92,13 @@ class HTTPConnector(Connector):
 
     def _get_file(self, url):
         conn = self.open(url)
-        r = conn.get(
-            url,
-            timeout=HTTP_TIMEOUT,
-        )
+        try:
+            r = conn.get(
+                url,
+                timeout=HTTP_TIMEOUT,
+            )
+        except requests.exceptions.ConnectionError as e:
+            raise FetchingFailed() from e
         if not r.ok:
             raise FetchingFailed(r)
         return r.content

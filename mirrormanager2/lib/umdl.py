@@ -32,24 +32,23 @@ import mirrormanager2.lib
 from mirrormanager2.lib.model import FileDetail, Repository, Version
 from mirrormanager2.lib.repomap import repo_prefix
 
-delete_directories = False
 logger = logging.getLogger("umdl")
-stdexcludes = [".*\\.snapshot", ".*/\\.~tmp~"]
-PREFIX = "/srv/"
+
+
+# For ostree, we someday need to actually extract the arch information
+# from the ostree repo, but for now (F21 and F22) we will only be
+# shipping x86_64, so we hardcode that.  At present, it is not possible
+# to query an ostree repo for the arch information.  Bug walters about
+# this.
+OSTREE_ARCH = "x86_64"
 
 
 def parent_dir(path):
     sdir = path.split("/")[:-1]
     try:
-        parent = os.path.join(*sdir)
-    except TypeError:  #
-        parent = ""
-    return parent
-
-
-def remove_category_topdir(topdirName, path):
-    path = path[len(topdirName) + 1 :]
-    return path
+        return os.path.join(*sdir)
+    except TypeError:
+        return ""
 
 
 def _get_version_from_path(path):
@@ -68,42 +67,6 @@ def _get_version_from_path(path):
     if "rawhide" in path:
         return "development"
     return None
-
-
-def create_version_from_path(session, category, path):
-    ver = None
-    vname = _get_version_from_path(path)
-    if vname is not None and vname != "":
-        test_paths = ["/test/", "/stage/"]
-        if any(x in path for x in test_paths):
-            isTest = True
-        else:
-            isTest = False
-
-        ver = mirrormanager2.lib.get_version_by_name_version(session, category.product.name, vname)
-        if not ver:
-            logger.info(
-                f"Created Version(product={category.product}, name={vname}, is_test={isTest}, "
-            )
-            ver = Version(product=category.product, name=vname, is_test=isTest)
-            session.add(ver)
-            session.flush()
-
-    return ver
-
-
-arch_cache = None
-version_cache = None
-
-
-def setup_arch_version_cache(session):
-    global arch_cache
-    if arch_cache is None:
-        arch_cache = mirrormanager2.lib.get_arches(session)
-
-    global version_cache
-    if version_cache is None:
-        version_cache = mirrormanager2.lib.get_versions(session)
 
 
 # Something like this is committed to yum upstream, but may not be in the
@@ -293,92 +256,56 @@ class FileDetailFromChecksumsListLoader(FileDetailFromChecksumsLoader):
         return size, ctime
 
 
-def make_repo_file_details(session, diskpath, relativeDName, D, target):
-    warning = "Won't make repo file details"
-
-    if diskpath is None:
-        logger.warning("%s: diskpath is None", warning)
-        return
-
-    # For yum repos and ostree repos
-    allowed_targets = ["repomd.xml", "summary"]
-    if target not in allowed_targets:
-        logger.warning(f"{warning}: {target!r} not in {allowed_targets!r}")
-        return
-
-    absolutepath = os.path.join(diskpath, relativeDName, target)
-
-    if not os.path.exists(absolutepath):
-        logger.warning(f"{warning}: {absolutepath!r} does not exist")
-        return
-
-    try:
-        with open(absolutepath, "rb") as f:
-            contents = f.read()
-    except Exception:
-        logger.exception("Error reading %s", absolutepath)
-        return
-
-    size = len(contents)
-    md5 = hashlib.md5(contents).hexdigest()
-    sha1 = hashlib.sha1(contents).hexdigest()
-    sha256 = hashlib.sha256(contents).hexdigest()
-    sha512 = hashlib.sha512(contents).hexdigest()
-
-    if target == "repomd.xml":
-        yumrepo = rpmmd.repoMDObject.RepoMD("repoid", absolutepath)
-        if "timestamp" not in yumrepo.__dict__:
-            set_repomd_timestamp(yumrepo)
-        timestamp = yumrepo.timestamp
-    elif target == "summary":
-        # TODO -- ostree repos may have a timestamp in their summary file
-        # someday.  for now, just use the system mtime.
-        timestamp = os.path.getmtime(absolutepath)
-
-    fd_attrs = dict(
-        directory_id=D.id,
-        filename=target,
-        sha1=sha1,
-        md5=md5,
-        sha256=sha256,
-        sha512=sha512,
-        size=size,
-        timestamp=timestamp,
-    )
-    fd = mirrormanager2.lib.get_file_detail(
-        session,
-        **fd_attrs,
-    )
-    if not fd:
-        fd = FileDetail(
-            **fd_attrs,
-            size=size,
-        )
-        logger.info(f"Updating FileDetail {fd!r}, {absolutepath!r}")
-        session.add(fd)
-        session.commit()
-        created = True
-    else:
-        created = False
-    return created
-
-
 class RepoMaker:
+    allowed_targets = ["repomd.xml", "summary"]
+
     def __init__(self, session, config):
         self.session = session
         self.config = config
+        self._arch_cache = None
+        self._version_cache = None
+
+    @property
+    def arch_cache(self):
+        if self._arch_cache is None:
+            self._arch_cache = mirrormanager2.lib.get_arches(self.session)
+        return self._arch_cache
+
+    @property
+    def version_cache(self):
+        if self._version_cache is None:
+            self._version_cache = mirrormanager2.lib.get_versions(self.session)
+        return self._version_cache
+
+    def create_version_from_path(self, category, path):
+        ver = None
+        vname = _get_version_from_path(path)
+        if vname is not None and vname != "":
+            test_paths = ["/test/", "/stage/"]
+            if any(x in path for x in test_paths):
+                isTest = True
+            else:
+                isTest = False
+
+            ver = mirrormanager2.lib.get_version_by_name_version(
+                self.session, category.product.name, vname
+            )
+            if not ver:
+                logger.info(
+                    f"Created Version(product={category.product}, name={vname}, is_test={isTest}, "
+                )
+                ver = Version(product=category.product, name=vname, is_test=isTest)
+                self.session.add(ver)
+                self.session.flush()
+
+        return ver
 
     def guess_ver_arch_from_path(self, category, path):
-        dname = os.path.join(category.topdir.name, path)
-        for skip in self.config["SKIP_PATHS_FOR_VERSION"]:
-            if dname.startswith(skip):
-                return (None, None)
-
         arch = None
         if "SRPMS" in path:
             arch = mirrormanager2.lib.get_arch_by_name(self.session, "source")
         else:
-            for a in arch_cache:
+            for a in self.arch_cache:
                 s = ".*(^|/)%s(/|$).*" % (a["name"])
                 if re.compile(s).match(path):
                     arch = mirrormanager2.lib.get_arch_by_name(self.session, a["name"])
@@ -386,7 +313,7 @@ class RepoMaker:
 
         ver = None
         # newest versions/IDs first, also handles stupid Fedora 9.newkey hack.
-        for v in version_cache:
+        for v in self.version_cache:
             if v["product_id"] != category.product.id:
                 continue
             s = ".*(^|/)%s(/|$).*" % (v["name"])
@@ -396,36 +323,41 @@ class RepoMaker:
 
         # create Versions if we can figure it out...
         if ver is None:
-            ver = create_version_from_path(self.session, category, path)
+            ver = self.create_version_from_path(category, path)
             if ver:
-                version_cache.append(ver)
+                self.version_cache.append(ver)
         return (ver, arch)
 
-    def make(self, directory, relativeDName, category, target):
-        logger.info(
+    def make_repo(self, directory, relativeDName, category, target):
+        logger.debug(
             f"Checking into Repo {directory} - {relativeDName} - cat: {category} - target: {target}"
         )
+
+        # stop making duplicate Repository objects.
+        if len(directory.repositories) > 0:
+            logger.debug("%s: directory already has a repository", directory.name)
+            return None
 
         warning = "Won't make repository object"
 
         # For yum repos and ostree repos
-        allowed_targets = ["repomd.xml", "summary"]
-        if target not in allowed_targets:
-            logger.warning(f"{warning}: {target!r} not in {allowed_targets!r}")
+
+        if target not in self.allowed_targets:
+            logger.warning(f"{warning}: {target!r} not in {self.allowed_targets!r}")
             return
 
         if target == "repomd.xml":
+            dname = os.path.join(category.topdir.name, relativeDName)
+            for skip in self.config["SKIP_PATHS_FOR_VERSION"]:
+                if dname.startswith(skip):
+                    logger.debug("Skipping path %s as requested by SKIP_PATHS_FOR_VERSION", dname)
+                    return None
             (ver, arch) = self.guess_ver_arch_from_path(category, relativeDName)
             if ver is None or arch is None:
                 logger.warning(f"{warning}: could not guess version and arch {ver!r}, {arch!r}")
                 return None
         elif target == "summary":
-            # For ostree, we someday need to actually extract the arch information
-            # from the ostree repo, but for now (F21 and F22) we will only be
-            # shipping x86_64, so we hardcode that.  At present, it is not possible
-            # to query an ostree repo for the arch information.  Bug walters about
-            # this.
-            arch = mirrormanager2.lib.get_arch_by_name(self.session, "x86_64")
+            arch = mirrormanager2.lib.get_arch_by_name(self.session, OSTREE_ARCH)
             # Furthermore, we'll grab the version piece from the path which looks
             # like atomic/rawhide or atomic/21.
             ver = relativeDName.rstrip("/").split("/")[-1]
@@ -435,15 +367,10 @@ class RepoMaker:
             if ver is None:
                 if not relativeDName.endswith("/"):
                     relativeDName += "/"
-                ver = create_version_from_path(self.session, category, relativeDName)
+                ver = self.create_version_from_path(category, relativeDName)
                 self.session.add(ver)
                 self.session.flush()
-                version_cache.append(ver)
-
-        # stop making duplicate Repository objects.
-        if len(directory.repositories) > 0:
-            logger.warning("%s: directory already has a repository" % (directory.name))
-            return None
+                self.version_cache.append(ver)
 
         repo = None
         prefix = repo_prefix(relativeDName, category, ver)
@@ -476,38 +403,105 @@ class RepoMaker:
 
         return repo
 
+    def make_file_details(self, D, diskpath, relativeDName, target):
+        warning = "Won't make repo file details"
 
-def short_filelist(config, relativeDName, files):
-    html = 0
-    rpms = 0
-    hdrs = 0
-    drpms = 0
-    for f in files:
-        if f.endswith(".html"):
-            html += 1
-        if f.endswith(".rpm"):
-            rpms += 1
-        if f.endswith(".hdr"):
-            hdrs += 1
-        if f.endswith(".drpm"):
-            drpms += 1
-    if html > 10 or rpms > 10 or hdrs > 10 or drpms > 10:
-        date_file_list = []
-        for k in files:
-            try:
-                s = os.stat(os.path.join(config["UMDL_PREFIX"], relativeDName, k))
-            except OSError:
-                continue
+        if diskpath is None:
+            logger.warning("%s: diskpath is None", warning)
+            return
 
-            date_file_tuple = (s[stat.ST_CTIME], k, str(s.st_size))
-            date_file_list.append(date_file_tuple)
-        date_file_list.sort()
-        # keep the most recent 3
-        date_file_list = date_file_list[-3:]
+        # For yum repos and ostree repos
+        if target not in self.allowed_targets:
+            logger.warning(f"{warning}: {target!r} not in {self.allowed_targets!r}")
+            return
 
-        return [item[1] for item in date_file_list]
-    else:
-        return files
+        absolutepath = os.path.join(diskpath, relativeDName, target)
+
+        if not os.path.exists(absolutepath):
+            logger.warning(f"{warning}: {absolutepath!r} does not exist")
+            return
+
+        try:
+            with open(absolutepath, "rb") as f:
+                contents = f.read()
+        except Exception:
+            logger.exception("Error reading %s", absolutepath)
+            return
+
+        size = len(contents)
+        md5 = hashlib.md5(contents).hexdigest()
+        sha1 = hashlib.sha1(contents).hexdigest()
+        sha256 = hashlib.sha256(contents).hexdigest()
+        sha512 = hashlib.sha512(contents).hexdigest()
+
+        if target == "repomd.xml":
+            yumrepo = rpmmd.repoMDObject.RepoMD("repoid", absolutepath)
+            if "timestamp" not in yumrepo.__dict__:
+                set_repomd_timestamp(yumrepo)
+            timestamp = yumrepo.timestamp
+        elif target == "summary":
+            # TODO -- ostree repos may have a timestamp in their summary file
+            # someday.  for now, just use the system mtime.
+            timestamp = os.path.getmtime(absolutepath)
+
+        fd_attrs = dict(
+            directory_id=D.id,
+            filename=target,
+            sha1=sha1,
+            md5=md5,
+            sha256=sha256,
+            sha512=sha512,
+            size=size,
+            timestamp=timestamp,
+        )
+        fd = mirrormanager2.lib.get_file_detail(
+            self.session,
+            **fd_attrs,
+        )
+        if not fd:
+            fd = FileDetail(
+                **fd_attrs,
+            )
+            logger.info(f"Updating FileDetail {fd!r}, {absolutepath!r}")
+            self.session.add(fd)
+            self.session.flush()
+            created = True
+        else:
+            created = False
+        return created
+
+
+# def short_filelist(config, relativeDName, files):
+#     html = 0
+#     rpms = 0
+#     hdrs = 0
+#     drpms = 0
+#     for f in files:
+#         if f.endswith(".html"):
+#             html += 1
+#         if f.endswith(".rpm"):
+#             rpms += 1
+#         if f.endswith(".hdr"):
+#             hdrs += 1
+#         if f.endswith(".drpm"):
+#             drpms += 1
+#     if html > 10 or rpms > 10 or hdrs > 10 or drpms > 10:
+#         date_file_list = []
+#         for k in files:
+#             try:
+#                 s = os.stat(os.path.join(config["UMDL_PREFIX"], relativeDName, k))
+#             except OSError:
+#                 continue
+
+#             date_file_tuple = (s[stat.ST_CTIME], k, str(s.st_size))
+#             date_file_list.append(date_file_tuple)
+#         date_file_list.sort()
+#         # keep the most recent 3
+#         date_file_list = date_file_list[-3:]
+
+#         return [item[1] for item in date_file_list]
+#     else:
+#         return files
 
 
 # def sync_category_directory(session, config, category, relativeDName, readable, ctime):

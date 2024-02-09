@@ -63,9 +63,8 @@ def main(config, only_category, debug, filename):
                 logger.error("Directory %s does not exist in the database, skipping", dirname)
                 continue
 
-            created = mirrormanager2.lib.umdl.make_repo_file_details(
-                session, master_dir["path"], dirname, directory, target
-            )
+            repomaker = mirrormanager2.lib.umdl.RepoMaker(session, config)
+            created = repomaker.make_file_details(directory, master_dir["path"], dirname, target)
 
             if created is False:
                 logger.warning(f"FileDetail unchanged {absolutepath!r}")

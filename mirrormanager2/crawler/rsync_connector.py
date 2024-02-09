@@ -93,8 +93,8 @@ class RsyncConnector(Connector):
                 if not status:
                     # Shortcut: we don't need to go over other files
                     return False
-            except Exception:  # something else went wrong
-                logger.exception("Exception caught when scanning %s", filename)
+            except Exception as e:  # something else went wrong
+                logger.error("Exception caught when scanning %s: %s", filename, e)
                 return False
 
         return True
