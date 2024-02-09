@@ -2,7 +2,7 @@ import logging
 import os
 import time
 from collections import defaultdict
-from datetime import datetime
+from datetime import date
 
 import click
 from rich.console import Console
@@ -238,7 +238,7 @@ def record_propagation(ctx_obj, options, results: list[PropagationResult]):
     for result in results:
         for repo_id, status in result.repo_status.items():
             repo_status[repo_id][status.value] += 1
-    today = datetime.today()
+    today = date.today()
     with db_manager.Session() as session:
         for repo_id, status_counts in repo_status.items():
             session.add(

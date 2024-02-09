@@ -18,6 +18,7 @@ def _get_connection_class(scheme):
         return FTPConnector
     if scheme == "rsync":
         return RsyncConnector
+    raise ValueError(f"Unknown scheme: {scheme}")
 
 
 class ConnectionPool:
@@ -30,7 +31,11 @@ class ConnectionPool:
     def get(self, url):
         scheme, netloc, path, query, fragment = urlsplit(url)
         if netloc not in self._connections:
-            connection_class = _get_connection_class(scheme)
+            try:
+                connection_class = _get_connection_class(scheme)
+            except ValueError:
+                logger.error(f"Malformed URL: {url!r}")
+                raise
             self._connections[(scheme, netloc)] = connection_class(
                 config=self.config,
                 debuglevel=self.debuglevel,
