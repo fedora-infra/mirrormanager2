@@ -12,8 +12,6 @@ import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.model import Repository
 
-from .common import read_config
-
 logger = None
 
 # dict(subpath='Workstation/armhfp/os', prefix="fedora-workstation-%s", arch="armhfp"),
@@ -118,7 +116,7 @@ def main(config, version, category, debug, base_install_path):
         DeprecationWarning,
         stacklevel=1,
     )
-    config = read_config(config)
+    config = mirrormanager2.lib.read_config(config)
     db_manager = get_db_manager(config)
     session = db_manager.Session()
     setup_logger(debug)

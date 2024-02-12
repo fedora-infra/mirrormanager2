@@ -17,7 +17,7 @@ import click
 import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
 
-from .common import get_filtered_categories, read_config, setup_logging
+from .common import get_filtered_categories, setup_logging
 
 logger = logging.getLogger("mm2")
 
@@ -40,7 +40,7 @@ logger = logging.getLogger("mm2")
 @click.option("--debug", is_flag=True, default=False, help="enable debugging")
 @click.argument("filename", type=click.Path(), required=True, help="path/to/file")
 def main(config, only_category, debug, filename):
-    config = read_config(config)
+    config = mirrormanager2.lib.read_config(config)
     db_manager = get_db_manager(config)
 
     setup_logging(debug=debug)

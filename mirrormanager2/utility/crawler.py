@@ -27,8 +27,6 @@ from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.model import HostCategoryDir
 from mirrormanager2.lib.sync import run_rsync
 
-from .common import read_config
-
 logger = logging.getLogger("crawler")
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 master_formatter = (
@@ -390,7 +388,7 @@ def main(
 ):
     starttime = time.time()
     setup_logging(debug)
-    config = read_config(config)
+    config = mirrormanager2.lib.read_config(config)
     doit(ctx.params, config)
     logger.info("Crawler finished after %d seconds" % (time.time() - starttime))
     return 0

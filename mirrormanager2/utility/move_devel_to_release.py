@@ -18,8 +18,6 @@ import click
 import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
 
-from .common import read_config
-
 
 def fixup_repos(session, version, repo, new_dir):
     """
@@ -124,7 +122,7 @@ def get_all_categories(session):
     default=None,
 )
 def main(config, version, category):
-    d = read_config(config)
+    d = mirrormanager2.lib.read_config(config)
     db_manager = get_db_manager(d)
     session = db_manager.Session()
 
