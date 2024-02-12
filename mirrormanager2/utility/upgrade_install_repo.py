@@ -12,6 +12,7 @@ TODO: test IRL
 """
 
 import os
+import warnings
 
 import click
 
@@ -122,6 +123,13 @@ def move_install_repo(session, version, test=False, debug=False):
     help="Output what changes but do not change anything",
 )
 def main(config, version, test, debug):
+    warnings.warn(
+        "This command is deprecated and will be removed in the next version. "
+        "Please open a ticket at https://github.com/fedora-infra/mirrormanager2/issues "
+        "if you still need it.",
+        DeprecationWarning,
+        stacklevel=1,
+    )
     conf = read_config(config)
     db_manager = get_db_manager(conf)
     session = db_manager.Session()

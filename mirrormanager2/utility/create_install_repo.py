@@ -4,6 +4,7 @@ This script creates the fedora-install repo for Fedora .
 
 import logging
 import os
+import warnings
 
 import click
 
@@ -110,6 +111,13 @@ def setup_logger(debug):
 @click.option("--debug", is_flag=True, default=False)
 @click.argument("base_install_path")
 def main(config, version, category, debug, base_install_path):
+    warnings.warn(
+        "This command is deprecated and will be removed in the next version. "
+        "Please open a ticket at https://github.com/fedora-infra/mirrormanager2/issues "
+        "if you still need it.",
+        DeprecationWarning,
+        stacklevel=1,
+    )
     config = read_config(config)
     db_manager = get_db_manager(config)
     session = db_manager.Session()
