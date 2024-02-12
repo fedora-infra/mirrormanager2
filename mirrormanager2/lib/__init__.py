@@ -28,6 +28,7 @@ import string
 import sqlalchemy
 
 # from sqlalchemy.orm import scoped_session, sessionmaker
+from mirrormanager2 import default_config
 from mirrormanager2.lib import model
 
 # def create_session(db_url, debug=False, pool_recycle=3600):
@@ -45,6 +46,16 @@ from mirrormanager2.lib import model
 #     engine = sqlalchemy.create_engine(db_url, echo=debug, pool_recycle=pool_recycle)
 #     scopedsession = scoped_session(sessionmaker(bind=engine))
 #     return scopedsession
+
+
+def read_config(filename):
+    config = dict()
+    for key in dir(default_config):
+        if key.isupper():
+            config[key] = getattr(default_config, key)
+    with open(filename) as fh:
+        exec(compile(fh.read(), filename, "exec"), config)
+    return config
 
 
 def get_site(session, site_id):

@@ -19,8 +19,6 @@ import click
 import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
 
-from .common import read_config
-
 # moving from pub/fedora/linux/releases/test/22_Beta/Server/x86_64/os/
 # to          pub/fedora/linux/releases/22/Server/x86_64/os
 # TODO: adjust the UMDL to do this
@@ -130,7 +128,7 @@ def main(config, version, test, debug):
         DeprecationWarning,
         stacklevel=1,
     )
-    conf = read_config(config)
+    conf = mirrormanager2.lib.read_config(config)
     db_manager = get_db_manager(conf)
     session = db_manager.Session()
 

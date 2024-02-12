@@ -33,8 +33,6 @@ import mirrormanager2.lib.umdl as umdl
 from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.model import Directory
 
-from .common import read_config
-
 logger = logging.getLogger("umdl")
 stdexcludes = [r".*\.snapshot", r".*/\.~tmp~"]
 
@@ -200,7 +198,7 @@ def main(config, logfile, list_categories, categories, debug, delete_directories
         DeprecationWarning,
         stacklevel=1,
     )
-    config = read_config(config)
+    config = mirrormanager2.lib.read_config(config)
     db_manager = get_db_manager(config)
     session = db_manager.Session()
 

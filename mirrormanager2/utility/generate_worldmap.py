@@ -19,8 +19,6 @@ import matplotlib
 import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
 
-from .common import read_config
-
 matplotlib.use("Agg")
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas  # noqa: E402
@@ -135,5 +133,5 @@ def doit(output, config):
     help="write output to DIR",
 )
 def main(config, output):
-    config = read_config(config)
+    config = mirrormanager2.lib.read_config(config)
     doit(output, config)

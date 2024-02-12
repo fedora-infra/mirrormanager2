@@ -12,8 +12,6 @@ import click
 import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
 
-from .common import read_config
-
 archiveCategory = "Fedora Archive"
 originalCategory = "Fedora Linux"
 
@@ -72,7 +70,7 @@ def doit(session, original_cat, archive_cat, directory_re):
     help="subdirectory regular expression to move (e.g. '/7/') " "[required]",
 )
 def main(config, originalcategory, archivecategory, directoryre):
-    d = read_config(config)
+    d = mirrormanager2.lib.read_config(config)
     db_manager = get_db_manager(d)
     session = db_manager.Session()
     doit(session, originalcategory, archivecategory, directoryre)

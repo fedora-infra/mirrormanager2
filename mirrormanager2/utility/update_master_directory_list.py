@@ -42,7 +42,7 @@ from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.model import Directory
 from mirrormanager2.lib.sync import run_rsync
 
-from .common import get_filtered_categories, read_config
+from .common import get_filtered_categories
 
 STD_EXCLUDES = [r".*\.snapshot", r".*/\.~tmp~"]
 # This directories will be skipped during repository creation
@@ -843,7 +843,7 @@ def main(
     delete_directories,
 ):
     global _current_cname
-    config = read_config(config)
+    config = mirrormanager2.lib.read_config(config)
     db_manager = get_db_manager(config)
     console = Console()
 

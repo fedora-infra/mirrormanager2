@@ -1,10 +1,12 @@
 import logging
+import os
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from sqlalchemy_helpers.flask_ext import get_url_from_app
 
 from mirrormanager2.app import create_app
+from mirrormanager2.lib import read_config
 from mirrormanager2.lib.model import BASE
 
 # this is the Alembic Config object, which provides
@@ -15,7 +17,15 @@ alembic_config = context.config
 # logging.config.fileConfig(alembic_config.config_file_name)
 logger = logging.getLogger("alembic.env")
 
-url = get_url_from_app(create_app)
+try:
+    url = get_url_from_app(create_app)
+except OSError:
+    # Usually because client_secrets.json can't be found, when run outside the frontend.
+    config_path = os.environ.get("MM2_CONFIG", "/etc/mirrormanager/mirrormanager2.cfg")
+    config = read_config(config_path)
+    url = config["SQLALCHEMY_DATABASE_URI"]
+
+
 alembic_config.set_main_option("sqlalchemy.url", url)
 target_metadata = BASE.metadata
 
