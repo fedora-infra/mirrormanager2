@@ -1694,6 +1694,17 @@ files = [
 ]
 
 [[package]]
+name = "mrtparse"
+version = "2.2.0"
+description = "MRT format data parser"
+optional = false
+python-versions = "*"
+files = [
+    {file = "mrtparse-2.2.0-py2.py3-none-any.whl", hash = "sha256:1672a92950eafb8fb5f6b56fe4c4ce0ebae8ec87de7b1489df7780418c311ca7"},
+    {file = "mrtparse-2.2.0.tar.gz", hash = "sha256:8806e20f57dfbbcdc107a9838af9d5386dacdc6d43474bfedeeacd80eb3945d4"},
+]
+
+[[package]]
 name = "multidict"
 version = "6.0.4"
 description = "multidict implementation"
@@ -3190,4 +3201,4 @@ graph = ["basemap", "basemap-data", "basemap-data-hires", "geoip2", "matplotlib"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9,<3.13"
-content-hash = "875f0975bb263d082c9159b2e1c4c8166847706e82822f6545605bbdf3c8655e"
+content-hash = "352751ff2aa11b534c3ae6317ee16aa7bfe89f4ee017d119ce9885bb51911929"
