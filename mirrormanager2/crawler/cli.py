@@ -9,10 +9,9 @@ from rich.console import Console
 from rich.progress import Progress
 
 import mirrormanager2.lib
-from mirrormanager2.lib import model
+from mirrormanager2.lib import model, read_config
 from mirrormanager2.lib.database import get_db_manager
 
-from ..utility.common import read_config
 from .constants import CONTINENTS
 from .crawler import PropagationResult, worker
 from .log import setup_logging
@@ -220,7 +219,7 @@ def crawl(ctx, **kwargs):
 )
 @click.pass_context
 def propagation(ctx, **kwargs):
-    """Print out information about repomd.xml propagation.
+    """Records information about repomd.xml propagation and generates graphs.
 
     Defaults to development/rawhide/x86_64/os/repodata
     """
@@ -245,3 +244,4 @@ def record_propagation(ctx_obj, options, results: list[PropagationResult]):
                 model.PropagationStat(repository_id=repo_id, datetime=today, **status_counts)
             )
         report_propagation(console, session, repo_status)
+        session.commit()

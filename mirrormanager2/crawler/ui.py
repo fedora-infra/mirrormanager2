@@ -6,8 +6,6 @@ from rich.text import Text
 
 from mirrormanager2.lib import model
 
-from .propagation import PropagationStatus
-
 if typing.TYPE_CHECKING:
     from .crawler import CrawlResult
 
@@ -91,17 +89,17 @@ def report_crawl(ctx_obj, options: dict, results: list["CrawlResult"]):
 
 
 def report_propagation(
-    console: Console, session, repo_status: dict[int, dict["PropagationStatus", int]]
+    console: Console, session, repo_status: dict[int, dict[model.PropagationStatus, int]]
 ):
     table = Table(title="Results")
     table.add_column("Repo")
-    for ps in PropagationStatus:
+    for ps in model.PropagationStatus:
         table.add_column(ps.value)
     for repo_id in sorted(repo_status):
         repo = session.get(model.Repository, repo_id)
         status_counts = repo_status[repo_id]
         row = [repo.prefix]
-        for ps in PropagationStatus:
+        for ps in model.PropagationStatus:
             row.append(str(status_counts.get(ps.value, 0)))
         table.add_row(*row)
     console.print(table)

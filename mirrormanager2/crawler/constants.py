@@ -2,9 +2,6 @@
 # this is according to GeoIP
 CONTINENTS = ["AF", "AN", "AS", "EU", "NA", "OC", "SA", "--"]
 
-# propagation URLs
-PROPAGATION_ARCH = "x86_64"
-
 REPODATA_DIR = "repodata"
 REPODATA_FILE = "repomd.xml"
 
