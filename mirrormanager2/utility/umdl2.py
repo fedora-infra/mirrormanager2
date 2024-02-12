@@ -24,6 +24,7 @@ import logging.handlers
 import os
 import re
 import stat
+import warnings
 
 import click
 
@@ -191,6 +192,14 @@ def setup_logging(config, logfile, debug, list_categories):
 )
 @click.option("--start-at", "path", default=None, help="Specify the path at which to start the run")
 def main(config, logfile, list_categories, categories, debug, delete_directories, path):
+    warnings.warn(
+        "This command is deprecated and will be removed in the next version. "
+        "To my knowledge, it's a rewrite that has never actually been used. "
+        "Please open a ticket at https://github.com/fedora-infra/mirrormanager2/issues "
+        "if you still need it.",
+        DeprecationWarning,
+        stacklevel=1,
+    )
     config = read_config(config)
     db_manager = get_db_manager(config)
     session = db_manager.Session()
