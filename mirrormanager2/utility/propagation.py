@@ -19,18 +19,26 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import glob
+import logging
 import os
-import sys
 
-import click
 import matplotlib
 
 matplotlib.use("Agg")
 
+import click  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from matplotlib import rc  # noqa: E402
+
+from mirrormanager2.lib import get_repositories, read_config  # noqa: E402
+from mirrormanager2.lib.constants import PROPAGATION_ARCH  # noqa: E402
+from mirrormanager2.lib.database import get_db_manager  # noqa: E402
+
+from .common import setup_logging  # noqa: E402
+
+logger = logging.getLogger(__name__)
+
 
 font = {"size": 9}
 
@@ -83,176 +91,173 @@ def label_bars_size(rects, fmt, ax, offset=None, last=False):
             )
 
 
-@click.command()
-@click.option(
-    "--logfiles",
-    default="/var/log/mirrormanager/propagation/propagation*",
-    help="Glob pattern for input logfiles",
-)
-@click.option(
-    "--prefix",
-    default="development",
-    help="Specify a prefix which should be added to the output files",
-)
-@click.option(
-    "--outdir",
-    required=True,
-    help="Specifiy directory into which the output should be placed",
-)
-@click.option("--debug", is_flag=True, default=False, help="Print debug output during")
-def main(logfiles, prefix, outdir, debug):
-    repomd_same = []
-    repomd_one_day = []
-    repomd_two_day = []
-    repomd_other = []
-    repomd_none = []
-    labels = []
-    maximum = 0
-    sha256sums = []
+# @click.option(
+#     "--prefix",
+#     default="development",
+#     help="Specify a prefix which should be added to the output files",
+# )
+# @click.option(
+#     "--outdir",
+#     required=True,
+#     help="Specifiy directory into which the output should be placed",
+# )
+# def main(logfiles, prefix, outdir, debug):
+#     repomd_same = []
+#     repomd_one_day = []
+#     repomd_two_day = []
+#     repomd_other = []
+#     repomd_none = []
+#     labels = []
+#     maximum = 0
+#     sha256sums = []
 
-    hosts_broken = {}
-    hosts_older = {}
-    hosts_older_1 = {}
-    hosts_older_2 = {}
+#     hosts_broken = {}
+#     hosts_older = {}
+#     hosts_older_1 = {}
+#     hosts_older_2 = {}
 
-    # add the output directory to the prefix
-    prefix = os.path.join(outdir, prefix)
+#     # add the output directory to the prefix
+#     prefix = os.path.join(outdir, prefix)
 
-    total = len(glob.glob(logfiles))
+#     total = len(glob.glob(logfiles))
 
-    if not total:
-        print("No input files found at: " + logfiles)
-        sys.exit(0)
+#     if not total:
+#         print("No input files found at: " + logfiles)
+#         sys.exit(0)
 
-    remaining = total
-    if debug:
-        print("%d data points available" % total)
+#     remaining = total
+#     if debug:
+#         print("%d data points available" % total)
 
-    proppath = None
+#     proppath = None
 
-    for filename in sorted(glob.glob(logfiles)):
-        for line in open(filename):
-            line = line.rstrip()
-            line = line.split("::")
-            try:
-                if not proppath:
-                    proppath = line[7]
-                if line[5] not in sha256sums:
-                    if len(line[5]) == 64:
-                        # sha256sum is 64 character long
-                        sha256sums.append(line[5])
-            except Exception:
-                pass
+#     for filename in sorted(glob.glob(logfiles)):
+#         for line in open(filename):
+#             line = line.rstrip()
+#             line = line.split("::")
+#             try:
+#                 if not proppath:
+#                     proppath = line[7]
+#                 if line[5] not in sha256sums:
+#                     if len(line[5]) == 64:
+#                         # sha256sum is 64 character long
+#                         sha256sums.append(line[5])
+#             except Exception:
+#                 pass
 
-    for filename in sorted(glob.glob(logfiles)):
-        total -= 1
-        if total > 58:
-            remaining -= 1
-            continue
-        if remaining > 30 and total % 2 == 0:
-            continue
-        remaining -= 1
-        same = 0
-        one_day = 0
-        two_day = 0
-        other = 0
-        none = 0
-        scandate = None
+#     for filename in sorted(glob.glob(logfiles)):
+#         total -= 1
+#         if total > 58:
+#             remaining -= 1
+#             continue
+#         if remaining > 30 and total % 2 == 0:
+#             continue
+#         remaining -= 1
+#         same = 0
+#         one_day = 0
+#         two_day = 0
+#         other = 0
+#         none = 0
+#         scandate = None
 
-        for line in open(filename):
-            line = line.rstrip()
-            line = line.split("::")
-            if len(line) <= 6:
-                continue
-            try:
-                date = line[4].split("-")
-                scandate = "{}-{}-{}\n{}-{}-{}".format(*tuple(date))
-            except Exception:
-                continue
-            if line[3] == "NOSUM":
-                none += 1
-                try:
-                    hosts_broken[line[1]] += 1
-                except Exception:
-                    hosts_broken[line[1]] = 1
-            elif line[6] != "200":
-                continue
-            elif line[3] == line[5]:
-                same += 1
-            elif len(line[5]) != 64:
-                other += 1
-            elif line[3] in sha256sums:
-                offset = sha256sums.index(line[5])
-                if sha256sums.index(line[3]) == offset:
-                    same += 1
-                elif sha256sums.index(line[3]) == offset - 1:
-                    one_day += 1
-                    try:
-                        hosts_older_1[line[1]] += 1
-                    except Exception:
-                        hosts_older_1[line[1]] = 1
-                elif sha256sums.index(line[3]) == offset - 2:
-                    two_day += 1
-                    try:
-                        hosts_older_2[line[1]] += 1
-                    except Exception:
-                        hosts_older_2[line[1]] = 1
-                else:
-                    other += 1
-            else:
-                other += 1
-                try:
-                    hosts_older[line[1]] += 1
-                except Exception:
-                    hosts_older[line[1]] = 1
-        if none + same + other + one_day + two_day > maximum:
-            maximum = none + same + other + one_day + two_day
+#         for line in open(filename):
+#             line = line.rstrip()
+#             line = line.split("::")
+#             if len(line) <= 6:
+#                 continue
+#             try:
+#                 date = line[4].split("-")
+#                 scandate = "{}-{}-{}\n{}-{}-{}".format(*tuple(date))
+#             except Exception:
+#                 continue
+#             if line[3] == "NOSUM":
+#                 none += 1
+#                 try:
+#                     hosts_broken[line[1]] += 1
+#                 except Exception:
+#                     hosts_broken[line[1]] = 1
+#             elif line[6] != "200":
+#                 continue
+#             elif line[3] == line[5]:
+#                 same += 1
+#             elif len(line[5]) != 64:
+#                 other += 1
+#             elif line[3] in sha256sums:
+#                 offset = sha256sums.index(line[5])
+#                 if sha256sums.index(line[3]) == offset:
+#                     same += 1
+#                 elif sha256sums.index(line[3]) == offset - 1:
+#                     one_day += 1
+#                     try:
+#                         hosts_older_1[line[1]] += 1
+#                     except Exception:
+#                         hosts_older_1[line[1]] = 1
+#                 elif sha256sums.index(line[3]) == offset - 2:
+#                     two_day += 1
+#                     try:
+#                         hosts_older_2[line[1]] += 1
+#                     except Exception:
+#                         hosts_older_2[line[1]] = 1
+#                 else:
+#                     other += 1
+#             else:
+#                 other += 1
+#                 try:
+#                     hosts_older[line[1]] += 1
+#                 except Exception:
+#                     hosts_older[line[1]] = 1
+#         if none + same + other + one_day + two_day > maximum:
+#             maximum = none + same + other + one_day + two_day
 
-        repomd_same.append(same)
-        repomd_one_day.append(one_day)
-        repomd_two_day.append(two_day)
-        repomd_other.append(other)
-        repomd_none.append(none)
-        labels.append(scandate)
+#         repomd_same.append(same)
+#         repomd_one_day.append(one_day)
+#         repomd_two_day.append(two_day)
+#         repomd_other.append(other)
+#         repomd_none.append(none)
+#         labels.append(scandate)
 
-    if debug:
-        print("%d data points used" % len(repomd_same))
+#     if debug:
+#         print("%d data points used" % len(repomd_same))
 
-    fd = open(f"{prefix}-repomd-report.txt", "w")
 
-    if debug:
-        print("Hosts broken")
-    fd.write("Hosts broken\n")
-    for url, count in sorted(hosts_broken.items(), key=lambda x: (int(x[1])), reverse=True):
-        if debug:
-            print("%s: %d" % (url, count))
-        fd.write("%s: %d\n" % (url, count))
+def make_graph(repository, outdir):
+    prefix = f"{repository.version.product.name} {repository.version.name}"
+    stats = repository.propagation_stats
+    labels = [ps.datetime.strftime(r"%Y-%m-%d\n%H-%M-%S") for ps in stats]
+    repomd_same = [ps.same_day for ps in stats]
+    repomd_one_day = [ps.one_day for ps in stats]
+    repomd_two_day = [ps.two_day for ps in stats]
+    repomd_older = [ps.older for ps in stats]
+    repomd_no_info = [ps.no_info for ps in stats]
+    proppath = repository.directory.name
 
-    if debug:
-        print("Hosts older")
-    fd.write("Hosts older\n")
-    for url, count in sorted(hosts_older.items(), key=lambda x: (int(x[1])), reverse=True):
-        if debug:
-            print("%s: %d" % (url, count))
-        fd.write("%s: %d\n" % (url, count))
+    maximums = [(ps.same_day + ps.one_day + ps.two_day + ps.older + ps.no_info) for ps in stats]
+    maximum = max(maximums)
 
-    if debug:
-        print("Hosts older - 1")
-    fd.write("Hosts older - 1\n")
-    for url, count in sorted(hosts_older_1.items(), key=lambda x: (int(x[1])), reverse=True):
-        if debug:
-            print("%s: %d" % (url, count))
-        fd.write("%s: %d\n" % (url, count))
-    fd.write("Hosts older - 2\n")
+    # with open(os.path.join(outdir, f"{prefix}-repomd-report.txt"), "w") as fd:
+    #     logger.debug("Hosts broken")
+    #     fd.write("Hosts broken\n")
+    #     for url, count in sorted(hosts_broken.items(), key=lambda x: (int(x[1])), reverse=True):
+    #         logger.debug(f"{url}: {count}")
+    #         fd.write(f"{url}: {count}\n" % (url, count))
 
-    if debug:
-        print("Hosts older - 2")
-    for url, count in sorted(hosts_older_2.items(), key=lambda x: (int(x[1])), reverse=True):
-        if debug:
-            print("%s: %d" % (url, count))
-        fd.write("%s: %d\n" % (url, count))
+    #     logger.debug("Hosts older")
+    #     fd.write("Hosts older\n")
+    #     for url, count in sorted(hosts_older.items(), key=lambda x: (int(x[1])), reverse=True):
+    #         logger.debug("%s: %d" % (url, count))
+    #         fd.write("%s: %d\n" % (url, count))
 
-    fd.close()
+    #     logger.debug("Hosts older - 1")
+    #     fd.write("Hosts older - 1\n")
+    #     for url, count in sorted(hosts_older_1.items(), key=lambda x: (int(x[1])), reverse=True):
+    #         logger.debug("%s: %d" % (url, count))
+    #         fd.write("%s: %d\n" % (url, count))
+    #     fd.write("Hosts older - 2\n")
+
+    #     logger.debug("Hosts older - 2")
+    #     for url, count in sorted(hosts_older_2.items(), key=lambda x: (int(x[1])), reverse=True):
+    #         logger.debug("%s: %d" % (url, count))
+    #         fd.write("%s: %d\n" % (url, count))
 
     ind = np.arange(len(labels))
     width = 0.62
@@ -266,19 +271,19 @@ def main(logfiles, prefix, outdir, debug):
     rects = ax.bar(
         ind, repomd_one_day, width, bottom=repomd_same, color="mediumvioletred", label="synced - 1"
     )
-    label_bars_size(rects, "%.0f", repomd_same, ax)
+    label_bars_size(rects, "%.0f", ax, repomd_same)
 
     bottom = list_adder(repomd_same, repomd_one_day)
     rects = ax.bar(ind, repomd_two_day, width, bottom=bottom, color="b", label="synced - 2")
-    label_bars_size(rects, "%.0f", bottom, ax)
+    label_bars_size(rects, "%.0f", ax, bottom)
 
     bottom = list_adder(bottom, repomd_two_day)
-    rects = ax.bar(ind, repomd_other, width, bottom=bottom, color="red", label="older")
-    label_bars_size(rects, "%.0f", bottom, ax)
+    rects = ax.bar(ind, repomd_older, width, bottom=bottom, color="red", label="older")
+    label_bars_size(rects, "%.0f", ax, bottom)
 
-    bottom = list_adder(bottom, repomd_other)
-    rects = ax.bar(ind, repomd_none, width, bottom=bottom, color="y", label="N/A")
-    label_bars_size(rects, "%.0f", bottom, True, ax)
+    bottom = list_adder(bottom, repomd_older)
+    rects = ax.bar(ind, repomd_no_info, width, bottom=bottom, color="y", label="N/A")
+    label_bars_size(rects, "%.0f", ax, bottom, True)
 
     ax.set_ylim(0, maximum + 40)
     ax.set_xticks(ind + width)
@@ -287,20 +292,48 @@ def main(logfiles, prefix, outdir, debug):
 
     plt.legend(loc=2, shadow=True, fancybox=True, ncol=3)
 
-    plt.title("repomd.xml propagation for %s" % proppath)
+    plt.title(f"repomd.xml propagation for {proppath}")
 
-    plt.savefig(
-        "{:<}-{}-repomd-propagation.pdf".format(prefix, labels[len(labels) - 1].split("\n")[0]),
-        bbox_inches="tight",
-    )
+    day = labels[-1].split(r"\n")[0]
+    pdfpath = os.path.join(outdir, f"{prefix:<}-{day}-repomd-propagation.pdf")
+    plt.savefig(pdfpath, bbox_inches="tight")
 
-    plt.savefig(
-        "{}-{}-repomd-propagation.svg".format(prefix, labels[len(labels) - 1].split("\n")[0]),
-        bbox_inches="tight",
-    )
+    svgpath = os.path.join(outdir, f"{prefix}-{day}-repomd-propagation.svg")
+    plt.savefig(svgpath, bbox_inches="tight")
 
-    if debug:
-        print("{}-{}-repomd-propagation.pdf".format(prefix, labels[len(labels) - 1].split("\n")[0]))
+    logger.debug(pdfpath)
 
-    plt.savefig(f"{prefix}-repomd-propagation.pdf", bbox_inches="tight")
-    plt.savefig(f"{prefix}-repomd-propagation.svg", bbox_inches="tight")
+    plt.savefig(os.path.join(outdir, f"{prefix}-repomd-propagation.pdf"), bbox_inches="tight")
+    plt.savefig(os.path.join(outdir, f"{prefix}-repomd-propagation.svg"), bbox_inches="tight")
+
+
+@click.command()
+@click.option(
+    "-c",
+    "--config",
+    envvar="MM2_CONFIG",
+    default="/etc/mirrormanager/mirrormanager2.cfg",
+    help="Configuration file to use",
+)
+@click.option(
+    "--repo-prefix",
+    "repo_prefixes",
+    default=["rawhide"],
+    multiple=True,
+    help="Repository prefix to use for propagation. Defaults to 'rawhide'.",
+)
+@click.option(
+    "--outdir",
+    required=True,
+    help="Specifiy directory into which the output should be placed",
+)
+@click.option("--debug", is_flag=True, default=False, help="enable debugging")
+def main(config, repo_prefixes, outdir, debug):
+    setup_logging(debug)
+    config = read_config(config)
+    db_manager = get_db_manager(config)
+    with db_manager.Session() as session:
+        for repository in get_repositories(
+            session, prefixes=repo_prefixes, arches=[PROPAGATION_ARCH]
+        ):
+            make_graph(repository, outdir)
