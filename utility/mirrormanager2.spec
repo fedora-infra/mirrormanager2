@@ -7,7 +7,7 @@ Release:        1%{?dist}
 Summary:        Mirror management application
 
 # Most MirrorManager files are licensed under the MIT license. Some
-# imported/derivated parts like zebra-dump-parser or the the script
+# imported/derivated parts like the script
 # to generate the worldmaps are licensed under GPLv2 and GPLv2+
 License:        MIT and GPLv2+ and GPLv2
 URL:            https://github.com/fedora-infra/mirrormanager2/
@@ -210,9 +210,6 @@ mkdir -p %{buildroot}%{_tmpfilesdir}
 install -m 0644 utility/backend_tempfile.conf \
     $RPM_BUILD_ROOT/%{_tmpfilesdir}/%{name}-backend.conf
 
-# Install the zebra-dump-parser perl module
-cp -r utility/zebra-dump-parser $RPM_BUILD_ROOT/%{_datadir}/mirrormanager2/
-
 # Install the client files
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/mirrormanager-client
 install -m 0644 client/report_mirror.conf \
@@ -299,7 +296,6 @@ MM2_SKIP_NETWORK_TESTS=1 %{pytest} -v tests
 %attr(755,root,root) %dir %{_localstatedir}/log/mirrormanager
 %attr(755,mirrormanager,mirrormanager) %dir %{_sharedstatedir}/mirrormanager
 %{_tmpfilesdir}/%{name}-backend.conf
-%{_datadir}/mirrormanager2/zebra-dump-parser/
 %{_bindir}/mm2_emergency-expire-repo
 %{_bindir}/mm2_get_global_netblocks
 %{_bindir}/mm2_get_internet2_netblocks
