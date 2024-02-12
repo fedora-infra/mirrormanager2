@@ -8,8 +8,7 @@ import click
 from rich.console import Console
 from rich.progress import Progress
 
-import mirrormanager2.lib
-from mirrormanager2.lib import model, read_config
+from mirrormanager2.lib import get_mirrors, model, read_config
 from mirrormanager2.lib.database import get_db_manager
 
 from .constants import CONTINENTS
@@ -126,7 +125,7 @@ def main(ctx, config, debug, startid, stopid, **kwargs):
     session = db_manager.Session()
 
     # Get *all* of the mirrors
-    hosts = mirrormanager2.lib.get_mirrors(
+    hosts = get_mirrors(
         session,
         private=False,
         order_by_crawl_duration=True,

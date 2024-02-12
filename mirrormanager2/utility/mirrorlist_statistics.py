@@ -29,10 +29,9 @@ from datetime import datetime, timedelta
 
 import click
 
+from mirrormanager2.lib import read_config
 from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.model import AccessStat, AccessStatCategory
-
-from .common import read_config
 
 logger = logging.getLogger("mirrorlist-statistics")
 
