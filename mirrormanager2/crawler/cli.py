@@ -92,6 +92,15 @@ def validate_continents(ctx, param, value):
     help="Stop crawling before host ID (default=no limit)",
 )
 @click.option(
+    "-f",
+    "--fraction",
+    default="1:1",
+    help="""Specify which part of the mirror range should be returned:
+1:1 - all mirrors
+1:2 - the first half of the mirrors
+2:3 - the middle third of the mirrors""",
+)
+@click.option(
     "--disable-fedmsg",
     "fedmsg",
     is_flag=True,
@@ -113,7 +122,7 @@ def validate_continents(ctx, param, value):
     help="enable printing of debug-level messages",
 )
 @click.pass_context
-def main(ctx, config, debug, startid, stopid, **kwargs):
+def main(ctx, config, debug, startid, stopid, fraction, **kwargs):
     ctx.ensure_object(dict)
     ctx.obj["console"] = Console()
 
@@ -137,6 +146,25 @@ def main(ctx, config, debug, startid, stopid, **kwargs):
     )
 
     # Limit our host list down to only the ones we really want to crawl
+    if fraction and fraction != "1:1":
+        if startid or stopid:
+            raise click.BadOptionUsage(
+                "--fraction", "Cannot use --fraction with --startid or --stopid"
+            )
+        host_ids = [host.id for host in hosts]
+        host_ids.sort()
+        slices = int(fraction.split(":")[1])
+        part = int(fraction.split(":")[0])
+        start_index = (part - 1) * int(len(host_ids) / slices)
+        stop_index = int(len(host_ids) / slices) * part
+
+        if slices == part:
+            # Final part
+            startid = host_ids[start_index]
+        else:
+            startid = host_ids[start_index]
+            stopid = host_ids[stop_index]
+
     hosts = [host for host in hosts if (host.id >= startid and (not stopid or host.id < stopid))]
     ctx.obj["hosts"] = hosts
 
@@ -151,7 +179,7 @@ def run_on_all_hosts(ctx_obj, options, report):
     starttime = time.monotonic()
     host_ids = [host.id for host in ctx_obj["hosts"]]
     results = []
-    with Progress(console=ctx_obj["console"], refresh_per_second=2) as progress:
+    with Progress(console=ctx_obj["console"], refresh_per_second=1) as progress:
         task_global = progress.add_task(f"Crawling {len(host_ids)} mirrors", total=len(host_ids))
         futures = run_in_threadpool(
             worker,
