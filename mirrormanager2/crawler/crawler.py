@@ -5,14 +5,14 @@ from dataclasses import dataclass
 from enum import Enum
 
 import mirrormanager2.lib
+from mirrormanager2.lib.constants import PROPAGATION_ARCH
 from mirrormanager2.lib.database import get_db_manager
-from mirrormanager2.lib.model import HostCategoryDir
+from mirrormanager2.lib.model import HostCategoryDir, PropagationStatus
 
 from .connection_pool import ConnectionPool
 from .connector import FetchingFailed, SchemeNotAvailable
-from .constants import PROPAGATION_ARCH, REPODATA_DIR, REPODATA_FILE
+from .constants import REPODATA_DIR, REPODATA_FILE
 from .continents import BrokenBaseUrl, EmbargoedCountry, WrongContinent, check_continent
-from .propagation import PropagationResult, PropagationStatus
 from .reporter import Reporter
 from .threads import ThreadTimeout, get_thread_id, on_thread_started
 from .ui import ProgressTask
@@ -56,6 +56,13 @@ class CrawlResult:
     unknown: int | None = None
     hcds_created: int | None = None
     hcds_deleted: int | None = None
+
+
+@dataclass
+class PropagationResult:
+    host_id: int
+    host_name: str
+    repo_status: dict[int, PropagationStatus]
 
 
 def get_preferred_urls(host_category):
