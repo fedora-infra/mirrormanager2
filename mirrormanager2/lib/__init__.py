@@ -455,7 +455,6 @@ def get_repo_prefix_arch(session, prefix, arch):
         .filter(model.Repository.arch_id == model.Arch.id)
         .filter(model.Arch.name == arch)
     )
-
     return query.first()
 
 
@@ -1090,3 +1089,31 @@ def get_rsync_filter_directories(session, categories, since):
 
     result = [entry[0] for entry in query.all()]
     return result
+
+
+def get_propagation_repos(session):
+    """Return a specified Site via its identifier.
+
+    :arg session: the session with which to connect to the database.
+
+    """
+    query = (
+        sqlalchemy.select(model.Repository)
+        .join(model.PropagationStat)
+        .order_by(model.Repository.prefix)
+    )
+    return session.execute(query).scalars()
+
+
+def get_propagation(session, repo_id):
+    """Return a specified Site via its identifier.
+
+    :arg session: the session with which to connect to the database.
+
+    """
+    query = (
+        sqlalchemy.select(model.PropagationStat)
+        .where(model.PropagationStat.repository_id == repo_id)
+        .order_by(model.PropagationStat.datetime)
+    )
+    return list(session.execute(query).scalars())
