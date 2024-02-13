@@ -12,6 +12,8 @@ import click
 import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
 
+from .common import config_option
+
 archiveCategory = "Fedora Archive"
 originalCategory = "Fedora Linux"
 
@@ -44,13 +46,7 @@ def doit(session, original_cat, archive_cat, directory_re):
 
 
 @click.command()
-@click.option(
-    "-c",
-    "--config",
-    envvar="MM2_CONFIG",
-    default="/etc/mirrormanager/mirrormanager2.cfg",
-    help="Configuration file to use (defaults to " "/etc/mirrormanager/mirrormanager2.cfg)",
-)
+@config_option
 @click.option(
     "--originalCategory",
     metavar="CATEGORY",

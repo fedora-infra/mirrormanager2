@@ -33,6 +33,8 @@ from mirrormanager2.lib import read_config
 from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.model import AccessStat, AccessStatCategory
 
+from .common import config_option
+
 logger = logging.getLogger("mirrorlist-statistics")
 
 
@@ -48,13 +50,7 @@ def setup_logging(debug=False):
 
 
 @click.command()
-@click.option(
-    "-c",
-    "--config",
-    envvar="MM2_CONFIG",
-    default="/etc/mirrormanager/mirrormanager2.cfg",
-    help="Configuration file to use",
-)
+@config_option
 @click.option(
     "-l",
     "--log",

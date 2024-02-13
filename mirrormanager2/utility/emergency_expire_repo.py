@@ -38,6 +38,8 @@ from mirrormanager2.lib import read_config
 from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.model import Product, Repository, Version
 
+from .common import config_option
+
 logger = logging.getLogger("mm2")
 
 
@@ -49,13 +51,7 @@ def setup_logging():
 
 
 @click.command()
-@click.option(
-    "-c",
-    "--config",
-    envvar="MM2_CONFIG",
-    default="/etc/mirrormanager/mirrormanager2.cfg",
-    help="Configuration file to use",
-)
+@config_option
 @click.argument("product", help="Product to clear old filedetails for (Fedora, EPEL)")
 @click.argument("version", help="VERSION to clear old filedetails for (20, 21)")
 def main(config, product, version):

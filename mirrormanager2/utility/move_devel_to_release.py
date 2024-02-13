@@ -18,6 +18,8 @@ import click
 import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
 
+from .common import config_option
+
 
 def fixup_repos(session, version, repo, new_dir):
     """
@@ -104,13 +106,7 @@ def get_all_categories(session):
 
 
 @click.command()
-@click.option(
-    "-c",
-    "--config",
-    envvar="MM2_CONFIG",
-    default="/etc/mirrormanager/mirrormanager2.cfg",
-    help="Configuration file to use " "(default=/etc/mirrormanager/mirrormanager2.cfg)",
-)
+@config_option
 @click.option(
     "--version",
     help="OS version to move (e.g. '14') [required]",

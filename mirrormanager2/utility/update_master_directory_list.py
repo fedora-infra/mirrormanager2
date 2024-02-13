@@ -42,7 +42,7 @@ from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.model import Directory
 from mirrormanager2.lib.sync import run_rsync
 
-from .common import get_filtered_categories
+from .common import config_option, get_filtered_categories
 
 STD_EXCLUDES = [r".*\.snapshot", r".*/\.~tmp~"]
 # This directories will be skipped during repository creation
@@ -798,13 +798,7 @@ class ProgressBar:
 
 
 @click.command()
-@click.option(
-    "-c",
-    "--config",
-    envvar="MM2_CONFIG",
-    default="/etc/mirrormanager/mirrormanager2.cfg",
-    help="Configuration file to use",
-)
+@config_option
 @click.option("--logfile", type=click.Path(), default="umdl.log", help="write logs to PATH")
 @click.option(
     "--list",

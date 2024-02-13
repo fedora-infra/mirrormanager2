@@ -1,8 +1,20 @@
 import logging
 
+import click
+
 from mirrormanager2.lib import get_category_by_name
 
 logger = logging.getLogger(__name__)
+
+
+config_option = click.option(
+    "-c",
+    "--config",
+    envvar="MM2_CONFIG",
+    default="/etc/mirrormanager/mirrormanager2.cfg",
+    help="Configuration file to use",
+    show_default=True,
+)
 
 
 def get_filtered_categories(config, session, only_category):
