@@ -19,6 +19,8 @@ import matplotlib
 import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
 
+from .common import config_option
+
 matplotlib.use("Agg")
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas  # noqa: E402
@@ -118,13 +120,7 @@ def doit(output, config):
 
 
 @click.command()
-@click.option(
-    "-c",
-    "--config",
-    envvar="MM2_CONFIG",
-    default="/etc/mirrormanager/mirrormanager2.cfg",
-    help="Configuration file to use",
-)
+@config_option
 @click.option(
     "-o",
     "--output",
