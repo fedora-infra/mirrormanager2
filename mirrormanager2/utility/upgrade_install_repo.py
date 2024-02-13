@@ -19,6 +19,8 @@ import click
 import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
 
+from .common import config_option
+
 # moving from pub/fedora/linux/releases/test/22_Beta/Server/x86_64/os/
 # to          pub/fedora/linux/releases/22/Server/x86_64/os
 # TODO: adjust the UMDL to do this
@@ -96,13 +98,7 @@ def move_install_repo(session, version, test=False, debug=False):
 
 
 @click.command()
-@click.option(
-    "-c",
-    "--config",
-    envvar="MM2_CONFIG",
-    default="/etc/mirrormanager/mirrormanager2.cfg",
-    help="Configuration file to use " "(default=/etc/mirrormanager/mirrormanager2.cfg)",
-)
+@config_option
 @click.option(
     "--version",
     help="OS version to move (e.g. '14') [required]",

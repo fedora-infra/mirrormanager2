@@ -35,7 +35,7 @@ from mirrormanager2.lib import get_repositories, read_config  # noqa: E402
 from mirrormanager2.lib.constants import PROPAGATION_ARCH  # noqa: E402
 from mirrormanager2.lib.database import get_db_manager  # noqa: E402
 
-from .common import setup_logging  # noqa: E402
+from .common import config_option, setup_logging  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -308,13 +308,7 @@ def make_graph(repository, outdir):
 
 
 @click.command()
-@click.option(
-    "-c",
-    "--config",
-    envvar="MM2_CONFIG",
-    default="/etc/mirrormanager/mirrormanager2.cfg",
-    help="Configuration file to use",
-)
+@config_option
 @click.option(
     "--repo-prefix",
     "repo_prefixes",

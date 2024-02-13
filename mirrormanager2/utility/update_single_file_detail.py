@@ -17,19 +17,13 @@ import click
 import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
 
-from .common import get_filtered_categories, setup_logging
+from .common import config_option, get_filtered_categories, setup_logging
 
 logger = logging.getLogger("mm2")
 
 
 @click.command()
-@click.option(
-    "-c",
-    "--config",
-    envvar="MM2_CONFIG",
-    default="/etc/mirrormanager/mirrormanager2.cfg",
-    help="Configuration file to use",
-)
+@config_option
 @click.option(
     "--category",
     "only_category",

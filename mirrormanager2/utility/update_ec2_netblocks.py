@@ -12,6 +12,8 @@ import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.model import HostNetblock
 
+from .common import config_option
+
 
 def parse_out_region(hostname):
     if hostname.startswith("s3-mirror-"):
@@ -100,13 +102,7 @@ def doit(session, dry_run):
 
 
 @click.command()
-@click.option(
-    "-c",
-    "--config",
-    envvar="MM2_CONFIG",
-    default="/etc/mirrormanager/mirrormanager2.cfg",
-    help="Config file to use",
-)
+@config_option
 @click.option("-n", "--dry-run", is_flag=True, default=False)
 def main(config, dry_run):
     config = mirrormanager2.lib.read_config(config)
