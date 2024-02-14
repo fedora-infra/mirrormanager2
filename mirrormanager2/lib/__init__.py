@@ -1092,7 +1092,7 @@ def get_rsync_filter_directories(session, categories, since):
 
 
 def get_propagation_repos(session):
-    """Return a specified Site via its identifier.
+    """Return Repositories which have Propagation statistics.
 
     :arg session: the session with which to connect to the database.
 
@@ -1106,9 +1106,10 @@ def get_propagation_repos(session):
 
 
 def get_propagation(session, repo_id):
-    """Return a specified Site via its identifier.
+    """Return Propagation statistics of the specified Repository ID.
 
     :arg session: the session with which to connect to the database.
+    :arg repo_id: the Repository ID.
 
     """
     query = (
@@ -1117,3 +1118,19 @@ def get_propagation(session, repo_id):
         .order_by(model.PropagationStat.datetime)
     )
     return list(session.execute(query).scalars())
+
+
+def delete_expired_propagation(session, older_than):
+    """Delete Propagation statistics older than the specified datetime.
+
+    :arg session: the session with which to connect to the database.
+    :arg older_than: the datetime threshold.
+    """
+    query = sqlalchemy.select(model.PropagationStat).where(
+        model.PropagationStat.datetime < older_than
+    )
+    # We *could* be using delete() to only run one SQL query but that bypasses
+    # some features in SQLAlchemy, and we don't really need the speedup as this
+    # is run by cron anyway.
+    for p_stat in session.execute(query).scalars():
+        session.delete(p_stat)

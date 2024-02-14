@@ -115,6 +115,9 @@ SHOW_PROPAGATION = True
 # Where to look for the above mentioned propagation images.
 PROPAGATION_BASE = "/var/lib/mirrormanager/statistics/data/propagation"
 
+# How long to keep the propagation stats, in days
+PROPAGATION_KEEP_DAYS = 30
+
 # Where the GeoIP database lives
 GEOIP_BASE = "/usr/share/GeoIP"
 
