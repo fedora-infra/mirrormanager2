@@ -98,6 +98,7 @@ mm2_umdl2 = "mirrormanager2.utility.umdl2:main"
 mm2_create_install_repo = "mirrormanager2.utility.create_install_repo:main"
 mm2_upgrade-install-repo = "mirrormanager2.utility.upgrade_install_repo:main"
 mm2_last-sync = "mirrormanager2.utility.last_sync:main"
+mm2_expire-propagation = "mirrormanager2.utility.propagation_expire:main"
 
 
 [tool.poetry.extras]
