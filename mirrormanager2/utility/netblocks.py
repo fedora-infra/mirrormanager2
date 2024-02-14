@@ -29,6 +29,8 @@ import requests
 
 from .common import setup_logging
 
+# TODO: rich progress bar
+
 GLOBAL_NETBLOCKS_URL = "http://ftp.routeviews.org/dnszones/rib.bz2"
 IPV6_NETBLOCKS_URL = "http://archive.routeviews.org/route-views6/bgpdata/{year}.{month}/RIBS"
 ROUTERS = ["ATLA", "CHIC", "HOUS", "KANS", "LOSA", "NEWY", "SALT", "SEAT", "WASH"]

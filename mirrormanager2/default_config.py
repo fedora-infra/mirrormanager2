@@ -91,6 +91,9 @@ SHOW_STATISTICS = True
 # to locate the statistics files and display them.
 STATISTICS_BASE = "/var/lib/mirrormanager/statistics/data"
 
+# How long to keep the access stats, in days
+ACCESS_STATS_KEEP_DAYS = 30
+
 # Countries which have to be excluded.
 EMBARGOED_COUNTRIES = ["CU", "IR", "KP", "SD", "SY"]
 
