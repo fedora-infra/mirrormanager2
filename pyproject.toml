@@ -83,7 +83,6 @@ responses = "^0.23.3"
 
 [tool.poetry.scripts]
 report_mirror = { reference = "client/report_mirror", type = "file" }
-mirrorlist_statistics = { reference = "mirrorlist/mirrorlist_statistics", type = "file" }
 mm2_crawler_old = "mirrormanager2.utility.crawler:main"
 mm2_crawler = "mirrormanager2.crawler.cli:main"
 mm2_emergency-expire-repo = "mirrormanager2.utility.emergency_expire_repo:main"
@@ -98,7 +97,9 @@ mm2_umdl2 = "mirrormanager2.utility.umdl2:main"
 mm2_create_install_repo = "mirrormanager2.utility.create_install_repo:main"
 mm2_upgrade-install-repo = "mirrormanager2.utility.upgrade_install_repo:main"
 mm2_last-sync = "mirrormanager2.utility.last_sync:main"
-mm2_expire-propagation = "mirrormanager2.utility.propagation_expire:main"
+mm2_expire-stats = "mirrormanager2.utility.expire_statistics:main"
+mm2_mirrorlist-statistics = "mirrormanager2.utility.mirrorlist_statistics:main"
+
 
 
 [tool.poetry.extras]

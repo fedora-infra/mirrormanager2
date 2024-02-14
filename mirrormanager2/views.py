@@ -1194,26 +1194,31 @@ def statistics(date=None, cat="countries"):
     yesterday = today - datetime.timedelta(days=1)
     tomorrow = today + datetime.timedelta(days=1)
 
-    today_file = check_for_statistics(today, cat)
-    if not check_for_statistics(yesterday, cat):
+    stats = mmlib.get_statistics(DB.session, today, cat)
+
+    if not mmlib.get_statistics(DB.session, yesterday, cat):
         yesterday = None
-    if not check_for_statistics(tomorrow, cat):
+    if not mmlib.get_statistics(DB.session, tomorrow, cat):
         tomorrow = None
 
-    try:
-        with open(today_file) as data:
-            table = data.read()
-    except (OSError, TypeError):
-        table = "N/A"
+    total = sum(stat.requests for stat in stats)
+
+    labels = [stat.name for stat in stats]
+    dataset = {
+        "label": "Percent",
+        "data": [stat.percent for stat in stats],
+    }
 
     return flask.render_template(
         "statistics.html",
-        table=table,
+        stats=stats,
+        total=total,
         yesterday=yesterday,
         today=today,
         tomorrow=tomorrow,
-        image=statistics_file_name(today, cat, "png"),
         cat=cat,
+        graph_labels=labels,
+        graph_dataset=dataset,
     )
 
 
@@ -1248,7 +1253,6 @@ def propagation(prefix):
     """
     repos = mmlib.get_propagation_repos(DB.session)
     repo = mmlib.get_repo_prefix_arch(DB.session, prefix=prefix, arch=constants.PROPAGATION_ARCH)
-    datasets = []
     if repo is None:
         propagation = []
     else:
@@ -1261,6 +1265,7 @@ def propagation(prefix):
         ("older", "older"),
         ("N/A", "no_info"),
     ]
+    datasets = []
     for label, attr in series:
         datasets.append(
             {
