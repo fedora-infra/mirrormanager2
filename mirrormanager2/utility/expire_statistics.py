@@ -25,6 +25,9 @@ def main(config, debug):
     db_manager = get_db_manager(config)
     setup_logging(debug=debug)
 
-    threshold = datetime.now() - timedelta(days=config["PROPAGATION_KEEP_DAYS"])
     with db_manager.Session() as session:
-        mirrormanager2.lib.delete_expired_propagation(session, threshold)
+        propagation_threshold = datetime.now() - timedelta(days=config["PROPAGATION_KEEP_DAYS"])
+        mirrormanager2.lib.delete_expired_propagation(session, propagation_threshold)
+
+        access_stat_threshold = datetime.now() - timedelta(days=config["ACCESS_STATS_KEEP_DAYS"])
+        mirrormanager2.lib.delete_expired_access_stats(session, access_stat_threshold)

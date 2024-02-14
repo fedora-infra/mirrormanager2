@@ -1120,17 +1120,46 @@ def get_propagation(session, repo_id):
     return list(session.execute(query).scalars())
 
 
+def _search_and_delete(session, model_class, property_name, older_than):
+    """Delete data when the property is older than the specified datetime.
+
+    :arg session: the session with which to connect to the database.
+    :arg model_class: the model class.
+    :arg property_name: the name of the model property to filter on.
+    :arg older_than: the datetime threshold.
+    """
+    query = sqlalchemy.select(model_class).where(getattr(model_class, property_name) < older_than)
+    # We *could* be using delete() to only run one SQL query but that bypasses
+    # some features in SQLAlchemy, and we don't really need the speedup as this
+    # is run by cron anyway.
+    for p_stat in session.execute(query).scalars():
+        session.delete(p_stat)
+
+
 def delete_expired_propagation(session, older_than):
     """Delete Propagation statistics older than the specified datetime.
 
     :arg session: the session with which to connect to the database.
     :arg older_than: the datetime threshold.
     """
-    query = sqlalchemy.select(model.PropagationStat).where(
-        model.PropagationStat.datetime < older_than
+    _search_and_delete(session, model.PropagationStat, "datetime", older_than)
+
+
+def delete_expired_access_stats(session, older_than):
+    """Delete Access statistics older than the specified datetime.
+
+    :arg session: the session with which to connect to the database.
+    :arg older_than: the datetime threshold.
+    """
+    _search_and_delete(session, model.AccessStat, "datePROPAGATION_KEEP_DAYS", older_than)
+
+
+def get_statistics(session, date, stat_category):
+    """Get the Access statistics for the specified date and access stat category."""
+    query = (
+        sqlalchemy.select(model.AccessStat)
+        .join(model.AccessStatCategory)
+        .where(model.AccessStatCategory.name == stat_category, model.AccessStat.date == date)
+        .order_by(model.AccessStat.requests.desc())
     )
-    # We *could* be using delete() to only run one SQL query but that bypasses
-    # some features in SQLAlchemy, and we don't really need the speedup as this
-    # is run by cron anyway.
-    for p_stat in session.execute(query).scalars():
-        session.delete(p_stat)
+    return list(session.execute(query).scalars())

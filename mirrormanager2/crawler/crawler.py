@@ -284,7 +284,7 @@ class Crawler:
             hcds_created=0,
             hcds_deleted=0,
         )
-        current_hcds = {}
+        current_hcds = set()
         keys = host_category_dirs.keys()
         keys = sorted(keys, key=lambda t: t[1].name)
         stats["total_directories"] = len(keys)
@@ -327,7 +327,7 @@ class Crawler:
             else:
                 stats["unchanged"] += 1
 
-            current_hcds[hcd] = True
+            current_hcds.add(hcd.id)
 
         # In repodata mode we only want to update the files actually scanned.
         # Do not mark files which have not been scanned as not being up to date.
@@ -340,11 +340,10 @@ class Crawler:
                     if hcd.directory is not None and not hcd.directory.readable:
                         stats["unreadable"] += 1
                         continue
-                    if hcd not in current_hcds:
-                        if hcd.up2date is not False:
-                            hcd.up2date = False
-                            self.session.add(hcd)
-                            stats["hcds_deleted"] += 1
+                    if hcd.id not in current_hcds and hcd.up2date is not False:
+                        hcd.up2date = False
+                        self.session.add(hcd)
+                        stats["hcds_deleted"] += 1
         self.session.commit()
         return stats
 
@@ -578,4 +577,4 @@ def worker(options, config, progress_bar, host_id):
             progress.finish()
         session.commit()
         logger.debug(f"Ending crawl of host {host.id} ({host.name})")
-        return result
+    return result
