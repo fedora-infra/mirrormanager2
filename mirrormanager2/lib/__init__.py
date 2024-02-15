@@ -25,9 +25,9 @@ import datetime
 import random
 import string
 
-import sqlalchemy
+import sqlalchemy as sa
 
-# from sqlalchemy.orm import scoped_session, sessionmaker
+# from sa.orm import scoped_session, sessionmaker
 from mirrormanager2 import default_config
 from mirrormanager2.lib import model
 
@@ -43,7 +43,7 @@ from mirrormanager2.lib import model
 #     :return a Session that can be used to query the database.
 #
 #     """
-#     engine = sqlalchemy.create_engine(db_url, echo=debug, pool_recycle=pool_recycle)
+#     engine = sa.create_engine(db_url, echo=debug, pool_recycle=pool_recycle)
 #     scopedsession = scoped_session(sessionmaker(bind=engine))
 #     return scopedsession
 
@@ -380,7 +380,7 @@ def get_categories(session, skip_admin=False):
 
     if skip_admin:
         query = query.filter(
-            sqlalchemy.or_(
+            sa.or_(
                 model.Category.admin_only.is_(None),
                 model.Category.admin_only.is_(False),
             )
@@ -610,7 +610,7 @@ def get_mirrors(
     :arg session: the session with which to connect to the database.
 
     """
-    query = session.query(sqlalchemy.func.distinct(model.Host.id))
+    query = sa.select(sa.func.distinct(model.Host.id))
 
     if private is not None:
         query = query.filter(model.Host.private == private)
@@ -625,62 +625,51 @@ def get_mirrors(
     if user_active is not None:
         query = query.filter(model.Host.user_active == user_active)
 
-    if host_category_url_private is not None:
-        query = (
-            query.filter(model.HostCategory.host_id == model.Host.id)
-            .filter(model.HostCategoryUrl.host_category_id == model.HostCategory.id)
-            .filter(model.HostCategoryUrl.private == host_category_url_private)
-        )
-
     if last_crawl_duration is True:
         query = query.filter(model.Host.last_crawl_duration > 0)
     if last_crawled is True:
-        query = query.filter(sqlalchemy.not_(model.Host.last_crawled.is_(None)))
+        query = query.filter(sa.not_(model.Host.last_crawled.is_(None)))
     if last_checked_in is True:
-        query = query.filter(sqlalchemy.not_(model.Host.last_checked_in.is_(None)))
+        query = query.filter(sa.not_(model.Host.last_checked_in.is_(None)))
 
+    needs_site_join = (site_private, site_user_active, site_admin_active)
+    if any(arg is not None for arg in needs_site_join):
+        query = query.join(model.Site)
     if site_private is not None:
-        query = query.filter(model.Host.site_id == model.Site.id).filter(
-            model.Site.private == site_private
-        )
+        query = query.filter(model.Site.private == site_private)
     if site_user_active is not None:
-        query = query.filter(model.Host.site_id == model.Site.id).filter(
-            model.Site.user_active == site_user_active
-        )
+        query = query.filter(model.Site.user_active == site_user_active)
     if site_admin_active is not None:
-        query = query.filter(model.Host.site_id == model.Site.id).filter(
-            model.Site.admin_active == site_admin_active
+        query = query.filter(model.Site.admin_active == site_admin_active)
+
+    needs_hostcategory_join = (host_category_url_private, up2date, version_id, arch_id, product_id)
+    if any(arg is not None for arg in needs_hostcategory_join):
+        query = query.join(model.HostCategory)
+
+    needs_category_join = (version_id, arch_id, product_id)
+    if any(arg is not None for arg in needs_category_join):
+        query = query.join(model.Category)
+
+    needs_repo_join = (version_id, arch_id)
+    if any(arg is not None for arg in needs_repo_join):
+        query = query.join(model.Repository)
+
+    if host_category_url_private is not None:
+        query = query.join(model.HostCategoryUrl).filter(
+            model.HostCategoryUrl.private == host_category_url_private
         )
 
     if up2date is not None:
-        query = (
-            query.filter(model.Host.id == model.HostCategory.host_id)
-            .filter(model.HostCategory.id == model.HostCategoryDir.host_category_id)
-            .filter(model.HostCategoryDir.up2date == up2date)
-        )
+        query = query.join(model.HostCategoryDir).filter(model.HostCategoryDir.up2date == up2date)
 
     if version_id is not None:
-        query = (
-            query.filter(model.Host.id == model.HostCategory.host_id)
-            .filter(model.HostCategory.category_id == model.Category.id)
-            .filter(model.Category.id == model.Repository.category_id)
-            .filter(model.Repository.version_id == version_id)
-        )
+        query = query.filter(model.Repository.version_id == version_id)
 
     if arch_id is not None:
-        query = (
-            query.filter(model.Host.id == model.HostCategory.host_id)
-            .filter(model.HostCategory.category_id == model.Category.id)
-            .filter(model.Category.id == model.Repository.category_id)
-            .filter(model.Repository.arch_id == arch_id)
-        )
+        query = query.filter(model.Repository.arch_id == arch_id)
 
     if product_id is not None:
-        query = (
-            query.filter(model.Host.id == model.HostCategory.host_id)
-            .filter(model.HostCategory.category_id == model.Category.id)
-            .filter(model.Category.product_id == product_id)
-        )
+        query = query.filter(model.Category.product_id == product_id)
 
     final_query = session.query(model.Host).filter(model.Host.id.in_(query.subquery()))
 
@@ -1098,9 +1087,7 @@ def get_propagation_repos(session):
 
     """
     query = (
-        sqlalchemy.select(model.Repository)
-        .join(model.PropagationStat)
-        .order_by(model.Repository.prefix)
+        sa.select(model.Repository).join(model.PropagationStat).order_by(model.Repository.prefix)
     )
     return session.execute(query).scalars()
 
@@ -1113,7 +1100,7 @@ def get_propagation(session, repo_id):
 
     """
     query = (
-        sqlalchemy.select(model.PropagationStat)
+        sa.select(model.PropagationStat)
         .where(model.PropagationStat.repository_id == repo_id)
         .order_by(model.PropagationStat.datetime)
     )
@@ -1128,7 +1115,7 @@ def _search_and_delete(session, model_class, property_name, older_than):
     :arg property_name: the name of the model property to filter on.
     :arg older_than: the datetime threshold.
     """
-    query = sqlalchemy.select(model_class).where(getattr(model_class, property_name) < older_than)
+    query = sa.select(model_class).where(getattr(model_class, property_name) < older_than)
     # We *could* be using delete() to only run one SQL query but that bypasses
     # some features in SQLAlchemy, and we don't really need the speedup as this
     # is run by cron anyway.
@@ -1157,7 +1144,7 @@ def delete_expired_access_stats(session, older_than):
 def get_statistics(session, date, stat_category):
     """Get the Access statistics for the specified date and access stat category."""
     query = (
-        sqlalchemy.select(model.AccessStat)
+        sa.select(model.AccessStat)
         .join(model.AccessStatCategory)
         .where(model.AccessStatCategory.name == stat_category, model.AccessStat.date == date)
         .order_by(model.AccessStat.requests.desc())
