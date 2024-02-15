@@ -62,5 +62,6 @@ def main(config, only_category, debug, filename):
 
             if created is False:
                 logger.warning(f"FileDetail unchanged {absolutepath!r}")
+            session.commit()
 
     logger.info("Done.")

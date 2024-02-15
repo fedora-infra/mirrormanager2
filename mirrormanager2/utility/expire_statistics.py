@@ -31,3 +31,5 @@ def main(config, debug):
 
         access_stat_threshold = datetime.now() - timedelta(days=config["ACCESS_STATS_KEEP_DAYS"])
         mirrormanager2.lib.delete_expired_access_stats(session, access_stat_threshold)
+
+        session.commit()
