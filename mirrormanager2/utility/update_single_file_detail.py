@@ -17,7 +17,7 @@ import click
 import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
 
-from .common import config_option, get_filtered_categories, setup_logging
+from .common import config_option, filter_master_directories, setup_logging
 
 logger = logging.getLogger("mm2")
 
@@ -26,22 +26,22 @@ logger = logging.getLogger("mm2")
 @config_option
 @click.option(
     "--category",
-    "only_category",
-    metavar="CATEGORY",
-    default=None,
-    help="only scan category CATEGORY",
+    "categories",
+    default=[],
+    multiple=True,
+    help="Category to scan (default=all), can be repeated, exclude by prefixing with '^'",
 )
 @click.option("--debug", is_flag=True, default=False, help="enable debugging")
 @click.argument("filename", type=click.Path(), required=True, help="path/to/file")
-def main(config, only_category, debug, filename):
+def main(config, categories, debug, filename):
     config = mirrormanager2.lib.read_config(config)
     db_manager = get_db_manager(config)
 
     setup_logging(debug=debug)
 
     with db_manager.Session() as session:
-        check_categories = get_filtered_categories(config, session, only_category)
-        for master_dir in check_categories:
+        master_dirs = filter_master_directories(config, session, categories)
+        for master_dir in master_dirs:
             cname = master_dir["category"]
             logger.info("Considering category %s" % cname)
             # category = mirrormanager2.lib.get_category_by_name(session, cname)
