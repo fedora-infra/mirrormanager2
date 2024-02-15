@@ -109,3 +109,4 @@ def main(config, dry_run):
     db_manager = get_db_manager(config)
     with db_manager.Session() as session:
         doit(session, dry_run)
+        session.commit()
