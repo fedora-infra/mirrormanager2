@@ -42,7 +42,7 @@ from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.model import Directory
 from mirrormanager2.lib.sync import run_rsync
 
-from .common import config_option, get_filtered_categories
+from .common import config_option, filter_master_directories
 
 STD_EXCLUDES = [r".*\.snapshot", r".*/\.~tmp~"]
 # This directories will be skipped during repository creation
@@ -809,10 +809,10 @@ class ProgressBar:
 )
 @click.option(
     "--category",
-    "only_category",
-    metavar="CATEGORY",
-    default=None,
-    help="only scan category CATEGORY",
+    "category_names",
+    default=[],
+    multiple=True,
+    help="Category to scan (default=all), can be repeated, exclude by prefixing with '^'",
 )
 @click.option("--debug", is_flag=True, default=False, help="enable debugging")
 @click.option(
@@ -831,7 +831,7 @@ def main(
     config,
     logfile,
     list_categories,
-    only_category,
+    category_names,
     debug,
     skip_fullfiletimelist,
     delete_directories,
@@ -852,10 +852,10 @@ def main(
 
     logger.info("Starting umdl")
     with db_manager.Session() as session:
-        check_categories = get_filtered_categories(config, session, only_category)
+        master_dirs = filter_master_directories(config, session, category_names)
         with Progress(console=console, refresh_per_second=2) as progress:
             progress_bar = ProgressBar(progress)
-            for master_dir in check_categories:
+            for master_dir in master_dirs:
                 check_category(
                     config,
                     session,

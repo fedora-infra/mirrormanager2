@@ -17,10 +17,14 @@ config_option = click.option(
 )
 
 
-def get_filtered_categories(config, session, only_category):
-    categories = []
+def filter_master_directories(config, session, category_names):
+    include_category_names = [n for n in category_names if not n.startswith("^")]
+    exclude_category_names = [n for n in category_names if n.startswith("^")]
+    master_directories = []
     for master_dir in config.get("UMDL_MASTER_DIRECTORIES"):
-        if only_category is not None and master_dir["category"] != only_category:
+        if include_category_names and master_dir["category"] not in include_category_names:
+            continue
+        if exclude_category_names and f"^{master_dir['category']}" in exclude_category_names:
             continue
         cname = master_dir["category"]
         category = get_category_by_name(session, cname)
@@ -34,8 +38,8 @@ def get_filtered_categories(config, session, only_category):
             logger.error("UMDL_MASTER_DIRECTORIES Category %s has null Product, skipping", cname)
             continue
         master_dir["category_db"] = category
-        categories.append(master_dir)
-    return categories
+        master_directories.append(master_dir)
+    return master_directories
 
 
 def setup_logging(debug=False):
