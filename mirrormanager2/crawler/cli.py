@@ -48,6 +48,7 @@ def validate_continents(ctx, param, value):
     envvar="MM2_CONFIG",
     default="/etc/mirrormanager/mirrormanager2.cfg",
     help="Configuration file to use",
+    show_default=True,
 )
 @click.option(
     "--include-private",
@@ -61,6 +62,7 @@ def validate_continents(ctx, param, value):
     type=int,
     default=DEFAULT_THREAD_COUNT,
     help="max threads to start in parallel",
+    show_default=True,
 )
 @click.option(
     "--timeout-minutes",
@@ -69,6 +71,7 @@ def validate_continents(ctx, param, value):
     default=120,
     callback=lambda ctx, param, value: value * 60,
     help="global timeout, in minutes",
+    show_default=True,
 )
 @click.option(
     "--host-timeout",
@@ -76,13 +79,15 @@ def validate_continents(ctx, param, value):
     type=int,
     default=30,
     help="host timeout, in seconds",
+    show_default=True,
 )
 @click.option(
     "--startid",
     type=int,
     metavar="ID",
     default=0,
-    help="Start crawling at host ID (default=0)",
+    help="Start crawling at host ID",
+    show_default=True,
 )
 @click.option(
     "--stopid",
@@ -96,9 +101,9 @@ def validate_continents(ctx, param, value):
     "--fraction",
     default="1:1",
     help="""Specify which part of the mirror range should be returned:
-1:1 - all mirrors
-1:2 - the first half of the mirrors
-2:3 - the middle third of the mirrors""",
+1:1 = all mirrors, 1:2 = the first half of the mirrors,
+2:3 = the middle third of the mirrors""",
+    show_default=True,
 )
 @click.option(
     "--disable-fedmsg",
@@ -242,7 +247,8 @@ def crawl(ctx, **kwargs):
     "repo_prefixes",
     default=["rawhide"],
     multiple=True,
-    help="Repository prefix to use for propagation. Defaults to 'rawhide'.",
+    help="Repository prefix to use for propagation",
+    show_default=True,
 )
 @click.pass_context
 def propagation(ctx, **kwargs):

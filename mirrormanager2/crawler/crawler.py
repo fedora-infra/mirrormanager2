@@ -14,7 +14,7 @@ from .connector import FetchingFailed, SchemeNotAvailable
 from .constants import REPODATA_DIR, REPODATA_FILE
 from .continents import BrokenBaseUrl, EmbargoedCountry, WrongContinent, check_continent
 from .reporter import Reporter
-from .threads import ThreadTimeout, get_thread_id, on_thread_started
+from .threads import ThreadTimeout, TimeoutError, get_thread_id, on_thread_started
 from .ui import ProgressTask
 
 logger = logging.getLogger("crawler")
@@ -575,6 +575,6 @@ def worker(options, config, progress_bar, host_id):
             raise
         finally:
             progress.finish()
-        session.commit()
         logger.debug(f"Ending crawl of host {host.id} ({host.name})")
+        session.commit()
     return result
