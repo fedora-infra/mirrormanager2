@@ -197,6 +197,9 @@ def run_on_all_hosts(ctx_obj, options, report):
         )
         for future in futures:
             progress.advance(task_global)
+            if future is None:
+                # The host has been skipped
+                continue
             results.append(future)
 
     report(ctx_obj, options, results)
