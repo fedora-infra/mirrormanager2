@@ -671,7 +671,7 @@ def get_mirrors(
     if product_id is not None:
         query = query.filter(model.Category.product_id == product_id)
 
-    final_query = session.query(model.Host).filter(model.Host.id.in_(query.subquery()))
+    final_query = session.query(model.Host).filter(model.Host.id.in_(query))
 
     if order_by_crawl_duration is True:
         # for best crawling results, start with the slowest mirrors
@@ -871,6 +871,36 @@ def get_hostcategorydir_by_hostcategoryid_and_path(session, host_category_id, pa
     )
 
     return query.all()
+
+
+def count_hostcategorydirs_with_unreadable_dir(session, hc):
+    """Return the number of HostCategoryDir objects linked to a HostCategory
+    that are linked to an unreadable Directory.
+
+    :arg session: the session with which to connect to the database.
+
+    """
+    query = (
+        sa.select(sa.func.count(model.HostCategoryDir.id))
+        .join(model.Directory)
+        .where(model.HostCategoryDir.host_category_id == hc.id, model.Directory.readable.is_(False))
+    )
+    return session.scalar(query)
+
+
+def get_hostcategorydirs_up2date_not_in_list(session, hc, hcd_ids):
+    """Return the HostCategoryDir objects linked to the specified HostCategory
+    but not in the list of HostCategoryDir IDs.
+
+    :arg session: the session with which to connect to the database.
+
+    """
+    query = sa.select(model.HostCategoryDir).where(
+        model.HostCategoryDir.host_category_id == hc.id,
+        model.HostCategoryDir.up2date.is_(True),
+        sa.not_(model.HostCategoryDir.id.in_(hcd_ids)),
+    )
+    return session.scalars(query)
 
 
 def uploaded_config(session, host, config):

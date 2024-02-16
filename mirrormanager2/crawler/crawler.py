@@ -4,7 +4,7 @@ import sys
 from dataclasses import dataclass
 from enum import Enum
 
-import mirrormanager2.lib
+import mirrormanager2.lib as mmlib
 from mirrormanager2.lib.constants import PROPAGATION_ARCH
 from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.model import HostCategoryDir, PropagationStatus
@@ -104,7 +104,7 @@ class Crawler:
         splitpath = directory.name.split("/")
         if len(splitpath[:-1]) > 0:
             parentPath = "/".join(splitpath[:-1])
-            parentDir = mirrormanager2.lib.get_directory_by_name(self.session, parentPath)
+            parentDir = mmlib.get_directory_by_name(self.session, parentPath)
         return parentDir
 
     def add_parents(self, host_category_dirs, hc, d):
@@ -121,7 +121,7 @@ class Crawler:
         result = []
         if self.options["categories"]:
             for category in self.options["categories"]:
-                hc = mirrormanager2.lib.get_host_category_by_hostid_category(
+                hc = mmlib.get_host_category_by_hostid_category(
                     self.session, host_id=self.host.id, category=category
                 )
                 if hc is not None:
@@ -213,12 +213,6 @@ class Crawler:
 
         if not self.check_for_base_dir(urls):
             raise CategoryNotAccessible
-        if self.options["canary"]:
-            return
-
-        category_prefix_length = len(category.topdir.name)
-        if category_prefix_length > 0:
-            category_prefix_length += 1
 
         msg = f"scanning category {category.name}"
         if self.options["canary"]:
@@ -226,6 +220,13 @@ class Crawler:
         elif self.options["repodata"]:
             msg = f"repodata {msg}"
         logger.debug(msg)
+
+        if self.options["canary"]:
+            return
+
+        category_prefix_length = len(category.topdir.name)
+        if category_prefix_length > 0:
+            category_prefix_length += 1
 
         trydirs = list(hc.category.directories)
         if self.options["repodata"]:
@@ -300,7 +301,7 @@ class Crawler:
                 toplen += 1
             path = d.name[toplen:]
 
-            hcd = mirrormanager2.lib.get_hostcategorydir_by_hostcategoryid_and_path(
+            hcd = mmlib.get_hostcategorydir_by_hostcategoryid_and_path(
                 self.session, host_category_id=hc.id, path=path
             )
             if len(hcd) > 0:
@@ -336,14 +337,16 @@ class Crawler:
             # we wait for a cascading Directory delete to delete this
             host_categories_to_scan = self.select_host_categories_to_scan(ignore_empty=True)
             for hc in host_categories_to_scan:
-                for hcd in list(hc.directories):
-                    if hcd.directory is not None and not hcd.directory.readable:
-                        stats["unreadable"] += 1
-                        continue
-                    if hcd.id not in current_hcds and hcd.up2date is not False:
-                        hcd.up2date = False
-                        self.session.add(hcd)
-                        stats["hcds_deleted"] += 1
+                # It is VERY memory-hungry to list hc.directories, so make specific DB queries.
+                stats["unreadable"] += mmlib.count_hostcategorydirs_with_unreadable_dir(
+                    self.session, hc
+                )
+                for hcd in mmlib.get_hostcategorydirs_up2date_not_in_list(
+                    self.session, hc, current_hcds
+                ):
+                    hcd.up2date = False
+                    stats["hcds_deleted"] += 1
+                self.session.flush()
         self.session.commit()
         return stats
 
@@ -351,7 +354,7 @@ class Crawler:
         self.timeout.start()
         repo_status = {}
 
-        repos = mirrormanager2.lib.get_repositories(
+        repos = mmlib.get_repositories(
             self.session,
             product_names=self.options["products"],
             version_names=self.options["versions"],
@@ -368,13 +371,13 @@ class Crawler:
                     "No directory for repo with prefix %s on %s", repo.prefix, PROPAGATION_ARCH
                 )
                 continue
-            repodata_dir = mirrormanager2.lib.get_directory_by_name(
+            repodata_dir = mmlib.get_directory_by_name(
                 self.session, f"{repo_dir.name}/{REPODATA_DIR}"
             )
             if repodata_dir is None:
                 logger.warning("Could not find the repodata dir for repo %s", repo)
                 continue
-            hc = mirrormanager2.lib.get_host_category_by_hostid_category(
+            hc = mmlib.get_host_category_by_hostid_category(
                 self.session, host_id=self.host.id, category=repo.category.name
             )
             if hc is None:
@@ -390,9 +393,7 @@ class Crawler:
                     repr(list(hc.urls)),
                 )
                 continue
-            fd = mirrormanager2.lib.get_file_detail(
-                self.session, REPODATA_FILE, repodata_dir.id, reverse=True
-            )
+            fd = mmlib.get_file_detail(self.session, REPODATA_FILE, repodata_dir.id, reverse=True)
             if fd is None:
                 logger.warning(
                     "Could not find the file details for repo with prefix %s on %s",
@@ -418,7 +419,7 @@ class Crawler:
         path = repo_dir.name
         if repo_dir.name.startswith(topdir):
             path = repo_dir.name[len(topdir) + 1 :]
-        # fds = mirrormanager2.lib.get_file_detail_history(self.session, "repomd.xml", repo_dir.id)
+        # fds = mmlib.get_file_detail_history(self.session, "repomd.xml", repo_dir.id)
         # sha256sums = {fd.sha256: fd.timestamp for fd in fds}
 
         logger.debug("Base URL: %s. Path: %s", url, path)
@@ -440,7 +441,7 @@ class Crawler:
             tzinfo=datetime.timezone.utc,
         )
         age_threshold = today - datetime.timedelta(days=5)
-        previous_file_detail = mirrormanager2.lib.get_file_details_with_checksum(
+        previous_file_detail = mmlib.get_file_details_with_checksum(
             self.session, file_detail, checksum, age_threshold
         )
         if previous_file_detail is None:
@@ -522,7 +523,10 @@ def crawl_and_report(options, crawler):
     else:
         # Resetting as this only counts consecutive crawl failures
         reporter.reset_crawl_failures()
-        stats = crawler.sync_hcds(host_category_dirs)
+        if not options["canary"]:
+            # in canary mode, host_category_dirs is empty, syncing would mark every dir
+            # as not up2date
+            stats = crawler.sync_hcds(host_category_dirs)
         status = CrawlStatus.SUCCESS
 
     reporter.record_crawl_end(record_duration=record_duration)
@@ -551,7 +555,7 @@ def worker(options, config, progress_bar, host_id):
     progress = ProgressTask(progress_bar, host_id)
     db_manager = get_db_manager(config)
     with db_manager.Session() as session:
-        host = mirrormanager2.lib.get_host(session, host_id)
+        host = mmlib.get_host(session, host_id)
         progress.set_host_name(host.name)
 
         on_thread_started(host_id=host_id, host_name=host.name)
