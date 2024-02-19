@@ -49,7 +49,7 @@ def run_in_threadpool(fn, iterable, fn_args, timeout, executor_kwargs):
         if isinstance(e, TimeoutError):
             logger.error("The crawl timed out! %s", e)
         elif isinstance(e, KeyboardInterrupt):
-            logger.error("Shutting down the thread pool")
+            logger.info("Shutting down the thread pool")
         shutdown = True
         threadpool.shutdown(cancel_futures=True)
         raise
@@ -64,7 +64,7 @@ class ThreadTimeout:
 
     def check(self):
         elapsed = self.elapsed()
-        if elapsed > (THREAD_TIMEOUT):
+        if elapsed > (self.max_duration):
             raise TimeoutError(f"Thread {get_thread_id()} timed out after {elapsed}s")
         if shutdown:
             raise KeyboardInterrupt
