@@ -170,8 +170,9 @@ def main(ctx, config, debug, startid, stopid, fraction, **kwargs):
             startid = host_ids[start_index]
             stopid = host_ids[stop_index]
 
-    hosts = [host for host in hosts if (host.id >= startid and (not stopid or host.id < stopid))]
-    ctx.obj["hosts"] = hosts
+    ctx.obj["host_ids"] = [
+        host.id for host in hosts if (host.id >= startid and (not stopid or host.id < stopid))
+    ]
 
     session.close()
 
@@ -182,7 +183,7 @@ def main(ctx, config, debug, startid, stopid, fraction, **kwargs):
 
 def run_on_all_hosts(ctx_obj, options, report):
     starttime = time.monotonic()
-    host_ids = [host.id for host in ctx_obj["hosts"]]
+    host_ids = ctx_obj["host_ids"]
     results = []
     with Progress(console=ctx_obj["console"], refresh_per_second=1) as progress:
         task_global = progress.add_task(f"Crawling {len(host_ids)} mirrors", total=len(host_ids))
