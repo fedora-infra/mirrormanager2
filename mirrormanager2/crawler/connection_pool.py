@@ -30,7 +30,7 @@ class ConnectionPool:
 
     def get(self, url):
         scheme, netloc, path, query, fragment = urlsplit(url)
-        if netloc not in self._connections:
+        if (scheme, netloc) not in self._connections:
             try:
                 connection_class = _get_connection_class(scheme)
             except ValueError:
@@ -38,6 +38,7 @@ class ConnectionPool:
                 raise
             self._connections[(scheme, netloc)] = connection_class(
                 config=self.config,
+                netloc=netloc,
                 debuglevel=self.debuglevel,
                 timeout=self.timeout,
                 on_closed=partial(self._remove_connection, scheme, netloc),

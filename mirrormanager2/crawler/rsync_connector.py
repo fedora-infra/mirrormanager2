@@ -26,7 +26,7 @@ class RsyncConnector(Connector):
             logger.exception("Failed to run rsync.", exc_info=True)
             return False
         rsync_stop_time = time.monotonic()
-        logger.debug("rsync time: %s", rsync_stop_time - rsync_start_time)
+        logger.debug("rsync time: %s", int(rsync_stop_time - rsync_start_time))
         if result == 10:
             # no rsync content, fail!
             logger.info(

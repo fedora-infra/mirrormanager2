@@ -274,14 +274,14 @@ class Crawler:
                 continue
 
             try:
-                host_category_dirs = self._scan_host_category_with_url(hc, url, trydirs)
+                directory_statuses = self._scan_host_category_with_url(hc, url, trydirs)
             except SchemeNotAvailable:
                 logger.debug(f"Scheme {url} is not available")
                 continue
             # we know about the status of all files in this category
             # no further checks necessary
             # do the next category
-            return host_category_dirs
+            return directory_statuses
         raise CategoryNotAccessible
 
     def _scan_host_category_with_url(self, hc, url, trydirs):
@@ -289,7 +289,7 @@ class Crawler:
         if category_prefix_length > 0:
             category_prefix_length += 1
 
-        host_category_dirs = {}
+        directory_statuses = {}
 
         self.progress.reset()
         self.progress.set_action(f"scanning {hc.category.id}")
@@ -308,14 +308,14 @@ class Crawler:
                 continue
             dir_status = connector.check_category(url, directory, category_prefix_length)
             # host_category_dirs[(hc, directory)] = dir_status
-            host_category_dirs[directory] = dir_status
+            directory_statuses[directory] = dir_status
             if dir_status:
                 # make sure our parent dirs appear on the list too
-                self.add_parents(host_category_dirs, directory, hc.category.topdir)
+                self.add_parents(directory_statuses, directory, hc.category.topdir)
             else:
                 # logger.warning("Not up2date: %s", directory.name)
                 logger.debug("Not up2date: %s", directory.name)
-        return host_category_dirs
+        return directory_statuses
 
     def sync_hcds(self, hc, directory_statuses):
         stats = CrawlStats()
@@ -562,15 +562,12 @@ def crawl_and_report(options, crawler):
 
     reporter.record_crawl_end(record_duration=record_duration)
 
-    # Stats can be None when we're doing a canary scan for example
-    stats = stats or {}
-
     result = CrawlResult(
         host_id=host.id,
         host_name=host.name,
         status=status.value,
         duration=crawler.timeout.elapsed(),
-        **stats,
+        stats=stats,
     )
 
     return result

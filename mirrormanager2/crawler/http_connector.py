@@ -10,7 +10,7 @@ logger = logging.getLogger("crawler")
 
 
 class HTTPConnector(Connector):
-    def _connect(self, netloc):
+    def _connect(self):
         session = requests.Session()
         session.headers = {
             "Connection": "Keep-Alive",
@@ -24,7 +24,7 @@ class HTTPConnector(Connector):
         self._connection.close()
 
     def check_url(self, url):
-        conn = self.open(url)
+        conn = self.get_connection()
         response = conn.head(url, timeout=HTTP_TIMEOUT)
         return response.ok
 
@@ -74,7 +74,7 @@ class HTTPConnector(Connector):
 
     def _check_dir(self, url, directory):
         try:
-            conn = self.open(url)
+            conn = self.get_connection()
         except Exception as e:
             logger.info(f"Could not get {url}: {e}")
             return None
@@ -91,7 +91,7 @@ class HTTPConnector(Connector):
         return True
 
     def _get_file(self, url):
-        conn = self.open(url)
+        conn = self.get_connection()
         try:
             r = conn.get(
                 url,
