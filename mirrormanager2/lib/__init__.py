@@ -854,7 +854,11 @@ def _get_directories_by_category_query(category, only_repodata=False):
     query = (
         sa.select(model.Directory)
         .join(model.Category, model.Directory.categories)
-        .where(model.Category.id == category.id)
+        .where(
+            model.Category.id == category.id,
+            model.Directory.readable.is_(True),
+            model.Directory.files.is_not(None),
+        )
     )
     if only_repodata:
         query = query.where(model.Directory.name.like("%/repodata"))
@@ -867,7 +871,9 @@ def get_directories_by_category(session, category, only_repodata=False):
     :arg session: the session with which to connect to the database.
 
     """
-    query = _get_directories_by_category_query(category, only_repodata)
+    query = _get_directories_by_category_query(category, only_repodata).order_by(
+        model.Directory.name
+    )
     return session.scalars(query)
 
 
@@ -907,7 +913,7 @@ def get_hostcategorydir_by_hostcategoryid_and_path(session, host_category_id, pa
         .filter(model.HostCategoryDir.host_category_id == host_category_id)
     )
 
-    return query.all()
+    return query.first()
 
 
 def count_hostcategorydirs_with_unreadable_dir(session, hc):
@@ -925,19 +931,23 @@ def count_hostcategorydirs_with_unreadable_dir(session, hc):
     return session.scalar(query)
 
 
-def get_hostcategorydirs_up2date_not_in_list(session, hc, hcd_ids):
-    """Return the HostCategoryDir objects linked to the specified HostCategory
-    but not in the list of HostCategoryDir IDs.
+def set_hostcategorydirs_not_up2date(session, hc, except_ids=None):
+    """Set the HostCategoryDir objects linked to the specified HostCategory
+    to not up2date, except those in the provided list of HostCategoryDir IDs.
 
     :arg session: the session with which to connect to the database.
+    :returns: the number of changed items
 
     """
-    query = sa.select(model.HostCategoryDir).where(
-        model.HostCategoryDir.host_category_id == hc.id,
-        model.HostCategoryDir.up2date.is_(True),
-        sa.not_(model.HostCategoryDir.id.in_(hcd_ids)),
+    statement = sa.update(model.HostCategoryDir).where(
+        model.HostCategoryDir.host_category_id == hc.id
     )
-    return session.scalars(query)
+    if except_ids:
+        statement = statement.where(
+            model.HostCategoryDir.id.not_in(except_ids),
+        )
+    statement = statement.values(up2date=False)
+    return session.execute(statement).rowcount
 
 
 def uploaded_config(session, host, config):
@@ -996,7 +1006,6 @@ def uploaded_config(session, host, config):
                 session, host_category_id=hc.id, path=d
             )
             if hcdir:
-                hcdir = hcdir[0]
                 # This is evil, but it avoids stat()s on the client
                 # side and a lot of data uploading.
                 # A directory is considered up to date if it exists

@@ -210,6 +210,7 @@ class JsonDictTypeFilter(sa.types.TypeDecorator):
     """This handles either JSON or a pickled dict from the database."""
 
     impl = sa.types.BLOB
+    cache_ok = True
 
     def process_bind_param(self, value, dialect):
         if value is None:
