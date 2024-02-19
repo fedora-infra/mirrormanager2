@@ -10,8 +10,8 @@ logger = logging.getLogger("crawler")
 
 
 class FTPConnector(Connector):
-    def _connect(self, netloc):
-        conn = FTP(netloc, timeout=self.timeout)
+    def _connect(self):
+        conn = FTP(self.netloc, timeout=self.timeout)
         conn.set_debuglevel(self.debuglevel)
         conn.login()
         return conn
@@ -22,7 +22,7 @@ class FTPConnector(Connector):
 
     def _ftp_dir(self, url):
         try:
-            conn = self.open(url)
+            conn = self.get_connection()
         except Exception:
             return None
         scheme, netloc, path, query, fragment = urlsplit(url)

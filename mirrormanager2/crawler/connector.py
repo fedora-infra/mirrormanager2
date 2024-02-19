@@ -1,6 +1,5 @@
 import hashlib
 import logging
-from urllib.parse import urlsplit
 
 logger = logging.getLogger("crawler")
 
@@ -25,17 +24,18 @@ class FetchingFailed(Exception):
 class Connector:
     scheme = None
 
-    def __init__(self, config, debuglevel, timeout, on_closed):
+    def __init__(self, config, netloc, debuglevel, timeout, on_closed):
         self._config = config
+        self._netloc = netloc
         self.debuglevel = debuglevel
         # ftplib and httplib take the timeout in seconds
         self.timeout = timeout
         self._connection = None
         self._on_closed = on_closed
 
-    def open(self, url):
-        scheme, netloc, path, query, fragment = urlsplit(url)
-        self._connection = self._connect(netloc)
+    def get_connection(self):
+        if self._connection is None:
+            self._connection = self._connect()
         return self._connection
 
     def close(self):
