@@ -79,7 +79,7 @@ class Connector:
                     found = True
                     break
                 else:
-                    logger.info(f"Found {fd.filename} with sha {sha256}, but expected {fd.sha256}")
+                    logger.debug(f"Found {fd.filename} with sha {sha256}, but expected {fd.sha256}")
         return found
 
     def _get_dir_url(self, url, directory, category_prefix_length):
