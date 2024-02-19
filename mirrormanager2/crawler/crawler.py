@@ -42,6 +42,16 @@ class CrawlStatus(Enum):
     UNKNOWN = "UNKNOWN"
 
 
+class SyncStatus(Enum):
+    UP2DATE = "up2date"
+    NOT_UP2DATE = "not_up2date"
+    UNCHANGED = "unchanged"
+    UNREADABLE = "unreadable"
+    UNKNOWN = "unknown"
+    CREATED = "created"
+    DELETED = "deleted"
+
+
 @dataclasses.dataclass
 class CrawlStats:
     total_directories: int = 0
@@ -58,6 +68,10 @@ class CrawlStats:
             current_value = getattr(self, field.name)
             other_value = getattr(other, field.name)
             setattr(self, field.name, current_value + other_value)
+
+    def increment(self, attr: str):
+        current_value = getattr(self, attr)
+        setattr(self, attr, current_value + 1)
 
 
 @dataclasses.dataclass
@@ -165,12 +179,14 @@ class Crawler:
 
         for hc in host_categories_to_scan:
             self.timeout.check()
+            self.progress.reset()
+            self.progress.set_action(hc.category.name)
             # self.progress.advance()
             if hc.always_up2date:
                 successful_categories += 1
                 continue
             try:
-                result = self._scan_host_category(hc)
+                category_stats = self._scan_host_category(hc)
             except CategoryNotAccessible:
                 continue
             else:
@@ -179,11 +195,12 @@ class Crawler:
                 successful_categories += 1
             # host_category_dirs.update(result or {})
 
-            if self.options["canary"]:
-                # in canary mode, host_category_dirs is empty, syncing would mark every dir
-                # as not up2date
-                continue
-            stats.update(self.sync_hcds(hc, result))
+            # if self.options["canary"]:
+            #     # in canary mode, host_category_dirs is empty, syncing would mark every dir
+            #     # as not up2date
+            #     continue
+            # stats.update(self.sync_hcds(hc, result))
+            stats.update(category_stats)
 
         self.connection_pool.close_all()
 
@@ -206,6 +223,7 @@ class Crawler:
         """
         client_urls = [url for url in urls if url.startswith("http:")]
         for url in client_urls:
+            self.timeout.check()
             connector = self.connection_pool.get(url)
             try:
                 exists = connector.check_url(url)
@@ -226,7 +244,46 @@ class Crawler:
         return False
 
     def _scan_host_category(self, hc):
-        category = hc.category
+        msg = f"scanning category {hc.category.name}"
+        if self.options["canary"]:
+            msg = f"canary {msg}"
+        elif self.options["repodata"]:
+            msg = f"repodata {msg}"
+        logger.debug(msg)
+
+        trydirs_count = mmlib.count_directories_by_category(
+            self.session, hc.category, self.options["repodata"]
+        )
+        self.progress.set_total(trydirs_count)
+        logger.info("Category %s has %s directories", hc.category.name, trydirs_count)
+
+        stats = CrawlStats(total_directories=trydirs_count)
+        seen_hcds = set()
+
+        for directory, status in self._get_directory_statuses(hc):
+            self.timeout.check()
+            self.progress.advance()
+            sync_status, hcd_id = self.sync_dir(hc, directory, status)
+            stats.increment(sync_status.value)
+            if hcd_id is not None:
+                # It's None on unknown status
+                seen_hcds.add(hcd_id)
+
+        # In repodata or canary mode we only want to update the files actually scanned.
+        # Do not mark files which have not been scanned as not being up to date.
+        if self.options["repodata"] or self.options["canary"]:
+            return stats
+
+        # now-historical HostCategoryDirs are not up2date
+        # we wait for a cascading Directory delete to delete this
+        # It is VERY memory-hungry to list hc.directories, so make specific DB queries.
+        stats.unreadable += mmlib.count_hostcategorydirs_with_unreadable_dir(self.session, hc)
+        stats.hcds_deleted += mmlib.set_hostcategorydirs_not_up2date(self.session, hc, seen_hcds)
+        self.session.commit()
+
+        return stats
+
+    def _get_directory_statuses(self, hc):
         urls = get_preferred_urls(hc)
         if not urls:
             raise CategoryNotAccessible
@@ -239,24 +296,16 @@ class Crawler:
         if not self.check_for_base_dir(urls):
             raise CategoryNotAccessible
 
-        msg = f"scanning category {category.name}"
-        if self.options["canary"]:
-            msg = f"canary {msg}"
-        elif self.options["repodata"]:
-            msg = f"repodata {msg}"
-        logger.debug(msg)
-
         if self.options["canary"]:
             return
 
-        trydirs_count = mmlib.count_directories_by_category(
-            self.session, hc.category, self.options["repodata"]
-        )
-        self.progress.set_total(trydirs_count)
         trydirs = mmlib.get_directories_by_category(
             self.session, hc.category, self.options["repodata"]
         )
-        logger.info("Category %s has %s directories", category.name, trydirs_count)
+
+        category_prefix_length = len(hc.category.topdir.name)
+        if category_prefix_length > 0:
+            category_prefix_length += 1
 
         while urls:
             try:
@@ -266,124 +315,127 @@ class Crawler:
             if url.endswith("/"):
                 url = url[:-1]
 
-            logger.debug("Crawling %s with URL %s", category.name, url)
+            logger.debug("Crawling %s with URL %s", hc.category.name, url)
 
             # No rsync in repodata mode, we only retrive a small subset of
             # existing files
             if self.options["repodata"] and url.startswith("rsync:"):
                 continue
 
+            connector = self.connection_pool.get(url)
             try:
-                directory_statuses = self._scan_host_category_with_url(hc, url, trydirs)
+                for directory in trydirs:
+                    status = connector.check_category(url, directory, category_prefix_length)
+                    yield directory, status
             except SchemeNotAvailable:
                 logger.debug(f"Scheme {url} is not available")
                 continue
-            # we know about the status of all files in this category
-            # no further checks necessary
-            # do the next category
-            return directory_statuses
+            return
         raise CategoryNotAccessible
 
-    def _scan_host_category_with_url(self, hc, url, trydirs):
-        category_prefix_length = len(hc.category.topdir.name)
-        if category_prefix_length > 0:
-            category_prefix_length += 1
+    def sync_dir(self, hc, directory, status):
+        sync_status = SyncStatus.UNKNOWN
+        if status is None:
+            return sync_status, None
 
-        directory_statuses = {}
+        topname = hc.category.topdir.name
+        toplen = len(topname)
+        if directory.name.startswith("/"):
+            toplen += 1
+        path = directory.name[toplen:]
 
-        self.progress.reset()
-        self.progress.set_action(f"scanning {hc.category.id}")
-
-        connector = self.connection_pool.get(url)
-        for directory in trydirs:
-            self.timeout.check()
-            self.progress.advance()
-            if not directory.readable:
-                continue
-            # directory.files is a dict which contains the last (maybe 10) files
-            # of the current directory. umdl copies the pickled dict
-            # into the database. It is either a dict or nothing.
-            if not isinstance(directory.files, dict):
-                logger.info("directory.files is not a dict: %s", repr(type(directory.files)))
-                continue
-            dir_status = connector.check_category(url, directory, category_prefix_length)
-            # host_category_dirs[(hc, directory)] = dir_status
-            directory_statuses[directory] = dir_status
-            if dir_status:
-                # make sure our parent dirs appear on the list too
-                self.add_parents(directory_statuses, directory, hc.category.topdir)
-            else:
-                # logger.warning("Not up2date: %s", directory.name)
-                logger.debug("Not up2date: %s", directory.name)
-        return directory_statuses
-
-    def sync_hcds(self, hc, directory_statuses):
-        stats = CrawlStats()
-        current_hcds = set()
-        dirnames = directory_statuses.keys()
-        dirnames = sorted(dirnames, key=lambda t: t.name)
-        stats.total_directories = len(dirnames)
-        self.progress.reset(total=len(dirnames))
-        self.progress.set_action("syncing")
-        for d in dirnames:
-            status = directory_statuses[d]
-            self.progress.advance()
-
-            if status is None:
-                stats.unknown += 1
-                continue
-
-            topname = hc.category.topdir.name
-            toplen = len(topname)
-            if d.name.startswith("/"):
-                toplen += 1
-            path = d.name[toplen:]
-
-            hcd = mmlib.get_hostcategorydir_by_hostcategoryid_and_path(
-                self.session, host_category_id=hc.id, path=path
-            )
-            if len(hcd) > 0:
-                hcd = hcd[0]
-            else:
+        hcd = mmlib.get_hostcategorydir_by_hostcategoryid_and_path(
+            self.session, host_category_id=hc.id, path=path
+        )
+        if hcd is None:
+            if not status:
                 # don't create HCDs for directories which aren't up2date on the
                 # mirror chances are the mirror is excluding that directory
-                if not status:
-                    continue
-                hcd = HostCategoryDir(host_category_id=hc.id, path=path, directory_id=d.id)
-                stats.hcds_created += 1
-
-            if hcd.directory is None:
-                hcd.directory = d
-            if hcd.up2date != status:
-                hcd.up2date = status
-                self.session.add(hcd)
-                if status is False:
-                    logger.info("Directory %s is not up-to-date on this host." % d.name)
-                    stats.not_up2date += 1
-                else:
-                    # logger.info(d.name)
-                    stats.up2date += 1
-            else:
-                stats.unchanged += 1
-
-            current_hcds.add(hcd.id)
+                return sync_status, None
+            hcd = HostCategoryDir(host_category_id=hc.id, path=path, directory_id=directory.id)
+            self.session.add(hcd)
             self.session.flush()
+            sync_status = SyncStatus.CREATED
 
-        # In repodata mode we only want to update the files actually scanned.
-        # Do not mark files which have not been scanned as not being up to date.
-        if self.options["repodata"]:
-            return stats
+        if hcd.directory is None:
+            hcd.directory = directory
+        if hcd.up2date != status:
+            hcd.up2date = status
+            if status is False:
+                logger.info("Directory %s is not up-to-date on this host.", directory.name)
+                sync_status = SyncStatus.NOT_UP2DATE
+            else:
+                sync_status = SyncStatus.UP2DATE
+        else:
+            sync_status = SyncStatus.UNCHANGED
+        self.session.flush()
+        return sync_status, hcd.id
 
-        # now-historical HostCategoryDirs are not up2date
-        # we wait for a cascading Directory delete to delete this
+    # def sync_hcds(self, hc, directory_statuses):
+    #     stats = CrawlStats()
+    #     current_hcds = set()
+    #     dirnames = directory_statuses.keys()
+    #     dirnames = sorted(dirnames, key=lambda t: t.name)
+    #     stats.total_directories = len(dirnames)
+    #     self.progress.reset(total=len(dirnames))
+    #     self.progress.set_action("syncing")
+    #     for d in dirnames:
+    #         status = directory_statuses[d]
+    #         self.progress.advance()
 
-        # It is VERY memory-hungry to list hc.directories, so make specific DB queries.
-        stats.unreadable += mmlib.count_hostcategorydirs_with_unreadable_dir(self.session, hc)
-        for hcd in mmlib.get_hostcategorydirs_up2date_not_in_list(self.session, hc, current_hcds):
-            hcd.up2date = False
-            stats.hcds_deleted += 1
-        self.session.commit()
-        return stats
+    #         if status is None:
+    #             stats.unknown += 1
+    #             continue
+
+    #         topname = hc.category.topdir.name
+    #         toplen = len(topname)
+    #         if d.name.startswith("/"):
+    #             toplen += 1
+    #         path = d.name[toplen:]
+
+    #         hcd = mmlib.get_hostcategorydir_by_hostcategoryid_and_path(
+    #             self.session, host_category_id=hc.id, path=path
+    #         )
+    #         if hcd is None:
+    #             # don't create HCDs for directories which aren't up2date on the
+    #             # mirror chances are the mirror is excluding that directory
+    #             if not status:
+    #                 continue
+    #             hcd = HostCategoryDir(host_category_id=hc.id, path=path, directory_id=d.id)
+    #             stats.hcds_created += 1
+
+    #         if hcd.directory is None:
+    #             hcd.directory = d
+    #         if hcd.up2date != status:
+    #             hcd.up2date = status
+    #             self.session.add(hcd)
+    #             if status is False:
+    #                 logger.info("Directory %s is not up-to-date on this host." % d.name)
+    #                 stats.not_up2date += 1
+    #             else:
+    #                 # logger.info(d.name)
+    #                 stats.up2date += 1
+    #         else:
+    #             stats.unchanged += 1
+
+    #         current_hcds.add(hcd.id)
+    #         self.session.flush()
+
+    #     # In repodata mode we only want to update the files actually scanned.
+    #     # Do not mark files which have not been scanned as not being up to date.
+    #     if self.options["repodata"]:
+    #         return stats
+
+    #     # now-historical HostCategoryDirs are not up2date
+    #     # we wait for a cascading Directory delete to delete this
+
+    #     # It is VERY memory-hungry to list hc.directories, so make specific DB queries.
+    #     stats.unreadable += mmlib.count_hostcategorydirs_with_unreadable_dir(self.session, hc)
+    #     for hcd in mmlib.get_hostcategorydirs_up2date_not_in_list(self.session, hc, current_hcds):
+    #         hcd.up2date = False
+    #         stats.hcds_deleted += 1
+    #     self.session.commit()
+    #     return stats
 
     def check_propagation(self):
         self.timeout.start()

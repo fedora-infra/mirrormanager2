@@ -136,45 +136,42 @@ def main(ctx, config, debug, startid, stopid, fraction, **kwargs):
     config = read_config(config)
     ctx.obj["config"] = config
     db_manager = get_db_manager(config)
-    session = db_manager.Session()
+    with db_manager.Session() as session:
+        # Get *all* of the mirrors
+        hosts = get_mirrors(
+            session,
+            private=False,
+            order_by_crawl_duration=True,
+            admin_active=True,
+            user_active=True,
+            site_private=False,
+            site_user_active=True,
+            site_admin_active=True,
+        )
 
-    # Get *all* of the mirrors
-    hosts = get_mirrors(
-        session,
-        private=False,
-        order_by_crawl_duration=True,
-        admin_active=True,
-        user_active=True,
-        site_private=False,
-        site_user_active=True,
-        site_admin_active=True,
-    )
+        # Limit our host list down to only the ones we really want to crawl
+        if fraction and fraction != "1:1":
+            if startid or stopid:
+                raise click.BadOptionUsage(
+                    "--fraction", "Cannot use --fraction with --startid or --stopid"
+                )
+            host_ids = [host.id for host in hosts]
+            host_ids.sort()
+            slices = int(fraction.split(":")[1])
+            part = int(fraction.split(":")[0])
+            start_index = (part - 1) * int(len(host_ids) / slices)
+            stop_index = int(len(host_ids) / slices) * part
 
-    # Limit our host list down to only the ones we really want to crawl
-    if fraction and fraction != "1:1":
-        if startid or stopid:
-            raise click.BadOptionUsage(
-                "--fraction", "Cannot use --fraction with --startid or --stopid"
-            )
-        host_ids = [host.id for host in hosts]
-        host_ids.sort()
-        slices = int(fraction.split(":")[1])
-        part = int(fraction.split(":")[0])
-        start_index = (part - 1) * int(len(host_ids) / slices)
-        stop_index = int(len(host_ids) / slices) * part
+            if slices == part:
+                # Final part
+                startid = host_ids[start_index]
+            else:
+                startid = host_ids[start_index]
+                stopid = host_ids[stop_index]
 
-        if slices == part:
-            # Final part
-            startid = host_ids[start_index]
-        else:
-            startid = host_ids[start_index]
-            stopid = host_ids[stop_index]
-
-    ctx.obj["host_ids"] = [
-        host.id for host in hosts if (host.id >= startid and (not stopid or host.id < stopid))
-    ]
-
-    session.close()
+        ctx.obj["host_ids"] = [
+            host.id for host in hosts if (host.id >= startid and (not stopid or host.id < stopid))
+        ]
 
     # Before we do work, chdir to /var/tmp/.  mirrormanager1 did this and I'm
     # not totally sure why...
