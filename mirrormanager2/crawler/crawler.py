@@ -228,12 +228,14 @@ class Crawler:
         if category_prefix_length > 0:
             category_prefix_length += 1
 
-        trydirs = list(hc.category.directories)
-        if self.options["repodata"]:
-            trydirs = [d for d in trydirs if d.name.endswith("/repodata")]
-        self.progress.set_total(len(trydirs))
-
-        host_category_dirs = {}
+        trydirs_count = mmlib.count_directories_by_category(
+            self.session, hc.category, self.options["repodata"]
+        )
+        self.progress.set_total(trydirs_count)
+        trydirs = mmlib.get_directories_by_category(
+            self.session, hc.category, self.options["repodata"]
+        )
+        logger.info("Category %s has %s directories", category.name, trydirs_count)
 
         while urls:
             try:
@@ -243,36 +245,50 @@ class Crawler:
             if url.endswith("/"):
                 url = url[:-1]
 
-            logger.debug("Crawling with URL %s", url)
+            logger.debug("Crawling %s with URL %s", category.name, url)
 
             # No rsync in repodata mode, we only retrive a small subset of
             # existing files
             if self.options["repodata"] and url.startswith("rsync:"):
                 continue
 
-            connector = self.connection_pool.get(url)
-            dir_statuses = connector.check_category(
-                url, trydirs, category_prefix_length, self.timeout
-            )
             try:
-                for directory, dir_status in dir_statuses:
-                    self.progress.advance()
-                    host_category_dirs[(hc, directory)] = dir_status
-                    if dir_status:
-                        # make sure our parent dirs appear on the list too
-                        host_category_dirs = self.add_parents(host_category_dirs, hc, directory)
-                    else:
-                        # logger.warning("Not up2date: %s", directory.name)
-                        logger.debug("Not up2date: %s", directory.name)
+                host_category_dirs = self._scan_host_category_with_url(
+                    hc, url, trydirs, category_prefix_length
+                )
             except SchemeNotAvailable:
                 logger.debug(f"Scheme {url} is not available")
                 continue
-
             # we know about the status of all files in this category
             # no further checks necessary
             # do the next category
             return host_category_dirs
         raise CategoryNotAccessible
+
+    def _scan_host_category_with_url(self, hc, url, trydirs, category_prefix_length):
+        host_category_dirs = {}
+        self.progress.reset()
+        connector = self.connection_pool.get(url)
+        for directory in trydirs:
+            self.timeout.check()
+            self.progress.advance()
+            if not directory.readable:
+                continue
+            # directory.files is a dict which contains the last (maybe 10) files
+            # of the current directory. umdl copies the pickled dict
+            # into the database. It is either a dict or nothing.
+            if not isinstance(directory.files, dict):
+                logger.info("directory.files is not a dict: %s", repr(type(directory.files)))
+                continue
+            dir_status = connector.check_category(url, directory, category_prefix_length)
+            host_category_dirs[(hc, directory)] = dir_status
+            if dir_status:
+                # make sure our parent dirs appear on the list too
+                host_category_dirs = self.add_parents(host_category_dirs, hc, directory)
+            else:
+                # logger.warning("Not up2date: %s", directory.name)
+                logger.debug("Not up2date: %s", directory.name)
+        return host_category_dirs
 
     def sync_hcds(self, host_category_dirs):
         stats = dict(

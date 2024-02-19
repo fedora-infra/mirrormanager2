@@ -106,13 +106,12 @@ class RsyncConnector(Connector):
     def check_category(
         self,
         url,
-        trydirs,
+        directory,
         category_prefix_length,
-        timeout,
     ):
         # Scan once for the entire category
         self._scan_result = self._run(url)
         if not self._scan_result:
             # no rsync content, fail!
             raise SchemeNotAvailable
-        yield from super().check_category(url, trydirs, category_prefix_length, timeout)
+        return super().check_category(url, directory, category_prefix_length)
