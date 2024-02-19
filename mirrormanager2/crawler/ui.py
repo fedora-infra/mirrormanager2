@@ -32,9 +32,13 @@ class ProgressTask:
             self._progress.update(self._task_id, description=self.name)
 
     def set_total(self, total):
-        self._total = total
+        self.reset(total=total)
+
+    def reset(self, **kwargs):
+        if "total" in kwargs:
+            self._total = kwargs["total"]
         if self._task_id is not None:
-            self._progress.reset(self._task_id, total=self._total)
+            self._progress.reset(self._task_id, **kwargs)
 
     def advance(self, amount=1):
         if self._task_id is None:
