@@ -89,29 +89,14 @@ class Connector:
     def check_category(
         self,
         url,
-        trydirs,
+        directory,
         category_prefix_length,
-        timeout,
     ):
-        for d in trydirs:
-            timeout.check()
-
-            if not d.readable:
-                continue
-
-            # d.files is a dict which contains the last (maybe 10) files
-            # of the current directory. umdl copies the pickled dict
-            # into the database. It is either a dict or nothing.
-            if not isinstance(d.files, dict):
-                logger.info("d.files is not a dict: %s", repr(type(d.files)))
-                continue
-
-            dir_url = self._get_dir_url(url, d, category_prefix_length)
-
-            dir_status = self.check_dir(dir_url, d)
-            if dir_status is None:
-                # could be a dir with no files, or an unreadable dir.
-                # defer decision on this dir, let a child decide.
-                raise SchemeNotAvailable
-            logger.debug(f"Dir status for {dir_url} is {dir_status}")
-            yield d, dir_status
+        dir_url = self._get_dir_url(url, directory, category_prefix_length)
+        dir_status = self.check_dir(dir_url, directory)
+        if dir_status is None:
+            # could be a dir with no files, or an unreadable dir.
+            # defer decision on this dir, let a child decide.
+            raise SchemeNotAvailable
+        # logger.debug(f"Dir status for {dir_url} is {dir_status}")
+        return dir_status

@@ -845,6 +845,43 @@ def get_directory_by_id(session, id):
     return query.first()
 
 
+def _get_directories_by_category_query(category, only_repodata=False):
+    """Return the query to get the Directory objects linked to the specified Category
+
+    :arg session: the session with which to connect to the database.
+
+    """
+    query = (
+        sa.select(model.Directory)
+        .join(model.Category, model.Directory.categories)
+        .where(model.Category.id == category.id)
+    )
+    if only_repodata:
+        query = query.where(model.Directory.name.like("%/repodata"))
+    return query
+
+
+def get_directories_by_category(session, category, only_repodata=False):
+    """Return the Directory objects linked to the specified Category
+
+    :arg session: the session with which to connect to the database.
+
+    """
+    query = _get_directories_by_category_query(category, only_repodata)
+    return session.scalars(query)
+
+
+def count_directories_by_category(session, category, only_repodata=False):
+    """Count the Directory objects linked to the specified Category
+
+    :arg session: the session with which to connect to the database.
+
+    """
+    query = _get_directories_by_category_query(category, only_repodata)
+    query = query.with_only_columns(sa.func.count(model.Directory.id), maintain_column_froms=True)
+    return session.scalar(query)
+
+
 def get_hostcategorydir_by_hostcategoryid(session, host_category_id):
     """Return all HostCategoryDir via its host_category_id.
 
