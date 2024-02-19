@@ -15,21 +15,35 @@ class ProgressTask:
         self._progress = progress
         self._host_id = host_id
         self._name = Text(str(host_id))
+        self._host_name = None
+        self._action = None
         self._total = None
         self._task_id = None
 
     @property
     def name(self):
-        padded = self._name.copy()
+        if self._host_name:
+            _name = self._host_name
+        else:
+            _name = Text(str(self.host_id))
+        if self._action:
+            _name = Text.assemble(_name, f" ({self._action})")
+        padded = _name.copy()
         padded.pad_right(45 - len(self._name))
         return padded
 
-    def set_host_name(self, host_name):
-        host_name = Text(host_name)
-        host_name.truncate(40, overflow="ellipsis")
-        self._name = Text.assemble(host_name, f" ({self._host_id})")
+    def _set_name(self):
         if self._task_id is not None:
             self._progress.update(self._task_id, description=self.name)
+
+    def set_host_name(self, host_name):
+        self._host_name = Text(host_name)
+        self._host_name.truncate(40, overflow="ellipsis")
+        self._set_name()
+
+    def set_action(self, action):
+        self._action = Text(action)
+        self._set_name()
 
     def set_total(self, total):
         self.reset(total=total)
@@ -66,8 +80,8 @@ def report_crawl(ctx_obj, options: dict, results: list["CrawlResult"]):
         table.add_column("HostCategoryDirs created")
         table.add_column("HostCategoryDirs deleted")
 
-    def _to_str(int_or_none):
-        str(int_or_none) if int_or_none is not None else ""
+    def _to_str(stats_or_none, attr):
+        str(getattr(stats_or_none, attr)) if stats_or_none is not None else ""
 
     for result in results:
         row = [
@@ -78,14 +92,14 @@ def report_crawl(ctx_obj, options: dict, results: list["CrawlResult"]):
         if options.get("canary"):
             row.extend(
                 [
-                    _to_str(result.total_directories),
-                    _to_str(result.unreadable),
-                    _to_str(result.up2date),
-                    _to_str(result.not_up2date),
-                    _to_str(result.unchanged),
-                    _to_str(result.unknown),
-                    _to_str(result.hcds_created),
-                    _to_str(result.hcds_deleted),
+                    _to_str(result.stats, "total_directories"),
+                    _to_str(result.stats, "unreadable"),
+                    _to_str(result.stats, "up2date"),
+                    _to_str(result.stats, "not_up2date"),
+                    _to_str(result.stats, "unchanged"),
+                    _to_str(result.stats, "unknown"),
+                    _to_str(result.stats, "hcds_created"),
+                    _to_str(result.stats, "hcds_deleted"),
                 ]
             )
         table.add_row(*row)
