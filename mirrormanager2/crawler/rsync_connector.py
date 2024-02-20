@@ -2,6 +2,7 @@ import logging
 import os
 import time
 
+from mirrormanager2 import lib as mmlib
 from mirrormanager2.lib.sync import run_rsync
 
 from .connector import Connector, SchemeNotAvailable
@@ -74,29 +75,30 @@ class RsyncConnector(Connector):
 
     def _check_dir(self, dirname, directory):
         # print(dirname, directory.name, len(directory.files), len(self._scan_result))
-        files = directory.files  # a bit expensive, involves json decoding
-        for filename in sorted(files):
-            if len(dirname) == 0:
-                key = filename
-            else:
-                key = os.path.join(dirname, filename)
-            logger.debug(f"Dirname: {dirname}, filename: {filename}, key: {key}")
+        with mmlib.instance_attribute(directory, "files") as files:
+            # Getting Directory.files is a bit expensive, involves json decoding
+            for filename in sorted(files):
+                if len(dirname) == 0:
+                    key = filename
+                else:
+                    key = os.path.join(dirname, filename)
+                logger.debug(f"Dirname: {dirname}, filename: {filename}, key: {key}")
 
-            logger.debug("trying with key %s", key)
-            try:
-                current_file_info = self._scan_result[filename]
-            except KeyError:  # file is not in the rsync listing
-                logger.debug("Missing remote file %s", key)
-                return False
-
-            try:
-                status = self._check_file(current_file_info, files[filename])
-                if not status:
-                    # Shortcut: we don't need to go over other files
+                logger.debug("trying with key %s", key)
+                try:
+                    current_file_info = self._scan_result[filename]
+                except KeyError:  # file is not in the rsync listing
+                    logger.debug("Missing remote file %s", key)
                     return False
-            except Exception as e:  # something else went wrong
-                logger.error("Exception caught when scanning %s: %s", filename, e)
-                return False
+
+                try:
+                    status = self._check_file(current_file_info, files[filename])
+                    if not status:
+                        # Shortcut: we don't need to go over other files
+                        return False
+                except Exception as e:  # something else went wrong
+                    logger.error("Exception caught when scanning %s: %s", filename, e)
+                    return False
 
         return True
 

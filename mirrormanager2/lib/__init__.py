@@ -24,6 +24,7 @@ MirrorManager2 internal api.
 import datetime
 import random
 import string
+from contextlib import contextmanager
 
 import sqlalchemy as sa
 
@@ -56,6 +57,20 @@ def read_config(filename):
     with open(filename) as fh:
         exec(compile(fh.read(), filename, "exec"), config)
     return config
+
+
+@contextmanager
+def instance_attribute(instance, attr_name):
+    """Return an instance attribute and expire it when leaving the context.
+
+    This can be useful for heavy lazily-loaded attributes.
+    """
+    attr = getattr(instance, attr_name)
+    try:
+        yield attr
+    finally:
+        session = sa.orm.object_session(instance)
+        session.expire(instance, [attr_name])
 
 
 def get_site(session, site_id):

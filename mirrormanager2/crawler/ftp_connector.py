@@ -4,6 +4,8 @@ from contextlib import suppress
 from ftplib import FTP
 from urllib.parse import urlsplit
 
+from mirrormanager2 import lib as mmlib
+
 from .connector import Connector, TryLater
 
 logger = logging.getLogger(__name__)
@@ -109,10 +111,11 @@ class FTPConnector(Connector):
         if results is None:
             return None
 
-        files = directory.files  # a bit expensive, involves json decoding
-        for filename in files:
-            status = self._check_file(results[filename], files[filename])
-            if not status:
-                # Shortcut: we don't need to go over other files
-                return False
+        with mmlib.instance_attribute(directory, "files") as files:
+            # Getting Directory.files is a bit expensive, involves json decoding
+            for filename in files:
+                status = self._check_file(results[filename], files[filename])
+                if not status:
+                    # Shortcut: we don't need to go over other files
+                    return False
         return True

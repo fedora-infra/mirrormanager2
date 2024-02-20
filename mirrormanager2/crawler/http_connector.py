@@ -3,6 +3,8 @@ from contextlib import suppress
 
 import requests
 
+from mirrormanager2 import lib as mmlib
+
 from .connector import Connector, FetchingFailed, ForbiddenExpected
 from .constants import HTTP_TIMEOUT
 
@@ -78,17 +80,18 @@ class HTTPConnector(Connector):
         except Exception as e:
             logger.info(f"Could not get {url}: {e}")
             return None
-        files = directory.files  # a bit expensive, involves json decoding
-        for filename in files:
-            file_url = f"{url}/{filename}"
-            exists = self._check_file(conn, file_url, files[filename], directory.readable)
-            if filename == "repomd.xml" and exists:
-                # Additional optional check
-                with suppress(Exception):
-                    exists = self.compare_sha256(directory, filename, file_url)
-            if exists in (False, None):
-                # Shortcut: we don't need to go over other files
-                return exists
+        with mmlib.instance_attribute(directory, "files") as files:
+            # Getting Directory.files is a bit expensive, involves json decoding
+            for filename in files:
+                file_url = f"{url}/{filename}"
+                exists = self._check_file(conn, file_url, files[filename], directory.readable)
+                if filename == "repomd.xml" and exists:
+                    # Additional optional check
+                    with suppress(Exception):
+                        exists = self.compare_sha256(directory, filename, file_url)
+                if exists in (False, None):
+                    # Shortcut: we don't need to go over other files
+                    return exists
         return True
 
     def _get_file(self, url):

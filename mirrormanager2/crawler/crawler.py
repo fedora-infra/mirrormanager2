@@ -268,6 +268,8 @@ class Crawler:
             if hcd_id is not None:
                 # It's None on unknown status
                 seen_hcds.add(hcd_id)
+        # Expire the session to unload the directory entries
+        self.session.commit()
 
         # In repodata or canary mode we only want to update the files actually scanned.
         # Do not mark files which have not been scanned as not being up to date.
