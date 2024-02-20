@@ -74,7 +74,8 @@ class RsyncConnector(Connector):
 
     def _check_dir(self, dirname, directory):
         # print(dirname, directory.name, len(directory.files), len(self._scan_result))
-        for filename in sorted(directory.files):
+        files = directory.files  # a bit expensive, involves json decoding
+        for filename in sorted(files):
             if len(dirname) == 0:
                 key = filename
             else:
@@ -89,7 +90,7 @@ class RsyncConnector(Connector):
                 return False
 
             try:
-                status = self._check_file(current_file_info, directory.files[filename])
+                status = self._check_file(current_file_info, files[filename])
                 if not status:
                     # Shortcut: we don't need to go over other files
                     return False
