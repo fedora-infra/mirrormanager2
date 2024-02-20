@@ -1,6 +1,10 @@
 import hashlib
 import logging
 
+from sqlalchemy.orm import object_session
+
+from mirrormanager2 import lib as mmlib
+
 logger = logging.getLogger(__name__)
 
 
@@ -67,20 +71,21 @@ class Connector:
 
     def compare_sha256(self, directory, filename, graburl):
         """looks for a FileDetails object that matches the given URL"""
-        found = False
         try:
             sha256 = self.get_sha256(graburl)
         except FetchingFailed:
             logger.debug("Could not get %s", graburl)
             return False
-        for fd in list(directory.fileDetails):
-            if fd.filename == filename and fd.sha256 is not None:
-                if fd.sha256 == sha256:
-                    found = True
-                    break
-                else:
-                    logger.debug(f"Found {fd.filename} with sha {sha256}, but expected {fd.sha256}")
-        return found
+        session = object_session(directory)
+        latest_file_detail = mmlib.get_file_detail(session, filename, directory_id=directory.id)
+        if latest_file_detail is None:
+            return False
+        if latest_file_detail.sha256 != sha256:
+            logger.debug(
+                f"Found {filename} with sha {sha256}, but expected {latest_file_detail.sha256}"
+            )
+            return False
+        return True
 
     def _get_dir_url(self, url, directory, category_prefix_length):
         dirname = directory.name[category_prefix_length:]
