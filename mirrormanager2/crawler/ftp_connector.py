@@ -109,8 +109,9 @@ class FTPConnector(Connector):
         if results is None:
             return None
 
-        for filename in directory.files:
-            status = self._check_file(results[filename], directory.files[filename])
+        files = directory.files  # a bit expensive, involves json decoding
+        for filename in files:
+            status = self._check_file(results[filename], files[filename])
             if not status:
                 # Shortcut: we don't need to go over other files
                 return False
