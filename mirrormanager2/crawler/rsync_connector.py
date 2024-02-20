@@ -6,7 +6,7 @@ from mirrormanager2.lib.sync import run_rsync
 
 from .connector import Connector, SchemeNotAvailable
 
-logger = logging.getLogger("crawler")
+logger = logging.getLogger(__name__)
 
 
 class RsyncConnector(Connector):
