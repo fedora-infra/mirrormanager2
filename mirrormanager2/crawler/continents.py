@@ -13,7 +13,7 @@ import mirrormanager2.lib
 
 from .constants import CONTINENTS
 
-logger = logging.getLogger("crawler")
+logger = logging.getLogger(__name__)
 
 
 class WrongContinent(Exception):

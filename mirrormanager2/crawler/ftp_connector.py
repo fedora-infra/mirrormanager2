@@ -6,7 +6,7 @@ from urllib.parse import urlsplit
 
 from .connector import Connector, TryLater
 
-logger = logging.getLogger("crawler")
+logger = logging.getLogger(__name__)
 
 
 class FTPConnector(Connector):

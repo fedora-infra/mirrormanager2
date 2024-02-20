@@ -871,8 +871,13 @@ def get_directories_by_category(session, category, only_repodata=False):
     :arg session: the session with which to connect to the database.
 
     """
-    query = _get_directories_by_category_query(category, only_repodata).order_by(
-        model.Directory.name
+    query = (
+        _get_directories_by_category_query(category, only_repodata)
+        .order_by(model.Directory.name)
+        .options(
+            # Don't load the files by default to save memory
+            sa.orm.defer(model.Directory.files)
+        )
     )
     return session.scalars(query)
 

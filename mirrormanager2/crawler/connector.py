@@ -1,7 +1,7 @@
 import hashlib
 import logging
 
-logger = logging.getLogger("crawler")
+logger = logging.getLogger(__name__)
 
 
 class TryLater(Exception):

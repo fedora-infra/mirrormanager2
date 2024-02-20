@@ -17,7 +17,7 @@ from .log import setup_logging
 from .threads import run_in_threadpool
 from .ui import report_crawl, report_propagation
 
-logger = logging.getLogger("crawler")
+logger = logging.getLogger(__name__)
 
 # def notify(options, topic, msg):
 #     if not options["fedmsg"]:

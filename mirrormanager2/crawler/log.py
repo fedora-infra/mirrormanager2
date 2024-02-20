@@ -5,7 +5,7 @@ from rich.logging import RichHandler
 
 from .threads import get_thread_id, threadlocal
 
-logger = logging.getLogger("crawler")
+logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 master_formatter = (
     # "%(levelname)s:%(name)s:%(hosts)s:%(threads)s:%(hostid)s:%(hostname)s:%(message)s"
@@ -44,15 +44,11 @@ class InjectingFilter(logging.Filter):
 
 def setup_logging(debug, console):
     handler = RichHandler(console=console, rich_tracebacks=True)
-    logging.basicConfig(format=master_formatter, handlers=[handler])
     f = MasterFilter()
     handler.addFilter(f)
-    logger.addFilter(f)
-    if debug:
-        logger.setLevel(logging.DEBUG)
-    else:
-        logger.setLevel(logging.INFO)
-    return logger
+    logging.basicConfig(
+        format=master_formatter, handlers=[handler], level=logging.DEBUG if debug else logging.INFO
+    )
 
 
 def thread_file_logger(log_dir, host_id, debug):
@@ -79,6 +75,7 @@ def thread_file_logger(log_dir, host_id, debug):
         else:
             fh.setLevel(logging.INFO)
         fh.setFormatter(formatter)
-        logger.addHandler(fh)
+        root_logger = logging.getLogger()
+        root_logger.addHandler(fh)
 
     return log_file, fh

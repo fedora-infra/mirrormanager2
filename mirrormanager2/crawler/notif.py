@@ -2,7 +2,7 @@ import logging
 
 import mirrormanager2.lib
 
-logger = logging.getLogger("crawler")
+logger = logging.getLogger(__name__)
 
 
 def notify(options, topic, msg):

@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 from .threads import threadlocal
 
-logger = logging.getLogger("crawler")
+logger = logging.getLogger(__name__)
 
 
 class Reporter:

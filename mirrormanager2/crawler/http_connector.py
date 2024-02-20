@@ -6,7 +6,7 @@ import requests
 from .connector import Connector, FetchingFailed, ForbiddenExpected
 from .constants import HTTP_TIMEOUT
 
-logger = logging.getLogger("crawler")
+logger = logging.getLogger(__name__)
 
 
 class HTTPConnector(Connector):
