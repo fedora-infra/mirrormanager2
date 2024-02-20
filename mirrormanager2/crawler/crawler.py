@@ -17,7 +17,7 @@ from .reporter import Reporter
 from .threads import ThreadTimeout, TimeoutError, get_thread_id, on_thread_started
 from .ui import ProgressTask
 
-logger = logging.getLogger("crawler")
+logger = logging.getLogger(__name__)
 
 
 class CrawlerError(Exception):

@@ -6,7 +6,7 @@ from .ftp_connector import FTPConnector
 from .http_connector import HTTPConnector, HTTPSConnector
 from .rsync_connector import RsyncConnector
 
-logger = logging.getLogger("crawler")
+logger = logging.getLogger(__name__)
 
 
 def _get_connection_class(scheme):
