@@ -206,6 +206,35 @@ class Host(BASE):
         return self.admin_active and self.user_active and self.site.user_active
 
 
+class LazyDict(collections.abc.Mapping):
+    """A lazily-evaluated dict, converted from a value."""
+
+    def __init__(self, convert_to_dict, value):
+        self._convert_to_dict = convert_to_dict
+        self._value = value
+        self._dict = None
+
+    def _ensure_dict(self):
+        if self._dict is None:
+            self._dict = self._convert_to_dict(self._value)
+
+    def __getitem__(self, key):
+        self._ensure_dict()
+        return self._dict[key]
+
+    def __iter__(self):
+        self._ensure_dict()
+        return self._dict.__iter__()
+
+    def __len__(self):
+        self._ensure_dict()
+        return self._dict.__len__()
+
+    def __eq__(self, other):
+        self._ensure_dict()
+        return self._dict == other
+
+
 class JsonDictTypeFilter(sa.types.TypeDecorator):
     """This handles either JSON or a pickled dict from the database."""
 
@@ -228,6 +257,9 @@ class JsonDictTypeFilter(sa.types.TypeDecorator):
         return json.dumps(result).encode()
 
     def process_result_value(self, value, dialect):
+        return LazyDict(self._as_dict, value)
+
+    def _as_dict(self, value):
         result = {}
         if value is None:
             return result

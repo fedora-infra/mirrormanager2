@@ -78,9 +78,10 @@ class HTTPConnector(Connector):
         except Exception as e:
             logger.info(f"Could not get {url}: {e}")
             return None
-        for filename in directory.files:
+        files = directory.files  # a bit expensive, involves json decoding
+        for filename in files:
             file_url = f"{url}/{filename}"
-            exists = self._check_file(conn, file_url, directory.files[filename], directory.readable)
+            exists = self._check_file(conn, file_url, files[filename], directory.readable)
             if filename == "repomd.xml" and exists:
                 # Additional optional check
                 with suppress(Exception):
