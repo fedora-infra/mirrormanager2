@@ -230,9 +230,9 @@ class Crawler:
             except Exception as e:
                 exists = False
                 logger.info("Could not get the base dir on %s: %s", url, e)
-            finally:
-                # Must close, or it will be reused for all schemes
-                connector.close()
+            # finally:
+            #     # Must close, or it will be reused for all schemes
+            #     connector.close()
             if not exists:
                 logger.warning("Base URL %s does not exist.", url)
                 continue
