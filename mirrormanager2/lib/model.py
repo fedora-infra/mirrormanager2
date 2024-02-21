@@ -248,13 +248,16 @@ class JsonDictTypeFilter(sa.types.TypeDecorator):
         if value is None:
             return None
 
+        # Format: dict[filename: {"size": size_int, "stat": timestamp_int}]
+        # Stored as: list[{"name": filename, "size": size_int, "timestamp": timestamp_int}]
+
         result = []
 
-        for i in list(value.keys()):
+        for filename in sorted(value):
             temp = {}
-            temp["name"] = i
-            temp["size"] = int(value[i]["size"])
-            temp["timestamp"] = int(value[i]["stat"])
+            temp["name"] = filename
+            temp["size"] = int(value[filename]["size"])
+            temp["timestamp"] = int(value[filename]["stat"])
             result.append(temp)
 
         return json.dumps(result).encode()
@@ -267,8 +270,7 @@ class JsonDictTypeFilter(sa.types.TypeDecorator):
         if value is None:
             return result
         try:
-            j = json.loads(value)
-            for i in j:
+            for i in json.loads(value):
                 result[i["name"]] = {"size": i["size"], "stat": i["timestamp"]}
         except ValueError:
             result = pickle.loads(value)
