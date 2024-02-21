@@ -35,7 +35,7 @@ from sqlalchemy.orm import deferred, relationship
 
 from .database import BASE
 
-ERROR_LOG = logging.getLogger("mirrormanager2.lib.model")
+ERROR_LOG = logging.getLogger(__name__)
 
 
 class Site(BASE):
