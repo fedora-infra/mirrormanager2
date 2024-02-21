@@ -19,14 +19,6 @@ from .ui import report_crawl, report_propagation
 
 logger = logging.getLogger(__name__)
 
-# def notify(options, topic, msg):
-#     if not options["fedmsg"]:
-#         return
-#
-#     mirrormanager2.lib.notifications.fedmsg_publish(
-#         f"mirrormanager.crawler.{topic}",
-#         msg,
-#     )
 DEFAULT_THREAD_COUNT = min(100, os.cpu_count() * 20)
 
 
@@ -184,7 +176,7 @@ def run_on_all_hosts(ctx_obj, options, report):
     results = []
     with Progress(console=ctx_obj["console"], refresh_per_second=1) as progress:
         task_global = progress.add_task(f"Crawling {len(host_ids)} mirrors", total=len(host_ids))
-        futures = run_in_threadpool(
+        threads_results = run_in_threadpool(
             worker,
             host_ids,
             fn_args=(options, ctx_obj["config"], progress),
@@ -193,12 +185,12 @@ def run_on_all_hosts(ctx_obj, options, report):
                 "max_workers": options["threads"],
             },
         )
-        for future in futures:
+        for result in threads_results:
             progress.advance(task_global)
-            if future is None:
+            if result is None:
                 # The host has been skipped
                 continue
-            results.append(future)
+            results.append(result)
 
     report(ctx_obj, options, results)
     logger.info("Crawler finished after %d seconds", (time.monotonic() - starttime))

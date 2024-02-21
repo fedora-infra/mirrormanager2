@@ -28,25 +28,8 @@ from contextlib import contextmanager
 
 import sqlalchemy as sa
 
-# from sa.orm import scoped_session, sessionmaker
 from mirrormanager2 import default_config
 from mirrormanager2.lib import model
-
-# def create_session(db_url, debug=False, pool_recycle=3600):
-#     """Create the Session object to use to query the database.
-#
-#     :arg db_url: URL used to connect to the database. The URL contains
-#     information with regards to the database engine, the host to connect
-#     to, the user and password and the database name.
-#       ie: <engine>://<user>:<password>@<host>/<dbname>
-#     :kwarg debug: a boolean specifying wether we should have the verbose
-#         output of sqlalchemy or not.
-#     :return a Session that can be used to query the database.
-#
-#     """
-#     engine = sa.create_engine(db_url, echo=debug, pool_recycle=pool_recycle)
-#     scopedsession = scoped_session(sessionmaker(bind=engine))
-#     return scopedsession
 
 
 def read_config(filename):
@@ -150,17 +133,6 @@ def get_host_by_name(session, host_name):
     return query.first()
 
 
-def get_hosts(session):
-    """Return all Hosts in the database.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = session.query(model.Host).order_by(model.Host.id)
-
-    return query.all()
-
-
 def get_host_acl_ip(session, host_acl_ip_id):
     """Return a specified HostAclIp via its identifier.
 
@@ -214,17 +186,6 @@ def get_host_category(session, host_category_id):
     query = session.query(model.HostCategory).filter(model.HostCategory.id == host_category_id)
 
     return query.first()
-
-
-def get_host_category_dirs(session):
-    """Return all the HostCategoryDir objects in the database.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = session.query(model.HostCategoryDir).order_by(model.HostCategoryDir.id)
-
-    return query.all()
 
 
 def get_host_category_by_hostid_category(session, host_id, category):
@@ -415,16 +376,6 @@ def get_category_by_name(session, name):
     return query.first()
 
 
-def get_category_directory(session):
-    """Return all the category directory present in the database.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = session.query(model.CategoryDirectory).order_by(model.CategoryDirectory.directory_id)
-    return query.all()
-
-
 def get_product_by_name(session, p_name):
     """Return a product by its name.
 
@@ -473,35 +424,6 @@ def get_repo_prefix_arch(session, prefix, arch):
     return query.first()
 
 
-def get_repo_by_name(session, name):
-    """Return a repository by its name.
-
-    :arg session: the session with which to connect to the database.
-    :arg name: the name of the repository
-
-    """
-    query = session.query(model.Repository).filter(model.Repository.name == name)
-
-    return query.first()
-
-
-def get_repo_by_dir(session, path):
-    """Return repositories by the path of its directory.
-
-    :arg session: the session with which to connect to the database.
-    :arg path: the path of the directory linked to the repositories returned
-
-    """
-    query = (
-        session.query(model.Repository)
-        .filter(model.Repository.directory_id == model.Directory.id)
-        .filter(model.Directory.name == path)
-        .order_by(model.Repository.id)
-    )
-
-    return query.all()
-
-
 def get_repositories(session, product_names=None, version_names=None, prefixes=None, arches=None):
     """Return all repositories in the database.
 
@@ -525,17 +447,6 @@ def get_repositories(session, product_names=None, version_names=None, prefixes=N
     if arches:
         query = query.join(model.Arch).filter(model.Arch.name.in_(arches))
     query = query.order_by(model.Repository.id)
-    return query.all()
-
-
-def get_reporedirect(session):
-    """Return all reporedirect in the database.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = session.query(model.RepositoryRedirect).order_by(model.RepositoryRedirect.id)
-
     return query.all()
 
 
@@ -574,28 +485,6 @@ def add_admin_to_site(session, site, admin):
         session.add(sa)
         session.flush()
         return "%s added as an admin" % admin
-
-
-def get_locations(session):
-    """Return all locations in the database.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = session.query(model.Location).order_by(model.Location.id)
-
-    return query.all()
-
-
-def get_netblock_country(session):
-    """Return all NetblockCountry in the database.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = session.query(model.NetblockCountry).order_by(model.NetblockCountry.id)
-
-    return query.all()
 
 
 def get_mirrors(
@@ -810,17 +699,6 @@ def get_file_detail_history(
     return query.all()
 
 
-def get_file_details(session):
-    """Return all the FileDetail object in the database.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = session.query(model.FileDetail).order_by(model.FileDetail.id)
-
-    return query.all()
-
-
 def get_file_details_with_checksum(session, file_detail, checksum, age_threshold):
     if len(checksum) != 64:
         # Only SHA256 is supported yet.
@@ -836,17 +714,6 @@ def get_file_details_with_checksum(session, file_detail, checksum, age_threshold
         .order_by(model.FileDetail.timestamp.desc())
     )
     return query.first()
-
-
-def get_directories(session):
-    """Return all Directory in the database.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = session.query(model.Directory).order_by(model.Directory.id)
-
-    return query.all()
 
 
 def get_directory_by_id(session, id):
@@ -906,19 +773,6 @@ def count_directories_by_category(session, category, only_repodata=False):
     query = _get_directories_by_category_query(category, only_repodata)
     query = query.with_only_columns(sa.func.count(model.Directory.id), maintain_column_froms=True)
     return session.scalar(query)
-
-
-def get_hostcategorydir_by_hostcategoryid(session, host_category_id):
-    """Return all HostCategoryDir via its host_category_id.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = session.query(model.HostCategoryDir).filter(
-        model.HostCategoryDir.host_category_id == host_category_id
-    )
-
-    return query.all()
 
 
 def get_hostcategorydir_by_hostcategoryid_and_path(session, host_category_id, path):
@@ -1057,13 +911,19 @@ def uploaded_config(session, host, config):
                 except Exception:
                     pass
 
-        for hcdir in get_hostcategorydir_by_hostcategoryid(session, hc.id):
+        hcdirs = session.scalars(
+            sa.select(model.HostCategoryDir).where(model.HostCategoryDir.host_category_id == hc.id)
+            # Don't load the files attribute, it's very heavy
+            .options(sa.orm.load_only(model.HostCategoryDir.path))
+        )
+        allowed_paths = list(config[cat_name]["dirtree"].keys())
+        for hcdir in hcdirs:
             # handle disappearing hcdirs, deleted by other processes
             try:
                 hcdirpath = hcdir.path
             except Exception:
                 continue
-            if hcdirpath not in list(config[cat_name]["dirtree"].keys()):
+            if hcdirpath not in allowed_paths:
                 try:
                     session.delete(hcdir)
                     session.commit()
@@ -1082,69 +942,6 @@ def uploaded_config(session, host, config):
         session.commit()
 
     return message
-
-
-def query_directories(session):
-    """Return the list of Directory, Host, HostCategoryUrl and Site
-    information required by `refresh_mirrorlist_cache` to build the pickle
-    file.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = (
-        session.query(
-            model.Directory.id.label("directory_id"),
-            model.Directory.name.label("dname"),
-            model.Host.id.label("hostid"),
-            model.Host.country.label("country"),
-            model.HostCategoryUrl.id.label("id"),
-            model.Site.private.label("siteprivate"),
-            model.Host.private.label("hostprivate"),
-            model.Host.internet2.label("internet2"),
-            model.Host.internet2_clients.label("internet2_clients"),
-        )
-        .filter(model.Host.user_active.is_(True))
-        .filter(model.Host.admin_active.is_(True))
-        .filter(model.Host.site_id == model.Site.id)
-        .filter(model.Site.user_active.is_(True))
-        .filter(model.Site.admin_active.is_(True))
-        .filter(model.Host.id == model.HostCategory.host_id)
-        .filter(model.HostCategory.category_id == model.CategoryDirectory.category_id)
-        .filter(model.CategoryDirectory.directory_id == model.Directory.id)
-        .filter(model.HostCategory.id == model.HostCategoryUrl.host_category_id)
-        .filter(model.HostCategoryUrl.private.is_(False))
-    )
-
-    q1 = (
-        query.filter(model.HostCategoryDir.host_category_id == model.HostCategory.id)
-        .filter(model.HostCategoryDir.directory_id == model.Directory.id)
-        .filter(model.HostCategoryDir.up2date.is_(True))
-    )
-
-    q2 = query.filter(model.HostCategory.always_up2date.is_(True))
-
-    q = session.query(q1.union(q2).subquery()).order_by("dname", "hostid")
-
-    return q.all()
-
-
-def get_directory_exclusive_host(session):
-    """Return the list of Directory that are exclusive for some hosts.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = (
-        session.query(
-            model.Directory.name.label("dname"),
-            model.DirectoryExclusiveHost.host_id.label("host_id"),
-        )
-        .filter(model.Directory.id == model.DirectoryExclusiveHost.directory_id)
-        .order_by("dname")
-    )
-
-    return query.all()
 
 
 def get_rsync_filter_directories(session, categories, since):

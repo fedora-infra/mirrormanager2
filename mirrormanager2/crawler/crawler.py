@@ -255,7 +255,7 @@ class Crawler:
             self.session, hc.category, self.options["repodata"]
         )
         self.progress.set_total(trydirs_count)
-        logger.info("Category %s has %s directories", hc.category.name, trydirs_count)
+        # logger.info("Category %s has %s directories", hc.category.name, trydirs_count)
 
         stats = CrawlStats(total_directories=trydirs_count)
         seen_hcds = set()
@@ -372,72 +372,6 @@ class Crawler:
             sync_status = SyncStatus.UNCHANGED
         self.session.flush()
         return sync_status, hcd.id
-
-    # def sync_hcds(self, hc, directory_statuses):
-    #     stats = CrawlStats()
-    #     current_hcds = set()
-    #     dirnames = directory_statuses.keys()
-    #     dirnames = sorted(dirnames, key=lambda t: t.name)
-    #     stats.total_directories = len(dirnames)
-    #     self.progress.reset(total=len(dirnames))
-    #     self.progress.set_action("syncing")
-    #     for d in dirnames:
-    #         status = directory_statuses[d]
-    #         self.progress.advance()
-
-    #         if status is None:
-    #             stats.unknown += 1
-    #             continue
-
-    #         topname = hc.category.topdir.name
-    #         toplen = len(topname)
-    #         if d.name.startswith("/"):
-    #             toplen += 1
-    #         path = d.name[toplen:]
-
-    #         hcd = mmlib.get_hostcategorydir_by_hostcategoryid_and_path(
-    #             self.session, host_category_id=hc.id, path=path
-    #         )
-    #         if hcd is None:
-    #             # don't create HCDs for directories which aren't up2date on the
-    #             # mirror chances are the mirror is excluding that directory
-    #             if not status:
-    #                 continue
-    #             hcd = HostCategoryDir(host_category_id=hc.id, path=path, directory_id=d.id)
-    #             stats.hcds_created += 1
-
-    #         if hcd.directory is None:
-    #             hcd.directory = d
-    #         if hcd.up2date != status:
-    #             hcd.up2date = status
-    #             self.session.add(hcd)
-    #             if status is False:
-    #                 logger.info("Directory %s is not up-to-date on this host." % d.name)
-    #                 stats.not_up2date += 1
-    #             else:
-    #                 # logger.info(d.name)
-    #                 stats.up2date += 1
-    #         else:
-    #             stats.unchanged += 1
-
-    #         current_hcds.add(hcd.id)
-    #         self.session.flush()
-
-    #     # In repodata mode we only want to update the files actually scanned.
-    #     # Do not mark files which have not been scanned as not being up to date.
-    #     if self.options["repodata"]:
-    #         return stats
-
-    #     # now-historical HostCategoryDirs are not up2date
-    #     # we wait for a cascading Directory delete to delete this
-
-    #     # It is VERY memory-hungry to list hc.directories, so make specific DB queries.
-    #     stats.unreadable += mmlib.count_hostcategorydirs_with_unreadable_dir(self.session, hc)
-    #     for hcd in mmlib.get_hostcategorydirs_up2date_not_in_list(self.session, hc, current_hcds):
-    #         hcd.up2date = False
-    #         stats.hcds_deleted += 1
-    #     self.session.commit()
-    #     return stats
 
     def check_propagation(self):
         self.timeout.start()

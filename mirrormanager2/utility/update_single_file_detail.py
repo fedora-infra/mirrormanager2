@@ -44,12 +44,9 @@ def main(config, categories, debug, filename):
         for master_dir in master_dirs:
             cname = master_dir["category"]
             logger.info("Considering category %s" % cname)
-            # category = mirrormanager2.lib.get_category_by_name(session, cname)
 
             absolutepath = os.path.join(master_dir["path"], filename)
-            # dirname = "/".join(absolutepath.strip("/").split("/")[1:-1])
             dirname = os.path.dirname(filename)
-            # target = filename.split("/")[-1]
             target = os.path.basename(filename)
 
             directory = mirrormanager2.lib.get_directory_by_name(session, dirname)
