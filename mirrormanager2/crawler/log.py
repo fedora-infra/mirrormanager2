@@ -1,9 +1,8 @@
 import logging
 import os
 
-from rich.logging import RichHandler
-
 from .threads import get_thread_id, threadlocal
+from .ui import get_logging_handler
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
@@ -43,7 +42,7 @@ class InjectingFilter(logging.Filter):
 
 
 def setup_logging(debug, console):
-    handler = RichHandler(console=console, rich_tracebacks=True)
+    handler = get_logging_handler(console)
     f = MasterFilter()
     handler.addFilter(f)
     logging.basicConfig(
