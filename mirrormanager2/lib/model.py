@@ -197,10 +197,13 @@ class Host(BASE):
         )
 
     def set_not_up2date(self, session):
-        for hc in self.categories:
-            for hcd in hc.directories:
-                hcd.up2date = False
-        session.commit()
+        hc_ids = [hc.id for hc in self.categories]
+        statement = (
+            sa.update(HostCategoryDir)
+            .where(HostCategoryDir.host_category_id.in_(hc_ids))
+            .values(up2date=False)
+        )
+        session.execute(statement)
 
     def is_active(self):
         return self.admin_active and self.user_active and self.site.user_active

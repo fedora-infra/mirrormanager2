@@ -64,12 +64,11 @@ class Reporter:
         It usually is called if the scan of a single category has failed.
         This is something the crawler does at multiple places: Failure
         in the scan of a single category disables the complete host."""
-        # Watch out: set_not_up2date(session) is commiting all changes
-        # in this thread to the database
         self.host_failed = True
         self.host.set_not_up2date(self.session)
         msg = f"Host {self.host.id} marked not up2date: {reason}"
         logger.warning(msg)
+        self.session.commit()
         if exc is not None:
             logger.debug(f"{exc[0]} {exc[1]} {exc[2]}")
         self.send_email(msg, exc)
