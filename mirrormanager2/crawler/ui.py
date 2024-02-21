@@ -1,6 +1,8 @@
 import typing
 
 from rich.console import Console
+from rich.highlighter import NullHighlighter
+from rich.logging import RichHandler
 from rich.table import Table
 from rich.text import Text
 
@@ -8,6 +10,10 @@ from mirrormanager2.lib import model
 
 if typing.TYPE_CHECKING:
     from .crawler import CrawlResult
+
+
+def get_logging_handler(console):
+    return RichHandler(console=console, highlighter=NullHighlighter())
 
 
 class ProgressTask:
