@@ -56,15 +56,17 @@ class HTTPConnector(Connector):
         """
         try:
             content_length = self._get_content_length(conn, url, readable)
+        except ForbiddenExpected:
+            return None
         except Exception:
-            return False
+            return None
         # lighttpd returns a Content-Length for directories
         # apache and nginx do not
         # For the basic check in check_for_base_dir() it is only
         # relevant if the directory exists or not. Therefore
         # passing None as filedata[]. This needs to be handled here.
         if filedata is None:
-            # The file/directory seems to exist
+            # The file/directory seems to exist, no additional check possible
             return True
         # fixme should check last_modified too
         if content_length not in (None, False) and float(filedata["size"]) != float(content_length):
