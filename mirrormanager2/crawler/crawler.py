@@ -13,6 +13,7 @@ from .connection_pool import ConnectionPool
 from .connector import FetchingFailed, SchemeNotAvailable
 from .constants import REPODATA_DIR, REPODATA_FILE
 from .continents import BrokenBaseUrl, EmbargoedCountry, WrongContinent, check_continent
+from .fedora import get_propagation_repo_prefix
 from .reporter import Reporter
 from .threads import ThreadTimeout, TimeoutError, get_thread_id, on_thread_started
 from .ui import ProgressTask
@@ -373,61 +374,65 @@ class Crawler:
         self.session.flush()
         return sync_status, hcd.id
 
-    def check_propagation(self):
+    def check_propagation(self, product_versions):
         self.timeout.start()
         repo_status = {}
-
-        repos = mmlib.get_repositories(
-            self.session,
-            product_names=self.options["products"],
-            version_names=self.options["versions"],
-            prefixes=self.options["repo_prefixes"],
-            arches=[PROPAGATION_ARCH],
-        )
+        repos = []
+        for product_name, version_name in product_versions:
+            repo_prefix = get_propagation_repo_prefix(product_name, version_name)
+            repos.extend(
+                mmlib.get_repositories(
+                    self.session,
+                    product_name=product_name,
+                    version_name=version_name,
+                    prefix=repo_prefix,
+                    arch=PROPAGATION_ARCH,
+                )
+            )
         if not repos:
             logger.warning("No repo found")
             return {}
         for repo in repos:
-            repo_dir = repo.directory
-            if repo_dir is None:
-                logger.warning(
-                    "No directory for repo with prefix %s on %s", repo.prefix, PROPAGATION_ARCH
-                )
-                continue
-            repodata_dir = mmlib.get_directory_by_name(
-                self.session, f"{repo_dir.name}/{REPODATA_DIR}"
-            )
-            if repodata_dir is None:
-                logger.warning("Could not find the repodata dir for repo %s", repo)
-                continue
-            hc = mmlib.get_host_category_by_hostid_category(
-                self.session, host_id=self.host.id, category=repo.category.name
-            )
-            if hc is None:
-                continue
-            self.timeout.check()
-            topdir = repo.category.topdir.name
-            url = self._get_http_url(hc)
-            if url is None:
-                logger.warning(
-                    "Could not find a HTTP(s) URL for %s and %s. URLs: %s",
-                    self.host,
-                    repo.category,
-                    repr(list(hc.urls)),
-                )
-                continue
-            fd = mmlib.get_file_detail(self.session, REPODATA_FILE, repodata_dir.id, reverse=True)
-            if fd is None:
-                logger.warning(
-                    "Could not find the file details for repo with prefix %s on %s",
-                    repo.prefix,
-                    PROPAGATION_ARCH,
-                )
-                continue
-            checksum = self._get_checksum_for_repo(url, topdir, repodata_dir)
-            status = self._get_file_propagation_status(fd, checksum)
-            repo_status[repo.id] = status
+            repo_status[repo.id] = self.check_propagation_for_repo(repo)
         return repo_status
+
+    def check_propagation_for_repo(self, repo):
+        repo_dir = repo.directory
+        if repo_dir is None:
+            logger.warning(
+                "No directory for repo with prefix %s on %s", repo.prefix, PROPAGATION_ARCH
+            )
+            return PropagationStatus.NO_INFO
+        repodata_dir = mmlib.get_directory_by_name(self.session, f"{repo_dir.name}/{REPODATA_DIR}")
+        if repodata_dir is None:
+            logger.warning("Could not find the repodata dir for repo %s", repo)
+            return PropagationStatus.NO_INFO
+        hc = mmlib.get_host_category_by_hostid_category(
+            self.session, host_id=self.host.id, category=repo.category.name
+        )
+        if hc is None:
+            return PropagationStatus.NO_INFO
+        self.timeout.check()
+        topdir = repo.category.topdir.name
+        url = self._get_http_url(hc)
+        if url is None:
+            logger.warning(
+                "Could not find a HTTP(s) URL for %s and %s. URLs: %s",
+                self.host,
+                repo.category,
+                repr(list(hc.urls)),
+            )
+            return PropagationStatus.NO_INFO
+        fd = mmlib.get_file_detail(self.session, REPODATA_FILE, repodata_dir.id, reverse=True)
+        if fd is None:
+            logger.warning(
+                "Could not find the file details for repo with prefix %s on %s",
+                repo.prefix,
+                PROPAGATION_ARCH,
+            )
+            return PropagationStatus.NO_INFO
+        checksum = self._get_checksum_for_repo(url, topdir, repodata_dir)
+        return self._get_file_propagation_status(fd, checksum)
 
     def _get_http_url(self, host_category):
         for hcu in host_category.urls:
@@ -440,7 +445,7 @@ class Crawler:
     def _get_checksum_for_repo(self, url, topdir, repo_dir):
         # Print out information about the repomd.xml status
         path = repo_dir.name
-        if repo_dir.name.startswith(topdir):
+        if topdir and repo_dir.name.startswith(topdir):
             path = repo_dir.name[len(topdir) + 1 :]
         # fds = mmlib.get_file_detail_history(self.session, "repomd.xml", repo_dir.id)
         # sha256sums = {fd.sha256: fd.timestamp for fd in fds}
@@ -562,7 +567,7 @@ def crawl_and_report(options, crawler):
 
 
 def check_propagation_and_report(options, crawler):
-    repo_status = crawler.check_propagation()
+    repo_status = crawler.check_propagation(options["product_versions"])
     return PropagationResult(
         host_id=crawler.host.id,
         host_name=crawler.host.name,
