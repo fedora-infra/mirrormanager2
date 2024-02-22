@@ -195,6 +195,9 @@ CRAWLER_AUTO_DISABLE = 4
 # the version and architecture from a path.
 SKIP_PATHS_FOR_VERSION = ["pub/alt"]
 
+# To get the current versions
+BODHI_URL = "https://bodhi.fedoraproject.org"
+
 # Whether to use Fedora Messaging for notifications
 USE_FEDORA_MESSAGING = True
 
