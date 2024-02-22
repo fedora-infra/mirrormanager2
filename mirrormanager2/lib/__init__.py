@@ -980,7 +980,7 @@ def get_propagation_repos(session):
     query = (
         sa.select(model.Repository).join(model.PropagationStat).order_by(model.Repository.prefix)
     )
-    return session.execute(query).scalars()
+    return session.scalars(query).unique()
 
 
 def get_propagation(session, repo_id):

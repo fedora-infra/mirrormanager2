@@ -5,26 +5,23 @@
 {%block tag %}propagation{% endblock %}
 
 {% block content %}
-<h1>Propagation</h1>
+<h1>Propagation{% if repo %} for {{ repo.version.product.name }} {{ repo.version.name }}{% endif %}</h1>
 
 {%- if config['SHOW_PROPAGATION'] -%}
-{%- if prefix == "oops" %}
-<h3>Ooooops, some file was somehow (or somewhere) not found. Move along!</h3>
-{%- else %}
 
-This diagram shows how many mirrors for the {{prefix}} branch have a
-repomd.xml file which is the same (respectively one day older, two days older or
-much older) version as on the master mirror.
+This diagram shows how many mirrors have a repomd.xml file which is the same
+(respectively one day older, two days older or much older) version as on the primary mirror.
 
 {%- if repos %}
-<br />The same diagram is als available for the branches:
+<br />The same diagram is als available for the following versions:
 <ul>
-  {%- for repo in repos -%}
-  {%- if repo.prefix != prefix %}
+  {%- for repo_with_stats in repos -%}
   <li>
-    <a href="{{url_for('base.propagation', prefix=repo.prefix)}}"
-      >{{ repo.prefix }}</a
+    {%- if repo_with_stats.id == repo.id %}<strong>{%- endif -%}
+    <a href="{{url_for('base.propagation', repo_id=repo_with_stats.id)}}"
+      >{{ repo_with_stats.version.product.name }} {{ repo_with_stats.version.name }}</a
     >
+    {%- if repo_with_stats.id == repo.id %}</strong>{%- endif -%}
   </li>
   {%- endif -%}
   {%- endfor -%}
@@ -34,7 +31,6 @@ much older) version as on the master mirror.
 
 <canvas id="chart"></canvas>
 
-{%- endif -%}
 {% else -%}
 Actually, this is disabled and you should not be here.
 Go away!
@@ -44,6 +40,7 @@ Go away!
 
 {% block jscripts %}
 {{ super() }}
+{% if datasets %}
 <script src="{{ url_for('static', filename='chart.js') }}"></script>
 <script>
   const canvas = document.getElementById('chart');
@@ -67,4 +64,5 @@ Go away!
     }
   });
 </script>
+{% endif %}
 {% endblock %}
