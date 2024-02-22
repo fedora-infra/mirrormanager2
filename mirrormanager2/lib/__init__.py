@@ -424,28 +424,26 @@ def get_repo_prefix_arch(session, prefix, arch):
     return query.first()
 
 
-def get_repositories(session, product_names=None, version_names=None, prefixes=None, arches=None):
+def get_repositories(session, product_name=None, version_name=None, prefix=None, arch=None):
     """Return all repositories in the database.
 
     :arg session: the session with which to connect to the database.
 
     """
     query = session.query(model.Repository)
-    if product_names:
+    if product_name:
         query = (
-            query.join(model.Version)
-            .join(model.Product)
-            .filter(model.Product.name.in_(product_names))
+            query.join(model.Version).join(model.Product).filter(model.Product.name == product_name)
         )
-    if version_names:
-        if not product_names:
+    if version_name:
+        if not product_name:
             # Searching by product has already added this join
             query = query.join(model.Version)
-        query = query.filter(model.Version.name.in_(version_names))
-    if prefixes:
-        query = query.filter(model.Repository.prefix.in_(prefixes))
-    if arches:
-        query = query.join(model.Arch).filter(model.Arch.name.in_(arches))
+        query = query.filter(model.Version.name == version_name)
+    if prefix:
+        query = query.filter(model.Repository.prefix == prefix)
+    if arch:
+        query = query.join(model.Arch).filter(model.Arch.name == arch)
     query = query.order_by(model.Repository.id)
     return query.all()
 

@@ -6,7 +6,7 @@ import requests
 from mirrormanager2 import lib as mmlib
 
 from .connector import Connector, FetchingFailed, ForbiddenExpected
-from .constants import HTTP_TIMEOUT
+from .constants import HTTP_TIMEOUT, REPODATA_FILE
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +87,7 @@ class HTTPConnector(Connector):
             for filename in files:
                 file_url = f"{url}/{filename}"
                 exists = self._check_file(conn, file_url, files[filename], directory.readable)
-                if filename == "repomd.xml" and exists:
+                if filename == REPODATA_FILE and exists:
                     # Additional optional check
                     with suppress(Exception):
                         exists = self.compare_sha256(directory, filename, file_url)

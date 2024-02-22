@@ -2,7 +2,7 @@ import logging
 import os
 import time
 from collections import defaultdict
-from datetime import date
+from datetime import datetime
 
 import click
 from rich.console import Console
@@ -13,6 +13,7 @@ from mirrormanager2.lib.database import get_db_manager
 
 from .constants import CONTINENTS
 from .crawler import PropagationResult, worker
+from .fedora import get_current_versions
 from .log import setup_logging
 from .threads import run_in_threadpool
 from .ui import report_crawl, report_propagation
@@ -225,23 +226,11 @@ def crawl(ctx, **kwargs):
 @main.command()
 @click.option(
     "--product",
-    "products",
-    multiple=True,
-    help="Products to check (default=all), can be repeated",
+    help="Product to check (default=all)",
 )
 @click.option(
     "--version",
-    "versions",
-    multiple=True,
-    help="Versions to check (default=all), can be repeated",
-)
-@click.option(
-    "--repo-prefix",
-    "repo_prefixes",
-    default=["rawhide"],
-    multiple=True,
-    help="Repository prefix to use for propagation",
-    show_default=True,
+    help="Version to check (default=all currently active versions)",
 )
 @click.pass_context
 def propagation(ctx, **kwargs):
@@ -252,6 +241,23 @@ def propagation(ctx, **kwargs):
     options = ctx.obj["options"]
     options.update(ctx.params)
     options["propagation"] = True
+    if options["version"] and not options["product"]:
+        raise click.BadOptionUsage(
+            "--version", "if you select a version, you must select a product."
+        )
+    if not options["version"]:
+        product_versions = get_current_versions(ctx.obj["config"])
+        if options["product"]:
+            product_versions = [pv for pv in product_versions if pv[0] == options["product"]]
+    else:
+        product_versions = [(options["product"], options["version"])]
+    del options["product"]
+    del options["version"]
+    options["product_versions"] = product_versions
+    logger.info(
+        "Propagation will be checked for %s",
+        ", ".join(f"{pv[0]} {pv[1]}" for pv in product_versions),
+    )
     run_on_all_hosts(ctx.obj, options, record_propagation)
 
 
@@ -263,11 +269,9 @@ def record_propagation(ctx_obj, options, results: list[PropagationResult]):
     for result in results:
         for repo_id, status in result.repo_status.items():
             repo_status[repo_id][status.value] += 1
-    today = date.today()
+    now = datetime.now()
     with db_manager.Session() as session:
         for repo_id, status_counts in repo_status.items():
-            session.add(
-                model.PropagationStat(repository_id=repo_id, datetime=today, **status_counts)
-            )
+            session.add(model.PropagationStat(repository_id=repo_id, datetime=now, **status_counts))
         report_propagation(console, session, repo_status)
         session.commit()
