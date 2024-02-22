@@ -14,7 +14,7 @@ from mirrormanager2.lib.database import get_db_manager
 
 from .common import config_option, setup_logging
 
-logger = logging.getLogger("mm2")
+logger = logging.getLogger(__name__)
 
 
 @click.command()

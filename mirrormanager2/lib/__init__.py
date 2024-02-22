@@ -1029,7 +1029,7 @@ def delete_expired_access_stats(session, older_than):
     :arg session: the session with which to connect to the database.
     :arg older_than: the datetime threshold.
     """
-    _search_and_delete(session, model.AccessStat, "datePROPAGATION_KEEP_DAYS", older_than)
+    _search_and_delete(session, model.AccessStat, "date", older_than)
 
 
 def get_statistics(session, date, stat_category):
