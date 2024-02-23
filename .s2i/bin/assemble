@@ -9,12 +9,31 @@
 set -e
 set -x
 
+which cargo &>/dev/null || (echo "You need to have cargo in the builder image"; exit 1)
+
 install_tool "micropipenv" "[toml]"
 
 micropipenv install --deploy
 
 # Now install the root project too, micropipenv does not do that
 pip install . --no-deps
+
+# Install the Rust components
+mkdir src-rust
+pushd src-rust
+# mirrorlist-server
+git clone --depth 1 --branch ${MIRRORLIST_SERVER_VERSION} https://github.com/adrianreber/mirrorlist-server.git
+pushd mirrorlist-server
+cargo build --release --bin generate-mirrorlist-cache
+cp -p target/release/generate-mirrorlist-cache /opt/app-root/bin/generate-mirrorlist-cache
+popd
+# scan-primary-mirror
+git clone --depth 1 --branch ${SCAN_PRIMARY_MIRROR_VERSION} https://github.com/adrianreber/scan-primary-mirror.git
+pushd scan-primary-mirror
+cargo build --release
+cp -p target/release/scan-primary-mirror /opt/app-root/bin/scan-primary-mirror
+popd
+popd
 
 # set permissions for any installed artifacts
 fix-permissions /opt/app-root -P
