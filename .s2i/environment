@@ -1,2 +1,5 @@
 UPGRADE_PIP_TO_LATEST=true
 APP_MODULE=mirrormanager2.app:create_app()
+# TODO: use a fixed tag > 3.0.7
+MIRRORLIST_SERVER_VERSION=master
+SCAN_PRIMARY_MIRROR_VERSION=0.4.3
