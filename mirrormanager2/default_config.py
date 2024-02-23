@@ -102,7 +102,7 @@ EMBARGOED_COUNTRIES = ["CU", "IR", "KP", "SD", "SY"]
 SHOW_MAPS = True
 
 # Where to look for maps
-MAPS_BASE = "/var/lib/mirrormanager/statistics/map"
+MAPS_BASE = "/var/lib/mirrormanager/map"
 
 # Location of the static map displayed in the map tab.
 STATIC_MAP = "map.png"

@@ -81,6 +81,7 @@ responses = "^0.23.3"
 report_mirror = { reference = "client/report_mirror", type = "file" }
 mm2_crawler = "mirrormanager2.crawler.cli:main"
 mm2_emergency-expire-repo = "mirrormanager2.utility.emergency_expire_repo:main"
+mm2_generate-worldmap = "mirrormanager2.utility.generate_worldmap:main"
 mm2_get-netblocks = "mirrormanager2.utility.netblocks:main"
 mm2_move-devel-to-release = "mirrormanager2.utility.move_to_release:main"
 mm2_move-to-archive = "mirrormanager2.utility.move_to_archive:main"
