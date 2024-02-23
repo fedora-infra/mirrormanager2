@@ -29,6 +29,7 @@ import re
 import stat
 import time
 from contextlib import contextmanager
+from dataclasses import dataclass
 from functools import partial
 
 import click
@@ -435,11 +436,50 @@ class DiskDirSynchronizer(DirSynchronizer):
         return category_directories
 
 
+@dataclass
+class FFTLine:
+    # Type can be either 'f' or 'd'
+    filetype: str
+    readable: bool
+    path: str
+    timestamp: int
+    size: int
+
+
 class FFTDirSynchronizer(DirSynchronizer):
     def _is_dir_gone(self, d, ctimes):
         if d.name == self.category.topdir.name:
             return False
         return d.name not in ctimes
+
+    def _read_fullfiletimelist(self, filename):
+        with open(filename, "rb") as f:
+            # tell mmap to open file read-only or mmap might fail
+            m = mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
+            in_files_section = False
+            row = m.readline()
+            while row:
+                row = row.decode()
+                if row.strip() == "[Files]":
+                    in_files_section = True
+                if in_files_section and row.strip().startswith("["):
+                    in_files_section = False
+                if not in_files_section:
+                    row = m.readline()
+                    continue
+                cols = row.strip().split("\t")
+                # only rows with at least 4 columns are what we are looking for
+                # 'ctime\ttype\tsize\tname'
+                if len(cols) < 4:
+                    row = m.readline()
+                    continue
+                yield FFTLine(
+                    filetype=cols[1][0],
+                    readable=len(cols[1]) >= 2 and cols[1][1] == "-",
+                    path=cols[3],
+                    timestamp=int(cols[0]),
+                    size=int(cols[2]),
+                )
 
     def _parse_fullfiletimelist(self):
         """
@@ -509,60 +549,41 @@ class FFTDirSynchronizer(DirSynchronizer):
         # Not opening the file as stream and reading line by line as this breaks
         # if the file changes. As this can happen, the file is loaded once into
         # memory using mmap.
-        with open(filelist[0], "rb") as f:
-            # tell mmap to open file read-only or mmap might fail
-            m = mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
-            row = m.readline()
-            while row:
-                row = row.decode()
-                col = row.strip().split("\t")
-                row = m.readline()
-                # only rows with at least 4 columns are what we are looking for
-                # 'ctime\ttype\tsize\tname'
-                if len(col) < 4:
-                    continue
-                # Type can be either 'f', 'd', 'f-', 'd-'.
-                # As long as the '-' support is not implemented only look
-                # for the first character so that this does not break
-                # once types with '-' can appear.
-                # https://pagure.io/quick-fedora-mirror/issue/40
+        for line in self._read_fullfiletimelist(filelist[0]):
+            # only files (type: f)
+            if line.filetype == "f":
+                # put all the information in a dict with path as key
+                fullpath = os.path.dirname(_handle_fedora_linux_category(line.path))
+                fullpath = os.path.join(self.path, fullpath).replace(umdl_prefix, "")
+                basename = os.path.basename(line.path)
 
-                # only files (type: f)
-                if col[1][0] == "f":
-                    # put all the information in a dict with path as key
-                    tmp = os.path.dirname(_handle_fedora_linux_category(col[3]))
-                    tmp = os.path.join(self.path, tmp).replace(umdl_prefix, "")
-                    tmp2 = os.path.basename(_handle_fedora_linux_category(col[3]))
-
-                    if tmp in seen:
-                        files[tmp].update({tmp2: {"stat": int(col[0]), "size": col[2]}})
-                    else:
-                        files[tmp] = {tmp2: {"stat": int(col[0]), "size": col[2]}}
-                        # Use a set() to track if the element already exists in the dict().
-                        # This is much faster than if tmp in files.keys(); much much faster
-                        seen.add(tmp)
-                    if tmp2 == "summary":
-                        # There is a 'summary' file, add the parent
-                        # directory to the has_summary set().
-                        has_objects.add(tmp)
-                elif col[1][0] == "d":
-                    # get all directories and their ctime
-                    tmp = os.path.join(self.path, _handle_fedora_linux_category(col[3]))
-
-                    tmp = tmp.replace(umdl_prefix, "")
-                    ctimes[tmp] = int(col[0])
-                    # Only if a directory contains a 'repodata' directory
-                    # it should be used for repository creation.
-                    if "repodata" in tmp:
-                        # There is a 'repodata' directory, add the parent
-                        # directory to the repo set().
-                        # Remove '/repodata'
-                        repo.add(tmp[:-9])
-                    if tmp.endswith("objects"):
-                        # There is a 'repodata' directory, add the parent
-                        # directory to the has_objects set().
-                        # Remove '/objects'
-                        has_objects.add(tmp[:-8])
+                if fullpath in seen:
+                    files[fullpath].update({basename: {"stat": line.timestamp, "size": line.size}})
+                else:
+                    files[fullpath] = {basename: {"stat": line.timestamp, "size": line.size}}
+                    # Use a set() to track if the element already exists in the dict().
+                    # This is much faster than if fullpath in files.keys(); much much faster
+                    seen.add(fullpath)
+                if basename == "summary":
+                    # There is a 'summary' file, add the parent
+                    # directory to the has_summary set().
+                    has_summary.add(fullpath)
+            elif line.filetype == "d":
+                # get all directories and their ctime
+                fullpath = os.path.join(self.path, _handle_fedora_linux_category(line.path))
+                fullpath = fullpath.replace(umdl_prefix, "")
+                ctimes[fullpath] = line.timestamp
+                basename = os.path.basename(line.path)
+                # Only if a directory contains a 'repodata' directory
+                # it should be used for repository creation.
+                if basename == "repodata":
+                    # This is a 'repodata' directory, add the parent
+                    # directory to the repo set().
+                    repo.add(os.path.dirname(fullpath))
+                if basename == "objects":
+                    # This is a 'objects' directory, add the parent
+                    # directory to the has_objects set().
+                    has_objects.add(os.path.dirname(fullpath))
 
         # add the root directory of the current category
         tmp = self.path.replace(umdl_prefix, "")
