@@ -25,6 +25,7 @@ import gzip
 import logging
 import time
 from collections import defaultdict
+from contextlib import suppress
 from datetime import datetime, timedelta
 
 import click
@@ -43,13 +44,6 @@ logger = logging.getLogger("mirrorlist-statistics")
 @click.command()
 @config_option
 @click.option(
-    "-l",
-    "--log",
-    "logfile",
-    type=click.Path(),
-    help="gzipped logfile which should be used as input",
-)
-@click.option(
     "-o",
     "--offset",
     type=int,
@@ -60,10 +54,16 @@ logger = logging.getLogger("mirrorlist-statistics")
     ),
 )
 @click.option("--debug", is_flag=True, default=False, help="enable debugging")
+@click.argument(
+    "logfile",
+    type=click.Path(),
+)
 def main(config, logfile, offset, debug):
     config = read_config(config)
     db_manager = get_db_manager(config)
     setup_logging(debug)
+    if not logfile.endswith(".gz"):
+        logger.warning("Warning, the logfile must be gzipped")
     logger.info("Starting mirrorlist statistics parser")
     start = time.monotonic()
     date = datetime.today() - timedelta(days=offset)
@@ -98,8 +98,12 @@ def parse_logfile(date, config, logfile):
             countries["N/"] += 1
         else:
             countries[country_code] += 1
-        archs[arguments[9]] += 1
-        repositories[arguments[7][: len(arguments[7]) - 1]] += 1
+        with suppress(IndexError):
+            arch = arguments[9].rstrip(";")
+            archs[arch] += 1
+        with suppress(IndexError):
+            repo = arguments[7].rstrip(";")
+            repositories[repo] += 1
         accesses += 1
     return {
         "countries": countries,
