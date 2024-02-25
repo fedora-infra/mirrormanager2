@@ -21,12 +21,12 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import datetime
 import gzip
 import logging
 import time
 from collections import defaultdict
 from contextlib import suppress
-from datetime import datetime, timedelta
 
 import click
 
@@ -66,7 +66,7 @@ def main(config, logfile, offset, debug):
         logger.warning("Warning, the logfile must be gzipped")
     logger.info("Starting mirrorlist statistics parser")
     start = time.monotonic()
-    date = datetime.today() - timedelta(days=offset)
+    date = datetime.date.today() - datetime.timedelta(days=offset)
 
     stats = parse_logfile(date, config, logfile)
     with db_manager.Session() as session:
