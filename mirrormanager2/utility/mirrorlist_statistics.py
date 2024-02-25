@@ -120,14 +120,12 @@ class StatsStore:
         self.accesses = accesses
 
     def store(self, category_name, stats):
-        category, _create = AccessStatCategory.get_or_create(name=category_name)
+        category, _created = AccessStatCategory.get_or_create(name=category_name)
         for name, requests in stats.items():
-            stat = AccessStat(
-                category_id=category.id,
-                date=self.date,
-                name=name,
-                requests=requests,
-                percent=(float(requests) / float(self.accesses)) * 100,
+            stat, _created = AccessStat.get_or_create(
+                category_id=category.id, date=self.date, name=name
             )
+            stat.requests = requests
+            stat.percent = (float(requests) / float(self.accesses)) * 100
             self.session.add(stat)
         self.session.flush()
