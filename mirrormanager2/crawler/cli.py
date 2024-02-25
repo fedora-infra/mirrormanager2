@@ -8,7 +8,7 @@ import click
 from rich.console import Console
 from rich.progress import Progress
 
-from mirrormanager2.lib import get_mirrors, model, read_config
+from mirrormanager2.lib import get_categories, get_category_by_name, get_mirrors, model, read_config
 from mirrormanager2.lib.database import get_db_manager
 
 from .constants import CONTINENTS
@@ -48,6 +48,12 @@ def validate_continents(ctx, param, value):
     is_flag=True,
     default=False,
     help="Include hosts marked 'private' in the crawl",
+)
+@click.option(
+    "--category",
+    "categories",
+    multiple=True,
+    help="Category to scan (default=all), can be repeated",
 )
 @click.option(
     "-t",
@@ -120,7 +126,7 @@ def validate_continents(ctx, param, value):
     help="enable printing of debug-level messages",
 )
 @click.pass_context
-def main(ctx, config, debug, startid, stopid, fraction, **kwargs):
+def main(ctx, config, debug, categories, startid, stopid, fraction, **kwargs):
     ctx.ensure_object(dict)
     ctx.obj["console"] = Console()
 
@@ -130,6 +136,17 @@ def main(ctx, config, debug, startid, stopid, fraction, **kwargs):
     ctx.obj["config"] = config
     db_manager = get_db_manager(config)
     with db_manager.Session() as session:
+        category_ids = []
+        for category_name in categories:
+            category = get_category_by_name(session, category_name)
+            if category is None:
+                available_categories = "".join(c.name for c in get_categories(session))
+                raise click.BadOptionUsage(
+                    "--category",
+                    f"Category {category_name} does not exist. "
+                    f"Available categories: {available_categories}",
+                )
+            category_ids.append(category.id)
         # Get *all* of the mirrors
         hosts = get_mirrors(
             session,
@@ -140,6 +157,7 @@ def main(ctx, config, debug, startid, stopid, fraction, **kwargs):
             site_private=False,
             site_user_active=True,
             site_admin_active=True,
+            category_ids=category_ids or None,
         )
 
         # Limit our host list down to only the ones we really want to crawl
@@ -198,12 +216,6 @@ def run_on_all_hosts(ctx_obj, options, report):
 
 
 @main.command()
-@click.option(
-    "--category",
-    "categories",
-    multiple=True,
-    help="Category to scan (default=all), can be repeated",
-)
 @click.option(
     "--canary",
     is_flag=True,
