@@ -487,13 +487,13 @@ def add_admin_to_site(session, site, admin):
 
 def get_mirrors(
     session,
+    *,
     private=None,
     internet2=None,
     internet2_clients=None,
     asn_clients=None,
     admin_active=None,
     user_active=None,
-    urls=None,
     last_crawl_duration=False,
     last_checked_in=False,
     last_crawled=False,
@@ -506,6 +506,7 @@ def get_mirrors(
     arch_id=None,
     order_by_crawl_duration=False,
     product_id=None,
+    category_ids=None,
 ):
     """Retrieve the mirrors based on the criteria specified.
 
@@ -544,7 +545,14 @@ def get_mirrors(
     if site_admin_active is not None:
         query = query.filter(model.Site.admin_active == site_admin_active)
 
-    needs_hostcategory_join = (host_category_url_private, up2date, version_id, arch_id, product_id)
+    needs_hostcategory_join = (
+        host_category_url_private,
+        up2date,
+        version_id,
+        arch_id,
+        product_id,
+        category_ids,
+    )
     if any(arg is not None for arg in needs_hostcategory_join):
         query = query.join(model.HostCategory)
 
@@ -572,6 +580,9 @@ def get_mirrors(
 
     if product_id is not None:
         query = query.filter(model.Category.product_id == product_id)
+
+    if category_ids is not None:
+        query = query.filter(model.HostCategory.category_id.in_(category_ids))
 
     final_query = session.query(model.Host).filter(model.Host.id.in_(query))
 
