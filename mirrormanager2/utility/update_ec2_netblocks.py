@@ -3,10 +3,8 @@ Synchronize Amazon AWS-published EC2 netblock lists per region into the
 MirrorManager database for Fedora Infrastructure-managed mirrors in S3.
 """
 
-import json
-
 import click
-import urlgrabber
+import requests
 
 import mirrormanager2.lib
 from mirrormanager2.lib.database import get_db_manager
@@ -42,11 +40,9 @@ def s3_mirrors(session):
 
 
 def get_ip_ranges():
-    return urlgrabber.urlread("https://ip-ranges.amazonaws.com/ip-ranges.json")
-
-
-def parse_ip_ranges(ipranges_str):
-    return json.loads(ipranges_str)
+    response = requests.get("https://ip-ranges.amazonaws.com/ip-ranges.json")
+    response.raise_for_status()
+    return response.json()
 
 
 def host_has_netblock(hosts_by_region, region, netblock):
@@ -55,8 +51,7 @@ def host_has_netblock(hosts_by_region, region, netblock):
 
 def doit(session, dry_run):
     hosts_by_region = s3_mirrors(session)
-    ipranges_str = get_ip_ranges()
-    ipranges = parse_ip_ranges(ipranges_str)
+    ipranges = get_ip_ranges()
 
     for p in ipranges["prefixes"]:
         service = p["service"]
