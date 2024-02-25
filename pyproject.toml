@@ -63,6 +63,7 @@ psycopg2 = {version = "^2.9.9", optional = true}
 whitenoise = "^6.6.0"
 rich = "^13.7.0"
 mrtparse = "^2.2.0"
+requests = "^2.31.0"
 
 [tool.poetry.group.dev.dependencies]
 black = ">=22.6.0"
