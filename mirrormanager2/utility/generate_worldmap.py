@@ -61,7 +61,8 @@ def lookup_host_locations(config, gi):
 def doit(output, config):
     gi = geoip2.database.Reader(os.path.join(config["GEOIP_BASE"], "GeoLite2-City.mmdb"))
     results = lookup_host_locations(config, gi)
-    os.makedirs(output)
+    if not os.path.isdir(output):
+        os.makedirs(output)
     marker_url = config.get("APPLICATION_ROOT", "/") + "static/map/f-dot.png"
     with open(os.path.join(output, "mirrors_location.txt"), "w", encoding="utf-8-sig") as fd:
         fd.write("lat\tlon\ttitle\tdescription\ticonSize\ticonOffset\ticon\n")
