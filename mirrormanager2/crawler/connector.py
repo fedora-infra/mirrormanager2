@@ -1,6 +1,7 @@
 import hashlib
 import logging
 
+import backoff
 from sqlalchemy.orm import object_session
 
 from mirrormanager2 import lib as mmlib
@@ -23,6 +24,21 @@ class SchemeNotAvailable(Exception):
 class FetchingFailed(Exception):
     def __init__(self, response=None):
         self.response = response
+
+
+def _on_backoff(details):
+    # connector = details["args"][0]
+    url = details["args"][1]
+    logger.info(
+        f"Server load exceeded on {url} - trying again in "
+        f"{details['wait']:0.1f}s (after {details['tries']} tries)"
+    )
+
+
+def _on_giveup(details):
+    # connector = details["args"][0]
+    url = details["args"][1]
+    logger.info(f"Server load exceeded on {url} - giving up after {details['tries']} tries")
 
 
 class Connector:
@@ -56,8 +72,14 @@ class Connector:
     def _get_file(self, url):
         raise NotImplementedError
 
-    # TODO: backoff on TryAgain with message
-    # f"Server load exceeded on {host!r} - try later ({try_later_delay} seconds)"
+    @backoff.on_exception(
+        backoff.expo,
+        TryLater,
+        max_tries=3,
+        on_backoff=_on_backoff,
+        on_giveup=_on_giveup,
+        logger=None,  # custom logging
+    )
     def check_dir(self, url, directory):
         return self._check_dir(url, directory)
 
@@ -98,7 +120,11 @@ class Connector:
         category_prefix_length,
     ):
         dir_url = self._get_dir_url(url, directory, category_prefix_length)
-        dir_status = self.check_dir(dir_url, directory)
+        try:
+            dir_status = self.check_dir(dir_url, directory)
+        except TryLater:
+            # We backed off a few times but it's still in timeout
+            dir_status = None
         if dir_status is None:
             # could be a dir with no files, or an unreadable dir.
             # defer decision on this dir, let a child decide.

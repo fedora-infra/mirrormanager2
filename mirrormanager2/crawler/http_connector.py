@@ -5,7 +5,7 @@ import requests
 
 from mirrormanager2 import lib as mmlib
 
-from .connector import Connector, FetchingFailed, ForbiddenExpected
+from .connector import Connector, FetchingFailed, ForbiddenExpected, TryLater
 from .constants import HTTP_TIMEOUT, REPODATA_FILE
 
 logger = logging.getLogger(__name__)
@@ -58,6 +58,8 @@ class HTTPConnector(Connector):
             content_length = self._get_content_length(conn, url, readable)
         except ForbiddenExpected:
             return None
+        except requests.Timeout as e:
+            raise TryLater from e
         except Exception:
             return None
         # lighttpd returns a Content-Length for directories
