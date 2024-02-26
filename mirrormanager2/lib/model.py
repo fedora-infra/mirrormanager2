@@ -286,7 +286,8 @@ class Directory(BASE):
     # e.g. pub/epel
     # e.g. pub/fedora/linux
     name = sa.Column(sa.Text(), nullable=False, unique=True)
-    files = sa.Column(JsonDictTypeFilter(), nullable=True)
+    # Don't load the files by default to save memory
+    files = deferred(sa.Column(JsonDictTypeFilter(), nullable=True))
     readable = sa.Column(sa.Boolean(), default=True, nullable=False)
     ctime = sa.Column(sa.BigInteger, default=0, nullable=True)
 
