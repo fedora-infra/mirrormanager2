@@ -762,13 +762,8 @@ def get_directories_by_category(session, category, only_repodata=False):
     :arg session: the session with which to connect to the database.
 
     """
-    query = (
-        _get_directories_by_category_query(category, only_repodata)
-        .order_by(model.Directory.name)
-        .options(
-            # Don't load the files by default to save memory
-            sa.orm.defer(model.Directory.files)
-        )
+    query = _get_directories_by_category_query(category, only_repodata).order_by(
+        model.Directory.name
     )
     return session.scalars(query)
 
@@ -922,8 +917,6 @@ def uploaded_config(session, host, config):
 
         hcdirs = session.scalars(
             sa.select(model.HostCategoryDir).where(model.HostCategoryDir.host_category_id == hc.id)
-            # Don't load the files attribute, it's very heavy
-            .options(sa.orm.load_only(model.HostCategoryDir.path))
         )
         allowed_paths = list(config[cat_name]["dirtree"].keys())
         for hcdir in hcdirs:
