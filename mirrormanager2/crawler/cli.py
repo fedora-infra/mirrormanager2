@@ -64,10 +64,10 @@ def validate_continents(ctx, param, value):
     show_default=True,
 )
 @click.option(
-    "--timeout-minutes",
+    "--global-timeout",
     "global_timeout",
     type=int,
-    default=120,
+    default=360,
     callback=lambda ctx, param, value: value * 60,
     help="global timeout, in minutes",
     show_default=True,
@@ -76,8 +76,9 @@ def validate_continents(ctx, param, value):
     "--host-timeout",
     "host_timeout",
     type=int,
-    default=30,
-    help="host timeout, in seconds",
+    default=240,
+    callback=lambda ctx, param, value: value * 60,
+    help="host timeout, in minutes",
     show_default=True,
 )
 @click.option(
