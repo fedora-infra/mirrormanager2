@@ -1,7 +1,6 @@
 import dataclasses
 import datetime
 import logging
-import sys
 from enum import Enum
 
 import mirrormanager2.lib as mmlib
@@ -542,11 +541,12 @@ def crawl_and_report(options, crawler):
         record_duration = False
         status = CrawlStatus.UNKNOWN
     except Exception:
-        logger.exception("Unhandled exception raised.")
-        reporter.mark_not_up2date(
-            reason="Unhandled exception raised. This is a bug in the MM crawler.",
-            exc=sys.exc_info(),
-        )
+        logger.exception("Unhandled exception raised, this is a bug in the MM crawler.")
+        # Don't disable the host, it's not their fault.
+        # reporter.mark_not_up2date(
+        #     reason="Unhandled exception raised. This is a bug in the MM crawler.",
+        #     exc=sys.exc_info(),
+        # )
         status = CrawlStatus.FAILURE
     else:
         # Resetting as this only counts consecutive crawl failures
