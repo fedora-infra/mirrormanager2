@@ -154,7 +154,9 @@ def main(ctx, config, debug, categories, startid, stopid, fraction, **kwargs):
             private=False,
             order_by_crawl_duration=True,
             admin_active=True,
-            user_active=True,
+            # I think we should scan all host, even disabled ones, in case they have fixed
+            # their issue.
+            # user_active=True,
             site_private=False,
             site_user_active=True,
             site_admin_active=True,
