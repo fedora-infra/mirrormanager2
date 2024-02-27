@@ -11,7 +11,7 @@ from rich.progress import Progress
 from mirrormanager2.lib import get_categories, get_category_by_name, get_mirrors, model, read_config
 from mirrormanager2.lib.database import get_db_manager
 
-from .constants import CONTINENTS
+from .constants import CONTINENTS, DEFAULT_GLOBAL_TIMEOUT, DEFAULT_HOST_TIMEOUT
 from .crawler import PropagationResult, worker
 from .fedora import get_current_versions
 from .log import setup_logging
@@ -67,7 +67,7 @@ def validate_continents(ctx, param, value):
     "--global-timeout",
     "global_timeout",
     type=int,
-    default=360,
+    default=DEFAULT_GLOBAL_TIMEOUT,
     callback=lambda ctx, param, value: value * 60,
     help="global timeout, in minutes",
     show_default=True,
@@ -76,7 +76,7 @@ def validate_continents(ctx, param, value):
     "--host-timeout",
     "host_timeout",
     type=int,
-    default=240,
+    default=DEFAULT_HOST_TIMEOUT,
     callback=lambda ctx, param, value: value * 60,
     help="host timeout, in minutes",
     show_default=True,
