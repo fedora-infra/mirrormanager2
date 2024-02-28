@@ -23,8 +23,8 @@ rpmmd_path=`/usr/bin/python3 -c "import os, rpmmd; print(os.path.dirname(rpmmd._
 cp -pr $rpmmd_path `echo $rpmmd_path | sed -e 's,/usr,/opt/app-root',`
 
 # Install the Rust components
-mkdir src-rust
-pushd src-rust
+mkdir ../src-rust
+pushd ../src-rust
 # mirrorlist-server
 git clone --depth 1 --branch ${MIRRORLIST_SERVER_VERSION} https://github.com/adrianreber/mirrorlist-server.git
 pushd mirrorlist-server
