@@ -76,7 +76,7 @@ def run_rsync(rsyncpath, extra_rsync_args=None, logger=None, timeout=None):
         cmd += " " + extra_rsync_args
     cmd += " " + rsyncpath
     if logger is not None:
-        logger.info("About to run following rsync command: " + cmd)
+        logger.debug("About to run following rsync command: " + cmd)
     devnull = open("/dev/null", "r+")
     p = subprocess.Popen(
         cmd,
