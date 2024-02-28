@@ -18,6 +18,10 @@ micropipenv install --deploy
 # Now install the root project too, micropipenv does not do that
 pip install . --no-deps
 
+# Install RPM-only python libraries
+rpmmd_path=`/usr/bin/python3 -c "import os, rpmmd; print(os.path.dirname(rpmmd.__file__))"`
+cp -pr $rpmmd_path `echo $rpmmd_path | sed -e 's,/usr,/opt/app-root',`
+
 # Install the Rust components
 mkdir src-rust
 pushd src-rust
