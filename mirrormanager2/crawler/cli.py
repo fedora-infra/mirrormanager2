@@ -16,7 +16,7 @@ from .crawler import PropagationResult, worker
 from .fedora import get_current_versions
 from .log import setup_logging
 from .threads import run_in_threadpool
-from .ui import report_crawl, report_propagation
+from .ui import human_duration, report_crawl, report_propagation
 
 logger = logging.getLogger(__name__)
 
@@ -215,7 +215,7 @@ def run_on_all_hosts(ctx_obj, options, report):
             results.append(result)
 
     report(ctx_obj, options, results)
-    logger.info("Crawler finished after %d seconds", (time.monotonic() - starttime))
+    logger.info("Crawler finished after %s", human_duration(time.monotonic() - starttime))
 
 
 @main.command()
