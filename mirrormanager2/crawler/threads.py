@@ -38,6 +38,12 @@ def run_in_threadpool(fn, iterable, fn_args, timeout, executor_kwargs):
     global shutdown
     threadpool = ThreadPoolExecutor(**executor_kwargs)
     signal.signal(signal.SIGALRM, partial(sigalrm_handler, threadpool))
+
+    def _shutdown_threadpool():
+        global shutdown
+        shutdown = True
+        threadpool.shutdown(cancel_futures=True)
+
     futures = {threadpool.submit(fn, *fn_args, item) for item in iterable}
     try:
         for future in as_completed(futures, timeout=timeout):
@@ -45,13 +51,12 @@ def run_in_threadpool(fn, iterable, fn_args, timeout, executor_kwargs):
                 yield future.result()
             except Exception:
                 logger.exception("Crawler failed!")
-    except (TimeoutError, KeyboardInterrupt) as e:
-        if isinstance(e, TimeoutError):
-            logger.error("The crawl timed out! %s", e)
-        elif isinstance(e, KeyboardInterrupt):
-            logger.info("Shutting down the thread pool")
-        shutdown = True
-        threadpool.shutdown(cancel_futures=True)
+    except TimeoutError as e:
+        logger.error("The crawl timed out! %s", e)
+        _shutdown_threadpool()
+    except KeyboardInterrupt:
+        logger.info("Shutting down the thread pool")
+        _shutdown_threadpool()
         raise
 
 
