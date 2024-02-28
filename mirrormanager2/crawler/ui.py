@@ -16,6 +16,18 @@ def get_logging_handler(console):
     return RichHandler(console=console, highlighter=NullHighlighter())
 
 
+def human_duration(total_seconds):
+    hours = int(total_seconds / 3600)
+    minutes = int((total_seconds % 3600) / 60)
+    seconds = int(total_seconds % 60)
+    output = [
+        f"{hours}h" if hours else "",
+        f"{minutes}m" if minutes else "",
+        f"{seconds}s" if seconds else "",
+    ]
+    return "".join(output)
+
+
 class ProgressTask:
     def __init__(self, progress, host_id):
         self._progress = progress
