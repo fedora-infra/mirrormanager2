@@ -183,8 +183,8 @@ def main(ctx, config, debug, categories, startid, stopid, fraction, **kwargs):
                 startid = host_ids[start_index]
                 stopid = host_ids[stop_index]
 
-        ctx.obj["host_ids"] = [
-            host.id for host in hosts if (host.id >= startid and (not stopid or host.id < stopid))
+        ctx.obj["hosts"] = [
+            host for host in hosts if (host.id >= startid and (not stopid or host.id < stopid))
         ]
 
     # Before we do work, chdir to /var/tmp/.  mirrormanager1 did this and I'm
@@ -194,7 +194,7 @@ def main(ctx, config, debug, categories, startid, stopid, fraction, **kwargs):
 
 def run_on_all_hosts(ctx_obj, options, report):
     starttime = time.monotonic()
-    host_ids = ctx_obj["host_ids"]
+    host_ids = [host.id for host in ctx_obj["hosts"]]
     results = []
     with Progress(console=ctx_obj["console"], refresh_per_second=1) as progress:
         task_global = progress.add_task(f"Crawling {len(host_ids)} mirrors", total=len(host_ids))
@@ -256,6 +256,8 @@ def propagation(ctx, **kwargs):
     options = ctx.obj["options"]
     options.update(ctx.params)
     options["propagation"] = True
+
+    # Set product_versions from product and version
     if options["version"] and not options["product"]:
         raise click.BadOptionUsage(
             "--version", "if you select a version, you must select a product."
@@ -273,6 +275,10 @@ def propagation(ctx, **kwargs):
         "Propagation will be checked for %s",
         ", ".join(f"{pv[0]} {pv[1]}" for pv in product_versions),
     )
+
+    # Only check propagation on active hosts
+    ctx.obj["hosts"] = [host for host in ctx.obj["hosts"] if host.user_active]
+
     run_on_all_hosts(ctx.obj, options, record_propagation)
 
 
