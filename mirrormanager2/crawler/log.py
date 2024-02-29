@@ -1,7 +1,8 @@
 import logging
 import os
+from logging.handlers import TimedRotatingFileHandler
 
-from .threads import get_thread_id, threadlocal
+from .threads import threadlocal
 from .ui import get_logging_handler
 
 logger = logging.getLogger(__name__)
@@ -31,12 +32,17 @@ class MasterFilter(logging.Filter):
 # This filter is necessary to enable logging per thread into a separate file
 # Based on http://plumberjack.blogspot.de/2010/09/configuring-logging-for-web.html
 class InjectingFilter(logging.Filter):
-    def __init__(self, thread_id):
-        self.thread_id = thread_id
+    """Check that the treadlocal variable has the attributes we want.
+
+    Example: InjectingFilter(host_id=42) will only log if threadlocal.host_id == 42
+    """
+
+    def __init__(self, **kwargs):
+        self.args = kwargs
 
     def filter(self, record):
         try:
-            return threadlocal.thread_id == self.thread_id
+            return all(getattr(threadlocal, key) == value for key, value in self.args.items())
         except Exception:
             return False
 
@@ -46,35 +52,29 @@ def setup_logging(debug, console):
     f = MasterFilter()
     handler.addFilter(f)
     logging.basicConfig(
-        format=master_formatter, handlers=[handler], level=logging.DEBUG if debug else logging.INFO
+        format=master_formatter,
+        datefmt="%Y-%m-%d %H:%M:%S",
+        handlers=[handler],
+        level=logging.DEBUG if debug else logging.INFO,
     )
 
 
-def thread_file_logger(log_dir, host_id, debug):
-    # check if the directory exists
-    if log_dir is not None:
-        log_dir += "/crawler"
-        if not os.path.isdir(log_dir):
-            # MM_LOG_DIR/crawler seems to be configured but does not exist
-            # not logging
-            logger.warning("Directory " + log_dir + " does not exists." " Not logging per host")
-            log_dir = None
+def thread_file_logger(config, host_id, debug):
+    log_dir = config.get("MM_LOG_DIR", None)
+    if log_dir is None or log_dir == "-":
+        return
+    log_dir = os.path.join(log_dir, "crawler")
+    if not os.path.isdir(log_dir):
+        os.makedirs(log_dir)
 
-    log_file = None
-    fh = None
-    if log_dir is not None:
-        log_file = log_dir + "/" + str(host_id) + ".log"
-        fh = logging.FileHandler(log_file)
-        threadlocal.thread_id = get_thread_id()
-        f = InjectingFilter(get_thread_id())
-        fh.addFilter(f)
+    log_file = os.path.join(log_dir, f"{host_id}.log")
+    handler = TimedRotatingFileHandler(log_file, when="D", interval=1, backupCount=7)
+    f = InjectingFilter(host_id=host_id)
+    handler.addFilter(f)
 
-        if debug:
-            fh.setLevel(logging.DEBUG)
-        else:
-            fh.setLevel(logging.INFO)
-        fh.setFormatter(formatter)
-        root_logger = logging.getLogger()
-        root_logger.addHandler(fh)
+    handler.setLevel(logging.DEBUG if debug else logging.INFO)
+    handler.setFormatter(formatter)
+    root_logger = logging.getLogger()
+    root_logger.addHandler(handler)
 
-    return log_file, fh
+    return log_file
