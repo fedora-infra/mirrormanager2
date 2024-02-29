@@ -2,28 +2,31 @@
 
 {% block title %}Propagation{% endblock %}
 
-{%block tag %}propagation{% endblock %}
+{% block tag %}propagation{% endblock %}
 
 {% block content %}
 <h1>Propagation{% if repo %} for {{ repo.version.product.name }} {{ repo.version.name }}{% endif %}</h1>
 
 {%- if config['SHOW_PROPAGATION'] -%}
 
-This diagram shows how many mirrors have a repomd.xml file which is the same
-(respectively one day older, two days older or much older) version as on the primary mirror.
+<p>
+  This diagram shows how many mirrors have a repomd.xml file which is the same
+  (respectively one day older, two days older or much older) version as on the primary mirror.
+</p>
 
 {%- if repos %}
-<br />The same diagram is als available for the following versions:
+<p>The same diagram is also available for the following versions:</p>
+
 <ul>
   {%- for repo_with_stats in repos -%}
   <li>
-    {%- if repo_with_stats.id == repo.id %}<strong>{%- endif -%}
-    <a href="{{url_for('base.propagation', repo_id=repo_with_stats.id)}}"
-      >{{ repo_with_stats.version.product.name }} {{ repo_with_stats.version.name }}</a
-    >
-    {%- if repo_with_stats.id == repo.id %}</strong>{%- endif -%}
+    <a
+      class="{% if repo and repo_with_stats.id == repo.id %}font-weight-bold{% endif %}"
+      href="{{url_for('base.propagation', repo_id=repo_with_stats.id)}}"
+      >
+      {{ repo_with_stats.version.product.name }} {{ repo_with_stats.version.name }}
+    </a>
   </li>
-  {%- endif -%}
   {%- endfor -%}
 </ul>
 

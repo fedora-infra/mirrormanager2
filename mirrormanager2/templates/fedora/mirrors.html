@@ -6,12 +6,20 @@
 {% block content %}
 <h2>Public active mirrors</h2>
 
+{% if request.view_args.p_name %}
+<p>
+  These are the mirrors for {{ request.view_args.p_name }}
+  {{ request.view_args.p_version }}
+  {% if request.view_args.p_arch %}on {{ request.view_args.p_arch }}{% endif %}
+</p>
+{% endif %}
+
 {% if mirrors %}
 <p>
   We have currently {{ mirrors | length }} active mirrors
 </p>
 
-<table>
+<table class="table table-striped">
   <tr>
     <th>Country</th>
     <th>Site Name</th>
@@ -31,14 +39,18 @@
     </td>
     <td>{{ mirror.name }}</td>
     <td>
+      <ul class="list-unstyled">
       {% for cat in mirror.categories %}
         {% if cat.urls %}
+          <li>
           {{ cat.category.name }}
           {% for url in cat.urls %}
             <a href="{{ url.url }}">{{ url.url.split('://')[0] }}</a>
-          {% endfor %} <br />
+          {% endfor %}
+          </li>
         {% endif %}
       {% endfor %}
+      </ul>
     </td>
     <td>{{ mirror.bandwidth_int }}</td>
     <td>{% if mirror.internet2 %}Yes{% else %}No{% endif %}</td>
