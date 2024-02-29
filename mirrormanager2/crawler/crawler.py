@@ -13,6 +13,7 @@ from .connector import FetchingFailed, SchemeNotAvailable
 from .constants import REPODATA_DIR, REPODATA_FILE
 from .continents import BrokenBaseUrl, EmbargoedCountry, WrongContinent, check_continent
 from .fedora import get_propagation_repo_prefix
+from .log import thread_file_logger
 from .reporter import Reporter
 from .threads import ThreadTimeout, TimeoutError, get_thread_id, on_thread_started
 from .ui import ProgressTask
@@ -487,14 +488,13 @@ class Crawler:
 
 
 def crawl_and_report(options, crawler):
-    # Do not update last crawl duration in canary/repodata mode.
-    # This duration is completely different from the real time
-    # required to crawl the complete host so that it does not help
-    # to remember it.
     host = crawler.host
-    reporter = Reporter(crawler.config, crawler.session, crawler.host)
-
     record_duration = not options["repodata"] and not options["canary"]
+
+    # Set the host-specific log file
+    thread_file_logger(crawler.config, host.id, options["debug"])
+
+    reporter = Reporter(crawler.config, crawler.session, crawler.host)
 
     reporter.record_crawl_start()
     stats = None
