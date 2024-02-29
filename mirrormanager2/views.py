@@ -1,5 +1,4 @@
 import datetime
-import os
 import re
 
 import flask
@@ -1159,26 +1158,6 @@ def rsyncFilter():
     return flask.render_template(
         "rsync_filter.html", includes=includes, excludes=excludes, message=message
     )
-
-
-def statistics_file_name(date, cat, ext):
-    year = date.strftime("%Y")
-    month = date.strftime("%m")
-    day = date.strftime("%d")
-    name = f"{year}/{month}/{cat}-"
-    name = f"{name}{year}-{month}-{day}.{ext}"
-    return name
-
-
-def check_for_statistics(date, cat):
-    try:
-        stat_file = flask.current_app.config["STATISTICS_BASE"]
-        stat_file = os.path.join(stat_file, statistics_file_name(date, cat, "txt"))
-        if os.access(stat_file, os.R_OK):
-            return stat_file
-    except Exception:
-        pass
-    return None
 
 
 @views.route("/statistics")

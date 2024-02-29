@@ -30,11 +30,9 @@
                           <li class="nav-item">
                               <a class="nav-link" href="{{url_for('base.list_mirrors')}}">Mirrors</a>
                           </li>
-                          {% if config['SHOW_STATISTICS'] %}
                           <li class="nav-item"><a class="nav-link" href="{{url_for('base.statistics')}}">Statistics</a></li>
-                          {% endif %}
                           {% if config['SHOW_MAPS'] %}
-                          <li class="nav-item"><a class="nav-link" href="{{url_for('base.maps')}}">Maps</a></li>
+                          <li class="nav-item"><a class="nav-link" href="{{url_for('base.maps')}}">Map</a></li>
                           {% endif %}
                           {% if config['SHOW_PROPAGATION'] %}
                           <li class="nav-item"><a class="nav-link" href="{{url_for('base.propagation_all')}}">Propagation</a></li>
