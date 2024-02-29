@@ -136,7 +136,5 @@ def create_app(config=None):
     # More static files
     app.wsgi_app = WhiteNoise(app.wsgi_app)
     app.wsgi_app.add_files(os.path.join(app.config["MM_LOG_DIR"], "crawler"), prefix="crawler/")
-    app.wsgi_app.add_files(app.config["STATISTICS_BASE"], prefix="data/")
-    app.wsgi_app.add_files(app.config["MAPS_BASE"], prefix="map/")
 
     return app
