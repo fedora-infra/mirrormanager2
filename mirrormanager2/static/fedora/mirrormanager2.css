@@ -84,3 +84,7 @@ input[type="checkbox"] {
     height: 600px;
     margin-bottom: 1em;
 }
+
+table.mm2-table-small {
+    width: auto;
+}
