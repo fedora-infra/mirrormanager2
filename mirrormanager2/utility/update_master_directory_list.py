@@ -34,6 +34,7 @@ from functools import partial
 
 import click
 from rich.console import Console
+from rich.highlighter import NullHighlighter
 from rich.logging import RichHandler
 from rich.progress import Progress
 
@@ -666,40 +667,18 @@ class FFTDirSynchronizer(DirSynchronizer):
         return category_directories
 
 
-def setup_logging(config, debug, logfile, console):
-    log_dir = config.get("MM_LOG_DIR", None)
-    # check if the directory exists
-    if log_dir is not None:
-        if not os.path.isdir(log_dir):
-            # MM_LOG_DIR seems to be configured but does not exist
-            # Logging into cwd.
-            logger.warning("Directory " + log_dir + " does not exists." " Logging into CWD.")
-            log_dir = None
-
-    if log_dir is not None:
-        log_file = log_dir + "/" + logfile
-    else:
-        log_file = logfile
-
-    fmt = "%(asctime)s : %(category)s : %(message)s"
-    datefmt = "%Y-%m-%d %H:%M:%S"
-    formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
-
-    handler = logging.handlers.WatchedFileHandler(log_file, "a+")
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-
+def setup_logging(debug, console):
     f = MasterFilter()
     logger.addFilter(f)
-    # list_categories is a special case where the user wants to see something
-    # on the console and not only in the log file
+    logger.setLevel(logging.DEBUG if debug else logging.INFO)
+
     if debug:
-        handler = RichHandler(console=console, rich_tracebacks=True)
+        fmt = "%(asctime)s : %(category)s : %(message)s"
+        datefmt = "%Y-%m-%d %H:%M:%S"
+        formatter = logging.Formatter(fmt=fmt, datefmt=datefmt)
+        handler = RichHandler(console=console, highlighter=NullHighlighter())
         handler.setFormatter(formatter)
         logger.addHandler(handler)
-        logger.setLevel(logging.DEBUG)
-    else:
-        logger.setLevel(logging.INFO)
 
 
 class ProgressBar:
@@ -713,7 +692,6 @@ class ProgressBar:
 
 @click.command()
 @config_option
-@click.option("--logfile", type=click.Path(), default="umdl.log", help="write logs to PATH")
 @click.option(
     "--list",
     "list_categories",
@@ -743,7 +721,6 @@ class ProgressBar:
 )
 def main(
     config,
-    logfile,
     list_categories,
     category_names,
     debug,
@@ -755,7 +732,9 @@ def main(
     db_manager = get_db_manager(config)
     console = Console()
 
-    setup_logging(config, debug or list_categories, logfile, console)
+    # list_categories is a special case where the user wants to see something
+    # on the console and not only in the log file
+    setup_logging(debug or list_categories, console)
 
     if list_categories:
         with db_manager.Session() as session:
