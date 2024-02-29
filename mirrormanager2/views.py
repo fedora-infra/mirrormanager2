@@ -1256,7 +1256,7 @@ def propagation(repo_id):
     repos = mmlib.get_propagation_repos(DB.session)
     repo = get_or_404(model.Repository, repo_id, "Repository not found")
     propagation = mmlib.get_propagation(DB.session, repo.id)
-    labels = [stat.datetime.strftime(r"%Y-%m-%d") for stat in propagation]
+    labels = [stat.datetime.strftime(r"%Y-%m-%d %H:%M") for stat in propagation]
     series = [
         ("synced", "same_day"),
         ("synced - 1", "one_day"),
