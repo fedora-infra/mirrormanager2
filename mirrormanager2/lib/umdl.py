@@ -462,7 +462,7 @@ class RepoMaker:
             fd = FileDetail(
                 **fd_attrs,
             )
-            logger.info(f"Updating FileDetail {fd!r}, {absolutepath!r}")
+            logger.info(f"Updating FileDetail {fd.id} for {absolutepath!r}")
             self.session.add(fd)
             self.session.flush()
             created = True
