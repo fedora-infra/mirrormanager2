@@ -463,7 +463,7 @@ class FFTDirSynchronizer(DirSynchronizer):
                 row = row.decode()
                 if row.strip() == "[Files]":
                     in_files_section = True
-                if in_files_section and row.strip().startswith("["):
+                elif in_files_section and row.strip().startswith("["):
                     in_files_section = False
                 if not in_files_section:
                     row = m.readline()
@@ -481,6 +481,7 @@ class FFTDirSynchronizer(DirSynchronizer):
                     timestamp=int(cols[0]),
                     size=int(cols[2]),
                 )
+                row = m.readline()
 
     def _parse_fullfiletimelist(self):
         """
