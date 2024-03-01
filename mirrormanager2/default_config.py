@@ -107,7 +107,7 @@ SHOW_PROPAGATION = True
 PROPAGATION_BASE = "/var/lib/mirrormanager/statistics/data/propagation"
 
 # How long to keep the propagation stats, in days
-PROPAGATION_KEEP_DAYS = 30
+PROPAGATION_KEEP_DAYS = 7
 
 # Where the GeoIP database lives
 GEOIP_BASE = "/usr/share/GeoIP"
