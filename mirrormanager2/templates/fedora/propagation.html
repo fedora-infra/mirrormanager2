@@ -48,11 +48,12 @@ Go away!
 <script>
   const canvas = document.getElementById('chart');
 
+  const datasets = {{ datasets | tojson }};
   new Chart(canvas, {
     type: 'bar',
     data: {
       labels: {{ labels | tojson }},
-      datasets: {{ datasets | tojson }},
+      datasets: datasets,
     },
     options: {
       scales: {
@@ -62,6 +63,19 @@ Go away!
         y: {
           stacked: true,
           beginAtZero: true
+        }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            afterLabel: function(context) {
+              if (context.parsed.y === null) {
+                return "";
+              }
+              const total = datasets.map(ds => ds.data[context.dataIndex]).reduce((a, b) => a + b, 0);
+              return "total: " + total;
+            }
+          }
         }
       }
     }
