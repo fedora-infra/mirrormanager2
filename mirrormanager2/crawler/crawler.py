@@ -380,15 +380,18 @@ class Crawler:
         repos = []
         for product_name, version_name in product_versions:
             repo_prefix = get_propagation_repo_prefix(product_name, version_name)
-            repos.extend(
-                mmlib.get_repositories(
+            # First try with the PROPAGATION_ARCH arch, but if not found try with any other.
+            for arch in [PROPAGATION_ARCH, None]:
+                repos_for_arch = mmlib.get_repositories(
                     self.session,
                     product_name=product_name,
                     version_name=version_name,
                     prefix=repo_prefix,
-                    arch=PROPAGATION_ARCH,
+                    arch=arch,
                 )
-            )
+                if repos_for_arch:
+                    repos.extend(repos_for_arch[0])
+                    break
         if not repos:
             logger.warning("No repo found")
             return {}
@@ -400,7 +403,7 @@ class Crawler:
         repo_dir = repo.directory
         if repo_dir is None:
             logger.warning(
-                "No directory for repo with prefix %s on %s", repo.prefix, PROPAGATION_ARCH
+                "No directory for repo with prefix %s on %s", repo.prefix, repo.arch.name
             )
             return PropagationStatus.NO_INFO
         repodata_dir = mmlib.get_directory_by_name(self.session, f"{repo_dir.name}/{REPODATA_DIR}")
@@ -428,7 +431,7 @@ class Crawler:
             logger.warning(
                 "Could not find the file details for repo with prefix %s on %s",
                 repo.prefix,
-                PROPAGATION_ARCH,
+                repo.arch.name,
             )
             return PropagationStatus.NO_INFO
         checksum = self._get_checksum_for_repo(url, topdir, repodata_dir)
