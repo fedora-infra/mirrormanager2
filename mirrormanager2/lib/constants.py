@@ -1,4 +1,3 @@
-# propagation URLs
 PROPAGATION_ARCH = "x86_64"
 
 REPODATA_DIR = "repodata"
