@@ -8,6 +8,8 @@ from rich.text import Text
 
 from mirrormanager2.lib import model
 
+from .states import PropagationStatus
+
 if typing.TYPE_CHECKING:
     from .crawler import CrawlResult
 
@@ -82,9 +84,8 @@ class ProgressTask:
             self._progress.remove_task(self._task_id)
 
 
-def report_crawl(ctx_obj, options: dict, results: list["CrawlResult"]):
-    console = ctx_obj["console"]
-    table = Table(title="Results")
+def report_crawl(console, options: dict, results: list["CrawlResult"]):
+    table = Table(title="Crawl results")
     table.add_column("Host Name")
     table.add_column("Status")
     table.add_column("Duration")
@@ -125,17 +126,17 @@ def report_crawl(ctx_obj, options: dict, results: list["CrawlResult"]):
 
 
 def report_propagation(
-    console: Console, session, repo_status: dict[int, dict[model.PropagationStatus, int]]
+    console: Console, session, repo_status: dict[int, dict[PropagationStatus, int]]
 ):
-    table = Table(title="Results")
+    table = Table(title="Propagation results")
     table.add_column("Repo")
-    for ps in model.PropagationStatus:
+    for ps in PropagationStatus:
         table.add_column(ps.value)
     for repo_id in sorted(repo_status):
         repo = session.get(model.Repository, repo_id)
         status_counts = repo_status[repo_id]
         row = [repo.prefix]
-        for ps in model.PropagationStatus:
+        for ps in PropagationStatus:
             row.append(str(status_counts.get(ps.value, 0)))
         table.add_row(*row)
     console.print(table)

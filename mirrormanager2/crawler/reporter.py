@@ -1,9 +1,15 @@
 import logging
 import smtplib
 import time
-from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
-from .threads import threadlocal
+import mirrormanager2.lib as mmlib
+
+from .states import CrawlStatus
+
+if TYPE_CHECKING:
+    from .crawler import CrawlResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -91,14 +97,53 @@ class Reporter:
         self.host.disable_reason = reason
         self.host.user_active = False
 
-    def record_crawl_start(self):
-        threadlocal.starttime = time.monotonic()
+    # def record_crawl_end(self, record_duration=True):
+    #     self.host.last_crawled = datetime.now(tz=timezone.utc)
+    #     last_crawl_duration = time.monotonic() - threadlocal.starttime
+    #     if record_duration:
+    #         self.record_duration(last_crawl_duration)
 
-    def record_crawl_end(self, record_duration=True):
-        self.host.last_crawled = datetime.now(tz=timezone.utc)
-        last_crawl_duration = time.monotonic() - threadlocal.starttime
-        if record_duration:
-            self.host.last_crawl_duration = last_crawl_duration
+    # def record_duration(self, duration):
+    #     self.host.last_crawl_duration = duration
 
     def reset_crawl_failures(self):
         self.host.crawl_failures = 0
+
+
+def store_crawl_result(config, options, session, crawl_result: "CrawlResult"):
+    host = mmlib.get_host(session, crawl_result.host_id)
+    reporter = Reporter(config, session, host)
+
+    if crawl_result.status == CrawlStatus.FAILURE:
+        if options["canary"]:
+            # If running in canary mode do not auto disable mirrors
+            # if they have failed.
+            # Let's mark the complete mirror as not being up to date.
+            reporter.mark_not_up2date(reason=crawl_result.details)
+        else:
+            # all categories have failed due to broken base URLs
+            # and that this host should be marked as failed during crawl
+            reporter.record_crawl_failure()
+
+    elif crawl_result.status == CrawlStatus.TIMEOUT:
+        reporter.mark_not_up2date(reason=crawl_result.details)
+        reporter.record_crawl_failure()
+
+    elif crawl_result.status == CrawlStatus.DISABLE:
+        reporter.disable_host(crawl_result.details)
+
+    elif crawl_result.status == CrawlStatus.OK:
+        # Resetting as we only count consecutive crawl failures
+        # reporter.reset_crawl_failures()
+        host.crawl_failures = 0
+
+    host.last_crawled = crawl_result.finished_at
+    if (
+        crawl_result.status != CrawlStatus.UNKNOWN
+        and not options["repodata"]
+        and not options["canary"]
+    ):
+        # reporter.record_duration(crawl_result.duration)
+        host.last_crawl_duration = crawl_result.duration
+
+    session.commit()
