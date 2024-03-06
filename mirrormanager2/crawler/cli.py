@@ -15,6 +15,7 @@ from .constants import CONTINENTS, DEFAULT_GLOBAL_TIMEOUT, DEFAULT_HOST_TIMEOUT
 from .crawler import PropagationResult, worker
 from .fedora import get_current_versions
 from .log import setup_logging
+from .reporter import store_crawl_result
 from .threads import run_in_threadpool
 from .ui import human_duration, report_crawl, report_propagation
 
@@ -235,7 +236,19 @@ def run_on_all_hosts(ctx_obj, options, report):
 def crawl(ctx, **kwargs):
     options = ctx.obj["options"]
     options.update(ctx.params)
-    run_on_all_hosts(ctx.obj, options, report_crawl)
+    run_on_all_hosts(ctx.obj, options, record_crawl)
+
+
+def record_crawl(ctx_obj, options, results: list[PropagationResult]):
+    console = ctx_obj["console"]
+    config = ctx_obj["config"]
+    options = ctx_obj["options"]
+    db_manager = get_db_manager(config)
+    with db_manager.Session() as session:
+        for result in results:
+            store_crawl_result(config, options, session, result)
+        session.commit()
+        report_crawl(console, options, results)
 
 
 @main.command()
