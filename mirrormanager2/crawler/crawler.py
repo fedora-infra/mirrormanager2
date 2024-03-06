@@ -1,12 +1,11 @@
 import dataclasses
 import datetime
 import logging
-from enum import Enum
 
 import mirrormanager2.lib as mmlib
 from mirrormanager2.lib.constants import PROPAGATION_ARCH
 from mirrormanager2.lib.database import get_db_manager
-from mirrormanager2.lib.model import HostCategoryDir, PropagationStatus
+from mirrormanager2.lib.model import HostCategoryDir
 
 from .connection_pool import ConnectionPool
 from .connector import FetchingFailed, SchemeNotAvailable
@@ -14,7 +13,7 @@ from .constants import REPODATA_DIR, REPODATA_FILE
 from .continents import BrokenBaseUrl, EmbargoedCountry, WrongContinent, check_continent
 from .fedora import get_propagation_repo_prefix
 from .log import thread_file_logger
-from .reporter import Reporter
+from .states import CrawlStatus, PropagationStatus, SyncStatus
 from .threads import ThreadTimeout, TimeoutError, get_thread_id, on_thread_started
 from .ui import ProgressTask
 
@@ -35,22 +34,6 @@ class NoCategory(CrawlerError):
 
 class CategoryNotAccessible(CrawlerError):
     pass
-
-
-class CrawlStatus(Enum):
-    SUCCESS = "SUCCESS"
-    FAILURE = "FAILURE"
-    UNKNOWN = "UNKNOWN"
-
-
-class SyncStatus(Enum):
-    UP2DATE = "up2date"
-    NOT_UP2DATE = "not_up2date"
-    UNCHANGED = "unchanged"
-    UNREADABLE = "unreadable"
-    UNKNOWN = "unknown"
-    CREATED = "created"
-    DELETED = "deleted"
 
 
 @dataclasses.dataclass
@@ -80,6 +63,8 @@ class CrawlResult:
     host_id: int
     host_name: str
     status: str
+    details: str
+    finished_at: datetime.datetime
     duration: int
     stats: CrawlStats | None = None
 
@@ -125,24 +110,24 @@ class Crawler:
         self.timeout = ThreadTimeout(options["host_timeout"])
         self.host_category_dirs = {}
 
-    def _parent(self, directory):
-        parentDir = None
-        splitpath = directory.name.split("/")
-        if len(splitpath[:-1]) > 0:
-            parentPath = "/".join(splitpath[:-1])
-            parentDir = mmlib.get_directory_by_name(self.session, parentPath)
-        return parentDir
+    # def _parent(self, directory):
+    #     parentDir = None
+    #     splitpath = directory.name.split("/")
+    #     if len(splitpath[:-1]) > 0:
+    #         parentPath = "/".join(splitpath[:-1])
+    #         parentDir = mmlib.get_directory_by_name(self.session, parentPath)
+    #     return parentDir
 
-    def add_parents(self, host_category_dirs, d, topdir):
-        parentDir = self._parent(d)
-        if parentDir is None:
-            return
-        if parentDir not in host_category_dirs:
-            host_category_dirs[parentDir] = None
-        if parentDir == topdir:
-            # stop at top of the category
-            return
-        self.add_parents(host_category_dirs, parentDir, topdir)
+    # def add_parents(self, host_category_dirs, d, topdir):
+    #     parentDir = self._parent(d)
+    #     if parentDir is None:
+    #         return
+    #     if parentDir not in host_category_dirs:
+    #         host_category_dirs[parentDir] = None
+    #     if parentDir == topdir:
+    #         # stop at top of the category
+    #         return
+    #     self.add_parents(host_category_dirs, parentDir, topdir)
 
     def select_host_categories_to_scan(self, ignore_empty=False):
         result = []
@@ -390,7 +375,7 @@ class Crawler:
                     arch=arch,
                 )
                 if repos_for_arch:
-                    repos.extend(repos_for_arch[0])
+                    repos.extend(repos_for_arch)
                     break
         if not repos:
             logger.warning("No repo found")
@@ -492,36 +477,24 @@ class Crawler:
 
 def crawl_and_report(options, crawler):
     host = crawler.host
-    record_duration = not options["repodata"] and not options["canary"]
 
     # Set the host-specific log file
     thread_file_logger(crawler.config, host.id, options["debug"])
 
-    reporter = Reporter(crawler.config, crawler.session, crawler.host)
-
-    reporter.record_crawl_start()
+    details = None
     stats = None
     try:
         stats = crawler.crawl()
     except AllCategoriesFailed:
+        status = CrawlStatus.FAILURE
         if options["canary"]:
             # If running in canary mode do not auto disable mirrors
             # if they have failed.
             # Let's mark the complete mirror as not being up to date.
-            reporter.mark_not_up2date(
-                reason="Canary mode failed for all categories. Marking host as not up to date.",
-            )
-        else:
-            # all categories have failed due to broken base URLs
-            # and that this host should me marked as failed during crawl
-            reporter.record_crawl_failure()
-        status = CrawlStatus.FAILURE
+            details = "Canary mode failed for all categories. Marking host as not up to date."
     except TimeoutError:
-        reporter.mark_not_up2date(
-            reason="Crawler timed out before completing.  Host is likely overloaded.",
-        )
-        reporter.record_crawl_failure()
-        status = CrawlStatus.FAILURE
+        status = CrawlStatus.TIMEOUT
+        details = "Crawler timed out before completing. Host is likely overloaded."
     except WrongContinent:
         logger.info("Skipping host %s (%s); wrong continent", host.id, host.name)
         status = CrawlStatus.UNKNOWN
@@ -530,38 +503,30 @@ def crawl_and_report(options, crawler):
         status = CrawlStatus.UNKNOWN
     except EmbargoedCountry as e:
         logger.info("Host %s (%s) is from an embargoed country: %s", host.id, host.name, e.country)
-        reporter.disable_host(f"Embargoed country: {e.country}")
-        status = CrawlStatus.FAILURE
+        status = CrawlStatus.DISABLE
+        details = f"Embargoed country: {e.country}"
     except NoCategory:
         # no category to crawl found. This is to make sure,
         # that host.crawl_failures is not reset to zero for crawling
         # non existing categories on this host
         logger.info("No categories to crawl on host %s (%s)", host.id, host.name)
-        # No need to update the crawl duration.
-        record_duration = False
         status = CrawlStatus.UNKNOWN
     except KeyboardInterrupt:
-        record_duration = False
         status = CrawlStatus.UNKNOWN
     except Exception:
         logger.exception("Unhandled exception raised, this is a bug in the MM crawler.")
         # Don't disable the host, it's not their fault.
-        # reporter.mark_not_up2date(
-        #     reason="Unhandled exception raised. This is a bug in the MM crawler.",
-        #     exc=sys.exc_info(),
-        # )
-        status = CrawlStatus.FAILURE
+        # status = CrawlStatus.FAILURE
+        status = CrawlStatus.UNKNOWN
     else:
-        # Resetting as this only counts consecutive crawl failures
-        reporter.reset_crawl_failures()
-        status = CrawlStatus.SUCCESS
-
-    reporter.record_crawl_end(record_duration=record_duration)
+        status = CrawlStatus.OK
 
     result = CrawlResult(
         host_id=host.id,
         host_name=host.name,
         status=status.value,
+        details=details,
+        finished_at=datetime.datetime.now(tz=datetime.timezone.utc),
         duration=crawler.timeout.elapsed(),
         stats=stats,
     )

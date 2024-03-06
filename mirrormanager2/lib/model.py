@@ -28,7 +28,6 @@ import logging
 import os
 import pickle
 import time
-from enum import Enum
 
 import sqlalchemy as sa
 from sqlalchemy.orm import deferred, relationship
@@ -1089,12 +1088,3 @@ class PropagationStat(BASE):
     no_info = sa.Column(sa.Integer, nullable=False, default=0)
 
     repository = relationship("Repository", back_populates="propagation_stats")
-
-
-# Keep this in sync with the fields in PropagationStat
-class PropagationStatus(Enum):
-    SAME_DAY = "same_day"
-    ONE_DAY = "one_day"
-    TWO_DAY = "two_day"
-    OLDER = "older"
-    NO_INFO = "no_info"
