@@ -52,10 +52,12 @@ def run_in_threadpool(fn, iterable, fn_args, timeout, executor_kwargs):
             except Exception:
                 logger.exception("Crawler failed!")
     except TimeoutError as e:
-        logger.error("The crawl timed out! %s", e)
-        _shutdown_threadpool()
-    except KeyboardInterrupt:
-        logger.info("Shutting down the thread pool")
+        if isinstance(e, TimeoutError):
+            logger.error("The crawl timed out! %s", e)
+        elif isinstance(e, KeyboardInterrupt):
+            logger.info("Shutting down the thread pool")
+        else:
+            logger.exception("Unhandled error in the thread pool")
         _shutdown_threadpool()
         raise
 
