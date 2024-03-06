@@ -16,7 +16,7 @@ from .crawler import PropagationResult, worker
 from .fedora import get_current_versions
 from .log import setup_logging
 from .reporter import store_crawl_result
-from .threads import run_in_threadpool
+from .threads import TimeoutError, run_in_threadpool
 from .ui import human_duration, report_crawl, report_propagation
 
 logger = logging.getLogger(__name__)
@@ -197,6 +197,7 @@ def run_on_all_hosts(ctx_obj, options, report):
     starttime = time.monotonic()
     host_ids = [host.id for host in ctx_obj["hosts"]]
     results = []
+    error = None
     with Progress(console=ctx_obj["console"], refresh_per_second=1) as progress:
         task_global = progress.add_task(f"Crawling {len(host_ids)} mirrors", total=len(host_ids))
         threads_results = run_in_threadpool(
@@ -208,15 +209,23 @@ def run_on_all_hosts(ctx_obj, options, report):
                 "max_workers": options["threads"],
             },
         )
-        for result in threads_results:
-            progress.advance(task_global)
-            if result is None:
-                # The host has been skipped
-                continue
-            results.append(result)
+        try:
+            for result in threads_results:
+                progress.advance(task_global)
+                if result is None:
+                    # The host has been skipped
+                    continue
+                results.append(result)
+        except TimeoutError as e:
+            error = e
 
+    # Report what we have even if there was an error
     report(ctx_obj, options, results)
-    logger.info("Crawler finished after %s", human_duration(time.monotonic() - starttime))
+    duration = human_duration(time.monotonic() - starttime)
+    if error is None:
+        click.echo(f"Crawler finished after {duration}")
+    else:
+        raise click.ClickException("Crawler failed after {duration}: {error}")
 
 
 @main.command()
