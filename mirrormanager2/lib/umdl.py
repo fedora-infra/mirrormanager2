@@ -306,19 +306,19 @@ class RepoMaker:
             arch = mirrormanager2.lib.get_arch_by_name(self.session, "source")
         else:
             for a in self.arch_cache:
-                s = ".*(^|/)%s(/|$).*" % (a["name"])
+                s = f".*(^|/){a.name}(/|$).*"
                 if re.compile(s).match(path):
-                    arch = mirrormanager2.lib.get_arch_by_name(self.session, a["name"])
+                    arch = mirrormanager2.lib.get_arch_by_name(self.session, a.name)
                     break
 
         ver = None
         # newest versions/IDs first, also handles stupid Fedora 9.newkey hack.
         for v in self.version_cache:
-            if v["product_id"] != category.product.id:
+            if v.product_id != category.product.id:
                 continue
-            s = ".*(^|/)%s(/|$).*" % (v["name"])
+            s = f".*(^|/){v.name}(/|$).*"
             if re.compile(s).match(path):
-                ver = mirrormanager2.lib.get_version_by_id(self.session, v["id"])
+                ver = mirrormanager2.lib.get_version_by_id(self.session, v.id)
                 break
 
         # create Versions if we can figure it out...
