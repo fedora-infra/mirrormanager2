@@ -381,7 +381,9 @@ class Crawler:
             logger.warning("No repo found")
             return {}
         for repo in repos:
-            repo_status[repo.id] = self.check_propagation_for_repo(repo)
+            status = self.check_propagation_for_repo(repo)
+            if status is not None:
+                repo_status[repo.id] = status
         return repo_status
 
     def check_propagation_for_repo(self, repo):
@@ -399,7 +401,7 @@ class Crawler:
             self.session, host_id=self.host.id, category=repo.category.name
         )
         if hc is None:
-            return PropagationStatus.NO_INFO
+            return None
         self.timeout.check()
         topdir = repo.category.topdir.name
         url = self._get_http_url(hc)
@@ -420,6 +422,13 @@ class Crawler:
             )
             return PropagationStatus.NO_INFO
         checksum = self._get_checksum_for_repo(url, topdir, repodata_dir)
+        if checksum is None:
+            logger.warning(
+                "Could not find the checksum for repo with prefix %s on %s",
+                repo.prefix,
+                repo.arch.name,
+            )
+            return PropagationStatus.NO_INFO
         return self._get_file_propagation_status(fd, checksum)
 
     def _get_http_url(self, host_category):
@@ -449,8 +458,6 @@ class Crawler:
         return csum
 
     def _get_file_propagation_status(self, file_detail, checksum):
-        if checksum is None:
-            return PropagationStatus.NO_INFO
         today = datetime.datetime.combine(
             datetime.date.today(),
             datetime.time(hour=0, minute=0, second=0),
