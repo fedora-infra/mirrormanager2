@@ -51,6 +51,11 @@ def validate_continents(ctx, param, value):
     help="Include hosts marked 'private' in the crawl",
 )
 @click.option(
+    "--include-disabled/--exclude-disabled",
+    default=False,
+    help="Include disabled hosts in the crawl",
+)
+@click.option(
     "--category",
     "categories",
     multiple=True,
@@ -128,7 +133,7 @@ def validate_continents(ctx, param, value):
     help="enable printing of debug-level messages",
 )
 @click.pass_context
-def main(ctx, config, debug, categories, startid, stopid, fraction, **kwargs):
+def main(ctx, config, debug, include_disabled, categories, startid, stopid, fraction, **kwargs):
     ctx.ensure_object(dict)
     ctx.obj["console"] = Console()
 
@@ -155,9 +160,7 @@ def main(ctx, config, debug, categories, startid, stopid, fraction, **kwargs):
             private=False,
             order_by_crawl_duration=True,
             admin_active=True,
-            # I think we should scan all host, even disabled ones, in case they have fixed
-            # their issue.
-            # user_active=True,
+            user_active=None if include_disabled else True,
             site_private=False,
             site_user_active=True,
             site_admin_active=True,
