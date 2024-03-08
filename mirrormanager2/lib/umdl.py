@@ -462,10 +462,10 @@ class RepoMaker:
             fd = FileDetail(
                 **fd_attrs,
             )
-            logger.info(f"Updating FileDetail {fd.id} for {absolutepath!r}")
             self.session.add(fd)
             self.session.flush()
             created = True
         else:
             created = False
+        logger.debug(f"Updating FileDetail {fd.id} for {absolutepath!r}")
         return created
