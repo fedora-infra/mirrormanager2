@@ -1014,8 +1014,8 @@ def _search_and_delete(session, model_class, property_name, older_than):
     # We *could* be using delete() to only run one SQL query but that bypasses
     # some features in SQLAlchemy, and we don't really need the speedup as this
     # is run by cron anyway.
-    for p_stat in session.execute(query).scalars():
-        session.delete(p_stat)
+    for instance in session.execute(query).scalars():
+        session.delete(instance)
 
 
 def delete_expired_propagation(session, older_than):
@@ -1034,6 +1034,32 @@ def delete_expired_access_stats(session, older_than):
     :arg older_than: the datetime threshold.
     """
     _search_and_delete(session, model.AccessStat, "date", older_than)
+
+
+def delete_expired_file_details(session, older_than):
+    """Delete FileDetail instances when they are older than the specified datetime
+
+    (and if they are not the last one)
+
+    :arg session: the session with which to connect to the database.
+    :arg older_than: the datetime threshold.
+    """
+    counted_query = sa.select(
+        model.FileDetail.id,
+        model.FileDetail.timestamp,
+        sa.func.row_number()
+        .over(
+            partition_by=(model.FileDetail.directory_id, model.FileDetail.filename),
+            order_by=model.FileDetail.timestamp.desc(),
+        )
+        .label("count"),
+    ).cte(name="counted")
+    query = sa.select(counted_query).where(
+        counted_query.c.timestamp < older_than.timestamp(), counted_query.c.count > 1
+    )
+    for fd in session.execute(query).all():
+        print(fd.id, fd.directory_id, fd.count)
+        # session.delete(fd)
 
 
 def get_statistics(session, date, stat_category):
