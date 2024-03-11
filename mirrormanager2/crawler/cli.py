@@ -228,7 +228,7 @@ def run_on_all_hosts(ctx_obj, options, report):
     if error is None:
         click.echo(f"Crawler finished after {duration}")
     else:
-        raise click.ClickException("Crawler failed after {duration}: {error}")
+        raise click.ClickException(f"Crawler failed after {duration}: {error}")
 
 
 @main.command()
