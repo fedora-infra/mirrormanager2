@@ -6,8 +6,6 @@ import time
 from concurrent.futures import ThreadPoolExecutor, TimeoutError, as_completed
 from functools import partial
 
-from .constants import THREAD_TIMEOUT
-
 logger = logging.getLogger(__name__)
 
 # Variable used to coordinate graceful shutdown of all threads
@@ -63,15 +61,16 @@ def run_in_threadpool(fn, iterable, fn_args, timeout, executor_kwargs):
 
 
 class ThreadTimeout:
-    def __init__(self, max_duration=THREAD_TIMEOUT):
+    def __init__(self, max_duration):
         self.max_duration = max_duration
+        logger.debug("Host timeout will be %ss", self.max_duration)
 
     def start(self):
         threadlocal.starttime = time.monotonic()
 
     def check(self):
         elapsed = self.elapsed()
-        if elapsed > (self.max_duration):
+        if elapsed > self.max_duration:
             raise TimeoutError(f"Thread {get_thread_id()} timed out after {elapsed}s")
         if shutdown:
             raise KeyboardInterrupt
