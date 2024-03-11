@@ -5,13 +5,13 @@ import logging
 import mirrormanager2.lib as mmlib
 from mirrormanager2.lib.constants import PROPAGATION_ARCH
 from mirrormanager2.lib.database import get_db_manager
+from mirrormanager2.lib.fedora import get_propagation_repo_prefix
 from mirrormanager2.lib.model import HostCategoryDir
 
 from .connection_pool import ConnectionPool
 from .connector import FetchingFailed, SchemeNotAvailable
 from .constants import REPODATA_DIR, REPODATA_FILE
 from .continents import BrokenBaseUrl, EmbargoedCountry, WrongContinent, check_continent
-from .fedora import get_propagation_repo_prefix
 from .log import thread_file_logger
 from .states import CrawlStatus, PropagationStatus, SyncStatus
 from .threads import ThreadTimeout, TimeoutError, get_thread_id, on_thread_started
@@ -464,7 +464,7 @@ class Crawler:
             datetime.time(hour=0, minute=0, second=0),
             tzinfo=datetime.timezone.utc,
         )
-        age_threshold = today - datetime.timedelta(days=5)
+        age_threshold = today - datetime.timedelta(days=self.config["MAX_STALE_DAYS"])
         previous_file_detail = mmlib.get_file_details_with_checksum(
             self.session, file_detail, checksum, age_threshold
         )

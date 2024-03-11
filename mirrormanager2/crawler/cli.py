@@ -10,10 +10,10 @@ from rich.progress import Progress
 
 from mirrormanager2.lib import get_categories, get_category_by_name, get_mirrors, model, read_config
 from mirrormanager2.lib.database import get_db_manager
+from mirrormanager2.lib.fedora import get_current_versions
 
 from .constants import CONTINENTS, DEFAULT_GLOBAL_TIMEOUT, DEFAULT_HOST_TIMEOUT
 from .crawler import PropagationResult, worker
-from .fedora import get_current_versions
 from .log import setup_logging
 from .reporter import store_crawl_result
 from .threads import TimeoutError, run_in_threadpool
