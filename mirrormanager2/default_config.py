@@ -189,6 +189,9 @@ BODHI_URL = "https://bodhi.fedoraproject.org"
 # Whether to use Fedora Messaging for notifications
 USE_FEDORA_MESSAGING = True
 
+# Maximum age of a FileDetail entry in the database
+MAX_STALE_DAYS = 4
+
 UMDL_PREFIX = ""
 
 UMDL_MASTER_DIRECTORIES = []
