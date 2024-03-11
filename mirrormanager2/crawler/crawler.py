@@ -322,6 +322,7 @@ class Crawler:
         raise CategoryNotAccessible
 
     def sync_dir(self, hc, directory, status):
+        logger.debug("Syncing directory %s", directory.name)
         sync_status = SyncStatus.UNKNOWN
         if status is None:
             return sync_status, None

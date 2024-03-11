@@ -11,6 +11,4 @@ DEFAULT_HOST_TIMEOUT = 190  # minutes
 # number of minutes to wait if a signal is received to shutdown the crawler
 SHUTDOWN_TIMEOUT = 5
 
-THREAD_TIMEOUT = 30 * 60  # seconds
-
 HTTP_TIMEOUT = 10  # seconds
