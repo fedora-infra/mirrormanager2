@@ -57,6 +57,10 @@ def setup_logging(debug, console):
         handlers=[handler],
         level=logging.DEBUG if debug else logging.INFO,
     )
+    # Set the requests loggers to INFO, otherwise they are very noisy
+    if debug:
+        for logger_name in ("requests", "urllib3"):
+            logging.getLogger(logger_name).setLevel(logging.INFO)
 
 
 def thread_file_logger(config, host_id, debug):
