@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import logging
 import signal
@@ -10,11 +11,21 @@ logger = logging.getLogger(__name__)
 
 # Variable used to coordinate graceful shutdown of all threads
 shutdown = False
+# Maximum global execution time
+max_global_execution_dt = None
 
 # This is a "thread local" object that allows us to store the start time of
 # each worker thread (so they can measure and check if they should time out or
 # not...)
 threadlocal = threading.local()
+
+
+class HostTimeoutError(TimeoutError):
+    pass
+
+
+class GlobalTimeoutError(TimeoutError):
+    pass
 
 
 def get_thread_id():
@@ -33,7 +44,9 @@ def on_thread_started(host_id, host_name):
 
 
 def run_in_threadpool(fn, iterable, fn_args, timeout, executor_kwargs):
-    global shutdown
+    global shutdown, max_global_execution_dt
+
+    max_global_execution_dt = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
     threadpool = ThreadPoolExecutor(**executor_kwargs)
     signal.signal(signal.SIGALRM, partial(sigalrm_handler, threadpool))
 
@@ -49,15 +62,17 @@ def run_in_threadpool(fn, iterable, fn_args, timeout, executor_kwargs):
                 yield future.result()
             except Exception:
                 logger.exception("Crawler failed!")
-    except TimeoutError as e:
+    except Exception as e:
+        reraised = e
         if isinstance(e, TimeoutError):
             logger.error("The crawl timed out! %s", e)
+            reraised = GlobalTimeoutError(str(e))
         elif isinstance(e, KeyboardInterrupt):
             logger.info("Shutting down the thread pool")
         else:
             logger.exception("Unhandled error in the thread pool")
         _shutdown_threadpool()
-        raise
+        raise reraised from e
 
 
 class ThreadTimeout:
@@ -69,9 +84,17 @@ class ThreadTimeout:
         threadlocal.starttime = time.monotonic()
 
     def check(self):
+        global max_global_execution_dt
         elapsed = self.elapsed()
         if elapsed > self.max_duration:
-            raise TimeoutError(f"Thread {get_thread_id()} timed out after {elapsed}s")
+            raise HostTimeoutError(f"Thread {get_thread_id()} timed out after {elapsed}s")
+        if (
+            max_global_execution_dt is not None
+            and datetime.datetime.now() > max_global_execution_dt
+        ):
+            raise GlobalTimeoutError(
+                f"Maximum run time reached, aborting thread {get_thread_id()} after {elapsed}s"
+            )
         if shutdown:
             raise KeyboardInterrupt
 

@@ -14,7 +14,13 @@ from .constants import REPODATA_DIR, REPODATA_FILE
 from .continents import BrokenBaseUrl, EmbargoedCountry, WrongContinent, check_continent
 from .log import thread_file_logger
 from .states import CrawlStatus, PropagationStatus, SyncStatus
-from .threads import ThreadTimeout, TimeoutError, get_thread_id, on_thread_started
+from .threads import (
+    GlobalTimeoutError,
+    HostTimeoutError,
+    ThreadTimeout,
+    get_thread_id,
+    on_thread_started,
+)
 from .ui import ProgressTask
 
 logger = logging.getLogger(__name__)
@@ -500,9 +506,12 @@ def crawl_and_report(options, crawler):
             # if they have failed.
             # Let's mark the complete mirror as not being up to date.
             details = "Canary mode failed for all categories. Marking host as not up to date."
-    except TimeoutError:
+    except HostTimeoutError:
         status = CrawlStatus.TIMEOUT
         details = "Crawler timed out before completing. Host is likely overloaded."
+    except GlobalTimeoutError:
+        status = CrawlStatus.UNKNOWN
+        details = "Crawler reached its maximum execution time, could not complete this host scan."
     except WrongContinent:
         logger.info("Skipping host %s (%s); wrong continent", host.id, host.name)
         status = CrawlStatus.UNKNOWN
