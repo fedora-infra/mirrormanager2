@@ -16,7 +16,7 @@ from .constants import CONTINENTS, DEFAULT_GLOBAL_TIMEOUT, DEFAULT_HOST_TIMEOUT
 from .crawler import PropagationResult, worker
 from .log import setup_logging
 from .reporter import store_crawl_result
-from .threads import TimeoutError, run_in_threadpool
+from .threads import GlobalTimeoutError, run_in_threadpool
 from .ui import human_duration, report_crawl, report_propagation
 
 logger = logging.getLogger(__name__)
@@ -219,7 +219,7 @@ def run_on_all_hosts(ctx_obj, options, report):
                     # The host has been skipped
                     continue
                 results.append(result)
-        except TimeoutError as e:
+        except GlobalTimeoutError as e:
             error = e
 
     # Report what we have even if there was an error
