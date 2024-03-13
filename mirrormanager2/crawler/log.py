@@ -1,6 +1,5 @@
 import logging
 import os
-from logging.handlers import TimedRotatingFileHandler
 
 from .threads import threadlocal
 from .ui import get_logging_handler
@@ -72,7 +71,7 @@ def thread_file_logger(config, host_id, debug):
         os.makedirs(log_dir)
 
     log_file = os.path.join(log_dir, f"{host_id}.log")
-    handler = TimedRotatingFileHandler(log_file, when="D", interval=1, backupCount=7)
+    handler = logging.FileHandler(log_file)
     f = InjectingFilter(host_id=host_id)
     handler.addFilter(f)
 
