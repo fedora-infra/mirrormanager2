@@ -506,12 +506,15 @@ def crawl_and_report(options, crawler):
             # if they have failed.
             # Let's mark the complete mirror as not being up to date.
             details = "Canary mode failed for all categories. Marking host as not up to date."
+        logger.info("All categories failed.")
     except HostTimeoutError:
         status = CrawlStatus.TIMEOUT
         details = "Crawler timed out before completing. Host is likely overloaded."
+        logger.info(details)
     except GlobalTimeoutError:
         status = CrawlStatus.UNKNOWN
-        details = "Crawler reached its maximum execution time, could not complete this host scan."
+        details = "Crawler reached its maximum execution time, could not complete this host's scan."
+        logger.info(details)
     except WrongContinent:
         logger.info("Skipping host %s (%s); wrong continent", host.id, host.name)
         status = CrawlStatus.UNKNOWN
