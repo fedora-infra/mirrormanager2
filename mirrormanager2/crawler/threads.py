@@ -78,7 +78,8 @@ def run_in_threadpool(fn, iterable, fn_args, timeout, executor_kwargs):
 class ThreadTimeout:
     def __init__(self, max_duration):
         self.max_duration = max_duration
-        logger.debug("Host timeout will be %ss", self.max_duration)
+        if self.max_duration is not None:
+            logger.debug("Host timeout will be %ss", self.max_duration)
 
     def start(self):
         threadlocal.starttime = time.monotonic()
@@ -86,7 +87,7 @@ class ThreadTimeout:
     def check(self):
         global max_global_execution_dt
         elapsed = self.elapsed()
-        if elapsed > self.max_duration:
+        if self.max_duration is not None and elapsed > self.max_duration:
             raise HostTimeoutError(f"Thread {get_thread_id()} timed out after {elapsed}s")
         if (
             max_global_execution_dt is not None

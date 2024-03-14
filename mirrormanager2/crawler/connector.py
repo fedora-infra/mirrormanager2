@@ -44,12 +44,10 @@ def _on_giveup(details):
 class Connector:
     scheme = None
 
-    def __init__(self, config, netloc, debuglevel, timeout, on_closed):
+    def __init__(self, config, netloc, debuglevel, on_closed):
         self._config = config
         self._netloc = netloc
         self.debuglevel = debuglevel
-        # ftplib and httplib take the timeout in seconds
-        self.timeout = timeout
         self._connection = None
         self._on_closed = on_closed
 

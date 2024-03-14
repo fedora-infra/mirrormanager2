@@ -6,9 +6,8 @@ REPODATA_DIR = "repodata"
 REPODATA_FILE = "repomd.xml"
 
 DEFAULT_GLOBAL_TIMEOUT = 360  # minutes
-DEFAULT_HOST_TIMEOUT = 300  # minutes
 
 # number of minutes to wait if a signal is received to shutdown the crawler
 SHUTDOWN_TIMEOUT = 5
 
-HTTP_TIMEOUT = 10  # seconds
+CONNECTION_TIMEOUT = 10  # seconds
