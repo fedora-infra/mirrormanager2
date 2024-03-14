@@ -97,6 +97,12 @@ class Reporter:
         self.host.disable_reason = reason
         self.host.user_active = False
 
+    def enable_host(self):
+        self.host.user_active = True
+        self.host.disable_reason = None
+        # Resetting as we only count consecutive crawl failures
+        self.host.crawl_failures = 0
+
     # def record_crawl_end(self, record_duration=True):
     #     self.host.last_crawled = datetime.now(tz=timezone.utc)
     #     last_crawl_duration = time.monotonic() - threadlocal.starttime
@@ -105,9 +111,6 @@ class Reporter:
 
     # def record_duration(self, duration):
     #     self.host.last_crawl_duration = duration
-
-    def reset_crawl_failures(self):
-        self.host.crawl_failures = 0
 
 
 def store_crawl_result(config, options, session, crawl_result: "CrawlResult"):
@@ -133,9 +136,7 @@ def store_crawl_result(config, options, session, crawl_result: "CrawlResult"):
         reporter.disable_host(crawl_result.details)
 
     elif crawl_result.status == CrawlStatus.OK:
-        # Resetting as we only count consecutive crawl failures
-        # reporter.reset_crawl_failures()
-        host.crawl_failures = 0
+        reporter.enable_host()
 
     host.last_crawled = crawl_result.finished_at
     if (
