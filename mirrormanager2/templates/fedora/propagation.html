@@ -24,7 +24,7 @@
       class="{% if repo and repo_with_stats.id == repo.id %}font-weight-bold{% endif %}"
       href="{{url_for('base.propagation', repo_id=repo_with_stats.id)}}"
       >
-      {{ repo_with_stats.version.product.name }} {{ repo_with_stats.version.name }}
+      {{ repo_with_stats.version.product.name }} {{ repo_with_stats.version.name }} ({{ repo_with_stats.arch.name }})
     </a>
   </li>
   {%- endfor -%}
