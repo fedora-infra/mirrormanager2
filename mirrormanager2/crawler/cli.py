@@ -197,6 +197,7 @@ def main(ctx, config, debug, include_disabled, categories, startid, stopid, frac
 
 
 def run_on_all_hosts(ctx_obj, options, report):
+    logger.debug("Run with option: %s", repr(options))
     starttime = time.monotonic()
     host_ids = [host.id for host in ctx_obj["hosts"]]
     results = []

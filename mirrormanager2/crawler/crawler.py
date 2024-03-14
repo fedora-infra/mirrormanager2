@@ -381,7 +381,6 @@ class Crawler:
                 )
                 if repos_for_arch:
                     repos.extend(repos_for_arch)
-                    break
         if not repos:
             logger.warning("No repo found")
             return {}
@@ -389,6 +388,7 @@ class Crawler:
             status = self.check_propagation_for_repo(repo)
             if status is not None:
                 repo_status[repo.id] = status
+                break
         return repo_status
 
     def check_propagation_for_repo(self, repo):
@@ -428,12 +428,13 @@ class Crawler:
             return PropagationStatus.NO_INFO
         checksum = self._get_checksum_for_repo(url, topdir, repodata_dir)
         if checksum is None:
-            logger.warning(
+            logger.info(
                 "Could not find the checksum for repo with prefix %s on %s",
                 repo.prefix,
                 repo.arch.name,
             )
-            return PropagationStatus.NO_INFO
+            # The file wasn't found on this arch, it may not be mirrored, try another arch.
+            return None
         return self._get_file_propagation_status(fd, checksum)
 
     def _get_http_url(self, host_category):
