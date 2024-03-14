@@ -20,9 +20,7 @@ class RsyncConnector(Connector):
             url += "/"
         rsync_start_time = time.monotonic()
         try:
-            result, listing = run_rsync(
-                url, self._config["CRAWLER_RSYNC_PARAMETERS"], logger, int(self.timeout * 0.9)
-            )
+            result, listing = run_rsync(url, self._config["CRAWLER_RSYNC_PARAMETERS"], logger)
         except Exception:
             logger.exception("Failed to run rsync.", exc_info=True)
             return False

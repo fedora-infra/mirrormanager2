@@ -7,13 +7,14 @@ from urllib.parse import urlsplit
 from mirrormanager2 import lib as mmlib
 
 from .connector import Connector, TryLater
+from .constants import CONNECTION_TIMEOUT
 
 logger = logging.getLogger(__name__)
 
 
 class FTPConnector(Connector):
     def _connect(self):
-        conn = FTP(self.netloc, timeout=self.timeout)
+        conn = FTP(self.netloc, timeout=CONNECTION_TIMEOUT)
         conn.set_debuglevel(self.debuglevel)
         conn.login()
         return conn

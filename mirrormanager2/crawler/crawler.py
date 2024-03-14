@@ -110,9 +110,7 @@ class Crawler:
         self.session = session
         self.progress = progress
         self.host = host
-        self.connection_pool = ConnectionPool(
-            config, debuglevel=2 if options["debug"] else 0, timeout=options["host_timeout"]
-        )
+        self.connection_pool = ConnectionPool(config, debuglevel=2 if options["debug"] else 0)
         self.timeout = ThreadTimeout(options["host_timeout"])
         self.host_category_dirs = {}
 
