@@ -6,7 +6,7 @@ import requests
 from mirrormanager2 import lib as mmlib
 
 from .connector import Connector, FetchingFailed, ForbiddenExpected, TryLater
-from .constants import HTTP_TIMEOUT, REPODATA_FILE
+from .constants import CONNECTION_TIMEOUT, REPODATA_FILE
 
 logger = logging.getLogger(__name__)
 
@@ -27,11 +27,11 @@ class HTTPConnector(Connector):
 
     def check_url(self, url):
         conn = self.get_connection()
-        response = conn.head(url, timeout=HTTP_TIMEOUT)
+        response = conn.head(url, timeout=CONNECTION_TIMEOUT)
         return response.ok
 
     def _get_content_length(self, conn, url, readable, recursion=0, retry=0):
-        response = conn.head(url, timeout=HTTP_TIMEOUT)
+        response = conn.head(url, timeout=CONNECTION_TIMEOUT)
         if response.ok:
             try:
                 return response.headers["Content-Length"]
@@ -103,7 +103,7 @@ class HTTPConnector(Connector):
         try:
             r = conn.get(
                 url,
-                timeout=HTTP_TIMEOUT,
+                timeout=CONNECTION_TIMEOUT,
             )
         except requests.exceptions.ConnectionError as e:
             raise FetchingFailed() from e

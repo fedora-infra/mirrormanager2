@@ -22,11 +22,10 @@ def _get_connection_class(scheme):
 
 
 class ConnectionPool:
-    def __init__(self, config, debuglevel=0, timeout=600):
+    def __init__(self, config, debuglevel=0):
         self._connections = {}
         self.config = config
         self.debuglevel = debuglevel
-        self.timeout = timeout
 
     def get(self, url):
         scheme, netloc, path, query, fragment = urlsplit(url)
@@ -40,7 +39,6 @@ class ConnectionPool:
                 config=self.config,
                 netloc=netloc,
                 debuglevel=self.debuglevel,
-                timeout=self.timeout,
                 on_closed=partial(self._remove_connection, scheme, netloc),
             )
             # self._connections[(scheme, netloc)] = self._connect(netloc)
