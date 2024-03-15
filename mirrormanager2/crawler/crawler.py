@@ -492,63 +492,66 @@ def crawl_and_report(options, crawler):
     host = crawler.host
 
     # Set the host-specific log file
-    thread_file_logger(crawler.config, host.id, options["debug"])
+    with thread_file_logger(crawler.config, host.id, options["debug"]):
+        details = None
+        stats = None
+        try:
+            stats = crawler.crawl()
+        except AllCategoriesFailed:
+            status = CrawlStatus.FAILURE
+            if options["canary"]:
+                # If running in canary mode do not auto disable mirrors
+                # if they have failed.
+                # Let's mark the complete mirror as not being up to date.
+                details = "Canary mode failed for all categories. Marking host as not up to date."
+            logger.info("All categories failed.")
+        except HostTimeoutError:
+            status = CrawlStatus.TIMEOUT
+            details = "Crawler timed out before completing. Host is likely overloaded."
+            logger.info(details)
+        except GlobalTimeoutError:
+            status = CrawlStatus.UNKNOWN
+            details = (
+                "Crawler reached its maximum execution time, could not complete this host's scan."
+            )
+            logger.info(details)
+        except WrongContinent:
+            logger.info("Skipping host %s (%s); wrong continent", host.id, host.name)
+            status = CrawlStatus.UNKNOWN
+        except BrokenBaseUrl:
+            logger.info("Skipping host %s (%s); broken base URL", host.id, host.name)
+            status = CrawlStatus.UNKNOWN
+        except EmbargoedCountry as e:
+            logger.info(
+                "Host %s (%s) is from an embargoed country: %s", host.id, host.name, e.country
+            )
+            status = CrawlStatus.DISABLE
+            details = f"Embargoed country: {e.country}"
+        except NoCategory:
+            # no category to crawl found. This is to make sure,
+            # that host.crawl_failures is not reset to zero for crawling
+            # non existing categories on this host
+            logger.info("No categories to crawl on host %s (%s)", host.id, host.name)
+            status = CrawlStatus.UNKNOWN
+        except KeyboardInterrupt:
+            status = CrawlStatus.UNKNOWN
+        except Exception:
+            logger.exception("Unhandled exception raised, this is a bug in the MM crawler.")
+            # Don't disable the host, it's not their fault.
+            # status = CrawlStatus.FAILURE
+            status = CrawlStatus.UNKNOWN
+        else:
+            status = CrawlStatus.OK
 
-    details = None
-    stats = None
-    try:
-        stats = crawler.crawl()
-    except AllCategoriesFailed:
-        status = CrawlStatus.FAILURE
-        if options["canary"]:
-            # If running in canary mode do not auto disable mirrors
-            # if they have failed.
-            # Let's mark the complete mirror as not being up to date.
-            details = "Canary mode failed for all categories. Marking host as not up to date."
-        logger.info("All categories failed.")
-    except HostTimeoutError:
-        status = CrawlStatus.TIMEOUT
-        details = "Crawler timed out before completing. Host is likely overloaded."
-        logger.info(details)
-    except GlobalTimeoutError:
-        status = CrawlStatus.UNKNOWN
-        details = "Crawler reached its maximum execution time, could not complete this host's scan."
-        logger.info(details)
-    except WrongContinent:
-        logger.info("Skipping host %s (%s); wrong continent", host.id, host.name)
-        status = CrawlStatus.UNKNOWN
-    except BrokenBaseUrl:
-        logger.info("Skipping host %s (%s); broken base URL", host.id, host.name)
-        status = CrawlStatus.UNKNOWN
-    except EmbargoedCountry as e:
-        logger.info("Host %s (%s) is from an embargoed country: %s", host.id, host.name, e.country)
-        status = CrawlStatus.DISABLE
-        details = f"Embargoed country: {e.country}"
-    except NoCategory:
-        # no category to crawl found. This is to make sure,
-        # that host.crawl_failures is not reset to zero for crawling
-        # non existing categories on this host
-        logger.info("No categories to crawl on host %s (%s)", host.id, host.name)
-        status = CrawlStatus.UNKNOWN
-    except KeyboardInterrupt:
-        status = CrawlStatus.UNKNOWN
-    except Exception:
-        logger.exception("Unhandled exception raised, this is a bug in the MM crawler.")
-        # Don't disable the host, it's not their fault.
-        # status = CrawlStatus.FAILURE
-        status = CrawlStatus.UNKNOWN
-    else:
-        status = CrawlStatus.OK
-
-    result = CrawlResult(
-        host_id=host.id,
-        host_name=host.name,
-        status=status.value,
-        details=details,
-        finished_at=datetime.datetime.now(tz=datetime.timezone.utc),
-        duration=crawler.timeout.elapsed(),
-        stats=stats,
-    )
+        result = CrawlResult(
+            host_id=host.id,
+            host_name=host.name,
+            status=status.value,
+            details=details,
+            finished_at=datetime.datetime.now(tz=datetime.timezone.utc),
+            duration=crawler.timeout.elapsed(),
+            stats=stats,
+        )
 
     return result
 
