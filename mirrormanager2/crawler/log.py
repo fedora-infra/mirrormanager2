@@ -1,11 +1,12 @@
 import logging
 import os
+from contextlib import contextmanager
 
 from .threads import threadlocal
 from .ui import get_logging_handler
 
 logger = logging.getLogger(__name__)
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+thread_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 master_formatter = (
     # "%(levelname)s:%(name)s:%(hosts)s:%(threads)s:%(hostid)s:%(hostname)s:%(message)s"
     # "%(levelname)s:%(name)s:%(hostid)s:%(hostname)s:%(message)s"
@@ -62,6 +63,7 @@ def setup_logging(debug, console):
             logging.getLogger(logger_name).setLevel(logging.INFO)
 
 
+@contextmanager
 def thread_file_logger(config, host_id, debug):
     log_dir = config.get("MM_LOG_DIR", None)
     if log_dir is None or log_dir == "-":
@@ -76,8 +78,10 @@ def thread_file_logger(config, host_id, debug):
     handler.addFilter(f)
 
     handler.setLevel(logging.DEBUG if debug else logging.INFO)
-    handler.setFormatter(formatter)
+    handler.setFormatter(thread_formatter)
     root_logger = logging.getLogger()
     root_logger.addHandler(handler)
 
-    return log_file
+    yield log_file
+
+    root_logger.removeHandler(handler)
