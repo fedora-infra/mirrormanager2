@@ -132,6 +132,12 @@ def validate_continents(ctx, param, value):
     default=False,
     help="enable printing of debug-level messages",
 )
+@click.option(
+    "--no-fail",
+    is_flag=True,
+    default=False,
+    help="Always exit with status code zero",
+)
 @click.pass_context
 def main(ctx, config, debug, include_disabled, categories, startid, stopid, fraction, **kwargs):
     ctx.ensure_object(dict)
@@ -228,6 +234,8 @@ def run_on_all_hosts(ctx_obj, options, report):
     duration = human_duration(time.monotonic() - starttime)
     if error is None:
         click.echo(f"Crawler finished after {duration}")
+    elif options["no_fail"]:
+        click.echo(f"Crawler failed after {duration}: {error}")
     else:
         raise click.ClickException(f"Crawler failed after {duration}: {error}")
 
