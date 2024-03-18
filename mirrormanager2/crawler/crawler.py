@@ -464,25 +464,19 @@ class Crawler:
         return csum
 
     def _get_file_propagation_status(self, file_detail, checksum):
-        today = datetime.datetime.combine(
-            datetime.date.today(),
-            datetime.time(hour=0, minute=0, second=0),
-            tzinfo=datetime.timezone.utc,
-        )
-        age_threshold = today - datetime.timedelta(days=self.config["MAX_STALE_DAYS"])
-        previous_file_detail = mmlib.get_file_details_with_checksum(
+        reference_dt = file_detail.datetime
+        age_threshold = reference_dt - datetime.timedelta(days=self.config["MAX_STALE_DAYS"])
+        host_file_detail = mmlib.get_file_details_with_checksum(
             self.session, file_detail, checksum, age_threshold
         )
-        if previous_file_detail is None:
+        if host_file_detail is None:
             return PropagationStatus.OLDER
-        previous_ts = datetime.datetime.fromtimestamp(
-            previous_file_detail.timestamp, tz=datetime.timezone.utc
-        )
-        if today - previous_ts > datetime.timedelta(days=3):
+        host_file_detail_dt = host_file_detail.datetime
+        if reference_dt - host_file_detail_dt > datetime.timedelta(days=3):
             return PropagationStatus.OLDER
-        elif today - previous_ts > datetime.timedelta(days=2):
+        elif reference_dt - host_file_detail_dt > datetime.timedelta(days=2):
             return PropagationStatus.TWO_DAY
-        elif today - previous_ts > datetime.timedelta(days=1):
+        elif reference_dt - host_file_detail_dt > datetime.timedelta(days=1):
             return PropagationStatus.ONE_DAY
         else:
             return PropagationStatus.SAME_DAY
