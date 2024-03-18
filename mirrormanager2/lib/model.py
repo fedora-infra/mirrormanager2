@@ -814,6 +814,10 @@ class FileDetail(BASE):
         secondary="file_detail_file_group",
     )
 
+    @property
+    def datetime(self):
+        return datetime.datetime.fromtimestamp(self.timestamp, tz=datetime.timezone.utc)
+
 
 class RepositoryRedirect(BASE):
     __tablename__ = "repository_redirect"
