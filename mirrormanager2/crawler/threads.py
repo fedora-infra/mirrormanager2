@@ -57,22 +57,20 @@ def run_in_threadpool(fn, iterable, fn_args, timeout, executor_kwargs):
 
     futures = {threadpool.submit(fn, *fn_args, item) for item in iterable}
     try:
-        for future in as_completed(futures, timeout=timeout):
+        for future in as_completed(futures):
             try:
                 yield future.result()
             except Exception:
                 logger.exception("Crawler failed!")
     except Exception as e:
-        reraised = e
-        if isinstance(e, TimeoutError):
-            logger.error("The crawl timed out! %s", e)
-            reraised = GlobalTimeoutError(str(e))
-        elif isinstance(e, KeyboardInterrupt):
+        if isinstance(e, KeyboardInterrupt):
             logger.info("Shutting down the thread pool")
         else:
             logger.exception("Unhandled error in the thread pool")
         _shutdown_threadpool()
-        raise reraised from e
+        raise
+    if datetime.datetime.now() > max_global_execution_dt:
+        raise GlobalTimeoutError("maximum run time reached, some host statuses are unknown")
 
 
 class ThreadTimeout:
