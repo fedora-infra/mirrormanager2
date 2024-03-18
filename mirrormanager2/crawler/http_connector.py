@@ -105,7 +105,7 @@ class HTTPConnector(Connector):
                 url,
                 timeout=CONNECTION_TIMEOUT,
             )
-        except requests.exceptions.ConnectionError as e:
+        except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout) as e:
             raise FetchingFailed() from e
         if not r.ok:
             raise FetchingFailed(r)
