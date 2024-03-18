@@ -1,6 +1,7 @@
 import dataclasses
 import datetime
 import logging
+from collections import defaultdict
 
 import mirrormanager2.lib as mmlib
 from mirrormanager2.lib.constants import PROPAGATION_ARCH
@@ -367,7 +368,7 @@ class Crawler:
     def check_propagation(self, product_versions):
         self.timeout.start()
         repo_status = {}
-        repos = []
+        all_repos = defaultdict(list)
         for product_name, version_name in product_versions:
             repo_prefix = get_propagation_repo_prefix(product_name, version_name)
             # First try with the PROPAGATION_ARCH arch, but if not found try with any other.
@@ -380,15 +381,16 @@ class Crawler:
                     arch=arch,
                 )
                 if repos_for_arch:
-                    repos.extend(repos_for_arch)
-        if not repos:
+                    all_repos[(product_name, version_name)].extend(repos_for_arch)
+        if not all_repos:
             logger.warning("No repo found")
             return {}
-        for repo in repos:
-            status = self.check_propagation_for_repo(repo)
-            if status is not None:
-                repo_status[repo.id] = status
-                break
+        for product_name, version_name in all_repos:
+            for repo in all_repos[(product_name, version_name)]:
+                status = self.check_propagation_for_repo(repo)
+                if status is not None:
+                    repo_status[repo.id] = status
+                    break
         return repo_status
 
     def check_propagation_for_repo(self, repo):
