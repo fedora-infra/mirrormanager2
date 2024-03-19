@@ -117,7 +117,7 @@ def store_crawl_result(config, options, session, crawl_result: "CrawlResult"):
     host = mmlib.get_host(session, crawl_result.host_id)
     reporter = Reporter(config, session, host)
 
-    if crawl_result.status == CrawlStatus.FAILURE:
+    if crawl_result.status == CrawlStatus.FAILURE.value:
         if options["canary"]:
             # If running in canary mode do not auto disable mirrors
             # if they have failed.
@@ -128,19 +128,19 @@ def store_crawl_result(config, options, session, crawl_result: "CrawlResult"):
             # and that this host should be marked as failed during crawl
             reporter.record_crawl_failure()
 
-    elif crawl_result.status == CrawlStatus.TIMEOUT:
+    elif crawl_result.status == CrawlStatus.TIMEOUT.value:
         reporter.mark_not_up2date(reason=crawl_result.details)
         reporter.record_crawl_failure()
 
-    elif crawl_result.status == CrawlStatus.DISABLE:
+    elif crawl_result.status == CrawlStatus.DISABLE.value:
         reporter.disable_host(crawl_result.details)
 
-    elif crawl_result.status == CrawlStatus.OK:
+    elif crawl_result.status == CrawlStatus.OK.value:
         reporter.enable_host()
 
     host.last_crawled = crawl_result.finished_at
     if (
-        crawl_result.status != CrawlStatus.UNKNOWN
+        crawl_result.status != CrawlStatus.UNKNOWN.value
         and not options["repodata"]
         and not options["canary"]
     ):
