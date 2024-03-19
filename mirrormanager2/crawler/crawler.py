@@ -279,6 +279,7 @@ class Crawler:
     def _get_directory_statuses(self, hc):
         urls = get_preferred_urls(hc)
         if not urls:
+            logger.debug("No URLs: %s", repr(urls))
             raise CategoryNotAccessible
 
         if self.options["continents"]:
@@ -287,6 +288,7 @@ class Crawler:
             check_continent(self.config, self.options, self.session, urls[0])
 
         if not self.check_for_base_dir(urls):
+            logger.debug("Base directory not accessible: %s", repr(urls))
             raise CategoryNotAccessible
 
         if self.options["canary"]:
@@ -324,6 +326,7 @@ class Crawler:
                 logger.debug(f"Scheme {url} is not available")
                 continue
             return
+        logger.debug("Category %s is not accessible with any URL. Tried %s", hc.category.name, urls)
         raise CategoryNotAccessible
 
     def sync_dir(self, hc, directory, status):
