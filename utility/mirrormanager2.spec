@@ -74,6 +74,7 @@ Requires:  %{name}-filesystem = %{version}-%{release}
 Requires:  python%{python_pkgversion}-IPy
 Requires:  python%{python_pkgversion}-dns
 Requires:  python%{python_pkgversion}-sqlalchemy >= 0.7
+Requires:  python%{python_pkgversion}-sqlalchemy < 2
 Requires:  python%{python_pkgversion}-pyrpmmd
 
 %description lib
