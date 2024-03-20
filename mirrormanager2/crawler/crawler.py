@@ -212,7 +212,7 @@ class Crawler:
         relevant for normal access. If both tests fail the mirror will be marked
         as failed during crawl.
         """
-        client_urls = [url for url in urls if url.startswith("http:")]
+        client_urls = [url for url in urls if url.startswith("http:") or url.startswith("https:")]
         for url in client_urls:
             self.timeout.check()
             connector = self.connection_pool.get(url)
