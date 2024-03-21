@@ -13,10 +13,6 @@ class TryLater(Exception):
     pass
 
 
-class ForbiddenExpected(Exception):
-    pass
-
-
 class SchemeNotAvailable(Exception):
     pass
 
