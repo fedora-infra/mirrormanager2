@@ -5,7 +5,7 @@ import requests
 
 from mirrormanager2 import lib as mmlib
 
-from .connector import Connector, FetchingFailed, ForbiddenExpected, TryLater
+from .connector import Connector, FetchingFailed, TryLater
 from .constants import CONNECTION_TIMEOUT, REPODATA_FILE
 
 logger = logging.getLogger(__name__)
@@ -30,24 +30,6 @@ class HTTPConnector(Connector):
         response = conn.head(url, timeout=CONNECTION_TIMEOUT)
         return response.ok
 
-    def _get_content_length(self, conn, url, readable, recursion=0, retry=0):
-        response = conn.head(url, timeout=CONNECTION_TIMEOUT)
-        if response.ok:
-            try:
-                return response.headers["Content-Length"]
-            except KeyError:
-                return None
-        if response.status_code == 404 or response.status_code == 410:
-            # Not Found / Gone
-            return False
-        if response.status_code == 403:
-            # may be a hidden dir still
-            if readable:
-                return False
-            else:
-                raise ForbiddenExpected()
-        response.raise_for_status()
-
     def _check_file(self, conn, url, filedata, readable):
         """Returns tuple:
         True - URL exists
@@ -55,13 +37,31 @@ class HTTPConnector(Connector):
         None - we don't know
         """
         try:
-            content_length = self._get_content_length(conn, url, readable)
-        except ForbiddenExpected:
-            return None
+            response = conn.head(url, timeout=CONNECTION_TIMEOUT)
+            response.raise_for_status()
         except requests.Timeout as e:
             raise TryLater from e
-        except Exception:
+        except requests.HTTPError as e:
+            if e.response.status_code in (404, 410):
+                # Not Found / Gone
+                return False
+            if response.status_code == 403:
+                # may be a hidden dir still
+                if readable:
+                    # It should be readable but it's not
+                    return False
+                else:
+                    # This 403 is allowed
+                    return None
+            logger.debug("Could not get the content length for %s: %s", url, e)
             return None
+
+        try:
+            content_length = response.headers["Content-Length"]
+        except KeyError:
+            logger.debug("No content length header for %s: %s", url)
+            return True
+
         # lighttpd returns a Content-Length for directories
         # apache and nginx do not
         # For the basic check in check_for_base_dir() it is only
@@ -71,11 +71,10 @@ class HTTPConnector(Connector):
             # The file/directory seems to exist, no additional check possible
             return True
         # fixme should check last_modified too
-        if content_length not in (None, False) and float(filedata["size"]) != float(content_length):
+        if float(filedata["size"]) != float(content_length):
             return False
 
-        # handle no content-length header, streaming/chunked return
-        # or zero-length file
+        # handle streaming/chunked return or zero-length file
         return True
 
     def _check_dir(self, url, directory):
