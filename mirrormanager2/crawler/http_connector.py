@@ -63,7 +63,7 @@ class HTTPConnector(Connector):
         try:
             content_length = response.headers["Content-Length"]
         except KeyError:
-            logger.debug("No content length header for %s: %s", url)
+            logger.debug("No content length header for %s", url)
             return True
 
         # lighttpd returns a Content-Length for directories
