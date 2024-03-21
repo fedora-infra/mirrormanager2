@@ -104,7 +104,7 @@ def report_crawl(console, options: dict, results: list["CrawlResult"]):
 
     for result in results:
         row = [
-            result.host_name,
+            f"{result.host_name} ({result.host_id})",
             result.status,
             f"{result.duration:.0f}s",
         ]
