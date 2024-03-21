@@ -120,12 +120,8 @@ class Connector:
         dir_url = self._get_dir_url(url, directory, category_prefix_length)
         try:
             dir_status = self.check_dir(dir_url, directory)
-        except TryLater:
+        except TryLater as e:
             # We backed off a few times but it's still in timeout
-            dir_status = None
-        if dir_status is None:
-            # could be a dir with no files, or an unreadable dir.
-            # defer decision on this dir, let a child decide.
-            raise SchemeNotAvailable
+            raise SchemeNotAvailable from e
         # logger.debug(f"Dir status for {dir_url} is {dir_status}")
         return dir_status

@@ -302,6 +302,7 @@ class Crawler:
         if category_prefix_length > 0:
             category_prefix_length += 1
 
+        all_urls = urls[:]
         while urls:
             try:
                 url = urls.pop(0)
@@ -326,13 +327,17 @@ class Crawler:
                 logger.debug(f"Scheme {url} is not available")
                 continue
             return
-        logger.debug("Category %s is not accessible with any URL. Tried %s", hc.category.name, urls)
+        logger.debug(
+            "Category %s is not accessible with any URL. Tried %s", hc.category.name, all_urls
+        )
         raise CategoryNotAccessible
 
     def sync_dir(self, hc, directory, status):
         logger.debug("Syncing directory %s", directory.name)
         sync_status = SyncStatus.UNKNOWN
         if status is None:
+            # could be a dir with no files, or an unreadable dir.
+            # defer decision on this dir, let a child decide.
             return sync_status, None
 
         topname = hc.category.topdir.name
