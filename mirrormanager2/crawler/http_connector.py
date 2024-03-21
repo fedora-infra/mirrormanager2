@@ -42,7 +42,8 @@ class HTTPConnector(Connector):
         except requests.Timeout as e:
             raise TryLater from e
         except requests.HTTPError as e:
-            if e.response.status_code in (404, 410):
+            response = e.response
+            if response.status_code in (404, 410):
                 # Not Found / Gone
                 return False
             if response.status_code == 403:
@@ -53,6 +54,9 @@ class HTTPConnector(Connector):
                 else:
                     # This 403 is allowed
                     return None
+            logger.debug("Could not get the content length for %s: %s", url, response)
+            return None
+        except requests.RequestException as e:
             logger.debug("Could not get the content length for %s: %s", url, e)
             return None
 
