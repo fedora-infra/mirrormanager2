@@ -11,3 +11,6 @@ DEFAULT_GLOBAL_TIMEOUT = 360  # minutes
 SHUTDOWN_TIMEOUT = 5
 
 CONNECTION_TIMEOUT = 10  # seconds
+
+# Number of times to retry a connection
+RETRIES = 5
