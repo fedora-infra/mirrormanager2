@@ -6,6 +6,8 @@ from sqlalchemy.orm import object_session
 
 from mirrormanager2 import lib as mmlib
 
+from .constants import RETRIES
+
 logger = logging.getLogger(__name__)
 
 
@@ -69,7 +71,7 @@ class Connector:
     @backoff.on_exception(
         backoff.expo,
         TryLater,
-        max_tries=3,
+        max_tries=RETRIES,
         on_backoff=_on_backoff,
         on_giveup=_on_giveup,
         logger=None,  # custom logging
