@@ -69,7 +69,7 @@ blinker = "^1.6.2"
 sphinxcontrib-httpdomain = "^1.8.1"
 cloud-sptheme = "^1.10.1.post20200504175005"
 oidc-register = "^0.2.1"
-responses = "^0.23.3"
+responses = "^0.23.3 || ^0.25.0"
 
 [tool.poetry.scripts]
 report_mirror = { reference = "client/report_mirror", type = "file" }
