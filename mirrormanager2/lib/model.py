@@ -30,105 +30,11 @@ import pickle
 import time
 
 import sqlalchemy as sa
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, deferred, relationship
+from sqlalchemy.orm import deferred, relationship
 
+from .database import BASE
 
-class MirrorManagerBaseMixin:
-    """Base mixin for mirrormanager2 models.
-
-    This base class mixin grants sqlalchemy models dict-like access so that
-    they behave somewhat similarly to SQLObject models (inherited from the TG1
-    codebase of mirrormanager1).  This was added with the intent to make the
-    porting of backend scripts from mirrormanager1 to mirrormanager2 easier.
-    """
-
-    def __getitem__(self, key):
-        return getattr(self, key)
-
-    def __setitem__(self, key, value):
-        setattr(self, key, value)
-
-    def __contains__(self, key):
-        return hasattr(self, key)
-
-    @classmethod
-    def get(cls, session, pkey_value):
-        primary_keys = [key.key for key in cls.__mapper__.primary_key]
-        return (
-            session.query(cls)
-            .filter(sa.or_(getattr(cls, col) == pkey_value for col in primary_keys))
-            .one()
-        )
-
-
-BASE = declarative_base(cls=MirrorManagerBaseMixin)
-
-ERROR_LOG = logging.getLogger("mirrormanager2.lib.model")
-
-# # Apparently some of our methods have too few public methods
-# pylint: disable=R0903
-# # Others have too many attributes
-# pylint: disable=R0902
-# # Others have too many arguments
-# pylint: disable=R0913
-# # We use id for the identifier in our db but that's too short
-# pylint: disable=C0103
-# # Some of the object we use here have inherited methods which apparently
-# # pylint does not detect.
-# pylint: disable=E1101
-
-
-def create_tables(db_url, alembic_ini=None, debug=False):
-    """Create the tables in the database using the information from the
-    url obtained.
-
-    :arg db_url, URL used to connect to the database. The URL contains
-        information with regards to the database engine, the host to
-        connect to, the user and password and the database name.
-          ie: <engine>://<user>:<password>@<host>/<dbname>
-    :kwarg alembic_ini, path to the alembic ini file. This is necessary
-        to be able to use alembic correctly, but not for the unit-tests.
-    :kwarg debug, a boolean specifying wether we should have the verbose
-        output of sqlalchemy or not.
-    :return a session that can be used to query the database.
-
-    """
-    engine = create_engine(db_url, echo=debug)
-    BASE.metadata.create_all(engine)
-    if db_url.startswith("sqlite:"):
-        # Ignore the warning about con_record
-        # pylint: disable=W0613
-        def _fk_pragma_on_connect(dbapi_con, con_record):
-            """Tries to enforce referential constraints on sqlite."""
-            dbapi_con.execute("pragma foreign_keys=ON")
-
-        sa.event.listen(engine, "connect", _fk_pragma_on_connect)
-
-    if alembic_ini is not None:  # pragma: no cover
-        # then, load the Alembic configuration and generate the
-        # version table, "stamping" it with the most recent rev:
-
-        # Ignore the warning missing alembic
-        # pylint: disable=F0401
-        from alembic import command
-        from alembic.config import Config
-
-        alembic_cfg = Config(alembic_ini)
-        command.stamp(alembic_cfg, "head")
-
-
-def drop_tables(db_url, engine):  # pragma: no cover
-    """Drops the tables in the database using the information from the
-    url obtained.
-
-    :arg db_url, URL used to connect to the database. The URL contains
-    information with regards to the database engine, the host to connect
-    to, the user and password and the database name.
-      ie: <engine>://<user>:<password>@<host>/<dbname>
-    """
-    engine = create_engine(db_url)
-    BASE.metadata.drop_all(engine)
+ERROR_LOG = logging.getLogger(__name__)
 
 
 class Site(BASE):
@@ -290,42 +196,80 @@ class Host(BASE):
         )
 
     def set_not_up2date(self, session):
-        for hc in self.categories:
-            for hcd in hc.directories:
-                hcd.up2date = False
-        session.commit()
+        hc_ids = [hc.id for hc in self.categories]
+        statement = (
+            sa.update(HostCategoryDir)
+            .where(HostCategoryDir.host_category_id.in_(hc_ids))
+            .values(up2date=False)
+        )
+        session.execute(statement)
 
     def is_active(self):
         return self.admin_active and self.user_active and self.site.user_active
+
+
+class LazyDict(collections.abc.Mapping):
+    """A lazily-evaluated dict, converted from a value."""
+
+    def __init__(self, convert_to_dict, value):
+        self._convert_to_dict = convert_to_dict
+        self._value = value
+        self._dict = None
+
+    def _ensure_dict(self):
+        if self._dict is None:
+            self._dict = self._convert_to_dict(self._value)
+
+    def __getitem__(self, key):
+        self._ensure_dict()
+        return self._dict[key]
+
+    def __iter__(self):
+        self._ensure_dict()
+        return self._dict.__iter__()
+
+    def __len__(self):
+        self._ensure_dict()
+        return self._dict.__len__()
+
+    def __eq__(self, other):
+        self._ensure_dict()
+        return self._dict == other
 
 
 class JsonDictTypeFilter(sa.types.TypeDecorator):
     """This handles either JSON or a pickled dict from the database."""
 
     impl = sa.types.BLOB
+    cache_ok = True
 
     def process_bind_param(self, value, dialect):
         if value is None:
             return None
 
+        # Format: dict[filename: {"size": size_int, "stat": timestamp_int}]
+        # Stored as: list[{"name": filename, "size": size_int, "timestamp": timestamp_int}]
+
         result = []
 
-        for i in list(value.keys()):
+        for filename in sorted(value):
             temp = {}
-            temp["name"] = i
-            temp["size"] = int(value[i]["size"])
-            temp["timestamp"] = int(value[i]["stat"])
+            temp["name"] = filename
+            temp["size"] = int(value[filename]["size"])
+            temp["timestamp"] = int(value[filename]["stat"])
             result.append(temp)
 
         return json.dumps(result).encode()
 
     def process_result_value(self, value, dialect):
+        return LazyDict(self._as_dict, value)
+
+    def _as_dict(self, value):
         result = {}
         if value is None:
             return result
         try:
-            j = json.loads(value)
-            for i in j:
+            for i in json.loads(value):
                 result[i["name"]] = {"size": i["size"], "stat": i["timestamp"]}
         except ValueError:
             result = pickle.loads(value)
@@ -341,7 +285,8 @@ class Directory(BASE):
     # e.g. pub/epel
     # e.g. pub/fedora/linux
     name = sa.Column(sa.Text(), nullable=False, unique=True)
-    files = sa.Column(JsonDictTypeFilter(), nullable=True)
+    # Don't load the files by default to save memory
+    files = deferred(sa.Column(JsonDictTypeFilter(), nullable=True))
     readable = sa.Column(sa.Boolean(), default=True, nullable=False)
     ctime = sa.Column(sa.BigInteger, default=0, nullable=True)
 
@@ -410,8 +355,8 @@ class Directory(BASE):
         """
 
         t = int(time.time())
-        max_stale = config.get("mirrormanager.max_stale_days", 3)
-        max_propogation = config.get("mirrormanager.max_propogation_days", 2)
+        max_stale = config["MAX_STALE_DAYS"]
+        max_propogation = max_stale - 1
         stale = t - (60 * 60 * 24 * max_stale)
         propogation = t - (60 * 60 * 24 * max_propogation)
 
@@ -426,7 +371,7 @@ class Directory(BASE):
                 # all others
                 for f in fds[start:]:
                     if f["timestamp"] < stale:
-                        detail = FileDetail.get(session, f["file_detail_id"])
+                        detail = FileDetail.get_by_pk(f["file_detail_id"])
                         session.delete(detail)
 
         session.commit()
@@ -505,6 +450,20 @@ class Category(BASE):
     def __repr__(self):
         """Return a string representation of the object."""
         return f"<Category({self.id} - {self.name})>"
+
+    @property
+    def directory_cache(self):
+        if not hasattr(self, "_directory_cache"):
+            self._directory_cache = dict()
+            topdirName = self.topdir.name
+            for directory in self.directories:
+                relative_path = directory.name[len(topdirName) + 1 :]
+                relative_path = relative_path.strip("/")
+                self._directory_cache[relative_path] = directory
+        return self._directory_cache
+
+    def directory_cache_clear(self):
+        delattr(self, "_directory_cache")
 
 
 class SiteToSite(BASE):
@@ -782,6 +741,12 @@ class Repository(BASE):
     version = relationship("Version", back_populates="repositories")
     arch = relationship("Arch", back_populates="repositories")
     directory = relationship("Directory", back_populates="repositories")
+    propagation_stats = relationship(
+        "PropagationStat",
+        back_populates="repository",
+        order_by="PropagationStat.datetime",
+        cascade="delete, delete-orphan",
+    )
 
     # Constraints
     __table_args__ = (
@@ -848,6 +813,10 @@ class FileDetail(BASE):
         back_populates="files",
         secondary="file_detail_file_group",
     )
+
+    @property
+    def datetime(self):
+        return datetime.datetime.fromtimestamp(self.timestamp, tz=datetime.timezone.utc)
 
 
 class RepositoryRedirect(BASE):
@@ -1074,3 +1043,52 @@ class User(BASE):
         """Return a string representation of this object."""
 
         return f"User: {self.id} - name {self.user_name}"
+
+
+class AccessStatCategory(BASE):
+    """Mirror access statistics category"""
+
+    __tablename__ = "access_stat_category"
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    name = sa.Column(sa.String(255), nullable=False, unique=True)
+
+    access_stats = relationship("AccessStat", back_populates="category")
+
+
+class AccessStat(BASE):
+    """Mirror access statistics"""
+
+    # names like "Group", "Order" and "User" are reserved words in SQL
+    # so we set the name to something safe for SQL
+    __tablename__ = "access_stat"
+
+    category_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey("access_stat_category.id"),
+        nullable=False,
+        primary_key=True,
+        index=True,
+    )
+    date = sa.Column(sa.Date, nullable=False, primary_key=True, index=True)
+    name = sa.Column(sa.String(255), nullable=False, primary_key=True)
+    percent = sa.Column(sa.Float)
+    requests = sa.Column(sa.Integer)
+
+    category = relationship("AccessStatCategory", back_populates="access_stats")
+
+
+class PropagationStat(BASE):
+    __tablename__ = "propagation_stat"
+
+    repository_id = sa.Column(
+        sa.Integer, sa.ForeignKey("repository.id"), nullable=True, primary_key=True, index=True
+    )
+    datetime = sa.Column(sa.DateTime, nullable=False, primary_key=True, index=True)
+    same_day = sa.Column(sa.Integer, nullable=False, default=0)
+    one_day = sa.Column(sa.Integer, nullable=False, default=0)
+    two_day = sa.Column(sa.Integer, nullable=False, default=0)
+    older = sa.Column(sa.Integer, nullable=False, default=0)
+    no_info = sa.Column(sa.Integer, nullable=False, default=0)
+
+    repository = relationship("Repository", back_populates="propagation_stats")

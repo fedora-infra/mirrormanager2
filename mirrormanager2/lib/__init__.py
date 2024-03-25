@@ -24,28 +24,36 @@ MirrorManager2 internal api.
 import datetime
 import random
 import string
+from contextlib import contextmanager
 
-import sqlalchemy
-from sqlalchemy.orm import scoped_session, sessionmaker
+import sqlalchemy as sa
 
+from mirrormanager2 import default_config
 from mirrormanager2.lib import model
 
 
-def create_session(db_url, debug=False, pool_recycle=3600):
-    """Create the Session object to use to query the database.
+def read_config(filename):
+    config = dict()
+    for key in dir(default_config):
+        if key.isupper():
+            config[key] = getattr(default_config, key)
+    with open(filename) as fh:
+        exec(compile(fh.read(), filename, "exec"), config)
+    return config
 
-    :arg db_url: URL used to connect to the database. The URL contains
-    information with regards to the database engine, the host to connect
-    to, the user and password and the database name.
-      ie: <engine>://<user>:<password>@<host>/<dbname>
-    :kwarg debug: a boolean specifying wether we should have the verbose
-        output of sqlalchemy or not.
-    :return a Session that can be used to query the database.
 
+@contextmanager
+def instance_attribute(instance, attr_name):
+    """Return an instance attribute and expire it when leaving the context.
+
+    This can be useful for heavy lazily-loaded attributes.
     """
-    engine = sqlalchemy.create_engine(db_url, echo=debug, pool_recycle=pool_recycle)
-    scopedsession = scoped_session(sessionmaker(bind=engine))
-    return scopedsession
+    attr = getattr(instance, attr_name)
+    try:
+        yield attr
+    finally:
+        session = sa.orm.object_session(instance)
+        session.expire(instance, [attr_name])
 
 
 def get_site(session, site_id):
@@ -125,17 +133,6 @@ def get_host_by_name(session, host_name):
     return query.first()
 
 
-def get_hosts(session):
-    """Return all Hosts in the database.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = session.query(model.Host).order_by(model.Host.id)
-
-    return query.all()
-
-
 def get_host_acl_ip(session, host_acl_ip_id):
     """Return a specified HostAclIp via its identifier.
 
@@ -191,17 +188,6 @@ def get_host_category(session, host_category_id):
     return query.first()
 
 
-def get_host_category_dirs(session):
-    """Return all the HostCategoryDir objects in the database.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = session.query(model.HostCategoryDir).order_by(model.HostCategoryDir.id)
-
-    return query.all()
-
-
 def get_host_category_by_hostid_category(session, host_id, category):
     """Return all HostCategory having the specified host_id and category.
 
@@ -215,7 +201,7 @@ def get_host_category_by_hostid_category(session, host_id, category):
         .filter(model.Category.name == category)
     )
 
-    return query.all()
+    return query.one_or_none()
 
 
 def get_host_category_url_by_id(session, host_category_url_id):
@@ -370,7 +356,7 @@ def get_categories(session, skip_admin=False):
 
     if skip_admin:
         query = query.filter(
-            sqlalchemy.or_(
+            sa.or_(
                 model.Category.admin_only.is_(None),
                 model.Category.admin_only.is_(False),
             )
@@ -388,16 +374,6 @@ def get_category_by_name(session, name):
     query = session.query(model.Category).filter(model.Category.name == name)
 
     return query.first()
-
-
-def get_category_directory(session):
-    """Return all the category directory present in the database.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = session.query(model.CategoryDirectory).order_by(model.CategoryDirectory.directory_id)
-    return query.all()
 
 
 def get_product_by_name(session, p_name):
@@ -445,58 +421,30 @@ def get_repo_prefix_arch(session, prefix, arch):
         .filter(model.Repository.arch_id == model.Arch.id)
         .filter(model.Arch.name == arch)
     )
-
     return query.first()
 
 
-def get_repo_by_name(session, name):
-    """Return a repository by its name.
-
-    :arg session: the session with which to connect to the database.
-    :arg name: the name of the repository
-
-    """
-    query = session.query(model.Repository).filter(model.Repository.name == name)
-
-    return query.first()
-
-
-def get_repo_by_dir(session, path):
-    """Return repositories by the path of its directory.
-
-    :arg session: the session with which to connect to the database.
-    :arg path: the path of the directory linked to the repositories returned
-
-    """
-    query = (
-        session.query(model.Repository)
-        .filter(model.Repository.directory_id == model.Directory.id)
-        .filter(model.Directory.name == path)
-        .order_by(model.Repository.id)
-    )
-
-    return query.all()
-
-
-def get_repositories(session):
+def get_repositories(session, product_name=None, version_name=None, prefix=None, arch=None):
     """Return all repositories in the database.
 
     :arg session: the session with which to connect to the database.
 
     """
-    query = session.query(model.Repository).order_by(model.Repository.id)
-
-    return query.all()
-
-
-def get_reporedirect(session):
-    """Return all reporedirect in the database.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = session.query(model.RepositoryRedirect).order_by(model.RepositoryRedirect.id)
-
+    query = session.query(model.Repository)
+    if product_name:
+        query = (
+            query.join(model.Version).join(model.Product).filter(model.Product.name == product_name)
+        )
+    if version_name:
+        if not product_name:
+            # Searching by product has already added this join
+            query = query.join(model.Version)
+        query = query.filter(model.Version.name == version_name)
+    if prefix:
+        query = query.filter(model.Repository.prefix == prefix)
+    if arch:
+        query = query.join(model.Arch).filter(model.Arch.name == arch)
+    query = query.order_by(model.Repository.id)
     return query.all()
 
 
@@ -537,37 +485,15 @@ def add_admin_to_site(session, site, admin):
         return "%s added as an admin" % admin
 
 
-def get_locations(session):
-    """Return all locations in the database.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = session.query(model.Location).order_by(model.Location.id)
-
-    return query.all()
-
-
-def get_netblock_country(session):
-    """Return all NetblockCountry in the database.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = session.query(model.NetblockCountry).order_by(model.NetblockCountry.id)
-
-    return query.all()
-
-
 def get_mirrors(
     session,
+    *,
     private=None,
     internet2=None,
     internet2_clients=None,
     asn_clients=None,
     admin_active=None,
     user_active=None,
-    urls=None,
     last_crawl_duration=False,
     last_checked_in=False,
     last_crawled=False,
@@ -580,13 +506,14 @@ def get_mirrors(
     arch_id=None,
     order_by_crawl_duration=False,
     product_id=None,
+    category_ids=None,
 ):
     """Retrieve the mirrors based on the criteria specified.
 
     :arg session: the session with which to connect to the database.
 
     """
-    query = session.query(sqlalchemy.func.distinct(model.Host.id))
+    query = sa.select(sa.func.distinct(model.Host.id))
 
     if private is not None:
         query = query.filter(model.Host.private == private)
@@ -601,64 +528,63 @@ def get_mirrors(
     if user_active is not None:
         query = query.filter(model.Host.user_active == user_active)
 
-    if host_category_url_private is not None:
-        query = (
-            query.filter(model.HostCategory.host_id == model.Host.id)
-            .filter(model.HostCategoryUrl.host_category_id == model.HostCategory.id)
-            .filter(model.HostCategoryUrl.private == host_category_url_private)
-        )
-
     if last_crawl_duration is True:
         query = query.filter(model.Host.last_crawl_duration > 0)
     if last_crawled is True:
-        query = query.filter(sqlalchemy.not_(model.Host.last_crawled.is_(None)))
+        query = query.filter(sa.not_(model.Host.last_crawled.is_(None)))
     if last_checked_in is True:
-        query = query.filter(sqlalchemy.not_(model.Host.last_checked_in.is_(None)))
+        query = query.filter(sa.not_(model.Host.last_checked_in.is_(None)))
 
+    needs_site_join = (site_private, site_user_active, site_admin_active)
+    if any(arg is not None for arg in needs_site_join):
+        query = query.join(model.Site)
     if site_private is not None:
-        query = query.filter(model.Host.site_id == model.Site.id).filter(
-            model.Site.private == site_private
-        )
+        query = query.filter(model.Site.private == site_private)
     if site_user_active is not None:
-        query = query.filter(model.Host.site_id == model.Site.id).filter(
-            model.Site.user_active == site_user_active
-        )
+        query = query.filter(model.Site.user_active == site_user_active)
     if site_admin_active is not None:
-        query = query.filter(model.Host.site_id == model.Site.id).filter(
-            model.Site.admin_active == site_admin_active
+        query = query.filter(model.Site.admin_active == site_admin_active)
+
+    needs_hostcategory_join = (
+        host_category_url_private,
+        up2date,
+        version_id,
+        arch_id,
+        product_id,
+        category_ids,
+    )
+    if any(arg is not None for arg in needs_hostcategory_join):
+        query = query.join(model.HostCategory)
+
+    needs_category_join = (version_id, arch_id, product_id)
+    if any(arg is not None for arg in needs_category_join):
+        query = query.join(model.Category)
+
+    needs_repo_join = (version_id, arch_id)
+    if any(arg is not None for arg in needs_repo_join):
+        query = query.join(model.Repository)
+
+    if host_category_url_private is not None:
+        query = query.join(model.HostCategoryUrl).filter(
+            model.HostCategoryUrl.private == host_category_url_private
         )
 
     if up2date is not None:
-        query = (
-            query.filter(model.Host.id == model.HostCategory.host_id)
-            .filter(model.HostCategory.id == model.HostCategoryDir.host_category_id)
-            .filter(model.HostCategoryDir.up2date == up2date)
-        )
+        query = query.join(model.HostCategoryDir).filter(model.HostCategoryDir.up2date == up2date)
 
     if version_id is not None:
-        query = (
-            query.filter(model.Host.id == model.HostCategory.host_id)
-            .filter(model.HostCategory.category_id == model.Category.id)
-            .filter(model.Category.id == model.Repository.category_id)
-            .filter(model.Repository.version_id == version_id)
-        )
+        query = query.filter(model.Repository.version_id == version_id)
 
     if arch_id is not None:
-        query = (
-            query.filter(model.Host.id == model.HostCategory.host_id)
-            .filter(model.HostCategory.category_id == model.Category.id)
-            .filter(model.Category.id == model.Repository.category_id)
-            .filter(model.Repository.arch_id == arch_id)
-        )
+        query = query.filter(model.Repository.arch_id == arch_id)
 
     if product_id is not None:
-        query = (
-            query.filter(model.Host.id == model.HostCategory.host_id)
-            .filter(model.HostCategory.category_id == model.Category.id)
-            .filter(model.Category.product_id == product_id)
-        )
+        query = query.filter(model.Category.product_id == product_id)
 
-    final_query = session.query(model.Host).filter(model.Host.id.in_(query.subquery()))
+    if category_ids is not None:
+        query = query.filter(model.HostCategory.category_id.in_(category_ids))
+
+    final_query = session.query(model.Host).filter(model.Host.id.in_(query))
 
     if order_by_crawl_duration is True:
         # for best crawling results, start with the slowest mirrors
@@ -703,7 +629,7 @@ def get_directory_by_name(session, dirname):
     """
     query = session.query(model.Directory).filter(model.Directory.name == dirname)
 
-    return query.first()
+    return query.one_or_none()
 
 
 def get_file_detail(
@@ -762,26 +688,41 @@ def get_file_detail(
     return query.first()
 
 
-def get_file_details(session):
-    """Return all the FileDetail object in the database.
+def get_file_detail_history(
+    session,
+    filename,
+    directory_id,
+):
+    """Return the history of FileDetail entries.
 
     :arg session: the session with which to connect to the database.
-
+    :arg filename:
+    :arg directory_id:
     """
-    query = session.query(model.FileDetail).order_by(model.FileDetail.id)
-
+    query = (
+        session.query(model.FileDetail)
+        .filter(model.FileDetail.filename == filename)
+        .filter(model.FileDetail.directory_id == directory_id)
+    )
+    query = query.order_by(model.FileDetail.timestamp.desc())
     return query.all()
 
 
-def get_directories(session):
-    """Return all Directory in the database.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = session.query(model.Directory).order_by(model.Directory.id)
-
-    return query.all()
+def get_file_details_with_checksum(session, file_detail, checksum, age_threshold):
+    if len(checksum) != 64:
+        # Only SHA256 is supported yet.
+        return None
+    query = (
+        session.query(model.FileDetail)
+        .filter(
+            model.FileDetail.directory_id == file_detail.directory_id,
+            model.FileDetail.filename == file_detail.filename,
+            model.FileDetail.sha256 == checksum,
+            model.FileDetail.timestamp > int(age_threshold.timestamp()),
+        )
+        .order_by(model.FileDetail.timestamp.desc())
+    )
+    return query.first()
 
 
 def get_directory_by_id(session, id):
@@ -795,17 +736,47 @@ def get_directory_by_id(session, id):
     return query.first()
 
 
-def get_hostcategorydir_by_hostcategoryid(session, host_category_id):
-    """Return all HostCategoryDir via its host_category_id.
+def _get_directories_by_category_query(category, only_repodata=False):
+    """Return the query to get the Directory objects linked to the specified Category
 
     :arg session: the session with which to connect to the database.
 
     """
-    query = session.query(model.HostCategoryDir).filter(
-        model.HostCategoryDir.host_category_id == host_category_id
+    query = (
+        sa.select(model.Directory)
+        .join(model.Category, model.Directory.categories)
+        .where(
+            model.Category.id == category.id,
+            model.Directory.readable.is_(True),
+            model.Directory.files.is_not(None),
+        )
     )
+    if only_repodata:
+        query = query.where(model.Directory.name.like("%/repodata"))
+    return query
 
-    return query.all()
+
+def get_directories_by_category(session, category, only_repodata=False):
+    """Return the Directory objects linked to the specified Category
+
+    :arg session: the session with which to connect to the database.
+
+    """
+    query = _get_directories_by_category_query(category, only_repodata).order_by(
+        model.Directory.name
+    )
+    return session.scalars(query)
+
+
+def count_directories_by_category(session, category, only_repodata=False):
+    """Count the Directory objects linked to the specified Category
+
+    :arg session: the session with which to connect to the database.
+
+    """
+    query = _get_directories_by_category_query(category, only_repodata)
+    query = query.with_only_columns(sa.func.count(model.Directory.id), maintain_column_froms=True)
+    return session.scalar(query)
 
 
 def get_hostcategorydir_by_hostcategoryid_and_path(session, host_category_id, path):
@@ -820,7 +791,41 @@ def get_hostcategorydir_by_hostcategoryid_and_path(session, host_category_id, pa
         .filter(model.HostCategoryDir.host_category_id == host_category_id)
     )
 
-    return query.all()
+    return query.first()
+
+
+def count_hostcategorydirs_with_unreadable_dir(session, hc):
+    """Return the number of HostCategoryDir objects linked to a HostCategory
+    that are linked to an unreadable Directory.
+
+    :arg session: the session with which to connect to the database.
+
+    """
+    query = (
+        sa.select(sa.func.count(model.HostCategoryDir.id))
+        .join(model.Directory)
+        .where(model.HostCategoryDir.host_category_id == hc.id, model.Directory.readable.is_(False))
+    )
+    return session.scalar(query)
+
+
+def set_hostcategorydirs_not_up2date(session, hc, except_ids=None):
+    """Set the HostCategoryDir objects linked to the specified HostCategory
+    to not up2date, except those in the provided list of HostCategoryDir IDs.
+
+    :arg session: the session with which to connect to the database.
+    :returns: the number of changed items
+
+    """
+    statement = sa.update(model.HostCategoryDir).where(
+        model.HostCategoryDir.host_category_id == hc.id
+    )
+    if except_ids:
+        statement = statement.where(
+            model.HostCategoryDir.id.not_in(except_ids),
+        )
+    statement = statement.values(up2date=False)
+    return session.execute(statement).rowcount
 
 
 def uploaded_config(session, host, config):
@@ -879,7 +884,6 @@ def uploaded_config(session, host, config):
                 session, host_category_id=hc.id, path=d
             )
             if hcdir:
-                hcdir = hcdir[0]
                 # This is evil, but it avoids stat()s on the client
                 # side and a lot of data uploading.
                 # A directory is considered up to date if it exists
@@ -911,13 +915,17 @@ def uploaded_config(session, host, config):
                 except Exception:
                     pass
 
-        for hcdir in get_hostcategorydir_by_hostcategoryid(session, hc.id):
+        hcdirs = session.scalars(
+            sa.select(model.HostCategoryDir).where(model.HostCategoryDir.host_category_id == hc.id)
+        )
+        allowed_paths = list(config[cat_name]["dirtree"].keys())
+        for hcdir in hcdirs:
             # handle disappearing hcdirs, deleted by other processes
             try:
                 hcdirpath = hcdir.path
             except Exception:
                 continue
-            if hcdirpath not in list(config[cat_name]["dirtree"].keys()):
+            if hcdirpath not in allowed_paths:
                 try:
                     session.delete(hcdir)
                     session.commit()
@@ -936,69 +944,6 @@ def uploaded_config(session, host, config):
         session.commit()
 
     return message
-
-
-def query_directories(session):
-    """Return the list of Directory, Host, HostCategoryUrl and Site
-    information required by `refresh_mirrorlist_cache` to build the pickle
-    file.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = (
-        session.query(
-            model.Directory.id.label("directory_id"),
-            model.Directory.name.label("dname"),
-            model.Host.id.label("hostid"),
-            model.Host.country.label("country"),
-            model.HostCategoryUrl.id.label("id"),
-            model.Site.private.label("siteprivate"),
-            model.Host.private.label("hostprivate"),
-            model.Host.internet2.label("internet2"),
-            model.Host.internet2_clients.label("internet2_clients"),
-        )
-        .filter(model.Host.user_active.is_(True))
-        .filter(model.Host.admin_active.is_(True))
-        .filter(model.Host.site_id == model.Site.id)
-        .filter(model.Site.user_active.is_(True))
-        .filter(model.Site.admin_active.is_(True))
-        .filter(model.Host.id == model.HostCategory.host_id)
-        .filter(model.HostCategory.category_id == model.CategoryDirectory.category_id)
-        .filter(model.CategoryDirectory.directory_id == model.Directory.id)
-        .filter(model.HostCategory.id == model.HostCategoryUrl.host_category_id)
-        .filter(model.HostCategoryUrl.private.is_(False))
-    )
-
-    q1 = (
-        query.filter(model.HostCategoryDir.host_category_id == model.HostCategory.id)
-        .filter(model.HostCategoryDir.directory_id == model.Directory.id)
-        .filter(model.HostCategoryDir.up2date.is_(True))
-    )
-
-    q2 = query.filter(model.HostCategory.always_up2date.is_(True))
-
-    q = session.query(q1.union(q2).subquery()).order_by("dname", "hostid")
-
-    return q.all()
-
-
-def get_directory_exclusive_host(session):
-    """Return the list of Directory that are exclusive for some hosts.
-
-    :arg session: the session with which to connect to the database.
-
-    """
-    query = (
-        session.query(
-            model.Directory.name.label("dname"),
-            model.DirectoryExclusiveHost.host_id.label("host_id"),
-        )
-        .filter(model.Directory.id == model.DirectoryExclusiveHost.directory_id)
-        .order_by("dname")
-    )
-
-    return query.all()
 
 
 def get_rsync_filter_directories(session, categories, since):
@@ -1028,3 +973,101 @@ def get_rsync_filter_directories(session, categories, since):
 
     result = [entry[0] for entry in query.all()]
     return result
+
+
+def get_propagation_repos(session):
+    """Return Repositories which have Propagation statistics.
+
+    :arg session: the session with which to connect to the database.
+
+    """
+    query = (
+        sa.select(model.Repository).join(model.PropagationStat).order_by(model.Repository.prefix)
+    )
+    return session.scalars(query).unique()
+
+
+def get_propagation(session, repo_id):
+    """Return Propagation statistics of the specified Repository ID.
+
+    :arg session: the session with which to connect to the database.
+    :arg repo_id: the Repository ID.
+
+    """
+    query = (
+        sa.select(model.PropagationStat)
+        .where(model.PropagationStat.repository_id == repo_id)
+        .order_by(model.PropagationStat.datetime)
+    )
+    return list(session.execute(query).scalars())
+
+
+def _search_and_delete(session, model_class, property_name, older_than):
+    """Delete data when the property is older than the specified datetime.
+
+    :arg session: the session with which to connect to the database.
+    :arg model_class: the model class.
+    :arg property_name: the name of the model property to filter on.
+    :arg older_than: the datetime threshold.
+    """
+    query = sa.select(model_class).where(getattr(model_class, property_name) < older_than)
+    # We *could* be using delete() to only run one SQL query but that bypasses
+    # some features in SQLAlchemy, and we don't really need the speedup as this
+    # is run by cron anyway.
+    for instance in session.execute(query).scalars():
+        session.delete(instance)
+
+
+def delete_expired_propagation(session, older_than):
+    """Delete Propagation statistics older than the specified datetime.
+
+    :arg session: the session with which to connect to the database.
+    :arg older_than: the datetime threshold.
+    """
+    _search_and_delete(session, model.PropagationStat, "datetime", older_than)
+
+
+def delete_expired_access_stats(session, older_than):
+    """Delete Access statistics older than the specified datetime.
+
+    :arg session: the session with which to connect to the database.
+    :arg older_than: the datetime threshold.
+    """
+    _search_and_delete(session, model.AccessStat, "date", older_than)
+
+
+def delete_expired_file_details(session, older_than):
+    """Delete FileDetail instances when they are older than the specified datetime
+
+    (and if they are not the last one)
+
+    :arg session: the session with which to connect to the database.
+    :arg older_than: the datetime threshold.
+    """
+    counted_query = sa.select(
+        model.FileDetail.id,
+        model.FileDetail.timestamp,
+        sa.func.row_number()
+        .over(
+            partition_by=(model.FileDetail.directory_id, model.FileDetail.filename),
+            order_by=model.FileDetail.timestamp.desc(),
+        )
+        .label("count"),
+    ).cte(name="counted")
+    query = sa.select(counted_query).where(
+        counted_query.c.timestamp < older_than.timestamp(), counted_query.c.count > 1
+    )
+    for fd in session.execute(query).all():
+        print(fd.id, fd.directory_id, fd.count)
+        # session.delete(fd)
+
+
+def get_statistics(session, date, stat_category):
+    """Get the Access statistics for the specified date and access stat category."""
+    query = (
+        sa.select(model.AccessStat)
+        .join(model.AccessStatCategory)
+        .where(model.AccessStatCategory.name == stat_category, model.AccessStat.date == date)
+        .order_by(model.AccessStat.requests.desc())
+    )
+    return list(session.execute(query).scalars())

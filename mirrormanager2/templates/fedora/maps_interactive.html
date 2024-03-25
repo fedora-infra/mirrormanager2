@@ -1,0 +1,36 @@
+{% extends "master_noauth.html" %}
+
+{% block title %}Interactive Map{% endblock %}
+{% block tag %}maps{% endblock %}
+
+{% block header %}
+<script src="{{ url_for('static', filename='map/OpenLayers.js') }}" type="text/javascript"></script>
+{% endblock %}
+
+{% block content %}
+<h1 id="title">Fedora Mirrors Map</h1>
+<div id="map"></div>
+<script defer="defer" type="text/javascript">
+
+  var map = new OpenLayers.Map ("map");
+  var Osm = new OpenLayers.Layer.OSM("Open Street Map",
+    // Official OSM tileset as protocol-independent URLs
+    [
+      '//a.tile.openstreetmap.org/${z}/${x}/${y}.png',
+      '//b.tile.openstreetmap.org/${z}/${x}/${y}.png',
+      '//c.tile.openstreetmap.org/${z}/${x}/${y}.png'
+    ], null);
+
+  map.addLayer(Osm);
+
+  var text = new OpenLayers.Layer.Text( "Fedora Mirrors", {location: "{{url_for('base.index')}}map/mirrors_location.txt"} );
+  map.addLayer(text);
+  var lonlat = new OpenLayers.LonLat(-15, 25).transform(
+    new OpenLayers.Projection("EPSG:4326"), // transform from WGS 1984
+    new OpenLayers.Projection("EPSG:900913") // to Spherical Mercator
+  );
+
+  map.setCenter(lonlat, 3);
+
+</script>
+{% endblock %}

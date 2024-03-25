@@ -31,14 +31,14 @@ import flask
 from flask_admin import Admin
 from flask_oidc import OpenIDConnect
 from sqlalchemy.orm import configure_mappers
+from whitenoise import WhiteNoise
 
 from mirrormanager2 import __version__, local_auth
 from mirrormanager2.admin import register_views as register_admin_views
-from mirrormanager2.database import Database
+from mirrormanager2.database import DB
 from mirrormanager2.perms import is_mirrormanager_admin
 
 OIDC = OpenIDConnect(prefix="oidc")
-DB = Database()
 
 
 def inject_variables():
@@ -113,7 +113,8 @@ def create_app(config=None):
     configure_mappers()
     # Now init Flask-Admin
     ADMIN.init_app(app)
-    register_admin_views(app, ADMIN, DB.session)
+    with app.app_context():
+        register_admin_views(app, ADMIN, DB.session)
 
     # Template variables
     app.context_processor(inject_variables)
@@ -131,5 +132,9 @@ def create_app(config=None):
     from mirrormanager2.xml_rpc import XMLRPC
 
     XMLRPC.connect(app, "/xmlrpc")
+
+    # More static files
+    app.wsgi_app = WhiteNoise(app.wsgi_app)
+    app.wsgi_app.add_files(os.path.join(app.config["MM_LOG_DIR"], "crawler"), prefix="crawler/")
 
     return app
