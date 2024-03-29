@@ -431,6 +431,7 @@ def get_repositories(session, product_name=None, version_name=None, prefix=None,
 
     """
     query = session.query(model.Repository)
+    order_by = [model.Repository.id]
     if product_name:
         query = (
             query.join(model.Version).join(model.Product).filter(model.Product.name == product_name)
@@ -444,7 +445,9 @@ def get_repositories(session, product_name=None, version_name=None, prefix=None,
         query = query.filter(model.Repository.prefix == prefix)
     if arch:
         query = query.join(model.Arch).filter(model.Arch.name == arch)
-    query = query.order_by(model.Repository.id)
+    else:
+        order_by.insert(0, model.Arch.id)
+    query = query.order_by(*order_by)
     return query.all()
 
 
