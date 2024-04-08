@@ -5,22 +5,6 @@ mirrormanager2 tests.
 import mirrormanager2.lib
 
 
-def test_query_directories(
-    db,
-    base_items,
-    site,
-    hosts,
-    directory,
-    category,
-    hostcategory,
-    hostcategoryurl,
-    categorydirectory,
-):
-    """Test the query_directories function of mirrormanager2.lib."""
-    results = mirrormanager2.lib.query_directories(db)
-    assert len(results) == 12
-
-
 def test_get_site(db, site):
     """Test the get_site function of mirrormanager2.lib."""
     results = mirrormanager2.lib.get_site(db, 0)
@@ -113,23 +97,6 @@ def test_get_host(db, site, hosts):
     results = mirrormanager2.lib.get_host(db, 3)
     assert results.name == "private.localhost"
     assert results.country == "NL"
-
-
-def test_get_hosts_empty(db):
-    results = mirrormanager2.lib.get_hosts(db)
-    assert results == []
-
-
-def test_get_hosts(db, site, hosts):
-    """Test the get_hosts function of mirrormanager2.lib."""
-    results = mirrormanager2.lib.get_hosts(db)
-    assert len(results) == 4
-    assert results[0].name == "mirror.localhost"
-    assert results[0].country == "US"
-    assert results[1].name == "mirror2.localhost"
-    assert results[1].country == "FR"
-    assert results[2].name == "private.localhost"
-    assert results[2].country == "NL"
 
 
 def test_get_host_acl_ip_empty(db):
@@ -480,21 +447,6 @@ def test_get_category_by_name(db, base_items, directory, category):
     assert results is None
 
 
-def test_get_category_directory_empty(db):
-    results = mirrormanager2.lib.get_category_directory(db)
-    assert results == []
-
-
-def test_get_category_directory(db, base_items, directory, category, categorydirectory):
-    """Test the get_category_directory function of mirrormanager2.lib."""
-    results = mirrormanager2.lib.get_category_directory(db)
-    assert len(results) == 4
-    assert results[0].category.name == "Fedora Linux"
-    assert results[0].directory.name == "pub/fedora/linux"
-    assert results[1].category.name == "Fedora EPEL"
-    assert results[1].directory.name == "pub/epel"
-
-
 def test_get_product_by_name_empty(db):
     results = mirrormanager2.lib.get_product_by_name(db, "Fedora")
     assert results is None
@@ -542,36 +494,6 @@ def test_get_repo_prefix_arch(db, base_items, version, directory, category, repo
     assert results is None
 
 
-def test_get_repo_by_name_empty(db):
-    results = mirrormanager2.lib.get_repo_by_name(db, "pub/fedora/linux/updates/testing/19/x86_64")
-    assert results is None
-
-
-def test_get_repo_by_name(db, base_items, version, directory, category, repository):
-    """Test the get_repo_by_name function of mirrormanager2.lib."""
-    results = mirrormanager2.lib.get_repo_by_name(db, "pub/fedora/linux/updates/testing/25/x86_64")
-    assert results.name == "pub/fedora/linux/updates/testing/25/x86_64"
-
-    results = mirrormanager2.lib.get_repo_by_name(db, "pub/fedora/linux/updates/testing/26/x86_64")
-    assert results.name == "pub/fedora/linux/updates/testing/26/x86_64"
-
-    results = mirrormanager2.lib.get_repo_by_name(db, "pub/fedora/linux/updates/testing/19/i386")
-    assert results is None
-
-
-def test_get_repo_by_dir_empty(db):
-    results = mirrormanager2.lib.get_repo_by_dir(db, "pub/fedora/linux/updates/testing/21/x86_64")
-    assert results == []
-
-
-def test_get_repo_by_dir(db, base_items, version, directory, category, repository):
-    """Test the get_repo_by_dir function of mirrormanager2.lib."""
-    results = mirrormanager2.lib.get_repo_by_dir(db, "pub/fedora/linux/updates/testing/27/x86_64")
-    assert len(results) == 1
-    assert results[0].name == "pub/fedora/linux/updates/testing/27/x86_64"
-    assert results[0].arch.name == "x86_64"
-
-
 def test_get_repositories_empty(db):
     results = mirrormanager2.lib.get_repositories(db)
     assert results == []
@@ -589,23 +511,6 @@ def test_get_repositories(db, base_items, version, directory, category, reposito
 
     assert results[2].name == "pub/fedora/linux/updates/testing/27/x86_64"
     assert results[2].arch.name == "x86_64"
-
-
-def test_get_reporedirect_empty(db):
-    results = mirrormanager2.lib.get_reporedirect(db)
-    assert results == []
-
-
-def test_get_reporedirect(db, repositoryredirect):
-    """Test the get_reporedirect function of mirrormanager2.lib."""
-    results = mirrormanager2.lib.get_reporedirect(db)
-    assert len(results) == 3
-    assert results[0].from_repo == "fedora-rawhide"
-    assert results[0].to_repo == "rawhide"
-    assert results[1].from_repo == "fedora-install-rawhide"
-    assert results[1].to_repo == "rawhide"
-    assert results[2].from_repo == "epel-6.0"
-    assert results[2].to_repo == "epel-6"
 
 
 def test_get_arches_empty(db):
@@ -632,33 +537,6 @@ def test_add_admin_to_site(db, base_items, site):
 
     results = mirrormanager2.lib.add_admin_to_site(db, site, "pingou")
     assert results == "pingou was already listed as an admin"
-
-
-def test_get_locations_empty(db):
-    results = mirrormanager2.lib.get_locations(db)
-    assert results == []
-
-
-def test_get_locations(db, location):
-    """Test the get_locations function of mirrormanager2.lib."""
-    results = mirrormanager2.lib.get_locations(db)
-    assert len(results) == 3
-    assert results[0].name == "foo"
-    assert results[1].name == "bar"
-    assert results[2].name == "foobar"
-
-
-def test_get_netblock_country_empty(db):
-    results = mirrormanager2.lib.get_netblock_country(db)
-    assert results == []
-
-
-def test_get_netblock_country(db, netblockcountry):
-    """Test the get_netblock_country function of mirrormanager2.lib."""
-    results = mirrormanager2.lib.get_netblock_country(db)
-    assert len(results) == 1
-    assert results[0].netblock == "127.0.0.0/24"
-    assert results[0].country == "AU"
 
 
 def check_results_host(results):
@@ -870,20 +748,6 @@ def test_get_directory_by_name(db, directory):
     assert results.readable is True
 
 
-def test_get_directories_empty(db):
-    results = mirrormanager2.lib.get_directories(db)
-    assert results == []
-
-
-def test_get_directories(db, directory):
-    """Test the get_directories function of mirrormanager2.lib."""
-    results = mirrormanager2.lib.get_directories(db)
-    assert len(results) == 9
-    assert results[0].name == "pub/fedora/linux"
-    assert results[1].name == "pub/fedora/linux/extras"
-    assert results[2].name == "pub/epel"
-
-
 def test_get_directory_by_id_empty(db):
     results = mirrormanager2.lib.get_directory_by_id(db, 1)
     assert results is None
@@ -908,7 +772,7 @@ def test_get_hostcategorydir_by_hostcategoryid_and_path_empty(db):
     results = mirrormanager2.lib.get_hostcategorydir_by_hostcategoryid_and_path(
         db, 2, "pub/fedora/linux/releases/21"
     )
-    assert results == []
+    assert results is None
 
 
 def test_get_hostcategorydir_by_hostcategoryid_and_path(
@@ -917,31 +781,11 @@ def test_get_hostcategorydir_by_hostcategoryid_and_path(
     """Test the get_hostcategorydir_by_hostcategoryid_and_path
     function of mirrormanager2.lib.
     """
-    results = mirrormanager2.lib.get_hostcategorydir_by_hostcategoryid_and_path(
+    result = mirrormanager2.lib.get_hostcategorydir_by_hostcategoryid_and_path(
         db, 3, "pub/fedora/linux/releases/27"
     )
-    assert len(results) == 1
-    assert results[0].directory.name == "pub/fedora/linux/releases/27"
-    assert results[0].host_category.category.name == "Fedora Linux"
-
-
-def test_get_directory_exclusive_host_empty(db):
-    results = mirrormanager2.lib.get_directory_exclusive_host(db)
-    assert results == []
-
-
-def test_get_directory_exclusive_host(
-    db, base_items, site, hosts, directory, directoryexclusivehost
-):
-    """Test the get_directory_exclusive_host function of
-    mirrormanager2.lib.
-    """
-    results = mirrormanager2.lib.get_directory_exclusive_host(db)
-    assert len(results) == 2
-    assert results[0].dname == "pub/fedora/linux/releases/26"
-    assert results[0].host_id == 1
-    assert results[1].dname == "pub/fedora/linux/releases/27"
-    assert results[1].host_id == 3
+    assert result.directory.name == "pub/fedora/linux/releases/27"
+    assert result.host_category.category.name == "Fedora Linux"
 
 
 def test_get_file_detail_empty(db):

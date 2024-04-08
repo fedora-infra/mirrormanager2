@@ -32,7 +32,7 @@ import mirrormanager2.lib
 from mirrormanager2.lib.model import FileDetail, Repository, Version
 from mirrormanager2.lib.repomap import repo_prefix
 
-logger = logging.getLogger("umdl")
+logger = logging.getLogger(__name__)
 
 
 # For ostree, we someday need to actually extract the arch information
@@ -81,10 +81,10 @@ def set_repomd_timestamp(yumrepo):
 
 
 class FileDetailFromChecksumsLoader:
-    sha1_globs = (re.compile(p) for p in [r".*\.sha1sum", "SHA1SUM", "sha1sum.txt"])
-    md5_globs = (re.compile(p) for p in [r".*\.md5sum", "MD5SUM", "md5sum.txt"])
-    sha256_globs = (re.compile(p) for p in [".*-CHECKSUM", "sha256sum.txt"])
-    sha512_globs = (re.compile(p) for p in [r".*\.sha512sum", "SHA512SUM", "sha512sum.txt"])
+    sha1_globs = list(re.compile(p) for p in [r".*\.sha1sum", "SHA1SUM", "sha1sum.txt"])
+    md5_globs = list(re.compile(p) for p in [r".*\.md5sum", "MD5SUM", "md5sum.txt"])
+    sha256_globs = list(re.compile(p) for p in [".*-CHECKSUM", "sha256sum.txt"])
+    sha512_globs = list(re.compile(p) for p in [r".*\.sha512sum", "SHA512SUM", "sha512sum.txt"])
 
     def __init__(self, session, config, directory, relative_dir_name=None):
         """

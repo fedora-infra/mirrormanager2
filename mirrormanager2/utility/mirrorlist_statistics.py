@@ -36,7 +36,7 @@ from mirrormanager2.lib.model import AccessStat, AccessStatCategory
 
 from .common import config_option, setup_logging
 
-logger = logging.getLogger("mirrorlist-statistics")
+logger = logging.getLogger(__name__)
 
 # TODO: rich progress bar
 

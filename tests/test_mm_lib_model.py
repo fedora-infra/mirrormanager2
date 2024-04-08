@@ -2,7 +2,6 @@
 mirrormanager2 model tests.
 """
 
-import mirrormanager2.lib
 import mirrormanager2.lib.model as model
 
 
@@ -153,13 +152,6 @@ def test_hostcategory_repr(db, base_items, directory, category, site, hosts, hos
     assert str(item) == "<HostCategory(1 - <Category(1 - Fedora Linux)>)>"
     item = model.HostCategory.get_by_pk(2)
     assert str(item) == "<HostCategory(2 - <Category(2 - Fedora EPEL)>)>"
-
-
-def test_categorydirectory_repr(db, base_items, directory, category, categorydirectory):
-    """Test the CategoryDirectory.__repr__ object of mirrormanager2.lib.model."""
-    item = mirrormanager2.lib.get_category_directory(db)
-    assert str(item[0]) == "<CategoryDirectory(1 - 1)>"
-    assert str(item[1]) == "<CategoryDirectory(2 - 3)>"
 
 
 def test_arch_repr(db, base_items):

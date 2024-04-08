@@ -1,5 +1,8 @@
 import time
 from contextlib import contextmanager
+from unittest.mock import patch
+
+from mirrormanager2.app import OIDC
 
 
 @contextmanager
@@ -24,7 +27,8 @@ def user_set(client, user):
             "zoneinfo": None,
             "groups": user.groups,
         }
-    yield
+    with patch.object(OIDC, "ensure_active_token"):
+        yield
 
 
 class FakeFasUser:
