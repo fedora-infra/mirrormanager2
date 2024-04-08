@@ -443,10 +443,13 @@ def get_repositories(session, product_name=None, version_name=None, prefix=None,
         query = query.filter(model.Version.name == version_name)
     if prefix:
         query = query.filter(model.Repository.prefix == prefix)
+
+    query = query.join(model.Arch)
     if arch:
-        query = query.join(model.Arch).filter(model.Arch.name == arch)
+        query = query.filter(model.Arch.name == arch)
     else:
         order_by.insert(0, model.Arch.id)
+
     query = query.order_by(*order_by)
     return query.all()
 

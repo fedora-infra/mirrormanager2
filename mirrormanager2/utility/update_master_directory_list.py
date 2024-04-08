@@ -52,7 +52,7 @@ STD_EXCLUDES = [r".*\.snapshot", r".*/\.~tmp~"]
 SKIP_REPO_DIRS = ["Cloud", "Workstation", "Server"]
 
 
-logger = logging.getLogger("umdl")
+logger = logging.getLogger(__name__)
 _current_cname = "N/A"
 
 
@@ -408,10 +408,17 @@ class DiskDirSynchronizer(DirSynchronizer):
             isAtomic = "summary" in filenames and "objects" in dirnames
 
             changed = d_ctime != ctime
+            relativeDNameText = f" {relativeDName}" if relativeDName else ""
             if changed:
-                logger.info(f"{relativeDName} has changed: {d_ctime} != {ctime}")
+                logger.info(
+                    "%s%s has changed: %s != %s",
+                    self.category.name,
+                    relativeDNameText,
+                    d_ctime,
+                    ctime,
+                )
             else:
-                logger.debug("    %s has not changed" % relativeDName)
+                logger.debug("%s %s has not changed", self.category.name, relativeDName)
 
             category_directories[relativeDName] = {
                 "files": {},

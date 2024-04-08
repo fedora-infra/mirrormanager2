@@ -5,6 +5,7 @@ mirrormanager2 tests for the `Move To Archive` (MTA) script.
 import os
 
 import pytest
+import sqlalchemy as sa
 from click.testing import CliRunner
 
 import mirrormanager2.lib
@@ -102,7 +103,7 @@ def test_mta(
     assert results[2].prefix == "updates-testing-f27"
     assert results[2].directory.name == "pub/fedora/linux/updates/testing/27/x86_64"
 
-    results = mirrormanager2.lib.get_directories(db)
+    results = db.execute(sa.select(model.Directory)).scalars().all()
     # create_directory creates 9 directories
     # we create 1 more here, 9+1=10
     assert len(results) == 10
@@ -155,7 +156,7 @@ def test_mta(
 
     # After the script
 
-    results = mirrormanager2.lib.get_directories(db)
+    results = db.execute(sa.select(model.Directory)).scalars().all()
     # create_directory creates 9 directories
     # we create 1 more here, 9+1=10
     assert len(results) == 11

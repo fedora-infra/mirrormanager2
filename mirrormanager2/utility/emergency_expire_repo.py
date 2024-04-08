@@ -40,7 +40,7 @@ from mirrormanager2.lib.model import Product, Repository, Version
 
 from .common import config_option
 
-logger = logging.getLogger("mm2")
+logger = logging.getLogger(__name__)
 
 
 def setup_logging():

@@ -2,10 +2,10 @@
 mirrormanager2 tests for the `Move Devel To Release` (MDTL) script.
 """
 
-
 import os
 
 import pytest
+import sqlalchemy as sa
 from click.testing import CliRunner
 
 import mirrormanager2.lib
@@ -144,7 +144,7 @@ def test_mdtr(command_args, db, base_items, directory, category, categorydirecto
     results = mirrormanager2.lib.get_repositories(db)
     assert len(results) == 2
 
-    results = mirrormanager2.lib.get_directories(db)
+    results = db.execute(sa.select(model.Directory)).scalars().all()
     # create_directory creates 9 directories
     # we create 6 more here, 9+6=15
     assert len(results) == 15
@@ -187,7 +187,7 @@ def test_mdtr(command_args, db, base_items, directory, category, categorydirecto
     assert res.arch.name == "x86_64"
     assert res.directory.name == "pub/fedora/linux/releases/26/Everything/x86_64/os"
 
-    results = mirrormanager2.lib.get_directories(db)
+    results = db.execute(sa.select(model.Directory)).scalars().all()
     # create_directory creates 9 directories
     # we create 6 more here, 9+6=15
     assert len(results) == 15
@@ -229,7 +229,7 @@ def test_mdtr(command_args, db, base_items, directory, category, categorydirecto
     assert res.arch.name == "x86_64"
     assert res.directory.name == "pub/fedora/linux/releases/26/Everything/x86_64/os"
 
-    results = mirrormanager2.lib.get_directories(db)
+    results = db.execute(sa.select(model.Directory)).scalars().all()
     # create_directory creates 9 directories
     # we create 6 more here, 9+6=15
     assert len(results) == 15
