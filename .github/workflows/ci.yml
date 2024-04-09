@@ -25,16 +25,10 @@ jobs:
     - name: Install dependencies
       run: dnf install -y python-pyrpmmd python-tox git rsync poetry
     - name: Install dependencies for rawhide
-      run: dnf install -y gcc gcc-c++ libffi-devel python-devel python-greenlet libpq-devel
+      run: dnf install -y gcc gcc-c++ libffi-devel python-devel python-greenlet libpq-devel python-pip
     - name: Mark the directory as safe for git
       run: git config --global --add safe.directory $PWD
-    - name: "rawhide hack: patch poetry to accept RPM-installed packages"
-      run: |
-        dnf install -y patch
-        cd $(python3 -c "import poetry; print(poetry.__path__[-1])")
-        poetry_ver=$(poetry --version | sed -e 's/[^0-9.]//g')
-        echo ${poetry_ver}
-        echo https://abompard.fedorapeople.org/poetry-${poetry_ver}-system-packages.patch
-        curl https://abompard.fedorapeople.org/poetry-${poetry_ver}-system-packages.patch | patch -p3
+    - name: Use the latest poetry version to support RPM-installed packages
+      run: pip install --upgrade poetry
     - name: Run Tests
       run: tox
