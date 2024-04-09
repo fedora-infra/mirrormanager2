@@ -75,7 +75,9 @@ def command_args(configfile):
 
 def run_command(args):
     runner = CliRunner()
-    return runner.invoke(update_master_directory_list.main, args, env={"TERM": "dumb"})
+    return runner.invoke(
+        update_master_directory_list.main, args, env={"TERM": "dumb", "COLUMNS": "80"}
+    )
 
 
 def test_0_umdl_empty_db(command_args, db, caplog):
@@ -107,34 +109,16 @@ def test_1_umdl(db, command_args, base_items, directory, category, categorydirec
     """Test the umdl cron."""
     caplog.set_level(logging.DEBUG)
 
-    # for catname in ("Secondary Arches", "Archive", "Other"):
-    #     db.add(
-    #         model.Category(
-    #             name=f"Fedora {catname}",
-    #             product_id=2,
-    #             canonicalhost="http://download.fedora.redhat.com",
-    #             topdir_id=1,
-    #             publiclist=True,
-    #         )
-    #     )
-    # db.commit()
-
     # Run the UDML
     result = run_command(command_args)
     assert result.exit_code == 0, result.output
     assert result.output == (
-        # "Syncing repositories of Fedora Other ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   0% "
-        # "-:--:--\n"
-        "Syncing repositories of Fedora Linux ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% "
-        "0:00:00\n"
+        "Syncing repositories of Fedora Linux ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% " "0:00:00\n"
     )
     # Ignore for now
     # assert stderr == ''
 
     # The DB should now be filled with what UMDL added, so let's check it
-    results = db.execute(sa.select(model.Directory)).scalars().all()
-    # assert len(results) == 0
-
     results = mirrormanager2.lib.get_versions(db)
     assert len(results) == 2
     for result in results:
