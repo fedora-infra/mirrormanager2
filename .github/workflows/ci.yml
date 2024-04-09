@@ -25,7 +25,7 @@ jobs:
     - name: Install dependencies
       run: dnf install -y python-pyrpmmd python-tox git rsync poetry
     - name: Install dependencies for rawhide
-      run: dnf install -y gcc gcc-c++ libffi-devel python-devel python-greenlet
+      run: dnf install -y gcc gcc-c++ libffi-devel python-devel python-greenlet libpq-devel
     - name: Mark the directory as safe for git
       run: git config --global --add safe.directory $PWD
     - name: "rawhide hack: patch poetry to accept RPM-installed packages"
