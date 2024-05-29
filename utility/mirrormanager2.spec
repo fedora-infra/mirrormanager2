@@ -15,45 +15,47 @@ Source0:        %{url}/archive/%{version}/%{name}-%{version}.tar.gz
 
 BuildArch:      noarch
 
+BuildRequires:  systemd-rpm-macros
 BuildRequires:  python%{python_pkgversion}-devel
+BuildRequires:  python%{python_pkgversion}-email-validator
 BuildRequires:  python%{python_pkgversion}-flask
 BuildRequires:  python%{python_pkgversion}-flask-admin
 BuildRequires:  python%{python_pkgversion}-flask-oidc >= 2.0.0
 BuildRequires:  python%{python_pkgversion}-flask-xml-rpc
 BuildRequires:  python%{python_pkgversion}-flask-wtf
 BuildRequires:  python%{python_pkgversion}-wtforms
-BuildRequires:  python%{python_pkgversion}-email-validator
 BuildRequires:  python%{python_pkgversion}-IPy
 BuildRequires:  python%{python_pkgversion}-dns
-BuildRequires:  python%{python_pkgversion}-setuptools
-BuildRequires:  python%{python_pkgversion}-psutil
-BuildRequires:  python%{python_pkgversion}-alembic
 BuildRequires:  python%{python_pkgversion}-backoff
-BuildRequires:  systemd-rpm-macros
-# Testing
 BuildRequires:  python%{python_pkgversion}-fedora-messaging
-BuildRequires:  python%{python_pkgversion}-blinker
-BuildRequires:  rsync
-BuildRequires:  python%{python_pkgversion}-pyrpmmd
-BuildRequires:  poetry
-
-BuildRequires:  python%{python_pkgversion}-py-radix
-Requires:  python%{python3_pkgversion}-mod_wsgi
+BuildRequires:  python%{python_pkgversion}-sqlalchemy-helpers
+BuildRequires:  python%{python_pkgversion}-click
+BuildRequires:  python%{python_pkgversion}-geoip2
+BuildRequires:  python%{python_pkgversion}-whitenoise
+BuildRequires:  python%{python_pkgversion}-rich
+BuildRequires:  python%{python_pkgversion}-mrtparse
+BuildRequires:  python%{python_pkgversion}-requests
 # Testing
 BuildRequires:  python%{python_pkgversion}-pytest
+BuildRequires:  python%{python_pkgversion}-pytest-cov
 BuildRequires:  python%{python_pkgversion}-coverage
+BuildRequires:  python%{python_pkgversion}-sphinx
+BuildRequires:  python%{python_pkgversion}-blinker
+BuildRequires:  python%{python_pkgversion}-sphinxcontrib-httpdomain
+BuildRequires:  python%{python_pkgversion}-cloud-sptheme
+BuildRequires:  rsync
+BuildRequires:  python%{python_pkgversion}-responses
+BuildRequires:  poetry
 
+Requires:  python%{python_pkgversion}-email-validator
 Requires:  python%{python_pkgversion}-flask
 Requires:  python%{python_pkgversion}-flask-admin
 Requires:  python%{python_pkgversion}-flask-oidc >= 2.0.0
 Requires:  python%{python_pkgversion}-flask-xml-rpc
 Requires:  python%{python_pkgversion}-flask-wtf
 Requires:  python%{python_pkgversion}-wtforms
-Requires:  python%{python_pkgversion}-email-validator
-Requires:  python%{python_pkgversion}-setuptools
-Requires:  python%{python_pkgversion}-psutil
-Requires:  python%{python_pkgversion}-alembic
 Requires:  python%{python_pkgversion}-backoff
+Requires:  python%{python_pkgversion}-sqlalchemy-helpers
 
 Requires:  %{name}-lib = %{version}-%{release}
 Requires:  %{name}-filesystem = %{version}-%{release}
@@ -73,7 +75,6 @@ BuildArch:      noarch
 Requires:  %{name}-filesystem = %{version}-%{release}
 Requires:  python%{python_pkgversion}-IPy
 Requires:  python%{python_pkgversion}-dns
-Requires:  python%{python_pkgversion}-sqlalchemy >= 0.7
 Requires:  python%{python_pkgversion}-pyrpmmd
 
 %description lib
@@ -132,16 +133,13 @@ Requires:  %{name}-filesystem = %{version}-%{release}
 Requires:  %{name}-lib = %{version}-%{release}
 Requires:  logrotate
 Requires:  python%{python_pkgversion}-geoip2
-Requires:  python%{python_pkgversion}-matplotlib
-Requires:  python%{python_pkgversion}-basemap
 
 %description statistics
 A collection of different statistics script which are analyzing
 MirrorManager content or log files. It contains scripts to analyze
 the mirrorlist server connections, draws maps of all available mirrors
 and can also visualize how fast the master data propagates to all the
-mirrors. As it depends on matplotlib it has a rather large dependency
-tree.
+mirrors.
 
 %package filesystem
 Summary:        Base directories used by multiple subpackages
