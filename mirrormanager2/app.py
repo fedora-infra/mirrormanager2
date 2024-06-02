@@ -38,7 +38,7 @@ from mirrormanager2.admin import register_views as register_admin_views
 from mirrormanager2.database import DB
 from mirrormanager2.perms import is_mirrormanager_admin
 
-OIDC = OpenIDConnect(prefix="oidc")
+OIDC = OpenIDConnect()
 
 
 def inject_variables():
@@ -99,9 +99,9 @@ def create_app(config=None):
 
     # Auth
     if app.config.get("MM_AUTHENTICATION") == "fas":
-        OIDC.init_app(app)
+        OIDC.init_app(app, prefix="/oidc")
     elif app.config.get("MM_AUTHENTICATION") == "local":
-        app.register_blueprint(local_auth.views, prefix="auth")
+        app.register_blueprint(local_auth.views, url_prefix="/auth")
 
     # Admin UI
     # Flask-Admin does not support having a single instance and multiple calls
@@ -128,7 +128,7 @@ def create_app(config=None):
     app.register_blueprint(base_views)
     from mirrormanager2.api import views as api_views
 
-    app.register_blueprint(api_views, prefix="api")
+    app.register_blueprint(api_views, url_prefix="/api")
     from mirrormanager2.xml_rpc import XMLRPC
 
     XMLRPC.connect(app, "/xmlrpc")
