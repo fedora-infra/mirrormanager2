@@ -108,11 +108,13 @@ build-backend = "poetry.core.masonry.api"
 line-length = 100
 
 [tool.ruff]
-select = ["E", "F", "W", "I", "B", "UP"]
 line-length = 100
 target-version = "py39"
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101", "S105", "S106"]
 "doc/conf.py" = ["E402"]
 "mirrormanager2/app.py" = ["E402"]
