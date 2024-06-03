@@ -83,9 +83,7 @@ class AddSiteForm(FlaskForm):
 class AddHostForm(FlaskForm):
     """Form to add or edit a host."""
 
-    name = wtforms.StringField(
-        'Host name  <span class="error">*</span>', [wtforms.validators.InputRequired()]
-    )
+    name = wtforms.StringField("Host name", [wtforms.validators.InputRequired()])
     admin_active = wtforms.BooleanField("Admin active", default=True)
     user_active = wtforms.BooleanField("User active", default=True)
     disable_reason = wtforms.StringField(
@@ -93,14 +91,14 @@ class AddHostForm(FlaskForm):
         [wtforms.validators.Optional()],
     )
     country = wtforms.StringField(
-        'Country  <span class="error">*</span>',
+        "Country",
         [
             wtforms.validators.InputRequired(),
             wtforms.validators.Regexp(COUNTRY_REGEX, flags=re.IGNORECASE),
         ],
     )
     bandwidth_int = wtforms.StringField(
-        'Bandwidth  <span class="error">*</span>',
+        "Bandwidth",
         [wtforms.validators.InputRequired(), is_number],
     )
     private = wtforms.BooleanField("Private", default=False)
@@ -121,7 +119,7 @@ class AddHostForm(FlaskForm):
         [wtforms.validators.Optional()],
     )
     max_connections = wtforms.StringField(
-        'Max connections  <span class="error">*</span>',
+        "Max connections",
         [wtforms.validators.InputRequired(), is_number],
         default=1,
     )
@@ -130,9 +128,7 @@ class AddHostForm(FlaskForm):
 class AddHostAclIpForm(FlaskForm):
     """Form to add or edit a host_acl_ip."""
 
-    ip = wtforms.StringField(
-        'IP  <span class="error">*</span>', [wtforms.validators.InputRequired()]
-    )
+    ip = wtforms.StringField("IP", [wtforms.validators.InputRequired()])
 
 
 def validate_netblocks(form, field):
@@ -162,11 +158,9 @@ def validate_netblocks(form, field):
 class AddHostNetblockForm(FlaskForm):
     """Form to add or edit a host_netblock."""
 
-    name = wtforms.StringField(
-        'Name  <span class="error">*</span>', [wtforms.validators.InputRequired()]
-    )
+    name = wtforms.StringField("Name", [wtforms.validators.InputRequired()])
     netblock = wtforms.StringField(
-        'Netblock  <span class="error">*</span>',
+        "Netblock",
         [wtforms.validators.InputRequired(), validate_netblocks],
     )
 
@@ -174,11 +168,9 @@ class AddHostNetblockForm(FlaskForm):
 class AddHostAsnForm(FlaskForm):
     """Form to add or edit a host_peer_asn."""
 
-    name = wtforms.StringField(
-        'Name  <span class="error">*</span>', [wtforms.validators.InputRequired()]
-    )
+    name = wtforms.StringField("Name", [wtforms.validators.InputRequired()])
     asn = wtforms.StringField(
-        'ASN  <span class="error">*</span>',
+        "ASN",
         [wtforms.validators.InputRequired(), is_number],
     )
 
@@ -187,7 +179,7 @@ class AddHostCountryForm(FlaskForm):
     """Form to add or edit a host_country."""
 
     country = wtforms.StringField(
-        'Country  <span class="error">*</span>',
+        "Country",
         [
             wtforms.validators.InputRequired(),
             wtforms.validators.Regexp(COUNTRY_REGEX, flags=re.IGNORECASE),
@@ -226,7 +218,7 @@ class AddHostCategoryUrlForm(FlaskForm):
     """Form to add a host_category_url."""
 
     url = wtforms.StringField(
-        'URL  <span class="error">*</span>',
+        "URL",
         [
             wtforms.validators.InputRequired(),
             # private mirrors might have unusual URLs

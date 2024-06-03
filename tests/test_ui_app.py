@@ -8,6 +8,8 @@ import pytest
 
 from mirrormanager2.lib import get_host
 
+HTML_REQUIRED = '<span class="error">*</span>'
+
 
 @pytest.fixture(autouse=True)
 def setup_all(db_items):
@@ -128,7 +130,7 @@ def test_site_new_auth(client, user):
     data = output.get_data(as_text=True)
     assert "<title>New Site - MirrorManager</title>" in data
     assert "<h2>Export Compliance</h2>" in data
-    assert 'td><label for="name">Site name</label></td>' in data
+    assert f'td><label for="name">Site name</label> {HTML_REQUIRED}</td>' in data
     assert '<a class="nav-link" href="/mirrors">Mirrors</a>' in data
 
     csrf_token = data.split('name="csrf_token" type="hidden" value="')[1].split('">')[0]
@@ -148,7 +150,7 @@ def test_site_new_auth(client, user):
     data = output.get_data(as_text=True)
     assert "<title>New Site - MirrorManager</title>" in data
     assert "<h2>Export Compliance</h2>" in data
-    assert 'td><label for="name">Site name</label></td>' in data
+    assert f'td><label for="name">Site name</label> {HTML_REQUIRED}</td>' in data
     assert '<a class="nav-link" href="/mirrors">Mirrors</a>' in data
 
     # Create the new site
