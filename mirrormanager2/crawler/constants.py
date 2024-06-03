@@ -14,3 +14,4 @@ CONNECTION_TIMEOUT = 10  # seconds
 
 # Number of times to retry a connection
 RETRIES = 10
+RETRIES_MAX_INTERVAL = 10  # in seconds
