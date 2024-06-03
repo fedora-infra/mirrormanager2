@@ -31,12 +31,14 @@ def _on_backoff(details):
         f"Server load exceeded on {url} - trying again in "
         f"{details['wait']:0.1f}s (after {details['tries']} tries)"
     )
+    logger.debug(f"Exception was: {details['exception']}")
 
 
 def _on_giveup(details):
     # connector = details["args"][0]
     url = details["args"][1]
     logger.info(f"Server load exceeded on {url} - giving up after {details['tries']} tries")
+    logger.debug(f"Exception was: {details['exception']}")
 
 
 class Connector:

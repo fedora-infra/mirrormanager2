@@ -41,7 +41,7 @@ class FTPConnector(Connector):
 
     def get_ftp_dir(self, url, readable, i=0):
         if i > 1:
-            raise TryLater()
+            raise TryLater("Too many FTP 530 errors")
 
         try:
             listing = self._ftp_dir(url)
@@ -62,7 +62,7 @@ class FTPConnector(Connector):
                 self.close_ftp(url)
                 return self.get_ftp_dir(url, readable, i + 1)
             if str(e).startswith("500"):  # Oops
-                raise TryLater() from e
+                raise TryLater(f"Got FTP 500 error: {e}") from e
             else:
                 logger.error(f"unknown permanent error {e} on {url}")
                 raise
@@ -73,11 +73,11 @@ class FTPConnector(Connector):
             # Returned by Princeton University when cannot log in due to
             # connection restrictions
             if str(e).startswith("421"):
-                logger.info("Connections Exceeded %s" % url)
-                raise TryLater() from e
+                logger.info("Connections Exceeded %s", url)
+                raise TryLater(f"FTP error 421: {e}") from e
             if str(e).startswith("425"):
-                logger.info("Failed to establish connection on %s" % url)
-                raise TryLater() from e
+                logger.info("Failed to establish connection on %s", url)
+                raise TryLater(f"FTP error 425: {e}") from e
             else:
                 logger.error(f"unknown error {e} on {url}")
                 raise

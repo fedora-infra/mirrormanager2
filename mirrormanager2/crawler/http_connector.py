@@ -40,7 +40,7 @@ class HTTPConnector(Connector):
             response = conn.head(url, timeout=CONNECTION_TIMEOUT)
             response.raise_for_status()
         except requests.Timeout as e:
-            raise TryLater from e
+            raise TryLater(f"HTTP timeout: {e}") from e
         except requests.HTTPError as e:
             response = e.response
             if response.status_code in (404, 410):
