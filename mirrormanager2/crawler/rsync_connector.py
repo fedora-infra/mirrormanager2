@@ -110,7 +110,8 @@ class RsyncConnector(Connector):
         category_prefix_length,
     ):
         # Scan once for the entire category
-        self._scan_result = self._run(url)
+        if self._scan_result is None:
+            self._scan_result = self._run(url)
         if not self._scan_result:
             # no rsync content, fail!
             raise SchemeNotAvailable
