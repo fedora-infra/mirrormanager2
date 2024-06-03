@@ -27,7 +27,7 @@ def human_duration(total_seconds):
         f"{minutes}m" if minutes else "",
         f"{seconds}s" if seconds else "",
     ]
-    return "".join(output)
+    return "".join(output) if output else "0s"
 
 
 class ProgressTask:
