@@ -23,7 +23,7 @@ timestampNow=$(date --utc +%s)
 yesterday=$((timestampNow - (60 * 60 * 24)))
 tmpfile=$(mktemp rsync.XXXXXXXX)
 curl \
-"https://admin.fedoraproject.org/mirrormanager/rsyncFilter?categories=Fedora%20Linux&since=${yesterday}&stripprefix=pub/fedora" \
+"https://mirrormanager.fedoraproject.org/rsyncFilter?categories=Fedora%20Linux&since=${yesterday}&stripprefix=pub/fedora" \
 > ${tmpfile}
 
 rsync -vvaHP --numeric-ids --exclude-from=${tmpfile} \
