@@ -1,6 +1,6 @@
 {% macro render_field(field, after="") %}
 <div class="row">
-  {{ field.label }}{% if field.flags.required %} <span class="error">*</span>{% endif %}{{ field(**kwargs)|safe }}
+  {{ field.label }}{% if field.flags.required %} <span class="text-danger" title="Required">*</span>{% endif %}{{ field(**kwargs)|safe }}
   {% if after %} {{ after }}{% endif %}
   {% if field.errors %}
   <ul class="errors">
@@ -14,7 +14,7 @@
 
 {% macro render_field_invert(field, after="") %}
 <div class="row">
-  {{ field(**kwargs)|safe }}{{ field.label }}{% if field.flags.required %} <span class="error">*</span>{% endif %}
+  {{ field(**kwargs)|safe }}{{ field.label }}{% if field.flags.required %} <span class="text-danger" title="Required">*</span>{% endif %}
   {% if after %} {{ after }}{% endif %}
   {% if field.errors %}
   <ul class="errors">
@@ -28,7 +28,7 @@
 
 {% macro render_field_in_row(field, after="", escape_after=False) %}
 <tr>
-    <td>{{ field.label }}{% if field.flags.required %} <span class="error">*</span>{% endif %}</td>
+    <td>{{ field.label }}{% if field.flags.required %} <span class="text-danger" title="Required">*</span>{% endif %}</td>
     <td>{{ field(**kwargs)|safe }}</td>
 
     {% if escape_after %}

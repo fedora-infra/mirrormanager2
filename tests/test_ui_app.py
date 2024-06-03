@@ -8,7 +8,7 @@ import pytest
 
 from mirrormanager2.lib import get_host
 
-HTML_REQUIRED = '<span class="error">*</span>'
+HTML_REQUIRED = '<span class="text-danger" title="Required">*</span>'
 
 
 @pytest.fixture(autouse=True)
