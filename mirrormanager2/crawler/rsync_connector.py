@@ -83,7 +83,7 @@ class RsyncConnector(Connector):
 
                 logger.debug("trying with key %s", key)
                 try:
-                    current_file_info = self._scan_result[filename]
+                    current_file_info = self._scan_result[key]
                 except KeyError:  # file is not in the rsync listing
                     logger.debug("Missing remote file %s", key)
                     return False
