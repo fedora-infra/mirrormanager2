@@ -98,7 +98,7 @@ class Connector:
             logger.debug("Could not get %s", graburl)
             return False
         session = object_session(directory)
-        latest_file_detail = mmlib.get_file_detail(session, filename, directory_id=directory.id)
+        latest_file_detail = mmlib.get_file_detail(session, filename, directory_id=directory.id, reverse=True)
         if latest_file_detail is None:
             return False
         if latest_file_detail.sha256 != sha256:
