@@ -31,7 +31,6 @@ BuildRequires:  python%{python_pkgversion}-fedora-messaging
 BuildRequires:  python%{python_pkgversion}-sqlalchemy-helpers
 BuildRequires:  python%{python_pkgversion}-click
 BuildRequires:  python%{python_pkgversion}-geoip2
-BuildRequires:  python%{python_pkgversion}-whitenoise
 BuildRequires:  python%{python_pkgversion}-rich
 BuildRequires:  python%{python_pkgversion}-mrtparse
 BuildRequires:  python%{python_pkgversion}-requests

@@ -60,7 +60,6 @@ click = "^8.1.7"
 geoip2 = "^4.7.0"
 gunicorn = {version = "^21.2.0", optional = true}
 psycopg2 = {version = "^2.9.9", optional = true}
-whitenoise = "^6.6.0"
 rich = "^13.7.0"
 mrtparse = "^2.2.0"
 requests = "^2.31.0"

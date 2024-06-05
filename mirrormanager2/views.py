@@ -1,4 +1,5 @@
 import datetime
+import os
 import re
 
 import flask
@@ -1255,3 +1256,9 @@ def propagation(repo_id):
     return flask.render_template(
         "propagation.html", repos=repos, repo=repo, labels=labels, datasets=datasets
     )
+
+
+@views.route("/crawler/<int:host_id>.log")
+def crawler_log(host_id):
+    crawler_log_dir = os.path.join(flask.current_app.config["MM_LOG_DIR"], "crawler")
+    return flask.helpers.send_from_directory(crawler_log_dir, f"{host_id}.log", max_age=None)
