@@ -27,34 +27,43 @@ class ConnectionPool:
         self.config = config
         self.debuglevel = debuglevel
 
+    def _get_key(self, url):
+        scheme, netloc, path, query, fragment = urlsplit(url)
+        if scheme == "rsync":
+            module = path.split("/")[1]
+            return (scheme, netloc, module)
+        else:
+            return (scheme, netloc)
+
     def get(self, url):
         scheme, netloc, path, query, fragment = urlsplit(url)
-        if (scheme, netloc) not in self._connections:
+        key = self._get_key(url)
+        if key not in self._connections:
             try:
                 connection_class = _get_connection_class(scheme)
             except ValueError:
                 logger.error(f"Malformed URL: {url!r}")
                 raise
-            self._connections[(scheme, netloc)] = connection_class(
+            self._connections[key] = connection_class(
                 config=self.config,
                 netloc=netloc,
                 debuglevel=self.debuglevel,
-                on_closed=partial(self._remove_connection, scheme, netloc),
+                on_closed=partial(self._remove_connection, key),
             )
-            # self._connections[(scheme, netloc)] = self._connect(netloc)
-            # self._connections[(scheme, netloc)].set_debuglevel(self.debuglevel)
-        return self._connections[(scheme, netloc)]
+            # self._connections[key] = self._connect(netloc)
+            # self._connections[key].set_debuglevel(self.debuglevel)
+        return self._connections[key]
 
     def close(self, url):
-        scheme, netloc, path, query, fragment = urlsplit(url)
+        key = self._get_key(url)
         try:
-            connection = self._connections[(scheme, netloc)]
+            connection = self._connections[key]
         except KeyError:
             return
         connection.close()
 
-    def _remove_connection(self, scheme, netloc, connection):
-        del self._connections[(scheme, netloc)]
+    def _remove_connection(self, key, connection):
+        del self._connections[key]
 
     def close_all(self):
         for connection in list(self._connections.values()):

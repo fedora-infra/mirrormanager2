@@ -15,6 +15,10 @@ class RsyncConnector(Connector):
         super().__init__(*args, **kwargs)
         self._scan_result = None
 
+    def close(self):
+        super().close()
+        self._scan_result = None
+
     def _run(self, url):
         if not url.endswith("/"):
             url += "/"
@@ -109,7 +113,7 @@ class RsyncConnector(Connector):
         directory,
         category_prefix_length,
     ):
-        # Scan once for the entire category
+        # Scan only once for the entire category
         if self._scan_result is None:
             self._scan_result = self._run(url)
         if not self._scan_result:

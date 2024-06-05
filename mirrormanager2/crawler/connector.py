@@ -59,6 +59,7 @@ class Connector:
     def close(self):
         if self._connection is not None:
             self._close()
+            self._connection = None
         self._on_closed(self)
 
     def _connect(self, url):
