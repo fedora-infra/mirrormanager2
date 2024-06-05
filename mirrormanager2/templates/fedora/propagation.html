@@ -18,14 +18,20 @@
 <p>The same diagram is also available for the following versions:</p>
 
 <ul>
-  {%- for repo_with_stats in repos -%}
+  {%- for version in repos|sort(attribute="product.name,name") -%}
   <li>
-    <a
-      class="{% if repo and repo_with_stats.id == repo.id %}font-weight-bold{% endif %}"
-      href="{{url_for('base.propagation', repo_id=repo_with_stats.id)}}"
+    {{ version.product.name }} {{ version.name }}:
+    {% for repo_with_stats in repos[version] -%}
+      <a
+        class="{% if repo and repo_with_stats.id == repo.id %}font-weight-bold{% endif %}"
+        href="{{url_for('base.propagation', repo_id=repo_with_stats.id)}}"
+        {% if not loop.first %}title="Mirrors which don't contain the main arch"{% endif %}
       >
-      {{ repo_with_stats.version.product.name }} {{ repo_with_stats.version.name }} ({{ repo_with_stats.arch.name }})
-    </a>
+        {{ repo_with_stats.arch.name }}
+      </a>
+      {% if loop.first and loop.length > 1 %} (main) {% endif %}
+      {%- if not loop.last %},{% endif %}
+    {% endfor -%}
   </li>
   {%- endfor -%}
 </ul>

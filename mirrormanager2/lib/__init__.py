@@ -24,6 +24,7 @@ MirrorManager2 internal api.
 import datetime
 import random
 import string
+from collections import defaultdict
 from contextlib import contextmanager
 
 import sqlalchemy as sa
@@ -988,9 +989,24 @@ def get_propagation_repos(session):
 
     """
     query = (
-        sa.select(model.Repository).join(model.PropagationStat).order_by(model.Repository.prefix)
+        sa.select(
+            model.Repository,
+            sa.func.avg(
+                model.PropagationStat.same_day
+                + model.PropagationStat.one_day
+                + model.PropagationStat.two_day
+                + model.PropagationStat.older
+                + model.PropagationStat.no_info
+            ).label("host_count"),
+        )
+        .join(model.PropagationStat)
+        .order_by(model.Repository.prefix, sa.desc("host_count"))
+        .group_by(model.Repository)
     )
-    return session.scalars(query).unique()
+    repo_by_version = defaultdict(list)
+    for repo in session.scalars(query):
+        repo_by_version[repo.version].append(repo)
+    return repo_by_version
 
 
 def get_propagation(session, repo_id):
