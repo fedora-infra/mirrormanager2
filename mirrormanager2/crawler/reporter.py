@@ -1,6 +1,7 @@
 import logging
 import smtplib
-import time
+from datetime import datetime, timezone
+from email.utils import format_datetime
 from typing import TYPE_CHECKING
 
 import mirrormanager2.lib as mmlib
@@ -21,27 +22,34 @@ class Reporter:
         self.host = host
         self.host_failed = False
 
+    def _get_log_url(self):
+        # This is web-framework-dependant
+        from flask import url_for
+
+        from mirrormanager2.app import create_app
+
+        app = create_app()
+        with app.app_context():
+            return url_for("base.crawler_log", host_id=self.host.id, _external=True)
+
     def send_email(self, report_str, exc):
         if not self.config.get("CRAWLER_SEND_EMAIL", False):
             return
 
-        SMTP_DATE_FORMAT = "%a, %d %b %Y %H:%M:%S %z"
         msg = """From: {}
     To: {}
-    Subject: {} MirrorManager crawler report
+    Subject: MirrorManager crawler report: {}
     Date: {}
 
     """.format(
             self.config.get("EMAIL_FROM"),
             self.config.get("ADMIN_EMAIL"),
             self.host.name,
-            time.strftime(SMTP_DATE_FORMAT),
+            format_datetime(datetime.now(tz=timezone.utc)),
         )
 
         msg += report_str + "\n"
-        msg += "Log can be found at {}/{}.log\n".format(
-            self.config.get("crawler.logdir"), str(self.host.id)
-        )
+        msg += f"Log can be found at {self._get_log_url()}\n"
         if exc is not None:
             msg += f"Exception info: type {exc[0]}; value {exc[1]}\n"
             msg += str(exc[2])
