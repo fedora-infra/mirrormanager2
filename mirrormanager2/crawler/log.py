@@ -67,6 +67,7 @@ def setup_logging(debug, console):
 def thread_file_logger(config, host_id, debug):
     log_dir = config.get("MM_LOG_DIR", None)
     if log_dir is None or log_dir == "-":
+        yield None
         return
     log_dir = os.path.join(log_dir, "crawler")
     if not os.path.isdir(log_dir):
