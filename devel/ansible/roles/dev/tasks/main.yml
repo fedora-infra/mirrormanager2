@@ -19,32 +19,6 @@
     cmd: poetry install
     chdir: /vagrant
 
-# Trust IPA's CA
-
-- name: Get the content of the CA cert
-  slurp:
-    src: /etc/ipa/ca.crt
-  register: ca_crt
-
-- name: Get the CA certs file from certifi
-  command: poetry run python -m certifi
-  args:
-    chdir: /vagrant
-  register: certifi_cacert
-
-- name: Put tinystage root CA in the list of CA's for certifi
-  blockinfile:
-    block: "{{ ca_crt.content | b64decode }}"
-    path: "{{ certifi_cacert.stdout }}"
-
-#
-
-- name: register the application with oidc-register
-  shell: poetry run oidc-register --debug --output-file /home/vagrant/client_secrets.json https://ipsilon.tinystage.test/idp/openidc/ https://mirrormanager2.tinystage.test/authorize
-  args:
-    chdir: /vagrant
-    creates: /home/vagrant/client_secrets.json
-
 - name: Install the config file
   copy:
     src: mirrormanager2.cfg

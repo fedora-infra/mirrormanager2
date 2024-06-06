@@ -12,4 +12,5 @@
   - core
   - ipa-client
   - cert
+  - oidc-register
   - dev
