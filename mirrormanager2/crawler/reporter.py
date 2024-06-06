@@ -1,6 +1,7 @@
 import logging
 import smtplib
 from datetime import datetime, timezone
+from email.message import Message
 from email.utils import format_datetime
 from typing import TYPE_CHECKING
 
@@ -36,23 +37,19 @@ class Reporter:
         if not self.config.get("CRAWLER_SEND_EMAIL", False):
             return
 
-        msg = """From: {}
-    To: {}
-    Subject: MirrorManager crawler report: {}
-    Date: {}
+        msg = Message()
+        msg["From"] = self.config.get("EMAIL_FROM")
+        msg["To"] = self.config.get("ADMIN_EMAIL")
+        msg["Subject"] = f"MirrorManager crawler report: {self.host.name}"
+        msg["Date"] = format_datetime(datetime.now(tz=timezone.utc))
 
-    """.format(
-            self.config.get("EMAIL_FROM"),
-            self.config.get("ADMIN_EMAIL"),
-            self.host.name,
-            format_datetime(datetime.now(tz=timezone.utc)),
-        )
-
-        msg += report_str + "\n"
-        msg += f"Log can be found at {self._get_log_url()}\n"
+        content = [report_str, f"Log can be found at {self._get_log_url()}"]
         if exc is not None:
-            msg += f"Exception info: type {exc[0]}; value {exc[1]}\n"
-            msg += str(exc[2])
+            msg.append(f"Exception info: type {exc[0]}; value {exc[1]}")
+            msg.append(str(exc[2]))
+        msg.set_content("\n".join(content))
+
+        logger.debug("Sending a email report about %s", self.host.name)
         try:
             smtp = smtplib.SMTP(self.config.get("SMTP_SERVER"))
 
@@ -62,7 +59,7 @@ class Reporter:
             if username and password:
                 smtp.login(username, password)
 
-            smtp.sendmail(self.config.get("SMTP_SERVER"), self.config.get("ADMIN_EMAIL"), msg)
+            smtp.send_message(msg)
         except Exception:
             logger.exception("Error sending email")
             logger.debug("Email message follows:")
@@ -71,7 +68,7 @@ class Reporter:
         try:
             smtp.quit()
         except Exception:
-            pass
+            logger.exception("Error quitting the SMTP connection")
 
     def mark_not_up2date(self, reason="Unknown", exc=None):
         """This function marks a complete host as not being up to date.
