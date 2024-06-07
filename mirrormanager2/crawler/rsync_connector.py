@@ -70,7 +70,7 @@ class RsyncConnector(Connector):
             return True
 
         try:
-            return float(current_file_info["size"]) != float(db_file_info["size"])
+            return float(current_file_info["size"]) == float(db_file_info["size"])
         except ValueError:  # one of the conversion to float() failed
             logger.debug("Invalid size value for file %s", current_file_info)
             return False
