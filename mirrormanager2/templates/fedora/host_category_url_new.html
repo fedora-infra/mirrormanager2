@@ -1,34 +1,26 @@
 {% extends "master.html" %}
-{% from "_formhelpers.html" import render_field_in_row %}
+{% from "_formhelpers.html" import render_field, render_switch %}
 
 {% block title %}New Host Category URL{% endblock %}
 {%block tag %}home{% endblock %}
 
 {% block content %}
-<h2>Add host category URL</h2>
-
-<p>
-  Back to <a href="{{ url_for('base.site_view', site_id=host.site_id) }}">
-    {{ host.site.name }}</a> / <a href="{{ url_for('base.host_view', host_id=host.id) }}">
-    {{ host.name }}</a> / <a href="{{ url_for('base.host_category', host_id=host.id,
-    hc_id=hostcategory.id) }}">{{ hostcategory.category.name }} </a>
-</p>
-
-<form action="{{ url_for('base.host_category_url_new',
-                 host_id=host.id, hc_id=hostcategory.id) }}" method="POST">
-  <table>
-    {{ render_field_in_row(form.url, after='URL (rsync, https, http) pointing to the top directory') }}
+<div class="card my-3 mx-auto col-6">
+  <div class="card-header">
+      <h6 class="mb-0">Add host category URL</h6>
+  </div>
+  <div class="card-body">
+    <form action="{{ url_for('base.host_category_url_new',
+    host_id=host.id, hc_id=hostcategory.id) }}" method="POST">
+    {{ render_field(form.url, after='URL (rsync, https, http) pointing to the top directory') }}
     {%- if is_admin -%}
-      {{ render_field_in_row(form.private, after='A private URL will not show up in the mirrorlist/metalink') }}
+      {{ render_switch(form.private, after='A private URL will not show up in the mirrorlist/metalink') }}
     {%- endif -%}
-  </table>
-  <p class="buttons indent">
-    <input type="submit" class="submit positive button" value="Create">
-    <a href="{{ url_for('base.host_view', host_id=host.id) }}">
-      <input type="button" value="Cancel" class="button">
-    </a>
-    {{ form.csrf_token }}
-  </p>
-</form>
-
+      <p>
+        <input type="submit" class="btn btn-primary" value="Create">
+        {{ form.csrf_token }}
+      </p>
+    </form>
+  </div>
+</div>
 {% endblock %}

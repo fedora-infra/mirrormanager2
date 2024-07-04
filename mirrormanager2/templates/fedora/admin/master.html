@@ -1,94 +1,24 @@
 {% extends 'admin/base.html' %}
 {% import 'admin/lib.html' as lib with context %}
 {% import 'admin/static.html' as admin_static with context %}
+{% from "_macros.html" import footer, headincludes, nav, flashmessages, bottomincludes %}
 
 {% block head %}
-    <link rel="shortcut icon" type="image/vnd.microsoft.icon"
-        href="{{ url_for('static', filename='favicon.ico')}}"/>
-    <link rel="stylesheet" type="text/css" media="screen"
-        href="{{ url_for('static', filename='koji.css') }}"/>
-    <link rel="stylesheet" type="text/css" media="screen"
-        href="{{ url_for('static', filename='mirrormanager2.css') }}"/>
-    <link type="text/css" rel="stylesheet"
-        href="{{ url_for('static',
-            filename='fedocal/jquery-ui-1.9.2.custom.css')}}" />
-
-    <link href="{{ admin_static.url(filename='select2/select2.css') }}"
-        rel="stylesheet">
-    <link href="{{ admin_static.url(
-        filename='datetimepicker/bootstrap-datetimepicker.css') }}"
-        rel="stylesheet">
+    {{headincludes()}}
 {% endblock %}
 
 {% block page_body %}
-    <div id="wrap">
-      <div id="innerwrap">
-
-        <!-- HEADER -->
-        <div id="header">
-          <img src="{{ url_for('static', filename='mirrormanager-logo.png') }}"
-            alt="MirrorManager Logo" id="kojiLogo"/>
-        </div><!-- end header -->
-
-        <!-- MAIN NAVIGATION -->
-        <div id="mainNav">
-          <h4 class="hide">Main Site Links:</h4>
-          <ul>
-            <li id="homeTab"><a href="{{url_for('base.index')}}">Home</a></li>
-            <li id="mirrorsTab"><a href="{{url_for('base.list_mirrors')}}">Mirrors</a></li>
-            {% if g.fas_user %}
-            <li id="mysitesTab"><a href="{{url_for('base.mysite')}}">My Sites</a></li>
-            {% endif %}
-            {% if is_admin %}
-            <li id="adminTabSelected"><a href="{{url_for('admin.index')}}">Admin</a></li>
-            <li id="allSitesTab"><a href="{{url_for('base.all_sites')}}">All sites</a></li>
-            {% endif %}
-          </ul>
-        </div><!-- end mainNav -->
-
-        <span id="loginInfo">
-          {% if g.fas_user %}
-            <span class="text">logged in as </span>
-            {{ g.fas_user.username }} |
-            <a href="{{ url_for('auth.logout') }}?next={{request.url}}">log out</a>
-          {% else %}
-        <a href="{{ url_for('auth.login') }}?next={{request.url}}">login</a>
-          {% endif %}
-        </span>
-
-        <div id="content">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if category, messages %}
-                <ul id="flashes">
-                    {% for category, message in messages %}
-                    <li class="{{ category }}">{{ message }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            {% endwith %}
-
-            {{ super() }}
-
-        {% block content %}{% endblock %}
-
-        </div>
-
-        <p id="footer">
-          Copyright &copy; 2014 Red Hat
-          <a href="https://github.com/fedora-infra/mirrormanager2/">mirrormanager</a>
-          -- {{version}}
-          -- <a href="http://mirrormanager.rtfd.org" rel="noopener noreferrer"
-                target="_blank">Documentation</a>
-          -- <a href="http://mirrormanager.readthedocs.org/en/latest/contributors.html">Authors</a>
-        </p>
-
-      </div>
-    </div>
+{{nav(is_admin)}}
+<div class="bodycontent pt-2">
+  <div class="container">
+    {{flashmessages()}}
+    {{ super() }}
+    {% block content %}{% endblock %}
+  </div>
+</div>
 {% endblock %}
 
 {% block tail %}
   {{ super() }}
-  <script src="{{ admin_static.url(
-    filename='datetimepicker/bootstrap-datetimepicker.js') }}"></script>
-  <script src="{{ admin_static.url(filename='admin/js/form.js') }}"></script>
+  {{bottomincludes()}}
 {% endblock %}

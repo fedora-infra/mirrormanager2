@@ -131,7 +131,7 @@ def site_new():
             # Site table. So the only situation where it could fail is a
             # failure at the DB server level itself.
             DB.session.rollback()
-            flask.flash("Could not create the new site")
+            flask.flash("Could not create the new site", "error")
             flask.current_app.logger.debug("Could not create the new site")
             flask.current_app.logger.exception(err)
             return flask.redirect(flask.url_for("base.index"))
@@ -193,7 +193,7 @@ def site_view(site_id):
             # new SiteAdmin and therefore the only situation where it could
             # fail is a failure at the DB server level itself.
             DB.session.rollback()
-            flask.flash("Could not update the Site")
+            flask.flash("Could not update the Site", "error")
             flask.current_app.logger.debug("Could not update the Site")
             flask.current_app.logger.exception(err)
 
@@ -233,7 +233,7 @@ def site_drop(site_id):
                 fedmsg_publish(topic, message)
         except SQLAlchemyError as err:
             DB.session.rollback()
-            flask.flash("Could not delete this site")
+            flask.flash("Could not delete this site", "error")
             flask.current_app.logger.debug("Could not delete this site")
             flask.current_app.logger.exception(err)
 
@@ -273,7 +273,7 @@ def host_new(site_id):
                 fedmsg_publish(topic, message)
         except SQLAlchemyError as err:
             DB.session.rollback()
-            flask.flash("Could not create the new host")
+            flask.flash("Could not create the new host", "error")
             flask.current_app.logger.debug("Could not create the new host")
             flask.current_app.logger.exception(err)
 
@@ -320,7 +320,7 @@ def host_drop(host_id):
                 fedmsg_publish(topic, message)
         except SQLAlchemyError as err:
             DB.session.rollback()
-            flask.flash("Could not delete this host")
+            flask.flash("Could not delete this host", "error")
             flask.current_app.logger.debug("Could not delete this host")
             flask.current_app.logger.exception(err)
 
@@ -354,7 +354,7 @@ def siteadmin_new(site_id):
             # Site table. So the only situation where it could fail is a
             # failure at the DB server level itself.
             DB.session.rollback()
-            flask.flash("Could not add Site Admin")
+            flask.flash("Could not add Site Admin", "error")
             flask.current_app.logger.debug("Could not add Site Admin")
             flask.current_app.logger.exception(err)
 
@@ -461,7 +461,7 @@ def host_view(host_id):
             # the only situation where it could fail is a failure at the
             # DB server level itself.
             DB.session.rollback()
-            flask.flash("Could not update the host")
+            flask.flash("Could not update the host", "error")
             flask.current_app.logger.debug("Could not update the host")
             flask.current_app.logger.exception(err)
 
@@ -501,7 +501,7 @@ def host_acl_ip_new(host_id):
             flask.flash("Host ACL IP added")
         except SQLAlchemyError as err:
             DB.session.rollback()
-            flask.flash("Could not add ACL IP to the host")
+            flask.flash("Could not add ACL IP to the host", "error")
             flask.current_app.logger.debug("Could not add ACL IP to the host")
             flask.current_app.logger.exception(err)
 
@@ -546,7 +546,7 @@ def host_acl_ip_delete(host_id, host_acl_ip_id):
             # run in is DB server related, and that we can't fake in our
             # tests
             DB.session.rollback()
-            flask.flash("Could not add ACL IP to the host")
+            flask.flash("Could not add ACL IP to the host", "error")
             flask.current_app.logger.debug("Could not add ACL IP to the host")
             flask.current_app.logger.exception(err)
 
@@ -584,7 +584,7 @@ def host_netblock_new(host_id):
             # table. So the only situation where it could fail is a failure
             # at the DB server level itself.
             DB.session.rollback()
-            flask.flash("Could not add netblock to the host")
+            flask.flash("Could not add netblock to the host", "error")
             flask.current_app.logger.debug("Could not add netblock to the host")
             flask.current_app.logger.exception(err)
 
@@ -629,7 +629,7 @@ def host_netblock_delete(host_id, host_netblock_id):
             # run in is DB server related, and that we can't fake in our
             # tests
             DB.session.rollback()
-            flask.flash("Could not delete netblock of the host")
+            flask.flash("Could not delete netblock of the host", "error")
             flask.current_app.logger.debug("Could not delete netblock of the host")
             flask.current_app.logger.exception(err)
 
@@ -666,7 +666,7 @@ def host_asn_new(host_id):
             # table. So the only situation where it could fail is a failure
             # at the DB server level itself.
             DB.session.rollback()
-            flask.flash("Could not add Peer ASN to the host")
+            flask.flash("Could not add Peer ASN to the host", "error")
             flask.current_app.logger.debug("Could not add Peer ASN to the host")
             flask.current_app.logger.exception(err)
 
@@ -712,7 +712,7 @@ def host_asn_delete(host_id, host_asn_id):
             # run in is DB server related, and that we can't fake in our
             # tests
             DB.session.rollback()
-            flask.flash("Could not delete Peer ASN of the host")
+            flask.flash("Could not delete Peer ASN of the host", "error")
             flask.current_app.logger.debug("Could not delete Peer ASN of the host")
             flask.current_app.logger.exception(err)
 
@@ -758,7 +758,7 @@ def host_country_new(host_id):
             # table. So the only situation where it could fail is a failure
             # at the DB server level itself.
             DB.session.rollback()
-            flask.flash("Could not add Country to the host")
+            flask.flash("Could not add Country to the host", "error")
             flask.current_app.logger.debug("Could not add Country to the host")
             flask.current_app.logger.exception(err)
 
@@ -807,7 +807,7 @@ def host_country_delete(host_id, host_country_id):
             # run in is DB server related, and that we can't fake in our
             # tests
             DB.session.rollback()
-            flask.flash("Could not delete Country of the host")
+            flask.flash("Could not delete Country of the host", "error")
             flask.current_app.logger.debug("Could not delete Country of the host")
             flask.current_app.logger.exception(err)
 
@@ -858,12 +858,10 @@ def host_category_new(host_id):
         try:
             DB.session.commit()
             flask.flash("Host Category added")
-            return flask.redirect(
-                flask.url_for("base.host_category", host_id=hostobj.id, hc_id=host_category.id)
-            )
+            return flask.redirect(flask.url_for("base.host_view", host_id=host_id))
         except SQLAlchemyError as err:
             DB.session.rollback()
-            flask.flash("Could not add Category to the host")
+            flask.flash("Could not add Category to the host", "error")
             flask.current_app.logger.debug("Could not add Category to the host")
             flask.current_app.logger.exception(err)
 
@@ -914,65 +912,11 @@ def host_category_delete(host_id, hc_id):
             # run in is DB server related, and that we can't fake in our
             # tests
             DB.session.rollback()
-            flask.flash("Could not delete Category of the host")
+            flask.flash("Could not delete Category of the host", "error")
             flask.current_app.logger.debug("Could not delete Category of the host")
             flask.current_app.logger.exception(err)
 
     return flask.redirect(flask.url_for("base.host_view", host_id=host_id))
-
-
-@views.route("/host/<host_id>/category/<hc_id>", methods=["GET", "POST"])
-@login_required
-def host_category(host_id, hc_id):
-    """View a host_category."""
-    hostobj = mmlib.get_host(DB.session, host_id)
-
-    if hostobj is None:
-        flask.abort(404, "Host not found")
-
-    if not (
-        is_site_admin(flask.g.fas_user, hostobj.site) or is_mirrormanager_admin(flask.g.fas_user)
-    ):
-        flask.abort(403, "Access denied")
-
-    hcobj = mmlib.get_host_category(DB.session, hc_id)
-
-    if hcobj is None:
-        flask.abort(404, "Host/Category not found")
-
-    host_cat_ids = [cat.id for cat in hostobj.categories]
-
-    if hcobj.id not in host_cat_ids:
-        flask.abort(404, "Category not associated with this host")
-
-    form = forms.EditHostCategoryForm(obj=hcobj)
-
-    if form.validate_on_submit() and is_mirrormanager_admin(flask.g.fas_user):
-        form.populate_obj(obj=hcobj)
-
-        try:
-            DB.session.flush()
-            flask.flash("Host Category updated")
-        except SQLAlchemyError as err:  # pragma: no cover
-            # We cannot check this because the code check before updating
-            # and therefore the only situation where it could fail is a
-            # failure at the DB server level itself.
-            DB.session.rollback()
-            flask.flash("Could not update Category to the host")
-            flask.current_app.logger.debug("Could not update Category to the host")
-            flask.current_app.logger.exception(err)
-
-        DB.session.commit()
-        return flask.redirect(
-            flask.url_for("base.host_category", host_id=hostobj.id, hc_id=hcobj.id)
-        )
-
-    return flask.render_template(
-        "host_category.html",
-        form=form,
-        host=hostobj,
-        hostcategory=hcobj,
-    )
 
 
 @views.route("/host/<host_id>/category/<hc_id>/url/new", methods=["GET", "POST"])
@@ -1026,12 +970,12 @@ def host_category_url_new(host_id, hc_id):
             flask.flash("Host Category URL added")
         except SQLAlchemyError as err:
             DB.session.rollback()
-            flask.flash("Could not add Category URL to the host")
+            flask.flash("Could not add Category URL to the host", "error")
             flask.current_app.logger.debug("Could not add Category URL to the host")
             flask.current_app.logger.exception(err)
 
         DB.session.commit()
-        return flask.redirect(flask.url_for("base.host_category", host_id=host_id, hc_id=hc_id))
+        return flask.redirect(flask.url_for("base.host_view", host_id=host_id))
 
     return flask.render_template(
         "host_category_url_new.html",
@@ -1091,11 +1035,11 @@ def host_category_url_delete(host_id, hc_id, host_category_url_id):
             # run in is DB server related, and that we can't fake in our
             # tests
             DB.session.rollback()
-            flask.flash("Could not delete category URL of the host")
+            flask.flash("Could not delete category URL of the host", "error")
             flask.current_app.logger.debug("Could not delete category URL of the host")
             flask.current_app.logger.exception(err)
 
-    return flask.redirect(flask.url_for("base.host_category", host_id=host_id, hc_id=hc_id))
+    return flask.redirect(flask.url_for("base.host_view", host_id=host_id))
 
 
 @views.route("/rsyncFilter")

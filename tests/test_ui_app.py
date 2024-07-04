@@ -8,8 +8,6 @@ import pytest
 
 from mirrormanager2.lib import get_host
 
-HTML_REQUIRED = '<span class="text-danger" title="Required">*</span>'
-
 
 @pytest.fixture(autouse=True)
 def setup_all(db_items):
@@ -25,7 +23,7 @@ def test_index(client):
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<title>Home - MirrorManager</title>" in data
-    assert '<a class="nav-link" href="/mirrors">Mirrors</a>' in data
+    assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
     assert 'href="/login?next=http://localhost/">Login</a>' in data
 
 
@@ -34,7 +32,7 @@ def test_index_auth(client, user):
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<title>Home - MirrorManager</title>" in data
-    assert '<a class="nav-link" href="/mirrors">Mirrors</a>' in data
+    assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
     assert 'href="/login?next=http://127.0.0.1:5000/">login/a>' not in data
     assert '<a class="dropdown-item" href="/site/mine">My Sites</a>' in data
     assert 'href="/logout?next=http://localhost/">Log Out</a>' in data
@@ -54,21 +52,21 @@ def test_list_mirrors(client):
         assert output.status_code == 200
         data = output.get_data(as_text=True)
         assert "<title>Mirrors - MirrorManager</title>" in data
-        assert '<a class="nav-link" href="/mirrors">Mirrors</a>' in data
+        assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
         assert "We have currently 2 active mirrors" in data
 
         output = client.get(f"/mirrors/Fedora Linux/{i}/x86_64")
         assert output.status_code == 200
         data = output.get_data(as_text=True)
         assert "<title>Mirrors - MirrorManager</title>" in data
-        assert '<a class="nav-link" href="/mirrors">Mirrors</a>' in data
+        assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
         assert "We have currently 2 active mirrors" in data
 
         output = client.get("/mirrors/Fedora Linux/20/i386")
         assert output.status_code == 200
         data = output.get_data(as_text=True)
         assert "<title>Mirrors - MirrorManager</title>" in data
-        assert '<a class="nav-link" href="/mirrors">Mirrors</a>' in data
+        assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
         assert "There are currently no active mirrors registered." in data
 
 
@@ -84,7 +82,7 @@ def test_mysite_auth(client, user):
     output = client.get("/site/mine")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "You have currently 1 sites listed" in data
+    assert "1 site" in data
 
 
 def test_all_sites(client):
@@ -101,9 +99,9 @@ def test_all_sites_auth(client, user):
     output = client.get("/admin/all_sites", follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="error">You are not an admin</li>' in data
+    assert '<div class="toast-body">You are not an admin</div>' in data
     assert "<title>Home - MirrorManager</title>" in data
-    assert '<a class="nav-link" href="/mirrors">Mirrors</a>' in data
+    assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
 
 
 def test_all_sites_auth_admin(client, admin_user):
@@ -111,9 +109,9 @@ def test_all_sites_auth_admin(client, admin_user):
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<title>Home - MirrorManager</title>" in data
-    assert '<a class="nav-link" href="/mirrors">Mirrors</a>' in data
-    assert "<h2>Admin - List all sites</h2>" in data
-    assert "You have currently 3 sites listed" in data
+    assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
+    assert "<h2>Admin - List all Sites</h2>" in data
+    assert "3 sites" in data
 
 
 def test_site_new(client):
@@ -129,9 +127,9 @@ def test_site_new_auth(client, user):
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<title>New Site - MirrorManager</title>" in data
-    assert "<h2>Export Compliance</h2>" in data
-    assert f'td><label for="name">Site name</label> {HTML_REQUIRED}</td>' in data
-    assert '<a class="nav-link" href="/mirrors">Mirrors</a>' in data
+    assert "<h4>Export Compliance</h4>" in data
+    assert '<label class="form-label" for="name">Site name</label>' in data
+    assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
 
     csrf_token = data.split('name="csrf_token" type="hidden" value="')[1].split('">')[0]
 
@@ -149,9 +147,9 @@ def test_site_new_auth(client, user):
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<title>New Site - MirrorManager</title>" in data
-    assert "<h2>Export Compliance</h2>" in data
-    assert f'td><label for="name">Site name</label> {HTML_REQUIRED}</td>' in data
-    assert '<a class="nav-link" href="/mirrors">Mirrors</a>' in data
+    assert "<h4>Export Compliance</h4>" in data
+    assert '<label class="form-label" for="name">Site name</label>' in data
+    assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
 
     # Create the new site
 
@@ -160,14 +158,14 @@ def test_site_new_auth(client, user):
     output = client.post("/site/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="message">Site added</li>' in data
-    assert '<li class="message">pingou added as an admin</li>' in data
+    assert '<div class="toast-body">Site added</div>' in data
+    assert '<div class="toast-body">pingou added as an admin</div>' in data
     assert "<h2>Fedora Public Active Mirrors</h2>" in data
 
     output = client.get("/site/mine")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "You have currently 2 sites listed" in data
+    assert "2 sites" in data
 
 
 def test_site_view(client):
@@ -191,9 +189,9 @@ def test_site_view_auth(client, user):
     output = client.get("/site/2")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Information site: test-mirror2</h2>" in data
-    assert "Created by: kevin" in data
-    assert "mirror2.localhost</a> <br />" in data
+    assert '<h2 class="mb-0"><span class="fa fa-globe"></span> test-mirror2</h2>' in data
+    assert "kevin" in data
+    assert "mirror2.localhost</a>" in data
 
     csrf_token = data.split('name="csrf_token" type="hidden" value="')[1].split('">')[0]
 
@@ -205,8 +203,8 @@ def test_site_view_auth(client, user):
     output = client.post("/site/2", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Information site: test-mirror2</h2>" in data
-    assert "Created by: kevin" in data
+    assert '<h2 class="mb-0"><span class="fa fa-globe"></span> test-mirror2</h2>' in data
+    assert "kevin" in data
     assert data.count("field is required.") == 2
 
     post_data = {
@@ -223,8 +221,8 @@ def test_site_view_auth(client, user):
     output = client.post("/site/2", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Information site: test-mirror2</h2>" in data
-    assert "Created by: kevin" in data
+    assert '<h2 class="mb-0"><span class="fa fa-globe"></span> test-mirror2</h2>' in data
+    assert "kevin" in data
 
     # Update site
 
@@ -234,15 +232,15 @@ def test_site_view_auth(client, user):
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<h2>Fedora Public Active Mirrors</h2>" in data
-    assert '<li class="message">Site Updated</li>' in data
+    assert '<div class="toast-body">Site Updated</div>' in data
 
     # Check after the edit
     output = client.get("/site/2")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Information site: test-mirror2.1</h2>" in data
-    assert "Created by: kevin" in data
-    assert "mirror2.localhost</a> <br />" in data
+    assert "test-mirror2.1</h2>" in data
+    assert "kevin" in data
+    assert "mirror2.localhost</a>" in data
 
 
 def test_host_new(client):
@@ -264,17 +262,17 @@ def test_host_new_auth(client, user):
     output = client.get("/site/2")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Information site: test-mirror2</h2>" in data
-    assert "Created by: kevin" in data
-    assert "mirror2.localhost</a> <br />" in data
-    assert "pingoured.fr</a> <br />" not in data
+    assert '<h2 class="mb-0"><span class="fa fa-globe"></span> test-mirror2</h2>' in data
+    assert "kevin" in data
+    assert "mirror2.localhost</a>" in data
+    assert "pingoured.fr</a>" not in data
 
     # Test host_new
     output = client.get("/host/2/new")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<title>New Host - MirrorManager</title>" in data
-    assert "<h2>Create new host</h2>" in data
+    assert '<h6 class="mb-0">Add New Host</h6>' in data
 
     csrf_token = data.split('name="csrf_token" type="hidden" value="')[1].split('">')[0]
 
@@ -294,7 +292,7 @@ def test_host_new_auth(client, user):
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<title>New Host - MirrorManager</title>" in data
-    assert "<h2>Create new host</h2>" in data
+    assert '<h6 class="mb-0">Add New Host</h6>' in data
 
     # Create Host
 
@@ -303,17 +301,17 @@ def test_host_new_auth(client, user):
     output = client.post("/host/2/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="message">Host added</li>' in data
-    assert "<h2>Information site: test-mirror2</h2>" in data
-    assert "Created by: kevin" in data
-    assert "mirror2.localhost</a> <br />" in data
-    assert "pingoured.fr</a> <br />" in data
+    assert '<div class="toast-body">Host added</div>' in data
+    assert '<h2 class="mb-0"><span class="fa fa-globe"></span> test-mirror2</h2>' in data
+    assert "kevin" in data
+    assert "mirror2.localhost</a>" in data
+    assert "pingoured.fr</a>" in data
 
     # Try creating the same host -- will fail
     output = client.post("/host/2/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="message">Could not create the new host</li>' in data
+    assert '<div class="toast-body">Could not create the new host</div>' in data
 
 
 def test_siteadmin_new(client):
@@ -335,8 +333,8 @@ def test_siteadmin_new_auth(client, user):
     output = client.get("/site/2")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Information site: test-mirror2</h2>" in data
-    assert "Created by: kevin" in data
+    assert '<h2 class="mb-0"><span class="fa fa-globe"></span> test-mirror2</h2>' in data
+    assert "kevin" in data
     assert 'action="/site/2/admin/5/delete">' not in data
     assert "skvidal" not in data
 
@@ -345,7 +343,7 @@ def test_siteadmin_new_auth(client, user):
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<title>New Site Admin - MirrorManager</title>" in data
-    assert "<h2>Add Site admin to site: test-mirror2</h2>" in data
+    assert '<h6 class="mb-0">Add Site admin to site: test-mirror2</h6>' in data
 
     csrf_token = data.split('name="csrf_token" type="hidden" value="')[1].split('">')[0]
 
@@ -359,7 +357,7 @@ def test_siteadmin_new_auth(client, user):
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<title>New Site Admin - MirrorManager</title>" in data
-    assert "<h2>Add Site admin to site: test-mirror2</h2>" in data
+    assert '<h6 class="mb-0">Add Site admin to site: test-mirror2</h6>' in data
 
     # Create Admin
 
@@ -368,9 +366,9 @@ def test_siteadmin_new_auth(client, user):
     output = client.post("/site/2/admin/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="message">Site Admin added</li>' in data
-    assert "<h2>Information site: test-mirror2</h2>" in data
-    assert "Created by: kevin" in data
+    assert '<div class="toast-body">Site Admin added</div>' in data
+    assert '<h2 class="mb-0"><span class="fa fa-globe"></span> test-mirror2</h2>' in data
+    assert "kevin" in data
     assert 'action="/site/2/admin/3/delete">' in data
     assert "skvidal" in data
 
@@ -388,10 +386,10 @@ def test_siteadmin_delete_auth(client, user):
     output = client.get("/site/2")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Information site: test-mirror2</h2>" in data
-    assert "Created by: kevin" in data
+    assert '<h2 class="mb-0"><span class="fa fa-globe"></span> test-mirror2</h2>' in data
+    assert "kevin" in data
     assert 'action="/site/2/admin/3/delete">' in data
-    assert data.count("ralph") == 1
+    assert data.count("</span> ralph") == 1
 
     csrf_token = data.split('name="csrf_token" type="hidden" value="')[1].split('">')[0]
 
@@ -402,10 +400,10 @@ def test_siteadmin_delete_auth(client, user):
     output = client.post("/site/2/admin/3/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Information site: test-mirror2</h2>" in data
-    assert "Created by: kevin" in data
+    assert '<h2 class="mb-0"><span class="fa fa-globe"></span> test-mirror2</h2>' in data
+    assert "kevin" in data
     assert 'action="/site/2/admin/3/delete">' in data
-    assert data.count("ralph") == 1
+    assert data.count("</span> ralph") == 1
 
     # Delete Site Admin
 
@@ -433,16 +431,18 @@ def test_siteadmin_delete_auth(client, user):
     output = client.post("/site/2/admin/3/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Information site: test-mirror2</h2>" in data
-    assert "Created by: kevin" in data
+    assert '<h2 class="mb-0"><span class="fa fa-globe"></span> test-mirror2</h2>' in data
+    assert "kevin" in data
     assert 'action="/site/2/admin/3/delete">' not in data
-    assert data.count("ralph") == 0
+    assert data.count("</span> ralph") == 0
 
     # Trying to delete the only admin
     output = client.post("/site/2/admin/4/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert ('<li class="error">There is only one admin set, you cannot ' "delete it.</li>") in data
+    assert (
+        '<div class="toast-body">There is only one admin set, you cannot ' "delete it.</div>"
+    ) in data
 
 
 def test_host_view(client):
@@ -466,8 +466,7 @@ def test_host_view_auth(client, user):
     output = client.get("/host/2")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Host mirror2.localhost" in data
-    assert 'Back to <a href="/site/2">' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> mirror2.localhost' in data
 
     csrf_token = data.split('name="csrf_token" type="hidden" value="')[1].split('">')[0]
 
@@ -479,8 +478,7 @@ def test_host_view_auth(client, user):
     output = client.post("/host/2", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Host mirror2.localhost" in data
-    assert 'Back to <a href="/site/2">' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> mirror2.localhost' in data
     assert data.count("field is required.") == 3
 
     post_data = {
@@ -499,8 +497,7 @@ def test_host_view_auth(client, user):
     output = client.post("/host/2", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Host mirror2.localhost" in data
-    assert 'Back to <a href="/site/2">' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> mirror2.localhost' in data
 
     # Update site
 
@@ -509,8 +506,7 @@ def test_host_view_auth(client, user):
     output = client.post("/host/2", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Host private.localhost.1" in data
-    assert 'Back to <a href="/site/2">' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> private.localhost.1' in data
 
 
 def test_host_netblock_new(client):
@@ -530,8 +526,7 @@ def test_host_netblock_new_auth(client, another_user):
     output = client.get("/host/3/netblock/new")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Add host netblock</h2>" in data
-    assert 'Back to <a href="/host/3">' in data
+    assert '<h6 class="mb-0">Add host netblock</h6>' in data
     assert "<title>New Host netblock - MirrorManager</title>" in data
     assert 'action="/host/3/host_netblock/2/delete">' not in data
 
@@ -547,8 +542,7 @@ def test_host_netblock_new_auth(client, another_user):
     output = client.post("/host/3/netblock/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Add host netblock</h2>" in data
-    assert 'Back to <a href="/host/3">' in data
+    assert '<h6 class="mb-0">Add host netblock</h6>' in data
     assert "<title>New Host netblock - MirrorManager</title>" in data
     assert 'action="/host/3/host_netblock/1/delete">' not in data
 
@@ -559,9 +553,8 @@ def test_host_netblock_new_auth(client, another_user):
     output = client.post("/host/3/netblock/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="message">Host netblock added</li>' in data
-    assert "<h2>Host private.localhost" in data
-    assert 'Back to <a href="/site/1">' in data
+    assert '<div class="toast-body">Host netblock added</div>' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> private.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/3/host_netblock/2/delete">' in data
 
@@ -579,8 +572,7 @@ def test_host_netblock_delete_auth(client, another_user):
     output = client.get("/host/3")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Host private.localhost" in data
-    assert 'Back to <a href="/site/1">' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> private.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/3/host_netblock/1/delete">' in data
 
@@ -593,8 +585,7 @@ def test_host_netblock_delete_auth(client, another_user):
     output = client.post("/host/3/host_netblock/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Host private.localhost" in data
-    assert 'Back to <a href="/site/1">' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> private.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/3/host_netblock/1/delete">' in data
 
@@ -618,9 +609,8 @@ def test_host_netblock_delete_auth(client, another_user):
     output = client.post("/host/3/host_netblock/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="message">Host netblock deleted</li>' in data
-    assert "<h2>Host private.localhost" in data
-    assert 'Back to <a href="/site/1">' in data
+    assert '<div class="toast-body">Host netblock deleted</div>' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> private.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/3/host_netblock/1/delete">' not in data
 
@@ -642,8 +632,7 @@ def test_host_asn_new_auth(client, admin_user):
     output = client.get("/host/3/asn/new")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Add host Peer ASNs</h2>" in data
-    assert 'Back to <a href="/host/3">' in data
+    assert '<h6 class="mb-0">Add host Peer ASNs</h6>' in data
     assert "<title>New Host Peer ASN - MirrorManager</title>" in data
     assert 'action="/host/3/host_asn/2/delete">' not in data
 
@@ -659,8 +648,7 @@ def test_host_asn_new_auth(client, admin_user):
     output = client.post("/host/3/asn/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Add host Peer ASNs</h2>" in data
-    assert 'Back to <a href="/host/3">' in data
+    assert '<h6 class="mb-0">Add host Peer ASNs</h6>' in data
     assert "<title>New Host Peer ASN - MirrorManager</title>" in data
     assert 'action="/host/3/host_asn/2/delete">' not in data
 
@@ -671,9 +659,8 @@ def test_host_asn_new_auth(client, admin_user):
     output = client.post("/host/3/asn/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="message">Host Peer ASN added</li>' in data
-    assert "<h2>Host private.localhost" in data
-    assert 'Back to <a href="/site/1">' in data
+    assert '<div class="toast-body">Host Peer ASN added</div>' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> private.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/3/host_asn/2/delete">' in data
 
@@ -691,8 +678,7 @@ def test_host_asn_delete_auth(client, admin_user):
     output = client.get("/host/3")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Host private.localhost" in data
-    assert 'Back to <a href="/site/1">' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> private.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/3/host_asn/1/delete">' in data
 
@@ -705,8 +691,7 @@ def test_host_asn_delete_auth(client, admin_user):
     output = client.post("/host/3/host_asn/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Host private.localhost" in data
-    assert 'Back to <a href="/site/1">' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> private.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/3/host_asn/1/delete">' in data
 
@@ -730,9 +715,8 @@ def test_host_asn_delete_auth(client, admin_user):
     output = client.post("/host/3/host_asn/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="message">Host Peer ASN deleted</li>' in data
-    assert "<h2>Host private.localhost" in data
-    assert 'Back to <a href="/site/1">' in data
+    assert '<div class="toast-body">Host Peer ASN deleted</div>' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> private.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/3/host_asn/1/delete">' not in data
 
@@ -754,8 +738,7 @@ def test_host_country_new_auth(client, another_user):
     output = client.get("/host/3/country/new")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Add host country allowed</h2>" in data
-    assert 'Back to <a href="/host/3">' in data
+    assert '<h6 class="mb-0">Add host country allowed</h6>' in data
     assert "<title>New Host Country - MirrorManager</title>" in data
     assert 'action="/host/3/host_country/3/delete">' not in data
 
@@ -770,8 +753,7 @@ def test_host_country_new_auth(client, another_user):
     output = client.post("/host/3/country/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Add host country allowed</h2>" in data
-    assert 'Back to <a href="/host/3">' in data
+    assert '<h6 class="mb-0">Add host country allowed</h6>' in data
     assert "<title>New Host Country - MirrorManager</title>" in data
     assert 'action="/host/3/host_country/3/delete">' not in data
 
@@ -782,9 +764,8 @@ def test_host_country_new_auth(client, another_user):
     output = client.post("/host/3/country/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="message">Invalid country code</li>' in data
-    assert "<h2>Add host country allowed</h2>" in data
-    assert 'Back to <a href="/host/3">' in data
+    assert '<div class="toast-body">Invalid country code</div>' in data
+    assert '<h6 class="mb-0">Add host country allowed</h6>' in data
     assert "<title>New Host Country - MirrorManager</title>" in data
     assert 'action="/host/3/host_country/3/delete">' not in data
 
@@ -795,9 +776,8 @@ def test_host_country_new_auth(client, another_user):
     output = client.post("/host/3/country/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="message">Host Country added</li>' in data
-    assert "<h2>Host private.localhost" in data
-    assert 'Back to <a href="/site/1">' in data
+    assert '<div class="toast-body">Host Country added</div>' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> private.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/3/host_country/3/delete">' in data
 
@@ -815,8 +795,7 @@ def test_host_country_delete_auth(client, another_user):
     output = client.get("/host/1")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Host mirror.localhost" in data
-    assert 'Back to <a href="/site/1">' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> mirror.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/1/host_country/1/delete">' in data
 
@@ -829,8 +808,7 @@ def test_host_country_delete_auth(client, another_user):
     output = client.post("/host/1/host_country/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Host mirror.localhost" in data
-    assert 'Back to <a href="/site/1">' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> mirror.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/1/host_country/1/delete">' in data
 
@@ -854,9 +832,8 @@ def test_host_country_delete_auth(client, another_user):
     output = client.post("/host/1/host_country/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="message">Host Country deleted</li>' in data
-    assert "<h2>Host mirror.localhost" in data
-    assert 'Back to <a href="/site/1">' in data
+    assert '<div class="toast-body">Host Country deleted</div>' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> mirror.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/1/host_country/1/delete">' not in data
 
@@ -878,8 +855,7 @@ def test_host_category_new_auth(client, user):
     output = client.get("/host/2/category/new")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Add host category</h2>" in data
-    assert 'Back to <a href="/host/2">' in data
+    assert '<h6 class="mb-0">Add host category</h6>' in data
     assert "<title>New Host Category - MirrorManager</title>" in data
     assert 'action="/host/2/category/1/delete">' not in data
 
@@ -894,8 +870,7 @@ def test_host_category_new_auth(client, user):
     output = client.post("/host/2/category/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Add host category</h2>" in data
-    assert 'Back to <a href="/host/2">' in data
+    assert '<h6 class="mb-0">Add host category</h6>' in data
     assert "<title>New Host Category - MirrorManager</title>" in data
     assert 'action="/host/2/category/1/delete">' not in data
     assert "Invalid Choice: could not coerce" in data
@@ -905,8 +880,7 @@ def test_host_category_new_auth(client, user):
     output = client.post("/host/2/category/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Add host category</h2>" in data
-    assert 'Back to <a href="/host/2">' in data
+    assert '<h6 class="mb-0">Add host category</h6>' in data
     assert "<title>New Host Category - MirrorManager</title>" in data
     assert 'action="/host/2/category/1/delete">' not in data
 
@@ -925,19 +899,17 @@ def test_host_category_new_auth(client, user):
     output = client.post("/host/2/category/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="message">Host Category added</li>' in data
-    assert "<h2>Host category</h2>" in data
-    assert 'Back to <a href="/site/2">' in data
-    assert "<title>Host Category - MirrorManager</title>" in data
+    assert '<div class="toast-body">Host Category added</div>' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> mirror2.localhost' in data
+    assert "<title>Host - MirrorManager</title>" in data
 
     # Try adding the same Category -- fails
 
     output = client.post("/host/2/category/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="message">Could not add Category to the host</li>' in data
-    assert "<h2>Add host category</h2>" in data
-    assert 'Back to <a href="/host/2">' in data
+    assert '<div class="toast-body">Could not add Category to the host</div>' in data
+    assert '<h6 class="mb-0">Add host category</h6>' in data
     assert "<title>New Host Category - MirrorManager</title>" in data
     assert 'action="/host/2/category/1/delete">' not in data
 
@@ -945,8 +917,7 @@ def test_host_category_new_auth(client, user):
     output = client.get("/host/2")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Host mirror2.localhost" in data
-    assert 'Back to <a href="/site/2">' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> mirror2.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/2/category/4/delete">' in data
 
@@ -968,8 +939,7 @@ def test_host_category_new_as_admin_auth(client, admin_user):
     output = client.get("/host/2/category/new")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Add host category</h2>" in data
-    assert 'Back to <a href="/host/2">' in data
+    assert '<h6 class="mb-0">Add host category</h6>' in data
     assert "<title>New Host Category - MirrorManager</title>" in data
     assert 'action="/host/2/category/1/delete">' not in data
 
@@ -989,19 +959,17 @@ def test_host_category_new_as_admin_auth(client, admin_user):
     output = client.post("/host/2/category/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="message">Host Category added</li>' in data
-    assert "<h2>Host category</h2>" in data
-    assert 'Back to <a href="/site/2">' in data
-    assert "<title>Host Category - MirrorManager</title>" in data
+    assert '<div class="toast-body">Host Category added</div>' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> mirror2.localhost' in data
+    assert "<title>Host - MirrorManager</title>" in data
 
     # Try adding the same Category -- fails
 
     output = client.post("/host/2/category/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="message">Could not add Category to the host</li>' in data
-    assert "<h2>Add host category</h2>" in data
-    assert 'Back to <a href="/host/2">' in data
+    assert '<div class="toast-body">Could not add Category to the host</div>' in data
+    assert '<h6 class="mb-0">Add host category</h6>' in data
     assert "<title>New Host Category - MirrorManager</title>" in data
     assert 'action="/host/2/category/1/delete">' not in data
 
@@ -1019,8 +987,7 @@ def test_host_category_delete_auth(client, user):
     output = client.get("/host/2")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Host mirror2.localhost" in data
-    assert 'Back to <a href="/site/2">' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> mirror2.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/2/category/3/delete">' in data
 
@@ -1033,8 +1000,7 @@ def test_host_category_delete_auth(client, user):
     output = client.post("/host/2/category/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Host mirror2.localhost" in data
-    assert 'Back to <a href="/site/2">' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> mirror2.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/2/category/3/delete">' in data
 
@@ -1064,9 +1030,8 @@ def test_host_category_delete_auth(client, user):
     output = client.post("/host/2/category/3/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="message">Host Category deleted</li>' in data
-    assert "<h2>Host mirror2.localhost" in data
-    assert 'Back to <a href="/site/2">' in data
+    assert '<div class="toast-body">Host Category deleted</div>' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> mirror2.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/2/category/1/delete">' not in data
 
@@ -1098,8 +1063,7 @@ def test_host_category_url_new_auth(client, user):
     output = client.get("/host/2/category/3/url/new")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Add host category URL</h2>" in data
-    assert 'test-mirror2</a> / <a href="/host/2">' in data
+    assert '<h6 class="mb-0">Add host category URL</h6>' in data
     assert "<title>New Host Category URL - MirrorManager</title>" in data
     assert 'action="/host/2/category/3/url/5/delete">' not in data
 
@@ -1114,8 +1078,7 @@ def test_host_category_url_new_auth(client, user):
     output = client.post("/host/2/category/3/url/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Add host category URL</h2>" in data
-    assert 'test-mirror2</a> / <a href="/host/2">' in data
+    assert '<h6 class="mb-0">Add host category URL</h6>' in data
     assert "<title>New Host Category URL - MirrorManager</title>" in data
     assert 'action="/host/2/category/3/url/5/delete">' not in data
 
@@ -1126,10 +1089,9 @@ def test_host_category_url_new_auth(client, user):
     output = client.post("/host/2/category/3/url/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="message">Host Category URL added</li>' in data
-    assert "<h2>Host category</h2>" in data
-    assert 'test-mirror2</a> / <a href="/host/2">' in data
-    assert "<title>Host Category - MirrorManager</title>" in data
+    assert '<div class="toast-body">Host Category URL added</div>' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span>' in data
+    assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/2/category/3/url/9/delete">' in data
 
     # Try adding the same Host Category URL -- fails
@@ -1139,10 +1101,9 @@ def test_host_category_url_new_auth(client, user):
     output = client.post("/host/2/category/3/url/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert 'class="message">Could not add Category URL to the host</li>' in data
-    assert "<h2>Host category</h2>" in data
-    assert 'test-mirror2</a> / <a href="/host/2">' in data
-    assert "<title>Host Category - MirrorManager</title>" in data
+    assert "Could not add Category URL to the host" in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span>' in data
+    assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/2/category/3/url/9/delete">' in data
 
 
@@ -1156,13 +1117,9 @@ def test_host_category_url_delete(client):
 
 def test_host_category_url_delete_auth(client, user):
     # Check before deleting the category URL
-    output = client.get("/host/2/category/3")
+    output = client.get("/host/2")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Host category</h2>" in data
-    assert 'Back to <a href="/site/2">' in data
-    assert "<title>Host Category - MirrorManager</title>" in data
-    assert 'action="/host/2/category/3/url/5/delete">' in data
 
     csrf_token = data.split('name="csrf_token" type="hidden" value="')[1].split('">')[0]
 
@@ -1173,9 +1130,8 @@ def test_host_category_url_delete_auth(client, user):
     output = client.post("/host/2/category/3/url/5/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "<h2>Host category</h2>" in data
-    assert 'Back to <a href="/site/2">' in data
-    assert "<title>Host Category - MirrorManager</title>" in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span>' in data
+    assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/2/category/3/url/5/delete">' in data
 
     # Delete Host Category URL
@@ -1216,41 +1172,10 @@ def test_host_category_url_delete_auth(client, user):
     output = client.post("/host/2/category/3/url/5/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="message">Host category URL deleted</li>' in data
-    assert "<h2>Host category</h2>" in data
-    assert 'Back to <a href="/site/2">' in data
-    assert "<title>Host Category - MirrorManager</title>" in data
+    assert '<div class="toast-body">Host category URL deleted</div>' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span>' in data
+    assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/2/category/3/url/5/delete">' not in data
-
-
-def test_host_category(client):
-    """Test the host_category endpoint."""
-    output = client.post("/host/2/category/5")
-    assert output.status_code == 302
-    data = output.get_data(as_text=True)
-    assert "/login?next=http://localhost/host/2/category/5" in data
-
-
-def test_host_category_auth(client, user):
-    output = client.get("/host/50/category/5")
-    assert output.status_code == 404
-    data = output.get_data(as_text=True)
-    assert "<p>Host not found</p>" in data
-
-    output = client.get("/host/2/category/50")
-    assert output.status_code == 404
-    data = output.get_data(as_text=True)
-    assert "<p>Host/Category not found</p>" in data
-
-    output = client.get("/host/2/category/2")
-    assert output.status_code == 404
-    data = output.get_data(as_text=True)
-    assert "<p>Category not associated with this host</p>" in data
-
-    output = client.get("/host/2/category/3")
-    assert output.status_code == 200
-    data = output.get_data(as_text=True)
-    assert "<h3>Up-to-Date Directories this host carries</h3>" in data
 
 
 def test_auth_logout(client):
@@ -1271,7 +1196,7 @@ def test_auth_logout_auth(client, user):
     output = client.get("/logout", follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert '<li class="message">You were successfully logged out.</li>' in data
+    assert '<div class="toast-body">You were successfully logged out.</div>' in data
     assert "<h2>Fedora Public Active Mirrors</h2>" in data
 
 
@@ -1280,24 +1205,22 @@ def test_toggle_private_flag_host(client):
     Test that the toggling of the private flag in the host
     deletes all host category directories.
     """
-    output = client.get("/host/2/category/3")
+    output = client.get("/host/2")
     assert output.status_code == 302
     data = output.get_data(as_text=True)
-    assert "/login?next=http://localhost/host/2/category/3" in data
+    assert "/login?next=http://localhost/host/2" in data
 
 
 def test_toggle_private_flag_host_auth(client, user):
-    output = client.get("/host/50/category/3")
+    output = client.get("/host/50")
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host not found</p>" in data
 
-    output = client.get("/host/2/category/3")
+    output = client.get("/host/2")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "pub/fedora/linux/releases/27" in data
-    assert 'Back to <a href="/site/2">' in data
-    assert "<title>Host Category - MirrorManager</title>" in data
 
     output = client.get("/host/2")
     data = output.get_data(as_text=True)
@@ -1320,13 +1243,11 @@ def test_toggle_private_flag_host_auth(client, user):
     assert output.status_code == 200
     data = output.get_data(as_text=True)
 
-    output = client.get("/host/2/category/3")
+    output = client.get("/host/2")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     # Make sure the host_category_directory is gone
     assert "pub/fedora/linux/releases/27" not in data
-    assert 'Back to <a href="/site/2">' in data
-    assert "<title>Host Category - MirrorManager</title>" in data
 
 
 def test_toggle_private_flag_host_auth_more(client, user, db, hostcategorydir_one_more):
@@ -1339,12 +1260,10 @@ def test_toggle_private_flag_host_auth_more(client, user, db, hostcategorydir_on
     hostobj.private = True
     db.commit()
     # Check the setup is good
-    output = client.get("/host/2/category/3")
+    output = client.get("/host/2")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "pub/fedora/linux/updates/testing/26/x86_64" in data
-    assert 'Back to <a href="/site/2">' in data
-    assert "<title>Host Category - MirrorManager</title>" in data
 
     # Toggle private flag -> private: False (or rather None)
     post_data = {
@@ -1365,15 +1284,13 @@ def test_toggle_private_flag_host_auth_more(client, user, db, hostcategorydir_on
     # data = output.get_data(as_text=True)
     # print(data)
 
-    output = client.get("/host/2/category/3")
+    output = client.get("/host/2")
     # output = client.get('/host/2')
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     print(data)
     # Make sure the host_category_directory is gone
     assert "pub/fedora/linux/updates/testing/26/x86_64" not in data
-    assert 'Back to <a href="/site/2">' in data
-    assert "<title>Host Category - MirrorManager</title>" in data
 
 
 def test_toggle_private_flag_site(client):
@@ -1381,24 +1298,22 @@ def test_toggle_private_flag_site(client):
     Test that the toggling of the private flag in the site
     deletes all host category directories.
     """
-    output = client.get("/host/2/category/3")
+    output = client.get("/host/2")
     assert output.status_code == 302
     data = output.get_data(as_text=True)
-    assert "/login?next=http://localhost/host/2/category/3" in data
+    assert "/login?next=http://localhost/host/2" in data
 
 
 def test_toggle_private_flag_site_auth(client, user):
-    output = client.get("/host/50/category/3")
+    output = client.get("/host/50")
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host not found</p>" in data
 
-    output = client.get("/host/2/category/3")
+    output = client.get("/host/2")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "pub/fedora/linux/releases/27" in data
-    assert 'Back to <a href="/site/2">' in data
-    assert "<title>Host Category - MirrorManager</title>" in data
 
 
 def test_toggle_private_flag_site_auth_more(client, user, hostcategorydir_even_more):
@@ -1407,12 +1322,10 @@ def test_toggle_private_flag_site_auth_more(client, user, hostcategorydir_even_m
     data = output.get_data(as_text=True)
     csrf_token = data.split('name="csrf_token" type="hidden" value="')[1].split('">')[0]
 
-    output = client.get("/host/2/category/3")
+    output = client.get("/host/2")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "pub/fedora/linux/updates/testing/27/x86_64" in data
-    assert 'Back to <a href="/site/2">' in data
-    assert "<title>Host Category - MirrorManager</title>" in data
 
     post_data = {
         "name": "test-mirror2.1",
@@ -1429,12 +1342,10 @@ def test_toggle_private_flag_site_auth_more(client, user, hostcategorydir_even_m
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<h2>Fedora Public Active Mirrors</h2>" in data
-    assert '<li class="message">Site Updated</li>' in data
+    assert '<div class="toast-body">Site Updated</div>' in data
 
-    output = client.get("/host/2/category/3")
+    output = client.get("/host/2")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     # Make sure the host_category_directory is gone
     assert "pub/fedora/linux/updates/testing/27/x86_64" not in data
-    assert 'Back to <a href="/site/2">' in data
-    assert "<title>Host Category - MirrorManager</title>" in data
