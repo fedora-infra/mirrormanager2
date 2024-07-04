@@ -105,7 +105,7 @@ def create_app(config=None):
     # Admin UI
     # Flask-Admin does not support having a single instance and multiple calls
     # to init_app() (it stores the app as an instance attribute)
-    ADMIN = Admin(template_mode="bootstrap3")
+    ADMIN = Admin(template_mode="bootstrap4")
     # Force mapper configuration here because flask-admin does relationship
     # introspection that will fail to recognize relationships if they haven't
     # been configured (and if no query has been emitted yet).

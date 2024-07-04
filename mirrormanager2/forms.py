@@ -72,8 +72,8 @@ class AddSiteForm(FlaskForm):
         [wtforms.validators.InputRequired()],
     )
     private = wtforms.BooleanField("Private", default=False)
-    admin_active = wtforms.BooleanField("Admin active", default=True)
-    user_active = wtforms.BooleanField("User active", default=True)
+    admin_active = wtforms.BooleanField("Enabled", default=True)
+    user_active = wtforms.BooleanField("Enabled", default=True)
     all_sites_can_pull_from_me = wtforms.BooleanField("All sites can pull from me?", default=False)
     downstream_comments = wtforms.StringField(
         "Comments for downstream siteadmins",

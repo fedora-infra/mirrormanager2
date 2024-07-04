@@ -1,0 +1,282 @@
+{% from "_formhelpers.html" import render_field, render_switch %}
+
+{% macro export_compliance() %}
+<div class="alert alert-light form-text">
+    <h4>Export Compliance</h4>
+    <p>
+        By downloading Fedora software, you acknowledge that you understand all of
+        the following: Fedora software and technical information may be subject to
+        the U.S. Export Administration Regulations (the “EAR”) and other U.S. and
+        foreign laws and may not be exported, re-exported or transferred
+        (a) to any country listed in Country Group E:1 in Supplement No. 1 to part
+        740 of the EAR (currently, Cuba, Iran, North Korea, Sudan and Syria);
+        (b) to any prohibited destination or to any end user who has been prohibited
+        from participating in U.S. export transactions by any federal agency of the
+        U.S. government; or
+        (c) for use in connection with the design, development or production of
+        nuclear, chemical or biological weapons, or rocket systems, space launch
+        vehicles, or sounding rockets, or unmanned air vehicle systems.
+    </p>
+    <p>
+        You may not download Fedora software or technical information if you are
+        located in one of these countries or otherwise subject to these restrictions.
+        You may not provide Fedora software or technical information to individuals
+        or entities located in one of these countries or otherwise subject to these
+        restrictions. You are also responsible for compliance with foreign law
+        requirements applicable to the import, export and use of Fedora software
+        and technical information.
+    </p>
+</div>
+{% endmacro %}
+
+{% macro footer() %}
+<div class="footer py-5 text-white">
+    <div class="container">
+        <div class="row footerlinks justify-content-center">
+            <div class="col-sm-3 col-4 mt-3">
+                <div>
+                    <dl>
+                        <dt class="text-uppercase h4"><strong>About</strong></dt>
+                        <dd><a href="https://getfedora.org/">Get Fedora Linux</a></dd>
+                        <dd><a href="https://getfedora.org/en/sponsors/">Sponsors</a></dd>
+                        <dd><a href="https://fedoramagazine.org">Fedora Magazine</a></dd>
+                        <dd><a href="https://fedoraproject.org/wiki/Legal:Main#Legal">Legal</a></dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="col-sm-3 col-4 mt-3">
+                <div>
+                    <dl>
+                        <dt class="text-uppercase h4"><strong>Support</strong></dt>
+                        <dd><a href="https://fedoraproject.org/wiki/Communicating_and_getting_help">Get Help</a></dd>
+                        <dd><a href="https://ask.fedoraproject.org/">Ask Fedora</a></dd>
+                        <dd><a href="https://discussion.fedoraproject.org/c/ask/common-issues/">Common Issues</a></dd>
+                        <dd><a href="https://developer.fedoraproject.org/">Fedora Developer Portal</a></dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="col-sm-3 col-4 mt-3">
+                <div>
+                    <dl>
+                        <dt class="text-uppercase h4"><strong>Community</strong></dt>
+                        <dd><a href="https://fedoraproject.org/wiki/Join">Join Fedora</a></dd>
+                        <dd><a href="https://fedoraproject.org/wiki/Overview">About Fedora</a></dd>
+                        <dd><a href="http://fedoraplanet.org">Planet Fedora</a></dd>
+                        <dd><a href="https://accounts.fedoraproject.org/">Fedora Accounts</a></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="row footerlinks">
+            <div class="col-12 text-center">
+                <p> Fedora is sponsored by Red Hat. <a href="https://www.redhat.com/en/technologies/linux-platforms/articles/relationship-between-fedora-and-rhel">Learn more about the relationship between Red Hat and Fedora »</a> </p>
+                <div class="py-3"> <a href="https://www.redhat.com/" class="border-0"><img class="rh-logo" height=34px src="{{ url_for('static', filename='redhat.png') }}" alt="Red Hat Logo"></a> </div>
+                <p> © 2014 - 2024 Red Hat, Inc. and others. </p>
+            </div>
+            <div class="col-12 text-center">
+                {% set noggin_link %}
+                    <a href="https://github.com/fedora-infra/noggin">noggin</a>
+                {% endset %}
+                <p>
+                <a href="https://github.com/fedora-infra/mirrormanager2/">mirrormanager</a>
+                -- {{version}}
+                -- <a href="http://mirrormanager.rtfd.org" rel="noopener noreferrer"
+                        target="_blank">Documentation</a>
+                -- <a href="http://mirrormanager.readthedocs.org/en/latest/contributors.html">Authors</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro flashmessages() %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if category, messages %}
+<div class="toast-container flash-messages position-fixed mt-2 top-0 start-50 translate-middle-x">
+    {% for category, message in messages %}
+    <div class="toast {{'bg-lightstyles-danger text-danger' if category == 'error' else 'bg-lightstyles-success text-success border-lightstyles-success'}} d-flex" {{"data-bs-autohide=false" if category == 'error'}} role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-body">{{ message }}</div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endwith %}
+{% endmacro %}
+
+{% macro headincludes() %}
+<link rel="shortcut icon" type="image/vnd.microsoft.icon"
+href="{{ url_for('static', filename='favicon.ico')}}"/>
+<link rel="stylesheet" type="text/css" media="screen"
+href="{{ url_for('static', filename='mirrormanager2.css') }}"/>
+<link href="{{ url_for('static', filename='fedora-bootstrap/fedora-bootstrap.min.css') }}" rel="stylesheet" />
+<link href="{{ url_for('static', filename='fonts/open-sans.css') }}" rel="stylesheet" />
+<link href="{{ url_for('static', filename='fonts/font-awesome.css') }}" rel="stylesheet" />
+{% endmacro %}
+
+{%macro bottomincludes()%}
+<script type="text/javascript" src="{{ url_for('static', filename='fedora-bootstrap/fedora-bootstrap.min.js') }}">
+</script>
+<script>
+  const toastElList = document.querySelectorAll('.toast')
+  const toastList = [...toastElList].map(toastEl => new bootstrap.Toast(toastEl))
+  toastList.forEach(toast => toast.show());
+</script>
+{%endmacro%}
+
+{% macro nav(is_admin) %}
+<nav class="navbar navbar-expand-lg navbar-light masthead py-2">
+    <a class="navbar-brand" href="{{url_for('base.index')}}"><img src="{{ url_for('static', filename='mirrormanager-logo.png') }}" alt="Fedora Account System logo" height="40"></a>
+    <ul class="navbar-nav align-items-center ms-auto">
+        <li class="nav-item">
+          <a class="nav-link color-white" href="{{url_for('base.list_mirrors')}}">Mirrors</a>
+        </li>
+        <li class="nav-item color-white"><a class="nav-link" href="{{url_for('base.statistics')}}">Statistics</a></li>
+        {% if config['SHOW_MAPS'] %}
+        <li class="nav-item color-white"><a class="nav-link" href="{{url_for('base.maps')}}">Map</a></li>
+        {% endif %}
+        {% if config['SHOW_PROPAGATION'] %}
+        <li class="nav-item color-white"><a class="nav-link" href="{{url_for('base.propagation_all')}}">Propagation</a></li>
+        {% endif %}
+        {% if g.fas_user %}
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="fa fa-user fa-lg"></span>
+            </a>
+                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownMenuLink">
+                <div class="dropdown-header">
+                    <strong>{{ g.fas_user.username }}</strong>
+                </div>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="{{url_for('base.mysite')}}">My Sites</a>
+                <a class="dropdown-item" href="{{ url_for('auth.logout') }}?next={{request.url}}">Log Out</a>
+                {% if is_admin %}
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-header">
+                    <strong>Admin Options</strong>
+                </div>
+                <a class="dropdown-item" href="{{url_for('admin.index')}}">Admin Panel</a>
+                <a class="dropdown-item" href="{{url_for('base.all_sites')}}">All sites</a>
+                {% endif %}
+            </div>
+        </li>
+        {% else %}
+        <a class="btn btn-primary ml-2" href="{{ url_for('auth.login') }}?next={{request.url}}">Login</a>
+        {% endif %}
+    </ul>
+  </nav>
+{% endmacro %}
+
+{% macro site_form(form, is_admin, action="Create") %}
+<form action="" method="POST" novalidate>
+    <div class="row">
+      <div class="col-md-6">
+        {{ render_field(form.name) }}
+      </div>
+      <div class="col-md-6">
+        {{ render_field(form.password,
+          after="used by report_mirrors script, you make this anything you want") }}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        {{ render_field(form.org_url,
+          after="Company/School/Organization URL e.g. https://www.redhat.com") }}
+      </div>
+      <div class="col-md-6">
+        {{ render_field(form.downstream_comments) }}
+      </div>
+    </div>
+    {{ render_switch(form.private, after="e.g. Not available to the public") }}
+    {{ render_switch(form.user_active,
+      after="Enabled and displayed on public listings.") }}
+    {% if is_admin %}
+      {{ render_switch(form.admin_active,
+        after="Admin Override for enabling or disabling") }}
+    {% endif %}
+    {{ render_switch(form.all_sites_can_pull_from_me,
+        after="Allow all mirror sites to pull my content 
+        without explicitly adding them to my list.") }}
+    <input type="submit" class="btn btn-primary" value="{{action}}">
+    {{ form.csrf_token }}
+  </form>
+  {% endmacro %}
+
+  {% macro host_form(form, is_admin, action="Create") %}
+  <form action="" method="POST">
+        <div class="row">
+            <div class="col-md-6">
+                {{ render_field(form.name,
+                    after="FQDN of server as seen by a public end user") }}
+            </div>
+            <div class="col-md-6">
+                {{ render_field(form.country,
+                    after="2-letter ISO country code") }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                {{ render_field(form.bandwidth_int,
+                    after="integer megabits/sec, how much bandwidth this host can serve") }}
+            </div>
+            <div class="col-md-6">
+                {{ render_field(form.max_connections,
+                    after="Maximum parallel download connections per client, suggested
+                           via metalinks.") }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                {{ render_field(form.robot_email,
+                    after="email address, will receive notice of upstream content updates") }}
+            </div>
+            <div class="col-md-6">
+                {{ render_field(form.comment,
+                    after="text, anything else you'd like a public end user to know
+                           about your mirror") }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                {{ render_switch(form.internet2,
+                    after="on Internet2") }}
+            </div>
+            <div class="col-md-6">
+                {{ render_switch(form.internet2_clients,
+                    after="serves Internet2 clients, even if private") }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                {{ render_switch(form.asn_clients,
+                    after="Serve all clients from the same ASN.  Used for ISPs,
+                           companies, or schools, not personal networks.") }}
+            </div>
+            <div class="col-md-6">
+                {{ render_field(form.asn,
+                    after="Autonomous System Number, used in BGP routing tables.") }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                {{ render_switch(form.user_active,
+                    after="Uncheck this box to temporarily disable this host, it will
+                          be removed from public listings.") }}
+                {{ render_switch(form.private,
+                    after="e.g. not available to the public, an internal private mirror") }}
+                {% if is_admin %}
+                {{ render_switch(form.admin_active,
+                    after="Uncheck this box to temporarily disable this host, it will
+                        be removed from public listings.") }}
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                {{ render_field(form.disable_reason) }}
+            </div>
+        </div>
+    <p>
+      <input type="submit" class="btn btn-primary" value="Update">
+    </p>
+    {{ form.csrf_token }}
+  </form>
+    {% endmacro %}
