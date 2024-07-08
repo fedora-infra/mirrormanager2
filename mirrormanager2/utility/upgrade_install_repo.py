@@ -45,7 +45,7 @@ def move_install_repo(session, version, test=False, debug=False):
             # We do not change development repos
             continue
 
-        prefix = "fedora-install-%s" % ver.name
+        prefix = f"fedora-install-{ver.name}"
         if a.primary_arch:
             d = f"pub/fedora/linux/releases/{ver.name}/Server/{a.name}/os"
             category = mirrormanager2.lib.get_category_by_name(session, "Fedora Linux")
@@ -56,8 +56,8 @@ def move_install_repo(session, version, test=False, debug=False):
         if not test:
             if not os.path.isdir(os.path.join("/srv", d)):
                 print(
-                    "directory %s does not exist on disk, skipping "
-                    "creation of a repository there" % d
+                    f"directory {d} does not exist on disk, skipping "
+                    "creation of a repository there"
                 )
                 continue
 
@@ -65,9 +65,9 @@ def move_install_repo(session, version, test=False, debug=False):
 
         if not dobj:
             print(
-                "directory %s exists on disk, but not in the database"
+                f"directory {d} exists on disk, but not in the database"
                 " yet, skipping creation of a repository there until "
-                "after the next UMDL run." % d
+                "after the next UMDL run."
             )
             continue
 
@@ -76,7 +76,7 @@ def move_install_repo(session, version, test=False, debug=False):
             print(f"No repo found for prefix: {prefix} - arch: {a.name}")
             continue
 
-        print("Updating %s" % repo)
+        print(f"Updating {repo}")
         print(f"Updating {repo.prefix} repo for arch {a.name}")
 
         if debug:

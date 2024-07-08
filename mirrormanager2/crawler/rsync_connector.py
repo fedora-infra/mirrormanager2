@@ -56,7 +56,7 @@ class RsyncConnector(Connector):
                     "time": fields[3],
                 }
             except IndexError:
-                logger.debug("invalid rsync line: %s\n" % line)
+                logger.debug("invalid rsync line: %s", line)
 
         # run_rsync() returns a temporary file which needs to be closed
         listing.close()

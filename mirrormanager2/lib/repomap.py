@@ -115,19 +115,19 @@ def repo_prefix(path, category, ver):
                         prefix = "rawhide"
                 # fedora-
                 elif isDebug:
-                    prefix = "fedora-debug-%s" % version
+                    prefix = f"fedora-debug-{version}"
                 elif isSource:
-                    prefix = "fedora-source-%s" % version
+                    prefix = f"fedora-source-{version}"
                 else:
-                    prefix = "fedora-%s" % version
+                    prefix = f"fedora-{version}"
             elif isModular:
                 # fedora-modular-
                 if isDebug:
-                    prefix = "fedora-modular-debug-%s" % version
+                    prefix = f"fedora-modular-debug-{version}"
                 elif isSource:
-                    prefix = "fedora-modular-source-%s" % version
+                    prefix = f"fedora-modular-source-{version}"
                 else:
-                    prefix = "fedora-modular-%s" % version
+                    prefix = f"fedora-modular-{version}"
             elif isFedora:
                 if isDebug or isSource:
                     # ignore releases/$version/Fedora/$arch/debug/
@@ -135,24 +135,24 @@ def repo_prefix(path, category, ver):
                     prefix = None
                 else:
                     # fedora-install-
-                    prefix = "fedora-install-%s" % version
+                    prefix = f"fedora-install-{version}"
         elif isModular:
             if isUpdatesReleased:
                 # updates-released-modular-
                 if isDebug:
-                    prefix = "updates-released-modular-debug-f%s" % version
+                    prefix = f"updates-released-modular-debug-f{version}"
                 elif isSource:
-                    prefix = "updates-released-modular-source-f%s" % version
+                    prefix = f"updates-released-modular-source-f{version}"
                 else:
-                    prefix = "updates-released-modular-f%s" % version
+                    prefix = f"updates-released-modular-f{version}"
             elif isUpdatesTesting:
                 # updates-testing-modular-
                 if isDebug:
-                    prefix = "updates-testing-modular-debug-f%s" % version
+                    prefix = f"updates-testing-modular-debug-f{version}"
                 elif isSource:
-                    prefix = "updates-testing-modular-source-f%s" % version
+                    prefix = f"updates-testing-modular-source-f{version}"
                 else:
-                    prefix = "updates-testing-modular-f%s" % version
+                    prefix = f"updates-testing-modular-f{version}"
             elif isRawhide:
                 # rawhide-modular
                 if isDebug:
@@ -163,31 +163,31 @@ def repo_prefix(path, category, ver):
                     prefix = "rawhide-modular"
             # fedora-modular-
             elif isDebug:
-                prefix = "fedora-modular-debug-%s" % version
+                prefix = f"fedora-modular-debug-{version}"
             elif isSource:
-                prefix = "fedora-modular-source-%s" % version
+                prefix = f"fedora-modular-source-{version}"
             else:
-                prefix = "fedora-modular-%s" % version
+                prefix = f"fedora-modular-{version}"
 
         elif isAtomic:
             # atomic
-            prefix = "atomic-%s" % version
+            prefix = f"atomic-{version}"
         elif isUpdatesReleased and isEverything:
             # updates-released-
             if isDebug:
-                prefix = "updates-released-debug-f%s" % version
+                prefix = f"updates-released-debug-f{version}"
             elif isSource:
-                prefix = "updates-released-source-f%s" % version
+                prefix = f"updates-released-source-f{version}"
             else:
-                prefix = "updates-released-f%s" % version
+                prefix = f"updates-released-f{version}"
         elif isUpdatesTesting and isEverything:
             # updates-testing-
             if isDebug:
-                prefix = "updates-testing-debug-f%s" % version
+                prefix = f"updates-testing-debug-f{version}"
             elif isSource:
-                prefix = "updates-testing-source-f%s" % version
+                prefix = f"updates-testing-source-f{version}"
             else:
-                prefix = "updates-testing-f%s" % version
+                prefix = f"updates-testing-f{version}"
         elif isRawhide:
             # rawhide
             if isDebug:
@@ -203,29 +203,29 @@ def repo_prefix(path, category, ver):
                 prefix = None
             # free-el
             elif isDebug:
-                prefix = "free-el-debug-%s" % version
+                prefix = f"free-el-debug-{version}"
             elif isSource:
-                prefix = "free-el-source-%s" % version
+                prefix = f"free-el-source-{version}"
             else:
-                prefix = "free-el-%s" % version
+                prefix = f"free-el-{version}"
 
         elif isUpdatesReleased:
             # updates-released-
             if isDebug:
-                prefix = "free-el-updates-released-debug-%s" % version
+                prefix = f"free-el-updates-released-debug-{version}"
             elif isSource:
-                prefix = "free-el-updates-released-source-%s" % version
+                prefix = f"free-el-updates-released-source-{version}"
             else:
-                prefix = "free-el-updates-released-%s" % version
+                prefix = f"free-el-updates-released-{version}"
 
         elif isUpdatesTesting:
             # updates-testing-
             if isDebug:
-                prefix = "free-el-updates-testing-debug-%s" % version
+                prefix = f"free-el-updates-testing-debug-{version}"
             elif isSource:
-                prefix = "free-el-updates-testing-source-%s" % version
+                prefix = f"free-el-updates-testing-source-{version}"
             else:
-                prefix = "free-el-updates-testing-%s" % version
+                prefix = f"free-el-updates-testing-{version}"
 
     elif isRrpmfusionNonfreeEl:
         if isReleases:
@@ -233,29 +233,29 @@ def repo_prefix(path, category, ver):
                 prefix = None
             # nonfree-el
             elif isDebug:
-                prefix = "nonfree-el-debug-%s" % version
+                prefix = f"nonfree-el-debug-{version}"
             elif isSource:
-                prefix = "nonfree-el-source-%s" % version
+                prefix = f"nonfree-el-source-{version}"
             else:
-                prefix = "nonfree-el-%s" % version
+                prefix = f"nonfree-el-{version}"
 
         elif isUpdatesReleased:
             # updates-released-
             if isDebug:
-                prefix = "nonfree-el-updates-released-debug-%s" % version
+                prefix = f"nonfree-el-updates-released-debug-{version}"
             elif isSource:
-                prefix = "nonfree-el-updates-released-source-%s" % version
+                prefix = f"nonfree-el-updates-released-source-{version}"
             else:
-                prefix = "nonfree-el-updates-released-%s" % version
+                prefix = f"nonfree-el-updates-released-{version}"
 
         elif isUpdatesTesting:
             # updates-testing-
             if isDebug:
-                prefix = "nonfree-el-updates-testing-debug-%s" % version
+                prefix = f"nonfree-el-updates-testing-debug-{version}"
             elif isSource:
-                prefix = "nonfree-el-updates-testing-source-%s" % version
+                prefix = f"nonfree-el-updates-testing-source-{version}"
             else:
-                prefix = "nonfree-el-updates-testing-%s" % version
+                prefix = f"nonfree-el-updates-testing-{version}"
 
     elif isRrpmfusionFreeFedora:
         if isReleases:
@@ -263,29 +263,29 @@ def repo_prefix(path, category, ver):
                 prefix = None
             # free-fedora
             elif isDebug:
-                prefix = "free-fedora-debug-%s" % version
+                prefix = f"free-fedora-debug-{version}"
             elif isSource:
-                prefix = "free-fedora-source-%s" % version
+                prefix = f"free-fedora-source-{version}"
             else:
-                prefix = "free-fedora-%s" % version
+                prefix = f"free-fedora-{version}"
 
         elif isUpdatesReleased:
             # updates-released-
             if isDebug:
-                prefix = "free-fedora-updates-released-debug-%s" % version
+                prefix = f"free-fedora-updates-released-debug-{version}"
             elif isSource:
-                prefix = "free-fedora-updates-released-source-%s" % version
+                prefix = f"free-fedora-updates-released-source-{version}"
             else:
-                prefix = "free-fedora-updates-released-%s" % version
+                prefix = f"free-fedora-updates-released-{version}"
 
         elif isUpdatesTesting:
             # updates-testing-
             if isDebug:
-                prefix = "free-fedora-updates-testing-debug-%s" % version
+                prefix = f"free-fedora-updates-testing-debug-{version}"
             elif isSource:
-                prefix = "free-fedora-updates-testing-source-%s" % version
+                prefix = f"free-fedora-updates-testing-source-{version}"
             else:
-                prefix = "free-fedora-updates-testing-%s" % version
+                prefix = f"free-fedora-updates-testing-{version}"
         elif isRawhide:
             # rawhide
             if isDebug:
@@ -301,29 +301,29 @@ def repo_prefix(path, category, ver):
                 prefix = None
             # nonfree-fedora
             elif isDebug:
-                prefix = "nonfree-fedora-debug-%s" % version
+                prefix = f"nonfree-fedora-debug-{version}"
             elif isSource:
-                prefix = "nonfree-fedora-source-%s" % version
+                prefix = f"nonfree-fedora-source-{version}"
             else:
-                prefix = "nonfree-fedora-%s" % version
+                prefix = f"nonfree-fedora-{version}"
 
         elif isUpdatesReleased:
             # updates-released-
             if isDebug:
-                prefix = "nonfree-fedora-updates-released-debug-%s" % version
+                prefix = f"nonfree-fedora-updates-released-debug-{version}"
             elif isSource:
-                prefix = "nonfree-fedora-updates-released-source-%s" % version
+                prefix = f"nonfree-fedora-updates-released-source-{version}"
             else:
-                prefix = "nonfree-fedora-updates-released-%s" % version
+                prefix = f"nonfree-fedora-updates-released-{version}"
 
         elif isUpdatesTesting:
             # updates-testing-
             if isDebug:
-                prefix = "nonfree-fedora-updates-testing-debug-%s" % version
+                prefix = f"nonfree-fedora-updates-testing-debug-{version}"
             elif isSource:
-                prefix = "nonfree-fedora-updates-testing-source-%s" % version
+                prefix = f"nonfree-fedora-updates-testing-source-{version}"
             else:
-                prefix = "nonfree-fedora-updates-testing-%s" % version
+                prefix = f"nonfree-fedora-updates-testing-{version}"
         elif isRawhide:
             # rawhide
             if isDebug:
@@ -342,30 +342,30 @@ def repo_prefix(path, category, ver):
         isLB = "LoadBalance" in path
 
         if isCS:
-            prefix = "rhel-%s-clusteredstorage" % version
+            prefix = f"rhel-{version}-clusteredstorage"
         elif isHA:
-            prefix = "rhel-%s-highavailability" % version
+            prefix = f"rhel-{version}-highavailability"
         elif isLFS:
-            prefix = "rhel-%s-largefilesystem" % version
+            prefix = f"rhel-{version}-largefilesystem"
         elif isLB:
-            prefix = "rhel-%s-loadbalance" % version
+            prefix = f"rhel-{version}-loadbalance"
         elif isOptional:
             if isSource:
-                prefix = "rhel-optional-source-%s" % version
+                prefix = f"rhel-optional-source-{version}"
             elif isDebug:
-                prefix = "rhel-optional-debug-%s" % version
+                prefix = f"rhel-optional-debug-{version}"
             else:
-                prefix = "rhel-optional-%s" % version
+                prefix = f"rhel-optional-{version}"
         else:
             if isDebug:
-                prefix = "rhel-debug-%s" % version
+                prefix = f"rhel-debug-{version}"
             elif isSource:
-                prefix = "rhel-source-%s" % version
+                prefix = f"rhel-source-{version}"
             else:
-                prefix = "rhel-%s" % version
+                prefix = f"rhel-{version}"
 
         if prefix and isBeta:
-            prefix = "%s-beta" % prefix
+            prefix = f"{prefix}-beta"
 
     elif isCentOS:
         prefix = centos_prefix(path)

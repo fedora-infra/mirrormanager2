@@ -21,10 +21,10 @@ originalCategory = "Fedora Linux"
 def doit(session, original_cat, archive_cat, directory_re):
     c = mirrormanager2.lib.get_category_by_name(session, original_cat)
     if c is None:
-        raise click.ClickException("No category could be found by the name: %s" % original_cat)
+        raise click.ClickException(f"No category could be found by the name: {original_cat}")
     a = mirrormanager2.lib.get_category_by_name(session, archive_cat)
     if a is None:
-        raise click.ClickException("No category could be found by the name: %s" % archive_cat)
+        raise click.ClickException(f"No category could be found by the name: {archive_cat}")
     originaltopdir = c.topdir.name
     archivetopdir = os.path.join(a.topdir.name, "fedora", "linux")
     dirRe = re.compile(directory_re)
@@ -32,7 +32,7 @@ def doit(session, original_cat, archive_cat, directory_re):
         if dirRe.search(d.name):
             for r in d.repositories:
                 t = os.path.join(archivetopdir, d.name[len(originaltopdir) + 1 :])
-                print("trying to find %s" % t)
+                print(f"trying to find {t}")
                 new_d = mirrormanager2.lib.get_directory_by_name(session, t)
                 if new_d is None:
                     raise click.ClickException(
@@ -50,13 +50,13 @@ def doit(session, original_cat, archive_cat, directory_re):
 @click.option(
     "--originalCategory",
     metavar="CATEGORY",
-    help="original Category (default=%s)" % originalCategory,
+    help=f"original Category (default={originalCategory})",
     default=originalCategory,
 )
 @click.option(
     "--archiveCategory",
     metavar="CATEGORY",
-    help="archive Category (default=%s)" % archiveCategory,
+    help=f"archive Category (default={archiveCategory})",
     default=archiveCategory,
 )
 @click.option(

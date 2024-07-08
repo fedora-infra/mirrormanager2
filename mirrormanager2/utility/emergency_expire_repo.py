@@ -81,7 +81,7 @@ def main(config, product, version):
         raise click.BadArgumentUsage(message)
 
     for repo in repos:
-        logger.info("Clearing for repo %s" % repo.name)
+        logger.info("Clearing for repo %s", repo.name)
         deleted = repo.emergency_expire_old_file_details(session)
 
         if not deleted:

@@ -135,13 +135,13 @@ def validate_netblocks(form, field):
     max_ipv4_netblock_size = current_app.config.get("MM_IPV4_NETBLOCK_SIZE", "/16")
     max_ipv6_netblock_size = current_app.config.get("MM_IPV6_NETBLOCK_SIZE", "/32")
 
-    emsg = "Error: IPv4 netblocks larger than %s" % max_ipv4_netblock_size
-    emsg += ", and IPv6 netblocks larger than %s" % max_ipv6_netblock_size
+    emsg = f"Error: IPv4 netblocks larger than {max_ipv4_netblock_size}"
+    emsg += f", and IPv6 netblocks larger than {max_ipv6_netblock_size}"
     emsg += " can only be created by mirrormanager administrators."
     emsg += " Please ask the mirrormanager administrators for assistance."
 
-    ipv4_block = IPy.IP("10.0.0.0%s" % max_ipv4_netblock_size)
-    ipv6_block = IPy.IP("fec0::%s" % max_ipv6_netblock_size)
+    ipv4_block = IPy.IP(f"10.0.0.0{max_ipv4_netblock_size}")
+    ipv6_block = IPy.IP(f"fec0::{max_ipv6_netblock_size}")
 
     try:
         ip = IPy.IP(field.data, make_net=True)
