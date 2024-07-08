@@ -70,7 +70,7 @@
         <div class="row footerlinks">
             <div class="col-12 text-center">
                 <p> Fedora is sponsored by Red Hat. <a href="https://www.redhat.com/en/technologies/linux-platforms/articles/relationship-between-fedora-and-rhel">Learn more about the relationship between Red Hat and Fedora »</a> </p>
-                <div class="py-3"> <a href="https://www.redhat.com/" class="border-0"><img class="rh-logo" height=34px src="{{ url_for('static', filename='redhat.png') }}" alt="Red Hat Logo"></a> </div>
+                <div class="py-3"> <a href="https://www.redhat.com/" class="border-0"><img class="rh-logo" height=34px src="{{ url_for('static', filename='fedora/redhat.png') }}" alt="Red Hat Logo"></a> </div>
                 <p> © 2014 - 2024 Red Hat, Inc. and others. </p>
             </div>
             <div class="col-12 text-center">
@@ -195,7 +195,7 @@ href="{{ url_for('static', filename='mirrormanager2.css') }}"/>
         after="Admin Override for enabling or disabling") }}
     {% endif %}
     {{ render_switch(form.all_sites_can_pull_from_me,
-        after="Allow all mirror sites to pull my content 
+        after="Allow all mirror sites to pull my content
         without explicitly adding them to my list.") }}
     <input type="submit" class="btn btn-primary" value="{{action}}">
     {{ form.csrf_token }}
