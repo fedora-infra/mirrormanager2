@@ -1,6 +1,20 @@
-name: ci
+name: CI
 
-on: [push, pull_request, workflow_dispatch]
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - production
+      - staging
+      - master
+    tags:
+      - v*
+  pull_request:
+    branches:
+      - production
+      - staging
+      - master
+
 
 jobs:
   ci:
@@ -25,7 +39,7 @@ jobs:
     - name: Install dependencies
       run: dnf install -y python-pyrpmmd python-tox git rsync poetry
     - name: Install dependencies for rawhide
-      run: dnf install -y gcc gcc-c++ libffi-devel python-devel python-greenlet libpq-devel python-pip
+      run: dnf install -y gcc gcc-c++ libffi-devel python-devel python-greenlet libpq-devel python-pip cargo
     - name: Mark the directory as safe for git
       run: git config --global --add safe.directory $PWD
     - name: Use the latest poetry version to support RPM-installed packages
