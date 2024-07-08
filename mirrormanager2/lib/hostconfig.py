@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 def validate_config(config):
     message = ""
     if not isinstance(config, dict):
-        logging.critical("NON-DICT SUBMITTED: %s" % config)
+        logging.critical("NON-DICT SUBMITTED: %s", config)
         message += "config file is not a dict.\n" "Please update your copy of report_mirror.\n"
         return (False, message)
     if "version" not in config:
@@ -39,12 +39,12 @@ def validate_config(config):
         return (False, message)
     # this field is an integer
     if config["version"] != 0:
-        message += "config file version is not 0, is %s.\n" % (config["version"])
+        message += "config file version is not 0, is {}.\n".format(config["version"])
         return (False, message)
 
     for section in ["global", "site", "host"]:
         if section not in config:
-            message += "config file missing section %s.\n" % (section)
+            message += f"config file missing section {section}.\n"
             return (False, message)
 
     globl = config["global"]
@@ -56,13 +56,13 @@ def validate_config(config):
     site = config["site"]
     for opt in ["name", "password"]:
         if opt not in site:
-            message += "config file [site] missing required option %s." "\n" % (opt)
+            message += f"config file [site] missing required option {opt}." "\n"
             return (False, message)
 
     host = config["host"]
     for opt in ["name"]:
         if opt not in host:
-            message += "section [host] missing required option %s.\n" % (opt)
+            message += f"section [host] missing required option {opt}.\n"
             return (False, message)
 
     for category in list(config.keys()):

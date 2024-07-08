@@ -484,12 +484,12 @@ def add_admin_to_site(session, site, admin):
     admins = [sa.username for sa in query.all()]
 
     if admin in admins:
-        return "%s was already listed as an admin" % admin
+        return f"{admin} was already listed as an admin"
     else:
         sa = model.SiteAdmin(site_id=site_id, username=admin)
         session.add(sa)
         session.flush()
-        return "%s added as an admin" % admin
+        return f"{admin} added as an admin"
 
 
 def get_mirrors(
@@ -940,11 +940,9 @@ def uploaded_config(session, host, config):
                     pass
                 deleted += 1
 
-        message += "Category {} directories updated: {}  added: {}  deleted {}\n".format(
-            cat.category.name,
-            marked_up2date,
-            added,
-            deleted,
+        message += (
+            f"Category {cat.category.name} directories updated: {marked_up2date}  "
+            f"added: {added}  deleted {deleted}\n"
         )
         host.last_checked_in = datetime.datetime.utcnow()
         session.add(hc)

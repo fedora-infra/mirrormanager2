@@ -151,7 +151,7 @@ class DirSynchronizer:
                 continue
             gone = self._is_dir_gone(d, **kwargs)
             if gone and len(d.categories) == 1:  # safety, this should always trigger
-                logger.info("Deleting gone directory %s" % (d.name))
+                logger.info("Deleting gone directory %s", d.name)
                 self.session.delete(d)
                 self.session.flush()
 
@@ -390,7 +390,7 @@ class DiskDirSynchronizer(DirSynchronizer):
                 s = os.stat(os.path.join(self.path, relativeDName))
                 ctime = s[stat.ST_CTIME]
             except OSError:
-                logger.debug("Avoiding %r, dissappeared." % relativeDName)
+                logger.debug("Avoiding %r, dissappeared.", relativeDName)
                 continue
 
             try:
@@ -623,7 +623,7 @@ class FFTDirSynchronizer(DirSynchronizer):
                 continue
             seen.add(dirname)
             if is_excluded(dirname, STD_EXCLUDES):
-                logger.info("Excluding %s" % (dirname))
+                logger.info("Excluding %s", dirname)
                 continue
             try:
                 file_dict = data["files"][dirname]

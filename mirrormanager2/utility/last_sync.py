@@ -43,7 +43,7 @@ def getKey(item):
 def create_url(url, topics, delta):
     topic = ""
     for i in topics:
-        topic += "&topic=%s" % i
+        topic += f"&topic={i}"
     return f"{url}?delta={delta}{topic}"
 
 

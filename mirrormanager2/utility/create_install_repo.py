@@ -42,8 +42,8 @@ def add_one_repository(directory, category, version, prefix, arch):
         directory=directory,
     )
     logger.info(
-        "Created Repository(prefix={}, version={}, arch={}, category={}) "
-        "-> Directory {}".format(prefix, version.name, arch.name, category.name, directory.name)
+        f"Created Repository(prefix={prefix}, version={version.name}, arch={arch.name}, "
+        f"category={category.name}) -> Directory {directory.name}"
     )
     return repo
 
@@ -53,13 +53,13 @@ def doit(session, version_name, category_name, parent):
 
     category = mirrormanager2.lib.get_category_by_name(session, category_name)
     if not category:
-        print("No such category found: %s" % category_name)
+        print(f"No such category found: {category_name}")
         return 1
     ver = mirrormanager2.lib.get_version_by_name_version(
         session, category.product.name, version_name
     )
     if not ver:
-        print("No such version found: %s" % version_name)
+        print(f"No such version found: {version_name}")
         return 1
 
     for r in REPOS:

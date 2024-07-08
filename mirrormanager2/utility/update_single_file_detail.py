@@ -46,7 +46,7 @@ def main(config, categories, debug, filename):
             if not filename.startswith(master_dir["path"]):
                 continue  # This file is not from this category, try the next one
 
-            logger.info("Considering category %s" % cname)
+            logger.info("Considering category %s", cname)
 
             dirname = os.path.dirname(filename)
             # Remove the prefix

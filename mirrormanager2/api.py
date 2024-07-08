@@ -75,7 +75,7 @@ def api_mirroradmins():
             site = host.site
 
         if not site:
-            jsonout = flask.jsonify({"message": "No host or site found for %s" % name})
+            jsonout = flask.jsonify({"message": f"No host or site found for {name}"})
             jsonout.status_code = 400
             return jsonout
 

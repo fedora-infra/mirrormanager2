@@ -48,7 +48,7 @@ def test_list_mirrors(client):
     assert "We have currently 2 active mirrors" in data
 
     for i in [27, 26, 25]:
-        output = client.get("/mirrors/Fedora/%s" % i)
+        output = client.get(f"/mirrors/Fedora/{i}")
         assert output.status_code == 200
         data = output.get_data(as_text=True)
         assert "<title>Mirrors - MirrorManager</title>" in data

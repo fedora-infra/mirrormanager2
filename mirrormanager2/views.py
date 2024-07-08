@@ -91,7 +91,7 @@ def mysite():
     return flask.render_template(
         "my_sites.html",
         tag="mysites",
-        username="%s's" % flask.g.fas_user.username,
+        username=f"{flask.g.fas_user.username}'s",
         sites=sites,
     )
 
@@ -228,7 +228,7 @@ def site_drop(site_id):
         DB.session.delete(siteobj)
         try:
             DB.session.commit()
-            flask.flash('Site "%s" dropped' % site_name)
+            flask.flash(f'Site "{site_name}" dropped')
             if flask.current_app.config["USE_FEDORA_MESSAGING"]:
                 fedmsg_publish(topic, message)
         except SQLAlchemyError as err:

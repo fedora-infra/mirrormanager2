@@ -126,7 +126,7 @@ def do_login():
                 DB.session.commit()
                 flask.g.fas_user = user_obj
                 flask.g.fas_session_id = visit_key
-                flask.flash("Welcome %s" % user_obj.username)
+                flask.flash(f"Welcome {user_obj.username}")
             except SQLAlchemyError as err:  # pragma: no cover
                 flask.flash(
                     "Could not set the session in the db, " "please report this error to an admin",
