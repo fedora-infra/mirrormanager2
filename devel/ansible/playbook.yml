@@ -9,7 +9,7 @@
     krb_realm: TINYSTAGE.TEST
 
   roles:
-  - core
+  - common
   - ipa-client
   - cert
   - oidc-register

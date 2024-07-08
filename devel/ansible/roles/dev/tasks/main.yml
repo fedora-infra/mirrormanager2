@@ -2,16 +2,17 @@
 - name: Install dev packages
   dnf:
     name:
-    - gcc
-    - libpq-devel
-    - python3
-    - python3-devel
-    - poetry
-    # This breaks with Python 3 when installed from pip, it's terribly outdated.
-    - python3-flask-xml-rpc
-    - redhat-rpm-config
-    # deps for running the tests
-    - protobuf-compiler
+      - sqlite3
+      - gcc
+      - libpq-devel
+      - python3
+      - python3-devel
+      - poetry
+      # This breaks with Python 3 when installed from pip, it's terribly outdated.
+      - python3-flask-xml-rpc
+      - redhat-rpm-config
+      # deps for running the tests
+      - protobuf-compiler
     state: present
 
 - name: Install python packages
@@ -31,9 +32,10 @@
   command: poetry run python devel/populate.py
   args:
     chdir: /vagrant/
-    creates: /var/tmp/mirrormanager2_dev.sqlite
+    creates: /home/vagrant/mirrormanager2.sqlite
   environment:
-    MM2_CONFIG: '/home/vagrant/mirrormanager2.cfg'
+    MM2_CONFIG: "/home/vagrant/mirrormanager2.cfg"
+  become_user: vagrant
 
 - name: Install the systemd unit file for mirrormanager2 service
   copy:
