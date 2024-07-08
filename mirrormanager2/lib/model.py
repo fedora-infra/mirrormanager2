@@ -120,6 +120,9 @@ class Host(BASE):
     # This field holds information about the last few crawls.
     # Which protocols were used, crawl duration, ...
     last_crawls = deferred(sa.Column(sa.PickleType(), nullable=True))
+    # GeoIP coordinates
+    latitude = sa.Column(sa.Float(), nullable=True)
+    longitude = sa.Column(sa.Float(), nullable=True)
 
     # Relations
     site = relationship("Site", back_populates="hosts")

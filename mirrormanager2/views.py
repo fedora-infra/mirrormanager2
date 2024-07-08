@@ -1,6 +1,7 @@
 import datetime
 import os
 import re
+from urllib.parse import urlsplit
 
 import flask
 from sqlalchemy.exc import SQLAlchemyError
@@ -1200,6 +1201,35 @@ def propagation(repo_id):
     return flask.render_template(
         "propagation.html", repos=repos, repo=repo, labels=labels, datasets=datasets
     )
+
+
+@views.route("/map/mirrors_location.txt")
+def mirrors_location():
+    results = []
+    tracking = []
+    for hcurl in mmlib.get_host_category_url(DB.session):
+        host = hcurl.host_category.host
+        if host.private or host.site.private:
+            continue
+        if host.latitude is None or host.longitude is None:
+            continue
+        scheme, hostname = urlsplit(hcurl.url)[:2]
+        if not scheme.startswith("http"):
+            continue
+        if hostname in tracking:
+            continue
+        url = f"{scheme}://{hostname}"
+        results.append(
+            {
+                "host": host,
+                "url": url,
+                "host_name": hostname,
+            }
+        )
+        tracking.append(hostname)
+    return flask.render_template("mirrors_location.txt", mirrors=results), {
+        "Content-Type": "text/plain"
+    }
 
 
 @views.route("/crawler/<int:host_id>.log")
