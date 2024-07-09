@@ -1101,7 +1101,7 @@ def test_host_category_url_new_auth(client, user):
     output = client.post("/host/2/category/3/url/new", data=post_data, follow_redirects=True)
     assert output.status_code == 200
     data = output.get_data(as_text=True)
-    assert "Could not add Category URL to the host" in data
+    assert "URL Not Added: http://pingoured.fr/pub/Fedora already exists on Fedora Linux" in data
     assert '<h2 class="mb-0"><span class="fa fa-server"></span>' in data
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/2/category/3/url/9/delete">' in data
