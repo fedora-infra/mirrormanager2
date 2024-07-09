@@ -962,6 +962,10 @@ def host_category_url_new(host_id, hc_id):
             url = url[:-1]
         host_category_u.url = url
 
+        if url in [url.url for url in hcobj.urls]:
+            flask.flash(f"URL Not Added: {url} already exists on {hcobj.category.name}", "error")
+            return flask.redirect(flask.url_for("base.host_view", host_id=host_id))
+
         # If the user is *not* an admin, keep the current private flag
         if not is_mirrormanager_admin(flask.g.fas_user):
             host_category_u.private = private
