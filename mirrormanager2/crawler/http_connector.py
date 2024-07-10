@@ -17,7 +17,7 @@ class HTTPConnector(Connector):
         session.headers = {
             "Connection": "Keep-Alive",
             "Pragma": "no-cache",
-            "User-Agent": "mirrormanager-crawler/0.1 (+https://"
+            "User-Agent": "mirrormanager-crawler/1.0 (+https://"
             "github.com/fedora-infra/mirrormanager2/)",
         }
         return session
