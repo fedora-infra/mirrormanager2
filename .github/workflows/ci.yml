@@ -28,8 +28,10 @@ jobs:
           # - "centos/centos:stream8"
           # - "centos/centos:stream9"
           - "fedora/fedora:38"
+          - "fedora/fedora:39"
           - "fedora/fedora:latest"
-          - "fedora/fedora:rawhide"
+          # psycopg2 not working on python 3.13 (in rawhide) yet
+          #- "fedora/fedora:rawhide"
 
     container:
       image: quay.io/${{ matrix.container }}
