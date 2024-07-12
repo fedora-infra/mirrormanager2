@@ -16,6 +16,10 @@ https://github.com/adrianreber/mirrorlist-server.
 Mailing list for announcements and discussions:
 https://lists.fedoraproject.org/archives/list/mirror-admin@lists.fedoraproject.org/
 
+The full documentation is hosted on ReadTheDocs:
+http://mirrormanager.readthedocs.io/
+
+
 Hacking
 -------
 
