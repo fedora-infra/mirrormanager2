@@ -473,20 +473,6 @@ files = [
 colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
-name = "cloud-sptheme"
-version = "1.10.1.post20200504175005"
-description = "a nice sphinx theme named 'Cloud', and some related extensions"
-optional = false
-python-versions = "*"
-files = [
-    {file = "cloud_sptheme-1.10.1.post20200504175005-py2.py3-none-any.whl", hash = "sha256:82be47ddebbc045e7386269fc062f79d6f87cefe8e5c1e35fe0e9f4266a57723"},
-    {file = "cloud_sptheme-1.10.1.post20200504175005.tar.gz", hash = "sha256:caf47ac4c6346eef47fc11e799adbeaf645921c712cc099cf2530560e7ecde44"},
-]
-
-[package.dependencies]
-sphinx = ">=1.6"
-
-[[package]]
 name = "colorama"
 version = "0.4.6"
 description = "Cross-platform colored terminal text."
@@ -2762,4 +2748,4 @@ deploy = ["gunicorn", "psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "650bb62ba7f6ab1e62af9d50bf72d56d76ac671126c71711c414fd8b32428282"
+content-hash = "8d83a083e298a1031969862112b762db06438a897b1ef595ec17595d7ff985e8"

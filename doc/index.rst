@@ -1,5 +1,5 @@
-MirrorManagement2
-=================
+Mirror Manager
+==============
 
 The MirrorManager project is the application used by the Fedora Project to
 manage their mirrors.
