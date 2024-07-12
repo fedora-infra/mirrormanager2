@@ -25,13 +25,19 @@ import mirrormanager2
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.coverage", "sphinx.ext.viewcode"]
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.coverage",
+    "sphinx.ext.viewcode",
+    "myst_parser",
+    "sphinxcontrib.mermaid",
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
 # The suffix of source filenames.
-source_suffix = ".rst"
+source_suffix = {".rst": "restructuredtext", ".md": "markdown"}
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
@@ -86,6 +92,16 @@ pygments_style = "sphinx"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
+
+# -- Extensions configuration ------
+
+mermaid_d3_zoom = True
+
+myst_enable_extensions = [
+    "colon_fence",
+]
+myst_heading_anchors = 3
+myst_fence_as_directive = ["mermaid"]
 
 
 # -- Options for HTML output ----------------------------------------------
