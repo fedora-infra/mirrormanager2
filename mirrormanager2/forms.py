@@ -68,7 +68,7 @@ class AddSiteForm(FlaskForm):
     name = wtforms.StringField("Site name", [wtforms.validators.InputRequired()])
     password = wtforms.StringField("Site Password", [wtforms.validators.InputRequired()])
     org_url = wtforms.StringField(
-        "Organisation URL",
+        "Organization URL",
         [wtforms.validators.InputRequired()],
     )
     private = wtforms.BooleanField("Private", default=False)
