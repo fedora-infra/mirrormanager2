@@ -28,3 +28,16 @@ repos:
     rev: v0.5.0
     hooks:
       - id: ruff
+
+  - repo: local
+    hooks:
+      - id: database-graph
+        name: Update the database schema graph
+        language: python
+        additional_dependencies: [paracelsus, sqlalchemy-helpers]
+        entry: paracelsus
+        args: [inject, doc/database_schema.md, "mirrormanager2.lib.model:BASE"]
+        files: mirrormanager2/lib/model\.py
+        require_serial: true
+        pass_filenames: false
+        verbose: true

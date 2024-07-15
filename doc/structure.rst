@@ -35,6 +35,9 @@ The database stores the information about the sites and their mirrors.
 It also stores the information about the files present on the master mirror
 and the status of the mirrors (if they are up to date or not).
 
+.. include:: database_schema.md
+   :parser: myst_parser.sphinx_
+
 
 The Frontend
 ------------

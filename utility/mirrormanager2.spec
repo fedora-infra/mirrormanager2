@@ -41,7 +41,6 @@ BuildRequires:  python%{python_pkgversion}-coverage
 BuildRequires:  python%{python_pkgversion}-sphinx
 BuildRequires:  python%{python_pkgversion}-blinker
 BuildRequires:  python%{python_pkgversion}-sphinxcontrib-httpdomain
-BuildRequires:  python%{python_pkgversion}-cloud-sptheme
 BuildRequires:  rsync
 BuildRequires:  python%{python_pkgversion}-responses
 BuildRequires:  poetry

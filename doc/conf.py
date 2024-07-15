@@ -25,13 +25,19 @@ import mirrormanager2
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.coverage", "sphinx.ext.viewcode"]
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.coverage",
+    "sphinx.ext.viewcode",
+    "myst_parser",
+    "sphinxcontrib.mermaid",
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
 # The suffix of source filenames.
-source_suffix = ".rst"
+source_suffix = {".rst": "restructuredtext", ".md": "markdown"}
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
@@ -40,7 +46,7 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = "MirrorManager2"
+project = "Mirror Manager"
 copyright = "2014, Pierre-Yves Chibon <pingou@pingoured.fr>"
 
 # The version info for the project you're documenting, acts as replacement
@@ -87,17 +93,23 @@ pygments_style = "sphinx"
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
 
+# -- Extensions configuration ------
+
+mermaid_d3_zoom = True
+
+myst_enable_extensions = [
+    "colon_fence",
+]
+myst_heading_anchors = 3
+myst_fence_as_directive = ["mermaid"]
+
 
 # -- Options for HTML output ----------------------------------------------
-
-import cloud_sptheme as csp
-
-html_style = "site.css"
 
 # The theme to use for HTML and HTML Help pages. See the documentation for
 # a list of builtin themes.
 # html_theme = 'default'
-html_theme = "cloud"
+html_theme = "alabaster"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further. For a list of options available for each theme, see the
@@ -105,39 +117,21 @@ html_theme = "cloud"
 # html_theme_options = {}
 
 html_theme_options = {
-    "sidebarwidth": "200px",
-    "max_width": "900px",
-    "compact_width": "800px",
-    "minimal_width": "700px",
-    # Style it like Fedora..
-    "bodyfont": "Cantarell",
-    "highlightcolor": "#79db32",  # First Green
-    "sidebarbgcolor": "#FEFEFE",
-    "sidebartrimcolor": "#FEFEFE",
-    "sectionbgcolor": "#FEFEFE",
-    "sectiontrimcolor": "#FEFEFE",
-    "sectiontextcolor": "#444444",
-    "relbarbgcolor": "#FEFEFE",
-    "relbartextcolor": "#444444",
-    "relbarlinkcolor": "#444444",
-    "bgcolor": "#FEFEFE",
-    "textcolor": "#444444",
-    # "linkcolor": "#79db32", # First Green
-    "linkcolor": "#00009d",
-    "headtextcolor": "#444444",
-    "headlinkcolor": "#444444",
-    # "codebgcolor"
-    # "codetextcolor"
-    "codetrimcolor": "#79db32",  # First Green
-    "footerbgcolor": "#FEFEFE",
+    "github_user": "fedora-infra",
+    "github_repo": "mirrormanager2",
+    "page_width": "1040px",
+    "show_related": True,
+    "sidebar_collapse": True,
+    "caption_font_size": "140%",
 }
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
-html_theme_path = [csp.get_theme_dir()]
 
 # The name for this set of Sphinx documents. If None, it defaults to
 # "<project> v<release> documentation".
 # html_title = None
+
+# html_style = "site.css"
 
 # A shorter title for the navigation bar. Default is the same as html_title.
 # html_short_title = None
@@ -165,15 +159,14 @@ html_static_path = ["_static"]
 # html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-html_sidebars = {
-    "**": [
-        "mm2-logo.html",
-        "localtoc.html",
-        "relations.html",
-        "sourcelink.html",
-        "searchbox.html",
-    ]
-}
+# html_sidebars = {
+#     "**": [
+#         "localtoc.html",
+#         "relations.html",
+#         "sourcelink.html",
+#         "searchbox.html",
+#     ]
+# }
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
