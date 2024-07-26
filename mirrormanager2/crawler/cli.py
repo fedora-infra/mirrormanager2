@@ -13,7 +13,7 @@ from mirrormanager2.lib.database import get_db_manager
 from mirrormanager2.lib.fedora import get_current_versions
 
 from .constants import CONTINENTS, DEFAULT_GLOBAL_TIMEOUT
-from .crawler import PropagationResult, worker
+from .crawler import CrawlResult, PropagationResult, worker
 from .log import setup_logging
 from .reporter import store_crawl_result
 from .threads import GlobalTimeoutError, run_in_threadpool
@@ -260,7 +260,7 @@ def crawl(ctx, **kwargs):
     run_on_all_hosts(ctx.obj, options, record_crawl)
 
 
-def record_crawl(ctx_obj, options, results: list[PropagationResult]):
+def record_crawl(ctx_obj, options, results: list[CrawlResult]):
     console = ctx_obj["console"]
     config = ctx_obj["config"]
     options = ctx_obj["options"]

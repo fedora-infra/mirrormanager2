@@ -1390,6 +1390,20 @@ files = [
 ]
 
 [[package]]
+name = "mirrormanager-messages"
+version = "1.0.0"
+description = "A schema package for messages sent by MirrorManager"
+optional = false
+python-versions = "<4.0.0,>=3.8.10"
+files = [
+    {file = "mirrormanager_messages-1.0.0-py3-none-any.whl", hash = "sha256:5c7b2945f78ea5eddad65786494660f27c3d5410ac05fdc7d681c8a9b123d851"},
+    {file = "mirrormanager_messages-1.0.0.tar.gz", hash = "sha256:29b238af3021737f99810d417c143f2daf42ea7388c2688cfdeb303672925088"},
+]
+
+[package.dependencies]
+fedora-messaging = ">=3.3.0,<4.0.0"
+
+[[package]]
 name = "mrtparse"
 version = "2.2.0"
 description = "MRT format data parser"
@@ -2752,4 +2766,4 @@ deploy = ["gunicorn", "psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "8d83a083e298a1031969862112b762db06438a897b1ef595ec17595d7ff985e8"
+content-hash = "16d80cbdf6ebbedb4be2ef3e7dd5ee24e708292a7a700c4750362267f3684d64"
