@@ -39,14 +39,9 @@ from fedora_messaging.message import Message
     (ConnectionException, PublishTimeout),
     max_tries=3,
 )
-def safe_publish(msg: Message):
-    fm_publish(msg)
-
-
-def fedmsg_publish(topic, content):  # pragma: no cover
+def fedmsg_publish(msg: Message):  # pragma: no cover
     """Try to publish a message on the fedmsg bus."""
-    msg = Message(body=content, topic=f"mirrormanager.{topic}")
-    safe_publish(msg)
+    fm_publish(msg)
 
 
 def email_publish(

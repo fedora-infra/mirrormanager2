@@ -1,6 +1,12 @@
+import dataclasses
 import logging
 
-import mirrormanager2.lib
+from fedora_messaging.api import Message
+
+from mirrormanager2.lib.model import Host
+from mirrormanager2.lib.notifications import fedmsg_publish
+
+from .crawler import CrawlResult, PropagationResult
 
 logger = logging.getLogger(__name__)
 
@@ -9,33 +15,22 @@ def notify(options, topic, msg):
     if not options["fedmsg"]:
         return
 
-    mirrormanager2.lib.notifications.fedmsg_publish(
-        f"mirrormanager.crawler.{topic}",
-        msg,
-    )
+    message = Message(topic=f"mirrormanager.crawler.{topic}", body=msg)
+    fedmsg_publish(message)
 
 
-def _get_host_names(hosts, options):
-    # Get a list of host names for fedmsg
-    return [
-        host.name
-        for host in hosts
-        if (not host.id < options["startid"] and not host.id >= options["stopid"])
-    ]
-
-
-def notify_start(hosts, options):
-    host_names = _get_host_names(hosts, options)
-    hostlist = [dict(id=id, host=host) for id, host in zip(hosts, host_names)]
+def notify_start(hosts: list[Host], options):
+    hostlist = [dict(id=host.id, name=host.name) for host in hosts]
     msg = dict(hosts=hostlist)
     msg["options"] = options
     notify(options, "start", msg)
 
 
-def notify_complete(hosts, options, return_codes):
-    # Put a bow on the results for fedmsg
-    host_names = _get_host_names(hosts, options)
-    results = [
-        dict(rc=rc, host=host, id=id) for rc, host, id in zip(return_codes, host_names, hosts)
-    ]
-    notify(options, "complete", dict(results=results))
+def notify_crawl_complete(options, results: list[CrawlResult]):
+    results = [dataclasses.asdict(result) for result in results]
+    notify(options, "crawl.complete", dict(results=results))
+
+
+def notify_propagation_crawl_complete(options, results: list[PropagationResult]):
+    results = [dataclasses.asdict(result) for result in results]
+    notify(options, "propagation.complete", dict(results=results))

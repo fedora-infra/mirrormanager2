@@ -4,6 +4,15 @@ import re
 from urllib.parse import urlsplit
 
 import flask
+from mirrormanager_messages.host import (
+    HostAddedV1,
+    HostAddedV2,
+    HostDeletedV1,
+    HostDeletedV2,
+    HostUpdatedV1,
+    HostUpdatedV2,
+)
+from mirrormanager_messages.site import SiteDeletedV1, SiteDeletedV2
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy_helpers.flask_ext import get_or_404
 
@@ -212,7 +221,6 @@ def site_view(site_id):
 @login_required
 def site_drop(site_id):
     """Drop a given site."""
-    topic = "site.deleted"
     siteobj = mmlib.get_site(DB.session, site_id)
 
     if siteobj is None:
@@ -224,19 +232,34 @@ def site_drop(site_id):
     form = forms.ConfirmationForm()
     site_name = siteobj.name
     if form.validate_on_submit():
-        message = dict(site_id=siteobj.id, site_name=siteobj.name, org_url=siteobj.org_url)
-
         DB.session.delete(siteobj)
         try:
             DB.session.commit()
-            flask.flash(f'Site "{site_name}" dropped')
-            if flask.current_app.config["USE_FEDORA_MESSAGING"]:
-                fedmsg_publish(topic, message)
         except SQLAlchemyError as err:
             DB.session.rollback()
             flask.flash("Could not delete this site", "error")
             flask.current_app.logger.debug("Could not delete this site")
             flask.current_app.logger.exception(err)
+        else:
+            flask.flash(f'Site "{site_name}" dropped')
+            if flask.current_app.config["USE_FEDORA_MESSAGING"]:
+                message_v1 = SiteDeletedV1(
+                    topic="mirrormanager.site.deleted",
+                    body=dict(site_id=siteobj.id, site_name=siteobj.name, org_url=siteobj.org_url),
+                )
+                fedmsg_publish(message_v1)
+                message_v2 = SiteDeletedV2(
+                    topic="mirrormanager.site.deleted.v2",
+                    body={
+                        "site": {
+                            "id": siteobj.id,
+                            "name": siteobj.name,
+                            "org_url": siteobj.org_url,
+                        },
+                        "agent": flask.g.fas_user,
+                    },
+                )
+                fedmsg_publish(message_v2)
 
     return flask.redirect(flask.url_for("base.index"))
 
@@ -245,8 +268,6 @@ def site_drop(site_id):
 @login_required
 def host_new(site_id):
     """Create a new host."""
-
-    topic = "host.added"
     siteobj = mmlib.get_site(DB.session, site_id)
 
     if siteobj is None:
@@ -267,20 +288,45 @@ def host_new(site_id):
         host.asn = None if not host.asn else int(host.asn)
 
         try:
-            DB.session.flush()
-            flask.flash("Host added")
-            message = dict(
-                site_id=host.site_id, host_id=host.id, bandwidth=host.bandwidth_int, asn=host.asn
-            )
-            if flask.current_app.config["USE_FEDORA_MESSAGING"]:
-                fedmsg_publish(topic, message)
+            DB.session.commit()
         except SQLAlchemyError as err:
             DB.session.rollback()
             flask.flash("Could not create the new host", "error")
             flask.current_app.logger.debug("Could not create the new host")
             flask.current_app.logger.exception(err)
+        else:
+            flask.flash("Host added")
+            if flask.current_app.config["USE_FEDORA_MESSAGING"]:
+                message_v1 = HostAddedV1(
+                    topic="mirrormanager.host.added",
+                    body={
+                        "site_id": host.site_id,
+                        "host_id": host.id,
+                        "bandwidth": host.bandwidth_int,
+                        "asn": host.asn,
+                    },
+                )
+                fedmsg_publish(message_v1)
+                message_v2 = HostAddedV2(
+                    topic="mirrormanager.host.added.v2",
+                    body={
+                        "site": {
+                            "id": host.site.id,
+                            "name": host.site.name,
+                            "org_url": host.site.org_url,
+                        },
+                        "host": {
+                            "id": host.id,
+                            "name": host.name,
+                            "country": host.country,
+                            "bandwidth": host.bandwidth_int,
+                            "asn": host.asn,
+                        },
+                        "agent": flask.g.fas_user,
+                    },
+                )
+                fedmsg_publish(message_v2)
 
-        DB.session.commit()
         return flask.redirect(flask.url_for("base.site_view", site_id=site_id))
 
     return flask.render_template(
@@ -294,40 +340,59 @@ def host_new(site_id):
 @login_required
 def host_drop(host_id):
     """Drop a given site."""
-    topic = "host.deleted"
-    hostobj = mmlib.get_host(DB.session, host_id)
+    host = mmlib.get_host(DB.session, host_id)
 
-    if hostobj is None:
+    if host is None:
         flask.abort(404, "Site not found")
 
-    if not (
-        is_site_admin(flask.g.fas_user, hostobj.site) or is_mirrormanager_admin(flask.g.fas_user)
-    ):
+    if not (is_site_admin(flask.g.fas_user, host.site) or is_mirrormanager_admin(flask.g.fas_user)):
         flask.abort(403, "Access denied")
 
-    site_id = hostobj.site.id
+    site = host.site
     form = forms.ConfirmationForm()
     if form.validate_on_submit():
-        message = dict(
-            site_id=hostobj.site_id,
-            host_id=host_id,
-            bandwidth=hostobj.bandwidth_int,
-            asn=hostobj.asn,
-        )
-
-        DB.session.delete(hostobj)
+        DB.session.delete(host)
         try:
             DB.session.commit()
-            flask.flash("Host dropped")
-            if flask.current_app.config["USE_FEDORA_MESSAGING"]:
-                fedmsg_publish(topic, message)
         except SQLAlchemyError as err:
             DB.session.rollback()
             flask.flash("Could not delete this host", "error")
             flask.current_app.logger.debug("Could not delete this host")
             flask.current_app.logger.exception(err)
+        else:
+            flask.flash("Host dropped")
+            if flask.current_app.config["USE_FEDORA_MESSAGING"]:
+                message_v1 = HostDeletedV1(
+                    topic="mirrormanager.host.deleted",
+                    body={
+                        "site_id": host.site_id,
+                        "host_id": host.id,
+                        "bandwidth": host.bandwidth_int,
+                        "asn": host.asn,
+                    },
+                )
+                fedmsg_publish(message_v1)
+                message_v2 = HostDeletedV2(
+                    topic="mirrormanager.host.deleted.v2",
+                    body={
+                        "site": {
+                            "id": site.id,
+                            "name": site.name,
+                            "org_url": site.org_url,
+                        },
+                        "host": {
+                            "id": host.id,
+                            "name": host.name,
+                            "country": host.country,
+                            "bandwidth": host.bandwidth_int,
+                            "asn": host.asn,
+                        },
+                        "agent": flask.g.fas_user,
+                    },
+                )
+                fedmsg_publish(message_v2)
 
-    return flask.redirect(flask.url_for("base.site_view", site_id=site_id))
+    return flask.redirect(flask.url_for("base.site_view", site_id=site.id))
 
 
 @views.route("/site/<int:site_id>/admin/new", methods=["GET", "POST"])
@@ -420,45 +485,32 @@ def siteadmin_delete(site_id, admin_id):
 @login_required
 def host_view(host_id):
     """Create a new host."""
-    topic = "host.updated"
-    hostobj = mmlib.get_host(DB.session, host_id)
+    host = mmlib.get_host(DB.session, host_id)
 
-    if hostobj is None:
+    if host is None:
         flask.abort(404, "Host not found")
 
-    if not (
-        is_site_admin(flask.g.fas_user, hostobj.site) or is_mirrormanager_admin(flask.g.fas_user)
-    ):
+    if not (is_site_admin(flask.g.fas_user, host.site) or is_mirrormanager_admin(flask.g.fas_user)):
         flask.abort(403, "Access denied")
 
-    form = forms.AddHostForm(obj=hostobj)
+    form = forms.AddHostForm(obj=host)
     if form.validate_on_submit():
-        admin_active = hostobj.admin_active
-        private = hostobj.private
-        form.populate_obj(obj=hostobj)
-        hostobj.bandwidth_int = int(hostobj.bandwidth_int)
-        hostobj.asn = None if not hostobj.asn else int(hostobj.asn)
+        admin_active = host.admin_active
+        private = host.private
+        form.populate_obj(obj=host)
+        host.bandwidth_int = int(host.bandwidth_int)
+        host.asn = None if not host.asn else int(host.asn)
 
         # If the user is *not* an admin, keep the current admin_active flag
         if not is_mirrormanager_admin(flask.g.fas_user):
-            hostobj.admin_active = admin_active
+            host.admin_active = admin_active
 
         # If the private flag has been changed, invalidate mirrors
-        if hostobj.private != private:
-            hostobj.set_not_up2date(DB.session)
-
-        message = dict(
-            site_id=hostobj.site_id,
-            host_id=host_id,
-            bandwidth=hostobj.bandwidth_int,
-            asn=hostobj.asn,
-        )
+        if host.private != private:
+            host.set_not_up2date(DB.session)
 
         try:
-            DB.session.flush()
-            flask.flash("Host updated")
-            if flask.current_app.config["USE_FEDORA_MESSAGING"]:
-                fedmsg_publish(topic, message)
+            DB.session.commit()
         except SQLAlchemyError as err:  # pragma: no cover
             # We cannot check this because the code updates data therefore
             # the only situation where it could fail is a failure at the
@@ -467,14 +519,45 @@ def host_view(host_id):
             flask.flash("Could not update the host", "error")
             flask.current_app.logger.debug("Could not update the host")
             flask.current_app.logger.exception(err)
+        else:
+            flask.flash("Host updated")
+            if flask.current_app.config["USE_FEDORA_MESSAGING"]:
+                message_v1 = HostUpdatedV1(
+                    topic="mirrormanager.host.updated",
+                    body={
+                        "site_id": host.site_id,
+                        "host_id": host.id,
+                        "bandwidth": host.bandwidth_int,
+                        "asn": host.asn,
+                    },
+                )
+                fedmsg_publish(message_v1)
+                message_v2 = HostUpdatedV2(
+                    topic="mirrormanager.host.updated.v2",
+                    body={
+                        "site": {
+                            "id": host.site.id,
+                            "name": host.site.name,
+                            "org_url": host.site.org_url,
+                        },
+                        "host": {
+                            "id": host.id,
+                            "name": host.name,
+                            "country": host.country,
+                            "bandwidth": host.bandwidth_int,
+                            "asn": host.asn,
+                        },
+                        "agent": flask.g.fas_user,
+                    },
+                )
+                fedmsg_publish(message_v2)
 
-        DB.session.commit()
         return flask.redirect(flask.url_for("base.host_view", host_id=host_id))
 
     return flask.render_template(
         "host.html",
         form=form,
-        host=hostobj,
+        host=host,
     )
 
 
