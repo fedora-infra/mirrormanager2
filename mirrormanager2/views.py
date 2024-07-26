@@ -265,11 +265,13 @@ def host_new(site_id):
 
         host.bandwidth_int = int(host.bandwidth_int)
         host.asn = None if not host.asn else int(host.asn)
-        message = dict(site_id=host.site_id, bandwidth=host.bandwidth_int, asn=host.asn)
 
         try:
             DB.session.flush()
             flask.flash("Host added")
+            message = dict(
+                site_id=host.site_id, host_id=host.id, bandwidth=host.bandwidth_int, asn=host.asn
+            )
             if flask.current_app.config["USE_FEDORA_MESSAGING"]:
                 fedmsg_publish(topic, message)
         except SQLAlchemyError as err:
