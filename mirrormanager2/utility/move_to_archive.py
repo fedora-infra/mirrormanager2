@@ -5,7 +5,6 @@ In principle it should be run about a week after the said release went EOL.
 """
 
 import os
-import re
 
 import click
 
@@ -14,59 +13,67 @@ from mirrormanager2.lib.database import get_db_manager
 
 from .common import config_option
 
-archiveCategory = "Fedora Archive"
-originalCategory = "Fedora Linux"
+DEFAULT_ARCHIVE_CATEGORY = "Fedora Archive"
+SKIP_DIR_PREFIX = "pub/"
 
 
-def doit(session, original_cat, archive_cat, directory_re):
-    c = mirrormanager2.lib.get_category_by_name(session, original_cat)
-    if c is None:
-        raise click.ClickException(f"No category could be found by the name: {original_cat}")
-    a = mirrormanager2.lib.get_category_by_name(session, archive_cat)
-    if a is None:
-        raise click.ClickException(f"No category could be found by the name: {archive_cat}")
-    originaltopdir = c.topdir.name
-    archivetopdir = os.path.join(a.topdir.name, "fedora", "linux")
-    dirRe = re.compile(directory_re)
-    for d in c.directories:
-        if dirRe.search(d.name):
-            for r in d.repositories:
-                t = os.path.join(archivetopdir, d.name[len(originaltopdir) + 1 :])
-                print(f"trying to find {t}")
-                new_d = mirrormanager2.lib.get_directory_by_name(session, t)
-                if new_d is None:
-                    raise click.ClickException(
-                        f"Unable to find a directory in [{archive_cat}] for {d.name}"
-                    )
-                r.directory = new_d
-                r.category = a
-                session.add(r)
-                session.commit()
-                print(f"{d.name} => {t}")
+def doit(session, product, version, archive_cat):
+    archivetopdir = archive_cat.topdir.name
+    repos = mirrormanager2.lib.get_repositories(session, product_name=product, version_name=version)
+    for repo in repos:
+        if repo.directory is None:
+            click.echo(f"Repo {repo.name} (prefix {repo.prefix}) has no directory, skipping.")
+            continue
+        if repo.category == archive_cat:
+            click.echo(f"Repo {repo.name} (prefix {repo.prefix}) is already archived, skipping.")
+            continue
+
+        subdir = repo.directory.name
+        if subdir.startswith(SKIP_DIR_PREFIX):
+            subdir = subdir[len(SKIP_DIR_PREFIX) :]
+        target_dir = os.path.join(archivetopdir, subdir)
+        new_d = mirrormanager2.lib.get_directory_by_name(session, target_dir)
+        if new_d is None:
+            raise click.ClickException(
+                f"Unable to find a directory in [{archive_cat.name}] for {repo.directory.name}"
+            )
+        click.echo(f"{repo.directory.name} => {target_dir}")
+        repo.directory = new_d
+        repo.category = archive_cat
+        session.add(repo)
+        session.commit()
 
 
 @click.command()
 @config_option
 @click.option(
-    "--originalCategory",
-    metavar="CATEGORY",
-    help=f"original Category (default={originalCategory})",
-    default=originalCategory,
-)
-@click.option(
-    "--archiveCategory",
-    metavar="CATEGORY",
-    help=f"archive Category (default={archiveCategory})",
-    default=archiveCategory,
-)
-@click.option(
-    "--directoryRe",
-    metavar="RE",
+    "--product",
     required=True,
-    help="subdirectory regular expression to move (e.g. '/7/') " "[required]",
+    help="Product name",
 )
-def main(config, originalcategory, archivecategory, directoryre):
+@click.option(
+    "--version",
+    required=True,
+    help="Version to archive",
+)
+@click.option(
+    "--archive-category",
+    metavar="CATEGORY",
+    help="Archive Category",
+    default=DEFAULT_ARCHIVE_CATEGORY,
+    show_default=1,
+)
+def main(config, archive_category, product, version):
     d = mirrormanager2.lib.read_config(config)
     db_manager = get_db_manager(d)
     session = db_manager.Session()
-    doit(session, originalcategory, archivecategory, directoryre)
+    if mirrormanager2.lib.get_product_by_name(session, product) is None:
+        raise click.BadOptionUsage("--product", f"No such product: {product}")
+    if mirrormanager2.lib.get_version_by_name_version(session, product, version) is None:
+        raise click.BadOptionUsage("--version", f"No such version: {version}")
+    archive_cat = mirrormanager2.lib.get_category_by_name(session, archive_category)
+    if archive_cat is None:
+        raise click.BadOptionUsage(
+            "--archive-category", f"No category could be found by the name: {archive_category}"
+        )
+    doit(session, product, version, archive_cat)
