@@ -35,7 +35,7 @@ CRAWLER_SEND_EMAIL =  False
 
 @pytest.fixture()
 def command_args(configfile):
-    return ["-c", configfile, "--directoryRe=/26"]
+    return ["-c", configfile, "--product", "Fedora", "--version", "26"]
 
 
 def run_command(args):
@@ -48,8 +48,8 @@ def test_mta_empty_db(command_args, db):
 
     # Ignore for now
     # assert stderr == ''
-    assert result.exit_code == 1
-    assert result.output == "Error: No category could be found by the name: Fedora Linux\n"
+    assert result.exit_code == 2
+    assert "Error: No such product: Fedora" in result.output
 
 
 def test_mta(
@@ -58,8 +58,8 @@ def test_mta(
     """Test the mta script."""
     result = run_command(command_args)
 
-    assert result.exit_code == 1
-    assert result.output == "Error: No category could be found by the name: Fedora Archive\n"
+    assert result.exit_code == 2, result.output
+    assert "Error: No category could be found by the name: Fedora Archive" in result.output
     # Ignore for now
     # assert stderr == ''
 
@@ -119,8 +119,7 @@ def test_mta(
     assert results[9].name == "pub/archive"
 
     result = run_command(command_args)
-    assert (
-        result.output == "trying to find pub/archive/fedora/linux/updates/testing/26/x86_64\n"
+    assert result.output == (
         "Error: Unable to find a directory in [Fedora Archive] for pub/fedora/"
         "linux/updates/testing/26/x86_64\n"
     )
@@ -137,8 +136,7 @@ def test_mta(
     db.commit()
 
     result = run_command(command_args)
-    assert (
-        result.output == "trying to find pub/archive/fedora/linux/updates/testing/26/x86_64\n"
+    assert result.output == (
         "pub/fedora/linux/updates/testing/26/x86_64 => "
         "pub/archive/fedora/linux/updates/testing/26/x86_64\n"
     )
