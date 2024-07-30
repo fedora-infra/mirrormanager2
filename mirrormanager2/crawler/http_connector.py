@@ -3,6 +3,7 @@ from contextlib import suppress
 
 import requests
 
+from mirrormanager2 import __version__
 from mirrormanager2 import lib as mmlib
 
 from .connector import Connector, FetchingFailed, TryLater
@@ -17,8 +18,7 @@ class HTTPConnector(Connector):
         session.headers = {
             "Connection": "Keep-Alive",
             "Pragma": "no-cache",
-            "User-Agent": "mirrormanager-crawler/0.1 (+https://"
-            "github.com/fedora-infra/mirrormanager2/)",
+            "User-Agent": f"mirrormanager-crawler/{__version__} (+https://github.com/fedora-infra/mirrormanager2/)",
         }
         return session
 
