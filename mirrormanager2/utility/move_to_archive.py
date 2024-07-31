@@ -14,10 +14,11 @@ from mirrormanager2.lib.database import get_db_manager
 from .common import config_option
 
 DEFAULT_ARCHIVE_CATEGORY = "Fedora Archive"
+IGNORE_CATEGORIES = ["Fedora Codecs"]
 SKIP_DIR_PREFIX = "pub/"
 
 
-def doit(session, product, version, archive_cat):
+def doit(session, product, version, archive_cat, dry_run):
     archivetopdir = archive_cat.topdir.name
     repos = mirrormanager2.lib.get_repositories(session, product_name=product, version_name=version)
     for repo in repos:
@@ -26,6 +27,12 @@ def doit(session, product, version, archive_cat):
             continue
         if repo.category == archive_cat:
             click.echo(f"Repo {repo.name} (prefix {repo.prefix}) is already archived, skipping.")
+            continue
+        if repo.category.name in IGNORE_CATEGORIES:
+            click.echo(
+                f"Repo {repo.name} (prefix {repo.prefix}) is in the "
+                f"{repo.category.name!r} category, skipping."
+            )
             continue
 
         subdir = repo.directory.name
@@ -40,8 +47,9 @@ def doit(session, product, version, archive_cat):
         click.echo(f"{repo.directory.name} => {target_dir}")
         repo.directory = new_d
         repo.category = archive_cat
-        session.add(repo)
-        session.commit()
+        if not dry_run:
+            session.add(repo)
+            session.commit()
 
 
 @click.command()
@@ -63,7 +71,13 @@ def doit(session, product, version, archive_cat):
     default=DEFAULT_ARCHIVE_CATEGORY,
     show_default=1,
 )
-def main(config, archive_category, product, version):
+@click.option(
+    "--dry-run",
+    help="Only show what would be done, don't commit to the database",
+    is_flag=True,
+    default=False,
+)
+def main(config, product, version, archive_category, dry_run):
     d = mirrormanager2.lib.read_config(config)
     db_manager = get_db_manager(d)
     session = db_manager.Session()
@@ -76,4 +90,4 @@ def main(config, archive_category, product, version):
         raise click.BadOptionUsage(
             "--archive-category", f"No category could be found by the name: {archive_category}"
         )
-    doit(session, product, version, archive_cat)
+    doit(session, product, version, archive_cat, dry_run)
