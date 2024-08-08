@@ -22,7 +22,8 @@ from .common import config_option
 
 @click.command()
 @config_option
-def main(config):
+@click.option("--verbose", is_flag=True, default=False, help="show more details")
+def main(config, verbose):
     config = mirrormanager2.lib.read_config(config)
     gi = geoip2.database.Reader(os.path.join(config["GEOIP_BASE"], "GeoLite2-City.mmdb"))
     db_manager = get_db_manager(config)
@@ -44,12 +45,15 @@ def main(config):
             if gir is None:
                 continue
             if gir.country.iso_code in embargoed_countries:
-                print(
+                click.echo(
                     f"WARNING: host {host.id} ({hostname}) seems to be from an embargoed "
-                    f"country: {gir.country.iso_code}"
+                    f"country: {gir.country.iso_code}",
+                    err=True,
                 )
                 continue
             host.latitude = gir.location.latitude
             host.longitude = gir.location.longitude
             tracking.add(host.id)
+            if verbose:
+                click.echo(f"{host.name} ({host.id}): {host.latitude} {host.longitude}")
         session.commit()
