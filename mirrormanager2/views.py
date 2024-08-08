@@ -1271,20 +1271,27 @@ def propagation(repo_id):
     repo = get_or_404(model.Repository, repo_id, "Repository not found")
     propagation = mmlib.get_propagation(DB.session, repo.id)
     labels = [stat.datetime.strftime(r"%Y-%m-%d %H:%M") for stat in propagation]
+
+    def _get_background_color(border_color):
+        return border_color.replace("rgb(", "rgba(").replace(")", ", 0.5)")
+
     series = [
-        ("synced", "same_day"),
-        ("synced - 1", "one_day"),
-        ("synced - 2", "two_day"),
-        ("older", "older"),
-        ("N/A", "no_info"),
+        # Colors are in https://github.com/chartjs/Chart.js/blob/master/src/plugins/plugin.colors.ts
+        ("synced", "same_day", "rgb(75, 192, 192)"),
+        ("synced - 1", "one_day", "rgb(255, 205, 86)"),
+        ("synced - 2", "two_day", "rgb(255, 159, 64)"),
+        ("older", "older", "rgb(255, 99, 132)"),
+        ("N/A", "no_info", "rgb(201, 203, 207)"),
     ]
     datasets = []
-    for label, attr in series:
+    for label, attr, color in series:
         datasets.append(
             {
                 "label": label,
                 "data": [getattr(stat, attr) for stat in propagation],
                 "borderWidth": 1,
+                "borderColor": color,
+                "backgroundColor": _get_background_color(color),
             }
         )
     return flask.render_template(
