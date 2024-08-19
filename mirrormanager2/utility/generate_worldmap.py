@@ -7,6 +7,7 @@
 # while the rest of MirrorManager is licensed MIT/X11
 
 
+import collections
 import os
 import socket
 from urllib.parse import urlsplit
@@ -39,11 +40,11 @@ def main(config, verbose):
                 continue
             gir = None
             try:
-                addrinfo = socket.getaddrinfo(hn, None)
+                addrinfo = socket.getaddrinfo(hostname, None)
                 # Extract the IPv4 and IPv6 address from the tuples returned by
                 # getaddrinfo.
                 addresses = set()
-                for family, socktype, proto, canonname, sockaddr in addrinfo:
+                for family, _socktype, _proto, _canonname, sockaddr in addrinfo:
                     # The GeoIP2 databases contain only information for IPv4 and
                     # IPv6 addresses. Therefore, other, unusual address families
                     # are ignored.
