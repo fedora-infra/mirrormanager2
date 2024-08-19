@@ -1,11 +1,18 @@
 import collections
+import os
 import socket
+from functools import cache
 
 import geoip2
 
 
 class HostUnreachable(Exception):
     pass
+
+
+@cache
+def get_geoip(base_dir, db_type):
+    return geoip2.database.Reader(os.path.join(base_dir, f"GeoLite2-{db_type}.mmdb"))
 
 
 def get_host_addresses(hostname):

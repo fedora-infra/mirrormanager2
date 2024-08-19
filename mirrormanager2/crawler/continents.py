@@ -1,12 +1,8 @@
 import csv
 import functools
 import logging
-import os
-from functools import cache
 from importlib import resources
 from urllib.parse import urlparse
-
-import geoip2
 
 from mirrormanager2.lib import geo, get_country_continent_redirect
 
@@ -53,13 +49,8 @@ def get_country_continents(session):
     return new_country_continents
 
 
-@cache
-def get_geoip(base_dir):
-    return geoip2.database.Reader(os.path.join(base_dir, "GeoLite2-Country.mmdb"))
-
-
 def check_continent(config, options, session, categoryUrl):
-    gi = get_geoip(config["GEOIP_BASE"])
+    gi = geo.get_geoip(config["GEOIP_BASE"], "Country")
     continents = filter_continents(options["continents"])
     country_continents = get_country_continents(session)
     # Before the first network access to the mirror let's

@@ -7,11 +7,9 @@
 # while the rest of MirrorManager is licensed MIT/X11
 
 
-import os
 from urllib.parse import urlsplit
 
 import click
-import geoip2.database
 
 from mirrormanager2.lib import geo, get_host_category_url, read_config
 from mirrormanager2.lib.database import get_db_manager
@@ -24,7 +22,7 @@ from .common import config_option
 @click.option("--verbose", is_flag=True, default=False, help="show more details")
 def main(config, verbose):
     config = read_config(config)
-    gi = geoip2.database.Reader(os.path.join(config["GEOIP_BASE"], "GeoLite2-City.mmdb"))
+    gi = geo.get_geoip(config["GEOIP_BASE"], "City")
     db_manager = get_db_manager(config)
     with db_manager.Session() as session:
         embargoed_countries = set(x.upper() for x in config["EMBARGOED_COUNTRIES"])
