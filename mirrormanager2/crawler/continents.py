@@ -1,3 +1,4 @@
+import collections
 import csv
 import functools
 import logging
@@ -81,14 +82,14 @@ def check_continent(config, options, session, categoryUrl):
 
     try:
         addrinfo = socket.getaddrinfo(hostname, None)
-    except socket.gaierror:
+    except socket.gaierror as e:
         # Name resolution failed. This means
         # that the base URL is broken.
         raise BrokenBaseUrl() from e
 
     # Extract the IPv4 and IPv6 address from the tuples returned by getaddrinfo.
     addresses = set()
-    for family, socktype, proto, canonname, sockaddr in addrinfo:
+    for family, _socktype, _proto, _canonname, sockaddr in addrinfo:
         # The GeoIP2 databases contain only information for IPv4 and IPv6
         # addresses. Therefore, other, unusual address families are ignored.
         if family == socket.AF_INET:
