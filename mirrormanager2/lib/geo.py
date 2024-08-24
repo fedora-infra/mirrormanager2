@@ -4,6 +4,7 @@ import socket
 from functools import cache
 
 import geoip2
+import geoip2.database
 
 
 class HostUnreachable(Exception):
