@@ -256,7 +256,7 @@ def site_drop(site_id):
                             "name": siteobj.name,
                             "org_url": siteobj.org_url,
                         },
-                        "agent": flask.g.fas_user,
+                        "agent": flask.g.fas_user.username,
                     },
                 )
                 fedmsg_publish(message_v2)
@@ -322,7 +322,7 @@ def host_new(site_id):
                             "bandwidth": host.bandwidth_int,
                             "asn": host.asn,
                         },
-                        "agent": flask.g.fas_user,
+                        "agent": flask.g.fas_user.username,
                     },
                 )
                 fedmsg_publish(message_v2)
@@ -387,7 +387,7 @@ def host_drop(host_id):
                             "bandwidth": host.bandwidth_int,
                             "asn": host.asn,
                         },
-                        "agent": flask.g.fas_user,
+                        "agent": flask.g.fas_user.username,
                     },
                 )
                 fedmsg_publish(message_v2)
@@ -547,7 +547,7 @@ def host_view(host_id):
                             "bandwidth": host.bandwidth_int,
                             "asn": host.asn,
                         },
-                        "agent": flask.g.fas_user,
+                        "agent": flask.g.fas_user.username,
                     },
                 )
                 fedmsg_publish(message_v2)
