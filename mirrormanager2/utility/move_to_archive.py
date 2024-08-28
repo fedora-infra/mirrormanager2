@@ -18,9 +18,9 @@ IGNORE_CATEGORIES = ["Fedora Codecs"]
 SKIP_DIR_PREFIX = "pub/"
 
 
-def doit(session, product, version, archive_cat, dry_run):
+def move_repos(session, archive_cat, dry_run, **repo_query_args):
     archivetopdir = archive_cat.topdir.name
-    repos = mirrormanager2.lib.get_repositories(session, product_name=product, version_name=version)
+    repos = mirrormanager2.lib.get_repositories(session, **repo_query_args)
     for repo in repos:
         if repo.directory is None:
             click.echo(f"Repo {repo.name} (prefix {repo.prefix}) has no directory, skipping.")
@@ -56,13 +56,15 @@ def doit(session, product, version, archive_cat, dry_run):
 @config_option
 @click.option(
     "--product",
-    required=True,
     help="Product name",
 )
 @click.option(
     "--version",
-    required=True,
     help="Version to archive",
+)
+@click.option(
+    "--repository",
+    help="Repository to archive",
 )
 @click.option(
     "--archive-category",
@@ -77,17 +79,24 @@ def doit(session, product, version, archive_cat, dry_run):
     is_flag=True,
     default=False,
 )
-def main(config, product, version, archive_category, dry_run):
+def main(config, product, version, repository, archive_category, dry_run):
     d = mirrormanager2.lib.read_config(config)
     db_manager = get_db_manager(d)
     session = db_manager.Session()
-    if mirrormanager2.lib.get_product_by_name(session, product) is None:
-        raise click.BadOptionUsage("--product", f"No such product: {product}")
-    if mirrormanager2.lib.get_version_by_name_version(session, product, version) is None:
-        raise click.BadOptionUsage("--version", f"No such version: {version}")
+
     archive_cat = mirrormanager2.lib.get_category_by_name(session, archive_category)
     if archive_cat is None:
         raise click.BadOptionUsage(
             "--archive-category", f"No category could be found by the name: {archive_category}"
         )
-    doit(session, product, version, archive_cat, dry_run)
+
+    if repository:
+        move_repos(session, archive_cat, dry_run, prefix=repository)
+    elif product and version:
+        if mirrormanager2.lib.get_product_by_name(session, product) is None:
+            raise click.BadOptionUsage("--product", f"No such product: {product}")
+        if mirrormanager2.lib.get_version_by_name_version(session, product, version) is None:
+            raise click.BadOptionUsage("--version", f"No such version: {version}")
+        move_repos(session, archive_cat, dry_run, product_name=product, version_name=version)
+    else:
+        raise click.UsageError("You need to pass either the repository or both product and version")

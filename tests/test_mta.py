@@ -43,13 +43,32 @@ def run_command(args):
     return runner.invoke(move_to_archive.main, args)
 
 
-def test_mta_empty_db(command_args, db):
+def _make_archive_category(db):
+    item = model.Directory(
+        name="pub/archive",
+        readable=True,
+    )
+    db.add(item)
+    db.flush()
+    item = model.Category(
+        name="Fedora Archive",
+        product_id=1,
+        canonicalhost="http://archive.fedoraproject.org",
+        topdir_id=item.id,
+        publiclist=True,
+    )
+    db.add(item)
+    db.commit()
+
+
+def test_mta_bad_version(command_args, base_items, db):
+    _make_archive_category(db)
     result = run_command(command_args)
 
     # Ignore for now
     # assert stderr == ''
     assert result.exit_code == 2
-    assert "Error: No such product: Fedora" in result.output
+    assert "Error: No such version: 26" in result.output
 
 
 def test_mta(
@@ -64,36 +83,7 @@ def test_mta(
     # assert stderr == ''
 
     # One step further
-    item = model.Directory(
-        name="pub/archive",
-        readable=True,
-    )
-    db.add(item)
-    db.flush()
-    item = model.Category(
-        name="Fedora Archive",
-        product_id=1,
-        canonicalhost="http://archive.fedoraproject.org",
-        topdir_id=10,
-        publiclist=True,
-    )
-    db.add(item)
-
-    item = model.CategoryDirectory(
-        directory_id=6,
-        category_id=1,
-    )
-    db.add(item)
-    item = model.CategoryDirectory(
-        directory_id=8,
-        category_id=1,
-    )
-    db.add(item)
-
-    db.commit()
-
-    # Before the script
-
+    _make_archive_category(db)
     results = mirrormanager2.lib.get_repositories(db)
     assert len(results) == 4
     assert results[0].prefix == "updates-testing-f25"

@@ -582,6 +582,16 @@ def categorydirectory(db):
         category_id=1,
     )
     db.add(item)
+    item = model.CategoryDirectory(
+        directory_id=6,
+        category_id=1,
+    )
+    db.add(item)
+    item = model.CategoryDirectory(
+        directory_id=8,
+        category_id=1,
+    )
+    db.add(item)
 
     item = model.CategoryDirectory(
         directory_id=3,
