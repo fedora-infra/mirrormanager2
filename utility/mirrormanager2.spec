@@ -24,7 +24,6 @@ BuildRequires:  python%{python_pkgversion}-flask-oidc >= 2.0.0
 BuildRequires:  python%{python_pkgversion}-flask-xml-rpc
 BuildRequires:  python%{python_pkgversion}-flask-wtf
 BuildRequires:  python%{python_pkgversion}-wtforms
-BuildRequires:  python%{python_pkgversion}-IPy
 BuildRequires:  python%{python_pkgversion}-backoff
 BuildRequires:  python%{python_pkgversion}-fedora-messaging
 BuildRequires:  python%{python_pkgversion}-sqlalchemy-helpers
@@ -70,7 +69,14 @@ Summary:        Library to interact with MirrorManager's database
 BuildArch:      noarch
 
 Requires:  %{name}-filesystem = %{version}-%{release}
+<<<<<<< HEAD
 Requires:  python%{python_pkgversion}-IPy
+||||||| parent of 0216c75 (Replace IPy with ipaddress)
+Requires:  python%{python_pkgversion}-IPy
+Requires:  python%{python_pkgversion}-dns
+=======
+Requires:  python%{python_pkgversion}-dns
+>>>>>>> 0216c75 (Replace IPy with ipaddress)
 Requires:  python%{python_pkgversion}-pyrpmmd
 
 %description lib
