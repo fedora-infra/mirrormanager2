@@ -31,6 +31,7 @@ MirrorManager2 forms.
 # pylint: disable=W0232
 
 
+import ipaddress
 import re
 
 import wtforms
@@ -40,7 +41,6 @@ try:
 except ImportError:
     from flask_wtf import Form as FlaskForm
 
-import IPy
 from flask import current_app, g
 
 COUNTRY_REGEX = "^[a-zA-Z][a-zA-Z]$"
@@ -140,17 +140,19 @@ def validate_netblocks(form, field):
     emsg += " can only be created by mirrormanager administrators."
     emsg += " Please ask the mirrormanager administrators for assistance."
 
-    ipv4_block = IPy.IP(f"10.0.0.0{max_ipv4_netblock_size}")
-    ipv6_block = IPy.IP(f"fec0::{max_ipv6_netblock_size}")
+    ipv4_block = ipaddress.IPv4Network(f"10.0.0.0{max_ipv4_netblock_size}",
+                                       strict=False)
+    ipv6_block = ipaddress.IPv6Network(f"fec0::{max_ipv6_netblock_size}",
+                                       strict=False)
 
     try:
-        ip = IPy.IP(field.data, make_net=True)
+        ip = ipaddress.ip_network(field.data, strict=False)
     except ValueError:
         # also accept DNS hostnames
         return
     if (
-        (ip.version() == 4 and ip.len() > ipv4_block.len())
-        or (ip.version() == 6 and ip.len() > ipv6_block.len())
+        (ip.version == 4 and ip.prefixlen < ipv4_block.prefixlen)
+        or (ip.version == 6 and ip.prefixlen < ipv6_block.prefixlen)
     ) and not g.is_mirrormanager_admin:
         raise wtforms.validators.ValidationError(emsg)
 
