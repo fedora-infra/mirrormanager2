@@ -51,7 +51,6 @@ flask-oidc = "^2.0.0"
 flask-xml-rpc-re = "^0.1.4"
 flask-wtf = "^1.1.1"
 wtforms = {extras = ["email"], version = "^3.0.1"}
-ipy = "^1.1"
 backoff = "^2.2.1"
 fedora-messaging = "^3.3.0"
 sqlalchemy-helpers = "^1.0.0"
