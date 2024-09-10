@@ -19,6 +19,7 @@
   command:
     cmd: poetry install
     chdir: /vagrant
+  become_user: vagrant
 
 - name: Install the config file
   copy:
