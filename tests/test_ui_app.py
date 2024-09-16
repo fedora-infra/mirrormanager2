@@ -70,6 +70,37 @@ def test_list_mirrors(client):
         assert "There are currently no active mirrors registered." in data
 
 
+def test_list_mirrors_pagination(client):
+    output = client.get("/mirrors", follow_redirects=True)
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert data.count("mirror-row") == 20
+    assert data.count("page-link") == 2
+    assert data.count('href="/mirrors?page_size=20&amp;page_number=2') == 1
+    assert data.count('<span class="page-link">\n                  1\n') == 1
+
+    output = client.get("/mirrors?page_size=0", follow_redirects=True)
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert data.count("mirror-row") == 26
+    assert data.count("page-link") == 0
+
+    output = client.get("/mirrors?page_size=9", follow_redirects=True)
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert data.count("mirror-row") == 9
+    assert data.count("page-link") == 3
+    assert data.count('href="/mirrors?page_size=9&amp;page_number=2') == 1
+
+    output = client.get("/mirrors?page_size=9&page_number=2", follow_redirects=True)
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert data.count("mirror-row") == 9
+    assert data.count("page-link") == 3
+    assert data.count('href="/mirrors?page_size=9&amp;page_number=1') == 1
+    assert data.count('href="/mirrors?page_size=9&amp;page_number=3') == 1
+
+
 def test_mysite(client):
     """Test the mysite endpoint."""
     output = client.get("/site/mine")
