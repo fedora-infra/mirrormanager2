@@ -233,6 +233,22 @@ def site(db):
     )
     db.add(item)
 
+    for x in range(1, 30):
+        item = model.Site(
+            name=f"extra-mirror{x}",
+            password="test_password",
+            org_url=f"http://extra-mirror{x}.test",
+            private=False,
+            admin_active=True,
+            user_active=True,
+            all_sites_can_pull_from_me=True,
+            downstream_comments=f"Extra Mirror {x} available over HTTP.",
+            email_on_drop=False,
+            email_on_add=False,
+            created_by="adamnelson",
+        )
+        db.add(item)
+
     db.commit()
 
 
@@ -343,6 +359,25 @@ def hosts(db):
         max_connections=10,
     )
     db.add(item)
+
+    for x in range(1, 30):
+        item = model.Host(
+            name=f"Extra Mirror {x}",
+            site_id=x + 3,
+            robot_email=None,
+            admin_active=True,
+            user_active=True,
+            country="HR",
+            bandwidth_int=300,
+            comment="Public mirror",
+            private=False,
+            internet2=False,
+            internet2_clients=False,
+            asn=None,
+            asn_clients=False,
+            max_connections=10,
+        )
+        db.add(item)
 
     db.commit()
 
@@ -503,6 +538,14 @@ def hostcategory(db):
     )
     db.add(item)
 
+    for x in range(1, 30):
+        item = model.HostCategory(
+            host_id=x + 3,
+            category_id=1,
+            always_up2date=True,
+        )
+        db.add(item)
+
     db.commit()
 
 
@@ -560,6 +603,14 @@ def hostcategoryurl(db):
         private=False,
     )
     db.add(item)
+
+    for x in range(1, 30):
+        item = model.HostCategoryUrl(
+            host_category_id=x,
+            url=f"https://extramirror{x}.test/pub/fedora",
+            private=False,
+        )
+        db.add(item)
 
     db.commit()
 
@@ -641,6 +692,13 @@ def hostcountry(db):
         country_id=1,
     )
     db.add(item)
+
+    for x in range(1, 30):
+        item = model.HostCountry(
+            host_id=x + 3,
+            country_id=1,
+        )
+        db.add(item)
 
     db.commit()
 
@@ -819,6 +877,15 @@ def hostcategorydir(db):
         up2date=True,
     )
     db.add(item)
+
+    for x in range(1, 30):
+        item = model.HostCategoryDir(
+            host_category_id=x,
+            directory_id=5,
+            path=f"pub/fedora/linux/releases/27/extramirror{x}",
+            up2date=True,
+        )
+        db.add(item)
 
     db.commit()
 

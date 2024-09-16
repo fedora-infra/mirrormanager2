@@ -50,10 +50,10 @@ def test_get_all_sites_empty(db):
 def test_get_all_sites(db, site):
     """Test the get_all_sites function of mirrormanager2.lib."""
     results = mirrormanager2.lib.get_all_sites(db)
-    assert len(results) == 3
-    assert results[0].name == "test-mirror"
-    assert results[1].name == "test-mirror2"
-    assert results[2].name == "test-mirror_private"
+    assert len(results) == 32
+    assert results[29].name == "test-mirror"
+    assert results[30].name == "test-mirror2"
+    assert results[31].name == "test-mirror_private"
 
 
 def test_get_siteadmin_no_site(db):
@@ -155,7 +155,7 @@ def test_get_host_country(db, base_items, site, hosts, hostcountry):
     results = mirrormanager2.lib.get_host_country(db, 2)
     assert results.host.name == "mirror2.localhost"
     assert results.host.country == "FR"
-    results = mirrormanager2.lib.get_host_country(db, 3)
+    results = mirrormanager2.lib.get_host_country(db, 100)
     assert results is None
 
 
@@ -178,7 +178,7 @@ def test_get_host_category(db, base_items, site, hosts, directory, category, hos
     results = mirrormanager2.lib.get_host_category(db, 4)
     assert results.host.name == "mirror2.localhost"
     assert results.host.country == "FR"
-    results = mirrormanager2.lib.get_host_category(db, 5)
+    results = mirrormanager2.lib.get_host_category(db, 100)
     assert results is None
 
 
@@ -223,7 +223,7 @@ def test_get_host_category_url_by_id(
         assert results.host_category.host.name == "mirror.localhost"
         assert results.host_category.host.country == "US"
 
-    results = mirrormanager2.lib.get_host_category_url_by_id(db, 9)
+    results = mirrormanager2.lib.get_host_category_url_by_id(db, 100)
     assert results is None
 
 
@@ -239,7 +239,7 @@ def test_get_host_category_url(
     mirrormanager2.lib.
     """
     results = mirrormanager2.lib.get_host_category_url(db)
-    assert len(results) == 8
+    assert len(results) == 37
     for i in range(4):
         assert results[i].host_category.host.name == "mirror.localhost"
         assert results[i].host_category.host.country == "US"
@@ -549,6 +549,8 @@ def check_results_host(results):
             assert result.name == "private.localhost"
         elif result.id == 4:
             assert result.name == "Another test entry"
+        elif result.id <= 33:
+            assert result.name == f"Extra Mirror {result.id-4}"
         else:
             raise AssertionError
 
@@ -574,7 +576,7 @@ def test_get_mirrors(
 ):
     """Test the get_mirrors function of mirrormanager2.lib."""
     results = mirrormanager2.lib.get_mirrors(db)
-    assert len(results) == 4
+    assert len(results) == 33
     check_results_host(results)
 
     results = mirrormanager2.lib.get_mirrors(db, private=True)
@@ -587,68 +589,68 @@ def test_get_mirrors(
     results = mirrormanager2.lib.get_mirrors(db, internet2_clients=True)
     assert len(results) == 0
     results = mirrormanager2.lib.get_mirrors(db, internet2_clients=False)
-    assert len(results) == 4
+    assert len(results) == 33
     check_results_host(results)
 
     results = mirrormanager2.lib.get_mirrors(db, asn_clients=True)
     assert len(results) == 1
     assert results[0].name == "mirror2.localhost"
     results = mirrormanager2.lib.get_mirrors(db, asn_clients=False)
-    assert len(results) == 3
+    assert len(results) == 32
     check_results_host(results)
 
     results = mirrormanager2.lib.get_mirrors(db, admin_active=False)
     assert len(results) == 0
     results = mirrormanager2.lib.get_mirrors(db, admin_active=True)
-    assert len(results) == 4
+    assert len(results) == 33
     check_results_host(results)
 
     results = mirrormanager2.lib.get_mirrors(db, user_active=False)
     assert len(results) == 0
     results = mirrormanager2.lib.get_mirrors(db, user_active=True)
-    assert len(results) == 4
+    assert len(results) == 33
     check_results_host(results)
 
     results = mirrormanager2.lib.get_mirrors(db, host_category_url_private=True)
     assert len(results) == 0
     results = mirrormanager2.lib.get_mirrors(db, host_category_url_private=False)
-    assert len(results) == 2
+    assert len(results) == 27
     assert results[0].name == "mirror2.localhost"
 
     results = mirrormanager2.lib.get_mirrors(db, last_crawl_duration=True)
     assert len(results) == 0
     results = mirrormanager2.lib.get_mirrors(db, last_crawl_duration=False)
-    assert len(results) == 4
+    assert len(results) == 33
     check_results_host(results)
 
     results = mirrormanager2.lib.get_mirrors(db, last_crawled=True)
     assert len(results) == 0
     results = mirrormanager2.lib.get_mirrors(db, last_crawled=False)
-    assert len(results) == 4
+    assert len(results) == 33
     check_results_host(results)
 
     results = mirrormanager2.lib.get_mirrors(db, last_checked_in=True)
     assert len(results) == 0
     results = mirrormanager2.lib.get_mirrors(db, last_checked_in=False)
-    assert len(results) == 4
+    assert len(results) == 33
     check_results_host(results)
 
     results = mirrormanager2.lib.get_mirrors(db, site_private=True)
     assert len(results) == 1
     results = mirrormanager2.lib.get_mirrors(db, site_private=False)
-    assert len(results) == 3
+    assert len(results) == 32
     check_results_host(results)
 
     results = mirrormanager2.lib.get_mirrors(db, site_user_active=False)
     assert len(results) == 0
     results = mirrormanager2.lib.get_mirrors(db, site_user_active=True)
-    assert len(results) == 4
+    assert len(results) == 33
     check_results_host(results)
 
     results = mirrormanager2.lib.get_mirrors(db, site_admin_active=False)
     assert len(results) == 0
     results = mirrormanager2.lib.get_mirrors(db, site_admin_active=True)
-    assert len(results) == 4
+    assert len(results) == 33
     check_results_host(results)
 
     results = mirrormanager2.lib.get_mirrors(db, up2date=True)
@@ -659,7 +661,7 @@ def test_get_mirrors(
     results = mirrormanager2.lib.get_mirrors(db, arch_id=1)
     assert len(results) == 0
     results = mirrormanager2.lib.get_mirrors(db, arch_id=3)
-    assert len(results) == 2
+    assert len(results) == 31
     check_results_host(results)
 
 
@@ -695,11 +697,10 @@ def test_get_mirrors_version(
     repository,
 ):
     results = mirrormanager2.lib.get_mirrors(db, version_id=1)
-    assert len(results) == 2
-    assert results[0].name == "mirror2.localhost"
-    assert results[1].name == "mirror.localhost"
+    assert len(results) == 31
+    check_results_host(results)
     results = mirrormanager2.lib.get_mirrors(db, version_id=3)
-    assert len(results) == 2
+    assert len(results) == 31
     check_results_host(results)
 
 

@@ -21,6 +21,8 @@ def test_site_repr(db, site):
     assert str(item) == "<Site(1 - test-mirror)>"
     item = model.Site.get_by_pk(3)
     assert str(item) == "<Site(3 - test-mirror_private)>"
+    item = model.Site.get_by_pk(4)
+    assert str(item) == "<Site(4 - extra-mirror1)>"
 
 
 def test_host_repr(db, site, hosts):

@@ -45,7 +45,7 @@ def test_list_mirrors(client):
     data = output.get_data(as_text=True)
     assert "<title>Mirrors - MirrorManager</title>" in data
     assert "<h2>Public active mirrors</h2>" in data
-    assert "We have currently 2 active mirrors" in data
+    assert "We have currently 26 active mirrors" in data
 
     for i in [27, 26, 25]:
         output = client.get(f"/mirrors/Fedora/{i}")
@@ -53,14 +53,14 @@ def test_list_mirrors(client):
         data = output.get_data(as_text=True)
         assert "<title>Mirrors - MirrorManager</title>" in data
         assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
-        assert "We have currently 2 active mirrors" in data
+        assert "We have currently 26 active mirrors" in data
 
         output = client.get(f"/mirrors/Fedora Linux/{i}/x86_64")
         assert output.status_code == 200
         data = output.get_data(as_text=True)
         assert "<title>Mirrors - MirrorManager</title>" in data
         assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
-        assert "We have currently 2 active mirrors" in data
+        assert "We have currently 26 active mirrors" in data
 
         output = client.get("/mirrors/Fedora Linux/20/i386")
         assert output.status_code == 200
@@ -111,7 +111,7 @@ def test_all_sites_auth_admin(client, admin_user):
     assert "<title>Home - MirrorManager</title>" in data
     assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
     assert "<h2>Admin - List all Sites</h2>" in data
-    assert "3 sites" in data
+    assert "2 sites" in data
 
 
 def test_site_new(client):
@@ -177,7 +177,7 @@ def test_site_view(client):
 
 
 def test_site_view_auth(client, user):
-    output = client.get("/site/5")
+    output = client.get("/site/100")
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Site not found</p>" in data
@@ -253,7 +253,7 @@ def test_host_new(client):
 
 def test_host_new_auth(client, user):
     # Invalid site identifier
-    output = client.get("/host/5/new")
+    output = client.get("/host/100/new")
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Site not found</p>" in data
@@ -324,7 +324,7 @@ def test_siteadmin_new(client):
 
 def test_siteadmin_new_auth(client, user):
     # Invalid site identifier
-    output = client.get("/site/5/admin/new")
+    output = client.get("/site/100/admin/new")
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Site not found</p>" in data
@@ -410,7 +410,7 @@ def test_siteadmin_delete_auth(client, user):
     post_data["csrf_token"] = csrf_token
 
     # Invalid site identifier
-    output = client.post("/site/5/admin/3/delete", data=post_data, follow_redirects=True)
+    output = client.post("/site/100/admin/3/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Site not found</p>" in data
@@ -594,7 +594,7 @@ def test_host_netblock_delete_auth(client, another_user):
     post_data["csrf_token"] = csrf_token
 
     # Invalid site identifier
-    output = client.post("/host/5/host_netblock/1/delete", data=post_data, follow_redirects=True)
+    output = client.post("/host/100/host_netblock/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host not found</p>" in data
@@ -700,7 +700,7 @@ def test_host_asn_delete_auth(client, admin_user):
     post_data["csrf_token"] = csrf_token
 
     # Invalid site identifier
-    output = client.post("/host/5/host_asn/1/delete", data=post_data, follow_redirects=True)
+    output = client.post("/host/100/host_asn/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host not found</p>" in data
@@ -779,7 +779,7 @@ def test_host_country_new_auth(client, another_user):
     assert '<div class="toast-body">Host Country added</div>' in data
     assert '<h2 class="mb-0"><span class="fa fa-server"></span> private.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
-    assert 'action="/host/3/host_country/3/delete">' in data
+    assert 'action="/host/3/host_country/32/delete">' in data
 
 
 def test_host_country_delete(client):
@@ -817,13 +817,13 @@ def test_host_country_delete_auth(client, another_user):
     post_data["csrf_token"] = csrf_token
 
     # Invalid site identifier
-    output = client.post("/host/5/host_country/1/delete", data=post_data, follow_redirects=True)
+    output = client.post("/host/100/host_country/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host not found</p>" in data
 
     # Invalid Host Country identifier
-    output = client.post("/host/1/host_country/5/delete", data=post_data, follow_redirects=True)
+    output = client.post("/host/1/host_country/500/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host Country not found</p>" in data
@@ -919,7 +919,7 @@ def test_host_category_new_auth(client, user):
     data = output.get_data(as_text=True)
     assert '<h2 class="mb-0"><span class="fa fa-server"></span> mirror2.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
-    assert 'action="/host/2/category/4/delete">' in data
+    assert 'action="/host/2/category/3/delete">' in data
 
 
 def test_host_category_new_as_admin(client):
@@ -1009,13 +1009,13 @@ def test_host_category_delete_auth(client, user):
     post_data["csrf_token"] = csrf_token
 
     # Invalid site identifier
-    output = client.post("/host/5/category/1/delete", data=post_data, follow_redirects=True)
+    output = client.post("/host/500/category/5/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host not found</p>" in data
 
     # Invalid Host Category identifier
-    output = client.post("/host/2/category/50/delete", data=post_data, follow_redirects=True)
+    output = client.post("/host/2/category/500/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host/Category not found</p>" in data
@@ -1045,12 +1045,12 @@ def test_host_category_url_new(client):
 
 
 def test_host_category_url_new_auth(client, user):
-    output = client.get("/host/50/category/1/url/new")
+    output = client.get("/host/50/category/500/url/new")
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host not found</p>" in data
 
-    output = client.get("/host/2/category/50/url/new")
+    output = client.get("/host/2/category/500/url/new")
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host/Category not found</p>" in data
@@ -1092,7 +1092,7 @@ def test_host_category_url_new_auth(client, user):
     assert '<div class="toast-body">Host Category URL added</div>' in data
     assert '<h2 class="mb-0"><span class="fa fa-server"></span>' in data
     assert "<title>Host - MirrorManager</title>" in data
-    assert 'action="/host/2/category/3/url/9/delete">' in data
+    assert 'action="/host/2/category/3/url/38/delete">' in data
 
     # Try adding the same Host Category URL -- fails
 
@@ -1104,7 +1104,7 @@ def test_host_category_url_new_auth(client, user):
     assert "URL Not Added: http://pingoured.fr/pub/Fedora already exists on Fedora Linux" in data
     assert '<h2 class="mb-0"><span class="fa fa-server"></span>' in data
     assert "<title>Host - MirrorManager</title>" in data
-    assert 'action="/host/2/category/3/url/9/delete">' in data
+    assert 'action="/host/2/category/3/url/38/delete">' in data
 
 
 def test_host_category_url_delete(client):
@@ -1139,7 +1139,7 @@ def test_host_category_url_delete_auth(client, user):
     post_data["csrf_token"] = csrf_token
 
     # Invalid site identifier
-    output = client.post("/host/5/category/5/url/5/delete", data=post_data, follow_redirects=True)
+    output = client.post("/host/500/category/5/url/5/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host not found</p>" in data
