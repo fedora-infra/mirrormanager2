@@ -37,8 +37,8 @@ DB_MODELS_LOCATION = "mirrormanager2.lib.model"
 DB_ALEMBIC_LOCATION = os.path.join(BASE_PATH, "lib", "migrations")
 
 # the number of items to display on the search pages
-# Default: ``50``.
-ITEMS_PER_PAGE = 50
+# Default: ``20``.
+ITEMS_PER_PAGE = 20
 
 # secret key used to generate unique csrf token
 SECRET_KEY = "<insert here your own key>"

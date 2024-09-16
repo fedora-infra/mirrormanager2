@@ -1,5 +1,7 @@
 {% extends "master.html" %}
 
+{% from "_macros.html" import pagination_bar %}
+
 {% block title %}Mirrors{% endblock %}
 {%block tag %}mirrors{% endblock %}
 
@@ -29,8 +31,8 @@
     <th>Internet2</th>
     <th>Comment</th>
   </tr>
-  {% for mirror in mirrors %}
-  <tr>
+  {% for mirror in mirrors.items %}
+  <tr class="mirror-row">
     <td>{{ mirror.country }}</td>
     <td>
       <a href="{{ mirror.site.org_url }}">
@@ -58,6 +60,7 @@
   </tr>
   {% endfor %}
 </table>
+{{pagination_bar(mirrors)}}
 {% else %}
 <p>
   There are currently no active mirrors registered.

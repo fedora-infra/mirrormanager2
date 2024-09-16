@@ -27,6 +27,7 @@ from mirrormanager2.perms import (
     is_site_admin,
     login_required,
 )
+from mirrormanager2.utility.pagination import PaginationArgs
 
 views = flask.Blueprint("base", __name__)
 
@@ -85,6 +86,7 @@ def list_mirrors(p_name=None, p_version=None, p_arch=None):
         version_id=version_id,
         arch_id=arch_id,
         product_id=product_id,
+        pagination=PaginationArgs(),
     )
 
     return flask.render_template(

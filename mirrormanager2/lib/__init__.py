@@ -31,6 +31,7 @@ import sqlalchemy as sa
 
 from mirrormanager2 import default_config
 from mirrormanager2.lib import model
+from mirrormanager2.utility.pagination import PagedResult
 
 
 def read_config(filename):
@@ -514,6 +515,7 @@ def get_mirrors(
     order_by_crawl_duration=False,
     product_id=None,
     category_ids=None,
+    pagination=None,
 ):
     """Retrieve the mirrors based on the criteria specified.
 
@@ -600,7 +602,22 @@ def get_mirrors(
         # default order
         final_query = final_query.order_by(model.Host.country, model.Host.name)
 
-    return final_query.all()
+    if not pagination:
+        return final_query.all()
+
+    total = final_query.count()
+
+    if pagination.page_size > 0:
+        final_query = final_query.limit(pagination.page_size).offset(
+            (pagination.page_number - 1) * pagination.page_size
+        )
+
+    return PagedResult(
+        items=final_query.all(),
+        page_size=pagination.page_size,
+        page_number=pagination.page_number,
+        total=total,
+    )
 
 
 def get_user_sites(session, username):
