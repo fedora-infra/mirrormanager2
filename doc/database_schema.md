@@ -302,7 +302,6 @@ erDiagram
     DATETIME datetime PK "indexed"
     INTEGER repository_id PK,FK "nullable,indexed"
     INTEGER no_info
-    INTEGER no_info2
     INTEGER older
     INTEGER one_day
     INTEGER same_day

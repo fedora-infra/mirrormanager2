@@ -707,7 +707,7 @@ def hostcountry(db):
 def version(db):
     """Create some Version to play with for the tests"""
     item = model.Version(
-        name=26,
+        name="26",
         product_id=2,
         is_test=False,
         display=True,
@@ -723,7 +723,7 @@ def version(db):
     )
     db.add(item)
     item = model.Version(
-        name=27,
+        name="27",
         product_id=2,
         is_test=False,
         display=True,
@@ -740,7 +740,7 @@ def version(db):
     )
     db.add(item)
     item = model.Version(
-        name=25,
+        name="25",
         product_id=2,
         is_test=False,
         display=True,
@@ -749,7 +749,7 @@ def version(db):
     db.add(item)
 
     item = model.Version(
-        name=7,
+        name="7",
         product_id=1,
         is_test=False,
         display=True,
