@@ -96,6 +96,7 @@ mm2_upgrade-install-repo = "mirrormanager2.utility.upgrade_install_repo:main"
 mm2_last-sync = "mirrormanager2.utility.last_sync:main"
 mm2_expire-stats = "mirrormanager2.utility.expire_statistics:main"
 mm2_mirrorlist-statistics = "mirrormanager2.utility.mirrorlist_statistics:main"
+mm2_add-product = "mirrormanager2.utility.add_product:main"
 
 [tool.poetry.extras]
 deploy = ["gunicorn", "psycopg2"]
