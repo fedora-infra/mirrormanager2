@@ -195,3 +195,8 @@ MAX_STALE_DAYS = 4
 UMDL_PREFIX = ""
 
 UMDL_MASTER_DIRECTORIES = []
+
+HEALTHZ = {
+    "live": "mirrormanager2.health_checks.liveness",
+    "ready": "mirrormanager2.health_checks.readiness",
+}

@@ -29,6 +29,7 @@ import sys
 
 import flask
 from flask_admin import Admin
+from flask_healthz import healthz
 from flask_oidc import OpenIDConnect
 from sqlalchemy.orm import configure_mappers
 
@@ -129,6 +130,8 @@ def create_app(config=None):
 
     app.register_blueprint(api_views, url_prefix="/api")
     from mirrormanager2.xml_rpc import XMLRPC
+
+    app.register_blueprint(healthz, url_prefix="/healthz")
 
     XMLRPC.connect(app, "/xmlrpc")
 
