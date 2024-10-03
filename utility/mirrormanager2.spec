@@ -25,7 +25,6 @@ BuildRequires:  python%{python_pkgversion}-flask-xml-rpc
 BuildRequires:  python%{python_pkgversion}-flask-wtf
 BuildRequires:  python%{python_pkgversion}-wtforms
 BuildRequires:  python%{python_pkgversion}-IPy
-BuildRequires:  python%{python_pkgversion}-dns
 BuildRequires:  python%{python_pkgversion}-backoff
 BuildRequires:  python%{python_pkgversion}-fedora-messaging
 BuildRequires:  python%{python_pkgversion}-sqlalchemy-helpers
@@ -72,7 +71,6 @@ BuildArch:      noarch
 
 Requires:  %{name}-filesystem = %{version}-%{release}
 Requires:  python%{python_pkgversion}-IPy
-Requires:  python%{python_pkgversion}-dns
 Requires:  python%{python_pkgversion}-pyrpmmd
 
 %description lib
