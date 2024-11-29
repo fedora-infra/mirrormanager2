@@ -94,8 +94,8 @@ class Reporter:
         auto_disable = self.config.get("CRAWLER_AUTO_DISABLE", 4)
         if self.host.crawl_failures >= auto_disable:
             self.disable_host(
-                "Host has been disabled (user_active) after %d"
-                " consecutive crawl failures" % auto_disable
+                f"Host has been disabled (user_active) after {auto_disable}"
+                " consecutive crawl failures"
             )
 
     def disable_host(self, reason):
