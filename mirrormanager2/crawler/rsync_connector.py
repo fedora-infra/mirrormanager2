@@ -61,7 +61,7 @@ class RsyncConnector(Connector):
         # run_rsync() returns a temporary file which needs to be closed
         listing.close()
 
-        logger.debug("rsync listing has %d lines" % len(rsync))
+        logger.debug("rsync listing has %s lines", len(rsync))
         return rsync
 
     def _check_file(self, current_file_info, db_file_info):
