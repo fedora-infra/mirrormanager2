@@ -140,10 +140,8 @@ def validate_netblocks(form, field):
     emsg += " can only be created by mirrormanager administrators."
     emsg += " Please ask the mirrormanager administrators for assistance."
 
-    ipv4_block = ipaddress.IPv4Network(f"10.0.0.0{max_ipv4_netblock_size}",
-                                       strict=False)
-    ipv6_block = ipaddress.IPv6Network(f"fec0::{max_ipv6_netblock_size}",
-                                       strict=False)
+    ipv4_block = ipaddress.IPv4Network(f"10.0.0.0{max_ipv4_netblock_size}", strict=False)
+    ipv6_block = ipaddress.IPv6Network(f"fec0::{max_ipv6_netblock_size}", strict=False)
 
     try:
         ip = ipaddress.ip_network(field.data, strict=False)
