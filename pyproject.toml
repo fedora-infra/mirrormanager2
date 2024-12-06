@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mirrormanager2"
-version = "1.0.0"
+version = "1.1.0"
 description = "The application used to managed the Fedora mirrors all over the world."
 authors = [
     "Fedora Infrastructure team <admin@fedoraproject.org>",
@@ -24,6 +24,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Operating System :: POSIX :: Linux",
 ]
 packages = [
