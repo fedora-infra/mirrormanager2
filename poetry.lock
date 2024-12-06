@@ -2787,6 +2787,7 @@ files = [
 ]
 
 [package.dependencies]
+email-validator = {version = "*", optional = true, markers = "extra == \"email\""}
 markupsafe = "*"
 
 [package.extras]
@@ -2967,4 +2968,4 @@ deploy = ["gunicorn", "psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "0ca6d38878aa381203ca0553a200190873f9218806cb91909026021395349641"
+content-hash = "a0e5634626ceb342a2823dafd92ebce1a6bb6b9c8bbccf24a9e59a486c188eff"
