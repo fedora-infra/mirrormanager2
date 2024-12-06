@@ -1,0 +1,72 @@
+# See the documentation for more information:
+# https://packit.dev/docs/configuration/
+
+specfile_path: utility/mirrormanager2.spec
+
+issue_repository: https://github.com/fedora-infra/mirrormanager2
+
+# add or remove files that should be synced
+files_to_sync:
+    - utility/mirrormanager2.spec
+    - .packit.yaml
+
+# name in upstream package repository or registry (e.g. in PyPI)
+upstream_package_name: mirrormanager2
+# downstream (Fedora) RPM package name
+downstream_package_name: mirrormanager2
+
+srpm_build_deps:
+  - curl
+
+targets:
+  - fedora-latest-stable
+  - fedora-development
+  - epel-9
+
+actions:
+  post-upstream-clone:
+    # fetch specfile from src.fp.o
+    - "sh -c 'curl -sSL https://install.python-poetry.org | python3 -'"
+    - "sh -c '$HOME/.local/bin/poetry --version'"
+  create-archive:
+    - "sh -c '$HOME/.local/bin/poetry build -f sdist'"
+    - "sh -c 'echo dist/mirrormanager2-$($HOME/.local/bin/poetry version -s).tar.gz'"
+  get-current-version:
+    # fetch the version number of the package
+    - "sh -c '$HOME/.local/bin/poetry version -s'"
+
+jobs:
+  # upon upstream PRs, perform COPR builds
+  - job: copr_build
+    trigger: pull_request
+  # upon upstream PRs, test builds
+  - job: tests
+    trigger: pull_request
+
+  # upon upstream releases, perform COPR builds
+  - job: copr_build
+    trigger: release
+
+  # upon downstream changes, create a PR upstream with sync'd files from above
+  - job: sync_from_downstream
+    trigger: commit
+
+  # land upstream release in fedora dist-git - no builds
+  - job: propose_downstream
+    trigger: release
+
+  # create an srpm from upstream and submit a scratch build to koji
+  - job: production_build
+    trigger: release
+
+  # trigger a build in koji for a new dist-git commit
+  - job: koji_build
+    trigger: commit
+
+  # create a new update in bodhi for a successful koji build. directly related to `koji_build`
+  - job: bodhi_update
+    trigger: commit
+    dist_git_branches:
+      # Don't create an update on Rawhide.
+      - fedora-latest-stable
+      - epel-9
