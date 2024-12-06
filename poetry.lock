@@ -2958,4 +2958,4 @@ deploy = ["gunicorn", "psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "a7b83790f58d4e9907bd27b67d57f0d7606fa099adf96649a6fd63c38b2ff715"
+content-hash = "fc49e6b9f3b04a487e0d3a379cb58778004115d94dd5aa943b18a84e66559a6a"
