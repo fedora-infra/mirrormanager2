@@ -1202,16 +1202,6 @@ files = [
 ]
 
 [[package]]
-name = "ipy"
-version = "1.01"
-description = "Class and tools for handling of IPv4 and IPv6 addresses and networks"
-optional = false
-python-versions = "*"
-files = [
-    {file = "IPy-1.01.tar.gz", hash = "sha256:edeca741dea2d54aca568fa23740288c3fe86c0f3ea700344571e9ef14a7cc1a"},
-]
-
-[[package]]
 name = "itsdangerous"
 version = "2.2.0"
 description = "Safely pass data to untrusted environments and back."
@@ -2968,4 +2958,4 @@ deploy = ["gunicorn", "psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "a0e5634626ceb342a2823dafd92ebce1a6bb6b9c8bbccf24a9e59a486c188eff"
+content-hash = "a7b83790f58d4e9907bd27b67d57f0d7606fa099adf96649a6fd63c38b2ff715"
