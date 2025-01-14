@@ -772,7 +772,6 @@ def _get_directories_by_category_query(category, only_repodata=False):
         .where(
             model.Category.id == category.id,
             model.Directory.readable.is_(True),
-            model.Directory.files.is_not(None),
         )
     )
     if only_repodata:

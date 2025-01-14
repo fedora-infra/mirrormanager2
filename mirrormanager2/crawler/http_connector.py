@@ -89,6 +89,8 @@ class HTTPConnector(Connector):
             return None
         with mmlib.instance_attribute(directory, "files") as files:
             # Getting Directory.files is a bit expensive, involves json decoding
+            # files can be None in case of empty directories
+            files = files or []
             for filename in files:
                 file_url = f"{url}/{filename}"
                 exists = self._check_file(conn, file_url, files[filename], directory.readable)

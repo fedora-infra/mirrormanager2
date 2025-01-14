@@ -78,6 +78,8 @@ class RsyncConnector(Connector):
     def _check_dir(self, dirname, directory):
         with mmlib.instance_attribute(directory, "files") as files:
             # Getting Directory.files is a bit expensive, involves json decoding
+            # files can be None in case of empty directories
+            files = files or []
             for filename in sorted(files):
                 if len(dirname) == 0:
                     key = filename
