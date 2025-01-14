@@ -115,6 +115,8 @@ class FTPConnector(Connector):
         with mmlib.instance_attribute(directory, "files") as files:
             # Getting Directory.files is a bit expensive, involves json decoding
             for filename in files:
+                if filename not in results:
+                    return False  # Missing file, we don't need to go over other files
                 status = self._check_file(results[filename], files[filename])
                 if not status:
                     # Shortcut: we don't need to go over other files

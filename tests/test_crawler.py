@@ -133,6 +133,16 @@ def test_scan_rsync(db, dir_obj_with_files, config):
     assert result is True
 
 
+def test_scan_missing_files_rsync(db, dir_obj_with_files, config):
+    """Test scanning directories with missing files."""
+    connection_pool = ConnectionPool(config)
+    connector = connection_pool.get(f"rsync://{FOLDER}/../testdata/")
+    dir_url = f"rsync:///{FOLDER}/../testdata/pub/fedora/linux"
+    connector._scan_result = connector._run(dir_url)
+    result = connector.check_dir(dir_url, dir_obj_with_files)
+    assert result is False
+
+
 def test_scan_http(db, dir_obj_with_files):
     """Test scanning directories with http"""
     connection_pool = ConnectionPool({})
@@ -149,6 +159,22 @@ def test_scan_http(db, dir_obj_with_files):
     )
 
 
+def test_scan_missing_files_http(db, dir_obj_with_files):
+    """Test scanning empty directories with http"""
+    connection_pool = ConnectionPool({})
+    connector = connection_pool.get("http://localhost/testdata/")
+    mocked_connection = object()
+    connector.get_connection = Mock(return_value=mocked_connection)
+    connector._check_file = Mock(return_value=False)
+    dir_url = "http://localhost/testdata/pub/fedora/linux"
+    result = connector.check_dir(dir_url, dir_obj_with_files)
+    assert result is False
+    connector.get_connection.assert_called_once()
+    connector._check_file.assert_called_once_with(
+        mocked_connection, f"{dir_url}/does-not-exist", {"size": 1, "stat": 1}, True
+    )
+
+
 def test_scan_ftp(db, dir_obj_with_files):
     """Test scanning directories with ftp"""
     connection_pool = ConnectionPool({})
@@ -157,4 +183,15 @@ def test_scan_ftp(db, dir_obj_with_files):
     dir_url = "http://localhost/testdata/pub/fedora/linux"
     result = connector.check_dir(dir_url, dir_obj_with_files)
     assert result is True
+    connector.get_ftp_dir.assert_called_once_with(dir_url, True)
+
+
+def test_scan_missing_files_ftp(db, dir_obj_with_files):
+    """Test scanning empty directories with ftp"""
+    connection_pool = ConnectionPool({})
+    connector = connection_pool.get("ftp://localhost/testdata/")
+    connector.get_ftp_dir = Mock(return_value={})
+    dir_url = "http://localhost/testdata/pub/fedora/linux"
+    result = connector.check_dir(dir_url, dir_obj_with_files)
+    assert result is False
     connector.get_ftp_dir.assert_called_once_with(dir_url, True)
