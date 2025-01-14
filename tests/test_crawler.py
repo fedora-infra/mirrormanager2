@@ -16,10 +16,44 @@ mirrormanager2 tests for the crawler.
 """
 
 import os
+from unittest.mock import Mock
 
+import pytest
+
+from mirrormanager2 import default_config
+from mirrormanager2.crawler.connection_pool import ConnectionPool
+from mirrormanager2.lib import model
 from mirrormanager2.lib.sync import run_rsync
 
 FOLDER = os.path.dirname(os.path.abspath(__file__))
+
+
+@pytest.fixture()
+def config():
+    config = dict()
+    for key in dir(default_config):
+        if key.isupper():
+            config[key] = getattr(default_config, key)
+    return config
+
+
+@pytest.fixture()
+def dir_obj(db):
+    """Test scanning empty directories."""
+    directory = model.Directory(
+        name="pub/fedora/linux/releases/20",
+        readable=True,
+    )
+    db.add(directory)
+    db.commit()
+    return directory
+
+
+@pytest.fixture()
+def dir_obj_with_files(db, dir_obj):
+    dir_obj.files = {"does-not-exist": {"size": 1, "stat": 1}}
+    db.commit()
+    return dir_obj
 
 
 def test_run_rsync():
@@ -82,3 +116,45 @@ def test_run_rsync():
 
     # Check that non-excluded files are still included
     assert "fedora/linux/development/22/" in output
+
+
+def test_scan_rsync(db, dir_obj_with_files, config):
+    """Test scanning directories with missing files."""
+    connection_pool = ConnectionPool(config)
+    connector = connection_pool.get(f"rsync://{FOLDER}/../testdata/")
+    dir_url = f"rsync:///{FOLDER}/../testdata/pub/fedora/linux"
+    scan_result = {
+        f"{dir_url}/{filename}": fileinfo for filename, fileinfo in dir_obj_with_files.files.items()
+    }
+    for fileinfo in scan_result.values():
+        fileinfo["mode"] = "f"
+    connector._scan_result = scan_result
+    result = connector.check_dir(dir_url, dir_obj_with_files)
+    assert result is True
+
+
+def test_scan_http(db, dir_obj_with_files):
+    """Test scanning directories with http"""
+    connection_pool = ConnectionPool({})
+    connector = connection_pool.get("http://localhost/testdata/")
+    mocked_connection = object()
+    connector.get_connection = Mock(return_value=mocked_connection)
+    connector._check_file = Mock(return_value=True)
+    dir_url = "http://localhost/testdata/pub/fedora/linux"
+    result = connector.check_dir(dir_url, dir_obj_with_files)
+    assert result is True
+    connector.get_connection.assert_called_once()
+    connector._check_file.assert_called_once_with(
+        mocked_connection, f"{dir_url}/does-not-exist", {"size": 1, "stat": 1}, True
+    )
+
+
+def test_scan_ftp(db, dir_obj_with_files):
+    """Test scanning directories with ftp"""
+    connection_pool = ConnectionPool({})
+    connector = connection_pool.get("ftp://localhost/testdata/")
+    connector.get_ftp_dir = Mock(return_value=dir_obj_with_files.files)
+    dir_url = "http://localhost/testdata/pub/fedora/linux"
+    result = connector.check_dir(dir_url, dir_obj_with_files)
+    assert result is True
+    connector.get_ftp_dir.assert_called_once_with(dir_url, True)
