@@ -33,6 +33,8 @@ from fedora_messaging.api import publish as fm_publish
 from fedora_messaging.exceptions import ConnectionException, PublishTimeout
 from fedora_messaging.message import Message
 
+from . import model
+
 
 @backoff.on_exception(
     backoff.expo,
@@ -42,6 +44,25 @@ from fedora_messaging.message import Message
 def fedmsg_publish(msg: Message):  # pragma: no cover
     """Try to publish a message on the fedmsg bus."""
     fm_publish(msg)
+
+
+def host_to_message_body(host: model.Host):
+    return {
+        "id": host.id,
+        "name": host.name,
+        "country": host.country,
+        "bandwidth": host.bandwidth_int,
+        "asn": host.asn,
+    }
+
+
+def site_to_message_body(site: model.Site):
+    return {
+        "id": site.id,
+        "name": site.name,
+        "org_url": site.org_url,
+        "admins": [admin.username for admin in site.admins],
+    }
 
 
 def email_publish(

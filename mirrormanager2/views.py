@@ -20,7 +20,11 @@ from mirrormanager2 import forms, login_forms
 from mirrormanager2 import lib as mmlib
 from mirrormanager2.database import DB
 from mirrormanager2.lib import model
-from mirrormanager2.lib.notifications import fedmsg_publish
+from mirrormanager2.lib.notifications import (
+    fedmsg_publish,
+    host_to_message_body,
+    site_to_message_body,
+)
 from mirrormanager2.perms import (
     admin_required,
     is_mirrormanager_admin,
@@ -253,11 +257,7 @@ def site_drop(site_id):
                 message_v2 = SiteDeletedV2(
                     topic="mirrormanager.site.deleted.v2",
                     body={
-                        "site": {
-                            "id": siteobj.id,
-                            "name": siteobj.name,
-                            "org_url": siteobj.org_url,
-                        },
+                        "site": site_to_message_body(siteobj),
                         "agent": flask.g.fas_user.username,
                     },
                 )
@@ -312,17 +312,10 @@ def host_new(site_id):
                 message_v2 = HostAddedV2(
                     topic="mirrormanager.host.added.v2",
                     body={
-                        "site": {
-                            "id": host.site.id,
-                            "name": host.site.name,
-                            "org_url": host.site.org_url,
-                        },
+                        "site": site_to_message_body(host.site),
                         "host": {
-                            "id": host.id,
-                            "name": host.name,
-                            "country": host.country,
-                            "bandwidth": host.bandwidth_int,
-                            "asn": host.asn,
+                            **host_to_message_body(host),
+                            "url": flask.url_for("base.host_view", host_id=host.id, _external=True),
                         },
                         "agent": flask.g.fas_user.username,
                     },
@@ -377,17 +370,10 @@ def host_drop(host_id):
                 message_v2 = HostDeletedV2(
                     topic="mirrormanager.host.deleted.v2",
                     body={
-                        "site": {
-                            "id": site.id,
-                            "name": site.name,
-                            "org_url": site.org_url,
-                        },
+                        "site": site_to_message_body(site),
                         "host": {
-                            "id": host.id,
-                            "name": host.name,
-                            "country": host.country,
-                            "bandwidth": host.bandwidth_int,
-                            "asn": host.asn,
+                            **host_to_message_body(host),
+                            "url": flask.url_for("base.host_view", host_id=host.id, _external=True),
                         },
                         "agent": flask.g.fas_user.username,
                     },
@@ -537,17 +523,10 @@ def host_view(host_id):
                 message_v2 = HostUpdatedV2(
                     topic="mirrormanager.host.updated.v2",
                     body={
-                        "site": {
-                            "id": host.site.id,
-                            "name": host.site.name,
-                            "org_url": host.site.org_url,
-                        },
+                        "site": site_to_message_body(host.site),
                         "host": {
-                            "id": host.id,
-                            "name": host.name,
-                            "country": host.country,
-                            "bandwidth": host.bandwidth_int,
-                            "asn": host.asn,
+                            **host_to_message_body(host),
+                            "url": flask.url_for("base.host_view", host_id=host.id, _external=True),
                         },
                         "agent": flask.g.fas_user.username,
                     },
