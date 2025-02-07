@@ -7,7 +7,9 @@ from typing import TYPE_CHECKING
 
 import mirrormanager2.lib as mmlib
 
+from .notif import Notifier
 from .states import CrawlStatus
+from .utils import get_host_urls
 
 if TYPE_CHECKING:
     from .crawler import CrawlResult
@@ -22,16 +24,7 @@ class Reporter:
         self.session = session
         self.host = host
         self.host_failed = False
-
-    def _get_log_url(self):
-        # This is web-framework-dependant
-        from flask import url_for
-
-        from mirrormanager2.app import create_app
-
-        app = create_app()
-        with app.app_context():
-            return url_for("base.crawler_log", host_id=self.host.id, _external=True)
+        self._notifier = Notifier(config=self.config)
 
     def send_email(self, report_str, exc):
         if not self.config.get("CRAWLER_SEND_EMAIL", False):
@@ -43,7 +36,8 @@ class Reporter:
         msg["Subject"] = f"MirrorManager crawler report: {self.host.name}"
         msg["Date"] = format_datetime(datetime.now(tz=timezone.utc))
 
-        content = [report_str, f"Log can be found at {self._get_log_url()}"]
+        host_urls = get_host_urls(self.host, config=self.config)
+        content = [report_str, f"Log can be found at {host_urls['crawler_log']}"]
         if exc is not None:
             msg.append(f"Exception info: type {exc[0]}; value {exc[1]}")
             msg.append(str(exc[2]))
@@ -101,6 +95,7 @@ class Reporter:
     def disable_host(self, reason):
         self.host.disable_reason = reason
         self.host.user_active = False
+        self._notifier.notify_disabled(self.host)
 
     def enable_host(self):
         self.host.user_active = True
@@ -120,6 +115,7 @@ class Reporter:
 
 def store_crawl_result(config, options, session, crawl_result: "CrawlResult"):
     host = mmlib.get_host(session, crawl_result.host_id)
+    host.last_crawled = crawl_result.finished_at
     reporter = Reporter(config, session, host)
 
     if crawl_result.status == CrawlStatus.FAILURE.value:
@@ -143,7 +139,6 @@ def store_crawl_result(config, options, session, crawl_result: "CrawlResult"):
     elif crawl_result.status == CrawlStatus.OK.value:
         reporter.enable_host()
 
-    host.last_crawled = crawl_result.finished_at
     if (
         crawl_result.status != CrawlStatus.UNKNOWN.value
         and not options["repodata"]

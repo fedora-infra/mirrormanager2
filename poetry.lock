@@ -1484,13 +1484,13 @@ files = [
 
 [[package]]
 name = "mirrormanager-messages"
-version = "1.0.0"
+version = "1.1.0"
 description = "A schema package for messages sent by MirrorManager"
 optional = false
 python-versions = "<4.0.0,>=3.8.10"
 files = [
-    {file = "mirrormanager_messages-1.0.0-py3-none-any.whl", hash = "sha256:5c7b2945f78ea5eddad65786494660f27c3d5410ac05fdc7d681c8a9b123d851"},
-    {file = "mirrormanager_messages-1.0.0.tar.gz", hash = "sha256:29b238af3021737f99810d417c143f2daf42ea7388c2688cfdeb303672925088"},
+    {file = "mirrormanager_messages-1.1.0-py3-none-any.whl", hash = "sha256:e256f5b739944ce2ca77db6255e9120c90fbae9e1c7f4737c5102ea856741876"},
+    {file = "mirrormanager_messages-1.1.0.tar.gz", hash = "sha256:4533407a94f5a588b5b0ddc80f10b1a56d164a0884f70e2537e159a8f6780ba6"},
 ]
 
 [package.dependencies]
@@ -1835,7 +1835,6 @@ files = [
     {file = "psycopg2-2.9.10-cp311-cp311-win_amd64.whl", hash = "sha256:0435034157049f6846e95103bd8f5a668788dd913a7c30162ca9503fdf542cb4"},
     {file = "psycopg2-2.9.10-cp312-cp312-win32.whl", hash = "sha256:65a63d7ab0e067e2cdb3cf266de39663203d38d6a8ed97f5ca0cb315c73fe067"},
     {file = "psycopg2-2.9.10-cp312-cp312-win_amd64.whl", hash = "sha256:4a579d6243da40a7b3182e0430493dbd55950c493d8c68f4eec0b302f6bbf20e"},
-    {file = "psycopg2-2.9.10-cp313-cp313-win_amd64.whl", hash = "sha256:91fd603a2155da8d0cfcdbf8ab24a2d54bca72795b90d2a3ed2b6da8d979dee2"},
     {file = "psycopg2-2.9.10-cp39-cp39-win32.whl", hash = "sha256:9d5b3b94b79a844a986d029eee38998232451119ad653aea42bb9220a8c5066b"},
     {file = "psycopg2-2.9.10-cp39-cp39-win_amd64.whl", hash = "sha256:88138c8dedcbfa96408023ea2b0c369eda40fe5d75002c0964c78f46f11fa442"},
     {file = "psycopg2-2.9.10.tar.gz", hash = "sha256:12ec0b40b0273f95296233e8750441339298e6a572f7039da5b260e3c8b60e11"},
@@ -2985,4 +2984,4 @@ deploy = ["gunicorn", "psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "fc49e6b9f3b04a487e0d3a379cb58778004115d94dd5aa943b18a84e66559a6a"
+content-hash = "2da0acdf0602b196dfabaf074276c8d65542d451ac212d91e7f9ffb4c9cb44c2"

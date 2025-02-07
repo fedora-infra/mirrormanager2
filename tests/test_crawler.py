@@ -16,12 +16,19 @@ mirrormanager2 tests for the crawler.
 """
 
 import os
+from datetime import datetime
 from unittest.mock import Mock
 
 import pytest
+import sqlalchemy as sa
+from fedora_messaging.testing import mock_sends
+from mirrormanager_messages.host import HostCrawlerDisabledV1
 
 from mirrormanager2 import default_config
 from mirrormanager2.crawler.connection_pool import ConnectionPool
+from mirrormanager2.crawler.crawler import CrawlResult
+from mirrormanager2.crawler.reporter import store_crawl_result
+from mirrormanager2.crawler.states import CrawlStatus
 from mirrormanager2.lib import model
 from mirrormanager2.lib.sync import run_rsync
 
@@ -34,6 +41,13 @@ def config():
     for key in dir(default_config):
         if key.isupper():
             config[key] = getattr(default_config, key)
+    config.update(
+        {
+            "TESTING": True,
+            "SERVER_NAME": "mirrormanager.example.com",
+            "OIDC_CLIENT_SECRETS": os.path.join(FOLDER, "client_secrets.json"),
+        }
+    )
     return config
 
 
@@ -228,3 +242,28 @@ def test_scan_empty_directory_ftp(db, dir_obj):
     result = connector.check_dir(dir_url, dir_obj)
     assert result is True
     connector.get_ftp_dir.assert_called_once_with(dir_url, True)
+
+
+def test_reporter_host_disabled(config, db, site, hosts):
+    failed_host: model.Host = db.scalar(
+        sa.select(model.Host).where(model.Host.name == "mirror2.localhost")
+    )
+    assert failed_host.user_active is True
+    crawl_result = CrawlResult(
+        host_id=failed_host.id,
+        host_name=failed_host.name,
+        status=CrawlStatus.DISABLE.value,
+        details="dummy crawl failure",
+        finished_at=datetime.now(),
+        duration=42,
+    )
+    with mock_sends(HostCrawlerDisabledV1):
+        store_crawl_result(
+            config,
+            options={"repodata": False, "canary": False},
+            session=db,
+            crawl_result=crawl_result,
+        )
+    db.refresh(failed_host)
+    assert failed_host.user_active is False
+    assert failed_host.disable_reason == "dummy crawl failure"
