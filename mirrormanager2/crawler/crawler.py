@@ -333,7 +333,7 @@ class Crawler:
         raise CategoryNotAccessible
 
     def sync_dir(self, hc, directory, status):
-        logger.debug("Syncing directory %s", directory.name)
+        logger.debug("Syncing directory %s with status %r", directory.name, status)
         sync_status = SyncStatus.UNKNOWN
         if status is None:
             # could be a dir with no files, or an unreadable dir.
