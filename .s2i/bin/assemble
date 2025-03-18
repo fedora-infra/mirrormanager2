@@ -24,6 +24,11 @@ cp -pr $rpmmd_path `echo $rpmmd_path | sed -e 's,/usr,/opt/app-root',`
 # add dependencies for rpmmd
 pip install six
 
+# Patches
+echo "---> Apply patches ..."
+curl https://github.com/pallets-eco/flask-admin/commit/498afbcbecaf456c9e7957c72799b0e6aea8ad0d.patch \
+    | patch -p1 -d /opt/app-root/lib/python3.*/site-packages
+
 # Install the Rust components
 mkdir ../src-rust
 pushd ../src-rust
