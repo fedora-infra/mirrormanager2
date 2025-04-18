@@ -34,7 +34,7 @@ repos:
       - id: database-graph
         name: Update the database schema graph
         language: python
-        additional_dependencies: [paracelsus, sqlalchemy-helpers]
+        additional_dependencies: [paracelsus, sqlalchemy-helpers, flask]
         entry: paracelsus
         args: [inject, doc/database_schema.md, "mirrormanager2.lib.model:BASE"]
         files: mirrormanager2/lib/model\.py
