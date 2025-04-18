@@ -5,18 +5,18 @@ This is the database schema (scroll to zoom, drag to move):
 erDiagram
   site {
     INTEGER id PK
-    BOOLEAN admin_active
+    BOOLEAN admin_active "indexed"
     BOOLEAN all_sites_can_pull_from_me
-    DATETIME created_at
+    DATETIME created_at "indexed"
     TEXT created_by
     TEXT downstream_comments "nullable"
     BOOLEAN email_on_add
     BOOLEAN email_on_drop
-    TEXT name
+    TEXT name "indexed"
     TEXT org_url "nullable"
     TEXT password "nullable"
-    BOOLEAN private
-    BOOLEAN user_active
+    BOOLEAN private "indexed"
+    BOOLEAN user_active "indexed"
   }
 
   country {
@@ -27,31 +27,31 @@ erDiagram
   host {
     INTEGER id PK
     INTEGER site_id FK "nullable"
-    BOOLEAN admin_active
+    BOOLEAN admin_active "indexed"
     INTEGER asn "nullable"
     BOOLEAN asn_clients
     INTEGER bandwidth_int "nullable"
     TEXT comment "nullable"
     BLOB config "nullable"
-    TEXT country
+    TEXT country "indexed"
     INTEGER crawl_failures
     TEXT disable_reason "nullable"
     BOOLEAN internet2
     BOOLEAN internet2_clients
     DATETIME last_checked_in "nullable"
-    BIGINT last_crawl_duration "nullable"
+    BIGINT last_crawl_duration "nullable,indexed"
     DATETIME last_crawled "nullable"
     BLOB last_crawls "nullable"
     FLOAT latitude "nullable"
     FLOAT longitude "nullable"
     INTEGER max_connections
-    TEXT name
-    BOOLEAN private
+    TEXT name "indexed"
+    BOOLEAN private "indexed"
     TEXT push_ssh_command "nullable"
     TEXT push_ssh_host "nullable"
     TEXT push_ssh_private_key "nullable"
     TEXT robot_email "nullable"
-    BOOLEAN user_active
+    BOOLEAN user_active "indexed"
   }
 
   directory {
@@ -59,7 +59,7 @@ erDiagram
     BIGINT ctime "nullable"
     BLOB files "nullable"
     TEXT name UK
-    BOOLEAN readable
+    BOOLEAN readable "indexed"
   }
 
   product {
@@ -116,7 +116,7 @@ erDiagram
   host_category_url {
     INTEGER id PK
     INTEGER host_category_id FK
-    BOOLEAN private
+    BOOLEAN private "indexed"
     TEXT url UK
   }
 
@@ -181,7 +181,7 @@ erDiagram
     INTEGER version_id FK "nullable"
     BOOLEAN disabled
     TEXT name UK
-    TEXT prefix "nullable"
+    TEXT prefix "nullable,indexed"
   }
 
   file_detail {
@@ -193,7 +193,7 @@ erDiagram
     TEXT sha256 "nullable"
     TEXT sha512 "nullable"
     BIGINT size "nullable"
-    BIGINT timestamp "nullable"
+    BIGINT timestamp "nullable,indexed"
   }
 
   repository_redirect {
@@ -295,7 +295,7 @@ erDiagram
     DATE date PK "indexed"
     VARCHAR(255) name PK
     FLOAT percent "nullable"
-    INTEGER requests "nullable"
+    INTEGER requests "nullable,indexed"
   }
 
   propagation_stat {

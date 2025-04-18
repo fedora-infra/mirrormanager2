@@ -41,13 +41,15 @@ class Site(BASE):
     __tablename__ = "site"
 
     id = sa.Column(sa.Integer, primary_key=True)
-    name = sa.Column(sa.Text(), nullable=False)
+    name = sa.Column(sa.Text(), nullable=False, index=True)
     password = sa.Column(sa.Text(), default=None, nullable=True)
     org_url = sa.Column(sa.Text(), default=None, nullable=True)
-    private = sa.Column(sa.Boolean(), default=False, nullable=False)
-    admin_active = sa.Column(sa.Boolean(), default=True, nullable=False)
-    user_active = sa.Column(sa.Boolean(), default=True, nullable=False)
-    created_at = sa.Column(sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
+    private = sa.Column(sa.Boolean(), default=False, nullable=False, index=True)
+    admin_active = sa.Column(sa.Boolean(), default=True, nullable=False, index=True)
+    user_active = sa.Column(sa.Boolean(), default=True, nullable=False, index=True)
+    created_at = sa.Column(
+        sa.DateTime, nullable=False, default=datetime.datetime.utcnow, index=True
+    )
     created_by = sa.Column(sa.Text(), nullable=False)
     # allow all sites to pull from me
     all_sites_can_pull_from_me = sa.Column(sa.Boolean(), default=False, nullable=False)
@@ -83,24 +85,24 @@ class Host(BASE):
     __tablename__ = "host"
 
     id = sa.Column(sa.Integer, primary_key=True)
-    name = sa.Column(sa.Text(), nullable=False)
+    name = sa.Column(sa.Text(), nullable=False, index=True)
     site_id = sa.Column(sa.Integer, sa.ForeignKey("site.id"), nullable=True)
     robot_email = sa.Column(sa.Text(), nullable=True)
-    admin_active = sa.Column(sa.Boolean(), default=True, nullable=False)
-    user_active = sa.Column(sa.Boolean(), default=True, nullable=False)
-    country = sa.Column(sa.Text(), nullable=False)
+    admin_active = sa.Column(sa.Boolean(), default=True, nullable=False, index=True)
+    user_active = sa.Column(sa.Boolean(), default=True, nullable=False, index=True)
+    country = sa.Column(sa.Text(), nullable=False, index=True)
     bandwidth_int = sa.Column(sa.Integer, default=100, nullable=True)
     comment = sa.Column(sa.Text(), nullable=True)
     config = deferred(sa.Column(sa.PickleType(), nullable=True))
     last_checked_in = sa.Column(sa.DateTime, nullable=True, default=None)
     last_crawled = sa.Column(sa.DateTime, nullable=True, default=None)
-    private = sa.Column(sa.Boolean(), default=False, nullable=False)
+    private = sa.Column(sa.Boolean(), default=False, nullable=False, index=True)
     internet2 = sa.Column(sa.Boolean(), default=False, nullable=False)
     internet2_clients = sa.Column(sa.Boolean(), default=False, nullable=False)
     asn = sa.Column(sa.Integer, default=None, nullable=True)
     asn_clients = sa.Column(sa.Boolean(), default=True, nullable=False)
     max_connections = sa.Column(sa.Integer, default=1, nullable=False)
-    last_crawl_duration = sa.Column(sa.BigInteger, default=0, nullable=True)
+    last_crawl_duration = sa.Column(sa.BigInteger, default=0, nullable=True, index=True)
     # Count the last consecutive crawl failures.
     # This can be used to auto disable a host if the crawler fails
     # multiple times in a row.
@@ -290,7 +292,7 @@ class Directory(BASE):
     name = sa.Column(sa.Text(), nullable=False, unique=True)
     # Don't load the files by default to save memory
     files = deferred(sa.Column(JsonDictTypeFilter(), nullable=True))
-    readable = sa.Column(sa.Boolean(), default=True, nullable=False)
+    readable = sa.Column(sa.Boolean(), default=True, nullable=False, index=True)
     ctime = sa.Column(sa.BigInteger, default=0, nullable=True)
 
     host_category_dirs = relationship(
@@ -599,7 +601,7 @@ class HostCategoryUrl(BASE):
         nullable=False,
     )
     url = sa.Column(sa.Text(), nullable=False, unique=True)
-    private = sa.Column(sa.Boolean(), default=False, nullable=False)
+    private = sa.Column(sa.Boolean(), default=False, nullable=False, index=True)
 
     __mapper_args__ = {"confirm_deleted_rows": False}
 
@@ -732,7 +734,7 @@ class Repository(BASE):
 
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.Text(), nullable=False, unique=True)
-    prefix = sa.Column(sa.Text(), nullable=True)
+    prefix = sa.Column(sa.Text(), nullable=True, index=True)
     category_id = sa.Column(sa.Integer, sa.ForeignKey("category.id"), nullable=True)
     version_id = sa.Column(sa.Integer, sa.ForeignKey("version.id"), nullable=True)
     arch_id = sa.Column(sa.Integer, sa.ForeignKey("arch.id"), nullable=True)
@@ -801,7 +803,7 @@ class FileDetail(BASE):
 
     id = sa.Column(sa.Integer, primary_key=True)
     filename = sa.Column(sa.Text(), nullable=False)
-    timestamp = sa.Column(sa.BigInteger, default=None, nullable=True)
+    timestamp = sa.Column(sa.BigInteger, default=None, nullable=True, index=True)
     size = sa.Column(sa.BigInteger, default=None, nullable=True)
     sha1 = sa.Column(sa.Text(), nullable=True)
     md5 = sa.Column(sa.Text(), nullable=True)
@@ -1076,7 +1078,7 @@ class AccessStat(BASE):
     date = sa.Column(sa.Date, nullable=False, primary_key=True, index=True)
     name = sa.Column(sa.String(255), nullable=False, primary_key=True)
     percent = sa.Column(sa.Float)
-    requests = sa.Column(sa.Integer)
+    requests = sa.Column(sa.Integer, index=True)
 
     category = relationship("AccessStatCategory", back_populates="access_stats")
 
