@@ -861,17 +861,21 @@ email = ["email-validator"]
 
 [[package]]
 name = "flask-xml-rpc-re"
-version = "0.1.4"
+version = "0.2.0"
 description = "Adds support for creating XML-RPC APIs to Flask"
 optional = false
 python-versions = "*"
 files = [
-    {file = "Flask-XML-RPC-Re-0.1.4.tar.gz", hash = "sha256:43ffe57b9411dd17a37e3bf13e16f8965e0c4400d1b8de212ccd050d513bd86a"},
-    {file = "Flask_XML_RPC_Re-0.1.4-py3-none-any.whl", hash = "sha256:cd948dc968d66885adf8f2e27691639ca2b461f6bc6d2410db0126b806aa8051"},
+    {file = "Flask-XML-RPC-Re-0.2.0.tar.gz", hash = "sha256:232002f8ca6fc9e8add5cda08d172b022263e6fc05b957b2200077914afc06a1"},
+    {file = "Flask_XML_RPC_Re-0.2.0-py3-none-any.whl", hash = "sha256:6b5decb8a68688ba037daefaa04fe670fbd497832fbb9a78059bdf819f038c1b"},
 ]
 
 [package.dependencies]
 Flask = "*"
+
+[package.extras]
+dev = ["sphinx"]
+test = ["nose"]
 
 [[package]]
 name = "frozenlist"
@@ -3067,4 +3071,4 @@ deploy = ["gunicorn", "psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "a06b2331abf343d9dacf59137d84cb8c04f1cd979f62c0647fd69de966b61e49"
+content-hash = "eb91dd168c0d0971c5983d250da1b5b86a1fdb5c19c24fedba71392bbdbc07a4"
