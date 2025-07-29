@@ -8,11 +8,14 @@
 {% block content %}
 <h2>Public active mirrors</h2>
 
-{% if request.view_args.p_name %}
+{% if valid_filters and valid_filters|length > 0 %}
 <p>
-  These are the mirrors for {{ request.view_args.p_name }}
-  {{ request.view_args.p_version }}
-  {% if request.view_args.p_arch %}on {{ request.view_args.p_arch }}{% endif %}
+  {% set filter_text = valid_filters | join(' ') %}
+  {% if filter_text.startswith('on ') or filter_text.startswith('in ') %}
+    These are the mirrors {{ filter_text }}
+  {% else %}
+    These are the mirrors for {{ filter_text }}
+  {% endif %}
 </p>
 {% endif %}
 
@@ -20,6 +23,35 @@
 <p>
   We have currently {{ mirrors | length }} active mirrors
 </p>
+
+<div class="row mb-3">
+  <div class="col-auto d-flex align-items-center gap-2">
+    <i class="bi bi-globe" style="font-size: 1.5em;"></i>
+    <select class="form-select" id="country-filter" name="country" style="width: auto;">
+      <option value="">All</option>
+      {% for country in countries %}
+        <option value="{{ country.code }}" {% if selected_country == country.code %}selected{% endif %}>
+          {{ country.code }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+</div>
+
+<script>
+document.getElementById('country-filter').addEventListener('change', function() {
+    const selectedCountry = this.value;
+    const currentUrl = new URL(window.location);
+
+    if (selectedCountry) {
+        currentUrl.searchParams.set('country', selectedCountry);
+    } else {
+        currentUrl.searchParams.delete('country');
+    }
+
+    window.location.href = currentUrl.toString();
+});
+</script>
 
 <table class="table table-striped">
   <tr>
