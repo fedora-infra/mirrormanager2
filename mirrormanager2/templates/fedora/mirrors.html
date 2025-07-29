@@ -8,11 +8,14 @@
 {% block content %}
 <h2>Public active mirrors</h2>
 
-{% if request.view_args.p_name %}
+{% if valid_filters and valid_filters|length > 0 %}
 <p>
-  These are the mirrors for {{ request.view_args.p_name }}
-  {{ request.view_args.p_version }}
-  {% if request.view_args.p_arch %}on {{ request.view_args.p_arch }}{% endif %}
+  {% set filter_text = valid_filters | join(' ') %}
+  {% if filter_text.startswith('on ') or filter_text.startswith('in ') %}
+    These are the mirrors {{ filter_text }}
+  {% else %}
+    These are the mirrors for {{ filter_text }}
+  {% endif %}
 </p>
 {% endif %}
 

@@ -516,6 +516,7 @@ def get_mirrors(
     product_id=None,
     category_ids=None,
     pagination=None,
+    country_id=None,
 ):
     """Retrieve the mirrors based on the criteria specified.
 
@@ -578,6 +579,9 @@ def get_mirrors(
             model.HostCategoryUrl.private == host_category_url_private
         )
 
+    if country_id is not None:
+        query = query.join(model.HostCountry).join(model.Country)
+
     if up2date is not None:
         query = query.join(model.HostCategoryDir).filter(model.HostCategoryDir.up2date == up2date)
 
@@ -592,6 +596,9 @@ def get_mirrors(
 
     if category_ids is not None:
         query = query.filter(model.HostCategory.category_id.in_(category_ids))
+
+    if country_id is not None:
+        query = query.filter(model.Country.id == country_id)
 
     final_query = session.query(model.Host).filter(model.Host.id.in_(query))
 
