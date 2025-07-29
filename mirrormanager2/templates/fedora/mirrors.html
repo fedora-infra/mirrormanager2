@@ -8,22 +8,27 @@
 {% block content %}
 <h2>Public active mirrors</h2>
 
-{% if request.view_args.p_name %}
-<p>
-  These are the mirrors for {{ request.view_args.p_name }}
-  {{ request.view_args.p_version }}
-  {% if request.view_args.p_arch %}on {{ request.view_args.p_arch }}{% endif %}
-</p>
-{% endif %}
-
 {% if mirrors %}
 <p>
-  We have currently {{ mirrors | length }} active mirrors
+  We currently have {{ mirrors | length }} active mirror{% if mirrors | length != 1 %}s{% endif %}
+  {% if filters["product"] %} for {{filters["product"]}} {% endif %}
+  {% if filters["version"] %} {{filters["version"]}} {% endif %}
+  {% if filters["arch"] %} on {{filters["arch"]}} {% endif %}
+  {% if filters["country"] %} in {{filters["country"]}} {% endif %}
 </p>
 
 <table class="table table-striped">
   <tr>
-    <th>Country</th>
+    <th>
+      <select class="form-select form-select-sm d-inline w-auto ms-1" id="country-filter" name="country">
+        <option value="">Country</option>
+        {% for country in countries %}
+          <option value="{{ country.code }}" {% if selected_country == country.code %}selected{% endif %}>
+            {{ country.code }}
+          </option>
+        {% endfor %}
+      </select>
+    </th>
     <th>Site Name</th>
     <th>Mirror Name</th>
     <th>Categories</th>
@@ -60,6 +65,7 @@
   </tr>
   {% endfor %}
 </table>
+
 {{pagination_bar(mirrors)}}
 {% else %}
 <p>
@@ -67,4 +73,22 @@
 </p>
 {% endif %}
 
+{% endblock %}
+
+{% block jscripts %}
+{{bottomincludes()}}
+<script>
+document.getElementById('country-filter').addEventListener('change', function() {
+    const selectedCountry = this.value;
+    const currentUrl = new URL(window.location);
+
+    if (selectedCountry) {
+        currentUrl.searchParams.set('country', selectedCountry);
+    } else {
+        currentUrl.searchParams.delete('country');
+    }
+
+    window.location.href = currentUrl.toString();
+});
+</script>
 {% endblock %}
