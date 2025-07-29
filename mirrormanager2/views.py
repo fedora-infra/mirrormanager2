@@ -61,19 +61,36 @@ def list_mirrors(p_name=None, p_version=None, p_arch=None):
     version_id = None
     arch_id = None
     product_id = None
-    if p_name and p_version:
-        version = mmlib.get_version_by_name_version(DB.session, p_name, p_version)
-        if version:
-            version_id = version.id
-    elif p_name:
+    country_id = None
+    filters = {
+        "product": None,
+        "version": None,
+        "arch": None,
+        "country": None,
+    }
+    if p_name:
         product = mmlib.get_product_by_name(DB.session, p_name)
         if product:
             product_id = product.id
+            filters["product"] = p_name
+            if p_version:
+                version = mmlib.get_version_by_name_version(DB.session, p_name, p_version)
+                if version:
+                    version_id = version.id
+                    filters["version"] = p_version
 
     if p_arch:
         arch = mmlib.get_arch_by_name(DB.session, p_arch)
         if arch:
             arch_id = arch.id
+            filters["arch"] = p_arch
+
+    p_country = flask.request.args.get("country")
+    if p_country:
+        country = mmlib.get_country_by_name(DB.session, p_country)
+        if country:
+            country_id = country.id
+            filters["country"] = p_country
 
     mirrors = mmlib.get_mirrors(
         DB.session,
@@ -91,11 +108,17 @@ def list_mirrors(p_name=None, p_version=None, p_arch=None):
         arch_id=arch_id,
         product_id=product_id,
         pagination=PaginationArgs(),
+        country_id=country_id,
     )
+
+    countries = mmlib.get_countries(DB.session)
 
     return flask.render_template(
         "mirrors.html",
         mirrors=mirrors,
+        filters=filters,
+        countries=countries,
+        selected_country=p_country,
     )
 
 
