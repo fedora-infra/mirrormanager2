@@ -53,6 +53,7 @@ def test_list_mirrors(client):
         data = output.get_data(as_text=True)
         assert "<title>Mirrors - MirrorManager</title>" in data
         assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
+        assert "These are the mirrors for Fedora" in data
         assert "We have currently 26 active mirrors" in data
 
         output = client.get(f"/mirrors/Fedora Linux/{i}/x86_64")
@@ -60,14 +61,28 @@ def test_list_mirrors(client):
         data = output.get_data(as_text=True)
         assert "<title>Mirrors - MirrorManager</title>" in data
         assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
+        assert "These are the mirrors on x86_64" in data
         assert "We have currently 26 active mirrors" in data
 
-        output = client.get("/mirrors/Fedora Linux/20/i386")
-        assert output.status_code == 200
-        data = output.get_data(as_text=True)
-        assert "<title>Mirrors - MirrorManager</title>" in data
-        assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
-        assert "There are currently no active mirrors registered." in data
+        for j in ["US", "FR"]:
+            output = client.get(f"/mirrors/Fedora/{i}?country={j}")
+            assert output.status_code == 200
+            data = output.get_data(as_text=True)
+            assert "<title>Mirrors - MirrorManager</title>" in data
+            assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
+            assert f"These are the mirrors for Fedora {i} on x86_64 in {j}" in data
+            if j == "US":
+                assert "We have currently 1 active mirrors" in data
+            else:
+                assert "We have currently 25 active mirrors" in data
+
+
+    output = client.get("/mirrors/Fedora Linux/20/i386")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert "<title>Mirrors - MirrorManager</title>" in data
+    assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
+    assert "There are currently no active mirrors registered." in data
 
 
 def test_list_mirrors_pagination(client):
