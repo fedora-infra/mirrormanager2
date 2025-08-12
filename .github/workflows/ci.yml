@@ -27,8 +27,8 @@ jobs:
           # https://src.fedoraproject.org/rpms/python-pyrpmmd
           # - "centos/centos:stream8"
           # - "centos/centos:stream9"
-          - "fedora/fedora:38"
-          - "fedora/fedora:39"
+          - "fedora/fedora:41"
+          - "fedora/fedora:42"
           - "fedora/fedora:latest"
           # psycopg2 not working on python 3.13 (in rawhide) yet
           #- "fedora/fedora:rawhide"

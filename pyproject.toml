@@ -21,7 +21,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -44,7 +43,7 @@ include = [
 
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 flask = "^2.2.3 || ^3.0.0"
 flask-admin = "^1.6.0"
 flask-healthz = "^1.0.0"
