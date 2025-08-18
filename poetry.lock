@@ -1875,6 +1875,7 @@ files = [
     {file = "psycopg2-2.9.10-cp311-cp311-win_amd64.whl", hash = "sha256:0435034157049f6846e95103bd8f5a668788dd913a7c30162ca9503fdf542cb4"},
     {file = "psycopg2-2.9.10-cp312-cp312-win32.whl", hash = "sha256:65a63d7ab0e067e2cdb3cf266de39663203d38d6a8ed97f5ca0cb315c73fe067"},
     {file = "psycopg2-2.9.10-cp312-cp312-win_amd64.whl", hash = "sha256:4a579d6243da40a7b3182e0430493dbd55950c493d8c68f4eec0b302f6bbf20e"},
+    {file = "psycopg2-2.9.10-cp313-cp313-win_amd64.whl", hash = "sha256:91fd603a2155da8d0cfcdbf8ab24a2d54bca72795b90d2a3ed2b6da8d979dee2"},
     {file = "psycopg2-2.9.10-cp39-cp39-win32.whl", hash = "sha256:9d5b3b94b79a844a986d029eee38998232451119ad653aea42bb9220a8c5066b"},
     {file = "psycopg2-2.9.10-cp39-cp39-win_amd64.whl", hash = "sha256:88138c8dedcbfa96408023ea2b0c369eda40fe5d75002c0964c78f46f11fa442"},
     {file = "psycopg2-2.9.10.tar.gz", hash = "sha256:12ec0b40b0273f95296233e8750441339298e6a572f7039da5b260e3c8b60e11"},
@@ -2658,21 +2659,22 @@ sqlcipher = ["sqlcipher3_binary"]
 
 [[package]]
 name = "sqlalchemy-helpers"
-version = "1.0.2"
+version = "2.0.1"
 description = "SQLAlchemy Helpers"
 optional = false
-python-versions = "<4.0.0,>=3.9.0"
+python-versions = "<4.0.0,>=3.10.0"
 files = [
-    {file = "sqlalchemy_helpers-1.0.2-py3-none-any.whl", hash = "sha256:64a3d44c847678c1795e5f01ba2b2eef13275a309e6881659c36ee323c1c234a"},
-    {file = "sqlalchemy_helpers-1.0.2.tar.gz", hash = "sha256:4bbfdbf0e36c06101a5b90d80aa5c68cdf1d8633c325c803e91a8ded4b12c7fc"},
+    {file = "sqlalchemy_helpers-2.0.1-py3-none-any.whl", hash = "sha256:c37737674245ead7d679e08ff63e908f8d9ce2d6dd79c0619cfd37224e336113"},
+    {file = "sqlalchemy_helpers-2.0.1.tar.gz", hash = "sha256:e6b1799fcc13edfeae90e2c09b1f15729ff02497c6ae10848f4b3f4c3cf72aa2"},
 ]
 
 [package.dependencies]
 alembic = ">=1.6.5"
-SQLAlchemy = {version = ">=1.4.0", extras = ["asyncio"]}
+SQLAlchemy = {version = ">=2.0.0", extras = ["asyncio"]}
 
 [package.extras]
 docs = ["Flask (>=2.0.0,<4.0.0)", "myst-parser", "sphinx", "sphinxcontrib-napoleon"]
+fastapi = ["fastapi (>=0.100.0)", "pydantic (>=2.0)"]
 flask = ["Flask (>=2.0.0,<4.0.0)"]
 
 [[package]]
@@ -3083,4 +3085,4 @@ deploy = ["gunicorn", "psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "ddd950e8009c962c329b10125bb34b1a233fe118900e8ea7e1a2aac6bca6f2bb"
+content-hash = "f5453e29ba58807a5b2a5fd844e51483a77ea4aaa4288d9a7d04e8c12ac24f52"
