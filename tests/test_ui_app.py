@@ -68,19 +68,22 @@ def test_list_mirrors(client):
             data = output.get_data(as_text=True)
             assert "<title>Mirrors - MirrorManager</title>" in data
             assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
-            if j == "US":
-                assert f"We currently have 1 active mirror for Fedora {i} on x86_64 in {j}" in data
-            else:
-                assert (
-                    f"We currently have 25 active mirrors for Fedora {i} on x86_64 in {j}" in data
-                )
+            assert f"We currently have 1 active mirror for Fedora {i} on x86_64 in {j}" in data
 
-    output = client.get("/mirrors/Fedora Linux/20/i386")
+    output = client.get("/mirrors/Fedora/20/i386")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "<title>Mirrors - MirrorManager</title>" in data
     assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
-    assert "There are currently no active mirrors registered." in data
+    # Fedora 20 is not in the DB: the version is not shown
+    assert "There are currently no active mirrors registered for Fedora on i386." in data
+
+    output = client.get("/mirrors/Fedora/27/x86_64?country=NL")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert "<title>Mirrors - MirrorManager</title>" in data
+    assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
+    assert "There are currently no active mirrors registered for Fedora 27 on x86_64 in NL." in data
 
 
 def test_list_mirrors_pagination(client):

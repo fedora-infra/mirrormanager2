@@ -8,14 +8,16 @@
 {% block content %}
 <h2>Public active mirrors</h2>
 
-{% if mirrors %}
-<p>
-  We currently have {{ mirrors | length }} active mirror{% if mirrors | length != 1 %}s{% endif %}
+{% set filter_text %}
   {%- if filters["product"] %} for {{filters["product"]}} {%- endif -%}
   {%- if filters["version"] %} {{filters["version"]}} {%- endif -%}
   {%- if filters["arch"] %} on {{filters["arch"]}} {%- endif -%}
   {%- if filters["country"] %} in {{filters["country"]}} {%- endif -%}
-  .
+{% endset %}
+
+{% if mirrors %}
+<p>
+  We currently have {{ mirrors | length }} active mirror{% if mirrors | length != 1 %}s{% endif %}{{ filter_text }}
 </p>
 
 <table class="table table-striped">
@@ -70,7 +72,7 @@
 {{pagination_bar(mirrors)}}
 {% else %}
 <p>
-  There are currently no active mirrors registered.
+  There are currently no active mirrors registered{{ filter_text }}.
 </p>
 {% endif %}
 
