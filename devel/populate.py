@@ -32,7 +32,7 @@ with app.app_context():
     DB.manager.sync()
     print("Database schema created")
     for funcname in fixtures:
-        func = getattr(conftest, funcname).__pytest_wrapped__.obj
+        func = getattr(conftest, funcname)._fixture_function
         try:
             func(DB.session)
         except IntegrityError:

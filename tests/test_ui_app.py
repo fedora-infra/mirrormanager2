@@ -826,7 +826,7 @@ def test_host_country_new_auth(client, another_user):
     assert '<div class="toast-body">Host Country added</div>' in data
     assert '<h2 class="mb-0"><span class="fa fa-server"></span> private.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
-    assert 'action="/host/3/host_country/32/delete">' in data
+    assert 'action="/host/3/host_country/34/delete">' in data
 
 
 def test_host_country_delete(client):

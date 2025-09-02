@@ -8,6 +8,7 @@ import os
 
 import pytest
 import responses
+from sqlalchemy import select
 
 from mirrormanager2.app import create_app
 from mirrormanager2.database import DB
@@ -114,6 +115,8 @@ def base_items(db):
         code="US",
     )
     db.add(item)
+    db.add(model.Country(code="NL"))
+    db.add(model.Country(code="HR"))
 
     # Insert some Product
     item = model.Product(
@@ -682,24 +685,10 @@ def hostpeerasn(db):
 @pytest.fixture()
 def hostcountry(db):
     """Create some HostCountry to play with for the tests"""
-    item = model.HostCountry(
-        host_id=1,
-        country_id=2,
-    )
-    db.add(item)
-    item = model.HostCountry(
-        host_id=2,
-        country_id=1,
-    )
-    db.add(item)
-
-    for x in range(1, 30):
-        item = model.HostCountry(
-            host_id=x + 3,
-            country_id=1,
-        )
-        db.add(item)
-
+    countries_result = db.scalars(select(model.Country))
+    countries = {country.code: country.id for country in countries_result}
+    for host in db.scalars(select(model.Host)):
+        db.add(model.HostCountry(host_id=host.id, country_id=countries[host.country]))
     db.commit()
 
 
