@@ -45,7 +45,7 @@ def test_list_mirrors(client):
     data = output.get_data(as_text=True)
     assert "<title>Mirrors - MirrorManager</title>" in data
     assert "<h2>Public active mirrors</h2>" in data
-    assert "We have currently 26 active mirrors" in data
+    assert "We currently have 26 active mirrors" in data
 
     for i in [27, 26, 25]:
         output = client.get(f"/mirrors/Fedora/{i}")
@@ -53,26 +53,26 @@ def test_list_mirrors(client):
         data = output.get_data(as_text=True)
         assert "<title>Mirrors - MirrorManager</title>" in data
         assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
-        assert "We have currently 26 active mirrors for Fedora" in data
+        assert "We currently have 26 active mirrors for Fedora" in data
 
         output = client.get(f"/mirrors/Fedora Linux/{i}/x86_64")
         assert output.status_code == 200
         data = output.get_data(as_text=True)
         assert "<title>Mirrors - MirrorManager</title>" in data
         assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
-        assert "We have currently 26 active mirrors on x86_64" in data
+        assert "We currently have 26 active mirrors on x86_64" in data
 
         for j in ["US", "FR"]:
-            output = client.get(f"/mirrors/Fedora/{i}?country={j}")
+            output = client.get(f"/mirrors/Fedora/{i}/x86_64?country={j}")
             assert output.status_code == 200
             data = output.get_data(as_text=True)
             assert "<title>Mirrors - MirrorManager</title>" in data
             assert '<a class="nav-link color-white" href="/mirrors">Mirrors</a>' in data
             if j == "US":
-                assert f"We have currently 1 active mirror for Fedora {i} on x86_64 in {j}" in data
+                assert f"We currently have 1 active mirror for Fedora {i} on x86_64 in {j}" in data
             else:
                 assert (
-                    f"We have currently 25 active mirrors for Fedora {i} on x86_64 in {j}" in data
+                    f"We currently have 25 active mirrors for Fedora {i} on x86_64 in {j}" in data
                 )
 
     output = client.get("/mirrors/Fedora Linux/20/i386")
