@@ -11,10 +11,11 @@
 {% if mirrors %}
 <p>
   We currently have {{ mirrors | length }} active mirror{% if mirrors | length != 1 %}s{% endif %}
-  {% if filters["product"] %} for {{filters["product"]}} {% endif %}
-  {% if filters["version"] %} {{filters["version"]}} {% endif %}
-  {% if filters["arch"] %} on {{filters["arch"]}} {% endif %}
-  {% if filters["country"] %} in {{filters["country"]}} {% endif %}
+  {%- if filters["product"] %} for {{filters["product"]}} {%- endif -%}
+  {%- if filters["version"] %} {{filters["version"]}} {%- endif -%}
+  {%- if filters["arch"] %} on {{filters["arch"]}} {%- endif -%}
+  {%- if filters["country"] %} in {{filters["country"]}} {%- endif -%}
+  .
 </p>
 
 <table class="table table-striped">
