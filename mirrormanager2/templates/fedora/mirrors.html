@@ -21,7 +21,7 @@
 <table class="table table-striped">
   <tr>
     <th>
-      <select class="form-select form-select-sm d-inline w-auto ms-1" id="country-filter" name="country">
+      <select class="form-select form-select-sm d-inline fw-bold w-auto ms-1" id="country-filter" name="country">
         <option value="">Country</option>
         {% for country in countries %}
           <option value="{{ country.code }}" {% if selected_country == country.code %}selected{% endif %}>
