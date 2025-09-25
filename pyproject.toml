@@ -33,7 +33,6 @@ packages = [
 
 include = [
     { path = "runserver.py", format = "sdist" },
-    { path = "mirrormanager.proto", format = "sdist" },
     { path = "doc", format = "sdist" },
     { path = "tox.ini", format = "sdist" },
     { path = "testdata", format = "sdist" },
