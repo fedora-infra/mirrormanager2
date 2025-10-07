@@ -7,9 +7,11 @@ import copy
 import json
 import os
 import pprint
+import requests
 import sys
-import xmlrpc.client as xmlrpclib
 from argparse import ArgumentParser
+
+from flask import request
 
 # globals
 exclude_list = []
@@ -283,27 +285,19 @@ def main():
 
     if not args.no_send:
         #  print("Connecting to %s" % item.config['global']['server'])
-        server = xmlrpclib.ServerProxy(item.config["global"]["server"])
 
         data = base64.urlsafe_b64encode(bz2.compress(p.encode())).decode()
 
         if data is not None:
-            try:
-                print(server.checkin(data))
-            except OSError as m:
-                print("Error checking in: %s.  Please try again later." % (m[1]))
-            except xmlrpclib.ProtocolError:
-                print(
-                    "Error checking in: Service Temporarily "
-                    "Unavailable.  Please try again later."
-                )
-                sys.exit(1)
-            except xmlrpclib.Fault:
-                print(
-                    "Error checking in.  Connection closed before "
-                    "checkin complete.  Please try again later."
-                )
-                sys.exit(1)
+            response = requests.post(
+                item.config["global"]["server"],
+                json={"data": data},
+                headers={"Content-Type": "application/json"},
+            )
+            if response.status_code == 200:
+                print("Success:", response.json())
+            else:
+                print("Error:", response.json())
 
 
 if __name__ == "__main__":

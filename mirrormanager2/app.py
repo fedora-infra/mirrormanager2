@@ -129,10 +129,7 @@ def create_app(config=None):
     from mirrormanager2.api import views as api_views
 
     app.register_blueprint(api_views, url_prefix="/api")
-    from mirrormanager2.xml_rpc import XMLRPC
 
     app.register_blueprint(healthz, url_prefix="/healthz")
-
-    XMLRPC.connect(app, "/xmlrpc")
 
     return app
