@@ -79,7 +79,10 @@ def _parse_rib(content):
             continue
         if _type_name(entry.data["subtype"]) not in ["RIB_IPV4_UNICAST", "RIB_IPV6_UNICAST"]:
             continue
-        as_value = _get_as_value(entry.data)
+        try:
+            as_value = _get_as_value(entry.data)
+        except Exception:
+            continue
         line = f"{entry.data['prefix']}/{entry.data['length']} {as_value}"
         # uniq
         if line in lines:
@@ -91,20 +94,34 @@ def _parse_rib(content):
     return lines
 
 
-def get_global_netblocks():
-    response = requests.get(GLOBAL_NETBLOCKS_URL)
-    response.raise_for_status()
-    with bz2.open(BytesIO(response.content)) as content:
+def get_global_netblocks(local_file=None):
+    if local_file:
+        print(f"Using local global netblocks file: {local_file}")
+        content_source = local_file
+    else:
+        print("Downloading global netblocks...")
+        response = requests.get(GLOBAL_NETBLOCKS_URL)
+        response.raise_for_status()
+        content_source = BytesIO(response.content)
+
+    with bz2.open(content_source) as content:
         return _parse_rib(content)
 
 
-def get_ipv6_netblocks():
-    yesterday = date.today() - timedelta(days=1)
-    url = IPV6_NETBLOCKS_URL.format(year=yesterday.year, month=yesterday.strftime("%m"))
-    last_rib_url = get_last_rib_url(url)
-    response = requests.get(last_rib_url)
-    response.raise_for_status()
-    with bz2.open(BytesIO(response.content)) as content:
+def get_ipv6_netblocks(local_file=None):
+    if local_file:
+        print(f"Using local IPv6 netblocks file: {local_file}")
+        content_source = local_file
+    else:
+        print("Downloading IPv6 netblocks...")
+        yesterday = date.today() - timedelta(days=1)
+        url = IPV6_NETBLOCKS_URL.format(year=yesterday.year, month=yesterday.strftime("%m"))
+        last_rib_url = get_last_rib_url(url)
+        response = requests.get(last_rib_url)
+        response.raise_for_status()
+        content_source = BytesIO(response.content)
+
+    with bz2.open(content_source) as content:
         return _parse_rib(content)
 
 
@@ -147,12 +164,67 @@ def main(debug):
 
 @main.command("global")
 @click.argument("output", type=click.Path())
-def global_netblocks(output):
+@click.option(
+    "--global-file",
+    type=click.Path(exists=True),
+    help="Use local global netblocks file instead of downloading",
+)
+@click.option(
+    "--ipv6-file",
+    type=click.Path(exists=True),
+    help="Use local IPv6 netblocks file instead of downloading",
+)
+@click.option(
+    "--disable-global", is_flag=True, default=False, help="Skip global netblocks processing"
+)
+@click.option("--disable-ipv6", is_flag=True, default=False, help="Skip IPv6 netblocks processing")
+def global_netblocks(output, global_file, ipv6_file, disable_global, disable_ipv6):
+    # Validate that at least one processing mode is enabled
+    if disable_global and disable_ipv6:
+        raise click.ClickException(
+            "Cannot disable both global and IPv6 processing. At least one must be enabled."
+        )
+
+    # Show configuration summary
+    print("=== Netblocks Processing Configuration ===")
+
+    if disable_global:
+        print("Global netblocks: DISABLED")
+    elif global_file:
+        print(f"Global netblocks: Using local file {global_file}")
+    else:
+        print(f"Global netblocks: Downloading from {GLOBAL_NETBLOCKS_URL}")
+
+    if disable_ipv6:
+        print("IPv6 netblocks: DISABLED")
+    elif ipv6_file:
+        print(f"IPv6 netblocks: Using local file {ipv6_file}")
+    else:
+        yesterday = date.today() - timedelta(days=1)
+        url = IPV6_NETBLOCKS_URL.format(year=yesterday.year, month=yesterday.strftime("%m"))
+        print(f"IPv6 netblocks: Downloading from {url}")
+
+    print(f"Output file: {output}")
+    print()
+
     with result_file(output) as output_file:
-        for source in [get_global_netblocks(), get_ipv6_netblocks()]:
-            for line in source:
+        # Build sources list based on disable flags
+        sources = []
+        if not disable_global:
+            sources.append(("global", get_global_netblocks(global_file)))
+        if not disable_ipv6:
+            sources.append(("IPv6", get_ipv6_netblocks(ipv6_file)))
+
+        for source_name, source_data in sources:
+            print(f"Processing {source_name} netblocks...")
+            count = 0
+            for line in source_data:
                 output_file.write(line)
                 output_file.write("\n")
+                count += 1
+            print(f"Processed {count:,} {source_name} netblocks")
+
+        print("Processing complete!")
 
 
 @main.command()
