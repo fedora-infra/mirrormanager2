@@ -352,7 +352,7 @@ class RepoMaker:
                 if dname.startswith(skip):
                     logger.debug("Skipping path %s as requested by SKIP_PATHS_FOR_VERSION", dname)
                     return None
-            (ver, arch) = self.guess_ver_arch_from_path(category, relativeDName)
+            ver, arch = self.guess_ver_arch_from_path(category, relativeDName)
             if ver is None or arch is None:
                 logger.warning(f"{warning}: could not guess version and arch {ver!r}, {arch!r}")
                 return None

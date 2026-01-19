@@ -21,7 +21,6 @@
 MirrorManager2 main flask controller.
 """
 
-
 import logging
 import logging.handlers
 import os
@@ -70,9 +69,7 @@ def create_app(config=None):
         app.config.get("MAIL_ADMIN", "admin@fedoraproject.org"),
         "MirrorManager2 error",
     )
-    MAIL_HANDLER.setFormatter(
-        logging.Formatter(
-            """
+    MAIL_HANDLER.setFormatter(logging.Formatter("""
         Message type:       %(levelname)s
         Location:           %(pathname)s:%(lineno)d
         Module:             %(module)s
@@ -82,9 +79,7 @@ def create_app(config=None):
         Message:
 
         %(message)s
-    """
-        )
-    )
+    """))
     MAIL_HANDLER.setLevel(logging.ERROR)
     if not app.debug:
         app.logger.addHandler(MAIL_HANDLER)
