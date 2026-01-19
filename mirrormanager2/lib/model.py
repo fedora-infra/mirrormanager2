@@ -366,7 +366,7 @@ class Directory(BASE):
         propogation = t - (60 * 60 * 24 * max_propogation)
 
         for k, fds in list(cls.file_details_cache.items()):
-            (directory_id, filename) = k
+            directory_id, filename = k
             if len(fds) > 1:
                 start = 2
                 # second-most recent only if most recent has had time to

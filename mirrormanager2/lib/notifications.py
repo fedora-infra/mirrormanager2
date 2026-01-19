@@ -24,7 +24,6 @@ These methods are used to send email or fedora-messaging message or
 any other notifications we could use.
 """
 
-
 import smtplib
 from email.mime.text import MIMEText
 
