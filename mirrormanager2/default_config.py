@@ -48,8 +48,12 @@ SECRET_KEY = "<insert here your own key>"
 PASSWORD_SEED = "You'd better change it and keep it secret"
 
 # Folder containing the theme to use.
-# Default: ``fedora``.
-THEME_FOLDER = "fedora"
+# Rocky: changed from fedora to rocky
+# Source: mirrormanager-rocky/mirrormanager2.cfg line 40
+# THEME_FOLDER = os.environ.get('MM2_THEME_FOLDER', 'fedora')
+# Source: mirrormanager-rocky/start-dev.sh line 26
+# -e 'MM2_THEME_FOLDER=rocky'
+THEME_FOLDER = "rocky"
 
 # Which authentication method to use, defaults to `fas` can be or `local`
 # Default: ``fas``.
@@ -69,14 +73,22 @@ OIDC_SCOPES = " ".join(
 
 # If the authentication method is `fas`, groups in which should be the user
 # to be recognized as an admin.
-ADMIN_GROUP = ["sysadmin-main"]
+# Rocky: changed from sysadmin-main to infrastructure
+# Source: mirrormanager-rocky/mirrormanager2.cfg line 61
+# ADMIN_GROUP = ["infrastructure"]
+ADMIN_GROUP = ["infrastructure"]
 
 # Email of the admin to which send notification or error
-ADMIN_EMAIL = "admin@fedoraproject.org"
+# Rocky: changed from fedoraproject.org to rockylinux.org
+# Source: mirrormanager-rocky/mirrormanager2.cfg line 64
+# ADMIN_EMAIL = "infrastructure@rockylinux.org"
+ADMIN_EMAIL = "infrastructure@rockylinux.org"
 
 # Email address used in the 'From' field of the emails sent.
-# Default: ``nobody@fedoraproject.org``.
-EMAIL_FROM = "nobody@fedoraproject.org"
+# Rocky: changed from fedoraproject.org to rockylinux.org
+# Source: mirrormanager-rocky/mirrormanager2.cfg line 68
+# EMAIL_FROM = "nobody@rockylinux.org"
+EMAIL_FROM = "nobody@rockylinux.org"
 
 # SMTP server to use,
 # Default: ``localhost``.
@@ -86,7 +98,10 @@ SMTP_SERVER = "localhost"
 ACCESS_STATS_KEEP_DAYS = 30
 
 # Countries which have to be excluded.
-EMBARGOED_COUNTRIES = ["CU", "IR", "KP", "SD", "SY"]
+# Rocky: added "RU" (Russia) to the list
+# Source: mirrormanager-rocky/mirrormanager2.cfg line 76
+# EMBARGOED_COUNTRIES = ["CU", "IR", "KP", "SD", "SY", "RU"]
+EMBARGOED_COUNTRIES = ["CU", "IR", "KP", "SD", "SY", "RU"]
 
 # When this is set to True, an additional menu item is shown which
 # displays the maps generated with mm2_generate-worldmap.
