@@ -11,7 +11,7 @@ from flask import (
     url_for,
 )
 
-from mirrormanager2 import forms, local_auth
+from mirrormanager2 import local_auth, login_forms
 from mirrormanager2.app import OIDC
 
 views = Blueprint("auth", __name__)
@@ -57,7 +57,7 @@ def before_request():
 @views.after_app_request
 def after_request(response):
     if current_app.config.get("MM_AUTHENTICATION") == "local":
-        local_auth._send_session_cookie()
+        local_auth._send_session_cookie(response)
     return response
 
 
@@ -75,7 +75,7 @@ def login():  # pragma: no cover
     if current_app.config.get("MM_AUTHENTICATION", None) == "fas":
         return redirect(f"{url_for('oidc_auth.login')}?next={next_url}")
     elif current_app.config.get("MM_AUTHENTICATION", None) == "local":
-        form = forms.LoginForm()
+        form = login_forms.LoginForm()
         return render_template(
             "login.html",
             next_url=next_url,
