@@ -1,0 +1,95 @@
+{#
+Rocky theme template
+Source: mirrormanager-rocky/templates/rocky/propagation.html
+This template shows propagation statistics - how many mirrors have
+up-to-date repomd.xml files compared to the primary mirror.
+#}
+{% extends "master.html" %}
+
+{% block title %}Propagation{% endblock %}
+
+{% block tag %}propagation{% endblock %}
+
+{% block content %}
+<h1>Propagation{% if repo %} for {{ repo.version.product.name }} {{ repo.version.name }}{% endif %}</h1>
+
+{%- if config['SHOW_PROPAGATION'] -%}
+
+<p>
+    This diagram shows how many mirrors have a repomd.xml file which is the same
+    (respectively one day older, two days older or much older) version as on the primary mirror.
+</p>
+
+{%- if repos %}
+<p>The same diagram is also available for the following versions:</p>
+
+<ul>
+    {%- for version in repos|sort(attribute="product.name,name") -%}
+    <li>
+        {{ version.product.name }} {{ version.name }}:
+        {% for repo_with_stats in repos[version] -%}
+        <a class="{% if repo and repo_with_stats.id == repo.id %}font-weight-bold{% endif %}"
+            href="{{url_for('base.propagation', repo_id=repo_with_stats.id)}}" {% if not loop.first
+            %}title="Mirrors which don't contain the main arch" {% endif %}>
+            {{ repo_with_stats.arch.name }}
+        </a>
+        {% if loop.first and loop.length > 1 %} (main) {% endif %}
+        {%- if not loop.last %},{% endif %}
+        {% endfor -%}
+    </li>
+    {%- endfor -%}
+</ul>
+
+{%- endif -%}
+
+<canvas id="chart"></canvas>
+
+{% else -%}
+Actually, this is disabled and you should not be here.
+Go away!
+{%- endif -%}
+{% endblock %}
+
+
+{% block jscripts %}
+{{ super() }}
+{% if datasets %}
+<script src="{{ url_for('static', filename='chart.js') }}"></script>
+<script>
+    const canvas = document.getElementById('chart');
+
+    const datasets = {{ datasets | tojson }};
+    new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: {{ labels | tojson }},
+        datasets: datasets,
+    },
+        options: {
+        scales: {
+            x: {
+                stacked: true
+            },
+            y: {
+                stacked: true,
+                beginAtZero: true
+            }
+        },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    afterLabel: function (context) {
+                        if (context.parsed.y === null) {
+                            return "";
+                        }
+                        const total = datasets.map(ds => ds.data[context.dataIndex]).reduce((a, b) => a + b, 0);
+                        return "total: " + total;
+                    }
+                }
+            }
+        }
+    }
+  });
+</script>
+{% endif %}
+{% endblock %}

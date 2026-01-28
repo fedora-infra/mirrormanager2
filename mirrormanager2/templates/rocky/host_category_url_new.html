@@ -1,0 +1,30 @@
+{# Rocky theme template
+Source: mirrormanager-rocky/templates/rocky/host_category_url_new.html
+This file is identical to the Fedora version
+#}
+{% extends "master.html" %}
+{% from "_formhelpers.html" import render_field, render_switch %}
+
+{% block title %}New Host Category URL{% endblock %}
+{%block tag %}home{% endblock %}
+
+{% block content %}
+<div class="card my-3 mx-auto col-6">
+    <div class="card-header">
+        <h6 class="mb-0">Add host category URL</h6>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('base.host_category_url_new',
+    host_id=host.id, hc_id=hostcategory.id) }}" method="POST">
+            {{ render_field(form.url, after='URL (rsync, https, http) pointing to the top directory') }}
+            {%- if is_admin -%}
+            {{ render_switch(form.private, after='A private URL will not show up in the mirrorlist/metalink') }}
+            {%- endif -%}
+            <p>
+                <input type="submit" class="btn btn-primary" value="Create">
+                {{ form.csrf_token }}
+            </p>
+        </form>
+    </div>
+</div>
+{% endblock %}

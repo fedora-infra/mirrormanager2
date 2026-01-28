@@ -1,0 +1,105 @@
+{# Rocky theme template
+Source: mirrormanager-rocky/templates/rocky/index.html
+
+Key changes from Fedora version:
+- Title: "Fedora Public Active Mirrors" -> "Rocky Public Active Mirrors"
+- Description: "Fedora is distributed" -> "Rocky Linux is distributed"
+- Added paragraph crediting Fedora for MirrorManager
+- Table class: added "mt-5" for top margin
+#}
+{% extends "master.html" %}
+
+{% block title %}Home{% endblock %}
+{%block tag %}home{% endblock %}
+
+{% block content %}
+{# Rocky: Changed from "Fedora Public Active Mirrors" #}
+<h2 class="h1 mb-4">Rocky Public Active Mirrors</h2>
+
+{# Rocky: Changed branding from Fedora to Rocky Linux #}
+<p>
+    Rocky Linux is distributed to millions of systems globally.
+    This would not be possible without the donations of time, disk space, and
+    bandwidth by hundreds of volunteer system administrators and their companies
+    or institutions.
+    Your fast download experience is made possible by these donations.
+</p>
+
+{# Rocky: Added credit to Fedora for MirrorManager
+Source: mirrormanager-rocky/templates/rocky/index.html lines 17-21 #}
+<p>
+    MirrorManager is a Fedora Infrastructure tool adopted by Rocky to aid in the
+    management and delivery of mirror information to users. We thank Fedora for
+    their work in this space.
+</p>
+
+<p>
+    To become a public Rocky mirror, please see our wiki page on Mirroring.
+</p>
+
+<p>
+    You may trim the selection through the links on the right,
+    or see the whole list.
+</p>
+
+<p>
+    I2 means both Internet2 and its peer high speed research and development
+    networks globally.
+</p>
+
+{# Rocky: Added mt-5 class to table #}
+<table class="table table-sm mt-5">
+    <tr id="matrixtitle">
+        <th colspan="{{ arches | length + 2 }}">
+            Mirror list filtering matrix
+        </th>
+    </tr>
+    <tr id="matrixheadings">
+        <th>Projects</th>
+        <th>Versions</th>
+        <th colspan="{{ arches | length}}">
+            Architectures
+        </th>
+    </tr>
+    {% for product in products %}
+    <tr>
+        <td class="matrix_section" rowspan="{{product.displayed_versions | length }}">
+            <a href="{{ url_for('base.list_mirrors', p_name=product.name) }}">
+                {{product.name}}
+            </a>
+        </td>
+        {% for version in product.displayed_versions %}
+        {% if not loop.first %}
+        {% if loop.last %}
+    <tr class="{{ loop.cycle('matrix_odd', 'matrix_even') }} matrix_section">
+        {% else %}
+    <tr class="{{ loop.cycle('matrix_odd', 'matrix_even') }}">
+        {% endif %}
+        {% endif %}
+        <td>
+            <a href="{{ url_for('base.list_mirrors',
+                p_name=product.name, p_version=version.name) }}">
+                {{ version.display_name or version.name }}
+            </a>
+        </td>
+        {% for arch in arches %}
+        {% if arch in version.arches %}
+        <td>
+            <a href="{{ url_for('base.list_mirrors',
+                    p_name=product.name, p_version=version.name, p_arch=arch) }}">
+                {{ arch }}
+            </a>
+        </td>
+        {% else %}
+        <td></td>
+        {% endif %}
+        {% endfor %}
+        {% if not loop.last %}
+    </tr>
+    {% endif %}
+    {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

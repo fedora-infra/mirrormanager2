@@ -10,7 +10,10 @@ def is_mirrormanager_admin(user):
     auth_method = current_app.config.get("MM_AUTHENTICATION", None)
 
     if auth_method == "fas":
-        if "signed_fpca" not in user.groups:
+        # Rocky: changed from signed_fpca to signed_rosca
+        # Source: mirrormanager-rocky/Containerfile line 32
+        # RUN sed -e 's/signed_fpca/signed_rosca/' -i mirrormanager2/perms.py
+        if "signed_rosca" not in user.groups:
             return False
 
     if auth_method in ("fas", "local"):

@@ -1,0 +1,18 @@
+{# Rocky theme template
+Source: mirrormanager-rocky/templates/rocky/maps.html
+This file is identical to the Fedora version
+#}
+{% extends "master.html" %}
+
+{% block title %}Map{% endblock %}
+{% block tag %}maps{% endblock %}
+
+{% block content %}
+<h1>Map</h1>
+{%- if config['SHOW_MAPS'] -%}
+Map of all public mirrors - <a href="{{url_for('base.maps_interactive')}}">Interactive Map</a>
+<img src="{{url_for('base.index')}}map/{{ config['STATIC_MAP'] }}" border="0" alt="alt" class="centered" />
+{%- else -%}
+Actually, this is disabled and you should not be here. Go away!
+{%- endif -%}
+{%- endblock -%}

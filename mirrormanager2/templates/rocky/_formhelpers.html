@@ -1,0 +1,66 @@
+{# Rocky theme template
+Source: mirrormanager-rocky/templates/rocky/_formhelpers.html
+This file is identical to the Fedora version
+#}
+{% macro render_switch(field, after="") %}
+<div class="mb-3">
+    <div class="form-check form-switch">
+        {{ field(class="form-check-input", type="checkbox",role="switch", **kwargs)|safe }}
+        {{ field.label(class_="form-check-label") }}
+    </div>
+    {% if after %}
+    <div class="form-text">{{ after }}</div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro render_field(field, after="") %}
+<div class="mb-3">
+    {{ field.label(class_="form-label") }}
+    {% if field.errors %}
+    {{ field(class="form-control is-invalid", **kwargs)|safe }}
+    {% else %}
+    {{ field(class="form-control", **kwargs)|safe }}
+    {% endif %}
+    {% if field.errors %}
+    <div class="invalid-feedback">
+        {% for error in field.errors %}{{ error }}{% endfor %}
+    </div>
+    {% elif after %}
+    <div class="form-text">{{ after }}</div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro render_field_invert(field, after="") %}
+<div class="row">
+    {{ field(**kwargs)|safe }}{{ field.label }}{% if field.flags.required %} <span class="text-danger"
+        title="Required">*</span>{% endif %}
+    {% if after %} {{ after }}{% endif %}
+    {% if field.errors %}
+    <ul class="errors">
+        {% for error in field.errors %}
+        <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro render_field_in_row(field, after="", escape_after=False) %}
+<tr>
+    <td>{{ field.label }}{% if field.flags.required %} <span class="text-danger" title="Required">*</span>{% endif %}
+    </td>
+    <td>{{ field(**kwargs)|safe }}</td>
+
+    {% if escape_after %}
+    {% autoescape off%} {% if after %} <td>{{ after }}</td>{% endif %} {% endautoescape %}
+    {% else %}
+    {% if after %} <td>{{ after }}</td>{% endif %}
+    {% endif %}
+
+    {% if field.errors %}
+    <td>{% for error in field.errors %}{{ error }}<br />{% endfor %}</td>
+    {% endif %}
+</tr>
+{% endmacro %}

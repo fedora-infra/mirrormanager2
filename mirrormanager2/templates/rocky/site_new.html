@@ -1,0 +1,21 @@
+{# Rocky theme template
+Source: mirrormanager-rocky/templates/rocky/site_new.html
+This file is identical to the Fedora version
+#}
+{% extends "master.html" %}
+{% from "_macros.html" import site_form, export_compliance %}
+
+{% block title %}New Site{% endblock %}
+{%block tag %}home{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h6 class="mb-0">Add New Site</h6>
+    </div>
+    <div class="card-body">
+        {{site_form(form, is_admin, action="Create")}}
+    </div>
+</div>
+{{export_compliance()}}
+{% endblock %}

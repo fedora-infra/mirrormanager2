@@ -1,0 +1,27 @@
+{# Rocky theme template
+Source: mirrormanager-rocky/templates/rocky/site_admin_new.html
+This file is identical to the Fedora version
+#}
+{% extends "master.html" %}
+{% from "_formhelpers.html" import render_field %}
+
+{% block title %}New Site Admin{% endblock %}
+{%block tag %}home{% endblock %}
+
+{% block content %}
+
+<div class="card my-3 mx-auto col-6">
+    <div class="card-header">
+        <h6 class="mb-0">Add Site admin to site: {{ site.name }}</h6>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('base.siteadmin_new', site_id=site.id) }}" method="POST">
+            {{ render_field(form.username) }}
+            <p>
+                <input type="submit" class="btn btn-primary" value="Create">
+                {{ form.csrf_token }}
+            </p>
+        </form>
+    </div>
+</div>
+{% endblock %}

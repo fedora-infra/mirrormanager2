@@ -1,0 +1,34 @@
+{# Rocky theme template
+Source: mirrormanager-rocky/templates/rocky/host_asn_new.html
+This file is identical to the Fedora version
+#}
+{% extends "master.html" %}
+{% from "_formhelpers.html" import render_field %}
+
+{% block title %}New Host Peer ASN{% endblock %}
+{%block tag %}home{% endblock %}
+
+{% block content %}
+<div class="card my-3 mx-auto col-6">
+    <div class="card-header">
+        <h6 class="mb-0">Add host Peer ASNs</h6>
+    </div>
+    <div class="card-body">
+        <p>
+            Peer ASNs are used to guide an end user on nearby networks to our mirror.
+            For example, a university might list their peer ASNs, and the mirrorlist
+            CGI would return the university-local mirror rather than a country-local
+            mirror. You must be in the MirrorManager administrators group in order to
+            create new entries here.
+        </p>
+        <form action="{{ url_for('base.host_asn_new', host_id=host.id) }}" method="POST">
+            {{ render_field(form.asn) }}
+            {{ render_field(form.name) }}
+            <p>
+                <input type="submit" class="btn btn-primary" value="Create">
+                {{ form.csrf_token }}
+            </p>
+        </form>
+    </div>
+</div>
+{% endblock %}

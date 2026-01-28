@@ -1,0 +1,94 @@
+{#
+Rocky theme template
+Source: mirrormanager-rocky/templates/rocky/statistics.html
+This template provides the statistics page with charts showing
+mirrorlist access breakdown by country, architecture, and repository.
+#}
+{% extends "master.html" %}
+
+{% block title %}Statistics{% endblock %}
+
+{% block tag %}statistics{% endblock %}
+
+{% macro category_link(name, title) -%}
+<a class="{% if cat == name %}font-weight-bold{% endif %}" href="{{url_for('base.statistics', date=today, cat=name)}}">
+    {{ title }}
+</a>
+{%- endmacro %}
+
+{% block content %}
+<h1>Statistics</h1>
+<p class="centered">
+    Mirrorlist access breakdown by
+    {{ category_link('countries', 'country') }}
+    |
+    {{ category_link('archs', 'architecture') }}
+    |
+    {{ category_link('repositories', 'repository') }}
+    on {{today}}
+</p>
+<p class="centered">
+    {% if yesterday %}
+    <a href="{{url_for('base.statistics', date=yesterday, cat=cat) }}">&lt;{{ yesterday }}</a>
+    {%- endif -%}
+    |
+    {% if tomorrow %}
+    <a href="{{url_for('base.statistics', date=tomorrow, cat=cat)}}">{{ tomorrow }}&gt;</a>
+    {%- endif -%}
+</p>
+
+<div class="chart-container" style="position: relative; height:40vh; width:100%">
+    <canvas id="chart" style="margin: auto"></canvas>
+</div>
+
+<h2>Details</h2>
+<table class="mx-auto table table-striped mm2-table-small">
+    <tr id="matrixtitle">
+        <th>{{ cat|title }}</th>
+        <th class="text-xs-center">%</th>
+        <th class="text-xs-end">#Requests</th>
+    </tr>
+    {% for stat in stats %}
+    <tr">
+        <td>{{ stat.name }}</td>
+        <td class="text-xs-center">{{ "{:03.4f}".format(stat.percent) }} %</td>
+        <td class="text-xs-end">{{ stat.requests }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <td><strong>Total</strong></td>
+            <td class="text-xs-end" colspan="2"><strong>{{ total }}</strong></td>
+        </tr>
+</table>
+
+{% endblock %}
+
+
+{% block jscripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='chart.js') }}"></script>
+<script>
+    const canvas = document.getElementById('chart');
+    new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels: {{ graph_labels | tojson }},
+        datasets: [{{ graph_dataset | tojson }}],
+        },
+        options: {
+        plugins: {
+            legend: {
+                display: false,
+            },
+            tooltip: {
+                callbacks: {
+                    label: function (context) {
+                        return " " + context.formattedValue + " %";
+                    }
+                }
+            }
+        },
+    }
+    });
+</script>
+{% endblock %}

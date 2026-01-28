@@ -1,0 +1,35 @@
+{# Rocky theme template
+Source: mirrormanager-rocky/templates/rocky/host_category_new.html
+
+Key changes from Fedora version:
+- Example categories: "Fedora and Fedora Archive" -> "Rocky, Rocky SIGs, and Rocky Vault"
+#}
+{% extends "master.html" %}
+{% from "_formhelpers.html" import render_field, render_switch %}
+
+{% block title %}New Host Category{% endblock %}
+{%block tag %}home{% endblock %}
+
+{% block content %}
+<div class="card my-3 mx-auto col-6">
+    <div class="card-header">
+        <h6 class="mb-0">Add host category</h6>
+    </div>
+    <div class="card-body">
+        {# Rocky: Changed example categories from "Fedora and Fedora Archive"
+        Source: mirrormanager-rocky/templates/rocky/host_category_new.html lines 13-15 #}
+        <p>
+            Hosts carry categories of software. Example Rocky categories include
+            Rocky, Rocky SIGs, and Rocky Vault.
+        </p>
+        <form action="{{ url_for('base.host_category_new', host_id=host.id) }}" method="POST">
+            {{ render_field(form.category_id) }}
+            {% if is_admin %}{{ render_switch(form.always_up2date) }}{% endif %}
+            <p>
+                <input type="submit" class="btn btn-primary" value="Create">
+                {{ form.csrf_token }}
+            </p>
+        </form>
+    </div>
+</div>
+{% endblock %}

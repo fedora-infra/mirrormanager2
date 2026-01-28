@@ -1,0 +1,89 @@
+{# Rocky theme template
+Source: mirrormanager-rocky/templates/rocky/site.html
+This file is identical to the Fedora version
+#}
+{% extends "master.html" %}
+{% from "_macros.html" import site_form, export_compliance %}
+
+
+{% block title %}Site Details{% endblock %}
+{%block tag %}home{% endblock %}
+
+{% block content %}
+<div class="mt-3 d-flex justify-content-between align-items-center">
+    <div>
+        <h2 class="mb-0"><span class="fa fa-globe"></span> {{ site.name }}</h2>
+        Created by <strong>{{ site.created_by }}</strong> at <strong>{{ site.created_at }}</strong>
+    </div>
+    <form method="POST" action="{{ url_for('base.site_drop', site_id=site.id) }}">
+        {{ form.csrf_token }}
+        <button class="btn btn-danger" onclick="return confirm('You sure you want to delete this site?');"
+            title="Delete site">
+            <span class="fa fa-trash"></span>
+            Delete Site
+        </button>
+    </form>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h4 class="mb-0">Site Details</h4>
+    </div>
+    <div class="card-body">
+        {{site_form(form, is_admin, action="Update")}}
+    </div>
+</div>
+
+<div class="card my-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Hosts</h4>
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('base.host_new', site_id=site.id) }}">Add New
+            Host</a>
+    </div>
+    <ul class="list-group list-group-flush">
+        {% for host in site.hosts %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <span class="fa fa-server fa-inline me-2"></span>
+                <a href="{{ url_for('base.host_view', host_id=host.id) }}">
+                    {{ host.name }}</a>
+            </div>
+            <form method="POST" action="{{ url_for('base.host_drop', host_id=host.id) }}">
+                {{ form.csrf_token }}
+                <button class="btn btn-sm btn-outline-danger"
+                    onclick="return confirm('You sure you want to delete the {{host.name}} host?');"
+                    title="Delete host">
+                    <span class="fa fa-trash fa-lg"></span> Delete Host
+                </button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<div class="card my-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Admins</h4>
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('base.siteadmin_new', site_id=site.id) }}">Add New
+            Admin</a>
+    </div>
+    <ul class="list-group list-group-flush">
+        {% for admin in site.admins %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <span class="fa fa-user me-2"></span> {{ admin.username }}
+            </div>
+            <form method="POST" action="{{ url_for('base.siteadmin_delete', site_id=site.id, admin_id=admin.id) }}">
+                {{ form.csrf_token }}
+                <button class="btn btn-sm btn-outline-danger"
+                    onclick="return confirm('You sure you want to remove {{ admin.username }} as an admin?');"
+                    title="Remove">
+                    <span class="fa fa-trash fa-lg"></span> Remove
+                </button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{{export_compliance()}}
+{% endblock %}

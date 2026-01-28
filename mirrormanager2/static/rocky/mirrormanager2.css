@@ -1,0 +1,88 @@
+/*
+ * Mirrormanager2 specific CSS
+ */
+input {
+    font-size: 100%;
+}
+
+textarea {
+    font-size: 100%;
+}
+
+button {
+    font-size: 100%;
+}
+
+select {
+    font-size: 100%;
+}
+
+.inline {
+    display: inline;
+}
+
+/* Stealed this from flask-admin */
+form.icon button {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
+    border: medium none;
+    line-height: normal;
+    padding: 0;
+    text-decoration: none;
+}
+
+/* Stealed this from bootstrap */
+label,
+select,
+button,
+input[type="button"],
+input[type="reset"],
+input[type="submit"],
+input[type="radio"],
+input[type="checkbox"] {
+    cursor: pointer;
+}
+
+.blue {
+    color: #0066cc;
+}
+
+#matrixtitle {
+    background-color: #2963a6;
+    color: #ffffff;
+    text-align: center;
+}
+
+#matrixheadings,
+#matrixheadings th {
+    background-color: #dddddd;
+    border-bottom: 1px solid #bbbbbb;
+    margin: 0;
+    color: #333333;
+}
+
+.matrix_section,
+.matrix_section td {
+    border-bottom: 1px solid #bbbbbb !important;
+}
+
+.matrix_even,
+.matrix_even td {
+    background-color: #f0f0f0;
+    border-bottom: 1px solid #dddddd;
+    border-top: 1px solid #dddddd;
+}
+
+.centered {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+.bodycontent {
+    min-height: 600px;
+}
+
+table.mm2-table-small {
+    width: auto;
+}

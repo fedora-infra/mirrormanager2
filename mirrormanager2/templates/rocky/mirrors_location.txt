@@ -1,0 +1,9 @@
+{#
+  Rocky theme template
+  Source: mirrormanager-rocky/templates/rocky/mirrors_location.txt
+  This template generates tab-separated data for the interactive map markers.
+#}
+lat	lon	title	description	iconSize	iconOffset	icon
+{% for mirror in mirrors -%}
+{{ mirror.host.latitude }}	{{ mirror.host.longitude }}	<a href='{{ mirror.url }}' rel='noopener noreferrer' target='_blank'>{{ mirror.host_name }}</a>	{{ mirror.host.site.name|default("N/A") }}	24,24	-12,-24	{{ url_for("static", filename="map/f-dot.png") }}
+{% endfor %}

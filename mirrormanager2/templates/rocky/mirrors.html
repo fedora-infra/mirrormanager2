@@ -1,0 +1,113 @@
+{# Rocky theme template
+Source: mirrormanager-rocky/templates/rocky/mirrors.html
+
+Note: The original mirrormanager-rocky version was simpler and lacked the
+country filter feature. This version incorporates the country filter from
+the Fedora template while keeping Rocky branding.
+
+Key differences from original Rocky version:
+- Added country filter dropdown (from Fedora)
+- Uses filter_text for dynamic messages (from Fedora)
+- Added JavaScript for country filter functionality (from Fedora)
+#}
+{% extends "master.html" %}
+
+{% from "_macros.html" import pagination_bar, bottomincludes %}
+
+{% block title %}Mirrors{% endblock %}
+{%block tag %}mirrors{% endblock %}
+
+{% block content %}
+<h2>Public active mirrors</h2>
+
+{# Filter text logic from Fedora version for better UX #}
+{% set filter_text %}
+{%- if filters["product"] %} for {{filters["product"]}} {%- endif -%}
+{%- if filters["version"] %} {{filters["version"]}} {%- endif -%}
+{%- if filters["arch"] %} on {{filters["arch"]}} {%- endif -%}
+{%- if filters["country"] %} in {{filters["country"]}} {%- endif -%}
+{% endset %}
+
+{% if mirrors %}
+<p>
+    {# Rocky: Original said "We have currently" - using Fedora's grammar #}
+    We currently have {{ mirrors | length }} active mirror{% if mirrors | length != 1 %}s{% endif %}{{ filter_text }}
+</p>
+
+<table class="table table-striped">
+    <tr>
+        <th>
+            {# Country filter dropdown from Fedora version #}
+            <select class="form-select form-select-sm d-inline fw-bold w-auto ms-1" id="country-filter" name="country">
+                <option value="">Country</option>
+                {% for country in countries %}
+                <option value="{{ country.code }}" {% if selected_country==country.code %}selected{% endif %}>
+                    {{ country.code }}
+                </option>
+                {% endfor %}
+            </select>
+        </th>
+        <th>Site Name</th>
+        <th>Mirror Name</th>
+        <th>Categories</th>
+        <th>Bandwith</th>
+        <th>Internet2</th>
+        <th>Comment</th>
+    </tr>
+    {% for mirror in mirrors.items %}
+    <tr class="mirror-row">
+        <td>{{ mirror.country }}</td>
+        <td>
+            <a href="{{ mirror.site.org_url }}">
+                {{ mirror.site.name }}
+            </a>
+        </td>
+        <td>{{ mirror.name }}</td>
+        <td>
+            <ul class="list-unstyled">
+                {% for cat in mirror.categories %}
+                {% if cat.urls %}
+                <li>
+                    {{ cat.category.name }}
+                    {% for url in cat.urls %}
+                    <a href="{{ url.url }}">{{ url.url.split('://')[0] }}</a>
+                    {% endfor %}
+                </li>
+                {% endif %}
+                {% endfor %}
+            </ul>
+        </td>
+        <td>{{ mirror.bandwidth_int }}</td>
+        <td>{% if mirror.internet2 %}Yes{% else %}No{% endif %}</td>
+        <td>{% if mirror.comment %}{{ mirror.comment }}{% endif %}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{{pagination_bar(mirrors)}}
+{% else %}
+<p>
+    There are currently no active mirrors registered{{ filter_text }}.
+</p>
+{% endif %}
+
+{% endblock %}
+
+{% block jscripts %}
+{{bottomincludes()}}
+{# Country filter JavaScript from Fedora version #}
+<script>
+    document.getElementById('country-filter').addEventListener('change', function () {
+        const selectedCountry = this.value;
+        const currentUrl = new URL(window.location);
+
+        if (selectedCountry) {
+            currentUrl.searchParams.set('country', selectedCountry);
+        } else {
+            currentUrl.searchParams.delete('country');
+        }
+
+        window.location.href = currentUrl.toString();
+    });
+</script>
+{% endblock %}

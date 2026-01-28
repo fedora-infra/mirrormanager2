@@ -1,0 +1,31 @@
+{# Rocky theme template
+Source: mirrormanager-rocky/templates/rocky/master.html
+This file is identical to the Fedora version (uses macros for branding)
+#}
+{% from "_macros.html" import footer, headincludes, nav, flashmessages, bottomincludes %}
+
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>{% block title %}{% endblock %} - MirrorManager</title>
+    {{headincludes()}}
+    {% block header %}{% endblock %}
+</head>
+
+<body id="{% block tag %}{% endblock %}">
+    {{nav(is_admin)}}
+    <div class="bodycontent pt-2">
+        <div class="container">
+            {{flashmessages()}}
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    {{footer()}}
+    {% block jscripts %}
+    {{bottomincludes()}}
+    {% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,20 @@
+{# Rocky theme template
+Source: mirrormanager-rocky/templates/rocky/host_new.html
+This file is identical to the Fedora version
+#}
+{% extends "master.html" %}
+{% from "_macros.html" import host_form %}
+
+{% block title %}New Host{% endblock %}
+{%block tag %}home{% endblock %}
+
+{% block content %}
+<div class="card my-3">
+    <div class="card-header">
+        <h6 class="mb-0">Add New Host</h6>
+    </div>
+    <div class="card-body">
+        {{host_form(form, is_admin, action="Create")}}
+    </div>
+</div>
+{% endblock %}

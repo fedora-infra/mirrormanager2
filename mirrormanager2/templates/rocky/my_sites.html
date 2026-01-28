@@ -1,0 +1,95 @@
+{# Rocky theme template
+Source: mirrormanager-rocky/templates/rocky/my_sites.html
+This file is identical to the Fedora version
+#}
+{% extends "master.html" %}
+
+{% block title %}Home{% endblock %}
+{%block tag %}{{tag}}{% endblock %}
+
+{% block content %}
+<h2>{{username}} Sites</h2>
+
+<div class="card">
+    <div class="card-header bg-light-subtle d-flex justify-content-between align-items-center">
+        <div class="fw-bold text-secondary">{{ sites | length }} site{{'s' if sites | length > 1}}</div>
+        <div>
+            <a href="{{ url_for('base.site_new') }}">
+                <input type="button" class="btn btn-outline-primary btn-sm" value="Add New Site" class="button">
+            </a>
+        </div>
+    </div>
+    {% if sites %}
+    <table class="table">
+        <thead class="table-light">
+            <tr>
+                <th>Site name</th>
+                <th>Hosts</th>
+                <th>Admin Active</th>
+                <th>User Active</th>
+                <th>Private</th>
+                <th>Bandwith</th>
+                <th>Last crawled</th>
+            </tr>
+        </thead>
+        {% for site in sites %}
+        <tr>
+            <td rowspan="{% if site.hosts %}{{ site.hosts | length }}{% endif %}">
+                <a href="{{ url_for('base.site_view', site_id=site.id) }}">
+                    {{ site.name }}
+                </a>
+            </td>
+            {% if not site.hosts %}
+            <td>0</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            {% else %}
+            {% for host in site.hosts %}
+            {% if not loop.first %}
+        </tr>
+        <tr>
+            {% endif %}
+
+            <td>
+                <a href="{{ url_for('base.host_view', host_id=host.id) }}">
+                    {{host.name}}
+                </a>
+            </td>
+
+            <td>
+                {{host.admin_active}}
+            </td>
+
+            <td>
+                {{host.user_active}}
+            </td>
+
+            <td>
+                {{host.private}}
+            </td>
+
+            <td>
+                {{host.bandwidth_int}}
+            </td>
+
+            <td>
+                {{host.last_crawled}}
+            </td>
+
+            {% endfor %}
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <div class="card-body bg-light">
+        <h5 class="text-center text-secondary">You Have 0 Sites Defined</h5>
+    </div>
+    {% endif %}
+</div>
+
+
+{% endblock %}

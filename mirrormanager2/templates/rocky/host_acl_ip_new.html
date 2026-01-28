@@ -1,0 +1,35 @@
+{# Rocky theme template
+Source: mirrormanager-rocky/templates/rocky/host_acl_ip_new.html
+This file is identical to the Fedora version
+#}
+{% extends "master.html" %}
+{% from "_formhelpers.html" import render_field %}
+
+{% block title %}New Host ACL IP{% endblock %}
+{%block tag %}home{% endblock %}
+
+{% block content %}
+{%- if config['MASTER_RSYNC_ACL'] -%}
+<div class="card my-3 mx-auto col-6">
+    <div class="card-header">
+        <h6 class="mb-0">Add host ACL IP</h6>
+    </div>
+    <div class="card-body">
+        <p>
+            These host DNS names and/or IP addresses will be allowed to rsync from the
+            master rsync/ftp servers. List here all the machines that you use for
+            pulling.
+        </p>
+        <form action="{{ url_for('base.host_acl_ip_new', host_id=host.id) }}" method="POST">
+            <table>
+                {{ render_field(form.ip) }}
+            </table>
+            <p>
+                <input type="submit" class="btn btn-primary" value="Create">
+                {{ form.csrf_token }}
+            </p>
+        </form>
+    </div>
+</div>
+{%- endif -%}{# MASTER_RSYNC_ACL ##}
+{% endblock %}

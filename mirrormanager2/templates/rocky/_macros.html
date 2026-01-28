@@ -1,0 +1,347 @@
+{# Rocky theme template
+Source: mirrormanager-rocky/templates/rocky/_macros.html
+
+Key changes from Fedora version:
+- export_compliance(): "Fedora software" -> "Rocky software"
+- footer(): All links changed to Rocky resources, copyright changed to RESF
+- footer(): Removed Red Hat logo and sponsorship text
+- headincludes(): Uses rocky.css instead of fedora-bootstrap.min.css
+- nav(): Added "container" class, logo height 60 (was 40), button styling changes
+
+Note: REPLACEME placeholders from original have been filled in with
+appropriate Rocky resources.
+#}
+{% from "_formhelpers.html" import render_field, render_switch %}
+
+{% macro export_compliance() %}
+{# Rocky: Changed all "Fedora" references to "Rocky"
+Source: mirrormanager-rocky/templates/rocky/_macros.html lines 3-29 #}
+<div class="alert alert-light form-text">
+    <h4>Export Compliance</h4>
+    <p>
+        By downloading Rocky software, you acknowledge that you understand all of
+        the following: Rocky software and technical information may be subject to
+        the U.S. Export Administration Regulations (the "EAR") and other U.S. and
+        foreign laws and may not be exported, re-exported or transferred
+        (a) to any country listed in Country Group E:1 in Supplement No. 1 to part
+        740 of the EAR (currently, Cuba, Iran, North Korea, Sudan and Syria);
+        (b) to any prohibited destination or to any end user who has been prohibited
+        from participating in U.S. export transactions by any federal agency of the
+        U.S. government; or
+        (c) for use in connection with the design, development or production of
+        nuclear, chemical or biological weapons, or rocket systems, space launch
+        vehicles, or sounding rockets, or unmanned air vehicle systems.
+    </p>
+    <p>
+        You may not download Rocky software or technical information if you are
+        located in one of these countries or otherwise subject to these restrictions.
+        You may not provide Rocky software or technical information to individuals
+        or entities located in one of these countries or otherwise subject to these
+        restrictions. You are also responsible for compliance with foreign law
+        requirements applicable to the import, export and use of Rocky software
+        and technical information.
+    </p>
+</div>
+{% endmacro %}
+
+{% macro footer() %}
+{# Rocky: Complete footer rewrite with Rocky branding
+Source: mirrormanager-rocky/templates/rocky/_macros.html lines 31-84
+Changes:
+- Footer class: removed "text-white"
+- All links point to Rocky resources
+- Copyright: RESF instead of Red Hat
+- Removed Red Hat logo
+Note: Original had "REPLACEME" placeholders which have been filled in #}
+<div class="footer py-5">
+    <div class="container">
+        <div class="row footerlinks">
+            <div class="col-sm-3 col-4 mt-3">
+                <div>
+                    <dl>
+                        <dt class="text-uppercase h4"><strong>About</strong></dt>
+                        <dd><a href="https://rockylinux.org/">Get Rocky Linux</a></dd>
+                        <dd><a href="https://rockylinux.org/sponsors/">Sponsors</a></dd>
+                        <dd><a href="https://resf.org">Rocky Enterprise Software Foundation</a></dd>
+                        <dd><a href="https://rockylinux.org/legal/trademarks">Legal</a></dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="col-sm-3 col-4 mt-3">
+                <div>
+                    <dl>
+                        <dt class="text-uppercase h4"><strong>Support</strong></dt>
+                        <dd><a href="https://wiki.rockylinux.org/rocky/support/">Get Help</a></dd>
+                        <dd><a href="https://chat.rockylinux.org/">Mattermost Chat</a></dd>
+                        <dd><a href="https://forums.rockylinux.org/c/techhelp/common-issues-and-questions/">Common
+                                Issues</a></dd>
+                        {# Note: Original mirrormanager-rocky had "REPLACEME" here, filled with Rocky Wiki #}
+                        <dd><a href="https://wiki.rockylinux.org/">Rocky Wiki</a></dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="col-sm-3 col-4 mt-3">
+                <div>
+                    <dl>
+                        <dt class="text-uppercase h4"><strong>Community</strong></dt>
+                        <dd><a href="https://wiki.rockylinux.org/contributing/">Get Involved</a></dd>
+                        <dd><a href="https://wiki.rockylinux.org/special_interest_groups/">Special Interest Groups</a>
+                        </dd>
+                        {# Note: Original mirrormanager-rocky had "REPLACEME" here, filled with Forums #}
+                        <dd><a href="https://forums.rockylinux.org/">Rocky Forums</a></dd>
+                        <dd><a href="https://accounts.rockylinux.org/">Rocky Accounts</a></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="row footerlinks mt-5">
+            <div class="col-12">
+                <p> © 2024 Rocky Enterprise Software Foundation, and others. </p>
+            </div>
+            <div class="col-12">
+                {% set noggin_link %}
+                <a href="https://github.com/fedora-infra/noggin">noggin</a>
+                {% endset %}
+                <p>
+                    <a href="https://github.com/fedora-infra/mirrormanager2/">mirrormanager</a>
+                    -- {{version}}
+                    -- <a href="http://mirrormanager.rtfd.org" rel="noopener noreferrer"
+                        target="_blank">Documentation</a>
+                    -- <a href="http://mirrormanager.readthedocs.org/en/latest/contributors.html">Authors</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro flashmessages() %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if category, messages %}
+<div class="toast-container flash-messages position-fixed mt-2 top-0 start-50 translate-middle-x">
+    {% for category, message in messages %}
+    <div class="toast {{'bg-lightstyles-danger text-danger' if category == 'error' else 'bg-lightstyles-success text-success border-lightstyles-success'}} d-flex"
+        {{"data-bs-autohide=false" if category=='error' }} role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-body">{{ message }}</div>
+        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+{% endmacro %}
+
+{% macro headincludes() %}
+{# Rocky: Uses rocky.css instead of fedora-bootstrap.min.css
+Source: mirrormanager-rocky/templates/rocky/_macros.html lines 100-106 #}
+<link rel="shortcut icon" type="image/vnd.microsoft.icon" href="{{ url_for('static', filename='favicon.ico')}}" />
+<link rel="stylesheet" type="text/css" media="screen" href="{{ url_for('static', filename='mirrormanager2.css') }}" />
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='rocky.css') }}" />
+<link href="{{ url_for('static', filename='fonts/open-sans.css') }}" rel="stylesheet" />
+<link href="{{ url_for('static', filename='fonts/font-awesome.css') }}" rel="stylesheet" />
+{% endmacro %}
+
+{%macro bottomincludes()%}
+<script type="text/javascript" src="{{ url_for('static', filename='fedora-bootstrap/fedora-bootstrap.min.js') }}">
+</script>
+<script>
+    const toastElList = document.querySelectorAll('.toast')
+    const toastList = [...toastElList].map(toastEl => new bootstrap.Toast(toastEl))
+    toastList.forEach(toast => toast.show());
+</script>
+{%endmacro%}
+
+{% macro nav(is_admin) %}
+{# Rocky: Added "container" class to navbar, changed logo height to 60, updated button styling
+Source: mirrormanager-rocky/templates/rocky/_macros.html lines 117-154 #}
+<nav class="navbar navbar-expand-lg navbar-light masthead py-2 container">
+    <a class="navbar-brand" href="{{url_for('base.index')}}"><img
+            src="{{ url_for('static', filename='mirrormanager-logo.png') }}" alt="Rocky MirrorManager logo"
+            height="60"></a>
+    <ul class="navbar-nav align-items-center ms-auto">
+        <li class="nav-item">
+            <a class="nav-link color-white" href="{{url_for('base.list_mirrors')}}">Mirrors</a>
+        </li>
+        <li class="nav-item color-white"><a class="nav-link" href="{{url_for('base.statistics')}}">Statistics</a></li>
+        {% if config['SHOW_MAPS'] %}
+        <li class="nav-item color-white"><a class="nav-link" href="{{url_for('base.maps')}}">Map</a></li>
+        {% endif %}
+        {% if config['SHOW_PROPAGATION'] %}
+        <li class="nav-item color-white"><a class="nav-link" href="{{url_for('base.propagation_all')}}">Propagation</a>
+        </li>
+        {% endif %}
+        {% if g.fas_user %}
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="fa fa-user fa-lg"></span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownMenuLink">
+                <div class="dropdown-header">
+                    <strong>{{ g.fas_user.username }}</strong>
+                </div>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="{{url_for('base.mysite')}}">My Sites</a>
+                <a class="dropdown-item" href="{{ url_for('auth.logout') }}?next={{request.url}}">Log Out</a>
+                {% if is_admin %}
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-header">
+                    <strong>Admin Options</strong>
+                </div>
+                <a class="dropdown-item" href="{{url_for('admin.index')}}">Admin Panel</a>
+                <a class="dropdown-item" href="{{url_for('base.all_sites')}}">All sites</a>
+                {% endif %}
+            </div>
+        </li>
+        {% else %}
+        {# Rocky: Changed button classes to include py-2 rounded-4 #}
+        <a class="btn btn-primary ml-2 py-2 rounded-4" href="{{ url_for('auth.login') }}?next={{request.url}}">Login</a>
+        {% endif %}
+    </ul>
+</nav>
+{% endmacro %}
+
+{% macro site_form(form, is_admin, action="Create") %}
+<form action="" method="POST" novalidate>
+    <div class="row">
+        <div class="col-md-6">
+            {{ render_field(form.name) }}
+        </div>
+        <div class="col-md-6">
+            {{ render_field(form.password,
+            after="used by report_mirrors script, you make this anything you want") }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            {{ render_field(form.org_url,
+            after="Company/School/Organization URL e.g. https://www.redhat.com") }}
+        </div>
+        <div class="col-md-6">
+            {{ render_field(form.downstream_comments) }}
+        </div>
+    </div>
+    {{ render_switch(form.private, after="e.g. Not available to the public") }}
+    {{ render_switch(form.user_active,
+    after="Enabled and displayed on public listings.") }}
+    {% if is_admin %}
+    {{ render_switch(form.admin_active,
+    after="Admin Override for enabling or disabling") }}
+    {% endif %}
+    {{ render_switch(form.all_sites_can_pull_from_me,
+    after="Allow all mirror sites to pull my content
+    without explicitly adding them to my list.") }}
+    <input type="submit" class="btn btn-primary" value="{{action}}">
+    {{ form.csrf_token }}
+</form>
+{% endmacro %}
+
+{% macro host_form(form, is_admin, action="Create") %}
+<form action="" method="POST">
+    <div class="row">
+        <div class="col-md-6">
+            {{ render_field(form.name,
+            after="FQDN of server as seen by a public end user") }}
+        </div>
+        <div class="col-md-6">
+            {{ render_field(form.country,
+            after="2-letter ISO country code") }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            {{ render_field(form.bandwidth_int,
+            after="integer megabits/sec, how much bandwidth this host can serve") }}
+        </div>
+        <div class="col-md-6">
+            {{ render_field(form.max_connections,
+            after="Maximum parallel download connections per client, suggested
+            via metalinks.") }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            {{ render_field(form.robot_email,
+            after="email address, will receive notice of upstream content updates") }}
+        </div>
+        <div class="col-md-6">
+            {{ render_field(form.comment,
+            after="text, anything else you'd like a public end user to know
+            about your mirror") }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            {{ render_switch(form.internet2,
+            after="on Internet2") }}
+        </div>
+        <div class="col-md-6">
+            {{ render_switch(form.internet2_clients,
+            after="serves Internet2 clients, even if private") }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            {{ render_switch(form.asn_clients,
+            after="Serve all clients from the same ASN. Used for ISPs,
+            companies, or schools, not personal networks.") }}
+        </div>
+        <div class="col-md-6">
+            {{ render_field(form.asn,
+            after="Autonomous System Number, used in BGP routing tables.") }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            {{ render_switch(form.user_active,
+            after="Uncheck this box to temporarily disable this host, it will
+            be removed from public listings.") }}
+            {{ render_switch(form.private,
+            after="e.g. not available to the public, an internal private mirror") }}
+            {% if is_admin %}
+            {{ render_switch(form.admin_active,
+            after="Uncheck this box to temporarily disable this host, it will
+            be removed from public listings.") }}
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            {{ render_field(form.disable_reason) }}
+        </div>
+    </div>
+    <p>
+        <input type="submit" class="btn btn-primary" value="Update">
+    </p>
+    {{ form.csrf_token }}
+</form>
+{% endmacro %}
+
+
+{% macro pagination_bar(result) %}
+{% if result.total_pages > 1 %}
+<nav aria-label="Pagination">
+    <ul class="pagination pagination-sm justify-content-center my-4">
+        {# Page list #}
+        {% for page_number in result.truncated_pages_list(margin=6) %}
+        {% if page_number == result.page_number %}
+        <li class="page-item active" aria-current="page">
+            <span class="page-link">
+                {{ page_number }}
+                <span class="sr-only">(current)</span>
+            </span>
+        </li>
+        {% elif page_number == None %}
+        <li class="page-item disabled">
+            <span class="page-link">...</span>
+        </li>
+        {% else %}
+        <li class="page-item">
+            <a class="page-link" href="{{ result.page_url(page_number) }}">
+                {{ page_number }}
+            </a>
+        </li>
+        {% endif %}
+        {% endfor %}
+    </ul>
+</nav>
+{% endif %}
+{% endmacro %}

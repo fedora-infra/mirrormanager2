@@ -40,7 +40,10 @@ def before_request():
                     username=userinfo.get("nickname"),
                     email=userinfo.get("email"),
                     timezone=userinfo.get("zoneinfo"),
-                    cla_done=("signed_fpca" in (userinfo.get("groups") or [])),
+                    # Rocky: changed from signed_fpca to signed_rosca
+                    # Source: mirrormanager-rocky/Containerfile line 32
+                    # RUN sed -e 's/signed_fpca/signed_rosca/' -i mirrormanager2/auth.py
+                    cla_done=("signed_rosca" in (userinfo.get("groups") or [])),
                     groups=userinfo.get("groups"),
                 )
             g.fas_user = session.fas_user

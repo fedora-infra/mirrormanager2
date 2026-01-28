@@ -1,0 +1,30 @@
+{#
+Rocky theme template
+Source: mirrormanager-rocky/templates/rocky/admin/master.html
+This template extends Flask-Admin's base.html to include Rocky branding
+in the admin interface (navigation, footer, styles).
+#}
+{% extends 'admin/base.html' %}
+{% import 'admin/lib.html' as lib with context %}
+{% import 'admin/static.html' as admin_static with context %}
+{% from "_macros.html" import footer, headincludes, nav, flashmessages, bottomincludes %}
+
+{% block head %}
+{{headincludes()}}
+{% endblock %}
+
+{% block page_body %}
+{{nav(is_admin)}}
+<div class="bodycontent pt-2">
+    <div class="container">
+        {{flashmessages()}}
+        {{ super() }}
+        {% block content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}
+
+{% block tail %}
+{{ super() }}
+{{bottomincludes()}}
+{% endblock %}
