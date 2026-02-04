@@ -12,4 +12,3 @@ const doMenuOpen = () => {
 }
 
 document.getElementById('user-menu-button').onclick = doMenuOpen;
-

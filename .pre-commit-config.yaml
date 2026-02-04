@@ -41,3 +41,11 @@ repos:
         require_serial: true
         pass_filenames: false
         verbose: true
+      - id: check-jinja2-templates
+        name: Check Jinja2 template syntax
+        language: python
+        additional_dependencies: [jinja2]
+        entry: python
+        args: [-c, "from jinja2 import Environment, FileSystemLoader; import sys; env = Environment(loader=FileSystemLoader('mirrormanager2/templates')); [env.get_template(f.replace('mirrormanager2/templates/', '')) for f in sys.argv[1:]]"]
+        files: ^mirrormanager2/templates/.*\.html$
+        pass_filenames: true

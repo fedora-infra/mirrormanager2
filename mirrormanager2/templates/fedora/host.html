@@ -48,7 +48,7 @@
         {{host_form(form, is_admin, action="Update")}}
       </div>
     </div>
-    
+
     {%- if config['MASTER_RSYNC_ACL'] -%}
     <div class="card  my-3">
       <div class="card-header d-flex justify-content-between align-items-center">
@@ -124,7 +124,7 @@
         {% for asn in host.peer_asns %}
         <li class="list-group-item d-flex justify-content-between align-items-center">
           <span>{{ asn.asn }}</span>
-          
+
           {% if is_admin %}
           <form method="POST"
           action="{{ url_for('base.host_asn_delete', host_id=host.id,
@@ -176,7 +176,7 @@
       </div>
       {% endif %}
     </div>
-  
+
     <div class="card my-3">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h4 class="mb-0">Categories Carried</h4>
@@ -210,7 +210,7 @@
             <ul class="list-group list-group-flush">
               {% for url in category.urls %}
               <li class="list-group-item">
-          
+
               <form method="POST" class="d-flex align-items-center justify-content-between"
                 action="{{ url_for('base.host_category_url_delete', host_id=host.id,
                    hc_id=category.id, host_category_url_id=url.id) }}">
@@ -263,7 +263,7 @@
       </div>
       {% endif %}
     </div>
-    
+
   </div>
 </div>
 {% endblock %}

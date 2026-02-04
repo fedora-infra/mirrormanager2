@@ -31,7 +31,7 @@ Key changes from Fedora version:
 
     map.addLayer(Osm);
 
-    {# Rocky: Changed layer name from "Fedora Mirrors" to "Rocky Mirrors" # }
+    {# Rocky: Changed layer name from "Fedora Mirrors" to "Rocky Mirrors" #}
     var text = new OpenLayers.Layer.Text("Rocky Mirrors", { location: "{{url_for('base.index')}}map/mirrors_location.txt" });
     map.addLayer(text);
     var lonlat = new OpenLayers.LonLat(-15, 25).transform(
