@@ -55,7 +55,7 @@ def new_user():
             form.password.data,
             flask.current_app.config.get("PASSWORD_SEED", None),
         )
-        form.password.data = hashlib.sha512(password).hexdigest()
+        form.password.data = hashlib.sha512(password.encode("utf-8")).hexdigest()
 
         token = mirrormanager2.lib.id_generator(40)
 
@@ -98,7 +98,7 @@ def do_login():
             form.password.data,
             flask.current_app.config.get("PASSWORD_SEED", None),
         )
-        password = hashlib.sha512(password).hexdigest()
+        password = hashlib.sha512(password.encode("utf-8")).hexdigest()
 
         user_obj = mirrormanager2.lib.get_user_by_username(DB.session, username)
         if not user_obj or user_obj.password != password:
@@ -226,7 +226,7 @@ def reset_password(token):
             form.password.data,
             flask.current_app.config.get("PASSWORD_SEED", None),
         )
-        user_obj.password = hashlib.sha512(password).hexdigest()
+        user_obj.password = hashlib.sha512(password.encode("utf-8")).hexdigest()
         user_obj.token = None
         DB.session.add(user_obj)
 
