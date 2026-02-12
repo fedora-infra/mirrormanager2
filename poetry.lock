@@ -2602,17 +2602,6 @@ mypy = ["idna", "mypy", "types-pyopenssl"]
 tests = ["coverage[toml] (>=5.0.2)", "pytest"]
 
 [[package]]
-name = "six"
-version = "1.17.0"
-description = "Python 2 and 3 compatibility utilities"
-optional = false
-python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
-files = [
-    {file = "six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"},
-    {file = "six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81"},
-]
-
-[[package]]
 name = "snowballstemmer"
 version = "3.0.1"
 description = "This package provides 32 stemmers for 30 languages generated from Snowball algorithms."
@@ -2708,18 +2697,17 @@ test = ["html5lib", "pytest"]
 
 [[package]]
 name = "sphinxcontrib-httpdomain"
-version = "1.8.1"
-description = "Sphinx domain for documenting HTTP APIs"
+version = "2.0.0"
+description = "Sphinx extension that provides a domain for documenting HTTP APIs."
 optional = false
-python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
+python-versions = ">=3.10"
 files = [
-    {file = "sphinxcontrib-httpdomain-1.8.1.tar.gz", hash = "sha256:6c2dfe6ca282d75f66df333869bb0ce7331c01b475db6809ff9d107b7cdfe04b"},
-    {file = "sphinxcontrib_httpdomain-1.8.1-py2.py3-none-any.whl", hash = "sha256:21eefe1270e4d9de8d717cc89ee92cc4871b8736774393bafc5e38a6bb77b1d5"},
+    {file = "sphinxcontrib_httpdomain-2.0.0-py3-none-any.whl", hash = "sha256:e968775c9994f8139cb6ff91e1f6a8557396a2cc08073997eed10d9b39f96df3"},
+    {file = "sphinxcontrib_httpdomain-2.0.0.tar.gz", hash = "sha256:9e4e8733bf41ee4d9d5f9eb4dbf3cc2c22a665221ba42c5c3ae181b98af8855d"},
 ]
 
 [package.dependencies]
-six = "*"
-Sphinx = ">=1.6"
+sphinx = ">=6.0"
 
 [[package]]
 name = "sphinxcontrib-jsmath"
@@ -3339,4 +3327,4 @@ deploy = ["gunicorn", "psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "4434510d94f36515d7399d9dba8e195108c1d708a05700420aee6c4021ad9e19"
+content-hash = "ee2037062814cda404027a42f650157f8dc45b272c4516074ca7288936f6436f"
