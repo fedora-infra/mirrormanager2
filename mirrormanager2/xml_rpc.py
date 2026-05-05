@@ -25,7 +25,6 @@ import base64
 import bz2
 import json
 import logging
-import pickle
 
 from mirrormanager2.database import DB
 from mirrormanager2.lib.hostconfig import read_host_config
@@ -42,19 +41,17 @@ XMLRPC = XMLRPCHandler("xmlrpc")
 
 
 @XMLRPC.register
-def checkin(pickledata):
-    is_pickle = False
-    uncompressed = bz2.decompress(base64.urlsafe_b64decode(pickledata))
+def checkin(jsondata):
+    uncompressed = bz2.decompress(base64.urlsafe_b64decode(jsondata))
     try:
         config = json.loads(uncompressed)
-    except ValueError:
-        logging.info("Fell back to pickle")
-        is_pickle = True
-        config = pickle.loads(uncompressed)
+    except ValueError as e:
+        logging.warning(f"Checkin is not JSON! ({e})")
+        return "error checking in"
     r, host, message = read_host_config(DB.session, config)
     if r is not None:
-        logging.info(f"Checkin for host {host} (pickle:{is_pickle}) succesful: {message}")
+        logging.info(f"Checkin for host {host} succesful: {message}")
         return message + "checked in successful"
     else:
-        logging.error(f"Error for host {host} (pickle:{is_pickle}) during checkin: {message}")
+        logging.error(f"Error for host {host} during checkin: {message}")
         return message + "error checking in"
