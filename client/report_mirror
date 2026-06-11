@@ -8,8 +8,9 @@ import json
 import os
 import pprint
 import sys
-import xmlrpc.client as xmlrpclib
 from argparse import ArgumentParser
+
+import requests
 
 # globals
 exclude_list = []
@@ -112,7 +113,7 @@ def parse_section(conf, section, item, required_options, optional_options=None):
         optional_options = []
     if conf.has_option(section, "enabled"):
         if conf.get(section, "enabled") != "1" and section.lower() in item.config:
-            print("removing disabled section %s" % (section))
+            print(f"removing disabled section {section}")
             del item.config[section.lower()]
             return False
 
@@ -134,7 +135,7 @@ def parse_section(conf, section, item, required_options, optional_options=None):
 def parse_global(conf, section, item):
     required_options = ["enabled", "server"]
     if not parse_section(conf, section, item, required_options):
-        errorprint("missing required options (server AND enabled) in [%s] section" % (section))
+        errorprint(f"missing required options (server AND enabled) in [{section}] section")
         return False
     return True
 
@@ -188,7 +189,7 @@ def config(cfg, item, crawl=True):
     conf = configparser.ConfigParser()
     files = conf.read(cfg)
     if files == []:
-        errorprint("Configuration file %s not found" % (cfg))
+        errorprint(f"Configuration file {cfg} not found")
         return False
     conf.read(cfg)
 
@@ -203,7 +204,7 @@ def config(cfg, item, crawl=True):
                 if not parsefunc(conf, section, item):
                     return False
             else:
-                errorprint("Invalid configuration - missing section [%s]" % (section))
+                errorprint(f"Invalid configuration - missing section [{section}]")
                 sys.exit(1)
 
         for section in conf.sections():
@@ -283,27 +284,22 @@ def main():
 
     if not args.no_send:
         #  print("Connecting to %s" % item.config['global']['server'])
-        server = xmlrpclib.ServerProxy(item.config["global"]["server"])
 
         data = base64.urlsafe_b64encode(bz2.compress(p.encode())).decode()
 
-        if data is not None:
-            try:
-                print(server.checkin(data))
-            except OSError as m:
-                print("Error checking in: %s.  Please try again later." % (m[1]))
-            except xmlrpclib.ProtocolError:
-                print(
-                    "Error checking in: Service Temporarily "
-                    "Unavailable.  Please try again later."
-                )
+        try:
+            response = requests.post(
+                item.config["global"]["server"],
+                json={"data": data},
+            )
+            if response.ok:
+                print("Success:", response.json())
+            else:
+                print("Error:", response.json())
                 sys.exit(1)
-            except xmlrpclib.Fault:
-                print(
-                    "Error checking in.  Connection closed before "
-                    "checkin complete.  Please try again later."
-                )
-                sys.exit(1)
+        except requests.RequestException as e:
+            errorprint(f"Failed to connect to server: {e}")
+            sys.exit(1)
 
 
 if __name__ == "__main__":

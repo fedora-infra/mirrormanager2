@@ -1,4 +1,11 @@
+Dependencies
+============
+
+The report_mirror script requires the following non-stdlib Python module:
+- requests
+
 New in v1.2.10: rsyncFilter
+============================
 
 The rsyncFilter web interface takes a comma-separated list of
 Categories to request, a timestamp (seconds since the epoch) of your

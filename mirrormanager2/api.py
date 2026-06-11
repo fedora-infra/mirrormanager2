@@ -21,10 +21,17 @@
 MirrorManager2 API controller.
 """
 
+import base64
+import binascii
+import bz2
+import json
+import logging
+
 import flask
 
 import mirrormanager2.lib as mmlib
 from mirrormanager2.database import DB
+from mirrormanager2.lib.hostconfig import read_host_config
 
 views = flask.Blueprint("api", __name__)
 
@@ -151,3 +158,33 @@ def api_repositories():
     jsonout = flask.jsonify(output)
     jsonout.status_code = 200
     return jsonout
+
+
+@views.route("/checkin", methods=["POST"])
+def checkin():
+    """REST API endpoint to replace XML-RPC checkin functionality."""
+    try:
+        data = flask.request.get_json()
+
+        if not data or "data" not in data:
+            return flask.jsonify({"message": "Missing data parameter"}), 400
+
+        uncompressed = bz2.decompress(base64.urlsafe_b64decode(data["data"]))
+        config = json.loads(uncompressed)
+        r, host, message = read_host_config(DB.session, config)
+
+        msg = message.strip()
+        if r is not None:
+            logging.info(f"Checkin for host {host} successful: {message}")
+            result = f"{msg} checked in successfully" if msg else "checked in successfully"
+            return flask.jsonify({"message": result})
+        else:
+            logging.error(f"Error for host {host} during checkin: {message}")
+            result = f"{msg} error checking in" if msg else "error checking in"
+            return flask.jsonify({"message": result}), 400
+    except (binascii.Error, OSError, json.JSONDecodeError) as e:
+        logging.error(f"Invalid client data: {e}")
+        return flask.jsonify({"message": f"Invalid data: {e}"}), 400
+    except Exception as e:
+        logging.error(f"Checkin error: {e}")
+        return flask.jsonify({"message": f"Internal server error: {e}"}), 500
