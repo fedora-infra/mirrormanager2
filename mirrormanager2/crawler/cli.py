@@ -267,7 +267,16 @@ def record_crawl(ctx_obj, options, results: list[CrawlResult]):
     db_manager = get_db_manager(config)
     with db_manager.Session() as session:
         for result in results:
-            store_crawl_result(config, options, session, result)
+            try:
+                store_crawl_result(config, options, session, result)
+            except Exception:
+                # One broken result must not lose the results of all other hosts
+                logger.exception(
+                    "Could not store the crawl result of host %s (%s)",
+                    result.host_id,
+                    result.host_name,
+                )
+                session.rollback()
         session.commit()
         report_crawl(console, options, results)
 

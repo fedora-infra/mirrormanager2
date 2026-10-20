@@ -271,6 +271,31 @@ def test_reporter_host_disabled(config, db, site, hosts):
     assert failed_host.disable_reason == "dummy crawl failure"
 
 
+def test_reporter_host_deleted_during_crawl(config, db, site, hosts, caplog):
+    """A host deleted while the crawl was running must not break storing the results."""
+    deleted_host: model.Host = db.scalar(
+        sa.select(model.Host).where(model.Host.name == "mirror2.localhost")
+    )
+    deleted_host_id = deleted_host.id
+    crawl_result = CrawlResult(
+        host_id=deleted_host_id,
+        host_name=deleted_host.name,
+        status=CrawlStatus.OK.value,
+        details=None,
+        finished_at=datetime.now(),
+        duration=42,
+    )
+    db.delete(deleted_host)
+    db.commit()
+    store_crawl_result(
+        config,
+        options={"repodata": False, "canary": False},
+        session=db,
+        crawl_result=crawl_result,
+    )
+    assert f"Host {deleted_host_id} (mirror2.localhost) no longer exists" in caplog.text
+
+
 def _http_response(status_code, headers=None, url="http://localhost/testdata/repomd.xml"):
     response = requests.Response()
     response.status_code = status_code
