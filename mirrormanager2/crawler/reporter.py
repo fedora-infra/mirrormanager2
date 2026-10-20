@@ -115,6 +115,14 @@ class Reporter:
 
 def store_crawl_result(config, options, session, crawl_result: "CrawlResult"):
     host = mmlib.get_host(session, crawl_result.host_id)
+    if host is None:
+        # The host (or its site) was deleted while the crawl was running.
+        logger.warning(
+            "Host %s (%s) no longer exists, dropping its crawl result",
+            crawl_result.host_id,
+            crawl_result.host_name,
+        )
+        return
     host.last_crawled = crawl_result.finished_at
     reporter = Reporter(config, session, host)
 
