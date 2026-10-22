@@ -441,3 +441,26 @@ def test_redirect_on_the_same_scheme_is_not_a_problem(db, url, location):
     # The base directory check has to keep accepting these, every common web
     # server answers a directory this way.
     assert connector.check_url(url) is True
+
+
+def test_rsync_listing_not_reused_across_categories(db, dir_obj_with_files, config):
+    """One rsync module serving several categories: the listing must be redone per category URL."""
+    from mirrormanager2.crawler.rsync_connector import RsyncConnector
+
+    connector = RsyncConnector(config, "localhost", 0, lambda *a: None)
+    listings = []
+
+    def fake_run(url):
+        listings.append(url)
+        return {"dummy": {"mode": "-rw-r--r--", "size": "1", "date": "", "time": ""}}
+
+    connector._run = fake_run
+    connector._check_dir = lambda dirname, directory: True
+    connector.check_category("rsync://localhost/module/free/fedora", dir_obj_with_files, 0)
+    connector.check_category("rsync://localhost/module/free/fedora", dir_obj_with_files, 0)
+    assert listings == ["rsync://localhost/module/free/fedora"]
+    connector.check_category("rsync://localhost/module/free/el", dir_obj_with_files, 0)
+    assert listings == [
+        "rsync://localhost/module/free/fedora",
+        "rsync://localhost/module/free/el",
+    ]
