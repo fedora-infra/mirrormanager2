@@ -37,6 +37,11 @@ class Notifier:
     #     self.notify("propagation.complete", dict(results=results))
 
     def notify_disabled(self, host: Host):
+        if not self._config.get("USE_FEDORA_MESSAGING", True):
+            # Same switch the web UI honours; without a message bus every
+            # publish attempt would wait for its timeout and then fail.
+            logger.debug("Fedora Messaging is disabled, not notifying about %s", host.name)
+            return
         host_urls = get_host_urls(host, config=self._config)
         body = {
             "site": site_to_message_body(host.site),
