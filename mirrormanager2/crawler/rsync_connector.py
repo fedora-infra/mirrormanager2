@@ -14,10 +14,12 @@ class RsyncConnector(Connector):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._scan_result = None
+        self._scan_url = None
 
     def close(self):
         super().close()
         self._scan_result = None
+        self._scan_url = None
 
     def _run(self, url):
         if not url.endswith("/"):
@@ -115,9 +117,13 @@ class RsyncConnector(Connector):
         directory,
         category_prefix_length,
     ):
-        # Scan only once for the entire category
-        if self._scan_result is None:
+        # Scan only once for the entire category. The connector is shared by all
+        # URLs of the same rsync module, and a host can serve several categories
+        # from one module (rsync://host/module/free/fedora, .../module/free/el):
+        # a listing made for another category URL must not be reused.
+        if self._scan_result is None or self._scan_url != url:
             self._scan_result = self._run(url)
+            self._scan_url = url
         if not self._scan_result:
             # no rsync content, fail!
             raise SchemeNotAvailable
