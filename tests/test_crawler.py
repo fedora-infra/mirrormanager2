@@ -464,3 +464,33 @@ def test_rsync_listing_not_reused_across_categories(db, dir_obj_with_files, conf
         "rsync://localhost/module/free/fedora",
         "rsync://localhost/module/free/el",
     ]
+
+
+def test_reporter_host_disabled_without_fedora_messaging(config, db, site, hosts, monkeypatch):
+    """USE_FEDORA_MESSAGING = False must disable the host without touching the message bus."""
+    from mirrormanager2.crawler import notif
+
+    def fail(*args, **kwargs):
+        raise AssertionError("fedmsg_publish must not be called")
+
+    monkeypatch.setattr(notif, "fedmsg_publish", fail)
+    config["USE_FEDORA_MESSAGING"] = False
+    failed_host: model.Host = db.scalar(
+        sa.select(model.Host).where(model.Host.name == "mirror2.localhost")
+    )
+    crawl_result = CrawlResult(
+        host_id=failed_host.id,
+        host_name=failed_host.name,
+        status=CrawlStatus.DISABLE.value,
+        details="dummy crawl failure",
+        finished_at=datetime.now(),
+        duration=42,
+    )
+    store_crawl_result(
+        config,
+        options={"repodata": False, "canary": False},
+        session=db,
+        crawl_result=crawl_result,
+    )
+    db.refresh(failed_host)
+    assert failed_host.user_active is False
