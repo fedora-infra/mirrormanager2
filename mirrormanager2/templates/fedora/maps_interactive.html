@@ -4,6 +4,11 @@
 {% block tag %}maps{% endblock %}
 
 {% block header %}
+{#- tile.openstreetmap.org answers requests without a Referer with an "Access
+    blocked" tile. Deployments behind a proxy that sets "Referrer-Policy:
+    same-origin" would send none to the tile servers; this overrides it for
+    this page and sends only the origin. #}
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <script src="{{ url_for('static', filename='map/OpenLayers.js') }}" type="text/javascript"></script>
 {% endblock %}
 
