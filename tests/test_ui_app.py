@@ -1423,3 +1423,15 @@ def test_list_mirrors_country_is_the_mirror_location(client, db):
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "We currently have 1 active mirror for Fedora 27 on x86_64 in US" in data
+
+
+def test_maps(client):
+    """Test the maps endpoint."""
+    output = client.get("/maps")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert "<title>Interactive Map - MirrorManager</title>" in data
+    # OpenStreetMap's tile servers block requests without a Referer; the page
+    # must send one even behind a proxy that sets Referrer-Policy: same-origin.
+    assert '<meta name="referrer" content="strict-origin-when-cross-origin">' in data
+    assert "tile.openstreetmap.org" in data
