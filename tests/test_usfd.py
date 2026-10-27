@@ -19,10 +19,10 @@ REPOMD_PATH = f"{UMDL_PREFIX}pub/fedora/linux/development/22/x86_64/os/repodata/
 
 
 @pytest.fixture()
-def configfile(tmp_path):
+def configfile(tmp_path, db_url):
     path = tmp_path.joinpath("mirrormanager2_tests.cfg").as_posix()
     contents = f"""
-SQLALCHEMY_DATABASE_URI = 'sqlite:///{tmp_path.as_posix()}/test.sqlite'
+SQLALCHEMY_DATABASE_URI = {db_url!r}
 import os
 DB_ALEMBIC_LOCATION = os.path.join("{FOLDER}", "..", "mirrormanager2", "lib", "migrations")
 UMDL_PREFIX = '{UMDL_PREFIX}'
