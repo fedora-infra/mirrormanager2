@@ -25,17 +25,43 @@ import base64
 import bz2
 import json
 import logging
+from xmlrpc.server import SimpleXMLRPCDispatcher
+
+from flask import current_app, request
 
 from mirrormanager2.database import DB
 from mirrormanager2.lib.hostconfig import read_host_config
 
-try:
-    from flask_xmlrpcre.xmlrpcre import XMLRPCHandler
-except ImportError:
-    # flask-xml-rpc is patched in Fedora, and flask-xml-rpc-re is not packaged.
-    from flaskext.xmlrpc import XMLRPCHandler
-
 logger = logging.getLogger(__name__)
+
+
+class XMLRPCHandler(SimpleXMLRPCDispatcher):
+    """
+    Serve XML-RPC methods as a Flask view.
+
+    This used to come from flask-xml-rpc, which is unmaintained upstream and has been
+    retired from Fedora.  Only the handful of features MirrorManager uses are kept.
+    """
+
+    def __init__(self, endpoint_name):
+        super().__init__(allow_none=True, encoding="utf-8")
+        self.endpoint_name = endpoint_name
+        self.register_introspection_functions()
+
+    def register(self, function):
+        """Register function as an XML-RPC method.  Can be used as a decorator."""
+        return self.register_function(function)
+
+    def connect(self, app, route):
+        """Serve the registered methods at route on app."""
+        app.add_url_rule(route, self.endpoint_name, self.handle_request, methods=["POST"])
+
+    def handle_request(self):
+        # _marshaled_dispatch() is private, but it is the only entry point the
+        # dispatcher offers for an already read request body.
+        response = self._marshaled_dispatch(request.data)
+        return current_app.response_class(response, content_type="text/xml")
+
 
 XMLRPC = XMLRPCHandler("xmlrpc")
 

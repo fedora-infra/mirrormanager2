@@ -21,7 +21,6 @@ BuildRequires:  python%{python_pkgversion}-email-validator
 BuildRequires:  python%{python_pkgversion}-flask
 BuildRequires:  python%{python_pkgversion}-flask-admin
 BuildRequires:  python%{python_pkgversion}-flask-oidc >= 2.0.0
-BuildRequires:  python%{python_pkgversion}-flask-xml-rpc
 BuildRequires:  python%{python_pkgversion}-flask-wtf
 BuildRequires:  python%{python_pkgversion}-wtforms
 BuildRequires:  python%{python_pkgversion}-backoff
@@ -47,7 +46,6 @@ Requires:  python%{python_pkgversion}-email-validator
 Requires:  python%{python_pkgversion}-flask
 Requires:  python%{python_pkgversion}-flask-admin
 Requires:  python%{python_pkgversion}-flask-oidc >= 2.0.0
-Requires:  python%{python_pkgversion}-flask-xml-rpc
 Requires:  python%{python_pkgversion}-flask-wtf
 Requires:  python%{python_pkgversion}-wtforms
 Requires:  python%{python_pkgversion}-backoff
