@@ -1,2 +1,0 @@
-from Config import *
-addFilter("incoherent-logrotate-file (/etc/logrotate.d/mm2_crawler)");
