@@ -30,9 +30,27 @@ jobs:
           - "fedora/fedora:latest"
           # psycopg2 not working on python 3.13 (in rawhide) yet
           #- "fedora/fedora:rawhide"
+        database:
+          - "sqlite"
+          - "postgresql"
 
     container:
       image: quay.io/${{ matrix.container }}
+
+    services:
+      postgres:
+        image: registry.access.redhat.com/hi/postgresql:latest
+        env:
+          POSTGRES_PASSWORD: test_password
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Empty means the tests use a SQLite file, see tests/conftest.py
+      MM2_TEST_DB_URL: ${{ matrix.database == 'postgresql' && 'postgresql://postgres:test_password@postgres:5432/postgres' || '' }}
 
     steps:
     - uses: actions/checkout@v6

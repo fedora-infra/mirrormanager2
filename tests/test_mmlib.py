@@ -360,7 +360,7 @@ def test_get_version_by_name_version(db, base_items, version):
     """Test the get_version_by_name_version function of
     mirrormanager2.lib.
     """
-    results = mirrormanager2.lib.get_version_by_name_version(db, "Fedora", 27)
+    results = mirrormanager2.lib.get_version_by_name_version(db, "Fedora", "27")
     assert results.product.name == "Fedora"
     assert results.name == "27"
 

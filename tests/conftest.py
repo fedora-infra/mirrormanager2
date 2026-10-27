@@ -5,9 +5,11 @@ mirrormanager2 tests.
 import datetime
 import logging
 import os
+import uuid
 
 import pytest
 import responses
+import sqlalchemy as sa
 from sqlalchemy import select
 
 from mirrormanager2.app import create_app
@@ -18,14 +20,45 @@ from .auth import AnotherFakeFasUser, FakeFasUser, FakeFasUserAdmin, user_set
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
+# Set this to a PostgreSQL URL to run the tests against PostgreSQL instead of SQLite,
+# for example postgresql://postgres:password@localhost:5432/postgres
+TEST_DB_URL = os.getenv("MM2_TEST_DB_URL")
+
 
 @pytest.fixture()
-def app(tmp_path):
+def db_url(tmp_path):
+    """The database URL to run a single test against.
+
+    With SQLite every test gets its own file, with PostgreSQL every test gets its own
+    database, so that the tests stay independent of each other either way.
+    """
+    if not TEST_DB_URL:
+        # A file database is required to check the integrity, don't ask
+        yield f"sqlite:///{tmp_path.as_posix()}/test.sqlite"
+        return
+
+    admin_url = sa.engine.make_url(TEST_DB_URL)
+    name = f"mm2_test_{uuid.uuid4().hex}"
+    admin_engine = sa.create_engine(admin_url, isolation_level="AUTOCOMMIT")
+    try:
+        with admin_engine.connect() as connection:
+            connection.execute(sa.text(f'CREATE DATABASE "{name}"'))
+        try:
+            yield admin_url.set(database=name).render_as_string(hide_password=False)
+        finally:
+            with admin_engine.connect() as connection:
+                # The application may still hold connections to the database
+                connection.execute(sa.text(f'DROP DATABASE "{name}" WITH (FORCE)'))
+    finally:
+        admin_engine.dispose()
+
+
+@pytest.fixture()
+def app(db_url):
     app = create_app(
         {
             "TESTING": True,
-            # A file database is required to check the integrity, don't ask
-            "SQLALCHEMY_DATABASE_URI": f"sqlite:///{tmp_path.as_posix()}/test.sqlite",
+            "SQLALCHEMY_DATABASE_URI": db_url,
             "OIDC_CLIENT_SECRETS": os.path.join(HERE, "client_secrets.json"),
             "USE_FEDORA_MESSAGING": False,
         }

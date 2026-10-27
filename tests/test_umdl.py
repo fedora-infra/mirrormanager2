@@ -24,10 +24,10 @@ def reset_caches():
 
 
 @pytest.fixture()
-def configfile(tmp_path):
+def configfile(tmp_path, db_url):
     path = tmp_path.joinpath("mirrormanager2_tests.cfg").as_posix()
     contents = f"""
-SQLALCHEMY_DATABASE_URI = 'sqlite:///{tmp_path.as_posix()}/test.sqlite'
+SQLALCHEMY_DATABASE_URI = {db_url!r}
 import os
 DB_ALEMBIC_LOCATION = os.path.join("{FOLDER}", "..", "mirrormanager2", "lib", "migrations")
 UMDL_PREFIX = '{FOLDER}/../testdata/'
@@ -173,7 +173,8 @@ def test_1_umdl(db, command_args, base_items, directory, category, categorydirec
     assert results[2].name == "source"
     assert results[3].name == "x86_64"
 
-    results = db.execute(sa.select(model.Directory)).scalars().all()
+    # Order explicitly, PostgreSQL does not return the insertion order like SQLite
+    results = db.execute(sa.select(model.Directory).order_by(model.Directory.id)).scalars().all()
     # tree testdata/pub says there are 49 directories and 49 files
     # There are 7 directories added by create_directory which are not
     # present on the FS, 49 + 7 = 56, so we are good \ó/
