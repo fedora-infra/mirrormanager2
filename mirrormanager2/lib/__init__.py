@@ -255,20 +255,30 @@ def get_country_continent_redirect(session):
 
 
 def get_countries(session):
-    """Return all countries that have mirrors, ordered by country code.
+    """Return the country codes of all public active mirrors, ordered by code.
+
+    The country of a mirror is stored on the host itself.  The host_country table
+    is unrelated: it lists the countries a mirror is willing to serve, see
+    HostCountry.
 
     :arg session: the session with which to connect to the database.
 
     """
     query = (
-        session.query(model.Country)
-        .join(model.HostCountry)
-        .join(model.Host)
-        .distinct()
-        .order_by(model.Country.code)
+        sa.select(sa.func.distinct(model.Host.country))
+        .join(model.Site)
+        .filter(
+            model.Host.private.is_(False),
+            model.Host.admin_active.is_(True),
+            model.Host.user_active.is_(True),
+            model.Site.private.is_(False),
+            model.Site.admin_active.is_(True),
+            model.Site.user_active.is_(True),
+        )
+        .order_by(model.Host.country)
     )
 
-    return query.all()
+    return list(session.scalars(query))
 
 
 def get_user_by_username(session, username):
@@ -533,7 +543,7 @@ def get_mirrors(
     product_id=None,
     category_ids=None,
     pagination=None,
-    country_id=None,
+    country_code=None,
 ):
     """Retrieve the mirrors based on the criteria specified.
 
@@ -596,9 +606,6 @@ def get_mirrors(
             model.HostCategoryUrl.private == host_category_url_private
         )
 
-    if country_id is not None:
-        query = query.join(model.HostCountry).join(model.Country)
-
     if up2date is not None:
         query = query.join(model.HostCategoryDir).filter(model.HostCategoryDir.up2date == up2date)
 
@@ -614,8 +621,10 @@ def get_mirrors(
     if category_ids is not None:
         query = query.filter(model.HostCategory.category_id.in_(category_ids))
 
-    if country_id is not None:
-        query = query.filter(model.Country.id == country_id)
+    if country_code is not None:
+        # Host.country is the country the mirror is hosted in.  It is entered by
+        # hand, so compare it case insensitively.
+        query = query.filter(sa.func.upper(model.Host.country) == country_code.upper())
 
     final_query = session.query(model.Host).filter(model.Host.id.in_(query))
 
