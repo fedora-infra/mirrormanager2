@@ -3,6 +3,7 @@ mirrormanager2 tests.
 """
 
 import mirrormanager2.lib
+from mirrormanager2.lib import model
 
 
 def test_get_site(db, site):
@@ -824,3 +825,31 @@ def test_get_file_detail(db, directory, filedetail):
     results = mirrormanager2.lib.get_file_detail(db, "repomd.xml", 7, timestamp=1357758825)
     assert results.md5 == "foo_md5"
     assert results.directory.name == "pub/fedora/linux/updates/testing/25/x86_64"
+
+
+def test_get_countries_empty(db):
+    assert mirrormanager2.lib.get_countries(db) == []
+
+
+def test_get_countries(db, base_items, site, hosts, hostcountry):
+    """Test the get_countries function of mirrormanager2.lib."""
+    # The private host is in NL, it is not listed and neither is its country.
+    assert mirrormanager2.lib.get_countries(db) == ["FR", "HR", "US"]
+
+
+def test_get_mirrors_country_code(db, base_items, site, hosts, hostcountry):
+    """The country filter matches the host country, not the countries it serves."""
+    results = mirrormanager2.lib.get_mirrors(db, country_code="US")
+    assert [host.name for host in results] == ["mirror.localhost"]
+
+    # Host 1 is in the US and now also serves the Netherlands.
+    netherlands = mirrormanager2.lib.get_country_by_name(db, "NL")
+    db.add(model.HostCountry(host_id=1, country_id=netherlands.id))
+    db.commit()
+
+    results = mirrormanager2.lib.get_mirrors(db, country_code="NL")
+    assert [host.name for host in results] == ["private.localhost"]
+
+    # Host countries are entered by hand, match them case insensitively.
+    results = mirrormanager2.lib.get_mirrors(db, country_code="us")
+    assert [host.name for host in results] == ["mirror.localhost"]

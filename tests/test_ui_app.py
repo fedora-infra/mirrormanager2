@@ -6,7 +6,8 @@ import os
 
 import pytest
 
-from mirrormanager2.lib import get_host
+import mirrormanager2.lib
+from mirrormanager2.lib import get_host, model
 
 
 @pytest.fixture(autouse=True)
@@ -1396,3 +1397,29 @@ def test_toggle_private_flag_site_auth_more(client, user, hostcategorydir_even_m
     data = output.get_data(as_text=True)
     # Make sure the host_category_directory is gone
     assert "pub/fedora/linux/updates/testing/27/x86_64" not in data
+
+
+def test_list_mirrors_country_is_the_mirror_location(client, db):
+    """The country filter must match where the mirror is, not who it serves.
+
+    The host_country table lists the countries a mirror is willing to serve, it has
+    nothing to do with the country the mirror is hosted in.
+    """
+    # This host is in the US and is the only mirror listed for Fedora 27 on x86_64 there.
+    host = db.get(model.Host, 1)
+    assert host.country == "US"
+    netherlands = mirrormanager2.lib.get_country_by_name(db, "NL")
+    db.add(model.HostCountry(host_id=host.id, country_id=netherlands.id))
+    db.commit()
+
+    # Allowing Dutch users does not move the mirror to the Netherlands.
+    output = client.get("/mirrors/Fedora/27/x86_64?country=NL")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert "There are currently no active mirrors registered for Fedora 27 on x86_64 in NL." in data
+
+    # And it does not remove it from the US either.
+    output = client.get("/mirrors/Fedora/27/x86_64?country=US")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert "We currently have 1 active mirror for Fedora 27 on x86_64 in US" in data

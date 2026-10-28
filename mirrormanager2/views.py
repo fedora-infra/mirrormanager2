@@ -61,7 +61,7 @@ def list_mirrors(p_name=None, p_version=None, p_arch=None):
     version_id = None
     arch_id = None
     product_id = None
-    country_id = None
+    country_code = None
     filters = {
         "product": None,
         "version": None,
@@ -86,11 +86,11 @@ def list_mirrors(p_name=None, p_version=None, p_arch=None):
             filters["arch"] = p_arch
 
     p_country = flask.request.args.get("country")
-    if p_country:
-        country = mmlib.get_country_by_name(DB.session, p_country)
-        if country:
-            country_id = country.id
-            filters["country"] = p_country
+    # The country table is a leftover from MirrorManager1 and is not maintained,
+    # so only check that the value looks like a country code.
+    if p_country and re.match(forms.COUNTRY_REGEX, p_country):
+        country_code = p_country.upper()
+        filters["country"] = country_code
 
     mirrors = mmlib.get_mirrors(
         DB.session,
@@ -108,7 +108,7 @@ def list_mirrors(p_name=None, p_version=None, p_arch=None):
         arch_id=arch_id,
         product_id=product_id,
         pagination=PaginationArgs(),
-        country_id=country_id,
+        country_code=country_code,
     )
 
     countries = mmlib.get_countries(DB.session)
@@ -118,7 +118,7 @@ def list_mirrors(p_name=None, p_version=None, p_arch=None):
         mirrors=mirrors,
         filters=filters,
         countries=countries,
-        selected_country=p_country,
+        selected_country=country_code,
     )
 
 
