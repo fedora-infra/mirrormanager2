@@ -15,6 +15,19 @@
   {%- if filters["country"] %} in {{filters["country"]}} {%- endif -%}
 {% endset %}
 
+<form class="mb-3" method="get" action="{{ request.path }}">
+  <label class="form-label fw-bold" for="country-filter">Country</label>
+  <select class="form-select form-select-sm d-inline w-auto ms-1" id="country-filter" name="country">
+    <option value="">All countries</option>
+    {% for country in countries %}
+      <option value="{{ country }}" {% if selected_country == country %}selected{% endif %}>
+        {{ country }}
+      </option>
+    {% endfor %}
+  </select>
+  <noscript><button class="btn btn-sm btn-primary" type="submit">Filter</button></noscript>
+</form>
+
 {% if mirrors %}
 <p>
   We currently have {{ mirrors | length }} active mirror{% if mirrors | length != 1 %}s{% endif %}{{ filter_text }}
@@ -22,16 +35,7 @@
 
 <table class="table table-striped">
   <tr>
-    <th>
-      <select class="form-select form-select-sm d-inline fw-bold w-auto ms-1" id="country-filter" name="country">
-        <option value="">Country</option>
-        {% for country in countries %}
-          <option value="{{ country.code }}" {% if selected_country == country.code %}selected{% endif %}>
-            {{ country.code }}
-          </option>
-        {% endfor %}
-      </select>
-    </th>
+    <th>Country</th>
     <th>Site Name</th>
     <th>Mirror Name</th>
     <th>Categories</th>
@@ -90,6 +94,8 @@ document.getElementById('country-filter').addEventListener('change', function() 
     } else {
         currentUrl.searchParams.delete('country');
     }
+    // A different country has a different number of pages, start over.
+    currentUrl.searchParams.delete('page_number');
 
     window.location.href = currentUrl.toString();
 });
