@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 import responses
+from sqlalchemy.orm import scoped_session
 
 # TODO: use parametrize
 
@@ -563,3 +564,21 @@ def test_admin_versionview(client, admin_user):
         )
         is not None
     )
+
+
+def test_admin_session_is_request_scoped(app):
+    """The admin views must resolve the session when they use it.
+
+    They are registered once when the application is created, so holding a single
+    session would share it between all the requests of the process.
+    """
+    views = app.extensions["admin"][0]._views[1:]
+    assert views
+    for view in views:
+        assert isinstance(view.session, scoped_session)
+
+    with app.app_context():
+        first = views[0].session()
+    with app.app_context():
+        second = views[0].session()
+    assert first is not second
