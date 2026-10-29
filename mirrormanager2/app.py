@@ -109,7 +109,9 @@ def create_app(config=None):
     # Now init Flask-Admin
     ADMIN.init_app(app)
     with app.app_context():
-        register_admin_views(app, ADMIN, DB.session)
+        # Pass the scoped session factory and not DB.session: the views are registered
+        # once, but the session it returns is removed at the end of every request.
+        register_admin_views(app, ADMIN, DB.manager.Session)
 
     # Template variables
     app.context_processor(inject_variables)
