@@ -1,5 +1,6 @@
 import logging
 from contextlib import suppress
+from urllib.parse import urljoin, urlsplit
 
 import requests
 
@@ -10,6 +11,43 @@ from .connector import Connector, FetchingFailed, TryLater
 from .constants import CONNECTION_TIMEOUT, REPODATA_FILE
 
 logger = logging.getLogger(__name__)
+
+
+def _changes_scheme(url, location):
+    """Whether following `location` from `url` would leave the scheme."""
+    if not location:
+        return False
+    return urlsplit(urljoin(url, location)).scheme != urlsplit(url).scheme
+
+
+def _is_scheme_redirect(url, response):
+    """Report whether the response sends us to a different scheme.
+
+    A mirror is listed with the scheme it registered, so content registered
+    under an http URL has to be served over http. An http URL which only
+    works by redirecting to https is of no use to somebody who asked for
+    http, for example to let a caching proxy do its work. Such a host has to
+    register the https URL instead.
+
+    A redirect which stays on the same scheme is not a problem and is not
+    reported. Asking for a directory without a trailing slash is answered
+    with a redirect to the same URL with one by every common web server, and
+    that is how most URLs are registered.
+    """
+    if not 300 <= response.status_code < 400:
+        return False
+    location = response.headers.get("Location", "")
+    if not _changes_scheme(url, location):
+        return False
+    logger.info(
+        "%s returns %s and redirects to %s, which is a different scheme. The "
+        "content has to be available on the URL which is registered, so please "
+        "register that URL instead.",
+        url,
+        response.status_code,
+        location,
+    )
+    return True
 
 
 class HTTPConnector(Connector):
@@ -27,8 +65,25 @@ class HTTPConnector(Connector):
 
     def check_url(self, url):
         conn = self.get_connection()
+        # This is a directory, so ask for it with a trailing slash. Without
+        # one every common web server answers with a redirect which adds it,
+        # and a server behind TLS termination which does not look at
+        # X-Forwarded-Proto builds that redirect with the wrong scheme. That
+        # is not the mirror refusing to serve the scheme it registered, it is
+        # just a badly built redirect, and the content is there.
+        if not url.endswith("/"):
+            url += "/"
         response = conn.head(url, timeout=CONNECTION_TIMEOUT)
-        return response.ok
+        if _is_scheme_redirect(url, response):
+            return False
+        # This check only has to find the mirrors which dropped the content,
+        # and those answer with a 404. Anything else means there is still
+        # something at this path: a 403 from a directory which is not
+        # listable, or a 502 from a server which cannot build the listing but
+        # does serve the files below it. Whether those files are there and up
+        # to date is decided per file, and a file which cannot be read leaves
+        # the directory undecided instead of marking it up to date.
+        return response.status_code not in (404, 410)
 
     def _check_file(self, conn, url, filedata, readable):
         """Returns tuple:
@@ -59,6 +114,12 @@ class HTTPConnector(Connector):
         except requests.RequestException as e:
             logger.debug("Could not get the content length for %s: %s", url, e)
             return None
+
+        if _is_scheme_redirect(url, response):
+            # The content is not served on this URL at all. The Content-Length
+            # below would be the one of the redirect page, so this has to be
+            # caught before looking at it.
+            return False
 
         try:
             content_length = response.headers["Content-Length"]
@@ -112,6 +173,14 @@ class HTTPConnector(Connector):
             )
         except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout) as e:
             raise FetchingFailed() from e
+        # Unlike head(), get() follows redirects. Same scheme redirects are
+        # fine, but the content must not be fetched over another scheme than
+        # the one which is registered.
+        schemes = {urlsplit(hop.url).scheme for hop in r.history}
+        schemes.add(urlsplit(r.url).scheme)
+        if schemes != {urlsplit(url).scheme}:
+            logger.info("%s was redirected to %s, which is a different scheme.", url, r.url)
+            raise FetchingFailed(r)
         if not r.ok:
             raise FetchingFailed(r)
         return r.content
