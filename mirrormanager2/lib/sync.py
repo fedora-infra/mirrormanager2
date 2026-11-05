@@ -23,6 +23,7 @@ MirrorManager2 internal api to manage sync.
 """
 
 import errno
+import shlex
 import subprocess
 import tempfile
 import threading
@@ -62,8 +63,8 @@ def run_rsync(rsyncpath, extra_rsync_args=None, logger=None, timeout=None):
 
     :param rsyncpath: The path 'rsync' should use to do a recursive listing.
                       This can be anything 'rsync' accepts.
-    :param extra_rsync_args: Additional parameters added to 'rsync' like
-                             excludes or includes or anything else.
+    :param extra_rsync_args: Additional parameters added to 'rsync'. String is split
+            into individual arguments using shell-style word splitting (via shlex).
     :param logger: If a logger is available it will be used for messages
     :param timeout: The timeout after which the rsync process should
                     definitely end. Will be p.kill()-ed.
@@ -71,16 +72,19 @@ def run_rsync(rsyncpath, extra_rsync_args=None, logger=None, timeout=None):
     """
 
     tmpfile = tempfile.SpooledTemporaryFile(mode="w+t")
-    cmd = "rsync --temp-dir=/tmp -r --exclude=.snapshot --exclude='*.~tmp~'"
+    # The crawler passes host category URLs that mirror administrators enter in
+    # the web UI, and a shell would execute metacharacters in such a URL.
+    cmd = ["rsync", "--temp-dir=/tmp", "-r", "--exclude=.snapshot", "--exclude=*.~tmp~"]
     if extra_rsync_args is not None:
-        cmd += " " + extra_rsync_args
-    cmd += " " + rsyncpath
+        cmd.extend(shlex.split(extra_rsync_args))
+    cmd.append(rsyncpath)
+
     if logger is not None:
-        logger.debug("About to run the following rsync command: " + cmd)
+        logger.debug("About to run the following rsync command: %s", shlex.join(cmd))
+
     devnull = open("/dev/null", "r+")
     p = subprocess.Popen(
         cmd,
-        shell=True,
         stdin=devnull,
         stdout=tmpfile,
         stderr=devnull,
