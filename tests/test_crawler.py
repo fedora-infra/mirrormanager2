@@ -134,6 +134,53 @@ def test_run_rsync():
     assert "fedora/linux/development/22/" in output
 
 
+@pytest.mark.parametrize(
+    "payload",
+    [
+        ";touch {marker}",
+        "$(touch {marker})",
+        "`touch {marker}`",
+        "|| touch {marker}",
+        "| touch {marker}",
+    ],
+)
+def test_run_rsync_shell_injection(tmp_path, payload):
+    # Regression test to ensure shell metacharacters in rsync path are not executed
+    marker = tmp_path / "marker"
+    malicious_path = f"rsync://localhost/testdata/{payload.format(marker=marker)}"
+
+    result, fd = run_rsync(malicious_path)
+    fd.close()
+
+    # The command should fail (non-zero exit code) because the path is invalid
+    assert result != 0
+    # The shell injection must fail, meaning the marker file was never created
+    assert not marker.exists()
+
+
+def test_run_rsync_extra_args_quoting():
+    # Regression test to ensure quoting in extra_rsync_args is handled correctly
+    dest = FOLDER + "/../testdata/"
+    extra = "--exclude '*aalib*'"
+
+    result, fd = run_rsync(dest, extra)
+    assert result == 0
+
+    output = ""
+    while True:
+        line = fd.readline()
+        if not line:
+            break
+        output += line
+
+    fd.close()
+
+    # Check that aalib is correctly excluded despite the quoting
+    assert "aalib" not in output
+    # Check that non-excluded files remain
+    assert "fedora/linux/development/22/" in output
+
+
 def test_scan_rsync(db, dir_obj_with_files, config):
     """Test scanning directories with missing files."""
     connection_pool = ConnectionPool(config)
