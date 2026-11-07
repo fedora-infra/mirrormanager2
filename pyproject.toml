@@ -47,7 +47,10 @@ include = [
 [tool.poetry.dependencies]
 python = "^3.11"
 flask = ">=2.2.3,<4.0.0"
-flask-admin = "^1.6.0"
+flask-admin = ">=2.0.0,<3.0.0"
+# Not used directly: importing flask_admin.contrib.sqla fails when
+# flask-sqlalchemy is missing (pallets-eco/flask-admin issue 2958).
+flask-sqlalchemy = ">=3.1.1,<4.0.0"
 flask-healthz = "^1.0.0"
 flask-oidc = "^2.0.0"
 flask-wtf = "^1.1.1"
