@@ -30,7 +30,7 @@ import pickle
 import time
 
 import sqlalchemy as sa
-from sqlalchemy.orm import deferred, relationship
+from sqlalchemy.orm import deferred, relationship, validates
 
 from .database import BASE
 
@@ -168,6 +168,14 @@ class Host(BASE):
     # exclusive_dirs = MultipleJoin('DirectoryExclusiveHost')
     # locations = SQLRelatedJoin('Location')
     # countries = SQLRelatedJoin('Country')
+
+    @validates("country")
+    def uppercase_country(self, key, value):
+        # The country dropdown on the mirrors page lists the distinct values
+        # of this column, so a host with "de" adds a second Germany next to
+        # "DE". The web form already uppercases its input, but flask-admin
+        # writes the column directly.
+        return value.upper() if value else value
 
     # Constraints
     __table_args__ = (sa.UniqueConstraint("site_id", "name", name="host_idx"),)

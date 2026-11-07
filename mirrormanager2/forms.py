@@ -46,6 +46,11 @@ from flask import current_app, g
 COUNTRY_REGEX = "^[a-zA-Z][a-zA-Z]$"
 
 
+def uppercase(value):
+    """Field filter; the value is None when the field was not submitted."""
+    return value.upper() if value else value
+
+
 def is_number(form, field):
     """Check if the data in the field is a number and raise an exception
     if it is not.
@@ -96,6 +101,7 @@ class AddHostForm(FlaskForm):
             wtforms.validators.InputRequired(),
             wtforms.validators.Regexp(COUNTRY_REGEX, flags=re.IGNORECASE),
         ],
+        filters=[uppercase],
     )
     bandwidth_int = wtforms.StringField(
         "Bandwidth",
@@ -184,6 +190,7 @@ class AddHostCountryForm(FlaskForm):
             wtforms.validators.InputRequired(),
             wtforms.validators.Regexp(COUNTRY_REGEX, flags=re.IGNORECASE),
         ],
+        filters=[uppercase],
     )
 
 
