@@ -217,3 +217,11 @@ def test_user_groups(db, base_items, user_groups):
     assert item.groups == ["fpca"]
     item = model.User.get_by_pk(4)
     assert item.groups == ["fpca", "packager"]
+
+
+def test_host_country_is_uppercased():
+    """Host.country is uppercased on assignment, whoever assigns it."""
+    item = model.Host(country="de")
+    assert item.country == "DE"
+    item.country = "ro"
+    assert item.country == "RO"

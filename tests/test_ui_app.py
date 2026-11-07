@@ -362,6 +362,32 @@ def test_host_new_auth(client, user):
     assert '<div class="toast-body">Could not create the new host</div>' in data
 
 
+def test_host_new_lowercase_country(client, user, db):
+    """A country code entered in lower case is stored in upper case."""
+    output = client.get("/host/2/new")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    csrf_token = data.split('name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+    post_data = {
+        "name": "lowercase.example.com",
+        "admin_active": True,
+        "user_active": True,
+        "country": "se",
+        "bandwidth_int": 100,
+        "asn_clients": True,
+        "max_connections": 3,
+        "csrf_token": csrf_token,
+    }
+    output = client.post("/host/2/new", data=post_data, follow_redirects=True)
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert '<div class="toast-body">Host added</div>' in data
+
+    host = db.query(model.Host).filter(model.Host.name == "lowercase.example.com").one()
+    assert host.country == "SE"
+
+
 def test_siteadmin_new(client):
     """Test the siteadmin_new endpoint."""
     output = client.get("/site/2/admin/new")
@@ -828,6 +854,23 @@ def test_host_country_new_auth(client, another_user):
     assert '<h2 class="mb-0"><span class="fa fa-server"></span> private.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/3/host_country/34/delete">' in data
+
+
+def test_host_country_new_lowercase(client, another_user):
+    """A country code entered in lower case matches the country table."""
+    output = client.get("/host/3/country/new")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    csrf_token = data.split('name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+    post_data = {
+        "country": "fr",
+        "csrf_token": csrf_token,
+    }
+    output = client.post("/host/3/country/new", data=post_data, follow_redirects=True)
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert '<div class="toast-body">Host Country added</div>' in data
 
 
 def test_host_country_delete(client):
