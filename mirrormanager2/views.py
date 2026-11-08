@@ -626,6 +626,9 @@ def host_acl_ip_delete(host_id, host_acl_ip_id):
 
         if hostaclobj is None:
             flask.abort(404, "Host ACL IP not found")
+
+        if hostaclobj not in hostobj.acl_ips:
+            flask.abort(404, "Host ACL IP not associated with this host")
         else:
             DB.session.delete(hostaclobj)
         try:
@@ -709,6 +712,9 @@ def host_netblock_delete(host_id, host_netblock_id):
 
         if hostnetbobj is None:
             flask.abort(404, "Host netblock not found")
+
+        if hostnetbobj not in hostobj.netblocks:
+            flask.abort(404, "Host netblock not associated with this host")
         else:
             DB.session.delete(hostnetbobj)
         try:
@@ -791,6 +797,9 @@ def host_asn_delete(host_id, host_asn_id):
 
         if hostasnobj is None:
             flask.abort(404, "Host Peer ASN not found")
+
+        if hostasnobj not in hostobj.peer_asns:
+            flask.abort(404, "Host Peer ASN not associated with this host")
         else:
             DB.session.delete(hostasnobj)
 
@@ -886,6 +895,9 @@ def host_country_delete(host_id, host_country_id):
 
         if hostcntobj is None:
             flask.abort(404, "Host Country not found")
+
+        if hostcntobj not in hostobj.countries:
+            flask.abort(404, "Host Country not associated with this host")
         else:
             DB.session.delete(hostcntobj)
 
