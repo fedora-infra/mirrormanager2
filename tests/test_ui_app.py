@@ -679,6 +679,17 @@ def test_host_netblock_delete_auth(client, another_user):
     data = output.get_data(as_text=True)
     assert "<p>Host netblock not found</p>" in data
 
+    # Invalid Host/netblock association
+    output = client.post("/host/1/host_netblock/1/delete", data=post_data, follow_redirects=True)
+    assert output.status_code == 404
+    data = output.get_data(as_text=True)
+    assert "<p>Host netblock not associated with this host</p>" in data
+    # Verify netblock is still there
+    output = client.get("/host/3")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert 'action="/host/3/host_netblock/1/delete">' in data
+
     # Delete Site Admin
     output = client.post("/host/3/host_netblock/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
@@ -784,6 +795,17 @@ def test_host_asn_delete_auth(client, admin_user):
     assert output.status_code == 404
     data = output.get_data(as_text=True)
     assert "<p>Host Peer ASN not found</p>" in data
+
+    # Invalid Host/ASN association
+    output = client.post("/host/1/host_asn/1/delete", data=post_data, follow_redirects=True)
+    assert output.status_code == 404
+    data = output.get_data(as_text=True)
+    assert "<p>Host Peer ASN not associated with this host</p>" in data
+    # Verify ASN is still there
+    output = client.get("/host/3")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert 'action="/host/3/host_asn/1/delete">' in data
 
     # Delete Host ASN
     output = client.post("/host/3/host_asn/1/delete", data=post_data, follow_redirects=True)
@@ -919,6 +941,17 @@ def test_host_country_delete_auth(client, another_user):
     data = output.get_data(as_text=True)
     assert "<p>Host Country not found</p>" in data
 
+    # Invalid Host/Country association
+    output = client.post("/host/1/host_country/3/delete", data=post_data, follow_redirects=True)
+    assert output.status_code == 404
+    data = output.get_data(as_text=True)
+    assert "<p>Host Country not associated with this host</p>" in data
+    # Verify Country is still there
+    output = client.get("/host/3")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert 'action="/host/3/host_country/3/delete">' in data
+
     # Delete Host Country
     output = client.post("/host/1/host_country/1/delete", data=post_data, follow_redirects=True)
     assert output.status_code == 200
@@ -927,6 +960,62 @@ def test_host_country_delete_auth(client, another_user):
     assert '<h2 class="mb-0"><span class="fa fa-server"></span> mirror.localhost' in data
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/1/host_country/1/delete">' not in data
+
+
+def test_host_acl_ip_delete_auth(client, another_user, hostaclip, db):
+    # Check before adding the host
+    output = client.get("/host/1")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> mirror.localhost' in data
+    assert "<title>Host - MirrorManager</title>" in data
+    assert db.get(model.HostAclIp, 1) is not None
+
+    csrf_token = data.split('name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+    post_data = {}
+
+    # Check CSRF protection
+
+    output = client.post("/host/1/host_acl_ip/1/delete", data=post_data, follow_redirects=True)
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> mirror.localhost' in data
+    assert "<title>Host - MirrorManager</title>" in data
+    assert db.get(model.HostAclIp, 1) is not None
+
+    # Delete Host ACL IP
+
+    post_data["csrf_token"] = csrf_token
+
+    # Invalid site identifier
+    output = client.post("/host/100/host_acl_ip/1/delete", data=post_data, follow_redirects=True)
+    assert output.status_code == 404
+    data = output.get_data(as_text=True)
+    assert "<p>Host not found</p>" in data
+
+    # Invalid Host ACL IP identifier
+    output = client.post("/host/1/host_acl_ip/200/delete", data=post_data, follow_redirects=True)
+    assert output.status_code == 404
+    data = output.get_data(as_text=True)
+    assert "<p>Host ACL IP not found</p>" in data
+
+    # Invalid Host/ACL IP association
+    output = client.post("/host/3/host_acl_ip/1/delete", data=post_data, follow_redirects=True)
+    assert output.status_code == 404
+    data = output.get_data(as_text=True)
+    assert "<p>Host ACL IP not associated with this host</p>" in data
+    # Verify ACL IP is still there
+    assert db.get(model.HostAclIp, 1) is not None
+
+    # Delete Host ACL IP
+    output = client.post("/host/1/host_acl_ip/1/delete", data=post_data, follow_redirects=True)
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert '<div class="toast-body">Host ACL IP deleted</div>' in data
+    assert '<h2 class="mb-0"><span class="fa fa-server"></span> mirror.localhost' in data
+    assert "<title>Host - MirrorManager</title>" in data
+    assert db.get(model.HostAclIp, 1) is None
 
 
 def test_host_category_new(client):
