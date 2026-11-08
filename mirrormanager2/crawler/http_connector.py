@@ -9,6 +9,7 @@ from mirrormanager2 import lib as mmlib
 
 from .connector import Connector, FetchingFailed, TryLater
 from .constants import CONNECTION_TIMEOUT, REPODATA_FILE
+from .states import DirStatus
 
 logger = logging.getLogger(__name__)
 
@@ -142,16 +143,45 @@ class HTTPConnector(Connector):
         # handle streaming/chunked return or zero-length file
         return True
 
+    def _check_dir_exists(self, conn, url):
+        """Report whether the directory itself exists on the mirror.
+
+        The files below a directory say nothing about the directory of a
+        mirror which excludes it, so this is the check for directories which
+        hold no files, and the tie-breaker between DirStatus.ABSENT and
+        DirStatus.STALE when a file check failed.
+        """
+        if not url.endswith("/"):
+            url += "/"
+        try:
+            response = conn.head(url, timeout=CONNECTION_TIMEOUT)
+        except requests.Timeout as e:
+            raise TryLater(f"HTTP timeout: {e}") from e
+        except requests.RequestException as e:
+            logger.debug("Could not check directory %s: %s", url, e)
+            return DirStatus.UNKNOWN
+        if _is_scheme_redirect(url, response):
+            # The content is not served on the registered scheme.
+            return DirStatus.ABSENT
+        if response.status_code in (404, 410):
+            return DirStatus.ABSENT
+        # A 403 comes from a directory which is not listable, a 5xx from a
+        # server which cannot build the listing but does serve the files
+        # below it. In both cases something is still there.
+        return DirStatus.PRESENT
+
     def _check_dir(self, url, directory):
         try:
             conn = self.get_connection()
         except Exception as e:
             logger.info(f"Could not get {url}: {e}")
-            return None
+            return DirStatus.UNKNOWN
         with mmlib.instance_attribute(directory, "files") as files:
             # Getting Directory.files is a bit expensive, involves json decoding
             # files can be None in case of empty directories
             files = files or []
+            if not files:
+                return self._check_dir_exists(conn, url)
             for filename in files:
                 file_url = f"{url}/{filename}"
                 exists = self._check_file(conn, file_url, files[filename], directory.readable)
@@ -159,10 +189,17 @@ class HTTPConnector(Connector):
                     # Additional optional check
                     with suppress(Exception):
                         exists = self.compare_sha256(directory, filename, file_url)
-                if exists in (False, None):
-                    # Shortcut: we don't need to go over other files
-                    return exists
-        return True
+                if exists is None:
+                    return DirStatus.UNKNOWN
+                if exists is False:
+                    # A failed file check does not say whether the mirror
+                    # excludes the directory or carries it with old content.
+                    # Only the directory itself tells, at the cost of one
+                    # more request on this failure path.
+                    if self._check_dir_exists(conn, url) == DirStatus.ABSENT:
+                        return DirStatus.ABSENT
+                    return DirStatus.STALE
+        return DirStatus.UP2DATE
 
     def _get_file(self, url):
         conn = self.get_connection()

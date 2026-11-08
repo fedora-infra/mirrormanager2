@@ -28,9 +28,14 @@ from mirrormanager_messages.host import HostCrawlerDisabledV1
 from mirrormanager2 import default_config
 from mirrormanager2.crawler.connection_pool import ConnectionPool
 from mirrormanager2.crawler.connector import FetchingFailed
-from mirrormanager2.crawler.crawler import CrawlResult
+from mirrormanager2.crawler.crawler import (
+    Crawler,
+    CrawlResult,
+    _hcd_path,
+    decide_dir_only_statuses,
+)
 from mirrormanager2.crawler.reporter import store_crawl_result
-from mirrormanager2.crawler.states import CrawlStatus
+from mirrormanager2.crawler.states import CrawlStatus, DirStatus, SyncStatus
 from mirrormanager2.lib import model
 from mirrormanager2.lib.sync import run_rsync
 
@@ -182,37 +187,57 @@ def test_run_rsync_extra_args_quoting():
 
 
 def test_scan_rsync(db, dir_obj_with_files, config):
-    """Test scanning directories with missing files."""
+    """Test scanning directories whose files all match."""
     connection_pool = ConnectionPool(config)
     connector = connection_pool.get(f"rsync://{FOLDER}/../testdata/")
-    dir_url = f"rsync:///{FOLDER}/../testdata/pub/fedora/linux"
+    dirname = "pub/fedora/linux"
     scan_result = {
-        f"{dir_url}/{filename}": fileinfo for filename, fileinfo in dir_obj_with_files.files.items()
+        f"{dirname}/{filename}": fileinfo for filename, fileinfo in dir_obj_with_files.files.items()
     }
     for fileinfo in scan_result.values():
         fileinfo["mode"] = "f"
+    scan_result[dirname] = {"mode": "drwxr-xr-x", "size": "4096", "date": "", "time": ""}
     connector._scan_result = scan_result
-    result = connector.check_dir(dir_url, dir_obj_with_files)
-    assert result is True
+    result = connector.check_dir(dirname, dir_obj_with_files)
+    assert result == DirStatus.UP2DATE
 
 
 def test_scan_missing_files_rsync(db, dir_obj_with_files, config):
-    """Test scanning directories with missing files."""
+    """A directory which exists on the mirror but misses files is stale."""
     connection_pool = ConnectionPool(config)
     connector = connection_pool.get(f"rsync://{FOLDER}/../testdata/")
-    dir_url = f"rsync:///{FOLDER}/../testdata/pub/fedora/linux"
-    connector._scan_result = connector._run(dir_url)
-    result = connector.check_dir(dir_url, dir_obj_with_files)
-    assert result is False
+    connector._scan_result = connector._run(f"{FOLDER}/../testdata/")
+    # The directory itself is in the listing, the files of dir_obj_with_files
+    # are not.
+    result = connector.check_dir("pub/fedora/linux", dir_obj_with_files)
+    assert result == DirStatus.STALE
 
 
-def test_scan_empty_directory_rsync(db, dir_obj):
-    """Test scanning empty directories with rsync"""
-    connection_pool = ConnectionPool({})
+def test_scan_missing_directory_rsync(db, dir_obj_with_files, config):
+    """A directory which is not in the listing does not exist on the mirror."""
+    connection_pool = ConnectionPool(config)
     connector = connection_pool.get(f"rsync://{FOLDER}/../testdata/")
-    dir_url = f"rsync://{FOLDER}/../testdata/pub/fedora/linux"
-    result = connector.check_dir(dir_url, dir_obj)
-    assert result is True
+    connector._scan_result = connector._run(f"{FOLDER}/../testdata/")
+    result = connector.check_dir("pub/fedora/linux/releases/21", dir_obj_with_files)
+    assert result == DirStatus.ABSENT
+
+
+def test_scan_empty_directory_rsync(db, dir_obj, config):
+    """A directory without files which the mirror carries is present."""
+    connection_pool = ConnectionPool(config)
+    connector = connection_pool.get(f"rsync://{FOLDER}/../testdata/")
+    connector._scan_result = connector._run(f"{FOLDER}/../testdata/")
+    result = connector.check_dir("pub/fedora/linux", dir_obj)
+    assert result == DirStatus.PRESENT
+
+
+def test_scan_empty_missing_directory_rsync(db, dir_obj, config):
+    """A directory without files which the mirror does not carry is absent."""
+    connection_pool = ConnectionPool(config)
+    connector = connection_pool.get(f"rsync://{FOLDER}/../testdata/")
+    connector._scan_result = connector._run(f"{FOLDER}/../testdata/")
+    result = connector.check_dir("pub/fedora/linux/releases/21", dir_obj)
+    assert result == DirStatus.ABSENT
 
 
 def test_scan_http(db, dir_obj_with_files):
@@ -224,40 +249,65 @@ def test_scan_http(db, dir_obj_with_files):
     connector._check_file = Mock(return_value=True)
     dir_url = "http://localhost/testdata/pub/fedora/linux"
     result = connector.check_dir(dir_url, dir_obj_with_files)
-    assert result is True
+    assert result == DirStatus.UP2DATE
     connector.get_connection.assert_called_once()
     connector._check_file.assert_called_once_with(
         mocked_connection, f"{dir_url}/does-not-exist", {"size": 1, "stat": 1}, True
     )
 
 
-def test_scan_missing_files_http(db, dir_obj_with_files):
-    """Test scanning empty directories with http"""
+@pytest.mark.parametrize(
+    "dir_code, expected",
+    [
+        # The directory answers, so the mirror carries it with old content.
+        (200, DirStatus.STALE),
+        (403, DirStatus.STALE),
+        # The directory itself is gone, the mirror does not carry it.
+        (404, DirStatus.ABSENT),
+    ],
+)
+def test_scan_missing_files_http(db, dir_obj_with_files, dir_code, expected):
+    """A failed file check asks the directory itself to tell stale from absent."""
     connection_pool = ConnectionPool({})
     connector = connection_pool.get("http://localhost/testdata/")
-    mocked_connection = object()
+    dir_url = "http://localhost/testdata/pub/fedora/linux"
+    mocked_connection = Mock(head=Mock(return_value=_http_response(dir_code, url=f"{dir_url}/")))
     connector.get_connection = Mock(return_value=mocked_connection)
     connector._check_file = Mock(return_value=False)
-    dir_url = "http://localhost/testdata/pub/fedora/linux"
     result = connector.check_dir(dir_url, dir_obj_with_files)
-    assert result is False
+    assert result == expected
     connector.get_connection.assert_called_once()
     connector._check_file.assert_called_once_with(
         mocked_connection, f"{dir_url}/does-not-exist", {"size": 1, "stat": 1}, True
     )
+    # The tie-breaker request asks for the directory with a trailing slash.
+    mocked_connection.head.assert_called_once()
+    assert mocked_connection.head.call_args.args[0] == f"{dir_url}/"
 
 
-def test_scan_empty_directory_http(db, dir_obj):
-    """Test scanning empty directories with http"""
+@pytest.mark.parametrize(
+    "dir_code, expected",
+    [
+        (200, DirStatus.PRESENT),
+        # The directory is there, the server just does not list it.
+        (403, DirStatus.PRESENT),
+        (404, DirStatus.ABSENT),
+        (410, DirStatus.ABSENT),
+    ],
+)
+def test_scan_empty_directory_http(db, dir_obj, dir_code, expected):
+    """A directory without files is checked for existence, not content."""
     connection_pool = ConnectionPool({})
     connector = connection_pool.get("http://localhost/testdata/")
-    connector.get_connection = Mock()
-    connector._check_file = Mock(return_value=True)
     dir_url = "http://localhost/testdata/pub/fedora/linux"
+    mocked_connection = Mock(head=Mock(return_value=_http_response(dir_code, url=f"{dir_url}/")))
+    connector.get_connection = Mock(return_value=mocked_connection)
+    connector._check_file = Mock(return_value=True)
     result = connector.check_dir(dir_url, dir_obj)
-    assert result is True
+    assert result == expected
     connector.get_connection.assert_called_once()
     connector._check_file.assert_not_called()
+    assert mocked_connection.head.call_args.args[0] == f"{dir_url}/"
 
 
 def test_scan_ftp(db, dir_obj_with_files):
@@ -267,30 +317,219 @@ def test_scan_ftp(db, dir_obj_with_files):
     connector.get_ftp_dir = Mock(return_value=dir_obj_with_files.files)
     dir_url = "http://localhost/testdata/pub/fedora/linux"
     result = connector.check_dir(dir_url, dir_obj_with_files)
-    assert result is True
+    assert result == DirStatus.UP2DATE
     connector.get_ftp_dir.assert_called_once_with(dir_url, True)
 
 
 def test_scan_missing_files_ftp(db, dir_obj_with_files):
-    """Test scanning empty directories with ftp"""
+    """A directory which lists but misses files is stale."""
     connection_pool = ConnectionPool({})
     connector = connection_pool.get("ftp://localhost/testdata/")
     connector.get_ftp_dir = Mock(return_value={})
     dir_url = "http://localhost/testdata/pub/fedora/linux"
     result = connector.check_dir(dir_url, dir_obj_with_files)
-    assert result is False
+    assert result == DirStatus.STALE
+    connector.get_ftp_dir.assert_called_once_with(dir_url, True)
+
+
+def test_scan_missing_directory_ftp(db, dir_obj_with_files):
+    """A directory the server reports as nonexistent is absent."""
+    connection_pool = ConnectionPool({})
+    connector = connection_pool.get("ftp://localhost/testdata/")
+    connector.get_ftp_dir = Mock(return_value=DirStatus.ABSENT)
+    dir_url = "ftp://localhost/testdata/pub/fedora/linux"
+    result = connector.check_dir(dir_url, dir_obj_with_files)
+    assert result == DirStatus.ABSENT
     connector.get_ftp_dir.assert_called_once_with(dir_url, True)
 
 
 def test_scan_empty_directory_ftp(db, dir_obj):
-    """Test scanning empty directories with ftp"""
+    """A directory without files which the mirror carries is present."""
     connection_pool = ConnectionPool({})
     connector = connection_pool.get("ftp://localhost/testdata/")
     connector.get_ftp_dir = Mock(return_value={})
     dir_url = "ftp://localhost/testdata/pub/fedora/linux"
     result = connector.check_dir(dir_url, dir_obj)
-    assert result is True
+    assert result == DirStatus.PRESENT
     connector.get_ftp_dir.assert_called_once_with(dir_url, True)
+
+
+def test_decide_dir_only_partial_mirror():
+    """A mirror which excludes a part of the tree stays up to date."""
+    master_paths = {
+        "",
+        "development",
+        "development/rawhide",
+        "development/rawhide/x86_64",
+        "development/rawhide/ppc64le",
+    }
+    # The mirror excludes ppc64le, so that path has no HostCategoryDir.
+    statuses = {"development/rawhide/x86_64": True}
+    pending = {"development": 1, "development/rawhide": 2}
+    decisions = decide_dir_only_statuses(pending, statuses, master_paths)
+    assert decisions == {"development": True, "development/rawhide": True}
+
+
+def test_decide_dir_only_stale_child():
+    """A stale child makes every directory above it stale."""
+    master_paths = {
+        "",
+        "development",
+        "development/rawhide",
+        "development/rawhide/x86_64",
+    }
+    statuses = {"development/rawhide/x86_64": False}
+    pending = {"development": 1, "development/rawhide": 2}
+    decisions = decide_dir_only_statuses(pending, statuses, master_paths)
+    assert decisions == {"development": False, "development/rawhide": False}
+
+
+def test_decide_dir_only_empty_shell():
+    """A directory whose content below is all excluded is not up to date."""
+    master_paths = {"", "development", "development/rawhide"}
+    statuses = {}
+    pending = {"development": 1}
+    decisions = decide_dir_only_statuses(pending, statuses, master_paths)
+    assert decisions == {"development": False}
+
+
+def test_decide_dir_only_master_leaf():
+    """A directory which is empty on the master too is up to date."""
+    master_paths = {"", "empty"}
+    statuses = {}
+    pending = {"empty": 1}
+    decisions = decide_dir_only_statuses(pending, statuses, master_paths)
+    assert decisions == {"empty": True}
+
+
+def test_decide_dir_only_topdir_chain():
+    """The decision runs bottom-up through nested directories without files."""
+    master_paths = {"", "development", "development/rawhide", "development/rawhide/x86_64"}
+    statuses = {"development/rawhide/x86_64": True}
+    pending = {"": 1, "development": 2, "development/rawhide": 3}
+    decisions = decide_dir_only_statuses(pending, statuses, master_paths)
+    assert decisions == {"": True, "development": True, "development/rawhide": True}
+
+
+@pytest.fixture()
+def crawler_obj(config, db, base_items, site, hosts, directory, category, hostcategory):
+    host = db.get(model.Host, 2)
+    options = {"debug": False, "host_timeout": 600}
+    return Crawler(config, db, options, Mock(), host)
+
+
+@pytest.fixture()
+def crawled_hc_and_dir(db):
+    # HostCategory 3 belongs to host 2 and the "Fedora Linux" category, whose
+    # topdir is "pub/fedora/linux" (directory 1). Directory 4 is
+    # "pub/fedora/linux/releases/26".
+    hc = db.get(model.HostCategory, 3)
+    dir_obj = db.get(model.Directory, 4)
+    return hc, dir_obj
+
+
+def test_sync_dir_absent_deletes_hcd(db, crawler_obj, crawled_hc_and_dir):
+    """A directory the mirror does not carry loses its HostCategoryDir."""
+    hc, dir_obj = crawled_hc_and_dir
+    path = _hcd_path(hc.category.topdir.name, dir_obj.name)
+    db.add(
+        model.HostCategoryDir(
+            host_category_id=hc.id, directory_id=dir_obj.id, path=path, up2date=False
+        )
+    )
+    db.commit()
+    sync_status, hcd_id, up2date = crawler_obj.sync_dir(hc, dir_obj, DirStatus.ABSENT, path)
+    assert sync_status == SyncStatus.DELETED
+    assert hcd_id is None
+    db.commit()
+    assert (
+        db.query(model.HostCategoryDir).filter_by(host_category_id=hc.id, path=path).first() is None
+    )
+
+
+def test_sync_dir_absent_without_hcd(db, crawler_obj, crawled_hc_and_dir):
+    """An absent directory which never had a HostCategoryDir does not get one."""
+    hc, dir_obj = crawled_hc_and_dir
+    path = _hcd_path(hc.category.topdir.name, dir_obj.name)
+    sync_status, hcd_id, up2date = crawler_obj.sync_dir(hc, dir_obj, DirStatus.ABSENT, path)
+    assert sync_status == SyncStatus.UNKNOWN
+    assert hcd_id is None
+    db.commit()
+    assert (
+        db.query(model.HostCategoryDir).filter_by(host_category_id=hc.id, path=path).first() is None
+    )
+
+
+def test_sync_dir_stale_does_not_create_hcd(db, crawler_obj, crawled_hc_and_dir):
+    """A stale directory which never had a HostCategoryDir does not get one."""
+    hc, dir_obj = crawled_hc_and_dir
+    path = _hcd_path(hc.category.topdir.name, dir_obj.name)
+    sync_status, hcd_id, up2date = crawler_obj.sync_dir(hc, dir_obj, DirStatus.STALE, path)
+    assert sync_status == SyncStatus.UNKNOWN
+    assert hcd_id is None
+    db.commit()
+    assert (
+        db.query(model.HostCategoryDir).filter_by(host_category_id=hc.id, path=path).first() is None
+    )
+
+
+def test_sync_dir_stale_marks_existing_hcd(db, crawler_obj, crawled_hc_and_dir):
+    """A stale directory keeps its HostCategoryDir with up2date False."""
+    hc, dir_obj = crawled_hc_and_dir
+    path = _hcd_path(hc.category.topdir.name, dir_obj.name)
+    db.add(
+        model.HostCategoryDir(
+            host_category_id=hc.id, directory_id=dir_obj.id, path=path, up2date=True
+        )
+    )
+    db.commit()
+    sync_status, hcd_id, up2date = crawler_obj.sync_dir(hc, dir_obj, DirStatus.STALE, path)
+    assert sync_status == SyncStatus.NOT_UP2DATE
+    assert hcd_id is not None
+    assert up2date is False
+    db.commit()
+    hcd = db.query(model.HostCategoryDir).filter_by(host_category_id=hc.id, path=path).one()
+    assert hcd.up2date is False
+
+
+def test_sync_dir_present_defers_decision(db, crawler_obj, crawled_hc_and_dir):
+    """A directory without files keeps its stored value until the post-pass."""
+    hc, dir_obj = crawled_hc_and_dir
+    path = _hcd_path(hc.category.topdir.name, dir_obj.name)
+    db.add(
+        model.HostCategoryDir(
+            host_category_id=hc.id, directory_id=dir_obj.id, path=path, up2date=False
+        )
+    )
+    db.commit()
+    sync_status, hcd_id, up2date = crawler_obj.sync_dir(hc, dir_obj, DirStatus.PRESENT, path)
+    assert hcd_id is not None
+    assert up2date is False
+    hcd = db.query(model.HostCategoryDir).filter_by(host_category_id=hc.id, path=path).one()
+    assert hcd.up2date is False
+
+
+def test_sync_dir_only_dirs_updates_rows(db, crawler_obj, crawled_hc_and_dir):
+    """The post-pass writes the decided values to the HostCategoryDirs."""
+    from mirrormanager2.crawler.crawler import CrawlStats
+
+    hc, dir_obj = crawled_hc_and_dir
+    hcd = model.HostCategoryDir(
+        host_category_id=hc.id, directory_id=dir_obj.id, path="releases", up2date=True
+    )
+    db.add(hcd)
+    db.commit()
+    stats = CrawlStats()
+    crawler_obj._sync_dir_only_dirs(
+        pending={"releases": hcd.id},
+        statuses={"releases": True, "releases/26": False},
+        master_paths={"", "releases", "releases/26"},
+        stats=stats,
+    )
+    db.commit()
+    db.refresh(hcd)
+    assert hcd.up2date is False
+    assert stats.not_up2date == 1
 
 
 def test_reporter_host_disabled(config, db, site, hosts):

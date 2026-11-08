@@ -8,6 +8,7 @@ from mirrormanager2 import lib as mmlib
 
 from .connector import Connector, TryLater
 from .constants import CONNECTION_TIMEOUT
+from .states import DirStatus
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,11 @@ class FTPConnector(Connector):
         return results
 
     def get_ftp_dir(self, url, readable, i=0):
+        """Return the directory listing as a dict, or a DirStatus.
+
+        A DirStatus is returned when the server's answer already decides the
+        directory's state and there is no listing to compare files against.
+        """
         if i > 1:
             raise TryLater("Too many FTP 530 errors")
 
@@ -48,14 +54,16 @@ class FTPConnector(Connector):
         except ftplib.error_perm as e:
             # Returned by Princeton University when directory does not exist
             if str(e).startswith("550"):
-                return []
+                return DirStatus.ABSENT
             # Returned by Princeton University when directory isn't readable
             # (pre-bitflip)
             if str(e).startswith("553"):
                 if readable:
-                    return []
+                    # It should be readable but it's not
+                    return DirStatus.STALE
                 else:
-                    return None
+                    # This 553 is allowed
+                    return DirStatus.UNKNOWN
             # Returned by ftp2.surplux.net when cannot log in due to connection
             # restrictions
             if str(e).startswith("530"):
@@ -69,7 +77,7 @@ class FTPConnector(Connector):
         except ftplib.error_temp as e:
             # Returned by Boston University when directory does not exist
             if str(e).startswith("450"):
-                return []
+                return DirStatus.ABSENT
             # Returned by Princeton University when cannot log in due to
             # connection restrictions
             if str(e).startswith("421"):
@@ -85,6 +93,9 @@ class FTPConnector(Connector):
             self.close(url)
             return self.get_ftp_dir(url, readable, i + 1)
 
+        if listing is None:
+            # _ftp_dir() could not connect at all.
+            return DirStatus.UNKNOWN
         results = {}
         for line in listing:
             if line.startswith("total"):
@@ -109,18 +120,25 @@ class FTPConnector(Connector):
 
     def _check_dir(self, url, directory):
         results = self.get_ftp_dir(url, directory.readable)
-        if results is None:
-            return None
+        if isinstance(results, DirStatus):
+            # The server's answer already decided the state, there is no
+            # listing to compare files against.
+            return results
 
         with mmlib.instance_attribute(directory, "files") as files:
             # Getting Directory.files is a bit expensive, involves json decoding
             # files can be None in case of empty directories
             files = files or []
+            if not files:
+                # The directory holds no files on the master, so there is
+                # nothing to compare. Whether it is up to date is decided
+                # from its child directories after the scan.
+                return DirStatus.PRESENT
             for filename in files:
                 if filename not in results:
-                    return False  # Missing file, we don't need to go over other files
+                    return DirStatus.STALE  # Missing file, no need to go over other files
                 status = self._check_file(results[filename], files[filename])
                 if not status:
                     # Shortcut: we don't need to go over other files
-                    return False
-        return True
+                    return DirStatus.STALE
+        return DirStatus.UP2DATE
