@@ -6,6 +6,7 @@ from mirrormanager2 import lib as mmlib
 from mirrormanager2.lib.sync import run_rsync
 
 from .connector import Connector, SchemeNotAvailable
+from .states import DirStatus
 
 logger = logging.getLogger(__name__)
 
@@ -78,10 +79,22 @@ class RsyncConnector(Connector):
             return False
 
     def _check_dir(self, dirname, directory):
+        # The listing covers the whole category and contains an entry for
+        # every directory the mirror carries, so a missing entry means the
+        # mirror does not have this directory. The category top directory is
+        # the root of the listing and has no entry of its own.
+        if dirname and dirname not in self._scan_result:
+            logger.debug("Missing remote directory %s", dirname)
+            return DirStatus.ABSENT
         with mmlib.instance_attribute(directory, "files") as files:
             # Getting Directory.files is a bit expensive, involves json decoding
             # files can be None in case of empty directories
             files = files or []
+            if not files:
+                # The directory holds no files on the master, so there is
+                # nothing to compare. Whether it is up to date is decided
+                # from its child directories after the scan.
+                return DirStatus.PRESENT
             for filename in sorted(files):
                 if len(dirname) == 0:
                     key = filename
@@ -94,18 +107,18 @@ class RsyncConnector(Connector):
                     current_file_info = self._scan_result[key]
                 except KeyError:  # file is not in the rsync listing
                     logger.debug("Missing remote file %s", key)
-                    return False
+                    return DirStatus.STALE
 
                 try:
                     status = self._check_file(current_file_info, files[filename])
                     if not status:
                         # Shortcut: we don't need to go over other files
-                        return False
+                        return DirStatus.STALE
                 except Exception as e:  # something else went wrong
                     logger.error("Exception caught when scanning %s: %s", filename, e)
-                    return False
+                    return DirStatus.STALE
 
-        return True
+        return DirStatus.UP2DATE
 
     def _get_dir_url(self, url, directory, category_prefix_length):
         # We don't need the whole URL, the scan has already been done

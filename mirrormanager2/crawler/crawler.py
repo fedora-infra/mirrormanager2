@@ -14,7 +14,7 @@ from .connector import FetchingFailed, SchemeNotAvailable
 from .constants import REPODATA_DIR, REPODATA_FILE
 from .continents import BrokenBaseUrl, EmbargoedCountry, WrongContinent, check_continent
 from .log import thread_file_logger
-from .states import CrawlStatus, PropagationStatus, SyncStatus
+from .states import CrawlStatus, DirStatus, PropagationStatus, SyncStatus
 from .threads import (
     GlobalTimeoutError,
     HostTimeoutError,
@@ -81,6 +81,78 @@ class PropagationResult:
     host_id: int
     host_name: str
     repo_status: dict[int, PropagationStatus]
+
+
+def _hcd_path(topname, dirname):
+    """Return the HostCategoryDir path of a directory name."""
+    toplen = len(topname)
+    if dirname.startswith("/"):
+        toplen += 1
+    return dirname[toplen:]
+
+
+def _parent_path(path):
+    """Return the HostCategoryDir path of the parent directory.
+
+    The category top directory has the path "", which is its own parent.
+    """
+    if "/" not in path:
+        return ""
+    return path.rsplit("/", 1)[0]
+
+
+def decide_dir_only_statuses(pending, statuses, master_paths):
+    """Decide up2date for the directories which hold no files on the master.
+
+    Such a directory cannot be compared file by file, so its state is read
+    from the child directories instead:
+
+    - The mirror carries at least one child directory and every child it
+      carries is up to date: the directory is up to date. Children the mirror
+      does not carry are not counted, because a mirror is allowed to exclude
+      parts of the tree, for example single architectures.
+    - The master has child directories but the mirror carries none of them:
+      the directory is not up to date.
+    - The master has no child directories either: the directory is up to
+      date, because nothing below it can be missing.
+
+    :arg pending: the paths to decide, each the path of a directory which
+        exists on the mirror and has no files on the master.
+    :arg statuses: maps the path of every HostCategoryDir which exists after
+        the scan to its up2date value.
+    :arg master_paths: the paths of every directory of the category on the
+        master, whether the mirror carries it or not.
+    :returns: a dict mapping each pending path to its decided up2date value.
+    """
+    children = defaultdict(list)
+    for path in set(statuses) | set(pending):
+        if path:
+            children[_parent_path(path)].append(path)
+    master_parents = {_parent_path(path) for path in master_paths if path}
+
+    def depth(path):
+        # The category top directory has the path "" and lies one level
+        # above the paths without a slash, so counting slashes alone would
+        # put it on their level.
+        if not path:
+            return 0
+        return path.count("/") + 1
+
+    statuses = dict(statuses)
+    decisions = {}
+    # A pending directory may itself be the child of another pending
+    # directory. Deciding the deepest paths first makes sure a parent reads
+    # the decided value of such a child, not its stale one.
+    for path in sorted(pending, key=depth, reverse=True):
+        child_statuses = [statuses[child] for child in children[path] if child in statuses]
+        if path not in master_parents:
+            up2date = True
+        elif child_statuses:
+            up2date = all(child_statuses)
+        else:
+            up2date = False
+        decisions[path] = statuses[path] = up2date
+    return decisions
 
 
 def get_preferred_urls(host_category):
@@ -250,15 +322,33 @@ class Crawler:
 
         stats = CrawlStats(total_directories=trydirs_count)
         seen_hcds = set()
+        topname = hc.category.topdir.name
+        # Directories which exist on the mirror but hold no files on the
+        # master. Their up2date is decided from their children once every
+        # directory of the category has been checked.
+        pending = {}
+        statuses = {}
+        master_paths = set()
 
         for directory, status in self._get_directory_statuses(hc):
             self.timeout.check()
             self.progress.advance()
-            sync_status, hcd_id = self.sync_dir(hc, directory, status)
-            stats.increment(sync_status.value)
+            path = _hcd_path(topname, directory.name)
+            master_paths.add(path)
+            sync_status, hcd_id, up2date = self.sync_dir(hc, directory, status, path)
+            if sync_status == SyncStatus.DELETED:
+                stats.hcds_deleted += 1
+            elif status != DirStatus.PRESENT:
+                # Directories with the PRESENT status are counted when their
+                # up2date is decided, in _sync_dir_only_dirs().
+                stats.increment(sync_status.value)
             if hcd_id is not None:
                 # It's None on unknown status
                 seen_hcds.add(hcd_id)
+                statuses[path] = up2date
+                if status == DirStatus.PRESENT:
+                    pending[path] = hcd_id
+        self._sync_dir_only_dirs(pending, statuses, master_paths, stats)
         # Expire the session to unload the directory entries
         self.session.commit()
 
@@ -332,28 +422,36 @@ class Crawler:
         )
         raise CategoryNotAccessible
 
-    def sync_dir(self, hc, directory, status):
+    def sync_dir(self, hc, directory, status, path):
         logger.debug("Syncing directory %s with status %r", directory.name, status)
-        sync_status = SyncStatus.UNKNOWN
-        if status is None:
-            # could be a dir with no files, or an unreadable dir.
-            # defer decision on this dir, let a child decide.
-            return sync_status, None
-
-        topname = hc.category.topdir.name
-        toplen = len(topname)
-        if directory.name.startswith("/"):
-            toplen += 1
-        path = directory.name[toplen:]
+        if status is None or status == DirStatus.UNKNOWN:
+            # The check could not tell, for example an unreadable dir.
+            # Leave the database alone for this directory.
+            return SyncStatus.UNKNOWN, None, None
 
         hcd = mmlib.get_hostcategorydir_by_hostcategoryid_and_path(
             self.session, host_category_id=hc.id, path=path
         )
+
+        if status == DirStatus.ABSENT:
+            if hcd is None:
+                return SyncStatus.UNKNOWN, None, None
+            # The mirror does not carry this directory any more. Setting
+            # up2date to False instead would keep the row until the master
+            # deletes the directory, and a mirror which merely excludes a
+            # part of the tree would look permanently stale to
+            # _sync_dir_only_dirs().
+            logger.info("Directory %s does not exist on this host, deleting.", directory.name)
+            self.session.delete(hcd)
+            self.session.flush()
+            return SyncStatus.DELETED, None, None
+
+        sync_status = SyncStatus.UNKNOWN
         if hcd is None:
-            if not status:
+            if status == DirStatus.STALE:
                 # don't create HCDs for directories which aren't up2date on the
                 # mirror chances are the mirror is excluding that directory
-                return sync_status, None
+                return sync_status, None, None
             hcd = HostCategoryDir(host_category_id=hc.id, path=path, directory_id=directory.id)
             self.session.add(hcd)
             self.session.flush()
@@ -361,9 +459,18 @@ class Crawler:
 
         if hcd.directory is None:
             hcd.directory = directory
-        if hcd.up2date != status:
-            hcd.up2date = status
-            if status is False:
+
+        if status == DirStatus.PRESENT:
+            # The directory holds no files on the master, so its up2date is
+            # decided from its children in _sync_dir_only_dirs(). Until then
+            # keep the current value.
+            self.session.flush()
+            return sync_status, hcd.id, hcd.up2date
+
+        up2date = status == DirStatus.UP2DATE
+        if hcd.up2date != up2date:
+            hcd.up2date = up2date
+            if up2date is False:
                 logger.info("Directory %s is not up-to-date on this host.", directory.name)
                 sync_status = SyncStatus.NOT_UP2DATE
             else:
@@ -371,7 +478,26 @@ class Crawler:
         else:
             sync_status = SyncStatus.UNCHANGED
         self.session.flush()
-        return sync_status, hcd.id
+        return sync_status, hcd.id, up2date
+
+    def _sync_dir_only_dirs(self, pending, statuses, master_paths, stats):
+        """Store the decided up2date of the directories which hold no files."""
+        for path, up2date in decide_dir_only_statuses(pending, statuses, master_paths).items():
+            hcd = self.session.get(HostCategoryDir, pending[path])
+            if hcd.up2date != up2date:
+                hcd.up2date = up2date
+                if up2date:
+                    stats.increment(SyncStatus.UP2DATE.value)
+                else:
+                    logger.info(
+                        "Directory %s is not up-to-date on this host "
+                        "because of its child directories.",
+                        path,
+                    )
+                    stats.increment(SyncStatus.NOT_UP2DATE.value)
+            else:
+                stats.increment(SyncStatus.UNCHANGED.value)
+        self.session.flush()
 
     def check_propagation(self, product_versions):
         self.timeout.start()

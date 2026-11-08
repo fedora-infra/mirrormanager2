@@ -55,6 +55,25 @@ of the file is downloaded. Only the metadata is downloaded. Only files with
 the name 'repomd.xml' are actually completed downloaded and their SHA256 sum
 is compared to the one in the database.
 
+Directories without files
+-------------------------
+
+A directory which holds only other directories, for example
+``pub/fedora/linux/development``, has no files the crawler could compare.
+Such a directory is checked for existence instead: with RSYNC through its
+entry in the category listing, with HTTP through a HEAD request on the
+directory itself. A directory which does not exist on the mirror loses its
+``HostCategoryDir`` row, so the mirrorlist no longer returns the mirror for
+that path. The same happens when a directory with files disappears from a
+mirror, for example because the mirror started to exclude it.
+
+Whether an existing directory without files is up to date is decided from its
+child directories after the whole category has been scanned: it is up to date
+when the mirror carries at least one of its child directories and every child
+it carries is up to date. Children the mirror does not carry are not counted,
+because a mirror is allowed to exclude parts of the tree, for example single
+architectures.
+
 Timeouts
 --------
 
