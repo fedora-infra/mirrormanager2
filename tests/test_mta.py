@@ -61,6 +61,140 @@ def _make_archive_category(db):
     db.commit()
 
 
+@pytest.fixture()
+def split_layout(db, base_items):
+    """Two categories of one product whose archive trees replace their top directory,
+    as on RPM Fusion: free/fedora is archived to free-archive/fedora."""
+    product = mirrormanager2.lib.get_product_by_name(db, "Fedora")
+    version = model.Version(name="42", product=product)
+    arch = mirrormanager2.lib.get_arch_by_name(db, "x86_64")
+    db.add(version)
+    for repo in ("free", "nonfree"):
+        for suffix in ("", "-archive"):
+            topdir = model.Directory(name=f"{repo}{suffix}/fedora", readable=True)
+            category = model.Category(
+                name=f"RPMFUSION {repo} Fedora{' Archive' if suffix else ''}",
+                product=product,
+                topdir=topdir,
+            )
+            directory = model.Directory(
+                name=f"{repo}{suffix}/fedora/updates/42/x86_64", readable=True
+            )
+            db.add_all([topdir, category, directory])
+            if not suffix:
+                db.add(
+                    model.Repository(
+                        name=directory.name,
+                        prefix=f"{repo}-fedora-updates-released-42",
+                        category=category,
+                        version=version,
+                        arch=arch,
+                        directory=directory,
+                    )
+                )
+    db.commit()
+
+
+def _repo_directories(db):
+    return {
+        repo.prefix: (repo.category.name, repo.directory.name)
+        for repo in mirrormanager2.lib.get_repositories(db)
+    }
+
+
+def test_mta_split_layout_without_category(configfile, db, split_layout):
+    """Without --category, the archive directory keeps the live top directory."""
+    result = run_command(
+        [
+            "-c",
+            configfile,
+            "--product",
+            "Fedora",
+            "--version",
+            "42",
+            "--archive-category",
+            "RPMFUSION free Fedora Archive",
+        ]
+    )
+    assert result.exit_code == 1, result.output
+    assert result.output == (
+        "Error: Unable to find a directory in [RPMFUSION free Fedora Archive] "
+        "for free/fedora/updates/42/x86_64\n"
+    )
+
+
+def test_mta_category(configfile, db, split_layout):
+    """--category replaces the top directory and leaves other categories alone."""
+    result = run_command(
+        [
+            "-c",
+            configfile,
+            "--product",
+            "Fedora",
+            "--version",
+            "42",
+            "--category",
+            "RPMFUSION free Fedora",
+            "--archive-category",
+            "RPMFUSION free Fedora Archive",
+        ]
+    )
+    assert result.exit_code == 0, result.output
+    assert result.output == (
+        "free/fedora/updates/42/x86_64 => free-archive/fedora/updates/42/x86_64\n"
+    )
+    assert _repo_directories(db) == {
+        "free-fedora-updates-released-42": (
+            "RPMFUSION free Fedora Archive",
+            "free-archive/fedora/updates/42/x86_64",
+        ),
+        "nonfree-fedora-updates-released-42": (
+            "RPMFUSION nonfree Fedora",
+            "nonfree/fedora/updates/42/x86_64",
+        ),
+    }
+
+
+def test_mta_category_unknown(configfile, db, split_layout):
+    result = run_command(
+        [
+            "-c",
+            configfile,
+            "--repository",
+            "free-fedora-updates-released-42",
+            "--category",
+            "RPMFUSION Fedora",
+            "--archive-category",
+            "RPMFUSION free Fedora Archive",
+        ]
+    )
+    assert result.exit_code == 2, result.output
+    assert "Error: No category could be found by the name: RPMFUSION Fedora" in result.output
+
+
+def test_mta_category_directory_outside_topdir(configfile, db, split_layout):
+    category = mirrormanager2.lib.get_category_by_name(db, "RPMFUSION free Fedora")
+    category.topdir = model.Directory(name="free/el", readable=True)
+    db.commit()
+    result = run_command(
+        [
+            "-c",
+            configfile,
+            "--repository",
+            "free-fedora-updates-released-42",
+            "--category",
+            "RPMFUSION free Fedora",
+            "--archive-category",
+            "RPMFUSION free Fedora Archive",
+        ]
+    )
+    assert result.exit_code == 1, result.output
+    assert result.output == (
+        "Error: free/fedora/updates/42/x86_64 is not below free/el, "
+        "the top directory of [RPMFUSION free Fedora]\n"
+    )
+
+
 def test_mta_bad_version(command_args, base_items, db):
     _make_archive_category(db)
     result = run_command(command_args)
