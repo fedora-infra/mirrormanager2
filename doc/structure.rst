@@ -144,3 +144,12 @@ to date or not (and mark it as such).
   This script moves a tree to archive.
   Few days after a release reaches End Of Life, one would want to point the
   tree of this release to the archives where it will remain, un-touched.
+  By default the archive directory of a repository is the top directory of the
+  archive category followed by the repository directory without its leading
+  ``pub/``, which matches the Fedora layout (``pub/fedora/linux/...`` is
+  archived to ``pub/archive/fedora/linux/...``).
+  When the archive tree replaces the top directory of a category instead (for
+  example ``free/fedora/...`` is archived to ``free-archive/fedora/...``), pass
+  that category with ``--category``: only its repositories are moved, and
+  their archive directory is their directory with the top directory of the
+  category replaced by the top directory of the archive category.
