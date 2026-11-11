@@ -36,6 +36,7 @@ def archive_directory_name(repo, archive_cat, live_cat):
 
 def move_repos(session, archive_cat, dry_run, live_cat=None, **repo_query_args):
     repos = mirrormanager2.lib.get_repositories(session, **repo_query_args)
+    moves = []
     for repo in repos:
         if live_cat is not None and repo.category != live_cat:
             continue
@@ -58,12 +59,17 @@ def move_repos(session, archive_cat, dry_run, live_cat=None, **repo_query_args):
             raise click.ClickException(
                 f"Unable to find a directory in [{archive_cat.name}] for {repo.directory.name}"
             )
-        click.echo(f"{repo.directory.name} => {target_dir}")
-        repo.directory = new_d
-        repo.category = archive_cat
+        moves.append((repo, new_d))
+
+    # All archive directories are looked up before the first repository changes, so a
+    # missing directory leaves every selected repository in its live category.
+    for repo, new_d in moves:
+        click.echo(f"{repo.directory.name} => {new_d.name}")
         if not dry_run:
-            session.add(repo)
-            session.commit()
+            repo.directory = new_d
+            repo.category = archive_cat
+    if not dry_run:
+        session.commit()
 
 
 @click.command()
