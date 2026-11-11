@@ -155,6 +155,47 @@ def test_mta_category(configfile, db, split_layout):
     }
 
 
+def test_mta_missing_directory_changes_nothing(configfile, db, split_layout):
+    """A missing archive directory aborts the run before any repository is moved."""
+    first = mirrormanager2.lib.get_repo_prefix_arch(db, "free-fedora-updates-released-42", "x86_64")
+    directory = model.Directory(name="free/fedora/updates/testing/42/x86_64", readable=True)
+    db.add(
+        model.Repository(
+            name=directory.name,
+            prefix="free-fedora-updates-testing-42",
+            category=first.category,
+            version=first.version,
+            arch=first.arch,
+            directory=directory,
+        )
+    )
+    db.commit()
+    result = run_command(
+        [
+            "-c",
+            configfile,
+            "--product",
+            "Fedora",
+            "--version",
+            "42",
+            "--category",
+            "RPMFUSION free Fedora",
+            "--archive-category",
+            "RPMFUSION free Fedora Archive",
+        ]
+    )
+    assert result.exit_code == 1, result.output
+    assert result.output == (
+        "Error: Unable to find a directory in [RPMFUSION free Fedora Archive] "
+        "for free/fedora/updates/testing/42/x86_64\n"
+    )
+    db.expire_all()
+    assert _repo_directories(db)["free-fedora-updates-released-42"] == (
+        "RPMFUSION free Fedora",
+        "free/fedora/updates/42/x86_64",
+    )
+
+
 def test_mta_category_unknown(configfile, db, split_layout):
     result = run_command(
         [
