@@ -60,10 +60,16 @@ class PagedResult:
 
         therange = list(range(min_page, max_page + 1))
 
-        if max_page != self.total_pages:
-            therange = therange + [None, self.total_pages]
-        if min_page != 1:
-            therange = [1, None] + therange
+        # The template shows None as an ellipsis. An ellipsis must replace at
+        # least one page, so it is left out next to the first and last page.
+        if max_page < self.total_pages - 1:
+            therange.append(None)
+        if max_page < self.total_pages:
+            therange.append(self.total_pages)
+        if min_page > 2:
+            therange.insert(0, None)
+        if min_page > 1:
+            therange.insert(0, 1)
 
         return therange
 
