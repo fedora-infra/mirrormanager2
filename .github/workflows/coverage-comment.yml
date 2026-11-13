@@ -1,0 +1,35 @@
+name: Post coverage comment
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+
+concurrency:
+  # github.ref is always the default branch in a workflow_run run. Two forks
+  # can use the same branch name, so the group also contains the repository.
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  comment:
+    name: Post coverage comment
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+    steps:
+    # This job has a write token, also for pull requests from forks. Never
+    # check out or run code from the pull request here.
+    - name: Post the coverage comment
+      uses: py-cov-action/python-coverage-comment-action@07249dd712cd2464873eb8a59a24f97fd281e76f # v4.6
+      with:
+        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_PR_RUN_ID: ${{ github.event.workflow_run.id }}
