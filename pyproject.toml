@@ -129,6 +129,10 @@ select = ["E", "F", "W", "I", "B", "UP"]
 [tool.coverage.run]
 branch = true
 source = ["mirrormanager2"]
+# The tests write the coverage data in a container, and the coverage job in
+# .github/workflows/ci.yml reads it on the runner host. The checkout has a
+# different absolute path in each place, so the data must use relative paths.
+relative_files = true
 
 [tool.coverage.paths]
 source = ["mirrormanager2", "utility"]

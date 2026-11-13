@@ -64,6 +64,54 @@ jobs:
       run: pip install --upgrade poetry
     - name: Run Tests
       run: tox
+    # The coverage job downloads the data of both matrix jobs into one
+    # directory, and "coverage combine" only reads files named .coverage.*.
+    - name: Rename the coverage data
+      run: mv .coverage .coverage.${{ matrix.database }}
+    - name: Store the coverage data
+      uses: actions/upload-artifact@v7
+      with:
+        name: coverage-${{ matrix.database }}
+        path: .coverage.${{ matrix.database }}
+        include-hidden-files: true
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    needs:
+      - ci
+    # The action exits with an error on workflow_dispatch runs. On pushes to
+    # other branches and tags, it has no PR to comment on and stores no data.
+    if: >-
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' &&
+       github.ref == format('refs/heads/{0}', github.event.repository.default_branch))
+    permissions:
+      # GitHub reduces both permissions to read-only for pull requests from
+      # forks. The action then cannot post the comment, so it writes the
+      # comment to a file, and coverage-comment.yml posts it.
+      contents: write
+      pull-requests: write
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+    - uses: actions/download-artifact@v8
+      with:
+        pattern: coverage-*
+        merge-multiple: true
+    - name: Create the coverage report
+      id: coverage_comment
+      uses: py-cov-action/python-coverage-comment-action@07249dd712cd2464873eb8a59a24f97fd281e76f # v4.6
+      with:
+        GITHUB_TOKEN: ${{ github.token }}
+        MERGE_COVERAGE_FILES: true
+    - name: Store the pull request comment
+      if: steps.coverage_comment.outputs.COMMENT_FILE_WRITTEN == 'true'
+      uses: actions/upload-artifact@v7
+      with:
+        name: python-coverage-comment-action
+        path: python-coverage-comment-action.txt
 
   # https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
   build:
