@@ -25,6 +25,7 @@ import logging
 import logging.handlers
 import os
 import sys
+from datetime import timezone
 
 import flask
 from flask_admin import Admin
@@ -47,6 +48,15 @@ def inject_variables():
     if hasattr(flask.g, "fas_user") and flask.g.fas_user:
         admin = is_mirrormanager_admin(flask.g.fas_user)
     return dict(is_admin=admin, version=__version__)
+
+
+def format_datetime(value, fmt="%Y-%m-%d %H:%M UTC"):
+    """Format a datetime for display. Naive values are assumed to be UTC."""
+    if value is None:
+        return "-"
+    if value.tzinfo is not None:
+        value = value.astimezone(timezone.utc)
+    return value.strftime(fmt)
 
 
 def create_app(config=None):
@@ -116,6 +126,7 @@ def create_app(config=None):
 
     # Template variables
     app.context_processor(inject_variables)
+    app.add_template_filter(format_datetime, "datetime")
 
     # Views
     from mirrormanager2.auth import views as auth_views

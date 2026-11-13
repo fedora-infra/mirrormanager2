@@ -28,11 +28,10 @@
         <span class="fa fa-globe"></span> <a href="{{ url_for('base.site_view', site_id=host.site_id) }}">{{ host.site.name }}</a>
     </div>
     {% if host.private %}
-    <div> <strong>Last Checked In:</strong> {{ host.last_checked_in or '-' }} </div>
+    <div> <strong>Last Checked In:</strong> {{ host.last_checked_in | datetime }} </div>
     {% endif %}
     {% if not host.private %}
-    <div><strong>Last Crawled:</strong> {% if host.last_crawled %} {{ host.last_crawled
-      }} <a href="{{url_for('base.crawler_log', host_id=host.id)}}">[Log]</a> {% else %} never {% endif %} </div>
+    <div><strong>Last Crawled:</strong> {% if host.last_crawled %} {{ host.last_crawled | datetime }} <a href="{{url_for('base.crawler_log', host_id=host.id)}}">[Log]</a> {% else %} never {% endif %} </div>
     <div><strong>Last Crawl Duration:</strong> {{ host.last_crawl_duration }} seconds</div>
       {% if host.crawl_failures > 0 %}
         <div><strong>Number of consecutive crawl failures:</strong> {{ host.crawl_failures }} </div>
