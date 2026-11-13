@@ -2,7 +2,7 @@ import csv
 import functools
 import logging
 from importlib import resources
-from urllib.parse import urlparse
+from urllib.parse import urlsplit
 
 from mirrormanager2.lib import geo, get_country_continent_redirect
 
@@ -59,15 +59,11 @@ def check_continent(config, options, session, categoryUrl):
     # The continent check takes the first URL of the first category
     # for the decision on which continent the mirror is.
     try:
-        hostname = urlparse.urlsplit(categoryUrl)[1]
-    except Exception as e:
-        # Not being able the split the URL is strange.
-        # Something is broken.
+        hostname = urlsplit(categoryUrl).hostname
+    except ValueError as e:
         raise BrokenBaseUrl() from e
-
-    # The function urlsplit() does not remove ':' in case someone
-    # specified a port. Only look at the first element before ':'
-    hostname = hostname.split(":")[0]
+    if not hostname:
+        raise BrokenBaseUrl()
 
     try:
         addresses = geo.get_host_addresses(hostname)
