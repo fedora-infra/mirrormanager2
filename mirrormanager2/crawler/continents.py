@@ -25,14 +25,13 @@ class BrokenBaseUrl(ValueError):
 
 
 def filter_continents(asked):
-    continents = []
-    for continent in CONTINENTS:
-        if f"^{continent}" in asked:
-            continue
-        if asked and continent not in asked:
-            continue
-        continents.append(continent)
-    return continents
+    excluded = {continent[1:] for continent in asked if continent.startswith("^")}
+    included = {continent for continent in asked if not continent.startswith("^")}
+    return [
+        continent
+        for continent in CONTINENTS
+        if continent not in excluded and (not included or continent in included)
+    ]
 
 
 @functools.cache
