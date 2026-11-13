@@ -6,6 +6,7 @@ from mirrormanager2.crawler.continents import (
     EmbargoedCountry,
     WrongContinent,
     check_continent,
+    filter_continents,
 )
 
 # ISO 3166-1 reserves the country codes XA to XZ for user-assigned use, so no
@@ -49,6 +50,10 @@ def test_check_continent_wrong_continent(resolved_hostnames):
         check_continent(CONFIG, {"continents": ["Lemuria"]}, None, "http://mirror.example.com/pub/")
 
 
+def test_check_continent_other_continent_excluded(resolved_hostnames):
+    check_continent(CONFIG, {"continents": ["^Lemuria"]}, None, "http://mirror.example.com/pub/")
+
+
 def test_check_continent_embargoed_country(resolved_hostnames):
     config = {**CONFIG, "EMBARGOED_COUNTRIES": ["XA"]}
     with pytest.raises(EmbargoedCountry) as excinfo:
@@ -64,3 +69,15 @@ def test_check_continent_broken_url(resolved_hostnames, url):
         check_continent(CONFIG, {"continents": ["Atlantis"]}, None, url)
     assert resolved_hostnames == []
 
+
+@pytest.mark.parametrize(
+    "asked,expected",
+    [
+        pytest.param([], ["Atlantis", "Lemuria", "Mu"], id="all"),
+        pytest.param(["Mu", "Atlantis"], ["Atlantis", "Mu"], id="include"),
+        pytest.param(["^Atlantis"], ["Lemuria", "Mu"], id="exclude"),
+        pytest.param(["Atlantis", "Lemuria", "^Lemuria"], ["Atlantis"], id="include-and-exclude"),
+    ],
+)
+def test_filter_continents(asked, expected):
+    assert filter_continents(asked) == expected
