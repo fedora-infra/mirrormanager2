@@ -1061,8 +1061,21 @@ def host_category_url_new(host_id, hc_id):
             url = url[:-1]
         host_category_u.url = url
 
-        if url in [url.url for url in hcobj.urls]:
-            flask.flash(f"URL Not Added: {url} already exists on {hcobj.category.name}", "error")
+        existing = mmlib.get_host_category_url_by_url(DB.session, url)
+        if existing is not None:
+            existing_hc = existing.host_category
+            if existing_hc.id == hcobj.id:
+                message = f"URL Not Added: {url} already exists on {hcobj.category.name}"
+            elif existing_hc.host_id == hostobj.id:
+                message = (
+                    f"URL Not Added: {url} already exists on {existing_hc.category.name}"
+                    " of this host"
+                )
+            else:
+                # The URL column is unique across all hosts. The user may not
+                # administer the other host, so do not name it.
+                message = f"URL Not Added: {url} is already used by another host"
+            flask.flash(message, "error")
             return flask.redirect(flask.url_for("base.host_view", host_id=host_id))
 
         # If the user is *not* an admin, keep the current private flag

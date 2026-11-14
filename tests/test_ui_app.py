@@ -1287,6 +1287,30 @@ def test_host_category_url_new_auth(client, user):
     assert "<title>Host - MirrorManager</title>" in data
     assert 'action="/host/2/category/3/url/38/delete">' in data
 
+    # Try adding the same URL to another category of the same host -- fails
+
+    output = client.post("/host/2/category/4/url/new", data=post_data, follow_redirects=True)
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert (
+        "URL Not Added: http://pingoured.fr/pub/Fedora already exists on Fedora Linux of this host"
+    ) in data
+    assert "Could not add Category URL to the host" not in data
+
+    # Try adding a URL that belongs to another host -- fails
+
+    post_data["url"] = "http://infrastructure.fedoraproject.org/pub/fedora/linux"
+    output = client.post("/host/2/category/3/url/new", data=post_data, follow_redirects=True)
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert (
+        "URL Not Added: http://infrastructure.fedoraproject.org/pub/fedora/linux"
+        " is already used by another host"
+    ) in data
+    assert "Could not add Category URL to the host" not in data
+    # The message must not reveal which host uses the URL.
+    assert "mirror.localhost" not in data
+
 
 def test_host_category_url_delete(client):
     """Test the host_category_url_delete endpoint."""
