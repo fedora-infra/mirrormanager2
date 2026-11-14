@@ -3,6 +3,7 @@ mirrormanager2 tests for the Flask application.
 """
 
 import os
+from datetime import datetime
 
 import pytest
 
@@ -1567,3 +1568,57 @@ def test_maps(client):
     # must send one even behind a proxy that sets Referrer-Policy: same-origin.
     assert '<meta name="referrer" content="strict-origin-when-cross-origin">' in data
     assert "tile.openstreetmap.org" in data
+
+
+RAW_DATE = datetime(2024, 3, 12, 14, 3, 27, 123456)
+
+
+def test_host_view_formats_last_crawled(client, user, db):
+    host = get_host(db, 2)
+    host.last_crawled = RAW_DATE
+    db.commit()
+
+    output = client.get("/host/2")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert "<strong>Last Crawled:</strong>  2024-03-12 14:03 UTC" in data
+    assert "14:03:27.123456" not in data
+
+
+def test_host_view_never_crawled(client, user):
+    output = client.get("/host/2")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert "<strong>Last Crawled:</strong>  never" in data
+
+
+def test_site_view_formats_created_at(client, user, db):
+    site = db.get(model.Site, 2)
+    site.created_at = RAW_DATE
+    db.commit()
+
+    output = client.get("/site/2")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert "at <strong>2024-03-12 14:03 UTC</strong>" in data
+    assert "14:03:27.123456" not in data
+
+
+def test_my_sites_formats_last_crawled(client, user, db):
+    host = get_host(db, 2)
+    host.last_crawled = RAW_DATE
+    db.commit()
+
+    output = client.get("/site/mine")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert "2024-03-12 14:03 UTC" in data
+    assert "14:03:27.123456" not in data
+
+
+def test_my_sites_never_crawled(client, user):
+    output = client.get("/site/mine")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert "never" in data
+    assert ">None<" not in data.replace(" ", "").replace("\n", "")
