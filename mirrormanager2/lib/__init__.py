@@ -219,6 +219,18 @@ def get_host_category_url_by_id(session, host_category_url_id):
     return query.first()
 
 
+def get_host_category_url_by_url(session, url):
+    """Return the HostCategoryUrl that uses the specified URL.
+
+    :arg session: the session with which to connect to the database.
+    :arg url: the URL of the HostCategoryUrl to return.
+
+    """
+    query = session.query(model.HostCategoryUrl).filter(model.HostCategoryUrl.url == url)
+
+    return query.one_or_none()
+
+
 def get_host_category_url(session):
     """Return all HostCategoryUrl in the database.
 
