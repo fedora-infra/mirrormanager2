@@ -72,7 +72,7 @@
         </td>
 
         <td>
-          {{ host.last_crawled | datetime }}
+          {% if host.last_crawled %}{{ host.last_crawled | datetime }}{% else %}never{% endif %}
         </td>
 
       {% endfor %}
