@@ -14,7 +14,7 @@
 | mirrormanager2/crawler/connection\_pool.py                                         |       52 |       14 |       14 |        2 |     73% |21, 41-\>55, 44-46, 58-63, 66, 69-71 |
 | mirrormanager2/crawler/connector.py                                                |       71 |       30 |        8 |        0 |     52% |29-30, 38-39, 56-58, 61-64, 92-93, 97-113, 116-117, 128-130 |
 | mirrormanager2/crawler/constants.py                                                |        8 |        0 |        0 |        0 |    100% |           |
-| mirrormanager2/crawler/continents.py                                               |       53 |       35 |       12 |        0 |     28% |20, 28-35, 40-49, 53-84 |
+| mirrormanager2/crawler/continents.py                                               |       49 |       10 |        8 |        0 |     79% |39-48, 69-72 |
 | mirrormanager2/crawler/crawler.py                                                  |      362 |      302 |      118 |        0 |     12% |58-61, 64-65, 89-104, 109-116, 138-151, 161-201, 215-235, 238-277, 280-333, 336-374, 377-402, 405-448, 451-456, 460-474, 477-492, 496-560, 564-565, 573-602 |
 | mirrormanager2/crawler/ftp\_connector.py                                           |       94 |       65 |       32 |        2 |     28% |17-20, 23-24, 27-40, 43-99, 102, 107-108, 113, 125 |
 | mirrormanager2/crawler/http\_connector.py                                          |      100 |       38 |       32 |        4 |     61% |19, 55-61, 64, 97-116, 124-143, 148-150, 160-161, 174-175, 185 |
@@ -33,9 +33,9 @@
 | mirrormanager2/lib/\_\_init\_\_.py                                                 |      382 |      129 |      136 |        5 |     65% |100-102, 133-135, 471, 478, 622, 633, 743, 759-765, 769-782, 802-812, 821-824, 833-835, 860-865, 876-884, 889-1000, 1012-1029, 1038-1056, 1066-1071, 1082-1087, 1096, 1105, 1116-1130, 1136-1142 |
 | mirrormanager2/lib/constants.py                                                    |        3 |        0 |        0 |        0 |    100% |           |
 | mirrormanager2/lib/database.py                                                     |        6 |        0 |        0 |        0 |    100% |           |
-| mirrormanager2/lib/fedora.py                                                       |       21 |       16 |        2 |        0 |     22% | 19-39, 43 |
+| mirrormanager2/lib/fedora.py                                                       |       21 |        1 |        2 |        0 |     96% |        43 |
 | mirrormanager2/lib/geo.py                                                          |       56 |       43 |       20 |        0 |     17% |16, 21-34, 39-67, 72-102 |
-| mirrormanager2/lib/hostconfig.py                                                   |       68 |       34 |       46 |        8 |     47% |34-36, 38-39, 47-48, 53-54, 59-60, 65-66, 72-75, 96-123 |
+| mirrormanager2/lib/hostconfig.py                                                   |       68 |       17 |       46 |        1 |     72% |    96-123 |
 | mirrormanager2/lib/migrations/env.py                                               |       37 |       13 |        6 |        1 |     58% |22-26, 45-48, 63-67, 87 |
 | mirrormanager2/lib/migrations/versions/8d2832628792\_access\_statistics.py         |       16 |        8 |        0 |        0 |     50% |20-44, 48-51 |
 | mirrormanager2/lib/migrations/versions/920e847c8c36\_add\_admin\_only\_category.py |        8 |        2 |        0 |        0 |     75% |    18, 22 |
@@ -45,7 +45,6 @@
 | mirrormanager2/lib/migrations/versions/e67aacbf9f4f\_host\_geo\_coordinates.py     |       12 |        4 |        0 |        0 |     67% |20-21, 25-26 |
 | mirrormanager2/lib/model.py                                                        |      524 |       25 |       40 |        1 |     93% |287-288, 379-388, 599, 780-806, 832 |
 | mirrormanager2/lib/notifications.py                                                |       11 |        0 |        0 |        0 |    100% |           |
-| mirrormanager2/lib/pid.py                                                          |       30 |       30 |        6 |        0 |      0% |     24-66 |
 | mirrormanager2/lib/repomap.py                                                      |      273 |      220 |      234 |        8 |     14% |13-28, 37, 48-\>50, 70-\>72, 77-103, 108-122, 125-130, 139-377 |
 | mirrormanager2/lib/sync.py                                                         |       39 |        4 |       14 |        1 |     87% |     51-55 |
 | mirrormanager2/lib/umdl.py                                                         |      269 |       64 |      104 |       24 |     72% |60, 67-69, 75-80, 130, 132, 135-140, 150-151, 232-\>211, 241-242, 245, 248-256, 283-\>301, 286, 293-\>301, 308-\>314, 318, 327-\>329, 338-339, 346-347, 353-354, 357-373, 400-402, 410-411, 415-416, 421-422, 427-429, 440, 442-445, 469 |
@@ -64,14 +63,14 @@
 | mirrormanager2/utility/move\_devel\_to\_release.py                                 |       56 |        6 |       20 |        6 |     84% |84, 86-\>74, 90-91, 96, 104, 126 |
 | mirrormanager2/utility/move\_to\_archive.py                                        |       75 |        8 |       38 |        7 |     87% |44-45, 47-48, 50-54, 68-\>66, 71-\>exit, 136, 143 |
 | mirrormanager2/utility/netblocks.py                                                |      189 |       84 |       52 |        3 |     52% |66-82, 86-90, 94, 99-110, 121-146, 156-166, 174-175, 187-189, 194-198, 202-217, 228, 269, 276-278, 337-340 |
-| mirrormanager2/utility/pagination.py                                               |       63 |       16 |       14 |        4 |     69% |21-22, 40, 44, 53-59, 64, 66, 72, 79, 82-84 |
+| mirrormanager2/utility/pagination.py                                               |       67 |        9 |       18 |        1 |     86% |21-22, 40, 44, 78, 85, 88-90 |
 | mirrormanager2/utility/update\_ec2\_netblocks.py                                   |       67 |       67 |       30 |        0 |      0% |     6-107 |
 | mirrormanager2/utility/update\_master\_directory\_list.py                          |      461 |      224 |      162 |       27 |     48% |68, 73-78, 92, 94, 96-107, 136-137, 140-141, 147-156, 160-\>166, 172-\>175, 178, 179-\>181, 184, 203-\>206, 207, 210-\>214, 220-\>227, 230-\>233, 241-242, 252-253, 257-270, 273-274, 277-324, 327-343, 346-362, 368-369, 383-386, 392-394, 406, 421, 433-\>378, 437-438, 459-461, 464-491, 512-521, 529-530, 537-600, 610-675, 684-689, 748-752, 786-791, 792-\>799, 794-\>796, 799-\>exit, 812 |
 | mirrormanager2/utility/update\_single\_file\_detail.py                             |       36 |        3 |        8 |        2 |     89% | 58-59, 65 |
 | mirrormanager2/utility/upgrade\_install\_repo.py                                   |       62 |       62 |       20 |        0 |      0% |    14-131 |
 | mirrormanager2/views.py                                                            |      684 |      188 |      236 |       25 |     71% |76-\>82, 84-\>88, 163, 219-\>223, 253-289, 302, 325-346, 361-406, 419, 464, 516-\>520, 536-557, 572-601, 623, 663, 709, 747, 794, 833, 892, 931, 944-\>948, 949, 992, 1036, 1060-\>1062, 1069-\>1072, 1077-1081, 1112, 1156-1209, 1218-1243, 1263, 1269, 1274-1275, 1286-1313, 1320-1342, 1349-1350 |
 | mirrormanager2/xml\_rpc.py                                                         |       36 |        2 |        2 |        1 |     92% |     79-80 |
-| **TOTAL**                                                                          | **5791** | **2703** | **1720** |  **164** | **49%** |           |
+| **TOTAL**                                                                          | **5761** | **2609** | **1714** |  **154** | **51%** |           |
 
 
 ## Setup coverage badge
