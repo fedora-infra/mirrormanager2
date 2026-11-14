@@ -1585,6 +1585,19 @@ def test_host_view_formats_last_crawled(client, user, db):
     assert "14:03:27.123456" not in data
 
 
+def test_host_view_formats_last_checked_in(client, user, db):
+    host = get_host(db, 2)
+    host.private = True
+    host.last_checked_in = RAW_DATE
+    db.commit()
+
+    output = client.get("/host/2")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert "<strong>Last Checked In:</strong> 2024-03-12 14:03 UTC" in data
+    assert "14:03:27.123456" not in data
+
+
 def test_host_view_never_crawled(client, user):
     output = client.get("/host/2")
     assert output.status_code == 200
