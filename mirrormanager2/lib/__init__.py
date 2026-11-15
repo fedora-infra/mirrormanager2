@@ -885,8 +885,12 @@ def set_hostcategorydirs_not_up2date(session, hc, except_ids=None):
     :returns: the number of changed items
 
     """
+    # Rows which are already not up2date are left out. PostgreSQL writes a new
+    # row version even when the value does not change, and the crawler adds
+    # the returned count to its statistics.
     statement = sa.update(model.HostCategoryDir).where(
-        model.HostCategoryDir.host_category_id == hc.id
+        model.HostCategoryDir.host_category_id == hc.id,
+        model.HostCategoryDir.up2date.is_(True),
     )
     if except_ids:
         statement = statement.where(

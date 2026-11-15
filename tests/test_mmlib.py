@@ -790,6 +790,36 @@ def test_get_hostcategorydir_by_hostcategoryid_and_path(
     assert result.host_category.category.name == "Fedora Linux"
 
 
+def test_set_hostcategorydirs_not_up2date(
+    db, base_items, site, hosts, directory, category, hostcategory, hostcategorydir
+):
+    """Only up2date rows outside except_ids change, and only they are counted."""
+    hc = mirrormanager2.lib.get_host_category(db, 1)
+    seen = mirrormanager2.lib.get_hostcategorydir_by_hostcategoryid_and_path(
+        db, hc.id, "pub/fedora/linux/releases/26"
+    )
+    unseen = mirrormanager2.lib.get_hostcategorydir_by_hostcategoryid_and_path(
+        db, hc.id, "pub/fedora/linux/releases/27/extramirror1"
+    )
+    already_stale = model.HostCategoryDir(
+        host_category_id=hc.id,
+        directory_id=5,
+        path="pub/fedora/linux/releases/27/stale",
+        up2date=False,
+    )
+    db.add(already_stale)
+    db.commit()
+
+    changed = mirrormanager2.lib.set_hostcategorydirs_not_up2date(db, hc, [seen.id])
+    db.commit()
+    db.expire_all()
+
+    assert changed == 1
+    assert seen.up2date is True
+    assert unseen.up2date is False
+    assert already_stale.up2date is False
+
+
 def test_get_file_detail_empty(db):
     results = mirrormanager2.lib.get_file_detail(db, "repomd.xml", 7)
     assert results is None
