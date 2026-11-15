@@ -820,6 +820,52 @@ def test_set_hostcategorydirs_not_up2date(
     assert already_stale.up2date is False
 
 
+def test_normalize_hostcategorydir_paths(
+    db, base_items, site, hosts, directory, category, hostcategory
+):
+    """Duplicates lose the row the crawler did not write, the rest lose the slash."""
+
+    def add(hc_id, dir_id, path, up2date):
+        row = model.HostCategoryDir(
+            host_category_id=hc_id, directory_id=dir_id, path=path, up2date=up2date
+        )
+        db.add(row)
+        return row
+
+    # HostCategory 3 has the "Fedora Linux" category with the top directory 1.
+    # Directories 2, 3, 4 and 5 are extras, epel, releases/26 and releases/27.
+    topdir = add(3, 1, "", True)
+    add(3, 1, "/", False)
+    releases_26 = add(3, 4, "/releases/26", True)
+    add(3, 4, "releases/26", False)
+    releases_27 = add(3, 5, "/releases/27", False)
+    add(3, 2, "/extras", True)
+    add(3, 3, "extras", True)
+    add(1, 4, "/releases/26", True)
+    db.commit()
+    expected_ids = {topdir.id, releases_26.id, releases_27.id}
+    hc = mirrormanager2.lib.get_host_category(db, 3)
+
+    result = mirrormanager2.lib.normalize_hostcategorydir_paths(db, hc)
+    db.commit()
+    db.expire_all()
+
+    assert result == (2, 2, 1)
+    rows = db.query(model.HostCategoryDir).filter_by(host_category_id=3).all()
+    assert {(row.directory_id, row.path, row.up2date) for row in rows} == {
+        (1, "", True),
+        (4, "releases/26", True),
+        (5, "releases/27", False),
+        (2, "/extras", True),
+        (3, "extras", True),
+    }
+    assert expected_ids <= {row.id for row in rows}
+    other_hc = db.query(model.HostCategoryDir).filter_by(host_category_id=1).one()
+    assert other_hc.path == "/releases/26"
+
+    assert mirrormanager2.lib.normalize_hostcategorydir_paths(db, hc) == (0, 0, 1)
+
+
 def test_get_file_detail_empty(db):
     results = mirrormanager2.lib.get_file_detail(db, "repomd.xml", 7)
     assert results is None

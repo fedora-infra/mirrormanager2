@@ -28,6 +28,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 
 import sqlalchemy as sa
+from sqlalchemy.orm import aliased
 
 from mirrormanager2 import default_config
 from mirrormanager2.lib import model
@@ -898,6 +899,81 @@ def set_hostcategorydirs_not_up2date(session, hc, except_ids=None):
         )
     statement = statement.values(up2date=False)
     return session.execute(statement).rowcount
+
+
+def normalize_hostcategorydir_paths(session, hc):
+    """Remove the leading slash from the HostCategoryDir paths of a HostCategory.
+
+    The crawler of releases 0.16 to 1.1.0 stored the path of every directory
+    below the category top directory with a leading slash, for example
+    "/releases/26". report_mirror and older crawlers store "releases/26". A
+    HostCategory can therefore contain the same directory under both paths.
+    Some old rows also store "/" for the top directory, whose path is "".
+
+    :arg session: the session with which to connect to the database.
+    :arg hc: the HostCategory whose HostCategoryDir paths are repaired.
+    :returns: a tuple of the number of deleted duplicates, the number of
+        renamed rows, and the number of rows which still start with a slash.
+
+    """
+    hcd = model.HostCategoryDir
+    other = aliased(model.HostCategoryDir)
+
+    def same_directory_with_path(path):
+        return sa.exists().where(
+            other.host_category_id == hcd.host_category_id,
+            other.directory_id == hcd.directory_id,
+            other.path == path,
+        )
+
+    # The crawler's row of a duplicate holds the result of the last crawl, so
+    # the other row is deleted. For the top directory the crawler's row is "",
+    # and for every other directory it is the row with the slash.
+    deleted = session.execute(
+        sa.delete(hcd)
+        .where(
+            hcd.host_category_id == hc.id,
+            hcd.path == "/",
+            same_directory_with_path(""),
+        )
+        .execution_options(synchronize_session=False)
+    ).rowcount
+    deleted += session.execute(
+        sa.delete(hcd)
+        .where(
+            hcd.host_category_id == hc.id,
+            hcd.path != "",
+            hcd.path.not_like("/%"),
+            same_directory_with_path(sa.literal("/").concat(hcd.path)),
+        )
+        .execution_options(synchronize_session=False)
+    ).rowcount
+
+    # A row whose path without the slash belongs to a different directory
+    # keeps its slash. Renaming it would violate the unique constraint on
+    # host_category_id and path.
+    stripped = sa.func.substr(hcd.path, 2)
+    renamed = session.execute(
+        sa.update(hcd)
+        .where(
+            hcd.host_category_id == hc.id,
+            hcd.path.like("/%"),
+            ~sa.exists().where(
+                other.host_category_id == hcd.host_category_id,
+                other.path == stripped,
+            ),
+        )
+        .values(path=stripped)
+        .execution_options(synchronize_session=False)
+    ).rowcount
+
+    remaining = session.scalar(
+        sa.select(sa.func.count(hcd.id)).where(
+            hcd.host_category_id == hc.id,
+            hcd.path.like("/%"),
+        )
+    )
+    return deleted, renamed, remaining
 
 
 def uploaded_config(session, host, config):

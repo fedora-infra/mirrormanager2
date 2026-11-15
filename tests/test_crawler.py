@@ -413,6 +413,19 @@ def test_decide_dir_only_topdir_chain():
     assert decisions == {"": True, "development": True, "development/rawhide": True}
 
 
+@pytest.mark.parametrize(
+    "topname,dirname,expected",
+    [
+        ("pub/fedora/linux", "pub/fedora/linux/releases/26", "releases/26"),
+        ("pub/fedora/linux", "pub/fedora/linux", ""),
+        ("", "releases/26", "releases/26"),
+    ],
+)
+def test_hcd_path(topname, dirname, expected):
+    """The path has no leading slash, also for an empty top directory."""
+    assert _hcd_path(topname, dirname) == expected
+
+
 @pytest.fixture()
 def crawler_obj(config, db, base_items, site, hosts, directory, category, hostcategory):
     host = db.get(model.Host, 2)
@@ -532,6 +545,35 @@ def test_sync_dir_only_dirs_updates_rows(db, crawler_obj, crawled_hc_and_dir):
     db.refresh(hcd)
     assert hcd.up2date is False
     assert stats.not_up2date == 1
+
+
+def test_scan_host_category_repairs_paths_with_a_slash(
+    config, db, base_items, site, hosts, directory, category, hostcategory, monkeypatch
+):
+    """The scan keeps one row per directory, the crawler's, without the slash."""
+    options = {"debug": False, "host_timeout": 600, "canary": False, "repodata": False}
+    crawler = Crawler(config, db, options, Mock(), db.get(model.Host, 2))
+    crawler.timeout.start()
+    hc, dir_obj = db.get(model.HostCategory, 3), db.get(model.Directory, 4)
+    crawler_row = model.HostCategoryDir(
+        host_category_id=hc.id, directory_id=dir_obj.id, path="/releases/26", up2date=False
+    )
+    old_row = model.HostCategoryDir(
+        host_category_id=hc.id, directory_id=dir_obj.id, path="releases/26", up2date=False
+    )
+    db.add_all([crawler_row, old_row])
+    db.commit()
+    crawler_row_id = crawler_row.id
+    monkeypatch.setattr(
+        crawler, "_get_directory_statuses", lambda hc: [(dir_obj, DirStatus.UP2DATE)]
+    )
+
+    crawler._scan_host_category(hc)
+
+    rows = db.query(model.HostCategoryDir).filter_by(host_category_id=hc.id).all()
+    assert [(row.id, row.path, row.up2date) for row in rows] == [
+        (crawler_row_id, "releases/26", True)
+    ]
 
 
 def test_reporter_host_disabled(config, db, site, hosts):
