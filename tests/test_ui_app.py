@@ -1353,6 +1353,70 @@ def test_host_category_url_delete_dialog_names_the_url(client, user, db):
     assert "confirm('You sure you want to delete this URL?');" not in data
 
 
+@pytest.fixture()
+def hc3_dirs(db):
+    """Add a stale row and an up-to-date row with HTML in its path to HostCategory 3.
+
+    HostCategory 3 of host 2 already has two up-to-date rows from the
+    hostcategorydir fixture.
+    """
+    db.add(
+        model.HostCategoryDir(
+            host_category_id=3, directory_id=2, path="pub/fedora/linux/extras", up2date=False
+        )
+    )
+    db.add(model.HostCategoryDir(host_category_id=3, directory_id=3, path="<b>x</b>", up2date=True))
+    db.commit()
+
+
+def test_host_view_loads_directories_on_demand(client, user, hc3_dirs):
+    """The host page counts the up-to-date directories but does not list them."""
+    output = client.get("/host/2")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert (
+        'Up-to-Date Directories this host carries <span class="badge bg-primary">3</span>'
+    ) in data
+    assert 'data-dirs-url="/host/2/category/3/dirs"' in data
+    assert "pub/fedora/linux/releases/27/extramirror3" not in data
+
+
+def test_host_category_dirs(client):
+    output = client.get("/host/2/category/3/dirs")
+    assert output.status_code == 302
+    data = output.get_data(as_text=True)
+    assert "/login?next=http://localhost/host/2/category/3/dirs" in data
+
+
+def test_host_category_dirs_auth(client, user, hc3_dirs):
+    output = client.get("/host/50/category/3/dirs")
+    assert output.status_code == 404
+    assert "<p>Host not found</p>" in output.get_data(as_text=True)
+
+    output = client.get("/host/1/category/1/dirs")
+    assert output.status_code == 403
+
+    output = client.get("/host/2/category/500/dirs")
+    assert output.status_code == 404
+    assert "<p>Host/Category not found</p>" in output.get_data(as_text=True)
+
+    output = client.get("/host/2/category/1/dirs")
+    assert output.status_code == 404
+    assert "<p>Category not associated with this host</p>" in output.get_data(as_text=True)
+
+    output = client.get("/host/2/category/3/dirs")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert "<html" not in data
+    assert data.split() == [
+        "<ul>",
+        "<li>&lt;b&gt;x&lt;/b&gt;</li>",
+        "<li>pub/fedora/linux/releases/27</li>",
+        "<li>pub/fedora/linux/releases/27/extramirror3</li>",
+        "</ul>",
+    ]
+
+
 def test_host_category_url_delete(client):
     """Test the host_category_url_delete endpoint."""
     output = client.post("/host/1/category/1/url/3/delete")
@@ -1463,7 +1527,7 @@ def test_toggle_private_flag_host_auth(client, user):
     data = output.get_data(as_text=True)
     assert "<p>Host not found</p>" in data
 
-    output = client.get("/host/2")
+    output = client.get("/host/2/category/3/dirs")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "pub/fedora/linux/releases/27" in data
@@ -1489,7 +1553,7 @@ def test_toggle_private_flag_host_auth(client, user):
     assert output.status_code == 200
     data = output.get_data(as_text=True)
 
-    output = client.get("/host/2")
+    output = client.get("/host/2/category/3/dirs")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     # Make sure the host_category_directory is gone
@@ -1506,7 +1570,7 @@ def test_toggle_private_flag_host_auth_more(client, user, db, hostcategorydir_on
     hostobj.private = True
     db.commit()
     # Check the setup is good
-    output = client.get("/host/2")
+    output = client.get("/host/2/category/3/dirs")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "pub/fedora/linux/updates/testing/26/x86_64" in data
@@ -1530,7 +1594,7 @@ def test_toggle_private_flag_host_auth_more(client, user, db, hostcategorydir_on
     # data = output.get_data(as_text=True)
     # print(data)
 
-    output = client.get("/host/2")
+    output = client.get("/host/2/category/3/dirs")
     # output = client.get('/host/2')
     assert output.status_code == 200
     data = output.get_data(as_text=True)
@@ -1556,7 +1620,7 @@ def test_toggle_private_flag_site_auth(client, user):
     data = output.get_data(as_text=True)
     assert "<p>Host not found</p>" in data
 
-    output = client.get("/host/2")
+    output = client.get("/host/2/category/3/dirs")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "pub/fedora/linux/releases/27" in data
@@ -1568,7 +1632,7 @@ def test_toggle_private_flag_site_auth_more(client, user, hostcategorydir_even_m
     data = output.get_data(as_text=True)
     csrf_token = data.split('name="csrf_token" type="hidden" value="')[1].split('">')[0]
 
-    output = client.get("/host/2")
+    output = client.get("/host/2/category/3/dirs")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     assert "pub/fedora/linux/updates/testing/27/x86_64" in data
@@ -1590,7 +1654,7 @@ def test_toggle_private_flag_site_auth_more(client, user, hostcategorydir_even_m
     assert "<h2>Fedora Public Active Mirrors</h2>" in data
     assert '<div class="toast-body">Site Updated</div>' in data
 
-    output = client.get("/host/2")
+    output = client.get("/host/2/category/3/dirs")
     assert output.status_code == 200
     data = output.get_data(as_text=True)
     # Make sure the host_category_directory is gone
