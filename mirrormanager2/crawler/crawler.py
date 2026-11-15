@@ -85,10 +85,7 @@ class PropagationResult:
 
 def _hcd_path(topname, dirname):
     """Return the HostCategoryDir path of a directory name."""
-    toplen = len(topname)
-    if dirname.startswith("/"):
-        toplen += 1
-    return dirname[toplen:]
+    return dirname[len(topname) :].lstrip("/")
 
 
 def _parent_path(path):
@@ -313,6 +310,27 @@ class Crawler:
         elif self.options["repodata"]:
             msg = f"repodata {msg}"
         logger.debug(msg)
+
+        # sync_dir() looks a HostCategoryDir up by its path without a leading
+        # slash, so rows written by the crawler of releases 0.16 to 1.1.0 are
+        # repaired first. The call can be removed once no host_category_dir
+        # path on the deployed instances starts with "/".
+        deleted, renamed, remaining = mmlib.normalize_hostcategorydir_paths(self.session, hc)
+        self.session.commit()
+        if deleted or renamed:
+            logger.info(
+                "Repaired paths of category %s: deleted %d duplicates, renamed %d",
+                hc.category.name,
+                deleted,
+                renamed,
+            )
+        if remaining:
+            logger.warning(
+                "Category %s has %d paths with a leading slash whose path without "
+                "it belongs to another directory",
+                hc.category.name,
+                remaining,
+            )
 
         trydirs_count = mmlib.count_directories_by_category(
             self.session, hc.category, self.options["repodata"]
