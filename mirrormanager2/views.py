@@ -562,6 +562,35 @@ def host_view(host_id):
         "host.html",
         form=form,
         host=host,
+        dir_counts=mmlib.count_up2date_hostcategorydirs(DB.session, host.categories),
+    )
+
+
+@views.route("/host/<host_id>/category/<hc_id>/dirs")
+@login_required
+def host_category_dirs(host_id, hc_id):
+    """Return the list of the up-to-date directories of a host_category."""
+    hostobj = mmlib.get_host(DB.session, host_id)
+
+    if hostobj is None:
+        flask.abort(404, "Host not found")
+
+    if not (
+        is_site_admin(flask.g.fas_user, hostobj.site) or is_mirrormanager_admin(flask.g.fas_user)
+    ):
+        flask.abort(403, "Access denied")
+
+    hcobj = mmlib.get_host_category(DB.session, hc_id)
+
+    if hcobj is None:
+        flask.abort(404, "Host/Category not found")
+
+    if hcobj.host_id != hostobj.id:
+        flask.abort(404, "Category not associated with this host")
+
+    return flask.render_template(
+        "host_category_dirs.html",
+        paths=mmlib.get_up2date_hostcategorydir_paths(DB.session, hcobj),
     )
 
 

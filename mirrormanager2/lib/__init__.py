@@ -878,6 +878,47 @@ def count_hostcategorydirs_with_unreadable_dir(session, hc):
     return session.scalar(query)
 
 
+def count_up2date_hostcategorydirs(session, hcs):
+    """Return the number of up2date HostCategoryDirs of each HostCategory.
+
+    :arg session: the session with which to connect to the database.
+    :arg hcs: the HostCategory objects to count the HostCategoryDirs of.
+    :returns: a dict mapping the HostCategory IDs to their number of up2date
+        HostCategoryDirs. HostCategories without any are left out.
+
+    """
+    hc_ids = [hc.id for hc in hcs]
+    if not hc_ids:
+        return {}
+    query = (
+        sa.select(model.HostCategoryDir.host_category_id, sa.func.count())
+        .where(
+            model.HostCategoryDir.host_category_id.in_(hc_ids),
+            model.HostCategoryDir.up2date.is_(True),
+        )
+        .group_by(model.HostCategoryDir.host_category_id)
+    )
+    return dict(session.execute(query).all())
+
+
+def get_up2date_hostcategorydir_paths(session, hc):
+    """Return the sorted paths of the up2date HostCategoryDirs of a HostCategory.
+
+    :arg session: the session with which to connect to the database.
+    :arg hc: the HostCategory to return the paths of.
+
+    """
+    query = (
+        sa.select(model.HostCategoryDir.path)
+        .where(
+            model.HostCategoryDir.host_category_id == hc.id,
+            model.HostCategoryDir.up2date.is_(True),
+        )
+        .order_by(model.HostCategoryDir.path)
+    )
+    return session.scalars(query).all()
+
+
 def set_hostcategorydirs_not_up2date(session, hc, except_ids=None):
     """Set the HostCategoryDir objects linked to the specified HostCategory
     to not up2date, except those in the provided list of HostCategoryDir IDs.
