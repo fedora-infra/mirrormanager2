@@ -51,7 +51,7 @@
       {{ form.csrf_token }}
         <button
           class="btn btn-sm btn-outline-danger"
-          onclick="return confirm('You sure you want to delete the {{host.name}} host?');"
+          onclick='return confirm({{ "You sure you want to delete the %s host?"|format(host.name)|tojson }});'
           title="Delete host">
           <span class="fa fa-trash fa-lg"></span> Delete Host
         </button>
@@ -77,7 +77,7 @@
       {{ form.csrf_token }}
         <button
           class="btn btn-sm btn-outline-danger"
-          onclick="return confirm('You sure you want to remove {{ admin.username }} as an admin?');"
+          onclick='return confirm({{ "You sure you want to remove %s as an admin?"|format(admin.username)|tojson }});'
           title="Remove">
           <span class="fa fa-trash fa-lg"></span> Remove
         </button>

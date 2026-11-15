@@ -225,6 +225,26 @@ def test_site_view(client):
     assert "/login?next=http://localhost/site/2" in data
 
 
+def test_site_view_dialogs_escape_names(client, user, db):
+    """A quote in a host name or a username cannot end the confirm() string."""
+    get_host(db, 2).name = "mirror'2.example.test"
+    db.add(model.SiteAdmin(username="o'brien", site_id=2))
+    db.commit()
+
+    output = client.get("/site/2")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert (
+        "onclick='return confirm(\"You sure you want to delete the "
+        "mirror\\u00272.example.test host?\");'"
+    ) in data
+    assert (
+        "onclick='return confirm(\"You sure you want to remove o\\u0027brien as an admin?\");'"
+    ) in data
+    assert "confirm('You sure you want to delete the mirror" not in data
+    assert "confirm('You sure you want to remove o" not in data
+
+
 def test_site_view_auth(client, user):
     output = client.get("/site/100")
     assert output.status_code == 404
