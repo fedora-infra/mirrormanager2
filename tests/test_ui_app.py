@@ -1312,6 +1312,24 @@ def test_host_category_url_new_auth(client, user):
     assert "mirror.localhost" not in data
 
 
+def test_host_category_url_new_strips_whitespace(client, user, db):
+    """Whitespace around a pasted URL does not make the URL invalid."""
+    output = client.get("/host/2/category/3/url/new")
+    data = output.get_data(as_text=True)
+    csrf_token = data.split('name="csrf_token" type="hidden" value="')[1].split('">')[0]
+
+    post_data = {
+        "url": "  https://mirror.example.test/pub/fedora/linux/ \t",
+        "csrf_token": csrf_token,
+    }
+    output = client.post("/host/2/category/3/url/new", data=post_data, follow_redirects=True)
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert '<div class="toast-body">Host Category URL added</div>' in data
+    urls = [url.url for url in mirrormanager2.lib.get_host_category(db, 3).urls]
+    assert "https://mirror.example.test/pub/fedora/linux" in urls
+
+
 def test_host_category_url_delete(client):
     """Test the host_category_url_delete endpoint."""
     output = client.post("/host/1/category/1/url/3/delete")
