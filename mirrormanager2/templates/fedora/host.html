@@ -217,7 +217,7 @@
             {{ form.csrf_token }}
             <button
               class="btn btn-sm btn-outline-danger"
-              onclick="return confirm('You sure you want to delete this URL?');"
+              onclick='return confirm({{ ("You sure you want to delete this URL?\n\n" ~ url.url)|tojson }});'
               title="Delete URL"><span class="fa fa-trash fa-lg"></span>
             </button>
     </form>

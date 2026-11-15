@@ -1330,6 +1330,29 @@ def test_host_category_url_new_strips_whitespace(client, user, db):
     assert "https://mirror.example.test/pub/fedora/linux" in urls
 
 
+def test_host_category_url_delete_dialog_names_the_url(client, user, db):
+    """The confirmation names the URL, and a quote in it cannot end the string."""
+    db.add(
+        model.HostCategoryUrl(
+            host_category_id=3, url="https://mirror.example.test/it's", private=False
+        )
+    )
+    db.commit()
+
+    output = client.get("/host/2")
+    assert output.status_code == 200
+    data = output.get_data(as_text=True)
+    assert (
+        "onclick='return confirm(\"You sure you want to delete this URL?\\n\\n"
+        "https://infrastructure.fedoraproject.org/pub/fedora/linux\");'"
+    ) in data
+    assert (
+        "onclick='return confirm(\"You sure you want to delete this URL?\\n\\n"
+        "https://mirror.example.test/it\\u0027s\");'"
+    ) in data
+    assert "confirm('You sure you want to delete this URL?');" not in data
+
+
 def test_host_category_url_delete(client):
     """Test the host_category_url_delete endpoint."""
     output = client.post("/host/1/category/1/url/3/delete")
