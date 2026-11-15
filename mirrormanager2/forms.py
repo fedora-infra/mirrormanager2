@@ -51,6 +51,11 @@ def uppercase(value):
     return value.upper() if value else value
 
 
+def strip(value):
+    """Field filter; the value is None when the field was not submitted."""
+    return value.strip() if value else value
+
+
 def is_number(form, field):
     """Check if the data in the field is a number and raise an exception
     if it is not.
@@ -237,6 +242,7 @@ class AddHostCategoryUrlForm(FlaskForm):
                 message="Unsupported URL",
             ),
         ],
+        filters=[strip],
     )
     private = wtforms.BooleanField(
         "Private",

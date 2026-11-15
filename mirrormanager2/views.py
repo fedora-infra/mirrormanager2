@@ -1056,7 +1056,7 @@ def host_category_url_new(host_id, hc_id):
         host_category_u.host_category_id = hcobj.id
         form.populate_obj(obj=host_category_u)
 
-        url = form.url.data.strip()
+        url = form.url.data
         if url.endswith("/"):
             url = url[:-1]
         host_category_u.url = url
