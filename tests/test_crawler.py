@@ -26,6 +26,7 @@ from fedora_messaging.testing import mock_sends
 from mirrormanager_messages.host import HostCrawlerDisabledV1
 
 from mirrormanager2 import default_config
+from mirrormanager2.crawler import crawler as crawler_module
 from mirrormanager2.crawler.connection_pool import ConnectionPool
 from mirrormanager2.crawler.connector import FetchingFailed
 from mirrormanager2.crawler.crawler import (
@@ -33,6 +34,7 @@ from mirrormanager2.crawler.crawler import (
     CrawlResult,
     _hcd_path,
     decide_dir_only_statuses,
+    worker,
 )
 from mirrormanager2.crawler.reporter import store_crawl_result
 from mirrormanager2.crawler.states import CrawlStatus, DirStatus, SyncStatus
@@ -780,3 +782,26 @@ def test_reporter_host_disabled_without_fedora_messaging(config, db, site, hosts
     )
     db.refresh(failed_host)
     assert failed_host.user_active is False
+
+
+@pytest.mark.parametrize(
+    "host_name,crawled",
+    [
+        ("private.localhost", False),
+        ("mirror.localhost", True),
+    ],
+)
+def test_worker_skips_private_hosts(
+    config, db, db_url, site, hosts, monkeypatch, host_name, crawled
+):
+    """A host which is private when its worker runs must not be crawled."""
+    config["SQLALCHEMY_DATABASE_URI"] = db_url
+    host = db.scalar(sa.select(model.Host).where(model.Host.name == host_name))
+    crawler_class = Mock()
+    monkeypatch.setattr(crawler_module, "Crawler", crawler_class)
+    monkeypatch.setattr(crawler_module, "crawl_and_report", Mock(return_value="crawled"))
+
+    result = worker({}, config, Mock(), host.id)
+
+    assert crawler_class.called is crawled
+    assert result == ("crawled" if crawled else None)
