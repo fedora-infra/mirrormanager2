@@ -45,12 +45,6 @@ def validate_continents(ctx, param, value):
     show_default=True,
 )
 @click.option(
-    "--include-private",
-    is_flag=True,
-    default=False,
-    help="Include hosts marked 'private' in the crawl",
-)
-@click.option(
     "--include-disabled/--exclude-disabled",
     default=False,
     help="Include disabled hosts in the crawl",

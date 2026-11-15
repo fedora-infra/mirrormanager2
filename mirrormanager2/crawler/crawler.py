@@ -703,7 +703,10 @@ def worker(options, config, progress_bar, host_id):
         progress.set_host_name(host.name)
 
         on_thread_started(host_id=host_id, host_name=host.name)
-        if host.private and not options["include_private"]:
+        # main() selects only public hosts when the run starts. A host can be
+        # made private before its worker runs, and private hosts are not
+        # reachable from the internet.
+        if host.private:
             progress.finish()
             return
 
