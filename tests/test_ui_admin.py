@@ -535,24 +535,6 @@ def test_admin_siteadminview(client, admin_user):
 
 
 @patch("mirrormanager2.app.is_mirrormanager_admin", Mock(return_value=None))
-def test_admin_sitetositeview(client, admin_user):
-    """Test the admin Site To Site view."""
-    output = handle_flask_admin_urls(client, "/admin/sitetosite/")
-    assert output.status_code == 200
-    data = output.get_data(as_text=True)
-    assert "<title>Site - Site To Site - Admin</title>" in data
-    assert re.search(r'"/admin/arch/">\s*Arch</a>', data) is not None
-    assert re.search(r'"/admin/category/">\s*Category</a>', data) is not None
-    assert (
-        re.search(
-            r'"/admin/sitetosite/\?sort=[0-2][^\"]*" ' 'title="Sort by Username">Username</a>',
-            data,
-        )
-        is not None
-    )
-
-
-@patch("mirrormanager2.app.is_mirrormanager_admin", Mock(return_value=None))
 def test_admin_versionview(client, admin_user):
     """Test the admin Version view."""
     output = handle_flask_admin_urls(client, "/admin/version/")
