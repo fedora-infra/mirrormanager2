@@ -51,8 +51,6 @@ class Site(BASE):
         sa.DateTime, nullable=False, default=datetime.datetime.utcnow, index=True
     )
     created_by = sa.Column(sa.Text(), nullable=False)
-    # allow all sites to pull from me
-    all_sites_can_pull_from_me = sa.Column(sa.Boolean(), default=False, nullable=False)
     email_on_drop = sa.Column(sa.Boolean(), default=False, nullable=False)
     email_on_add = sa.Column(sa.Boolean(), default=False, nullable=False)
 

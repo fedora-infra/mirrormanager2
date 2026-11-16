@@ -191,9 +191,6 @@ href="{{ url_for('static', filename='mirrormanager2.css') }}"/>
       {{ render_switch(form.admin_active,
         after="Admin Override for enabling or disabling") }}
     {% endif %}
-    {{ render_switch(form.all_sites_can_pull_from_me,
-        after="Allow all mirror sites to pull my content
-        without explicitly adding them to my list.") }}
     <input type="submit" class="btn btn-primary" value="{{action}}">
     {{ form.csrf_token }}
   </form>

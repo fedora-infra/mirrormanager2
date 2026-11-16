@@ -269,7 +269,6 @@ erDiagram
   site {
     INTEGER id PK
     BOOLEAN admin_active "indexed"
-    BOOLEAN all_sites_can_pull_from_me
     DATETIME created_at "indexed"
     TEXT created_by
     BOOLEAN email_on_add
