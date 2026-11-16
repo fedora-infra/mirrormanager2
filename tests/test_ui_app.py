@@ -282,7 +282,6 @@ def test_site_view_auth(client, user):
         "org_url": "http://getfedora.org",
         "admin_active": True,
         "user_active": True,
-        "downstream_comments": "Mirror available over HTTP.",
     }
 
     # Check CSRF protection
@@ -1664,7 +1663,6 @@ def test_toggle_private_flag_site_auth_more(client, user, hostcategorydir_even_m
         "admin_active": True,
         "user_active": True,
         "private": True,
-        "downstream_comments": "Mirror available over HTTP.",
         "csrf_token": csrf_token,
     }
 

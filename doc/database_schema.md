@@ -272,7 +272,6 @@ erDiagram
     BOOLEAN all_sites_can_pull_from_me
     DATETIME created_at "indexed"
     TEXT created_by
-    TEXT downstream_comments "nullable"
     BOOLEAN email_on_add
     BOOLEAN email_on_drop
     TEXT name "indexed"
