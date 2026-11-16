@@ -234,7 +234,6 @@ def site(db):
         admin_active=True,
         user_active=True,
         all_sites_can_pull_from_me=True,
-        downstream_comments="Mirror available over RSYNC and HTTP.",
         email_on_drop=False,  # Default value - not changeable in the UI Oo
         email_on_add=False,  # Default value - not changeable in the UI Oo
         created_by="pingou",
@@ -248,7 +247,6 @@ def site(db):
         admin_active=True,
         user_active=True,
         all_sites_can_pull_from_me=True,
-        downstream_comments="Mirror available over HTTP.",
         email_on_drop=False,
         email_on_add=False,
         created_by="kevin",
@@ -262,7 +260,6 @@ def site(db):
         admin_active=True,
         user_active=True,
         all_sites_can_pull_from_me=False,
-        downstream_comments="My own mirror available over HTTP.",
         email_on_drop=False,
         email_on_add=False,
         created_by="skvidal",
@@ -278,7 +275,6 @@ def site(db):
             admin_active=True,
             user_active=True,
             all_sites_can_pull_from_me=True,
-            downstream_comments=f"Extra Mirror {x} available over HTTP.",
             email_on_drop=False,
             email_on_add=False,
             created_by="adamnelson",

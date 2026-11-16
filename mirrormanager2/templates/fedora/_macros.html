@@ -183,9 +183,6 @@ href="{{ url_for('static', filename='mirrormanager2.css') }}"/>
         {{ render_field(form.org_url,
           after="Company/School/Organization URL e.g. https://www.redhat.com") }}
       </div>
-      <div class="col-md-6">
-        {{ render_field(form.downstream_comments) }}
-      </div>
     </div>
     {{ render_switch(form.private, after="e.g. Not available to the public") }}
     {{ render_switch(form.user_active,
