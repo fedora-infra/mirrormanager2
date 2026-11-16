@@ -479,26 +479,6 @@ class Category(BASE):
         delattr(self, "_directory_cache")
 
 
-class SiteToSite(BASE):
-    __tablename__ = "site_to_site"
-
-    id = sa.Column(sa.Integer, primary_key=True)
-    username = sa.Column(sa.Text(), default=None, nullable=True)
-    password = sa.Column(sa.Text(), default=None, nullable=True)
-    upstream_site_id = sa.Column(sa.Integer, sa.ForeignKey("site.id"), nullable=False)
-    downstream_site_id = sa.Column(sa.Integer, sa.ForeignKey("site.id"), nullable=False)
-
-    # Relations
-    upstream_site = relationship("Site", foreign_keys=[upstream_site_id])
-    downstream_site = relationship("Site", foreign_keys=[downstream_site_id])
-
-    # Constraints
-    __table_args__ = (
-        sa.UniqueConstraint("upstream_site_id", "downstream_site_id", name="site_to_site_idx"),
-        sa.UniqueConstraint("upstream_site_id", "username", name="site_to_site_username_idx"),
-    )
-
-
 class SiteAdmin(BASE):
     __tablename__ = "site_admin"
 

@@ -288,14 +288,6 @@ erDiagram
     TEXT username "nullable"
   }
 
-  site_to_site {
-    INTEGER id PK
-    INTEGER downstream_site_id FK
-    INTEGER upstream_site_id FK
-    TEXT password "nullable"
-    TEXT username "nullable"
-  }
-
   version {
     INTEGER id PK
     INTEGER product_id FK "nullable"
@@ -342,8 +334,6 @@ erDiagram
   arch ||--o{ repository : arch_id
   directory ||--o{ repository : directory_id
   site ||--o{ site_admin : site_id
-  site ||--o{ site_to_site : upstream_site_id
-  site ||--o{ site_to_site : downstream_site_id
   product ||--o{ version : product_id
 
 ```

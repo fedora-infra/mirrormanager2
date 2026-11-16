@@ -80,7 +80,6 @@ def get_views(config, db_session):
         MMModelView(model.RepositoryRedirect, db_session, category="Repository"),
         MMModelView(model.Site, db_session, category="Site"),
         MMModelView(model.SiteAdmin, db_session, category="Site"),
-        MMModelView(model.SiteToSite, db_session, category="Site"),
         MMModelView(model.Version, db_session),
     ]
 
