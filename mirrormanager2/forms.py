@@ -84,7 +84,6 @@ class AddSiteForm(FlaskForm):
     private = wtforms.BooleanField("Private", default=False)
     admin_active = wtforms.BooleanField("Enabled", default=True)
     user_active = wtforms.BooleanField("Enabled", default=True)
-    all_sites_can_pull_from_me = wtforms.BooleanField("All sites can pull from me?", default=False)
 
 
 class AddHostForm(FlaskForm):

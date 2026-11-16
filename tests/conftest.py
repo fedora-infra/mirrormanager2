@@ -233,7 +233,6 @@ def site(db):
         private=False,
         admin_active=True,
         user_active=True,
-        all_sites_can_pull_from_me=True,
         email_on_drop=False,  # Default value - not changeable in the UI Oo
         email_on_add=False,  # Default value - not changeable in the UI Oo
         created_by="pingou",
@@ -246,7 +245,6 @@ def site(db):
         private=False,
         admin_active=True,
         user_active=True,
-        all_sites_can_pull_from_me=True,
         email_on_drop=False,
         email_on_add=False,
         created_by="kevin",
@@ -259,7 +257,6 @@ def site(db):
         private=True,
         admin_active=True,
         user_active=True,
-        all_sites_can_pull_from_me=False,
         email_on_drop=False,
         email_on_add=False,
         created_by="skvidal",
@@ -274,7 +271,6 @@ def site(db):
             private=False,
             admin_active=True,
             user_active=True,
-            all_sites_can_pull_from_me=True,
             email_on_drop=False,
             email_on_add=False,
             created_by="adamnelson",
