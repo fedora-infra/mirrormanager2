@@ -690,6 +690,9 @@ class Version(BASE):
     is_test = sa.Column(sa.Boolean(), default=False, nullable=False)
     display = sa.Column(sa.Boolean(), default=True, nullable=False)
     display_name = sa.Column(sa.Text(), nullable=True)
+    # No code reads ordered_mirrorlist. The flag only mattered for Fedora 7 and older, and the
+    # Rust mirrorlist-server does not evaluate it. The column stays, because scan-primary-mirror
+    # still sets it to true for each new version.
     ordered_mirrorlist = sa.Column(sa.Boolean(), default=True, nullable=False)
     sortorder = sa.Column(sa.Integer, default=0, nullable=False)
     product_id = sa.Column(sa.Integer, sa.ForeignKey("product.id"), nullable=True)
